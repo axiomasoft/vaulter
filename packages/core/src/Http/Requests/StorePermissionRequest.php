@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DocVault\Http\Requests;
+
+use DocVault\Data\GrantPermissionData;
+use DocVault\Enums\PermissionLevel;
+use Illuminate\Validation\Rule;
+
+final class StorePermissionRequest extends DocVaultFormRequest
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'subject_type' => ['required', 'string'],
+            'subject_id' => ['required'],
+            'permission' => ['required', 'string', Rule::enum(PermissionLevel::class)],
+        ];
+    }
+
+    public function toData(): GrantPermissionData
+    {
+        return new GrantPermissionData(
+            subjectType: $this->string('subject_type')->toString(),
+            subjectId: $this->scalarId('subject_id'),
+            level: PermissionLevel::from($this->string('permission')->toString()),
+            grantedBy: $this->actorId(),
+        );
+    }
+}

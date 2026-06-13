@@ -6,21 +6,23 @@ use DocVault\DocVaultManager;
 use DocVault\Facades\DocVault;
 
 it('merges the docvault config', function (): void {
-    expect(config('docvault'))->toBeArray()
-        ->and(config('docvault.route_prefix'))->toBe('api/docvault')
-        ->and(config('docvault.document_types'))->toContain('richtext');
+    expect(config('docvault.route_prefix'))->toBe('api/docvault')
+        ->and(config('docvault.enabled_document_types'))->toContain('richtext');
 });
 
-it('resolves the DocVault manager as a singleton', function (): void {
+it('binds the manager as a singleton', function (): void {
     expect(app('docvault'))->toBeInstanceOf(DocVaultManager::class)
         ->and(app('docvault'))->toBe(app(DocVaultManager::class));
 });
 
-it('registers the document CRUD routes', function (): void {
-    $routes = collect(app('router')->getRoutes()->getRoutes())
+it('registers the API routes', function (): void {
+    $uris = collect(app('router')->getRoutes()->getRoutes())
         ->map(fn ($route): string => $route->uri());
 
-    expect($routes)->toContain('api/docvault/documents');
+    expect($uris)
+        ->toContain('api/docvault/documents')
+        ->toContain('api/docvault/documents/{documentId}/versions')
+        ->toContain('api/docvault/folders');
 });
 
 it('exposes the DocVault facade', function (): void {

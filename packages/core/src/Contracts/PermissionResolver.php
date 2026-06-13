@@ -23,5 +23,5 @@ interface PermissionResolver
     /**
      * May the user create documents inside the given workspace?
      */
-    public function canCreate(Authenticatable $user, string $workspaceType, int $workspaceId): bool;
+    public function canCreate(Authenticatable $user, string $workspaceType, int|string $workspaceId): bool;
 }

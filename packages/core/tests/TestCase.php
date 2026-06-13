@@ -32,5 +32,14 @@ abstract class TestCase extends OrchestraTestCase
             'database' => ':memory:',
             'prefix' => '',
         ]);
+
+        // Drop the route middleware group so tests do not depend on the host's
+        // 'api' group definition; authorization is exercised via the resolver.
+        $app['config']->set('docvault.middleware', []);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }

@@ -7,6 +7,7 @@ const guideSidebar = [
     text: 'Introduction',
     items: [
       { text: 'What is DocVault?', link: '/guide/introduction' },
+      { text: 'Architecture', link: '/guide/architecture' },
       { text: 'Installation', link: '/guide/installation' },
       { text: 'Quick Start', link: '/guide/quick-start' },
     ],
@@ -15,9 +16,25 @@ const guideSidebar = [
     text: 'Usage',
     items: [
       { text: 'Configuration', link: '/guide/configuration' },
+      { text: 'Embedding', link: '/guide/embedding' },
       { text: 'Permission Resolver', link: '/guide/permission-resolver' },
+      { text: 'Abilities', link: '/guide/abilities' },
       { text: 'Vue Components', link: '/guide/vue-components' },
       { text: 'Collaboration', link: '/guide/collaboration' },
+      { text: 'Error Reference', link: '/guide/errors' },
+    ],
+  },
+]
+
+const adrSidebar = [
+  {
+    text: 'Architecture Decision Records',
+    items: [
+      { text: 'Overview', link: '/adr/' },
+      { text: '0001 — Collaboration transport', link: '/adr/0001-collaboration-transport' },
+      { text: '0002 — Authorization delegation', link: '/adr/0002-authorization-delegation' },
+      { text: '0003 — Embeddability & data model', link: '/adr/0003-embeddability-data-model' },
+      { text: '0004 — Content format & versioning', link: '/adr/0004-content-format' },
     ],
   },
 ]
@@ -40,11 +57,13 @@ export default defineConfig({
     siteTitle: 'DocVault',
     nav: [
       { text: 'Guide', link: '/guide/introduction' },
+      { text: 'ADRs', link: '/adr/' },
       { text: 'Changelog', link: 'https://github.com/axioma-studio/doc-vault/blob/main/CHANGELOG.md' },
       { text: 'GitHub', link: repo },
     ],
     sidebar: {
       '/guide/': guideSidebar,
+      '/adr/': adrSidebar,
     },
     socialLinks: [{ icon: 'github', link: repo }],
     search: { provider: 'local' },

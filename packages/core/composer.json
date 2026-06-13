@@ -36,6 +36,10 @@
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
+    "suggest": {
+        "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
+        "axioma-studio/docvault-filament": "Filament admin UI for documents, folders and permissions."
+    },
     "autoload": {
         "psr-4": {
             "DocVault\\": "src/"
@@ -43,7 +47,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "DocVault\\Tests\\": "tests/"
+            "DocVault\\Tests\\": "tests/",
+            "DocVault\\Database\\Factories\\": "database/factories/"
         }
     },
     "extra": {
