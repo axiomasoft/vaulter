@@ -1,0 +1,20 @@
+{
+  "name": "@docvault/hocuspocus-server",
+  "version": "0.0.1",
+  "description": "DocVault real-time collaboration server (Hocuspocus + Yjs). Validates JWTs against the Laravel backend and persists document snapshots.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@hocuspocus/server": "^2.13",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

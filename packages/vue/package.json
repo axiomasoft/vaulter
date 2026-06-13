@@ -1,0 +1,42 @@
+{
+  "name": "@docvault/vue",
+  "version": "0.0.1",
+  "description": "Vue 3 components for DocVault — file manager, TipTap editor, version history and permissions panel.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/docvault-vue.umd.cjs",
+  "module": "./dist/docvault-vue.js",
+  "exports": {
+    ".": {
+      "import": "./dist/docvault-vue.js",
+      "require": "./dist/docvault-vue.umd.cjs"
+    },
+    "./style.css": "./dist/docvault-vue.css"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "vue": "^3.4"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^2.13",
+    "@tiptap/pm": "^2.10",
+    "@tiptap/starter-kit": "^2.10",
+    "@tiptap/vue-3": "^2.10",
+    "yjs": "^13.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^15.11.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0",
+    "vue": "^3.5.0"
+  }
+}

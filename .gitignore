@@ -1,0 +1,28 @@
+# PHP
+/vendor/
+packages/*/vendor/
+composer.lock
+.phpunit.cache/
+.phpunit.result.cache
+build/
+.rector-cache/
+
+# Node
+node_modules/
+dist/
+package-lock.json
+*.log
+
+# VitePress
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# Env / OS
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Local tooling artifacts
+*.bak
+.claude/settings.local.json.bak

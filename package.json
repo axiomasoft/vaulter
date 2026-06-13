@@ -1,0 +1,21 @@
+{
+  "name": "doc-vault",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "DocVault monorepo — Vue components, Hocuspocus collaboration server and VitePress documentation.",
+  "workspaces": [
+    "packages/vue",
+    "hocuspocus-server"
+  ],
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "build": "npm run build --workspace @docvault/vue",
+    "test": "npm run test --workspace @docvault/vue"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}
