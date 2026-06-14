@@ -92,6 +92,8 @@ export interface DocVaultClient {
     remove(id: DocumentId): Promise<void>
     forceDelete(id: DocumentId): Promise<void>
     restore(id: DocumentId): Promise<DocVaultDocument>
+    move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument>
+    duplicate(id: DocumentId): Promise<DocVaultDocument>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
   versions: {
@@ -180,6 +182,9 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
       remove: (id) => request<void>('DELETE', `/documents/${id}`),
       forceDelete: (id) => request<void>('DELETE', `/documents/${id}/force`),
       restore: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/restore`)),
+      move: (id, folderId) =>
+        unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
+      duplicate: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/duplicate`)),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
     },

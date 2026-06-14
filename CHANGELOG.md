@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `{ format, content, filename }`.
   - `@docvault/vue`: `useDocumentExport` composable (with a browser `download` helper) and a
     `documents.export(id, format)` client method.
+- **Document operations**: move & duplicate.
+  - `PATCH /documents/{id}/move` (`MoveDocumentAction`, gated by `edit`) re-files a document into a
+    folder of the same workspace (cross-workspace → `422`) and dispatches `DocumentMoved`;
+    `POST /documents/{id}/duplicate` (`DuplicateDocumentAction`, gated by `view` + `create`) clones it.
+  - `@docvault/vue`: `documents.move` / `documents.duplicate` client methods and `useDocuments`
+    `move` / `duplicate`.
 - **Search & trash**: document discovery and lifecycle.
   - The document list accepts a `q` term (title + content `LIKE`, workspace-scoped). A trash
     listing (`GET /documents/trash`) and permanent `DELETE /documents/{id}/force` (gated by

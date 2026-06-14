@@ -41,3 +41,22 @@ await forceDelete(documentId) // permanent — dispatches DocumentPurged
 
 A permanent delete dispatches `DocVault\Events\DocumentPurged` (distinct from the reversible
 `DocumentDeleted`), so your app can treat hard deletes differently in audit logs.
+
+## Move & duplicate
+
+| Method | URL | Ability |
+|---|---|---|
+| PATCH | `/documents/{id}/move` | `edit` |
+| POST | `/documents/{id}/duplicate` | `view` + `create` |
+
+`move` accepts `{ folder_id: id \| null }` (null moves to the root); moving into a folder from a
+different workspace is rejected with `422`, and a successful move dispatches `DocumentMoved`.
+`duplicate` clones the document (title prefixed with `Copy of `) into the same workspace/folder and
+dispatches `DocumentCreated`.
+
+```ts
+const { move, duplicate } = useDocuments()
+
+await move(documentId, folderId)   // or move(documentId, null) to un-file
+const copy = await duplicate(documentId)
+```

@@ -112,6 +112,23 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('/documents/7/force')
   })
 
+  it('moves and duplicates a document', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 1, folder_id: 9 } }))
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 2, title: 'Copy of X' } }, 201))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const moved = await client.documents.move(1, 9)
+    expect(moved.folder_id).toBe(9)
+    const [, moveInit] = fetchMock.mock.calls[0]
+    expect(moveInit.method).toBe('PATCH')
+    expect(JSON.parse(moveInit.body).folder_id).toBe(9)
+
+    const copy = await client.documents.duplicate(1)
+    expect(copy.title).toBe('Copy of X')
+    expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/duplicate')
+  })
+
   it('exports a document, passing the format query', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),

@@ -18,6 +18,8 @@ export interface UseDocumentsReturn {
   listTrashed: (query: WorkspaceQuery) => Promise<DocVaultDocument[]>
   create: (payload: CreateDocumentPayload) => Promise<DocVaultDocument>
   update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<DocVaultDocument>
+  move: (id: DocumentId, folderId: DocumentId | null) => Promise<DocVaultDocument>
+  duplicate: (id: DocumentId) => Promise<DocVaultDocument>
   remove: (id: DocumentId) => Promise<void>
   forceDelete: (id: DocumentId) => Promise<void>
 }
@@ -63,6 +65,18 @@ export function useDocuments(): UseDocumentsReturn {
     return updated
   }
 
+  async function move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument> {
+    const moved = await client.documents.move(id, folderId)
+    documents.value = documents.value.map((doc) => (doc.id === id ? moved : doc))
+    return moved
+  }
+
+  async function duplicate(id: DocumentId): Promise<DocVaultDocument> {
+    const copy = await client.documents.duplicate(id)
+    documents.value = [...documents.value, copy]
+    return copy
+  }
+
   async function remove(id: DocumentId): Promise<void> {
     await client.documents.remove(id)
     documents.value = documents.value.filter((doc) => doc.id !== id)
@@ -74,5 +88,5 @@ export function useDocuments(): UseDocumentsReturn {
     trashed.value = trashed.value.filter((doc) => doc.id !== id)
   }
 
-  return { documents, trashed, loading, error, list, listTrashed, create, update, remove, forceDelete }
+  return { documents, trashed, loading, error, list, listTrashed, create, update, move, duplicate, remove, forceDelete }
 }

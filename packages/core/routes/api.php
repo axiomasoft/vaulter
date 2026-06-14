@@ -32,6 +32,8 @@ Route::prefix(Config::routePrefix())
         Route::delete('documents/{id}', [DocumentController::class, 'destroy']);
         Route::delete('documents/{id}/force', [DocumentController::class, 'forceDestroy']);
         Route::post('documents/{id}/restore', [DocumentController::class, 'restore']);
+        Route::patch('documents/{id}/move', [DocumentController::class, 'move']);
+        Route::post('documents/{id}/duplicate', [DocumentController::class, 'duplicate']);
         Route::get('documents/{documentId}/export', [ExportController::class, 'show']);
 
         // Versions
