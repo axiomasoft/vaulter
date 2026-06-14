@@ -1,6 +1,8 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useDocVaultClient } from './useDocVaultClient'
 import type {
+  BulkDocumentsPayload,
+  BulkResult,
   CreateDocumentPayload,
   DocVaultDocument,
   DocumentId,
@@ -22,6 +24,7 @@ export interface UseDocumentsReturn {
   duplicate: (id: DocumentId) => Promise<DocVaultDocument>
   remove: (id: DocumentId) => Promise<void>
   forceDelete: (id: DocumentId) => Promise<void>
+  bulk: (payload: BulkDocumentsPayload) => Promise<BulkResult>
 }
 
 /**
@@ -88,5 +91,17 @@ export function useDocuments(): UseDocumentsReturn {
     trashed.value = trashed.value.filter((doc) => doc.id !== id)
   }
 
-  return { documents, trashed, loading, error, list, listTrashed, create, update, move, duplicate, remove, forceDelete }
+  async function bulk(payload: BulkDocumentsPayload): Promise<BulkResult> {
+    const result = await client.documents.bulk(payload)
+    const processed = new Set(result.processed.map(String))
+    if (payload.action === 'delete' || payload.action === 'force-delete') {
+      documents.value = documents.value.filter((doc) => ! processed.has(String(doc.id)))
+    }
+    return result
+  }
+
+  return {
+    documents, trashed, loading, error,
+    list, listTrashed, create, update, move, duplicate, remove, forceDelete, bulk,
+  }
 }

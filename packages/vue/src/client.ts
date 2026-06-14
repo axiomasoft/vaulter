@@ -1,4 +1,6 @@
 import type {
+  BulkDocumentsPayload,
+  BulkResult,
   CollaborationConnection,
   CreateCommentPayload,
   CreateDocumentPayload,
@@ -94,6 +96,7 @@ export interface DocVaultClient {
     restore(id: DocumentId): Promise<DocVaultDocument>
     move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument>
     duplicate(id: DocumentId): Promise<DocVaultDocument>
+    bulk(payload: BulkDocumentsPayload): Promise<BulkResult>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
   versions: {
@@ -185,6 +188,7 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
       move: (id, folderId) =>
         unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
       duplicate: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/duplicate`)),
+      bulk: (payload) => unwrap(request<Envelope<BulkResult>>('POST', '/documents/bulk', { body: payload })),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
     },

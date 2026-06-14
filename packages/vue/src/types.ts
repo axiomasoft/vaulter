@@ -71,6 +71,20 @@ export interface DocVaultPermission {
   granted_by: DocumentId | null
 }
 
+export type BulkAction = 'delete' | 'restore' | 'move' | 'force-delete'
+
+export interface BulkDocumentsPayload {
+  action: BulkAction
+  ids: DocumentId[]
+  folder_id?: DocumentId | null
+}
+
+export interface BulkResult {
+  action: BulkAction
+  processed: DocumentId[]
+  skipped: DocumentId[]
+}
+
 export type ExportFormat = 'html' | 'markdown'
 
 export interface DocumentExport {

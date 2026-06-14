@@ -129,6 +129,20 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/duplicate')
   })
 
+  it('performs a bulk action', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ data: { action: 'delete', processed: [1, 2], skipped: [] } }),
+    )
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const result = await client.documents.bulk({ action: 'delete', ids: [1, 2] })
+
+    expect(result.processed).toHaveLength(2)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toContain('/documents/bulk')
+    expect(JSON.parse(init.body).action).toBe('delete')
+  })
+
   it('exports a document, passing the format query', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),

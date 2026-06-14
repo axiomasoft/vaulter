@@ -23,6 +23,7 @@ function mockClient(): DocVaultClient {
       restore: vi.fn(),
       move: vi.fn(),
       duplicate: vi.fn(),
+      bulk: vi.fn(),
       export: vi.fn(),
     },
     versions: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), restore: vi.fn() },

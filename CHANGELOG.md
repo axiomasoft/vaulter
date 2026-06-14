@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `{ format, content, filename }`.
   - `@docvault/vue`: `useDocumentExport` composable (with a browser `download` helper) and a
     `documents.export(id, format)` client method.
+- **Bulk operations**: `POST /documents/bulk` applies one action (`delete` / `restore` / `move` /
+  `force-delete`) to many documents, authorizing each individually and returning `processed` vs
+  `skipped` ids (`BulkAction` enum, `BulkDocumentController`). `@docvault/vue`: `documents.bulk`
+  client method and `useDocuments.bulk`.
 - **Document operations**: move & duplicate.
   - `PATCH /documents/{id}/move` (`MoveDocumentAction`, gated by `edit`) re-files a document into a
     folder of the same workspace (cross-workspace → `422`) and dispatches `DocumentMoved`;

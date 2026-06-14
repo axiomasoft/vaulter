@@ -60,3 +60,22 @@ const { move, duplicate } = useDocuments()
 await move(documentId, folderId)   // or move(documentId, null) to un-file
 const copy = await duplicate(documentId)
 ```
+
+## Bulk operations
+
+`POST /documents/bulk` applies one action to many documents, authorizing each individually and
+reporting which were processed vs skipped (denied / missing):
+
+```
+POST /api/docvault/documents/bulk
+{ "action": "move", "ids": [1, 2, 3], "folder_id": 9 }
+→ { "data": { "action": "move", "processed": [1, 3], "skipped": [2] } }
+```
+
+Actions: `delete`, `restore`, `move` (with `folder_id`), `force-delete` — each gated by the same
+ability as its single-document counterpart (`delete` / `manage` / `edit` / `manage`).
+
+```ts
+const { bulk } = useDocuments()
+await bulk({ action: 'delete', ids: selectedIds })
+```

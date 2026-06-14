@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DocVault\Http\Controllers\BulkDocumentController;
 use DocVault\Http\Controllers\CollaborationController;
 use DocVault\Http\Controllers\CommentController;
 use DocVault\Http\Controllers\DocumentController;
@@ -26,6 +27,7 @@ Route::prefix(Config::routePrefix())
         // Documents
         Route::get('documents', [DocumentController::class, 'index']); // supports ?q= search
         Route::get('documents/trash', [DocumentController::class, 'trash']); // before /{id}
+        Route::post('documents/bulk', BulkDocumentController::class);
         Route::post('documents', [DocumentController::class, 'store']);
         Route::get('documents/{id}', [DocumentController::class, 'show']);
         Route::patch('documents/{id}', [DocumentController::class, 'update']);
