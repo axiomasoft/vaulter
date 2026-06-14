@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DocVault\Tests\TablePrefixTestCase;
 use DocVault\Tests\TestCase;
 use DocVault\Tests\UlidTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,4 +15,8 @@ uses(TestCase::class, RefreshDatabase::class)->in(
 
 uses(UlidTestCase::class, RefreshDatabase::class)->in(
     $core.'/Ulid',
+);
+
+uses(TablePrefixTestCase::class, RefreshDatabase::class)->in(
+    $core.'/TablePrefix',
 );

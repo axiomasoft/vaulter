@@ -13,6 +13,16 @@ First public release. DocVault is a complete, embeddable document-management pac
 with a TypeScript front-end and an optional Filament admin.
 
 ### Added
+- **Configurable table prefix**: `config('docvault.table_prefix')` (env `DOCVAULT_TABLE_PREFIX`,
+  default `dv_`) prefixes every DocVault table. Published migrations and models resolve table names
+  through it, so the package coexists with host tables and naming conventions.
+
+## [0.1.0] - 2026-06-14
+
+First public release. DocVault is a complete, embeddable document-management package for Laravel
+with a TypeScript front-end and an optional Filament admin.
+
+### Added
 - **Filament admin** (`axioma-studio/docvault-filament`): an optional Filament 5 plugin
   (`DocVaultPlugin`) adding **Documents** (searchable table, edit form, trash filter, delete/restore/
   force-delete), **Folders** (CRUD) and **Share-links** (list + revoke) resources, each resolving the

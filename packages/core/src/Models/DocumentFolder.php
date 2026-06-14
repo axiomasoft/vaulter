@@ -32,9 +32,13 @@ class DocumentFolder extends Model
 
     use InteractsWithWorkspace;
 
-    protected $table = 'dv_document_folders';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('document_folders');
+    }
 
     /**
      * @return BelongsTo<self, $this>

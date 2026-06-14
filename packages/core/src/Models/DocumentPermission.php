@@ -31,9 +31,13 @@ class DocumentPermission extends Model
     /** @use HasFactory<DocumentPermissionFactory> */
     use HasFactory;
 
-    protected $table = 'dv_document_permissions';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('document_permissions');
+    }
 
     /**
      * @return BelongsTo<Document, $this>

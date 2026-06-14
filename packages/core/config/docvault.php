@@ -59,6 +59,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Table prefix
+    |--------------------------------------------------------------------------
+    | Prefix for every DocVault table (published migrations and models read it),
+    | so the package coexists with host tables and naming conventions.
+    */
+    'table_prefix' => env('DOCVAULT_TABLE_PREFIX', 'dv_'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authorization
     |--------------------------------------------------------------------------
     | FQCN of a \DocVault\Contracts\PermissionResolver implementation, or null

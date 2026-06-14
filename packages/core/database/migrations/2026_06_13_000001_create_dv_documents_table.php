@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DocVault\Support\Config;
 use DocVault\Support\DocVaultSchema;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -11,7 +12,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('dv_documents', function (Blueprint $table): void {
+        Schema::create(Config::table('documents'), function (Blueprint $table): void {
             DocVaultSchema::key($table);
             DocVaultSchema::tenant($table);
             DocVaultSchema::morphs($table, 'workspace');
@@ -29,6 +30,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('dv_documents');
+        Schema::dropIfExists(Config::table('documents'));
     }
 };

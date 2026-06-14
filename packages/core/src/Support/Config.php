@@ -108,6 +108,21 @@ final class Config
         return is_string($value) ? $value : 'tenant_id';
     }
 
+    public static function tablePrefix(): string
+    {
+        $value = config('docvault.table_prefix', 'dv_');
+
+        return is_string($value) ? $value : 'dv_';
+    }
+
+    /**
+     * Resolve a DocVault table name (configured prefix + base name).
+     */
+    public static function table(string $name): string
+    {
+        return self::tablePrefix().$name;
+    }
+
     public static function routePrefix(): string
     {
         $value = config('docvault.route_prefix', 'api/docvault');

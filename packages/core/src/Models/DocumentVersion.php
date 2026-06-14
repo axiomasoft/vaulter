@@ -31,9 +31,13 @@ class DocumentVersion extends Model
 
     public const UPDATED_AT = null;
 
-    protected $table = 'dv_document_versions';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('document_versions');
+    }
 
     /**
      * @return BelongsTo<Document, $this>
