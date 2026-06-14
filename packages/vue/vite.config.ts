@@ -1,10 +1,15 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import dts from 'vite-plugin-dts'
 
-// Library build: externalize Vue, emit ES + UMD bundles.
+// Library build: type-check + emit declarations, externalize Vue (and the
+// optional realtime/editor stack used from M3 onward), ship ES + UMD bundles.
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    dts({ tsconfigPath: './tsconfig.json', include: ['src'], exclude: ['tests'] }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -12,12 +17,12 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: fileURLToPath(new URL('./src/index.js', import.meta.url)),
+      entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
       name: 'DocVaultVue',
       fileName: 'docvault-vue',
     },
     rollupOptions: {
-      external: ['vue'],
+      external: ['vue', 'yjs', /^@tiptap\//, /^@hocuspocus\//],
       output: {
         exports: 'named',
         globals: {
