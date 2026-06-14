@@ -32,6 +32,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 |---|---|---|
 | `permission_resolver` | `null` | FQCN of your `PermissionResolver`, or register at runtime. |
 | `storage_adapter` | `DefaultStorageAdapter::class` | Binary-attachment storage. |
+| `share_token_generator` | `RandomShareTokenGenerator::class` | FQCN of your `ShareTokenGenerator` (short/hashed/prefixed share tokens). |
 
 ## API & documents
 
@@ -42,6 +43,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 | `max_versions` | `50` | Versions kept per document (`0` = unlimited). |
 | `enabled_document_types` | `['richtext','table','markdown','template']` | Allowed types. |
 | `max_document_size_kb` | `5120` | Per-document size limit. |
+| `exporters` | `['html' => …, 'markdown' => …]` | Map of format → `DocumentExporter` (add PDF/DOCX/custom). |
 
 ## Collaboration
 

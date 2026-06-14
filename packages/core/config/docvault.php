@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use DocVault\Collaboration\HocuspocusCollaborationDriver;
 use DocVault\Collaboration\ReverbCollaborationDriver;
+use DocVault\Export\HtmlExporter;
+use DocVault\Export\MarkdownExporter;
 use DocVault\Models\Document;
 use DocVault\Models\DocumentComment;
 use DocVault\Models\DocumentFolder;
@@ -11,6 +13,7 @@ use DocVault\Models\DocumentPermission;
 use DocVault\Models\DocumentShare;
 use DocVault\Models\DocumentVersion;
 use DocVault\Support\DefaultStorageAdapter;
+use DocVault\Support\RandomShareTokenGenerator;
 
 /**
  * DocVault configuration.
@@ -84,6 +87,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Share-link token generator
+    |--------------------------------------------------------------------------
+    | FQCN of a \DocVault\Contracts\ShareTokenGenerator. Swap to mint short,
+    | hashed or prefixed tokens (must be unique and fit the token column).
+    */
+    'share_token_generator' => RandomShareTokenGenerator::class,
+
+    /*
+    |--------------------------------------------------------------------------
     | API routes
     |--------------------------------------------------------------------------
     */
@@ -105,6 +117,18 @@ return [
     */
     'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
     'max_document_size_kb' => 5120,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export formats
+    |--------------------------------------------------------------------------
+    | Map of format => \DocVault\Contracts\DocumentExporter. Add your own (PDF,
+    | DOCX, …) here, or at runtime via DocVault::registerExporter().
+    */
+    'exporters' => [
+        'html' => HtmlExporter::class,
+        'markdown' => MarkdownExporter::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
