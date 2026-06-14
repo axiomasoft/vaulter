@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DocVault\Filament;
 
 use DocVault\Filament\Resources\DocumentResource;
+use DocVault\Filament\Resources\FolderResource;
+use DocVault\Filament\Resources\ShareResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
@@ -34,6 +36,8 @@ final class DocVaultPlugin implements Plugin
     {
         $panel->resources([
             DocumentResource::class,
+            FolderResource::class,
+            ShareResource::class,
         ]);
     }
 

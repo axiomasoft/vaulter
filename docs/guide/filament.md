@@ -20,14 +20,16 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-That adds a **Documents** resource (under the `DocVault` navigation group) with:
+That adds three resources under the `DocVault` navigation group:
 
-- a searchable, sortable table (title, type, workspace, created date) with a trashed filter;
-- an edit form for the document's metadata (title, type, workspace);
-- delete / restore / force-delete row and header actions.
+- **Documents** — a searchable, sortable table (title, type, workspace, created) with a trashed
+  filter, an edit form (title, type, workspace) and delete / restore / force-delete actions.
+- **Folders** — list, create, edit and delete the workspace folder tree.
+- **Share links** — list and **revoke** tokenized public shares (read-only; links are minted via the
+  API).
 
-The resource resolves the configured model (`config('docvault.models.document')`), so it works with
-swapped/ULID/tenant-aware models too.
+Every resource resolves the configured model (`config('docvault.models.*')`), so they work with
+swapped / ULID / tenant-aware models too.
 
 ## Why a separate package & CI
 
