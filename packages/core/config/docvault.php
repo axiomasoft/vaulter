@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use DocVault\Collaboration\HocuspocusCollaborationDriver;
 use DocVault\Collaboration\ReverbCollaborationDriver;
+use DocVault\Export\HtmlExporter;
+use DocVault\Export\MarkdownExporter;
 use DocVault\Models\Document;
 use DocVault\Models\DocumentComment;
 use DocVault\Models\DocumentFolder;
@@ -115,6 +117,18 @@ return [
     */
     'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
     'max_document_size_kb' => 5120,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export formats
+    |--------------------------------------------------------------------------
+    | Map of format => \DocVault\Contracts\DocumentExporter. Add your own (PDF,
+    | DOCX, …) here, or at runtime via DocVault::registerExporter().
+    */
+    'exporters' => [
+        'html' => HtmlExporter::class,
+        'markdown' => MarkdownExporter::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------

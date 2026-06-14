@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Pluggable export formats**: register a `\DocVault\Contracts\DocumentExporter` via
+  `config('docvault.exporters')` or `DocVault::registerExporter()` to export documents to custom
+  formats (PDF, DOCX, …) alongside the built-in HTML and Markdown.
 - **Swappable share-link token generator**: `config('docvault.share_token_generator')` — implement
   `\DocVault\Contracts\ShareTokenGenerator` to mint short, hashed or prefixed share tokens (the
   default stays a 48-char random string).
