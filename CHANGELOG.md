@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Filament admin** (`axioma-studio/docvault-filament`): an optional Filament 5 plugin
+  (`DocVaultPlugin`) adding a Documents resource (searchable table, edit form, trash filter and
+  delete/restore/force-delete actions) that resolves the configured model. Self-contained package
+  with an isolated CI workflow so Filament never constrains the core Laravel 12/13 matrix.
 - Initial monorepo scaffold: `packages/core` (Laravel package), `packages/vue`
   (`@docvault/vue` components), `hocuspocus-server/` (collaboration server) and
   VitePress documentation under `docs/`.

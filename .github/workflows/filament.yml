@@ -1,0 +1,47 @@
+name: Filament
+
+# The Filament package is tested in isolation against a Filament-compatible
+# Laravel so it never constrains the core Tests matrix (which spans Laravel 12 & 13).
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
+    paths:
+      - 'packages/filament/**'
+      - 'packages/core/**'
+      - '.github/workflows/filament.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  filament:
+    name: docvault-filament (Filament 5)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: packages/filament
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Code style (Pint)
+        working-directory: packages/filament
+        run: vendor/bin/pint --test
+
+      - name: Static analysis (Larastan)
+        working-directory: packages/filament
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+      - name: Tests (Pest)
+        working-directory: packages/filament
+        run: vendor/bin/pest --ci

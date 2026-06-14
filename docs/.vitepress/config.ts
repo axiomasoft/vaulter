@@ -21,6 +21,7 @@ const guideSidebar = [
       { text: 'Permission Resolver', link: '/guide/permission-resolver' },
       { text: 'Abilities', link: '/guide/abilities' },
       { text: 'Vue Components', link: '/guide/vue-components' },
+      { text: 'Filament Admin', link: '/guide/filament' },
       { text: 'Collaboration', link: '/guide/collaboration' },
       { text: 'Comments', link: '/guide/comments' },
       { text: 'Share Links', link: '/guide/sharing' },
