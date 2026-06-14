@@ -1,0 +1,74 @@
+{
+    "name": "axioma-studio/docvault-core",
+    "description": "Embeddable document management for Laravel — file manager, TipTap editor, version history and real-time collaboration, integrated through adapters.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "documents",
+        "tiptap",
+        "collaboration",
+        "yjs",
+        "versioning",
+        "editor",
+        "file-manager"
+    ],
+    "homepage": "https://github.com/axioma-studio/doc-vault",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/axioma-studio/doc-vault/issues",
+        "source": "https://github.com/axioma-studio/doc-vault"
+    },
+    "require": {
+        "php": "^8.4",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "spatie/laravel-package-tools": "^1.92"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
+    },
+    "suggest": {
+        "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
+        "axioma-studio/docvault-filament": "Filament admin UI for documents, folders and permissions."
+    },
+    "autoload": {
+        "psr-4": {
+            "DocVault\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DocVault\\Tests\\": "tests/",
+            "DocVault\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DocVault\\DocVaultServiceProvider"
+            ],
+            "aliases": {
+                "DocVault": "DocVault\\Facades\\DocVault"
+            }
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

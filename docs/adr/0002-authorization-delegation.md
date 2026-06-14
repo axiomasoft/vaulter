@@ -1,0 +1,28 @@
+# ADR-0002 — Authorization delegation
+
+**Status:** accepted
+
+## Context
+
+DocVault must embed in apps with wildly different role systems (Laravel Gate, Spatie
+Permission, AzGuard/CoreX entity-scoped RBAC). Shipping its own permission model would
+conflict with the host's.
+
+## Decision
+
+DocVault ships **no** authorization logic. The host implements a single contract,
+`PermissionResolver` (`can($user, $action, $document)`, `canCreate($user, $type, $id)`), and
+registers it via `DocVault::resolvePermissionsWith()` or `config('docvault.permission_resolver')`.
+
+- Read visibility flows through `DocumentVisibilityService`, which calls the resolver.
+- The API maps a denied action to `403` via `PermissionDeniedException`.
+- Computed per-document permissions are shipped to the front-end as an `abilities` object
+  (`AbilitiesDto`), so the UI renders only allowed actions.
+- When no resolver is configured, access is open — intended for trusted/dev setups; production
+  must bind a resolver.
+
+## Consequences
+
+- Zero coupling to any RBAC package; works with all of them.
+- The host keeps a single source of truth for permissions.
+- DocVault stays focused on documents, not access control.

@@ -1,0 +1,43 @@
+name: Static Analysis
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  larastan:
+    name: Larastan (PHPStan level 8)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-phpstan-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-phpstan-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run Larastan
+        run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=256M --no-progress

@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: max
+
+    paths:
+        - packages/core/src
+        - packages/core/database
+
+    inferPrivatePropertyTypeFromConstructor: true
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # Eloquent dynamic builder/property magic that Larastan cannot fully model.
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
