@@ -18,6 +18,8 @@ export { useCollaboration } from './composables/useCollaboration'
 export type { UseCollaborationReturn } from './composables/useCollaboration'
 export { useComments } from './composables/useComments'
 export type { UseCommentsReturn } from './composables/useComments'
+export { useShares } from './composables/useShares'
+export type { UseSharesReturn } from './composables/useShares'
 
 // Collaboration transport
 export { createCollaborationSession } from './collaboration'
@@ -33,6 +35,7 @@ export { default as DocVaultEditor } from './components/DocVaultEditor.vue'
 export { default as DocVaultVersionHistory } from './components/DocVaultVersionHistory.vue'
 export { default as DocVaultPermissionsPanel } from './components/DocVaultPermissionsPanel.vue'
 export { default as DocVaultCommentsPanel } from './components/DocVaultCommentsPanel.vue'
+export { default as DocVaultSharePanel } from './components/DocVaultSharePanel.vue'
 export { default as DocVaultBreadcrumb } from './components/DocVaultBreadcrumb.vue'
 
 // Types

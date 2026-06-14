@@ -85,6 +85,28 @@ export interface DocVaultComment {
   created_at: string | null
 }
 
+export interface DocVaultShare {
+  id: DocumentId
+  document_id: DocumentId
+  token: string
+  permission: PermissionLevelName
+  expires_at: string | null
+  created_at: string | null
+}
+
+/** The public, token-resolved view of a shared document. */
+export interface SharedDocument {
+  id: DocumentId
+  type: DocumentTypeName
+  title: string
+  content: TipTapDocument | null
+  abilities: DocumentAbilities
+  share: {
+    permission: PermissionLevelName
+    expires_at: string | null
+  }
+}
+
 export interface ReverbCollaborationConnection {
   driver: 'reverb'
   channel: string
@@ -160,6 +182,11 @@ export interface CreateCommentPayload {
   body: string
   parent_id?: DocumentId | null
   anchor?: Record<string, unknown> | null
+}
+
+export interface CreateSharePayload {
+  permission: Extract<PermissionLevelName, 'view' | 'comment' | 'edit'>
+  expires_at?: string | null
 }
 
 export interface DocVaultClientOptions {

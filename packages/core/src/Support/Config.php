@@ -9,6 +9,7 @@ use DocVault\Models\Document;
 use DocVault\Models\DocumentComment;
 use DocVault\Models\DocumentFolder;
 use DocVault\Models\DocumentPermission;
+use DocVault\Models\DocumentShare;
 use DocVault\Models\DocumentVersion;
 
 /**
@@ -68,6 +69,17 @@ final class Config
     {
         /** @var class-string<DocumentComment> $class */
         $class = config('docvault.models.comment', DocumentComment::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<DocumentShare>
+     */
+    public static function shareModel(): string
+    {
+        /** @var class-string<DocumentShare> $class */
+        $class = config('docvault.models.share', DocumentShare::class);
 
         return $class;
     }

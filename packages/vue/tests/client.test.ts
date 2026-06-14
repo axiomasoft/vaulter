@@ -76,6 +76,20 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/comments/7/resolve')
   })
 
+  it('creates a share and resolves a shared document by token', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 1, token: 'abc', permission: 'view' } }, 201))
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 5, title: 'Shared', abilities: { view: true } } }))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const share = await client.shares.create(5, { permission: 'view' })
+    expect(share.token).toBe('abc')
+
+    const shared = await client.shares.resolve('abc')
+    expect(shared.title).toBe('Shared')
+    expect(fetchMock.mock.calls[1][0]).toContain('/shares/abc')
+  })
+
   it('requests a collaboration token without a data envelope', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ driver: 'reverb', channel: 'docvault.documents.1', document_id: 1, token: '' }),

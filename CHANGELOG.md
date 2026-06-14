@@ -47,7 +47,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     abilities, and a broadcast `CommentAdded` (`comment.added`) + `CommentResolved` events.
   - `@docvault/vue`: `useComments` composable, `DocVaultCommentsPanel` component, client methods
     and types.
+- **Public share links**: tokenized, level-scoped, optionally expiring document shares.
+  - `dv_document_shares` model (swappable), `CreateShareLink` / `RevokeShareLink` actions, managed
+    under `/documents/{id}/shares` (gated by `manage`) with a **public** `GET /shares/{token}`
+    that returns the document with abilities derived from the share level; `ShareLinkCreated` /
+    `ShareLinkRevoked` events; `DocumentAbilities::fromLevel()`.
+  - `@docvault/vue`: `useShares` composable, `DocVaultSharePanel` component, client methods (incl.
+    `shares.resolve(token)`) and types.
 - Documentation: architecture, embedding, permission resolver, abilities, collaboration, comments,
-  error reference, the TypeScript frontend guide, and ADRs 0001–0004.
+  sharing, error reference, the TypeScript frontend guide, and ADRs 0001–0004.
 
 [Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main

@@ -3,17 +3,20 @@ import type {
   CreateCommentPayload,
   CreateDocumentPayload,
   CreateFolderPayload,
+  CreateSharePayload,
   CreateVersionPayload,
   DocVaultClientOptions,
   DocVaultComment,
   DocVaultDocument,
   DocVaultFolder,
   DocVaultPermission,
+  DocVaultShare,
   DocVaultVersion,
   DocumentId,
   GrantPermissionPayload,
   ListDocumentsQuery,
   ListFoldersQuery,
+  SharedDocument,
   UpdateDocumentPayload,
   UpdateFolderPayload,
 } from './types'
@@ -107,6 +110,12 @@ export interface DocVaultClient {
     resolve(documentId: DocumentId, commentId: DocumentId): Promise<DocVaultComment>
     remove(documentId: DocumentId, commentId: DocumentId): Promise<void>
   }
+  shares: {
+    list(documentId: DocumentId): Promise<DocVaultShare[]>
+    create(documentId: DocumentId, payload: CreateSharePayload): Promise<DocVaultShare>
+    revoke(documentId: DocumentId, shareId: DocumentId): Promise<void>
+    resolve(token: string): Promise<SharedDocument>
+  }
   collaboration: {
     token(documentId: DocumentId): Promise<CollaborationConnection>
   }
@@ -191,6 +200,13 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
       resolve: (documentId, commentId) =>
         unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
       remove: (documentId, commentId) => request<void>('DELETE', `/documents/${documentId}/comments/${commentId}`),
+    },
+    shares: {
+      list: (documentId) => unwrap(request<Envelope<DocVaultShare[]>>('GET', `/documents/${documentId}/shares`)),
+      create: (documentId, payload) =>
+        unwrap(request<Envelope<DocVaultShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
+      revoke: (documentId, shareId) => request<void>('DELETE', `/documents/${documentId}/shares/${shareId}`),
+      resolve: (token) => unwrap(request<Envelope<SharedDocument>>('GET', `/shares/${token}`)),
     },
     collaboration: {
       token: (documentId) => request<CollaborationConnection>('POST', `/documents/${documentId}/collab/token`, { body: {} }),

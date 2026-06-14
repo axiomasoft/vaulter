@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocVault\Abilities;
 
 use DocVault\DocVaultManager;
+use DocVault\Enums\PermissionLevel;
 use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -37,6 +38,20 @@ final readonly class DocumentAbilities extends AbilitiesDto
             edit: $flags['edit'],
             manage: $flags['manage'],
             delete: $flags['delete'],
+        );
+    }
+
+    /**
+     * Derive abilities from a fixed permission level (e.g. a share link grant).
+     */
+    public static function fromLevel(PermissionLevel $level): self
+    {
+        return new self(
+            view: $level->grants(PermissionLevel::View),
+            comment: $level->grants(PermissionLevel::Comment),
+            edit: $level->grants(PermissionLevel::Edit),
+            manage: $level->grants(PermissionLevel::Manage),
+            delete: false,
         );
     }
 

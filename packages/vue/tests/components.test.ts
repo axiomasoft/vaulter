@@ -5,6 +5,7 @@ import DocVaultCommentsPanel from '../src/components/DocVaultCommentsPanel.vue'
 import DocVaultEditor from '../src/components/DocVaultEditor.vue'
 import DocVaultFileManager from '../src/components/DocVaultFileManager.vue'
 import DocVaultPermissionsPanel from '../src/components/DocVaultPermissionsPanel.vue'
+import DocVaultSharePanel from '../src/components/DocVaultSharePanel.vue'
 import DocVaultVersionHistory from '../src/components/DocVaultVersionHistory.vue'
 import { docVaultClientKey } from '../src/composables/useDocVaultClient'
 import type { DocVaultClient } from '../src/client'
@@ -23,6 +24,7 @@ function mockClient(): DocVaultClient {
     folders: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), remove: vi.fn() },
     permissions: { list: vi.fn().mockResolvedValue([]), grant: vi.fn(), revoke: vi.fn() },
     comments: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), resolve: vi.fn(), remove: vi.fn() },
+    shares: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), revoke: vi.fn(), resolve: vi.fn() },
     collaboration: { token: vi.fn() },
   } as unknown as DocVaultClient
 }
@@ -55,6 +57,9 @@ describe('@docvault/vue components', () => {
 
     const comments = mount(DocVaultCommentsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
     expect(comments.classes()).toContain('docvault-comments-panel')
+
+    const shares = mount(DocVaultSharePanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
+    expect(shares.classes()).toContain('docvault-share-panel')
   })
 
   it('renders the breadcrumb without a client and emits navigate', async () => {

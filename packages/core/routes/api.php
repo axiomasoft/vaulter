@@ -7,6 +7,7 @@ use DocVault\Http\Controllers\CommentController;
 use DocVault\Http\Controllers\DocumentController;
 use DocVault\Http\Controllers\FolderController;
 use DocVault\Http\Controllers\PermissionController;
+use DocVault\Http\Controllers\ShareController;
 use DocVault\Http\Controllers\VersionController;
 use DocVault\Support\Config;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,12 @@ Route::prefix(Config::routePrefix())
         Route::post('documents/{documentId}/comments', [CommentController::class, 'store']);
         Route::post('documents/{documentId}/comments/{commentId}/resolve', [CommentController::class, 'resolve']);
         Route::delete('documents/{documentId}/comments/{commentId}', [CommentController::class, 'destroy']);
+
+        // Share links
+        Route::get('documents/{documentId}/shares', [ShareController::class, 'index']);
+        Route::post('documents/{documentId}/shares', [ShareController::class, 'store']);
+        Route::delete('documents/{documentId}/shares/{shareId}', [ShareController::class, 'destroy']);
+        Route::get('shares/{token}', [ShareController::class, 'resolve']);
 
         // Collaboration
         Route::post('documents/{documentId}/collab/token', [CollaborationController::class, 'token']);

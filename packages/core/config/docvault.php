@@ -8,6 +8,7 @@ use DocVault\Models\Document;
 use DocVault\Models\DocumentComment;
 use DocVault\Models\DocumentFolder;
 use DocVault\Models\DocumentPermission;
+use DocVault\Models\DocumentShare;
 use DocVault\Models\DocumentVersion;
 use DocVault\Support\DefaultStorageAdapter;
 
@@ -31,6 +32,7 @@ return [
         'folder' => DocumentFolder::class,
         'permission' => DocumentPermission::class,
         'comment' => DocumentComment::class,
+        'share' => DocumentShare::class,
     ],
 
     /*
