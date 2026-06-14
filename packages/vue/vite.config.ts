@@ -26,7 +26,9 @@ export default defineConfig({
       output: {
         exports: 'named',
         globals: {
-          vue: 'Vue',
+          'vue': 'Vue',
+          'yjs': 'Y',
+          '@hocuspocus/provider': 'Hocuspocus',
         },
       },
     },

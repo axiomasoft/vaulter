@@ -17,6 +17,14 @@ export type { UseDocVaultEditorOptions, UseDocVaultEditorReturn } from './compos
 export { useCollaboration } from './composables/useCollaboration'
 export type { UseCollaborationReturn } from './composables/useCollaboration'
 
+// Collaboration transport
+export { createCollaborationSession } from './collaboration'
+export type {
+  CollaborationProviderHandle,
+  CollaborationSession,
+  CreateCollaborationOptions,
+} from './collaboration'
+
 // Components
 export { default as DocVaultFileManager } from './components/DocVaultFileManager.vue'
 export { default as DocVaultEditor } from './components/DocVaultEditor.vue'
