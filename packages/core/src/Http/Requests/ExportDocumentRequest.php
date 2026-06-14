@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DocVault\Http\Requests;
 
-use DocVault\Enums\ExportFormat;
+use DocVault\DocVaultManager;
 use Illuminate\Validation\Rule;
 
 final class ExportDocumentRequest extends DocVaultFormRequest
@@ -15,12 +15,22 @@ final class ExportDocumentRequest extends DocVaultFormRequest
     public function rules(): array
     {
         return [
-            'format' => ['nullable', 'string', Rule::in(ExportFormat::values())],
+            'format' => ['nullable', 'string', Rule::in($this->exporterFormats())],
         ];
     }
 
-    public function exportFormat(): ExportFormat
+    public function exportFormat(): string
     {
-        return $this->enum('format', ExportFormat::class) ?? ExportFormat::Html;
+        $format = $this->input('format');
+
+        return is_string($format) && $format !== '' ? $format : 'html';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function exporterFormats(): array
+    {
+        return app(DocVaultManager::class)->exporterFormats();
     }
 }

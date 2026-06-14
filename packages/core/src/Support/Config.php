@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocVault\Support;
 
+use DocVault\Contracts\DocumentExporter;
 use DocVault\Contracts\ShareTokenGenerator;
 use DocVault\Contracts\StorageAdapter;
 use DocVault\Models\Document;
@@ -223,6 +224,29 @@ final class Config
         $class = config('docvault.share_token_generator', RandomShareTokenGenerator::class);
 
         return $class;
+    }
+
+    /**
+     * @return array<string, class-string<DocumentExporter>>
+     */
+    public static function exporters(): array
+    {
+        $value = config('docvault.exporters', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $exporters = [];
+
+        foreach ($value as $format => $class) {
+            if (is_string($format) && is_string($class) && is_a($class, DocumentExporter::class, allow_string: true)) {
+                $exporters[$format] = $class;
+            }
+        }
+
+        /** @var array<string, class-string<DocumentExporter>> $exporters */
+        return $exporters;
     }
 
     /**

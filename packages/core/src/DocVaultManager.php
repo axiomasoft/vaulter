@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace DocVault;
 
 use DocVault\Contracts\CollaborationDriver;
+use DocVault\Contracts\DocumentExporter;
 use DocVault\Contracts\PermissionResolver;
 use DocVault\Exceptions\DocVaultException;
+use DocVault\Exceptions\UnknownExportFormatException;
 use DocVault\Support\Config;
 use Illuminate\Contracts\Container\Container;
 
@@ -22,6 +24,11 @@ final class DocVaultManager
      * @var array<string, array<string, mixed>>
      */
     private array $documentTypes = [];
+
+    /**
+     * @var array<string, DocumentExporter>
+     */
+    private array $exporters = [];
 
     public function __construct(
         private readonly Container $container,
@@ -68,6 +75,43 @@ final class DocVaultManager
     public function documentTypes(): array
     {
         return $this->documentTypes;
+    }
+
+    /**
+     * Register a custom export format.
+     */
+    public function registerExporter(DocumentExporter $exporter): void
+    {
+        $this->exporters[$exporter->format()] = $exporter;
+    }
+
+    public function exporter(string $format): DocumentExporter
+    {
+        if (isset($this->exporters[$format])) {
+            return $this->exporters[$format];
+        }
+
+        $configured = Config::exporters();
+
+        if (isset($configured[$format])) {
+            /** @var DocumentExporter $exporter */
+            $exporter = $this->container->make($configured[$format]);
+
+            return $this->exporters[$format] = $exporter;
+        }
+
+        throw UnknownExportFormatException::forFormat($format, $this->exporterFormats());
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function exporterFormats(): array
+    {
+        return array_values(array_unique([
+            ...array_keys(Config::exporters()),
+            ...array_keys($this->exporters),
+        ]));
     }
 
     /**
