@@ -38,7 +38,9 @@ jobs:
           XDEBUG_MODE: coverage
 
       - name: Validate composer
-        run: composer validate --strict
+        run: |
+          composer validate --no-check-publish
+          composer validate packages/core/composer.json --strict
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -66,7 +68,6 @@ jobs:
           XDEBUG_MODE: coverage
 
       - name: Upload coverage to Codecov
-        if: secrets.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v7
         with:
           files: coverage.xml

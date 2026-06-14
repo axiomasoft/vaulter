@@ -40,6 +40,7 @@ Route::prefix(Config::routePrefix())
 
         // Collaboration
         Route::post('documents/{documentId}/collab/token', [CollaborationController::class, 'token']);
+        Route::post('documents/{documentId}/collab/sync', [CollaborationController::class, 'sync']);
 
         // Folders
         Route::get('folders', [FolderController::class, 'index']);
