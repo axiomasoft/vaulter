@@ -40,9 +40,13 @@ class Document extends Model
     use InteractsWithWorkspace;
     use SoftDeletes;
 
-    protected $table = 'dv_documents';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('documents');
+    }
 
     /**
      * @return BelongsTo<DocumentFolder, $this>

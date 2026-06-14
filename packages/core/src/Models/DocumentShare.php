@@ -33,9 +33,13 @@ class DocumentShare extends Model
     /** @use HasFactory<DocumentShareFactory> */
     use HasFactory;
 
-    protected $table = 'dv_document_shares';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('document_shares');
+    }
 
     /**
      * @return BelongsTo<Document, $this>

@@ -36,9 +36,13 @@ class DocumentComment extends Model
     /** @use HasFactory<DocumentCommentFactory> */
     use HasFactory;
 
-    protected $table = 'dv_document_comments';
-
     protected $guarded = [];
+
+    #[\Override]
+    public function getTable(): string
+    {
+        return Config::table('document_comments');
+    }
 
     /**
      * @return BelongsTo<Document, $this>

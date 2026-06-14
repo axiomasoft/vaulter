@@ -24,6 +24,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 | `id_type` | `id` | `id` (auto-increment) or `ulid`. Drives the published migrations. |
 | `tenant.enabled` | `false` | Adds a tenant column to every table (your model applies the scope). |
 | `tenant.column` | `tenant_id` | Tenant column name. |
+| `table_prefix` | `dv_` | Prefix for every DocVault table (migrations + models). |
 
 ## Authorization & storage
 
