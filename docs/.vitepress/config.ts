@@ -21,6 +21,7 @@ const guideSidebar = [
       { text: 'Abilities', link: '/guide/abilities' },
       { text: 'Vue Components', link: '/guide/vue-components' },
       { text: 'Collaboration', link: '/guide/collaboration' },
+      { text: 'Comments', link: '/guide/comments' },
       { text: 'Error Reference', link: '/guide/errors' },
     ],
   },

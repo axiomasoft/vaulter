@@ -5,6 +5,7 @@ declare(strict_types=1);
 use DocVault\Collaboration\HocuspocusCollaborationDriver;
 use DocVault\Collaboration\ReverbCollaborationDriver;
 use DocVault\Models\Document;
+use DocVault\Models\DocumentComment;
 use DocVault\Models\DocumentFolder;
 use DocVault\Models\DocumentPermission;
 use DocVault\Models\DocumentVersion;
@@ -29,6 +30,7 @@ return [
         'version' => DocumentVersion::class,
         'folder' => DocumentFolder::class,
         'permission' => DocumentPermission::class,
+        'comment' => DocumentComment::class,
     ],
 
     /*

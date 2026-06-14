@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use DocVault\Http\Controllers\CollaborationController;
+use DocVault\Http\Controllers\CommentController;
 use DocVault\Http\Controllers\DocumentController;
 use DocVault\Http\Controllers\FolderController;
 use DocVault\Http\Controllers\PermissionController;
@@ -37,6 +38,12 @@ Route::prefix(Config::routePrefix())
         Route::get('documents/{documentId}/permissions', [PermissionController::class, 'index']);
         Route::post('documents/{documentId}/permissions', [PermissionController::class, 'store']);
         Route::delete('documents/{documentId}/permissions/{permissionId}', [PermissionController::class, 'destroy']);
+
+        // Comments
+        Route::get('documents/{documentId}/comments', [CommentController::class, 'index']);
+        Route::post('documents/{documentId}/comments', [CommentController::class, 'store']);
+        Route::post('documents/{documentId}/comments/{commentId}/resolve', [CommentController::class, 'resolve']);
+        Route::delete('documents/{documentId}/comments/{commentId}', [CommentController::class, 'destroy']);
 
         // Collaboration
         Route::post('documents/{documentId}/collab/token', [CollaborationController::class, 'token']);

@@ -61,6 +61,21 @@ describe('createDocVaultClient', () => {
     await expect(client.documents.get(1)).rejects.toBeInstanceOf(DocVaultApiError)
   })
 
+  it('creates and resolves comments', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, body: 'Hi' } }, 201))
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, resolved_at: '2026-06-14T00:00:00Z' } }))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const created = await client.comments.create(1, { body: 'Hi' })
+    expect(created.id).toBe(7)
+
+    const resolved = await client.comments.resolve(1, 7)
+    expect(resolved.resolved_at).not.toBeNull()
+
+    expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/comments/7/resolve')
+  })
+
   it('requests a collaboration token without a data envelope', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ driver: 'reverb', channel: 'docvault.documents.1', document_id: 1, token: '' }),

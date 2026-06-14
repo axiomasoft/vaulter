@@ -3,6 +3,7 @@ import { createDocVaultClient, type DocVaultClient } from './client'
 import { docVaultClientKey } from './composables/useDocVaultClient'
 import type { DocVaultClientOptions } from './types'
 import DocVaultBreadcrumb from './components/DocVaultBreadcrumb.vue'
+import DocVaultCommentsPanel from './components/DocVaultCommentsPanel.vue'
 import DocVaultEditor from './components/DocVaultEditor.vue'
 import DocVaultFileManager from './components/DocVaultFileManager.vue'
 import DocVaultPermissionsPanel from './components/DocVaultPermissionsPanel.vue'
@@ -27,6 +28,7 @@ export const DocVaultPlugin = {
     app.component('DocVaultEditor', DocVaultEditor)
     app.component('DocVaultVersionHistory', DocVaultVersionHistory)
     app.component('DocVaultPermissionsPanel', DocVaultPermissionsPanel)
+    app.component('DocVaultCommentsPanel', DocVaultCommentsPanel)
     app.component('DocVaultBreadcrumb', DocVaultBreadcrumb)
   },
 }

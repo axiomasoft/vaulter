@@ -41,7 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `DocumentContentSynced` event on the private channel `docvault.documents.{id}`.
   - `@docvault/vue`: `createCollaborationSession` (Hocuspocus out of the box, injectable Reverb
     bridge) and a `useCollaboration` that exposes a `Y.Doc` plus `connect`/`disconnect`.
-- Documentation: architecture, embedding, permission resolver, abilities, collaboration, error
-  reference, the TypeScript frontend guide, and ADRs 0001–0004.
+- **Comments**: threaded, optionally anchored document comments.
+  - `dv_document_comments` model (swappable), `AddComment`/`ResolveComment`/`DeleteComment`
+    actions, REST API under `/documents/{id}/comments` gated by the `comment` / `manage`
+    abilities, and a broadcast `CommentAdded` (`comment.added`) + `CommentResolved` events.
+  - `@docvault/vue`: `useComments` composable, `DocVaultCommentsPanel` component, client methods
+    and types.
+- Documentation: architecture, embedding, permission resolver, abilities, collaboration, comments,
+  error reference, the TypeScript frontend guide, and ADRs 0001–0004.
 
 [Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main

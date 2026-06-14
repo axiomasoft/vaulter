@@ -16,6 +16,8 @@ export { useDocVaultEditor } from './composables/useDocVaultEditor'
 export type { UseDocVaultEditorOptions, UseDocVaultEditorReturn } from './composables/useDocVaultEditor'
 export { useCollaboration } from './composables/useCollaboration'
 export type { UseCollaborationReturn } from './composables/useCollaboration'
+export { useComments } from './composables/useComments'
+export type { UseCommentsReturn } from './composables/useComments'
 
 // Collaboration transport
 export { createCollaborationSession } from './collaboration'
@@ -30,6 +32,7 @@ export { default as DocVaultFileManager } from './components/DocVaultFileManager
 export { default as DocVaultEditor } from './components/DocVaultEditor.vue'
 export { default as DocVaultVersionHistory } from './components/DocVaultVersionHistory.vue'
 export { default as DocVaultPermissionsPanel } from './components/DocVaultPermissionsPanel.vue'
+export { default as DocVaultCommentsPanel } from './components/DocVaultCommentsPanel.vue'
 export { default as DocVaultBreadcrumb } from './components/DocVaultBreadcrumb.vue'
 
 // Types

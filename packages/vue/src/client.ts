@@ -1,9 +1,11 @@
 import type {
   CollaborationConnection,
+  CreateCommentPayload,
   CreateDocumentPayload,
   CreateFolderPayload,
   CreateVersionPayload,
   DocVaultClientOptions,
+  DocVaultComment,
   DocVaultDocument,
   DocVaultFolder,
   DocVaultPermission,
@@ -99,6 +101,12 @@ export interface DocVaultClient {
     grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<DocVaultPermission>
     revoke(documentId: DocumentId, permissionId: DocumentId): Promise<void>
   }
+  comments: {
+    list(documentId: DocumentId): Promise<DocVaultComment[]>
+    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<DocVaultComment>
+    resolve(documentId: DocumentId, commentId: DocumentId): Promise<DocVaultComment>
+    remove(documentId: DocumentId, commentId: DocumentId): Promise<void>
+  }
   collaboration: {
     token(documentId: DocumentId): Promise<CollaborationConnection>
   }
@@ -175,6 +183,14 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
         unwrap(request<Envelope<DocVaultPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
       revoke: (documentId, permissionId) =>
         request<void>('DELETE', `/documents/${documentId}/permissions/${permissionId}`),
+    },
+    comments: {
+      list: (documentId) => unwrap(request<Envelope<DocVaultComment[]>>('GET', `/documents/${documentId}/comments`)),
+      create: (documentId, payload) =>
+        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
+      resolve: (documentId, commentId) =>
+        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
+      remove: (documentId, commentId) => request<void>('DELETE', `/documents/${documentId}/comments/${commentId}`),
     },
     collaboration: {
       token: (documentId) => request<CollaborationConnection>('POST', `/documents/${documentId}/collab/token`, { body: {} }),

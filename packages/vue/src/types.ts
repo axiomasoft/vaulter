@@ -71,6 +71,20 @@ export interface DocVaultPermission {
   granted_by: DocumentId | null
 }
 
+export interface DocVaultComment {
+  id: DocumentId
+  document_id: DocumentId
+  parent_id: DocumentId | null
+  author: {
+    type: string
+    id: WorkspaceId
+  }
+  body: string
+  anchor: Record<string, unknown> | null
+  resolved_at: string | null
+  created_at: string | null
+}
+
 export interface ReverbCollaborationConnection {
   driver: 'reverb'
   channel: string
@@ -140,6 +154,12 @@ export interface GrantPermissionPayload {
   subject_type: string
   subject_id: WorkspaceId
   permission: PermissionLevelName
+}
+
+export interface CreateCommentPayload {
+  body: string
+  parent_id?: DocumentId | null
+  anchor?: Record<string, unknown> | null
 }
 
 export interface DocVaultClientOptions {
