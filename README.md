@@ -34,6 +34,8 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 - **TypeScript front-end** (`@docvault/vue`) — a typed API client, composables
   (`useDocuments`, `useDocVaultEditor`, `useCollaboration`, `useComments`, `useShares`,
   `usePermissions`, `useDocumentExport`) and slot-driven components, shipped with `.d.ts`.
+- **Filament admin** (`@docvault/filament`, optional) — a drop-in Filament 5 plugin to manage
+  documents (incl. trash/restore) from your panel.
 
 ## Install
 
@@ -73,14 +75,16 @@ setup and embedding into multi-tenant apps.
 doc-vault/
 ├── packages/
 │   ├── core/             # axioma-studio/docvault-core — the Laravel package (DocVault\)
-│   └── vue/              # @docvault/vue — TypeScript Vue 3 client, composables & components
+│   ├── vue/              # @docvault/vue — TypeScript Vue 3 client, composables & components
+│   └── filament/         # axioma-studio/docvault-filament — Filament 5 admin (DocVault\Filament\)
 ├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)
 ├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)
 ```
 
-Further integrations follow the AzGuard convention — each lives under `packages/` with its own
-namespace, e.g. a future `packages/filament` → `DocVault\Filament\`.
+Integrations follow the AzGuard convention — each lives under `packages/` with its own namespace
+(`DocVault\Filament\`, …) and is tested in isolation so optional dependencies (Filament) never
+constrain the core matrix.
 
 ## Development
 
