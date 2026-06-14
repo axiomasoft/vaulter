@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-06-14
+
+First public release. DocVault is a complete, embeddable document-management package for Laravel
+with a TypeScript front-end and an optional Filament admin.
+
 ### Added
 - **Filament admin** (`axioma-studio/docvault-filament`): an optional Filament 5 plugin
   (`DocVaultPlugin`) adding **Documents** (searchable table, edit form, trash filter, delete/restore/
@@ -85,4 +90,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   collaboration, comments, sharing, export, error reference, the TypeScript frontend guide, and
   ADRs 0001–0004.
 
-[Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main
+[Unreleased]: https://github.com/axioma-studio/doc-vault/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/axioma-studio/doc-vault/releases/tag/v0.1.0

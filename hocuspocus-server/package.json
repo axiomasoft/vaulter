@@ -1,6 +1,6 @@
 {
   "name": "@docvault/hocuspocus-server",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "DocVault real-time collaboration server (Hocuspocus + Yjs). Validates JWTs against the Laravel backend and persists document snapshots.",
   "license": "MIT",
   "type": "module",
