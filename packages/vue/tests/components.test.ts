@@ -19,6 +19,7 @@ function mockClient(): DocVaultClient {
       update: vi.fn(),
       remove: vi.fn(),
       restore: vi.fn(),
+      export: vi.fn(),
     },
     versions: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), restore: vi.fn() },
     folders: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), remove: vi.fn() },

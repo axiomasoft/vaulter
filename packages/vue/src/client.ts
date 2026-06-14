@@ -8,6 +8,8 @@ import type {
   DocVaultClientOptions,
   DocVaultComment,
   DocVaultDocument,
+  DocumentExport,
+  ExportFormat,
   DocVaultFolder,
   DocVaultPermission,
   DocVaultShare,
@@ -87,6 +89,7 @@ export interface DocVaultClient {
     update(id: DocumentId, payload: UpdateDocumentPayload): Promise<DocVaultDocument>
     remove(id: DocumentId): Promise<void>
     restore(id: DocumentId): Promise<DocVaultDocument>
+    export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
   versions: {
     list(documentId: DocumentId): Promise<DocVaultVersion[]>
@@ -172,6 +175,8 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
       update: (id, payload) => unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/documents/${id}`),
       restore: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/restore`)),
+      export: (id, format) =>
+        unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
     },
     versions: {
       list: (documentId) => unwrap(request<Envelope<DocVaultVersion[]>>('GET', `/documents/${documentId}/versions`)),

@@ -20,6 +20,8 @@ export { useComments } from './composables/useComments'
 export type { UseCommentsReturn } from './composables/useComments'
 export { useShares } from './composables/useShares'
 export type { UseSharesReturn } from './composables/useShares'
+export { useDocumentExport } from './composables/useDocumentExport'
+export type { UseDocumentExportReturn } from './composables/useDocumentExport'
 
 // Collaboration transport
 export { createCollaborationSession } from './collaboration'

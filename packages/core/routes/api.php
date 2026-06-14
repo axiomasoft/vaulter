@@ -5,6 +5,7 @@ declare(strict_types=1);
 use DocVault\Http\Controllers\CollaborationController;
 use DocVault\Http\Controllers\CommentController;
 use DocVault\Http\Controllers\DocumentController;
+use DocVault\Http\Controllers\ExportController;
 use DocVault\Http\Controllers\FolderController;
 use DocVault\Http\Controllers\PermissionController;
 use DocVault\Http\Controllers\ShareController;
@@ -29,6 +30,7 @@ Route::prefix(Config::routePrefix())
         Route::patch('documents/{id}', [DocumentController::class, 'update']);
         Route::delete('documents/{id}', [DocumentController::class, 'destroy']);
         Route::post('documents/{id}/restore', [DocumentController::class, 'restore']);
+        Route::get('documents/{documentId}/export', [ExportController::class, 'show']);
 
         // Versions
         Route::get('documents/{documentId}/versions', [VersionController::class, 'index']);

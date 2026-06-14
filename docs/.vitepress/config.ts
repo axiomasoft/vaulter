@@ -23,6 +23,7 @@ const guideSidebar = [
       { text: 'Collaboration', link: '/guide/collaboration' },
       { text: 'Comments', link: '/guide/comments' },
       { text: 'Share Links', link: '/guide/sharing' },
+      { text: 'Export', link: '/guide/export' },
       { text: 'Error Reference', link: '/guide/errors' },
     ],
   },

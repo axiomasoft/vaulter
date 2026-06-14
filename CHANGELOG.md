@@ -54,7 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `ShareLinkRevoked` events; `DocumentAbilities::fromLevel()`.
   - `@docvault/vue`: `useShares` composable, `DocVaultSharePanel` component, client methods (incl.
     `shares.resolve(token)`) and types.
+- **Export**: render documents to HTML or Markdown.
+  - `TipTapRenderer` (common nodes/marks, escaped HTML) + `ExportFormat` enum and a
+    `GET /documents/{id}/export?format=` endpoint (gated by `view`) returning
+    `{ format, content, filename }`.
+  - `@docvault/vue`: `useDocumentExport` composable (with a browser `download` helper) and a
+    `documents.export(id, format)` client method.
 - Documentation: architecture, embedding, permission resolver, abilities, collaboration, comments,
-  sharing, error reference, the TypeScript frontend guide, and ADRs 0001–0004.
+  sharing, export, error reference, the TypeScript frontend guide, and ADRs 0001–0004.
 
 [Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main

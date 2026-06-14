@@ -71,6 +71,14 @@ export interface DocVaultPermission {
   granted_by: DocumentId | null
 }
 
+export type ExportFormat = 'html' | 'markdown'
+
+export interface DocumentExport {
+  format: ExportFormat
+  content: string
+  filename: string
+}
+
 export interface DocVaultComment {
   id: DocumentId
   document_id: DocumentId

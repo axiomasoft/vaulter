@@ -90,6 +90,18 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[1][0]).toContain('/shares/abc')
   })
 
+  it('exports a document, passing the format query', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),
+    )
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const result = await client.documents.export(3, 'markdown')
+
+    expect(result.content).toBe('# Hi')
+    expect(fetchMock.mock.calls[0][0]).toContain('/documents/3/export?format=markdown')
+  })
+
   it('requests a collaboration token without a data envelope', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ driver: 'reverb', channel: 'docvault.documents.1', document_id: 1, token: '' }),
