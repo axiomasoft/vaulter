@@ -1,17 +1,11 @@
 # DocVault
 
-> Embeddable document management for Laravel — file manager, TipTap editor, version
-> history and real-time collaboration, wired into your app's own roles via a thin adapter.
+> Embeddable document management for Laravel — a file manager, TipTap editor, version history
+> and real-time collaboration, wired into your app's own roles through a thin adapter.
 
-DocVault grew out of the collaborative-documents module in FlexCRM. It packages that
-infrastructure (TipTap JSON content, version snapshots, folder tree, workspace scoping,
-and Yjs-based real-time editing) into a reusable component you can drop into any Laravel
-project without adopting a new auth system.
-
-> **Status:** early scaffold (`0.0.x`). The repository structure, tooling and docs are in
-> place; feature implementation follows the milestones in [`docvault-spec.md`](docvault-spec.md).
-
-## Requirements
+DocVault grew out of the collaborative-documents module in FlexCRM and packages that
+infrastructure into a reusable component you can drop into any Laravel project **without adopting
+a new auth system** — it delegates every permission check to a `PermissionResolver` you implement.
 
 | Component | Version |
 |---|---|
@@ -20,42 +14,83 @@ project without adopting a new auth system.
 | Vue | `3.x` |
 | Node (collab server / build) | `>=20` |
 
+## Features
+
+- **Documents** — TipTap-JSON content, four built-in types (rich text, table, markdown, template),
+  soft-delete + trash, restore, permanent purge, **move**, **duplicate**, **bulk** operations and
+  title/content **search**.
+- **Versions** — named snapshots, history and one-click restore, with pruning to a configurable cap.
+- **Folders** — a hierarchical tree scoped to a workspace.
+- **Permissions** — delegated entirely to your app via `PermissionResolver`; computed **abilities**
+  (`view/comment/edit/manage/delete`) are shipped to the front-end on every document.
+- **Real-time collaboration** — Yjs over a pluggable `CollaborationDriver`: **Laravel Reverb** (no
+  extra service) by default, or an external **Hocuspocus** Node hub. Server-side state sync +
+  `content.synced` broadcast.
+- **Comments** — threaded, optionally anchored, broadcast live (`comment.added`).
+- **Share links** — tokenized, level-scoped, optionally expiring public links.
+- **Export** — render any document to HTML or Markdown.
+- **Embeddable by design** — swappable Eloquent models, dual `id`/`ulid` keys and optional
+  `tenant_id` (drops cleanly into both plain Laravel and multi-tenant apps).
+- **TypeScript front-end** (`@docvault/vue`) — a typed API client, composables
+  (`useDocuments`, `useDocVaultEditor`, `useCollaboration`, `useComments`, `useShares`,
+  `usePermissions`, `useDocumentExport`) and slot-driven components, shipped with `.d.ts`.
+
+## Install
+
+```bash
+composer require axioma-studio/docvault-core
+php artisan docvault:install   # publishes config + migrations, runs them
+npm install @docvault/vue
+```
+
+Tell DocVault how to authorize, by implementing `DocVault\Contracts\PermissionResolver`:
+
+```php
+use DocVault\Facades\DocVault;
+
+DocVault::resolvePermissionsWith(new \App\DocVault\PermissionResolver());
+```
+
+Wire the front-end:
+
+```ts
+import { DocVaultPlugin } from '@docvault/vue'
+
+app.use(DocVaultPlugin, { baseUrl: '/api/docvault' })
+```
+
+```vue
+<DocVaultFileManager workspace-type="App\Models\Project" :workspace-id="project.id"
+  @open-document="openEditor" />
+```
+
+See the [documentation](docs/) for the full API, the permission-resolver contract, the collaboration
+setup and embedding into multi-tenant apps.
+
 ## Monorepo layout
 
 ```
 doc-vault/
 ├── packages/
 │   ├── core/             # axioma-studio/docvault-core — the Laravel package (DocVault\)
-│   │   ├── src/  config/  database/migrations/  routes/  tests/
-│   └── vue/              # @docvault/vue — Vue 3 components (Vite library build)
-├── hocuspocus-server/    # Node.js real-time collaboration server (+ Docker)
-├── docs/                 # VitePress developer documentation (synced with the Brain vault)
+│   └── vue/              # @docvault/vue — TypeScript Vue 3 client, composables & components
+├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)
+├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)
 ```
 
-Further integrations follow the AzGuard convention — each lives under `packages/` with its
-own namespace, e.g. a future `packages/filament` → `DocVault\Filament\`.
+Further integrations follow the AzGuard convention — each lives under `packages/` with its own
+namespace, e.g. a future `packages/filament` → `DocVault\Filament\`.
 
-## Quick start (development)
+## Development
 
 ```bash
-# PHP side (monorepo, path-linked packages)
-composer install
-make ci            # pint --test + phpstan + rector --dry-run + pest --min=80
-
-# JS side (npm workspaces)
-npm install
-npm run build      # build @docvault/vue
-npm test           # Vitest
-
-# Docs
-npm run docs:dev   # VitePress dev server
+composer install && make ci      # Pint + PHPStan (level max) + Rector + Pest
+npm install && npm test          # vue-tsc + Vitest
+npm run docs:dev                 # VitePress
 ```
 
-## Documentation
-
-Developer docs live in [`docs/`](docs/) and are published with VitePress. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+Every public class is strictly typed and covered by tests; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

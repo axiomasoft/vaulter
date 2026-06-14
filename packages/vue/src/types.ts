@@ -71,6 +71,64 @@ export interface DocVaultPermission {
   granted_by: DocumentId | null
 }
 
+export type BulkAction = 'delete' | 'restore' | 'move' | 'force-delete'
+
+export interface BulkDocumentsPayload {
+  action: BulkAction
+  ids: DocumentId[]
+  folder_id?: DocumentId | null
+}
+
+export interface BulkResult {
+  action: BulkAction
+  processed: DocumentId[]
+  skipped: DocumentId[]
+}
+
+export type ExportFormat = 'html' | 'markdown'
+
+export interface DocumentExport {
+  format: ExportFormat
+  content: string
+  filename: string
+}
+
+export interface DocVaultComment {
+  id: DocumentId
+  document_id: DocumentId
+  parent_id: DocumentId | null
+  author: {
+    type: string
+    id: WorkspaceId
+  }
+  body: string
+  anchor: Record<string, unknown> | null
+  resolved_at: string | null
+  created_at: string | null
+}
+
+export interface DocVaultShare {
+  id: DocumentId
+  document_id: DocumentId
+  token: string
+  permission: PermissionLevelName
+  expires_at: string | null
+  created_at: string | null
+}
+
+/** The public, token-resolved view of a shared document. */
+export interface SharedDocument {
+  id: DocumentId
+  type: DocumentTypeName
+  title: string
+  content: TipTapDocument | null
+  abilities: DocumentAbilities
+  share: {
+    permission: PermissionLevelName
+    expires_at: string | null
+  }
+}
+
 export interface ReverbCollaborationConnection {
   driver: 'reverb'
   channel: string
@@ -96,6 +154,13 @@ export interface ListDocumentsQuery {
   workspace_id: WorkspaceId
   folder_id?: DocumentId | null
   type?: DocumentTypeName
+  /** Full-text term (matched against title and content). */
+  q?: string
+}
+
+export interface WorkspaceQuery {
+  workspace_type: string
+  workspace_id: WorkspaceId
 }
 
 export interface CreateDocumentPayload {
@@ -140,6 +205,17 @@ export interface GrantPermissionPayload {
   subject_type: string
   subject_id: WorkspaceId
   permission: PermissionLevelName
+}
+
+export interface CreateCommentPayload {
+  body: string
+  parent_id?: DocumentId | null
+  anchor?: Record<string, unknown> | null
+}
+
+export interface CreateSharePayload {
+  permission: Extract<PermissionLevelName, 'view' | 'comment' | 'edit'>
+  expires_at?: string | null
 }
 
 export interface DocVaultClientOptions {

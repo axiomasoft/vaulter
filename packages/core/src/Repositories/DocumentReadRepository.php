@@ -30,6 +30,28 @@ final class DocumentReadRepository
         return $this->query()->forWorkspace($workspace);
     }
 
+    /**
+     * Search a workspace's documents by title and raw content.
+     *
+     * @return Builder<Document>
+     */
+    public function search(WorkspaceRef $workspace, string $term): Builder
+    {
+        $like = '%'.$term.'%';
+
+        return $this->forWorkspace($workspace)->where(function (Builder $query) use ($like): void {
+            $query->where('title', 'like', $like)->orWhere('content', 'like', $like);
+        });
+    }
+
+    /**
+     * @return Builder<Document>
+     */
+    public function trashedForWorkspace(WorkspaceRef $workspace): Builder
+    {
+        return $this->query()->onlyTrashed()->forWorkspace($workspace);
+    }
+
     public function find(int|string $id): ?Document
     {
         return $this->query()->find($id);

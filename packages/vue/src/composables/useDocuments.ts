@@ -1,21 +1,30 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useDocVaultClient } from './useDocVaultClient'
 import type {
+  BulkDocumentsPayload,
+  BulkResult,
   CreateDocumentPayload,
   DocVaultDocument,
   DocumentId,
   ListDocumentsQuery,
   UpdateDocumentPayload,
+  WorkspaceQuery,
 } from '../types'
 
 export interface UseDocumentsReturn {
   documents: ShallowRef<DocVaultDocument[]>
+  trashed: ShallowRef<DocVaultDocument[]>
   loading: Ref<boolean>
   error: Ref<unknown>
   list: (query: ListDocumentsQuery) => Promise<DocVaultDocument[]>
+  listTrashed: (query: WorkspaceQuery) => Promise<DocVaultDocument[]>
   create: (payload: CreateDocumentPayload) => Promise<DocVaultDocument>
   update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<DocVaultDocument>
+  move: (id: DocumentId, folderId: DocumentId | null) => Promise<DocVaultDocument>
+  duplicate: (id: DocumentId) => Promise<DocVaultDocument>
   remove: (id: DocumentId) => Promise<void>
+  forceDelete: (id: DocumentId) => Promise<void>
+  bulk: (payload: BulkDocumentsPayload) => Promise<BulkResult>
 }
 
 /**
@@ -24,6 +33,7 @@ export interface UseDocumentsReturn {
 export function useDocuments(): UseDocumentsReturn {
   const client = useDocVaultClient()
   const documents = shallowRef<DocVaultDocument[]>([])
+  const trashed = shallowRef<DocVaultDocument[]>([])
   const loading = ref(false)
   const error = ref<unknown>(null)
 
@@ -41,6 +51,11 @@ export function useDocuments(): UseDocumentsReturn {
     }
   }
 
+  async function listTrashed(query: WorkspaceQuery): Promise<DocVaultDocument[]> {
+    trashed.value = await client.documents.trashed(query)
+    return trashed.value
+  }
+
   async function create(payload: CreateDocumentPayload): Promise<DocVaultDocument> {
     const created = await client.documents.create(payload)
     documents.value = [...documents.value, created]
@@ -53,10 +68,40 @@ export function useDocuments(): UseDocumentsReturn {
     return updated
   }
 
+  async function move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument> {
+    const moved = await client.documents.move(id, folderId)
+    documents.value = documents.value.map((doc) => (doc.id === id ? moved : doc))
+    return moved
+  }
+
+  async function duplicate(id: DocumentId): Promise<DocVaultDocument> {
+    const copy = await client.documents.duplicate(id)
+    documents.value = [...documents.value, copy]
+    return copy
+  }
+
   async function remove(id: DocumentId): Promise<void> {
     await client.documents.remove(id)
     documents.value = documents.value.filter((doc) => doc.id !== id)
   }
 
-  return { documents, loading, error, list, create, update, remove }
+  async function forceDelete(id: DocumentId): Promise<void> {
+    await client.documents.forceDelete(id)
+    documents.value = documents.value.filter((doc) => doc.id !== id)
+    trashed.value = trashed.value.filter((doc) => doc.id !== id)
+  }
+
+  async function bulk(payload: BulkDocumentsPayload): Promise<BulkResult> {
+    const result = await client.documents.bulk(payload)
+    const processed = new Set(result.processed.map(String))
+    if (payload.action === 'delete' || payload.action === 'force-delete') {
+      documents.value = documents.value.filter((doc) => ! processed.has(String(doc.id)))
+    }
+    return result
+  }
+
+  return {
+    documents, trashed, loading, error,
+    list, listTrashed, create, update, move, duplicate, remove, forceDelete, bulk,
+  }
 }

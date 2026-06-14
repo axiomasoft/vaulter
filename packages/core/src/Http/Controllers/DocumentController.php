@@ -6,10 +6,14 @@ namespace DocVault\Http\Controllers;
 
 use DocVault\Actions\CreateDocumentAction;
 use DocVault\Actions\DeleteDocumentAction;
+use DocVault\Actions\DuplicateDocumentAction;
+use DocVault\Actions\ForceDeleteDocumentAction;
+use DocVault\Actions\MoveDocumentAction;
 use DocVault\Actions\RestoreDocumentAction;
 use DocVault\Actions\UpdateDocumentAction;
 use DocVault\Exceptions\DocumentNotFoundException;
 use DocVault\Exceptions\PermissionDeniedException;
+use DocVault\Http\Requests\MoveDocumentRequest;
 use DocVault\Http\Requests\StoreDocumentRequest;
 use DocVault\Http\Requests\UpdateDocumentRequest;
 use DocVault\Http\Resources\DocumentResource;
@@ -31,12 +35,11 @@ final class DocumentController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $workspace = new WorkspaceRef(
-            type: $request->string('workspace_type')->toString(),
-            id: $this->scalarId($request, 'workspace_id'),
-        );
+        $workspace = $this->workspaceFrom($request);
 
-        $query = $this->documents->forWorkspace($workspace);
+        $query = $request->filled('q')
+            ? $this->documents->search($workspace, $request->string('q')->toString())
+            : $this->documents->forWorkspace($workspace);
 
         if ($request->filled('folder_id')) {
             $query->where('folder_id', $request->input('folder_id'));
@@ -47,6 +50,18 @@ final class DocumentController extends Controller
         }
 
         $documents = $this->visibility->filterViewable($request->user(), $query->get());
+
+        return DocumentResource::collection($documents);
+    }
+
+    public function trash(Request $request): AnonymousResourceCollection
+    {
+        $workspace = $this->workspaceFrom($request);
+
+        $documents = $this->visibility->filterViewable(
+            $request->user(),
+            $this->documents->trashedForWorkspace($workspace)->get(),
+        );
 
         return DocumentResource::collection($documents);
     }
@@ -90,12 +105,52 @@ final class DocumentController extends Controller
         return response()->noContent();
     }
 
+    public function forceDestroy(Request $request, int|string $id, ForceDeleteDocumentAction $action): Response
+    {
+        $document = $this->documents->findWithTrashed($id) ?? throw DocumentNotFoundException::withId($id);
+        $this->authorizeDocument($request, 'manage', $document);
+
+        $action->execute($document, $this->actorId($request));
+
+        return response()->noContent();
+    }
+
     public function restore(Request $request, int|string $id, RestoreDocumentAction $action): DocumentResource
     {
         $document = $this->documents->findWithTrashed($id) ?? throw DocumentNotFoundException::withId($id);
         $this->authorizeDocument($request, 'manage', $document);
 
         return DocumentResource::make($action->execute($document, $this->actorId($request)));
+    }
+
+    public function move(MoveDocumentRequest $request, int|string $id, MoveDocumentAction $action): DocumentResource
+    {
+        $document = $this->documents->findOrFail($id);
+        $this->authorizeDocument($request, 'edit', $document);
+
+        return DocumentResource::make($action->execute($document, $request->folderId(), $this->actorId($request)));
+    }
+
+    public function duplicate(Request $request, int|string $id, DuplicateDocumentAction $action): JsonResponse
+    {
+        $document = $this->documents->findOrFail($id);
+        $this->authorizeDocument($request, 'view', $document);
+
+        if (!$this->visibility->canCreate($request->user(), $document->workspace_type, $document->workspace_id)) {
+            throw PermissionDeniedException::forAction('create');
+        }
+
+        return DocumentResource::make($action->execute($document, $this->actorId($request)))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    private function workspaceFrom(Request $request): WorkspaceRef
+    {
+        return new WorkspaceRef(
+            type: $request->string('workspace_type')->toString(),
+            id: $this->scalarId($request, 'workspace_id'),
+        );
     }
 
     private function authorizeDocument(Request $request, string $action, Document $document): void

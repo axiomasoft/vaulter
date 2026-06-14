@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DocVault\Http\Requests;
+
+use DocVault\Enums\BulkAction;
+use Illuminate\Validation\Rule;
+
+final class BulkDocumentRequest extends DocVaultFormRequest
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'action' => ['required', 'string', Rule::in(BulkAction::values())],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required'],
+            'folder_id' => ['nullable'],
+        ];
+    }
+
+    public function action(): BulkAction
+    {
+        return $this->enum('action', BulkAction::class) ?? BulkAction::Delete;
+    }
+
+    /**
+     * @return list<int|string>
+     */
+    public function ids(): array
+    {
+        $ids = $this->input('ids');
+
+        if (!is_array($ids)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($ids as $id) {
+            if (is_int($id)) {
+                $result[] = $id;
+            } elseif (is_scalar($id)) {
+                $result[] = (string) $id;
+            }
+        }
+
+        return $result;
+    }
+
+    public function folderId(): int|string|null
+    {
+        return $this->nullableScalarId('folder_id');
+    }
+}

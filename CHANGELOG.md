@@ -41,7 +41,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `DocumentContentSynced` event on the private channel `docvault.documents.{id}`.
   - `@docvault/vue`: `createCollaborationSession` (Hocuspocus out of the box, injectable Reverb
     bridge) and a `useCollaboration` that exposes a `Y.Doc` plus `connect`/`disconnect`.
-- Documentation: architecture, embedding, permission resolver, abilities, collaboration, error
-  reference, the TypeScript frontend guide, and ADRs 0001–0004.
+- **Comments**: threaded, optionally anchored document comments.
+  - `dv_document_comments` model (swappable), `AddComment`/`ResolveComment`/`DeleteComment`
+    actions, REST API under `/documents/{id}/comments` gated by the `comment` / `manage`
+    abilities, and a broadcast `CommentAdded` (`comment.added`) + `CommentResolved` events.
+  - `@docvault/vue`: `useComments` composable, `DocVaultCommentsPanel` component, client methods
+    and types.
+- **Public share links**: tokenized, level-scoped, optionally expiring document shares.
+  - `dv_document_shares` model (swappable), `CreateShareLink` / `RevokeShareLink` actions, managed
+    under `/documents/{id}/shares` (gated by `manage`) with a **public** `GET /shares/{token}`
+    that returns the document with abilities derived from the share level; `ShareLinkCreated` /
+    `ShareLinkRevoked` events; `DocumentAbilities::fromLevel()`.
+  - `@docvault/vue`: `useShares` composable, `DocVaultSharePanel` component, client methods (incl.
+    `shares.resolve(token)`) and types.
+- **Export**: render documents to HTML or Markdown.
+  - `TipTapRenderer` (common nodes/marks, escaped HTML) + `ExportFormat` enum and a
+    `GET /documents/{id}/export?format=` endpoint (gated by `view`) returning
+    `{ format, content, filename }`.
+  - `@docvault/vue`: `useDocumentExport` composable (with a browser `download` helper) and a
+    `documents.export(id, format)` client method.
+- **Bulk operations**: `POST /documents/bulk` applies one action (`delete` / `restore` / `move` /
+  `force-delete`) to many documents, authorizing each individually and returning `processed` vs
+  `skipped` ids (`BulkAction` enum, `BulkDocumentController`). `@docvault/vue`: `documents.bulk`
+  client method and `useDocuments.bulk`.
+- **Document operations**: move & duplicate.
+  - `PATCH /documents/{id}/move` (`MoveDocumentAction`, gated by `edit`) re-files a document into a
+    folder of the same workspace (cross-workspace → `422`) and dispatches `DocumentMoved`;
+    `POST /documents/{id}/duplicate` (`DuplicateDocumentAction`, gated by `view` + `create`) clones it.
+  - `@docvault/vue`: `documents.move` / `documents.duplicate` client methods and `useDocuments`
+    `move` / `duplicate`.
+- **Search & trash**: document discovery and lifecycle.
+  - The document list accepts a `q` term (title + content `LIKE`, workspace-scoped). A trash
+    listing (`GET /documents/trash`) and permanent `DELETE /documents/{id}/force` (gated by
+    `manage`) round out soft-delete/restore; `DocumentPurged` event on hard delete.
+  - `@docvault/vue`: `useDocuments` gains `listTrashed` / `forceDelete` (and `q` on `list`); client
+    `documents.trashed` / `documents.forceDelete`.
+- Documentation: architecture, embedding, search & trash, permission resolver, abilities,
+  collaboration, comments, sharing, export, error reference, the TypeScript frontend guide, and
+  ADRs 0001–0004.
 
 [Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main
