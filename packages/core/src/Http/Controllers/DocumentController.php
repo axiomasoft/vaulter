@@ -8,11 +8,13 @@ use DocVault\Actions\CreateDocumentAction;
 use DocVault\Actions\DeleteDocumentAction;
 use DocVault\Actions\DuplicateDocumentAction;
 use DocVault\Actions\ForceDeleteDocumentAction;
+use DocVault\Actions\InstantiateTemplateAction;
 use DocVault\Actions\MoveDocumentAction;
 use DocVault\Actions\RestoreDocumentAction;
 use DocVault\Actions\UpdateDocumentAction;
 use DocVault\Exceptions\DocumentNotFoundException;
 use DocVault\Exceptions\PermissionDeniedException;
+use DocVault\Http\Requests\InstantiateTemplateRequest;
 use DocVault\Http\Requests\MoveDocumentRequest;
 use DocVault\Http\Requests\StoreDocumentRequest;
 use DocVault\Http\Requests\UpdateDocumentRequest;
@@ -141,6 +143,24 @@ final class DocumentController extends Controller
         }
 
         return DocumentResource::make($action->execute($document, $this->actorId($request)))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function instantiate(InstantiateTemplateRequest $request, int|string $id, InstantiateTemplateAction $action): JsonResponse
+    {
+        $source = $this->documents->findOrFail($id);
+        $this->authorizeDocument($request, 'view', $source);
+
+        $data = $request->toData();
+        $workspaceType = $data->workspaceType ?? $source->workspace_type;
+        $workspaceId = $data->workspaceId ?? $source->workspace_id;
+
+        if (!$this->visibility->canCreate($request->user(), $workspaceType, $workspaceId)) {
+            throw PermissionDeniedException::forAction('create');
+        }
+
+        return DocumentResource::make($action->execute($source, $data))
             ->response()
             ->setStatusCode(201);
     }

@@ -129,6 +129,20 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/duplicate')
   })
 
+  it('instantiates a document from a template, posting variables and title', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: 7, title: 'Letter to Ada' } }, 201))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    const created = await client.documents.instantiate(3, { variables: { name: 'Ada' }, title: 'Letter to Ada' })
+
+    expect(created.title).toBe('Letter to Ada')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toContain('/documents/3/instantiate')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body).variables.name).toBe('Ada')
+    expect(JSON.parse(init.body).title).toBe('Letter to Ada')
+  })
+
   it('performs a bulk action', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { action: 'delete', processed: [1, 2], skipped: [] } }),

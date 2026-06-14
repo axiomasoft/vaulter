@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Document templates**: documents of type `template` can be instantiated into new
+  documents via `POST /documents/{id}/instantiate`. `{{ placeholder }}` tokens in the
+  template content are replaced with caller-supplied `variables`; unknown placeholders are
+  left intact. The new document defaults its title, workspace and folder to the source
+  template (each overridable), and authorization requires the **create** ability on the
+  target workspace. Exposed through the typed client (`documents.instantiate`) and the
+  `useDocuments` composable.
+
 ## [0.1.0] - 2026-06-14
 
 First public release. DocVault is a complete, embeddable document-management package for Laravel

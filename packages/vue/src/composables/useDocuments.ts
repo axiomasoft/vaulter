@@ -6,6 +6,7 @@ import type {
   CreateDocumentPayload,
   DocVaultDocument,
   DocumentId,
+  InstantiateTemplatePayload,
   ListDocumentsQuery,
   UpdateDocumentPayload,
   WorkspaceQuery,
@@ -22,6 +23,7 @@ export interface UseDocumentsReturn {
   update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<DocVaultDocument>
   move: (id: DocumentId, folderId: DocumentId | null) => Promise<DocVaultDocument>
   duplicate: (id: DocumentId) => Promise<DocVaultDocument>
+  instantiate: (id: DocumentId, payload?: InstantiateTemplatePayload) => Promise<DocVaultDocument>
   remove: (id: DocumentId) => Promise<void>
   forceDelete: (id: DocumentId) => Promise<void>
   bulk: (payload: BulkDocumentsPayload) => Promise<BulkResult>
@@ -80,6 +82,12 @@ export function useDocuments(): UseDocumentsReturn {
     return copy
   }
 
+  async function instantiate(id: DocumentId, payload?: InstantiateTemplatePayload): Promise<DocVaultDocument> {
+    const created = await client.documents.instantiate(id, payload)
+    documents.value = [...documents.value, created]
+    return created
+  }
+
   async function remove(id: DocumentId): Promise<void> {
     await client.documents.remove(id)
     documents.value = documents.value.filter((doc) => doc.id !== id)
@@ -102,6 +110,6 @@ export function useDocuments(): UseDocumentsReturn {
 
   return {
     documents, trashed, loading, error,
-    list, listTrashed, create, update, move, duplicate, remove, forceDelete, bulk,
+    list, listTrashed, create, update, move, duplicate, instantiate, remove, forceDelete, bulk,
   }
 }

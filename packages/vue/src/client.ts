@@ -18,6 +18,7 @@ import type {
   DocVaultVersion,
   DocumentId,
   GrantPermissionPayload,
+  InstantiateTemplatePayload,
   ListDocumentsQuery,
   ListFoldersQuery,
   SharedDocument,
@@ -96,6 +97,7 @@ export interface DocVaultClient {
     restore(id: DocumentId): Promise<DocVaultDocument>
     move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument>
     duplicate(id: DocumentId): Promise<DocVaultDocument>
+    instantiate(id: DocumentId, payload?: InstantiateTemplatePayload): Promise<DocVaultDocument>
     bulk(payload: BulkDocumentsPayload): Promise<BulkResult>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
@@ -188,6 +190,8 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
       move: (id, folderId) =>
         unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
       duplicate: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/duplicate`)),
+      instantiate: (id, payload) =>
+        unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/instantiate`, { body: payload ?? {} })),
       bulk: (payload) => unwrap(request<Envelope<BulkResult>>('POST', '/documents/bulk', { body: payload })),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),

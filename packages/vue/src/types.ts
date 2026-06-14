@@ -179,6 +179,15 @@ export interface UpdateDocumentPayload {
   meta?: Record<string, unknown> | null
 }
 
+export interface InstantiateTemplatePayload {
+  variables?: Record<string, string>
+  title?: string
+  type?: Exclude<DocumentTypeName, 'template'>
+  workspace_type?: string
+  workspace_id?: WorkspaceId
+  folder_id?: DocumentId | null
+}
+
 export interface CreateVersionPayload {
   snapshot_label?: string | null
 }

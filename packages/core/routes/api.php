@@ -36,6 +36,7 @@ Route::prefix(Config::routePrefix())
         Route::post('documents/{id}/restore', [DocumentController::class, 'restore']);
         Route::patch('documents/{id}/move', [DocumentController::class, 'move']);
         Route::post('documents/{id}/duplicate', [DocumentController::class, 'duplicate']);
+        Route::post('documents/{id}/instantiate', [DocumentController::class, 'instantiate']);
         Route::get('documents/{documentId}/export', [ExportController::class, 'show']);
 
         // Versions
