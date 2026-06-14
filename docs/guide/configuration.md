@@ -32,6 +32,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 |---|---|---|
 | `permission_resolver` | `null` | FQCN of your `PermissionResolver`, or register at runtime. |
 | `storage_adapter` | `DefaultStorageAdapter::class` | Binary-attachment storage. |
+| `share_token_generator` | `RandomShareTokenGenerator::class` | FQCN of your `ShareTokenGenerator` (short/hashed/prefixed share tokens). |
 
 ## API & documents
 

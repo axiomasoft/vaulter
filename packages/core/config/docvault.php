@@ -11,6 +11,7 @@ use DocVault\Models\DocumentPermission;
 use DocVault\Models\DocumentShare;
 use DocVault\Models\DocumentVersion;
 use DocVault\Support\DefaultStorageAdapter;
+use DocVault\Support\RandomShareTokenGenerator;
 
 /**
  * DocVault configuration.
@@ -81,6 +82,15 @@ return [
     |--------------------------------------------------------------------------
     */
     'storage_adapter' => DefaultStorageAdapter::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Share-link token generator
+    |--------------------------------------------------------------------------
+    | FQCN of a \DocVault\Contracts\ShareTokenGenerator. Swap to mint short,
+    | hashed or prefixed tokens (must be unique and fit the token column).
+    */
+    'share_token_generator' => RandomShareTokenGenerator::class,
 
     /*
     |--------------------------------------------------------------------------

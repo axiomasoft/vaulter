@@ -6,6 +6,7 @@ namespace DocVault;
 
 use DocVault\Contracts\CollaborationDriver;
 use DocVault\Contracts\PermissionResolver;
+use DocVault\Contracts\ShareTokenGenerator;
 use DocVault\Support\Config;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Broadcast;
@@ -36,6 +37,8 @@ final class DocVaultServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton(DocVaultManager::class);
         $this->app->alias(DocVaultManager::class, 'docvault');
+
+        $this->app->bind(ShareTokenGenerator::class, Config::shareTokenGeneratorClass());
 
         $resolverClass = Config::permissionResolverClass();
 

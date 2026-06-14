@@ -7,12 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-06-14
-
-First public release. DocVault is a complete, embeddable document-management package for Laravel
-with a TypeScript front-end and an optional Filament admin.
-
 ### Added
+- **Swappable share-link token generator**: `config('docvault.share_token_generator')` — implement
+  `\DocVault\Contracts\ShareTokenGenerator` to mint short, hashed or prefixed share tokens (the
+  default stays a 48-char random string).
 - **Configurable table prefix**: `config('docvault.table_prefix')` (env `DOCVAULT_TABLE_PREFIX`,
   default `dv_`) prefixes every DocVault table. Published migrations and models resolve table names
   through it, so the package coexists with host tables and naming conventions.

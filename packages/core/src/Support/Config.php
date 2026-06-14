@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocVault\Support;
 
+use DocVault\Contracts\ShareTokenGenerator;
 use DocVault\Contracts\StorageAdapter;
 use DocVault\Models\Document;
 use DocVault\Models\DocumentComment;
@@ -209,6 +210,17 @@ final class Config
     {
         /** @var class-string<StorageAdapter> $class */
         $class = config('docvault.storage_adapter', DefaultStorageAdapter::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<ShareTokenGenerator>
+     */
+    public static function shareTokenGeneratorClass(): string
+    {
+        /** @var class-string<ShareTokenGenerator> $class */
+        $class = config('docvault.share_token_generator', RandomShareTokenGenerator::class);
 
         return $class;
     }
