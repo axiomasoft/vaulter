@@ -90,6 +90,28 @@ describe('createDocVaultClient', () => {
     expect(fetchMock.mock.calls[1][0]).toContain('/shares/abc')
   })
 
+  it('searches via the q query and lists the trash', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ data: [{ id: 1 }] }))
+      .mockResolvedValueOnce(jsonResponse({ data: [{ id: 2 }] }))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    await client.documents.list({ workspace_type: 'w', workspace_id: 1, q: 'roadmap' })
+    expect(fetchMock.mock.calls[0][0]).toContain('q=roadmap')
+
+    const trashed = await client.documents.trashed({ workspace_type: 'w', workspace_id: 1 })
+    expect(trashed).toHaveLength(1)
+    expect(fetchMock.mock.calls[1][0]).toContain('/documents/trash?')
+  })
+
+  it('force-deletes a document', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    const client = createDocVaultClient({ fetch: fetchMock })
+
+    await expect(client.documents.forceDelete(7)).resolves.toBeUndefined()
+    expect(fetchMock.mock.calls[0][0]).toContain('/documents/7/force')
+  })
+
   it('exports a document, passing the format query', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),

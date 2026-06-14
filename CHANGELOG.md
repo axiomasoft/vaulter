@@ -60,7 +60,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `{ format, content, filename }`.
   - `@docvault/vue`: `useDocumentExport` composable (with a browser `download` helper) and a
     `documents.export(id, format)` client method.
-- Documentation: architecture, embedding, permission resolver, abilities, collaboration, comments,
-  sharing, export, error reference, the TypeScript frontend guide, and ADRs 0001–0004.
+- **Search & trash**: document discovery and lifecycle.
+  - The document list accepts a `q` term (title + content `LIKE`, workspace-scoped). A trash
+    listing (`GET /documents/trash`) and permanent `DELETE /documents/{id}/force` (gated by
+    `manage`) round out soft-delete/restore; `DocumentPurged` event on hard delete.
+  - `@docvault/vue`: `useDocuments` gains `listTrashed` / `forceDelete` (and `q` on `list`); client
+    `documents.trashed` / `documents.forceDelete`.
+- Documentation: architecture, embedding, search & trash, permission resolver, abilities,
+  collaboration, comments, sharing, export, error reference, the TypeScript frontend guide, and
+  ADRs 0001–0004.
 
 [Unreleased]: https://github.com/axioma-studio/doc-vault/commits/main

@@ -16,6 +16,7 @@ const guideSidebar = [
     text: 'Usage',
     items: [
       { text: 'Configuration', link: '/guide/configuration' },
+      { text: 'Search & Trash', link: '/guide/search-trash' },
       { text: 'Embedding', link: '/guide/embedding' },
       { text: 'Permission Resolver', link: '/guide/permission-resolver' },
       { text: 'Abilities', link: '/guide/abilities' },

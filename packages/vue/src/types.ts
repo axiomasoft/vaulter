@@ -140,6 +140,13 @@ export interface ListDocumentsQuery {
   workspace_id: WorkspaceId
   folder_id?: DocumentId | null
   type?: DocumentTypeName
+  /** Full-text term (matched against title and content). */
+  q?: string
+}
+
+export interface WorkspaceQuery {
+  workspace_type: string
+  workspace_id: WorkspaceId
 }
 
 export interface CreateDocumentPayload {

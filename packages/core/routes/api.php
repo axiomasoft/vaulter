@@ -24,11 +24,13 @@ Route::prefix(Config::routePrefix())
     ->middleware(Config::middleware())
     ->group(static function (): void {
         // Documents
-        Route::get('documents', [DocumentController::class, 'index']);
+        Route::get('documents', [DocumentController::class, 'index']); // supports ?q= search
+        Route::get('documents/trash', [DocumentController::class, 'trash']); // before /{id}
         Route::post('documents', [DocumentController::class, 'store']);
         Route::get('documents/{id}', [DocumentController::class, 'show']);
         Route::patch('documents/{id}', [DocumentController::class, 'update']);
         Route::delete('documents/{id}', [DocumentController::class, 'destroy']);
+        Route::delete('documents/{id}/force', [DocumentController::class, 'forceDestroy']);
         Route::post('documents/{id}/restore', [DocumentController::class, 'restore']);
         Route::get('documents/{documentId}/export', [ExportController::class, 'show']);
 

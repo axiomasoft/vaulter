@@ -21,6 +21,7 @@ import type {
   SharedDocument,
   UpdateDocumentPayload,
   UpdateFolderPayload,
+  WorkspaceQuery,
 } from './types'
 
 /** Error thrown for non-2xx DocVault API responses. */
@@ -84,10 +85,12 @@ interface Envelope<T> {
 export interface DocVaultClient {
   documents: {
     list(query: ListDocumentsQuery): Promise<DocVaultDocument[]>
+    trashed(query: WorkspaceQuery): Promise<DocVaultDocument[]>
     get(id: DocumentId): Promise<DocVaultDocument>
     create(payload: CreateDocumentPayload): Promise<DocVaultDocument>
     update(id: DocumentId, payload: UpdateDocumentPayload): Promise<DocVaultDocument>
     remove(id: DocumentId): Promise<void>
+    forceDelete(id: DocumentId): Promise<void>
     restore(id: DocumentId): Promise<DocVaultDocument>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
@@ -170,10 +173,12 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
   return {
     documents: {
       list: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents', { query })),
+      trashed: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents/trash', { query })),
       get: (id) => unwrap(request<Envelope<DocVaultDocument>>('GET', `/documents/${id}`)),
       create: (payload) => unwrap(request<Envelope<DocVaultDocument>>('POST', '/documents', { body: payload })),
       update: (id, payload) => unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/documents/${id}`),
+      forceDelete: (id) => request<void>('DELETE', `/documents/${id}/force`),
       restore: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/restore`)),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),

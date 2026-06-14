@@ -42,4 +42,9 @@ final class DocumentStoreRepository
     {
         $document->restore();
     }
+
+    public function forceDelete(Document $document): void
+    {
+        $document->forceDelete();
+    }
 }

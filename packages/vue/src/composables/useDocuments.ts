@@ -6,16 +6,20 @@ import type {
   DocumentId,
   ListDocumentsQuery,
   UpdateDocumentPayload,
+  WorkspaceQuery,
 } from '../types'
 
 export interface UseDocumentsReturn {
   documents: ShallowRef<DocVaultDocument[]>
+  trashed: ShallowRef<DocVaultDocument[]>
   loading: Ref<boolean>
   error: Ref<unknown>
   list: (query: ListDocumentsQuery) => Promise<DocVaultDocument[]>
+  listTrashed: (query: WorkspaceQuery) => Promise<DocVaultDocument[]>
   create: (payload: CreateDocumentPayload) => Promise<DocVaultDocument>
   update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<DocVaultDocument>
   remove: (id: DocumentId) => Promise<void>
+  forceDelete: (id: DocumentId) => Promise<void>
 }
 
 /**
@@ -24,6 +28,7 @@ export interface UseDocumentsReturn {
 export function useDocuments(): UseDocumentsReturn {
   const client = useDocVaultClient()
   const documents = shallowRef<DocVaultDocument[]>([])
+  const trashed = shallowRef<DocVaultDocument[]>([])
   const loading = ref(false)
   const error = ref<unknown>(null)
 
@@ -39,6 +44,11 @@ export function useDocuments(): UseDocumentsReturn {
     } finally {
       loading.value = false
     }
+  }
+
+  async function listTrashed(query: WorkspaceQuery): Promise<DocVaultDocument[]> {
+    trashed.value = await client.documents.trashed(query)
+    return trashed.value
   }
 
   async function create(payload: CreateDocumentPayload): Promise<DocVaultDocument> {
@@ -58,5 +68,11 @@ export function useDocuments(): UseDocumentsReturn {
     documents.value = documents.value.filter((doc) => doc.id !== id)
   }
 
-  return { documents, loading, error, list, create, update, remove }
+  async function forceDelete(id: DocumentId): Promise<void> {
+    await client.documents.forceDelete(id)
+    documents.value = documents.value.filter((doc) => doc.id !== id)
+    trashed.value = trashed.value.filter((doc) => doc.id !== id)
+  }
+
+  return { documents, trashed, loading, error, list, listTrashed, create, update, remove, forceDelete }
 }

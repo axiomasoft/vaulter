@@ -14,10 +14,12 @@ function mockClient(): DocVaultClient {
   return {
     documents: {
       list: vi.fn().mockResolvedValue([]),
+      trashed: vi.fn().mockResolvedValue([]),
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       remove: vi.fn(),
+      forceDelete: vi.fn(),
       restore: vi.fn(),
       export: vi.fn(),
     },
