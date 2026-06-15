@@ -100,3 +100,48 @@ it('exports through a registered custom exporter', function (): void {
         ->assertJsonPath('data.filename', 'my-doc.json')
         ->assertJsonPath('data.content', 'custom-export-body');
 });
+
+it('includes the exporter mime type in the response', function (): void {
+    DocVault::resolvePermissionsWith(new AllowResolver);
+    $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
+
+    $this->getJson(sprintf('api/docvault/documents/%s/export?format=html', $document->id))
+        ->assertOk()
+        ->assertJsonPath('data.mime_type', 'text/html');
+});
+
+it('supports a binary exporter returning base64 content', function (): void {
+    DocVault::resolvePermissionsWith(new AllowResolver);
+    DocVault::registerExporter(new class implements DocumentExporter
+    {
+        public function format(): string
+        {
+            return 'pdf';
+        }
+
+        public function mimeType(): string
+        {
+            return 'application/pdf';
+        }
+
+        public function extension(): string
+        {
+            return 'pdf';
+        }
+
+        public function export(TipTapContent $content): string
+        {
+            return base64_encode('%PDF-1.4 fake');
+        }
+    });
+
+    $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
+
+    $response = $this->getJson(sprintf('api/docvault/documents/%s/export?format=pdf', $document->id))
+        ->assertOk()
+        ->assertJsonPath('data.format', 'pdf')
+        ->assertJsonPath('data.filename', 'my-doc.pdf')
+        ->assertJsonPath('data.mime_type', 'application/pdf');
+
+    expect(base64_decode((string) $response->json('data.content')))->toBe('%PDF-1.4 fake');
+});

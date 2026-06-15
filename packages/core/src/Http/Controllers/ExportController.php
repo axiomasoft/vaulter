@@ -39,6 +39,7 @@ final class ExportController extends Controller
                 'format' => $exporter->format(),
                 'content' => $exporter->export($content),
                 'filename' => $this->filename($document, $exporter),
+                'mime_type' => $exporter->mimeType(),
             ],
         ]);
     }
