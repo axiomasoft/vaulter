@@ -5,7 +5,7 @@
       "args": [
         "mcp",
         "--scope",
-        "project:docvault"
+        "project:vaulter"
       ]
     },
     "serena": {

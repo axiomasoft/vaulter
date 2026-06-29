@@ -9,7 +9,7 @@ on:
 
 jobs:
   vue:
-    name: "@docvault/vue (Node ${{ matrix.node }})"
+    name: "@vaulter/vue (Node ${{ matrix.node }})"
     runs-on: ubuntu-latest
 
     strategy:
@@ -30,10 +30,10 @@ jobs:
         run: npm install
 
       - name: Type-check
-        run: npm run typecheck --workspace @docvault/vue
+        run: npm run typecheck --workspace @vaulter/vue
 
       - name: Test
-        run: npm run test --workspace @docvault/vue
+        run: npm run test --workspace @vaulter/vue
 
       - name: Build
-        run: npm run build --workspace @docvault/vue
+        run: npm run build --workspace @vaulter/vue
