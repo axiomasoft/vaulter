@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-use DocVault\Support\Config;
-use DocVault\Support\DocVaultSchema;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Support\Config;
+use Vaulter\Support\VaulterSchema;
 
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create(Config::table('document_permissions'), function (Blueprint $table): void {
-            DocVaultSchema::key($table);
-            DocVaultSchema::tenant($table);
-            DocVaultSchema::foreignKey($table, 'document_id');
-            DocVaultSchema::morphs($table, 'subject');
+            VaulterSchema::key($table);
+            VaulterSchema::tenant($table);
+            VaulterSchema::foreignKey($table, 'document_id');
+            VaulterSchema::morphs($table, 'subject');
             $table->string('permission');
-            DocVaultSchema::actor($table, 'granted_by');
+            VaulterSchema::actor($table, 'granted_by');
             $table->timestamps();
         });
     }

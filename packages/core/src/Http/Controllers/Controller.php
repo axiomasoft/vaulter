@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
 use Illuminate\Http\Request;
 

@@ -1,14 +1,14 @@
-# DocVault — Техническое задание на разработку пакета
+# Vaulter — Техническое задание на разработку пакета
 
 > **Статус:** Draft v0.1  
-> **Проект:** `docvault` (open-source Laravel/Vue package)  
+> **Проект:** `vaulter` (open-source Laravel/Vue package)  
 > **Назначение документа:** Полное описание задач для передачи в Lovable / low-code-агент
 
 ---
 
 ## 1. Обзор проекта
 
-**DocVault** — открытый Laravel-пакет для встраивания полноценной системы управления документами в существующие приложения. Идея возникла из модуля совместного редактирования во FlexCRM, где используется TipTap-редактор с облачной синхронизацией, серверным хабом и JSON-хранением версий в БД. Цель пакета — вынести эту инфраструктуру в переиспользуемый, максимально гибкий компонент, пригодный для встраивания в любой Laravel-проект с произвольной системой ролей.
+**Vaulter** — открытый Laravel-пакет для встраивания полноценной системы управления документами в существующие приложения. Идея возникла из модуля совместного редактирования во FlexCRM, где используется TipTap-редактор с облачной синхронизацией, серверным хабом и JSON-хранением версий в БД. Цель пакета — вынести эту инфраструктуру в переиспользуемый, максимально гибкий компонент, пригодный для встраивания в любой Laravel-проект с произвольной системой ролей.
 
 ### Ключевые концепции
 
@@ -16,7 +16,7 @@
 - **Version** — снапшот документа в момент сохранения; цепочка версий образует историю
 - **Folder** — иерархическое дерево папок (аналог Google Drive / Яндекс Диска)
 - **Workspace** — изолированное пространство документов, привязанное к сущности хост-приложения (организация, проект, пользователь)
-- **Permission Context** — адаптер, через который DocVault обращается к системе ролей хост-приложения
+- **Permission Context** — адаптер, через который Vaulter обращается к системе ролей хост-приложения
 
 ---
 
@@ -43,9 +43,9 @@
 ### 3.1 Структура репозитория
 
 ```
-docvault/
+vaulter/
 ├── src/
-│   ├── DocVaultServiceProvider.php
+│   ├── VaulterServiceProvider.php
 │   ├── Models/
 │   │   ├── Document.php
 │   │   ├── DocumentVersion.php
@@ -58,7 +58,7 @@ docvault/
 │   │   │   ├── FolderController.php
 │   │   │   └── CollaborationController.php
 │   │   └── Middleware/
-│   │       └── DocVaultAuth.php
+│   │       └── VaulterAuth.php
 │   ├── Contracts/
 │   │   ├── PermissionResolver.php
 │   │   └── StorageAdapter.php
@@ -70,20 +70,20 @@ docvault/
 ├── resources/
 │   └── js/
 │       ├── components/
-│       │   ├── DocVaultFileManager.vue
-│       │   ├── DocVaultEditor.vue
-│       │   ├── DocVaultVersionHistory.vue
-│       │   ├── DocVaultBreadcrumb.vue
-│       │   └── DocVaultPermissionsPanel.vue
+│       │   ├── VaulterFileManager.vue
+│       │   ├── VaulterEditor.vue
+│       │   ├── VaulterVersionHistory.vue
+│       │   ├── VaulterBreadcrumb.vue
+│       │   └── VaulterPermissionsPanel.vue
 │       └── index.js
 ├── database/
 │   └── migrations/
-│       ├── create_dv_documents_table.php
-│       ├── create_dv_document_versions_table.php
-│       ├── create_dv_document_folders_table.php
-│       └── create_dv_document_permissions_table.php
+│       ├── create_v_documents_table.php
+│       ├── create_v_document_versions_table.php
+│       ├── create_v_document_folders_table.php
+│       └── create_v_document_permissions_table.php
 ├── config/
-│   └── docvault.php
+│   └── vaulter.php
 ├── routes/
 │   └── api.php
 └── tests/
@@ -98,9 +98,9 @@ docvault/
 └───────────────────────┬─────────────────────┘
                         │ HTTP / WebSocket
 ┌───────────────────────▼─────────────────────┐
-│              Laravel API (DocVault)          │
+│              Laravel API (Vaulter)          │
 │  DocumentController │ CollaborationController│
-│  Middleware: DocVaultAuth                   │
+│  Middleware: VaulterAuth                   │
 └───────────────────────┬─────────────────────┘
                         │
         ┌───────────────┼──────────────┐
@@ -113,7 +113,7 @@ docvault/
         │
 ┌───────▼──────────────────────────────────────┐
 │            База данных (host app)             │
-│  dv_documents │ dv_versions │ dv_folders     │
+│  v_documents │ v_versions │ v_folders     │
 └──────────────────────────────────────────────┘
 ```
 
@@ -121,14 +121,14 @@ docvault/
 
 ## 4. База данных
 
-### 4.1 Таблица `dv_documents`
+### 4.1 Таблица `v_documents`
 
 | Колонка | Тип | Описание |
 |---|---|---|
 | `id` | bigint, PK | — |
 | `workspace_type` | string | Polymorphic: тип владельца (App\Models\Project) |
 | `workspace_id` | bigint | Polymorphic: id владельца |
-| `folder_id` | bigint, nullable | FK → dv_document_folders |
+| `folder_id` | bigint, nullable | FK → v_document_folders |
 | `type` | string | Тип: `richtext`, `table`, `markdown`, `template` |
 | `title` | string | Заголовок документа |
 | `content` | longtext JSON | TipTap JSON (текущая версия) |
@@ -138,18 +138,18 @@ docvault/
 | `deleted_at` | timestamp, nullable | Soft delete |
 | `created_at` / `updated_at` | timestamps | — |
 
-### 4.2 Таблица `dv_document_versions`
+### 4.2 Таблица `v_document_versions`
 
 | Колонка | Тип | Описание |
 |---|---|---|
 | `id` | bigint, PK | — |
-| `document_id` | bigint | FK → dv_documents |
+| `document_id` | bigint | FK → v_documents |
 | `content` | longtext JSON | Снапшот TipTap JSON |
 | `snapshot_label` | string, nullable | Метка версии (напр. «v1.2 — правки клиента») |
 | `created_by` | bigint | FK → users |
 | `created_at` | timestamp | — |
 
-### 4.3 Таблица `dv_document_folders`
+### 4.3 Таблица `v_document_folders`
 
 | Колонка | Тип | Описание |
 |---|---|---|
@@ -161,12 +161,12 @@ docvault/
 | `order` | integer | Порядок отображения |
 | `created_at` / `updated_at` | timestamps | — |
 
-### 4.4 Таблица `dv_document_permissions`
+### 4.4 Таблица `v_document_permissions`
 
 | Колонка | Тип | Описание |
 |---|---|---|
 | `id` | bigint, PK | — |
-| `document_id` | bigint | FK → dv_documents |
+| `document_id` | bigint | FK → v_documents |
 | `subject_type` | string | Polymorphic: user / role / team |
 | `subject_id` | bigint | Polymorphic |
 | `permission` | string | `view`, `edit`, `comment`, `manage` |
@@ -175,18 +175,18 @@ docvault/
 
 ---
 
-## 5. Конфигурация (`config/docvault.php`)
+## 5. Конфигурация (`config/vaulter.php`)
 
 ```php
 return [
     // Адаптер для проверки прав — реализуется в хост-приложении
-    'permission_resolver' => \App\DocVault\PermissionResolver::class,
+    'permission_resolver' => \App\Vaulter\PermissionResolver::class,
 
     // Адаптер для хранения бинарных вложений
     'storage_adapter' => \Docvault\Support\DefaultStorageAdapter::class,
 
     // Префикс всех маршрутов API
-    'route_prefix' => 'api/docvault',
+    'route_prefix' => 'api/vaulter',
 
     // Мидлварь для API-маршрутов
     'middleware' => ['api', 'auth:sanctum'],
@@ -200,9 +200,9 @@ return [
     // Hocuspocus-сервер для совместного редактирования
     'collaboration' => [
         'enabled' => true,
-        'server_url' => env('DOCVAULT_COLLAB_URL', 'ws://localhost:1234'),
-        'app_id' => env('DOCVAULT_COLLAB_APP_ID'),
-        'secret' => env('DOCVAULT_COLLAB_SECRET'),
+        'server_url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+        'app_id' => env('VAULTER_COLLAB_APP_ID'),
+        'secret' => env('VAULTER_COLLAB_SECRET'),
     ],
 
     // Лимит размера документа в KB
@@ -216,7 +216,7 @@ return [
 
 ### 6.1 `PermissionResolver`
 
-Хост-приложение обязано реализовать этот интерфейс, чтобы DocVault мог делегировать проверку прав существующей системе ролей:
+Хост-приложение обязано реализовать этот интерфейс, чтобы Vaulter мог делегировать проверку прав существующей системе ролей:
 
 ```php
 namespace Docvault\Contracts;
@@ -257,7 +257,7 @@ interface StorageAdapter
 
 ## 7. API-маршруты
 
-Все маршруты монтируются под префиксом из конфига (`api/docvault` по умолчанию).
+Все маршруты монтируются под префиксом из конфига (`api/vaulter` по умолчанию).
 
 ### Документы
 
@@ -303,7 +303,7 @@ interface StorageAdapter
 
 Пакет предоставляет готовые Vue 3 компоненты, регистрируемые глобально или импортируемые по-отдельности.
 
-### 8.1 `DocVaultFileManager`
+### 8.1 `VaulterFileManager`
 
 Файловый менеджер — главная точка входа для пользователя. Аналог Google Drive.
 
@@ -313,7 +313,7 @@ interface StorageAdapter
 |---|---|---|
 | `workspaceType` | String | Тип workspace (напр. `App\\Models\\Project`) |
 | `workspaceId` | Number | ID workspace |
-| `baseUrl` | String | Базовый URL API (по умолчанию `/api/docvault`) |
+| `baseUrl` | String | Базовый URL API (по умолчанию `/api/vaulter`) |
 | `viewMode` | String | `grid` \| `list` (по умолчанию `list`) |
 | `allowedTypes` | Array | Разрешённые типы для создания |
 
@@ -330,7 +330,7 @@ interface StorageAdapter
 - Контекстное меню: переименовать, переместить, история версий, удалить
 - Строка поиска по названию
 
-### 8.2 `DocVaultEditor`
+### 8.2 `VaulterEditor`
 
 Обёртка над TipTap с поддержкой совместного редактирования.
 
@@ -357,7 +357,7 @@ interface StorageAdapter
 - Кнопка «Сохранить версию» с диалогом метки
 - Счётчик несохранённых изменений
 
-### 8.3 `DocVaultVersionHistory`
+### 8.3 `VaulterVersionHistory`
 
 Боковая панель с историей версий документа.
 
@@ -370,7 +370,7 @@ interface StorageAdapter
 - Предпросмотр версии в режиме diff (подсветка изменений)
 - Кнопка «Восстановить»
 
-### 8.4 `DocVaultPermissionsPanel`
+### 8.4 `VaulterPermissionsPanel`
 
 Управление доступом к документу.
 
@@ -382,7 +382,7 @@ interface StorageAdapter
 - Добавление субъекта через autocomplete
 - Отзыв доступа
 
-### 8.5 `DocVaultBreadcrumb`
+### 8.5 `VaulterBreadcrumb`
 
 Хлебные крошки навигации по папкам.
 
@@ -397,36 +397,36 @@ interface StorageAdapter
 ### 9.1 Установка
 
 ```bash
-composer require docvault/docvault
-php artisan vendor:publish --tag=docvault-migrations
-php artisan vendor:publish --tag=docvault-config
+composer require vaulter/vaulter
+php artisan vendor:publish --tag=vaulter-migrations
+php artisan vendor:publish --tag=vaulter-config
 php artisan migrate
-npm install @docvault/vue
+npm install @vaulter/vue
 ```
 
 ### 9.2 Регистрация адаптера
 
 ```php
 // app/Providers/AppServiceProvider.php
-use Docvault\Facades\DocVault;
+use Docvault\Facades\Vaulter;
 
-DocVault::resolvePermissionsWith(new \App\DocVault\PermissionResolver());
+Vaulter::resolvePermissionsWith(new \App\Vaulter\PermissionResolver());
 ```
 
 ### 9.3 Использование Vue-компонентов
 
 ```js
 // resources/js/app.js
-import { DocVaultPlugin } from '@docvault/vue'
+import { VaulterPlugin } from '@vaulter/vue'
 
-app.use(DocVaultPlugin, {
-    baseUrl: '/api/docvault',
+app.use(VaulterPlugin, {
+    baseUrl: '/api/vaulter',
 })
 ```
 
 ```vue
 <!-- Внутри любой страницы хост-приложения -->
-<DocVaultFileManager
+<VaulterFileManager
     workspace-type="App\Models\Project"
     :workspace-id="project.id"
     @open-document="openEditor"
@@ -439,18 +439,18 @@ app.use(DocVaultPlugin, {
 
 ### Схема работы
 
-1. Frontend запрашивает `POST /api/docvault/documents/{id}/collab/token` — сервер выдаёт JWT
-2. `DocVaultEditor` подключается к Hocuspocus WebSocket-серверу с этим JWT
+1. Frontend запрашивает `POST /api/vaulter/documents/{id}/collab/token` — сервер выдаёт JWT
+2. `VaulterEditor` подключается к Hocuspocus WebSocket-серверу с этим JWT
 3. Hocuspocus-сервер валидирует JWT через webhook на Laravel-бэкенд
 4. Y.js синхронизирует изменения между всеми подключёнными клиентами в реальном времени
-5. По событию `save` (debounce или ручному) содержимое пишется в `dv_documents.content` и при необходимости в `dv_document_versions`
+5. По событию `save` (debounce или ручному) содержимое пишется в `v_documents.content` и при необходимости в `v_document_versions`
 
 ### Переменные окружения
 
 ```env
-DOCVAULT_COLLAB_URL=ws://your-hocuspocus-server:1234
-DOCVAULT_COLLAB_APP_ID=your-app-id
-DOCVAULT_COLLAB_SECRET=your-secret-key
+VAULTER_COLLAB_URL=ws://your-hocuspocus-server:1234
+VAULTER_COLLAB_APP_ID=your-app-id
+VAULTER_COLLAB_SECRET=your-secret-key
 ```
 
 ### Деплой Hocuspocus-сервера
@@ -464,10 +464,10 @@ DOCVAULT_COLLAB_SECRET=your-secret-key
 Реестр типов расширяем из хост-приложения:
 
 ```php
-DocVault::registerDocumentType('spreadsheet', [
+Vaulter::registerDocumentType('spreadsheet', [
     'label' => 'Таблица',
     'icon' => 'table-cells',
-    'editor_component' => 'DocVaultSpreadsheetEditor',
+    'editor_component' => 'VaulterSpreadsheetEditor',
     'tiptap_extensions' => [\Tiptap\Extensions\Table::class],
 ]);
 ```
@@ -499,9 +499,9 @@ DocVault::registerDocumentType('spreadsheet', [
 
 ### Компонентные тесты (Vitest)
 
-- `DocVaultFileManager`: рендер, поиск, навигация по папкам
-- `DocVaultEditor`: автосохранение, эмит событий
-- `DocVaultVersionHistory`: превью и восстановление
+- `VaulterFileManager`: рендер, поиск, навигация по папкам
+- `VaulterEditor`: автосохранение, эмит событий
+- `VaulterVersionHistory`: превью и восстановление
 
 ---
 
@@ -524,7 +524,7 @@ DocVault::registerDocumentType('spreadsheet', [
 - [ ] Поддержка offline-редактирования (Y.js IndexedDB persistence)?
 - [ ] Экспорт документов в PDF / DOCX — в scope M1 или отдельный пакет?
 - [ ] Нужна ли поддержка комментариев к фрагментам текста (TipTap Comments extension)?
-- [ ] Брендинг: `docvault/docvault` (Composer) + `@docvault/vue` (npm) — подтвердить неймспейс
+- [ ] Брендинг: `vaulter/vaulter` (Composer) + `@vaulter/vue` (npm) — подтвердить неймспейс
 
 ---
 

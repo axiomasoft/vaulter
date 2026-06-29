@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-abstract class DocVaultFormRequest extends FormRequest
+abstract class VaulterFormRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -1,6 +1,6 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { Doc as YDoc } from 'yjs'
-import { useDocVaultClient } from './useDocVaultClient'
+import { useVaulterClient } from './useVaulterClient'
 import { createCollaborationSession, type CollaborationSession, type CreateCollaborationOptions } from '../collaboration'
 import type { CollaborationConnection, DocumentId } from '../types'
 
@@ -21,7 +21,7 @@ export interface UseCollaborationReturn {
  * extension; call `disconnect()` on unmount.
  */
 export function useCollaboration(documentId: DocumentId): UseCollaborationReturn {
-  const client = useDocVaultClient()
+  const client = useVaulterClient()
   const connection = shallowRef<CollaborationConnection | null>(null)
   const connecting = ref(false)
   const error = ref<unknown>(null)

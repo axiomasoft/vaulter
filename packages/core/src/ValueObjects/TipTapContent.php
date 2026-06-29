@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\ValueObjects;
+namespace Vaulter\ValueObjects;
 
-use DocVault\Exceptions\InvalidTipTapContentException;
+use Vaulter\Exceptions\InvalidTipTapContentException;
 
 /**
  * Immutable wrapper around a validated TipTap JSON document

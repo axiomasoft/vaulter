@@ -10,25 +10,25 @@ behind the `CollaborationDriver` contract, with two implementations.
 | **Reverb** (default) | Yjs over Laravel Reverb | Pure-Laravel apps — no extra service to deploy. |
 | **Hocuspocus** | External Node Hocuspocus hub | When you want a dedicated collaboration server. |
 
-Select one with `config('docvault.collaboration.driver')` (or `DOCVAULT_COLLAB_DRIVER`).
+Select one with `config('vaulter.collaboration.driver')` (or `VAULTER_COLLAB_DRIVER`).
 
 ## How it works
 
 1. The front-end requests a connection descriptor:
-   `POST /api/docvault/documents/{id}/collab/token`.
+   `POST /api/vaulter/documents/{id}/collab/token`.
 2. The configured driver authorizes the user via your `PermissionResolver` (the `edit`
    action) and returns a `connectionConfig` — channel/room, transport URL, and a token.
 3. The front-end opens a Yjs session over that descriptor and binds it to the editor.
-4. On save, the merged content is persisted: `POST /api/docvault/documents/{id}/collab/sync`
+4. On save, the merged content is persisted: `POST /api/vaulter/documents/{id}/collab/sync`
    writes it to the document and broadcasts `content.synced` on the private channel so other
    clients refresh. Named snapshots go through the versions endpoint.
 
 ## Front-end session
 
-`@docvault/vue` turns the descriptor into a Yjs session:
+`@vaulter/vue` turns the descriptor into a Yjs session:
 
 ```ts
-import { useCollaboration } from '@docvault/vue'
+import { useCollaboration } from '@vaulter/vue'
 import { Editor } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 
@@ -49,21 +49,21 @@ disconnect()
 ## Persisting the merged state
 
 ```ts
-import { useDocVaultClient } from '@docvault/vue'
+import { useVaulterClient } from '@vaulter/vue'
 
-const client = useDocVaultClient()
+const client = useVaulterClient()
 // after a debounced save, send the TipTap JSON derived from the Yjs doc:
 await client /* POST .../collab/sync */
 ```
 
 ### Reverb
 
-Returns a private channel `docvault.documents.{id}`. Authorization runs through the broadcast
+Returns a private channel `vaulter.documents.{id}`. Authorization runs through the broadcast
 channel registered by the package, which calls your resolver — no room token needed.
 
 ### Hocuspocus
 
-Mints a short-lived JWT (`firebase/php-jwt`, signed with `DOCVAULT_COLLAB_SECRET`) for the
+Mints a short-lived JWT (`firebase/php-jwt`, signed with `VAULTER_COLLAB_SECRET`) for the
 Node hub under `hocuspocus-server/`:
 
 ```bash

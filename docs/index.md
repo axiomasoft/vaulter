@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: DocVault
+  name: Vaulter
   text: Documents, versioned and collaborative.
   tagline: An embeddable document-management package for Laravel — file manager, TipTap editor, version history and real-time collaboration, wired into your app's own roles.
   actions:
@@ -10,11 +10,11 @@ hero:
       text: Get Started →
       link: /guide/quick-start
     - theme: alt
-      text: What is DocVault?
+      text: What is Vaulter?
       link: /guide/introduction
     - theme: alt
       text: View on GitHub
-      link: https://github.com/axioma-studio/doc-vault
+      link: https://github.com/axioma-studio/vaulter
 
 features:
   - title: 📂 File manager
@@ -24,7 +24,7 @@ features:
   - title: 🤝 Real-time collaboration
     details: Yjs + Hocuspocus for conflict-free multi-user editing, with presence and snapshots.
   - title: 🔌 Bring your own roles
-    details: DocVault never ships an auth system — it delegates every check to a PermissionResolver you implement.
+    details: Vaulter never ships an auth system — it delegates every check to a PermissionResolver you implement.
 ---
 
 > **Status:** early scaffold (`0.0.x`). The structure, tooling and docs are in place;

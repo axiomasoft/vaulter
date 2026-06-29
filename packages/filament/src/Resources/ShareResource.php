@@ -2,13 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources;
+namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
-use DocVault\Enums\PermissionLevel;
-use DocVault\Filament\Resources\ShareResource\Pages\ListShares;
-use DocVault\Models\DocumentShare;
-use DocVault\Support\Config;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\PageRegistration;
@@ -18,6 +14,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Override;
 use UnitEnum;
+use Vaulter\Enums\PermissionLevel;
+use Vaulter\Filament\Resources\ShareResource\Pages\ListShares;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Support\Config;
 
 final class ShareResource extends Resource
 {
@@ -25,7 +25,7 @@ final class ShareResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-link';
 
-    protected static string|UnitEnum|null $navigationGroup = 'DocVault';
+    protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
 
     protected static ?string $recordTitleAttribute = 'token';
 

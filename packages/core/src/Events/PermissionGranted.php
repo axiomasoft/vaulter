@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\DocumentPermission;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Vaulter\Models\DocumentPermission;
 
 final readonly class PermissionGranted implements ShouldDispatchAfterCommit
 {

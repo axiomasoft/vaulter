@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\Document;
-use DocVault\Models\DocumentShare;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Support\Config;
 
 final class ShareReadRepository
 {

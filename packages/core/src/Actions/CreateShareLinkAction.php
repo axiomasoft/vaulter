@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\CreateShareData;
-use DocVault\Events\ShareLinkCreated;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentShare;
-use DocVault\Repositories\ShareStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\CreateShareData;
+use Vaulter\Events\ShareLinkCreated;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Repositories\ShareStoreRepository;
 
 final readonly class CreateShareLinkAction
 {

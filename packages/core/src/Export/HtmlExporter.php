@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Export;
+namespace Vaulter\Export;
 
-use DocVault\Contracts\DocumentExporter;
-use DocVault\Enums\ExportFormat;
-use DocVault\Support\TipTapRenderer;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Enums\ExportFormat;
+use Vaulter\Support\TipTapRenderer;
+use Vaulter\ValueObjects\TipTapContent;
 
 final class HtmlExporter implements DocumentExporter
 {

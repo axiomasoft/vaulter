@@ -1,14 +1,14 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
-import { useDocVaultClient } from './useDocVaultClient'
-import type { CreateCommentPayload, DocVaultComment, DocumentId } from '../types'
+import { useVaulterClient } from './useVaulterClient'
+import type { CreateCommentPayload, VaulterComment, DocumentId } from '../types'
 
 export interface UseCommentsReturn {
-  comments: ShallowRef<DocVaultComment[]>
+  comments: ShallowRef<VaulterComment[]>
   loading: Ref<boolean>
   error: Ref<unknown>
-  list: () => Promise<DocVaultComment[]>
-  add: (payload: CreateCommentPayload) => Promise<DocVaultComment>
-  resolve: (commentId: DocumentId) => Promise<DocVaultComment>
+  list: () => Promise<VaulterComment[]>
+  add: (payload: CreateCommentPayload) => Promise<VaulterComment>
+  resolve: (commentId: DocumentId) => Promise<VaulterComment>
   remove: (commentId: DocumentId) => Promise<void>
 }
 
@@ -16,12 +16,12 @@ export interface UseCommentsReturn {
  * Reactive comment thread for a document, backed by the injected client.
  */
 export function useComments(documentId: DocumentId): UseCommentsReturn {
-  const client = useDocVaultClient()
-  const comments = shallowRef<DocVaultComment[]>([])
+  const client = useVaulterClient()
+  const comments = shallowRef<VaulterComment[]>([])
   const loading = ref(false)
   const error = ref<unknown>(null)
 
-  async function list(): Promise<DocVaultComment[]> {
+  async function list(): Promise<VaulterComment[]> {
     loading.value = true
     error.value = null
     try {
@@ -35,13 +35,13 @@ export function useComments(documentId: DocumentId): UseCommentsReturn {
     }
   }
 
-  async function add(payload: CreateCommentPayload): Promise<DocVaultComment> {
+  async function add(payload: CreateCommentPayload): Promise<VaulterComment> {
     const created = await client.comments.create(documentId, payload)
     comments.value = [...comments.value, created]
     return created
   }
 
-  async function resolve(commentId: DocumentId): Promise<DocVaultComment> {
+  async function resolve(commentId: DocumentId): Promise<VaulterComment> {
     const updated = await client.comments.resolve(documentId, commentId)
     comments.value = comments.value.map((comment) => (comment.id === commentId ? updated : comment))
     return updated

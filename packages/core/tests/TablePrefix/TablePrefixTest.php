@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use DocVault\Models\Document;
-use DocVault\Support\Config;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Models\Document;
+use Vaulter\Support\Config;
 
 it('creates every table with the configured prefix', function (): void {
     expect(Schema::hasTable('custom_documents'))->toBeTrue()
@@ -13,7 +13,7 @@ it('creates every table with the configured prefix', function (): void {
         ->and(Schema::hasTable('custom_document_permissions'))->toBeTrue()
         ->and(Schema::hasTable('custom_document_comments'))->toBeTrue()
         ->and(Schema::hasTable('custom_document_shares'))->toBeTrue()
-        ->and(Schema::hasTable('dv_documents'))->toBeFalse();
+        ->and(Schema::hasTable('v_documents'))->toBeFalse();
 });
 
 it('resolves config and model tables through the prefix', function (): void {

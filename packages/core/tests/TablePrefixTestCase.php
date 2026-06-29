@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Tests;
+namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 
@@ -20,6 +20,6 @@ class TablePrefixTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('docvault.table_prefix', 'custom_');
+        $app['config']->set('vaulter.table_prefix', 'custom_');
     }
 }

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Tests;
+namespace Vaulter\Tests;
 
-use DocVault\DocVaultServiceProvider;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -17,7 +17,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            DocVaultServiceProvider::class,
+            VaulterServiceProvider::class,
         ];
     }
 
@@ -35,7 +35,7 @@ abstract class TestCase extends OrchestraTestCase
 
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
-        $app['config']->set('docvault.middleware', []);
+        $app['config']->set('vaulter.middleware', []);
     }
 
     protected function defineDatabaseMigrations(): void

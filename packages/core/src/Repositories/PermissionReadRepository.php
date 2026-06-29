@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\Document;
-use DocVault\Models\DocumentPermission;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentPermission;
+use Vaulter\Support\Config;
 
 final class PermissionReadRepository
 {

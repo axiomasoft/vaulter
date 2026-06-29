@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Collaboration;
+namespace Vaulter\Collaboration;
 
-use DocVault\Contracts\CollaborationDriver;
-use DocVault\DocVaultManager;
-use DocVault\Enums\CollaborationDriverType;
-use DocVault\Models\Document;
-use DocVault\Support\Config;
-use DocVault\Support\Identity;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Contracts\CollaborationDriver;
+use Vaulter\Enums\CollaborationDriverType;
+use Vaulter\Models\Document;
+use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
  * Default driver: Yjs over Laravel Reverb. The front-end joins a private channel
@@ -19,7 +19,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 final readonly class ReverbCollaborationDriver implements CollaborationDriver
 {
     public function __construct(
-        private DocVaultManager $manager,
+        private VaulterManager $manager,
     ) {}
 
     public function type(): CollaborationDriverType

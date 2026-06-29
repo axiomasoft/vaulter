@@ -1,27 +1,27 @@
 # Installation
 
-> DocVault is in early scaffolding. The commands below describe the intended install flow;
+> Vaulter is in early scaffolding. The commands below describe the intended install flow;
 > some artifacts are not published to Packagist / npm yet.
 
 ## Backend (Laravel package)
 
 ```bash
-composer require axioma-studio/docvault-core
-php artisan vendor:publish --tag=docvault-config
-php artisan vendor:publish --tag=docvault-migrations
+composer require axioma-studio/vaulter-core
+php artisan vendor:publish --tag=vaulter-config
+php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
 
 Or run the bundled install command:
 
 ```bash
-php artisan docvault:install
+php artisan vaulter:install
 ```
 
 ## Frontend (Vue components)
 
 ```bash
-npm install @docvault/vue
+npm install @vaulter/vue
 ```
 
 ## Collaboration server (optional)

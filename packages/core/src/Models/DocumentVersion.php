@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentVersionFactory;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Database\Factories\DocumentVersionFactory;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Support\Config;
 
 /**
  * An append-only snapshot of a document's content at save time.
@@ -24,10 +24,10 @@ use Illuminate\Support\Carbon;
  */
 class DocumentVersion extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentVersionFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     public const UPDATED_AT = null;
 

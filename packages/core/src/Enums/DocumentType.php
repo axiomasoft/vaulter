@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Enums;
+namespace Vaulter\Enums;
 
-use DocVault\Attributes\Icon;
-use DocVault\Attributes\Label;
-use DocVault\Attributes\TiptapExtensions;
-use DocVault\Support\Concerns\HasIcon;
-use DocVault\Support\Concerns\HasLabel;
-use DocVault\Support\Concerns\HasTiptapExtensions;
+use Vaulter\Attributes\Icon;
+use Vaulter\Attributes\Label;
+use Vaulter\Attributes\TiptapExtensions;
+use Vaulter\Support\Concerns\HasIcon;
+use Vaulter\Support\Concerns\HasLabel;
+use Vaulter\Support\Concerns\HasTiptapExtensions;
 
 enum DocumentType: string
 {

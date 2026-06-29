@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources\ShareResource\Pages;
+namespace Vaulter\Filament\Resources\ShareResource\Pages;
 
-use DocVault\Filament\Resources\ShareResource;
 use Filament\Resources\Pages\ListRecords;
+use Vaulter\Filament\Resources\ShareResource;
 
 final class ListShares extends ListRecords
 {

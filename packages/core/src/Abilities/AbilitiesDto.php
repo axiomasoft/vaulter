@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Abilities;
+namespace Vaulter\Abilities;
 
-use DocVault\DocVaultManager;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Models\Document;
+use Vaulter\VaulterManager;
 
 /**
  * Base for computed-permission DTOs shipped to the front-end. Subclasses map a
@@ -22,7 +22,7 @@ abstract readonly class AbilitiesDto
     protected static function resolveFlags(
         ?Authenticatable $user,
         Document $document,
-        DocVaultManager $manager,
+        VaulterManager $manager,
         array $abilityMap,
     ): array {
         $resolver = $manager->permissionResolver();

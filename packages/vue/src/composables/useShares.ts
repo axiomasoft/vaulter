@@ -1,13 +1,13 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
-import { useDocVaultClient } from './useDocVaultClient'
-import type { CreateSharePayload, DocVaultShare, DocumentId } from '../types'
+import { useVaulterClient } from './useVaulterClient'
+import type { CreateSharePayload, VaulterShare, DocumentId } from '../types'
 
 export interface UseSharesReturn {
-  shares: ShallowRef<DocVaultShare[]>
+  shares: ShallowRef<VaulterShare[]>
   loading: Ref<boolean>
   error: Ref<unknown>
-  list: () => Promise<DocVaultShare[]>
-  create: (payload: CreateSharePayload) => Promise<DocVaultShare>
+  list: () => Promise<VaulterShare[]>
+  create: (payload: CreateSharePayload) => Promise<VaulterShare>
   revoke: (shareId: DocumentId) => Promise<void>
 }
 
@@ -15,12 +15,12 @@ export interface UseSharesReturn {
  * Reactive management of a document's public share links.
  */
 export function useShares(documentId: DocumentId): UseSharesReturn {
-  const client = useDocVaultClient()
-  const shares = shallowRef<DocVaultShare[]>([])
+  const client = useVaulterClient()
+  const shares = shallowRef<VaulterShare[]>([])
   const loading = ref(false)
   const error = ref<unknown>(null)
 
-  async function list(): Promise<DocVaultShare[]> {
+  async function list(): Promise<VaulterShare[]> {
     loading.value = true
     error.value = null
     try {
@@ -34,7 +34,7 @@ export function useShares(documentId: DocumentId): UseSharesReturn {
     }
   }
 
-  async function create(payload: CreateSharePayload): Promise<DocVaultShare> {
+  async function create(payload: CreateSharePayload): Promise<VaulterShare> {
     const created = await client.shares.create(documentId, payload)
     shares.value = [created, ...shares.value]
     return created

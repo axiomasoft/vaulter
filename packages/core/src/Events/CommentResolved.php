@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\DocumentComment;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Vaulter\Models\DocumentComment;
 
 final readonly class CommentResolved implements ShouldDispatchAfterCommit
 {

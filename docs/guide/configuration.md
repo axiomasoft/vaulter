@@ -1,21 +1,21 @@
 # Configuration
 
-Publish the config with `php artisan vendor:publish --tag=docvault-config`. It lands at
-`config/docvault.php`.
+Publish the config with `php artisan vendor:publish --tag=vaulter-config`. It lands at
+`config/vaulter.php`.
 
 ## Models (swappable)
 
 ```php
 'models' => [
-    'document'   => \DocVault\Models\Document::class,
-    'version'    => \DocVault\Models\DocumentVersion::class,
-    'folder'     => \DocVault\Models\DocumentFolder::class,
-    'permission' => \DocVault\Models\DocumentPermission::class,
+    'document'   => \Vaulter\Models\Document::class,
+    'version'    => \Vaulter\Models\DocumentVersion::class,
+    'folder'     => \Vaulter\Models\DocumentFolder::class,
+    'permission' => \Vaulter\Models\DocumentPermission::class,
 ],
 ```
 
 Point any of these at your own subclass to add behaviour (ULID keys, tenant scope, audit).
-DocVault always resolves models through this map. See [Embedding](/guide/embedding).
+Vaulter always resolves models through this map. See [Embedding](/guide/embedding).
 
 ## Keys & tenancy
 
@@ -24,7 +24,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 | `id_type` | `id` | `id` (auto-increment) or `ulid`. Drives the published migrations. |
 | `tenant.enabled` | `false` | Adds a tenant column to every table (your model applies the scope). |
 | `tenant.column` | `tenant_id` | Tenant column name. |
-| `table_prefix` | `dv_` | Prefix for every DocVault table (migrations + models). |
+| `table_prefix` | `v_` | Prefix for every Vaulter table (migrations + models). |
 
 ## Authorization & storage
 
@@ -38,7 +38,7 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 
 | Key | Default | Description |
 |---|---|---|
-| `route_prefix` | `api/docvault` | Prefix for all routes. |
+| `route_prefix` | `api/vaulter` | Prefix for all routes. |
 | `middleware` | `['api']` | Middleware applied to the routes. |
 | `max_versions` | `50` | Versions kept per document (`0` = unlimited). |
 | `enabled_document_types` | `['richtext','table','markdown','template']` | Allowed types. |
@@ -49,11 +49,11 @@ DocVault always resolves models through this map. See [Embedding](/guide/embeddi
 
 ```php
 'collaboration' => [
-    'driver' => env('DOCVAULT_COLLAB_DRIVER', 'reverb'), // reverb | hocuspocus
-    'channel_prefix' => 'docvault.documents',
+    'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'), // reverb | hocuspocus
+    'channel_prefix' => 'vaulter.documents',
     'drivers' => [
-        'reverb'     => ['class' => \DocVault\Collaboration\ReverbCollaborationDriver::class, /* … */],
-        'hocuspocus' => ['class' => \DocVault\Collaboration\HocuspocusCollaborationDriver::class, /* url, secret, token_ttl */],
+        'reverb'     => ['class' => \Vaulter\Collaboration\ReverbCollaborationDriver::class, /* … */],
+        'hocuspocus' => ['class' => \Vaulter\Collaboration\HocuspocusCollaborationDriver::class, /* url, secret, token_ttl */],
     ],
 ],
 ```

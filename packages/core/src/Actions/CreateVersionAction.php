@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\CreateVersionData;
-use DocVault\Events\VersionCreated;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentVersion;
-use DocVault\Repositories\VersionStoreRepository;
-use DocVault\Support\Config;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\CreateVersionData;
+use Vaulter\Events\VersionCreated;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentVersion;
+use Vaulter\Repositories\VersionStoreRepository;
+use Vaulter\Support\Config;
 
 final readonly class CreateVersionAction
 {

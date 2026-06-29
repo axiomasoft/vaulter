@@ -2,17 +2,17 @@
 
 ## 1. Register a permission resolver
 
-DocVault delegates every authorization check to your application. Implement
-`DocVault\Contracts\PermissionResolver` and register it:
+Vaulter delegates every authorization check to your application. Implement
+`Vaulter\Contracts\PermissionResolver` and register it:
 
 ```php
 // app/Providers/AppServiceProvider.php
-use DocVault\Facades\DocVault;
-use App\DocVault\PermissionResolver;
+use Vaulter\Facades\Vaulter;
+use App\Vaulter\PermissionResolver;
 
 public function boot(): void
 {
-    DocVault::resolvePermissionsWith(new PermissionResolver());
+    Vaulter::resolvePermissionsWith(new PermissionResolver());
 }
 ```
 
@@ -20,13 +20,13 @@ public function boot(): void
 
 ```js
 // resources/js/app.js
-import { DocVaultPlugin } from '@docvault/vue'
+import { VaulterPlugin } from '@vaulter/vue'
 
-app.use(DocVaultPlugin, { baseUrl: '/api/docvault' })
+app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 ```
 
 ```vue
-<DocVaultFileManager
+<VaulterFileManager
   workspace-type="App\Models\Project"
   :workspace-id="project.id"
   @open-document="openEditor"
@@ -36,7 +36,7 @@ app.use(DocVaultPlugin, { baseUrl: '/api/docvault' })
 ## 3. Edit a document
 
 ```vue
-<DocVaultEditor :document-id="documentId" :collaborative="true" />
+<VaulterEditor :document-id="documentId" :collaborative="true" />
 ```
 
 That's the intended end-state. See [Configuration](/guide/configuration) for the available

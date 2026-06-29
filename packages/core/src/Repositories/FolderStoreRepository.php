@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\DocumentFolder;
-use DocVault\Support\Config;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Support\Config;
 
 final class FolderStoreRepository
 {

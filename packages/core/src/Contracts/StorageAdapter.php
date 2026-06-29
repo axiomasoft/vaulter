@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Contracts;
+namespace Vaulter\Contracts;
 
 /**
- * Pluggable storage for binary attachments. DocVault itself only stores JSON
+ * Pluggable storage for binary attachments. Vaulter itself only stores JSON
  * content; binary files (images, etc.) are delegated to an implementation of
  * this contract.
  */

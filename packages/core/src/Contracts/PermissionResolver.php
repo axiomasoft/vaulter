@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Contracts;
+namespace Vaulter\Contracts;
 
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Models\Document;
 
 /**
- * Implemented by the host application so DocVault can delegate authorization
+ * Implemented by the host application so Vaulter can delegate authorization
  * to its existing role system.
  */
 interface PermissionResolver

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Contracts;
+namespace Vaulter\Contracts;
 
-use DocVault\Enums\CollaborationDriverType;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Enums\CollaborationDriverType;
+use Vaulter\Models\Document;
 
 /**
  * Abstracts the real-time collaboration transport. The Reverb driver keeps

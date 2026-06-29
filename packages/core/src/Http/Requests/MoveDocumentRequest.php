@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-final class MoveDocumentRequest extends DocVaultFormRequest
+final class MoveDocumentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

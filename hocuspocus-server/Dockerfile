@@ -1,4 +1,4 @@
-# DocVault collaboration server
+# Vaulter collaboration server
 FROM node:22-alpine
 
 WORKDIR /app
@@ -10,7 +10,7 @@ RUN npm install --omit=dev
 
 COPY src ./src
 
-ENV DOCVAULT_COLLAB_PORT=1234
+ENV VAULTER_COLLAB_PORT=1234
 EXPOSE 1234
 
 CMD ["node", "src/index.js"]

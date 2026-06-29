@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\CommentResolved;
-use DocVault\Models\DocumentComment;
-use DocVault\Repositories\CommentStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\CommentResolved;
+use Vaulter\Models\DocumentComment;
+use Vaulter\Repositories\CommentStoreRepository;
 
 final readonly class ResolveCommentAction
 {

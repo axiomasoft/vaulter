@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\DocumentComment;
-use DocVault\Support\Config;
-use DocVault\Support\Identity;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Vaulter\Models\DocumentComment;
+use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
 
 /**
  * Broadcast on the document's private channel when a comment is added, so open

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support\Concerns;
+namespace Vaulter\Support\Concerns;
 
-use DocVault\Attributes\TiptapExtensions;
-use DocVault\Support\EnumCaseAttributeResolver;
+use Vaulter\Attributes\TiptapExtensions;
+use Vaulter\Support\EnumCaseAttributeResolver;
 
 /**
  * @phpstan-require-implements \UnitEnum

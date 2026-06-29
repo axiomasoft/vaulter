@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\DocumentFolder;
-use DocVault\Support\Config;
-use DocVault\ValueObjects\WorkspaceRef;
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Support\Config;
+use Vaulter\ValueObjects\WorkspaceRef;
 
 final class FolderReadRepository
 {

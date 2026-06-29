@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-use DocVault\Http\Controllers\BulkDocumentController;
-use DocVault\Http\Controllers\CollaborationController;
-use DocVault\Http\Controllers\CommentController;
-use DocVault\Http\Controllers\DocumentController;
-use DocVault\Http\Controllers\ExportController;
-use DocVault\Http\Controllers\FolderController;
-use DocVault\Http\Controllers\PermissionController;
-use DocVault\Http\Controllers\ShareController;
-use DocVault\Http\Controllers\VersionController;
-use DocVault\Support\Config;
 use Illuminate\Support\Facades\Route;
+use Vaulter\Http\Controllers\BulkDocumentController;
+use Vaulter\Http\Controllers\CollaborationController;
+use Vaulter\Http\Controllers\CommentController;
+use Vaulter\Http\Controllers\DocumentController;
+use Vaulter\Http\Controllers\ExportController;
+use Vaulter\Http\Controllers\FolderController;
+use Vaulter\Http\Controllers\PermissionController;
+use Vaulter\Http\Controllers\ShareController;
+use Vaulter\Http\Controllers\VersionController;
+use Vaulter\Support\Config;
 
 /*
 |--------------------------------------------------------------------------
-| DocVault API routes
+| Vaulter API routes
 |--------------------------------------------------------------------------
-| Mounted under the configured prefix (default: api/docvault).
+| Mounted under the configured prefix (default: api/vaulter).
 */
 
 Route::prefix(Config::routePrefix())

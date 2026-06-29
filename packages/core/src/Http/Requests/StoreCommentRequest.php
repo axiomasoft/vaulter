@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\CreateCommentData;
+use Vaulter\Data\CreateCommentData;
 
-final class StoreCommentRequest extends DocVaultFormRequest
+final class StoreCommentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

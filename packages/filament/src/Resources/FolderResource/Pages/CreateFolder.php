@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources\FolderResource\Pages;
+namespace Vaulter\Filament\Resources\FolderResource\Pages;
 
-use DocVault\Filament\Resources\FolderResource;
 use Filament\Resources\Pages\CreateRecord;
+use Vaulter\Filament\Resources\FolderResource;
 
 final class CreateFolder extends CreateRecord
 {

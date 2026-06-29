@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
 use ReflectionEnumUnitCase;
 use UnitEnum;

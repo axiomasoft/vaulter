@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
 use Illuminate\Database\Schema\Blueprint;
 
 /**
- * Schema helpers that honour config('docvault.id_type') and tenancy, so the
+ * Schema helpers that honour config('vaulter.id_type') and tenancy, so the
  * published migrations work for both auto-increment and ULID host apps.
  */
-final class DocVaultSchema
+final class VaulterSchema
 {
     public static function key(Blueprint $table): void
     {

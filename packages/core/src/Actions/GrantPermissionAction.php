@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\GrantPermissionData;
-use DocVault\Events\PermissionGranted;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentPermission;
-use DocVault\Repositories\PermissionStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\GrantPermissionData;
+use Vaulter\Events\PermissionGranted;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentPermission;
+use Vaulter\Repositories\PermissionStoreRepository;
 
 final readonly class GrantPermissionAction
 {

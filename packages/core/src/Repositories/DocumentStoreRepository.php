@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\Document;
-use DocVault\Support\Config;
+use Vaulter\Models\Document;
+use Vaulter\Support\Config;
 
 final class DocumentStoreRepository
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\Document;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Vaulter\Models\Document;
 
 final readonly class DocumentMoved implements ShouldDispatchAfterCommit
 {

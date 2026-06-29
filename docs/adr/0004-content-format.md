@@ -14,7 +14,7 @@ does not grow unbounded.
   which validates the root node (`{"type":"doc", …}`) and enforces a size limit.
 - **Versions are append-only snapshots.** `CreateVersionAction` snapshots the document's
   current content; `DocumentVersion` has no `updated_at` (immutable).
-- **Bounded history.** `config('docvault.max_versions')` caps retained versions per document;
+- **Bounded history.** `config('vaulter.max_versions')` caps retained versions per document;
   `VersionStoreRepository::pruneOldest()` drops the oldest beyond the cap (`0` = unlimited).
 - **Restore** copies a version's content back onto the document (a normal update that itself
   can be re-snapshotted), preserving a linear, auditable history.

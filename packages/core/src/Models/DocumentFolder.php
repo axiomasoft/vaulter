@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentFolderFactory;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Models\Concerns\InteractsWithWorkspace;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Vaulter\Database\Factories\DocumentFolderFactory;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\InteractsWithWorkspace;
+use Vaulter\Support\Config;
 
 /**
  * A node in the hierarchical folder tree (Google Drive style) scoped to a workspace.
@@ -25,10 +25,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class DocumentFolder extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentFolderFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     use InteractsWithWorkspace;
 

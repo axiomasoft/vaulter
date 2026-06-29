@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\DocVaultManager;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Collection;
+use Vaulter\Models\Document;
+use Vaulter\VaulterManager;
 
 /**
  * Read-side authorization gate. Delegates to the host {@see PermissionResolver}.
@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 final readonly class DocumentVisibilityService
 {
     public function __construct(
-        private DocVaultManager $manager,
+        private VaulterManager $manager,
     ) {}
 
     public function canView(?Authenticatable $user, Document $document): bool

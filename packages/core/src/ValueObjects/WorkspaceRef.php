@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\ValueObjects;
+namespace Vaulter\ValueObjects;
 
 /**
  * A polymorphic reference to the host entity that owns a set of documents

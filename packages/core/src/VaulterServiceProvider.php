@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DocVault;
+namespace Vaulter;
 
-use DocVault\Contracts\CollaborationDriver;
-use DocVault\Contracts\PermissionResolver;
-use DocVault\Contracts\ShareTokenGenerator;
-use DocVault\Support\Config;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Broadcast;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Contracts\CollaborationDriver;
+use Vaulter\Contracts\PermissionResolver;
+use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Support\Config;
 
-final class DocVaultServiceProvider extends PackageServiceProvider
+final class VaulterServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('docvault')
+            ->name('vaulter')
             ->hasConfigFile()
             ->discoversMigrations()
             ->runsMigrations()
@@ -29,14 +29,14 @@ final class DocVaultServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub('axioma-studio/doc-vault');
+                    ->askToStarRepoOnGitHub('axioma-studio/vaulter');
             });
     }
 
     public function packageRegistered(): void
     {
-        $this->app->singleton(DocVaultManager::class);
-        $this->app->alias(DocVaultManager::class, 'docvault');
+        $this->app->singleton(VaulterManager::class);
+        $this->app->alias(VaulterManager::class, 'vaulter');
 
         $this->app->bind(ShareTokenGenerator::class, Config::shareTokenGeneratorClass());
 
@@ -48,7 +48,7 @@ final class DocVaultServiceProvider extends PackageServiceProvider
 
         $this->app->bind(
             CollaborationDriver::class,
-            fn (): CollaborationDriver => $this->app->make(DocVaultManager::class)->driver(),
+            fn (): CollaborationDriver => $this->app->make(VaulterManager::class)->driver(),
         );
     }
 
@@ -69,7 +69,7 @@ final class DocVaultServiceProvider extends PackageServiceProvider
                     return false;
                 }
 
-                return app(DocVaultManager::class)->driver()->authorizeChannel($user, $document);
+                return app(VaulterManager::class)->driver()->authorizeChannel($user, $document);
             },
         );
     }

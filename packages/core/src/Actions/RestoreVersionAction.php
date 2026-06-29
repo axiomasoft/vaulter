@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\VersionRestored;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentVersion;
-use DocVault\Repositories\DocumentStoreRepository;
-use DocVault\Support\Identity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Events\VersionRestored;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentVersion;
+use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Support\Identity;
 
 final readonly class RestoreVersionAction
 {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
-import { useDocVaultClient } from '../composables/useDocVaultClient'
-import type { DocVaultPermission, DocumentId, GrantPermissionPayload } from '../types'
+import { useVaulterClient } from '../composables/useVaulterClient'
+import type { VaulterPermission, DocumentId, GrantPermissionPayload } from '../types'
 
 const props = withDefaults(
   defineProps<{ documentId: DocumentId, autoLoad?: boolean }>(),
@@ -9,12 +9,12 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  granted: [permission: DocVaultPermission]
+  granted: [permission: VaulterPermission]
   revoked: [permissionId: DocumentId]
 }>()
 
-const client = useDocVaultClient()
-const permissions: Ref<DocVaultPermission[]> = ref([])
+const client = useVaulterClient()
+const permissions: Ref<VaulterPermission[]> = ref([])
 const loading = ref(false)
 
 async function refresh(): Promise<void> {
@@ -32,7 +32,7 @@ async function grant(payload: GrantPermissionPayload): Promise<void> {
   await refresh()
 }
 
-async function revoke(permission: DocVaultPermission): Promise<void> {
+async function revoke(permission: VaulterPermission): Promise<void> {
   await client.permissions.revoke(props.documentId, permission.id)
   emit('revoked', permission.id)
   await refresh()
@@ -48,10 +48,10 @@ defineExpose({ refresh, grant, revoke, permissions, loading })
 </script>
 
 <template>
-  <div class="docvault-permissions-panel">
+  <div class="vaulter-permissions-panel">
     <slot v-if="loading" name="loading">Loading…</slot>
-    <ul v-else class="docvault-permissions-panel__list">
-      <li v-for="permission in permissions" :key="permission.id" class="docvault-permissions-panel__item">
+    <ul v-else class="vaulter-permissions-panel__list">
+      <li v-for="permission in permissions" :key="permission.id" class="vaulter-permissions-panel__item">
         <slot name="item" :permission="permission" :revoke="() => revoke(permission)">
           {{ permission.subject.type }}#{{ permission.subject.id }} — {{ permission.permission }}
         </slot>

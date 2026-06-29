@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Attributes;
+namespace Vaulter\Attributes;
 
 use Attribute;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 
 arch('all package code declares strict types')
-    ->expect('DocVault')
+    ->expect('Vaulter')
     ->toUseStrictTypes();
 
 arch('no debug helpers leak into the package')
@@ -12,29 +12,29 @@ arch('no debug helpers leak into the package')
     ->not->toBeUsed();
 
 arch('actions are final')
-    ->expect('DocVault\Actions')
+    ->expect('Vaulter\Actions')
     ->toBeFinal();
 
 arch('value objects are readonly')
-    ->expect('DocVault\ValueObjects')
+    ->expect('Vaulter\ValueObjects')
     ->toBeReadonly();
 
 arch('data transfer objects are readonly')
-    ->expect('DocVault\Data')
+    ->expect('Vaulter\Data')
     ->toBeReadonly();
 
 arch('events are readonly')
-    ->expect('DocVault\Events')
+    ->expect('Vaulter\Events')
     ->toBeReadonly();
 
 arch('contracts are interfaces')
-    ->expect('DocVault\Contracts')
+    ->expect('Vaulter\Contracts')
     ->toBeInterfaces();
 
 arch('actions never depend on the HTTP request')
-    ->expect('DocVault\Actions')
+    ->expect('Vaulter\Actions')
     ->not->toUse(Request::class);
 
 arch('repositories never depend on the HTTP request')
-    ->expect('DocVault\Repositories')
+    ->expect('Vaulter\Repositories')
     ->not->toUse(Request::class);

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentShareFactory;
-use DocVault\Enums\PermissionLevel;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Database\Factories\DocumentShareFactory;
+use Vaulter\Enums\PermissionLevel;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Support\Config;
 
 /**
  * A tokenized public share of a document, granting a fixed permission level until
@@ -28,10 +28,10 @@ use Illuminate\Support\Carbon;
  */
 class DocumentShare extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentShareFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     protected $guarded = [];
 

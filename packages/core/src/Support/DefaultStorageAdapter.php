@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
-use DocVault\Contracts\StorageAdapter;
+use Vaulter\Contracts\StorageAdapter;
 
 /**
  * No-op default. Real binary persistence (filesystem disk, S3, …) is wired in a

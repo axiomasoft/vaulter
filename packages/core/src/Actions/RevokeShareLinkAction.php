@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\ShareLinkRevoked;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentShare;
-use DocVault\Repositories\ShareStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\ShareLinkRevoked;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Repositories\ShareStoreRepository;
 
 final readonly class RevokeShareLinkAction
 {

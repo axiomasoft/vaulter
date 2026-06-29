@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     | Navigation group
     |--------------------------------------------------------------------------
-    | The Filament navigation group the DocVault resources are listed under.
+    | The Filament navigation group the Vaulter resources are listed under.
     */
-    'navigation_group' => 'DocVault',
+    'navigation_group' => 'Vaulter',
 ];

@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament;
+namespace Vaulter\Filament;
 
-use DocVault\Filament\Resources\DocumentResource;
-use DocVault\Filament\Resources\FolderResource;
-use DocVault\Filament\Resources\ShareResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
+use Vaulter\Filament\Resources\DocumentResource;
+use Vaulter\Filament\Resources\FolderResource;
+use Vaulter\Filament\Resources\ShareResource;
 
 /**
- * DocVault Filament plugin (Filament 5).
+ * Vaulter Filament plugin (Filament 5).
  *
  * Register it in your PanelProvider:
  *
- *   $panel->plugins([ DocVaultPlugin::make() ]);
+ *   $panel->plugins([ VaulterPlugin::make() ]);
  */
-final class DocVaultPlugin implements Plugin
+final class VaulterPlugin implements Plugin
 {
     public static function make(): static
     {
@@ -28,7 +28,7 @@ final class DocVaultPlugin implements Plugin
     #[Override]
     public function getId(): string
     {
-        return 'docvault';
+        return 'vaulter';
     }
 
     #[Override]

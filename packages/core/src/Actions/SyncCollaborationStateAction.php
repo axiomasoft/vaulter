@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\DocumentContentSynced;
-use DocVault\Events\DocumentUpdated;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentStoreRepository;
-use DocVault\Support\Config;
-use DocVault\ValueObjects\TipTapContent;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\DocumentContentSynced;
+use Vaulter\Events\DocumentUpdated;
+use Vaulter\Models\Document;
+use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Support\Config;
+use Vaulter\ValueObjects\TipTapContent;
 
 /**
  * Persists the latest collaborative content (the merged Yjs state, serialized to

@@ -1,23 +1,23 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
-import { useDocVaultClient } from './useDocVaultClient'
-import type { DocVaultDocument, DocumentId, TipTapDocument } from '../types'
+import { useVaulterClient } from './useVaulterClient'
+import type { VaulterDocument, DocumentId, TipTapDocument } from '../types'
 
-export interface UseDocVaultEditorOptions {
+export interface UseVaulterEditorOptions {
   /** Save automatically after `setContent` (default: false). */
   autosave?: boolean
   /** Debounce window for autosave, in ms (default: 2000). */
   autosaveDelay?: number
 }
 
-export interface UseDocVaultEditorReturn {
-  document: ShallowRef<DocVaultDocument | null>
+export interface UseVaulterEditorReturn {
+  document: ShallowRef<VaulterDocument | null>
   content: ShallowRef<TipTapDocument | null>
   loading: Ref<boolean>
   saving: Ref<boolean>
   dirty: Ref<boolean>
-  load: () => Promise<DocVaultDocument>
+  load: () => Promise<VaulterDocument>
   setContent: (content: TipTapDocument) => void
-  save: () => Promise<DocVaultDocument | null>
+  save: () => Promise<VaulterDocument | null>
   snapshot: (label?: string) => Promise<void>
 }
 
@@ -26,12 +26,12 @@ export interface UseDocVaultEditorReturn {
  * debounced autosave). The actual TipTap/Yjs binding is wired in M3 — feed editor
  * output to `setContent` and read `content` to seed the editor.
  */
-export function useDocVaultEditor(
+export function useVaulterEditor(
   documentId: DocumentId,
-  options: UseDocVaultEditorOptions = {},
-): UseDocVaultEditorReturn {
-  const client = useDocVaultClient()
-  const document = shallowRef<DocVaultDocument | null>(null)
+  options: UseVaulterEditorOptions = {},
+): UseVaulterEditorReturn {
+  const client = useVaulterClient()
+  const document = shallowRef<VaulterDocument | null>(null)
   const content = shallowRef<TipTapDocument | null>(null)
   const loading = ref(false)
   const saving = ref(false)
@@ -39,7 +39,7 @@ export function useDocVaultEditor(
 
   let timer: ReturnType<typeof setTimeout> | null = null
 
-  async function load(): Promise<DocVaultDocument> {
+  async function load(): Promise<VaulterDocument> {
     loading.value = true
     try {
       const loaded = await client.documents.get(documentId)
@@ -52,7 +52,7 @@ export function useDocVaultEditor(
     }
   }
 
-  async function save(): Promise<DocVaultDocument | null> {
+  async function save(): Promise<VaulterDocument | null> {
     if (content.value === null) {
       return null
     }

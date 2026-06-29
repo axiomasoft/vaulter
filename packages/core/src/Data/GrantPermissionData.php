@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Data;
+namespace Vaulter\Data;
 
-use DocVault\Enums\PermissionLevel;
+use Vaulter\Enums\PermissionLevel;
 
 final readonly class GrantPermissionData
 {

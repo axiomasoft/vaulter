@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Models\Document;
-use DocVault\Models\DocumentComment;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentComment;
+use Vaulter\Support\Config;
 
 final class CommentReadRepository
 {

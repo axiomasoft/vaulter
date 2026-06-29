@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\UpdateDocumentData;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Data\UpdateDocumentData;
+use Vaulter\ValueObjects\TipTapContent;
 
-final class UpdateDocumentRequest extends DocVaultFormRequest
+final class UpdateDocumentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

@@ -1,12 +1,12 @@
 services:
-  docvault-collab:
+  vaulter-collab:
     build: .
-    image: docvault/hocuspocus-server:dev
+    image: vaulter/hocuspocus-server:dev
     ports:
-      - "${DOCVAULT_COLLAB_PORT:-1234}:1234"
+      - "${VAULTER_COLLAB_PORT:-1234}:1234"
     environment:
-      DOCVAULT_COLLAB_PORT: 1234
-      DOCVAULT_COLLAB_APP_ID: ${DOCVAULT_COLLAB_APP_ID:-}
-      DOCVAULT_COLLAB_SECRET: ${DOCVAULT_COLLAB_SECRET:-}
-      DOCVAULT_BACKEND_URL: ${DOCVAULT_BACKEND_URL:-http://host.docker.internal}
+      VAULTER_COLLAB_PORT: 1234
+      VAULTER_COLLAB_APP_ID: ${VAULTER_COLLAB_APP_ID:-}
+      VAULTER_COLLAB_SECRET: ${VAULTER_COLLAB_SECRET:-}
+      VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
     restart: unless-stopped

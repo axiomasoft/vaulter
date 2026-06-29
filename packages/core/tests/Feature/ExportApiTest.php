@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use DocVault\Contracts\DocumentExporter;
-use DocVault\Facades\DocVault;
-use DocVault\Models\Document;
-use DocVault\Tests\Fixtures\AllowResolver;
-use DocVault\Tests\Fixtures\DenyResolver;
-use DocVault\Tests\Fixtures\TestUser;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Document;
+use Vaulter\Tests\Fixtures\AllowResolver;
+use Vaulter\Tests\Fixtures\DenyResolver;
+use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\TipTapContent;
 
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 21]));
@@ -23,10 +23,10 @@ function exportContent(): array
 }
 
 it('exports a document as HTML', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export?format=html', $document->id))
+    $this->getJson(sprintf('api/vaulter/documents/%s/export?format=html', $document->id))
         ->assertOk()
         ->assertJsonPath('data.format', 'html')
         ->assertJsonPath('data.filename', 'my-doc.html')
@@ -34,10 +34,10 @@ it('exports a document as HTML', function (): void {
 });
 
 it('exports a document as Markdown', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export?format=markdown', $document->id))
+    $this->getJson(sprintf('api/vaulter/documents/%s/export?format=markdown', $document->id))
         ->assertOk()
         ->assertJsonPath('data.format', 'markdown')
         ->assertJsonPath('data.filename', 'my-doc.md')
@@ -45,31 +45,31 @@ it('exports a document as Markdown', function (): void {
 });
 
 it('defaults to HTML when no format is given', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create();
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export', $document->id))
+    $this->getJson(sprintf('api/vaulter/documents/%s/export', $document->id))
         ->assertOk()
         ->assertJsonPath('data.format', 'html');
 });
 
 it('forbids exporting when the resolver denies view', function (): void {
-    DocVault::resolvePermissionsWith(new DenyResolver);
+    Vaulter::resolvePermissionsWith(new DenyResolver);
     $document = Document::factory()->create();
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export', $document->id))->assertForbidden();
+    $this->getJson(sprintf('api/vaulter/documents/%s/export', $document->id))->assertForbidden();
 });
 
 it('rejects an unsupported export format', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create();
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export?format=pdf', $document->id))->assertStatus(422);
+    $this->getJson(sprintf('api/vaulter/documents/%s/export?format=pdf', $document->id))->assertStatus(422);
 });
 
 it('exports through a registered custom exporter', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
-    DocVault::registerExporter(new class implements DocumentExporter
+    Vaulter::resolvePermissionsWith(new AllowResolver);
+    Vaulter::registerExporter(new class implements DocumentExporter
     {
         public function format(): string
         {
@@ -94,7 +94,7 @@ it('exports through a registered custom exporter', function (): void {
 
     $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export?format=json', $document->id))
+    $this->getJson(sprintf('api/vaulter/documents/%s/export?format=json', $document->id))
         ->assertOk()
         ->assertJsonPath('data.format', 'json')
         ->assertJsonPath('data.filename', 'my-doc.json')
@@ -102,17 +102,17 @@ it('exports through a registered custom exporter', function (): void {
 });
 
 it('includes the exporter mime type in the response', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
 
-    $this->getJson(sprintf('api/docvault/documents/%s/export?format=html', $document->id))
+    $this->getJson(sprintf('api/vaulter/documents/%s/export?format=html', $document->id))
         ->assertOk()
         ->assertJsonPath('data.mime_type', 'text/html');
 });
 
 it('supports a binary exporter returning base64 content', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
-    DocVault::registerExporter(new class implements DocumentExporter
+    Vaulter::resolvePermissionsWith(new AllowResolver);
+    Vaulter::registerExporter(new class implements DocumentExporter
     {
         public function format(): string
         {
@@ -137,7 +137,7 @@ it('supports a binary exporter returning base64 content', function (): void {
 
     $document = Document::factory()->create(['title' => 'My Doc', 'content' => exportContent()]);
 
-    $response = $this->getJson(sprintf('api/docvault/documents/%s/export?format=pdf', $document->id))
+    $response = $this->getJson(sprintf('api/vaulter/documents/%s/export?format=pdf', $document->id))
         ->assertOk()
         ->assertJsonPath('data.format', 'pdf')
         ->assertJsonPath('data.filename', 'my-doc.pdf')

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Exceptions;
+namespace Vaulter\Exceptions;
 
-final class UnknownDocumentTypeException extends DocVaultException
+final class UnknownDocumentTypeException extends VaulterException
 {
     /**
      * @param list<string> $allowed
@@ -14,10 +14,10 @@ final class UnknownDocumentTypeException extends DocVaultException
         $list = implode(', ', $allowed);
 
         return new self(
-            sprintf('[DocVault] Unknown document type [%s]. ', $type)
+            sprintf('[Vaulter] Unknown document type [%s]. ', $type)
             .sprintf('Why: it is not in the enabled types [%s]. ', $list)
-            .'Fix: enable it in config(docvault.enabled_document_types) or register a custom type '
-            .'via DocVault::registerDocumentType(). '
+            .'Fix: enable it in config(vaulter.enabled_document_types) or register a custom type '
+            .'via Vaulter::registerDocumentType(). '
             .'Docs: '.self::docs('unknown-document-type'),
         );
     }

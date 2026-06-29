@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models\Concerns;
+namespace Vaulter\Models\Concerns;
 
-use DocVault\ValueObjects\WorkspaceRef;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Vaulter\ValueObjects\WorkspaceRef;
 
 /**
  * Adds the polymorphic workspace relation (workspace_type / workspace_id) and a

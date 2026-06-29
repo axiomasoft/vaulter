@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Tests\Fixtures;
+namespace Vaulter\Tests\Fixtures;
 
 use Illuminate\Foundation\Auth\User;
 

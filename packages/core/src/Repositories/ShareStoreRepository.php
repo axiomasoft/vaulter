@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Contracts\ShareTokenGenerator;
-use DocVault\Data\CreateShareData;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentShare;
-use DocVault\Support\Config;
+use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Data\CreateShareData;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Support\Config;
 
 final class ShareStoreRepository
 {

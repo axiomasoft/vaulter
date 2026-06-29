@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Data;
+namespace Vaulter\Data;
 
 final readonly class CreateFolderData
 {

@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace DocVault;
+namespace Vaulter;
 
-use DocVault\Contracts\CollaborationDriver;
-use DocVault\Contracts\DocumentExporter;
-use DocVault\Contracts\PermissionResolver;
-use DocVault\Exceptions\DocVaultException;
-use DocVault\Exceptions\UnknownExportFormatException;
-use DocVault\Support\Config;
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Contracts\CollaborationDriver;
+use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\PermissionResolver;
+use Vaulter\Exceptions\UnknownExportFormatException;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Support\Config;
 
 /**
  * Public entry point for host-app integration: register the permission resolver,
  * extend the document-type registry, and resolve the collaboration driver.
  */
-final class DocVaultManager
+final class VaulterManager
 {
     private ?PermissionResolver $permissionResolver = null;
 
@@ -35,7 +35,7 @@ final class DocVaultManager
     ) {}
 
     /**
-     * Tell DocVault how to delegate authorization to the host application.
+     * Tell Vaulter how to delegate authorization to the host application.
      */
     public function resolvePermissionsWith(PermissionResolver $resolver): void
     {
@@ -115,7 +115,7 @@ final class DocVaultManager
     }
 
     /**
-     * Resolve a collaboration driver (defaults to config('docvault.collaboration.driver')).
+     * Resolve a collaboration driver (defaults to config('vaulter.collaboration.driver')).
      */
     public function driver(?string $name = null): CollaborationDriver
     {
@@ -124,10 +124,10 @@ final class DocVaultManager
         $class = $config['class'] ?? null;
 
         if (!is_string($class) || !is_a($class, CollaborationDriver::class, allow_string: true)) {
-            throw new DocVaultException(
-                sprintf('[DocVault] Unknown collaboration driver [%s]. ', $name)
-                .'Fix: add it under config(docvault.collaboration.drivers) with a "class" implementing CollaborationDriver. '
-                .'Docs: https://github.com/axioma-studio/doc-vault/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
+            throw new VaulterException(
+                sprintf('[Vaulter] Unknown collaboration driver [%s]. ', $name)
+                .'Fix: add it under config(vaulter.collaboration.drivers) with a "class" implementing CollaborationDriver. '
+                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
             );
         }
 

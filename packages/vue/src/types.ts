@@ -1,6 +1,6 @@
 /**
- * Public types for the DocVault API surface. These mirror the JSON resources
- * returned by `axioma-studio/docvault-core`.
+ * Public types for the Vaulter API surface. These mirror the JSON resources
+ * returned by `axioma-studio/vaulter-core`.
  */
 
 export type DocumentId = number | string
@@ -31,7 +31,7 @@ export interface TipTapDocument {
   [key: string]: unknown
 }
 
-export interface DocVaultDocument {
+export interface VaulterDocument {
   id: DocumentId
   workspace: WorkspaceRef
   folder_id: DocumentId | null
@@ -44,7 +44,7 @@ export interface DocVaultDocument {
   abilities: DocumentAbilities
 }
 
-export interface DocVaultVersion {
+export interface VaulterVersion {
   id: DocumentId
   document_id: DocumentId
   snapshot_label: string | null
@@ -52,7 +52,7 @@ export interface DocVaultVersion {
   created_at: string | null
 }
 
-export interface DocVaultFolder {
+export interface VaulterFolder {
   id: DocumentId
   workspace: WorkspaceRef
   parent_id: DocumentId | null
@@ -60,7 +60,7 @@ export interface DocVaultFolder {
   order: number
 }
 
-export interface DocVaultPermission {
+export interface VaulterPermission {
   id: DocumentId
   document_id: DocumentId
   subject: {
@@ -93,7 +93,7 @@ export interface DocumentExport {
   filename: string
 }
 
-export interface DocVaultComment {
+export interface VaulterComment {
   id: DocumentId
   document_id: DocumentId
   parent_id: DocumentId | null
@@ -107,7 +107,7 @@ export interface DocVaultComment {
   created_at: string | null
 }
 
-export interface DocVaultShare {
+export interface VaulterShare {
   id: DocumentId
   document_id: DocumentId
   token: string
@@ -218,8 +218,8 @@ export interface CreateSharePayload {
   expires_at?: string | null
 }
 
-export interface DocVaultClientOptions {
-  /** Base URL of the DocVault API (default: `/api/docvault`). */
+export interface VaulterClientOptions {
+  /** Base URL of the Vaulter API (default: `/api/vaulter`). */
   baseUrl?: string
   /** Extra request headers, or a getter (e.g. for a rotating bearer token). */
   headers?: Record<string, string> | (() => Record<string, string>)

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use DocVault\Contracts\ShareTokenGenerator;
-use DocVault\Facades\DocVault;
-use DocVault\Models\Document;
-use DocVault\Tests\Fixtures\AllowResolver;
-use DocVault\Tests\Fixtures\TestUser;
+use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Document;
+use Vaulter\Tests\Fixtures\AllowResolver;
+use Vaulter\Tests\Fixtures\TestUser;
 
 it('mints share tokens with a swapped generator', function (): void {
     app()->bind(ShareTokenGenerator::class, fn (): ShareTokenGenerator => new class implements ShareTokenGenerator
@@ -17,21 +17,21 @@ it('mints share tokens with a swapped generator', function (): void {
         }
     });
 
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $this->actingAs((new TestUser)->forceFill(['id' => 11]));
     $document = Document::factory()->create();
 
-    $this->postJson(sprintf('api/docvault/documents/%s/shares', $document->id), ['permission' => 'edit'])
+    $this->postJson(sprintf('api/vaulter/documents/%s/shares', $document->id), ['permission' => 'edit'])
         ->assertCreated()
         ->assertJsonPath('data.token', 'fixed-share-token');
 });
 
 it('defaults to a 48-character random token', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $this->actingAs((new TestUser)->forceFill(['id' => 11]));
     $document = Document::factory()->create();
 
-    $token = $this->postJson(sprintf('api/docvault/documents/%s/shares', $document->id), ['permission' => 'view'])
+    $token = $this->postJson(sprintf('api/vaulter/documents/%s/shares', $document->id), ['permission' => 'view'])
         ->assertCreated()
         ->json('data.token');
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Enums;
+namespace Vaulter\Enums;
 
-use DocVault\Attributes\Label;
-use DocVault\Support\Concerns\HasLabel;
+use Vaulter\Attributes\Label;
+use Vaulter\Support\Concerns\HasLabel;
 
 enum BulkAction: string
 {

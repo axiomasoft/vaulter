@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Data;
+namespace Vaulter\Data;
 
-use DocVault\Enums\DocumentType;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Enums\DocumentType;
+use Vaulter\ValueObjects\TipTapContent;
 
 final readonly class CreateDocumentData
 {

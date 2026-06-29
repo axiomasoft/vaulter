@@ -1,9 +1,9 @@
-# DocVault
+# Vaulter
 
 > Embeddable document management for Laravel — a file manager, TipTap editor, version history
 > and real-time collaboration, wired into your app's own roles through a thin adapter.
 
-DocVault grew out of the collaborative-documents module in FlexCRM and packages that
+Vaulter grew out of the collaborative-documents module in FlexCRM and packages that
 infrastructure into a reusable component you can drop into any Laravel project **without adopting
 a new auth system** — it delegates every permission check to a `PermissionResolver` you implement.
 
@@ -31,38 +31,38 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 - **Export** — render any document to HTML or Markdown.
 - **Embeddable by design** — swappable Eloquent models, dual `id`/`ulid` keys and optional
   `tenant_id` (drops cleanly into both plain Laravel and multi-tenant apps).
-- **TypeScript front-end** (`@docvault/vue`) — a typed API client, composables
-  (`useDocuments`, `useDocVaultEditor`, `useCollaboration`, `useComments`, `useShares`,
+- **TypeScript front-end** (`@vaulter/vue`) — a typed API client, composables
+  (`useDocuments`, `useVaulterEditor`, `useCollaboration`, `useComments`, `useShares`,
   `usePermissions`, `useDocumentExport`) and slot-driven components, shipped with `.d.ts`.
-- **Filament admin** (`@docvault/filament`, optional) — a drop-in Filament 5 plugin to manage
+- **Filament admin** (`@vaulter/filament`, optional) — a drop-in Filament 5 plugin to manage
   documents (incl. trash/restore) from your panel.
 
 ## Install
 
 ```bash
-composer require axioma-studio/docvault-core
-php artisan docvault:install   # publishes config + migrations, runs them
-npm install @docvault/vue
+composer require axioma-studio/vaulter-core
+php artisan vaulter:install   # publishes config + migrations, runs them
+npm install @vaulter/vue
 ```
 
-Tell DocVault how to authorize, by implementing `DocVault\Contracts\PermissionResolver`:
+Tell Vaulter how to authorize, by implementing `Vaulter\Contracts\PermissionResolver`:
 
 ```php
-use DocVault\Facades\DocVault;
+use Vaulter\Facades\Vaulter;
 
-DocVault::resolvePermissionsWith(new \App\DocVault\PermissionResolver());
+Vaulter::resolvePermissionsWith(new \App\Vaulter\PermissionResolver());
 ```
 
 Wire the front-end:
 
 ```ts
-import { DocVaultPlugin } from '@docvault/vue'
+import { VaulterPlugin } from '@vaulter/vue'
 
-app.use(DocVaultPlugin, { baseUrl: '/api/docvault' })
+app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 ```
 
 ```vue
-<DocVaultFileManager workspace-type="App\Models\Project" :workspace-id="project.id"
+<VaulterFileManager workspace-type="App\Models\Project" :workspace-id="project.id"
   @open-document="openEditor" />
 ```
 
@@ -72,18 +72,18 @@ setup and embedding into multi-tenant apps.
 ## Monorepo layout
 
 ```
-doc-vault/
+vaulter/
 ├── packages/
-│   ├── core/             # axioma-studio/docvault-core — the Laravel package (DocVault\)
-│   ├── vue/              # @docvault/vue — TypeScript Vue 3 client, composables & components
-│   └── filament/         # axioma-studio/docvault-filament — Filament 5 admin (DocVault\Filament\)
+│   ├── core/             # axioma-studio/vaulter-core — the Laravel package (Vaulter\)
+│   ├── vue/              # @vaulter/vue — TypeScript Vue 3 client, composables & components
+│   └── filament/         # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
 ├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)
 ├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)
 ```
 
 Integrations follow the AzGuard convention — each lives under `packages/` with its own namespace
-(`DocVault\Filament\`, …) and is tested in isolation so optional dependencies (Filament) never
+(`Vaulter\Filament\`, …) and is tested in isolation so optional dependencies (Filament) never
 constrain the core matrix.
 
 ## Development

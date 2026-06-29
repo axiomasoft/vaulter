@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useDocuments } from '../composables/useDocuments'
-import type { DocVaultDocument, DocumentId, DocumentTypeName } from '../types'
+import type { VaulterDocument, DocumentId, DocumentTypeName } from '../types'
 
 // File manager — the main entry point (Google Drive style). Loads a workspace's
 // documents through the injected client; rendering is slot-driven so host apps
@@ -18,7 +18,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'open-document': [document: DocVaultDocument]
+  'open-document': [document: VaulterDocument]
   'create-document': [type: DocumentTypeName, folderId: DocumentId | null]
   'folder-changed': [folderId: DocumentId | null]
 }>()
@@ -48,14 +48,14 @@ defineExpose({ refresh, documents, loading, error })
 </script>
 
 <template>
-  <div class="docvault-file-manager" :data-view="viewMode">
+  <div class="vaulter-file-manager" :data-view="viewMode">
     <slot v-if="loading" name="loading">Loading…</slot>
     <slot v-else-if="error" name="error" :error="error">Failed to load documents.</slot>
-    <ul v-else class="docvault-file-manager__list">
+    <ul v-else class="vaulter-file-manager__list">
       <li
         v-for="doc in documents"
         :key="doc.id"
-        class="docvault-file-manager__item"
+        class="vaulter-file-manager__item"
         @click="emit('open-document', doc)"
       >
         <slot name="item" :document="doc">{{ doc.title }}</slot>

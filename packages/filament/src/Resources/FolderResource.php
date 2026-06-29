@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources;
+namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
-use DocVault\Filament\Resources\FolderResource\Pages\CreateFolder;
-use DocVault\Filament\Resources\FolderResource\Pages\EditFolder;
-use DocVault\Filament\Resources\FolderResource\Pages\ListFolders;
-use DocVault\Models\DocumentFolder;
-use DocVault\Support\Config;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\PageRegistration;
@@ -19,6 +14,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Override;
 use UnitEnum;
+use Vaulter\Filament\Resources\FolderResource\Pages\CreateFolder;
+use Vaulter\Filament\Resources\FolderResource\Pages\EditFolder;
+use Vaulter\Filament\Resources\FolderResource\Pages\ListFolders;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Support\Config;
 
 final class FolderResource extends Resource
 {
@@ -26,7 +26,7 @@ final class FolderResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-folder';
 
-    protected static string|UnitEnum|null $navigationGroup = 'DocVault';
+    protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
 
     protected static ?string $recordTitleAttribute = 'name';
 

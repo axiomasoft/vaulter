@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
 /**
  * Safely stringifies model keys / auth identifiers (which Eloquent types as mixed).

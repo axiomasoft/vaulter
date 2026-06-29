@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useDocVaultEditor } from '../composables/useDocVaultEditor'
+import { useVaulterEditor } from '../composables/useVaulterEditor'
 import { usePermissions } from '../composables/usePermissions'
-import type { DocVaultDocument, DocumentId, TipTapDocument } from '../types'
+import type { VaulterDocument, DocumentId, TipTapDocument } from '../types'
 
 // Editor shell: loads the document, tracks unsaved changes and persists content
 // (with optional autosave). The TipTap surface + collaborator presence land in M3;
@@ -19,11 +19,11 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  save: [document: DocVaultDocument]
+  save: [document: VaulterDocument]
   'content-changed': [content: TipTapDocument]
 }>()
 
-const { document, content, dirty, saving, loading, load, setContent, save, snapshot } = useDocVaultEditor(
+const { document, content, dirty, saving, loading, load, setContent, save, snapshot } = useVaulterEditor(
   props.documentId,
   { autosave: props.autosave },
 )
@@ -55,7 +55,7 @@ defineExpose({ load, save: persist, setContent: update, snapshot, content, dirty
 </script>
 
 <template>
-  <div class="docvault-editor" :data-readonly="readonly">
+  <div class="vaulter-editor" :data-readonly="readonly">
     <slot v-if="loading" name="loading">Loading…</slot>
     <slot
       v-else
@@ -67,7 +67,7 @@ defineExpose({ load, save: persist, setContent: update, snapshot, content, dirty
       :set-content="update"
       :save="persist"
     >
-      <div class="docvault-editor__placeholder">{{ document?.title ?? 'DocVault editor' }}</div>
+      <div class="vaulter-editor__placeholder">{{ document?.title ?? 'Vaulter editor' }}</div>
     </slot>
   </div>
 </template>

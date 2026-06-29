@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\CreateDocumentData;
-use DocVault\Enums\DocumentType;
-use DocVault\Events\DocumentCreated;
-use DocVault\Exceptions\UnknownDocumentTypeException;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentStoreRepository;
-use DocVault\Support\Config;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\CreateDocumentData;
+use Vaulter\Enums\DocumentType;
+use Vaulter\Events\DocumentCreated;
+use Vaulter\Exceptions\UnknownDocumentTypeException;
+use Vaulter\Models\Document;
+use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Support\Config;
 
 final readonly class CreateDocumentAction
 {

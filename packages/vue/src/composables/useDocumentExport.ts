@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { useDocVaultClient } from './useDocVaultClient'
+import { useVaulterClient } from './useVaulterClient'
 import type { DocumentExport, DocumentId, ExportFormat } from '../types'
 
 export interface UseDocumentExportReturn {
@@ -14,7 +14,7 @@ export interface UseDocumentExportReturn {
  * of the rendered content (no-op outside a DOM environment).
  */
 export function useDocumentExport(documentId: DocumentId): UseDocumentExportReturn {
-  const client = useDocVaultClient()
+  const client = useVaulterClient()
   const exporting = ref(false)
   const error = ref<unknown>(null)
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Tests;
+namespace Vaulter\Filament\Tests;
 
-use DocVault\DocVaultServiceProvider;
-use DocVault\Filament\DocVaultFilamentServiceProvider;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\Filament\VaulterFilamentServiceProvider;
+use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -18,8 +18,8 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            DocVaultServiceProvider::class,
-            DocVaultFilamentServiceProvider::class,
+            VaulterServiceProvider::class,
+            VaulterFilamentServiceProvider::class,
         ];
     }
 }

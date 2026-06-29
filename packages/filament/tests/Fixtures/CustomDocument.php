@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Tests\Fixtures;
+namespace Vaulter\Filament\Tests\Fixtures;
 
-use DocVault\Models\Document;
+use Vaulter\Models\Document;
 
 final class CustomDocument extends Document {}

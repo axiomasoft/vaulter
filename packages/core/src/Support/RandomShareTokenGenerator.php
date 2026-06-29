@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
-use DocVault\Contracts\ShareTokenGenerator;
 use Illuminate\Support\Str;
+use Vaulter\Contracts\ShareTokenGenerator;
 
 /**
  * Default share-token generator: a 48-character random alphanumeric string.

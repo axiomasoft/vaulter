@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Models\DocumentFolder;
-use DocVault\Repositories\FolderStoreRepository;
-use DocVault\Support\Identity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Repositories\FolderStoreRepository;
+use Vaulter\Support\Identity;
 
 final readonly class MoveFolderAction
 {

@@ -7,15 +7,15 @@ import type {
   CreateFolderPayload,
   CreateSharePayload,
   CreateVersionPayload,
-  DocVaultClientOptions,
-  DocVaultComment,
-  DocVaultDocument,
+  VaulterClientOptions,
+  VaulterComment,
+  VaulterDocument,
   DocumentExport,
   ExportFormat,
-  DocVaultFolder,
-  DocVaultPermission,
-  DocVaultShare,
-  DocVaultVersion,
+  VaulterFolder,
+  VaulterPermission,
+  VaulterShare,
+  VaulterVersion,
   DocumentId,
   GrantPermissionPayload,
   ListDocumentsQuery,
@@ -26,8 +26,8 @@ import type {
   WorkspaceQuery,
 } from './types'
 
-/** Error thrown for non-2xx DocVault API responses. */
-export class DocVaultApiError extends Error {
+/** Error thrown for non-2xx Vaulter API responses. */
+export class VaulterApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
@@ -35,11 +35,11 @@ export class DocVaultApiError extends Error {
     public readonly response?: Response,
   ) {
     super(message)
-    this.name = 'DocVaultApiError'
+    this.name = 'VaulterApiError'
   }
 
-  static async fromResponse(response: Response): Promise<DocVaultApiError> {
-    let message = `DocVault API error (${response.status})`
+  static async fromResponse(response: Response): Promise<VaulterApiError> {
+    let message = `Vaulter API error (${response.status})`
     let errors: Record<string, string[]> = {}
 
     try {
@@ -54,7 +54,7 @@ export class DocVaultApiError extends Error {
       // Non-JSON error body — keep the default message.
     }
 
-    return new DocVaultApiError(response.status, message, errors, response)
+    return new VaulterApiError(response.status, message, errors, response)
   }
 }
 
@@ -84,46 +84,46 @@ interface Envelope<T> {
   data: T
 }
 
-export interface DocVaultClient {
+export interface VaulterClient {
   documents: {
-    list(query: ListDocumentsQuery): Promise<DocVaultDocument[]>
-    trashed(query: WorkspaceQuery): Promise<DocVaultDocument[]>
-    get(id: DocumentId): Promise<DocVaultDocument>
-    create(payload: CreateDocumentPayload): Promise<DocVaultDocument>
-    update(id: DocumentId, payload: UpdateDocumentPayload): Promise<DocVaultDocument>
+    list(query: ListDocumentsQuery): Promise<VaulterDocument[]>
+    trashed(query: WorkspaceQuery): Promise<VaulterDocument[]>
+    get(id: DocumentId): Promise<VaulterDocument>
+    create(payload: CreateDocumentPayload): Promise<VaulterDocument>
+    update(id: DocumentId, payload: UpdateDocumentPayload): Promise<VaulterDocument>
     remove(id: DocumentId): Promise<void>
     forceDelete(id: DocumentId): Promise<void>
-    restore(id: DocumentId): Promise<DocVaultDocument>
-    move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument>
-    duplicate(id: DocumentId): Promise<DocVaultDocument>
+    restore(id: DocumentId): Promise<VaulterDocument>
+    move(id: DocumentId, folderId: DocumentId | null): Promise<VaulterDocument>
+    duplicate(id: DocumentId): Promise<VaulterDocument>
     bulk(payload: BulkDocumentsPayload): Promise<BulkResult>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
   versions: {
-    list(documentId: DocumentId): Promise<DocVaultVersion[]>
-    create(documentId: DocumentId, payload?: CreateVersionPayload): Promise<DocVaultVersion>
-    restore(documentId: DocumentId, versionId: DocumentId): Promise<DocVaultDocument>
+    list(documentId: DocumentId): Promise<VaulterVersion[]>
+    create(documentId: DocumentId, payload?: CreateVersionPayload): Promise<VaulterVersion>
+    restore(documentId: DocumentId, versionId: DocumentId): Promise<VaulterDocument>
   }
   folders: {
-    list(query: ListFoldersQuery): Promise<DocVaultFolder[]>
-    create(payload: CreateFolderPayload): Promise<DocVaultFolder>
-    update(id: DocumentId, payload: UpdateFolderPayload): Promise<DocVaultFolder>
+    list(query: ListFoldersQuery): Promise<VaulterFolder[]>
+    create(payload: CreateFolderPayload): Promise<VaulterFolder>
+    update(id: DocumentId, payload: UpdateFolderPayload): Promise<VaulterFolder>
     remove(id: DocumentId): Promise<void>
   }
   permissions: {
-    list(documentId: DocumentId): Promise<DocVaultPermission[]>
-    grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<DocVaultPermission>
+    list(documentId: DocumentId): Promise<VaulterPermission[]>
+    grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<VaulterPermission>
     revoke(documentId: DocumentId, permissionId: DocumentId): Promise<void>
   }
   comments: {
-    list(documentId: DocumentId): Promise<DocVaultComment[]>
-    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<DocVaultComment>
-    resolve(documentId: DocumentId, commentId: DocumentId): Promise<DocVaultComment>
+    list(documentId: DocumentId): Promise<VaulterComment[]>
+    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<VaulterComment>
+    resolve(documentId: DocumentId, commentId: DocumentId): Promise<VaulterComment>
     remove(documentId: DocumentId, commentId: DocumentId): Promise<void>
   }
   shares: {
-    list(documentId: DocumentId): Promise<DocVaultShare[]>
-    create(documentId: DocumentId, payload: CreateSharePayload): Promise<DocVaultShare>
+    list(documentId: DocumentId): Promise<VaulterShare[]>
+    create(documentId: DocumentId, payload: CreateSharePayload): Promise<VaulterShare>
     revoke(documentId: DocumentId, shareId: DocumentId): Promise<void>
     resolve(token: string): Promise<SharedDocument>
   }
@@ -132,8 +132,8 @@ export interface DocVaultClient {
   }
 }
 
-export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVaultClient {
-  const baseUrl = (options.baseUrl ?? '/api/docvault').replace(/\/+$/, '')
+export function createVaulterClient(options: VaulterClientOptions = {}): VaulterClient {
+  const baseUrl = (options.baseUrl ?? '/api/vaulter').replace(/\/+$/, '')
   const fetchImpl = options.fetch ?? globalThis.fetch
 
   function resolveHeaders(): Record<string, string> {
@@ -161,7 +161,7 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
     })
 
     if (!response.ok) {
-      throw await DocVaultApiError.fromResponse(response)
+      throw await VaulterApiError.fromResponse(response)
     }
 
     if (response.status === 204) {
@@ -177,53 +177,53 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
 
   return {
     documents: {
-      list: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents', { query })),
-      trashed: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents/trash', { query })),
-      get: (id) => unwrap(request<Envelope<DocVaultDocument>>('GET', `/documents/${id}`)),
-      create: (payload) => unwrap(request<Envelope<DocVaultDocument>>('POST', '/documents', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}`, { body: payload })),
+      list: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents', { query })),
+      trashed: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents/trash', { query })),
+      get: (id) => unwrap(request<Envelope<VaulterDocument>>('GET', `/documents/${id}`)),
+      create: (payload) => unwrap(request<Envelope<VaulterDocument>>('POST', '/documents', { body: payload })),
+      update: (id, payload) => unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/documents/${id}`),
       forceDelete: (id) => request<void>('DELETE', `/documents/${id}/force`),
-      restore: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/restore`)),
+      restore: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/restore`)),
       move: (id, folderId) =>
-        unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
-      duplicate: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/duplicate`)),
+        unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
+      duplicate: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/duplicate`)),
       bulk: (payload) => unwrap(request<Envelope<BulkResult>>('POST', '/documents/bulk', { body: payload })),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
     },
     versions: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultVersion[]>>('GET', `/documents/${documentId}/versions`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterVersion[]>>('GET', `/documents/${documentId}/versions`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultVersion>>('POST', `/documents/${documentId}/versions`, { body: payload ?? {} })),
+        unwrap(request<Envelope<VaulterVersion>>('POST', `/documents/${documentId}/versions`, { body: payload ?? {} })),
       restore: (documentId, versionId) =>
-        unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${documentId}/versions/${versionId}/restore`)),
+        unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${documentId}/versions/${versionId}/restore`)),
     },
     folders: {
-      list: (query) => unwrap(request<Envelope<DocVaultFolder[]>>('GET', '/folders', { query })),
-      create: (payload) => unwrap(request<Envelope<DocVaultFolder>>('POST', '/folders', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<DocVaultFolder>>('PATCH', `/folders/${id}`, { body: payload })),
+      list: (query) => unwrap(request<Envelope<VaulterFolder[]>>('GET', '/folders', { query })),
+      create: (payload) => unwrap(request<Envelope<VaulterFolder>>('POST', '/folders', { body: payload })),
+      update: (id, payload) => unwrap(request<Envelope<VaulterFolder>>('PATCH', `/folders/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/folders/${id}`),
     },
     permissions: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultPermission[]>>('GET', `/documents/${documentId}/permissions`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterPermission[]>>('GET', `/documents/${documentId}/permissions`)),
       grant: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
+        unwrap(request<Envelope<VaulterPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
       revoke: (documentId, permissionId) =>
         request<void>('DELETE', `/documents/${documentId}/permissions/${permissionId}`),
     },
     comments: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultComment[]>>('GET', `/documents/${documentId}/comments`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterComment[]>>('GET', `/documents/${documentId}/comments`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
+        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
       resolve: (documentId, commentId) =>
-        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
+        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
       remove: (documentId, commentId) => request<void>('DELETE', `/documents/${documentId}/comments/${commentId}`),
     },
     shares: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultShare[]>>('GET', `/documents/${documentId}/shares`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterShare[]>>('GET', `/documents/${documentId}/shares`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
+        unwrap(request<Envelope<VaulterShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
       revoke: (documentId, shareId) => request<void>('DELETE', `/documents/${documentId}/shares/${shareId}`),
       resolve: (token) => unwrap(request<Envelope<SharedDocument>>('GET', `/shares/${token}`)),
     },

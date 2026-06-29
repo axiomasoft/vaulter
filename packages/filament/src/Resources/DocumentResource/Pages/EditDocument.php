@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources\DocumentResource\Pages;
+namespace Vaulter\Filament\Resources\DocumentResource\Pages;
 
-use DocVault\Filament\Resources\DocumentResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 use Override;
+use Vaulter\Filament\Resources\DocumentResource;
 
 final class EditDocument extends EditRecord
 {

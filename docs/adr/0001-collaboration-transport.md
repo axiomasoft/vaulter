@@ -4,7 +4,7 @@
 
 ## Context
 
-The original DocVault spec assumed a standalone Node **Hocuspocus** server. The first
+The original Vaulter spec assumed a standalone Node **Hocuspocus** server. The first
 consumer (FlexCRM, CoreX-based) instead runs **Yjs + y-websocket over Laravel Reverb** — no
 extra service to deploy. Forcing either choice on every host would hurt adoption.
 
@@ -17,8 +17,8 @@ Abstract the transport behind a `CollaborationDriver` contract with two implemen
 - `HocuspocusCollaborationDriver` (**optional**) — targets an external Node hub; mints room
   JWTs via `firebase/php-jwt`.
 
-The driver is selected through `config('docvault.collaboration.driver')` and resolved by
-`DocVaultManager::driver()`.
+The driver is selected through `config('vaulter.collaboration.driver')` and resolved by
+`VaulterManager::driver()`.
 
 ## Consequences
 

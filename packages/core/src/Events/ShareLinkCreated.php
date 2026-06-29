@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\DocumentShare;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Vaulter\Models\DocumentShare;
 
 final readonly class ShareLinkCreated implements ShouldDispatchAfterCommit
 {

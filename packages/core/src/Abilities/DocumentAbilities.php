@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Abilities;
+namespace Vaulter\Abilities;
 
-use DocVault\DocVaultManager;
-use DocVault\Enums\PermissionLevel;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Enums\PermissionLevel;
+use Vaulter\Models\Document;
+use Vaulter\VaulterManager;
 
 /**
  * Per-document computed permissions for the front-end.
@@ -22,7 +22,7 @@ final readonly class DocumentAbilities extends AbilitiesDto
         public bool $delete,
     ) {}
 
-    public static function for(?Authenticatable $user, Document $document, DocVaultManager $manager): self
+    public static function for(?Authenticatable $user, Document $document, VaulterManager $manager): self
     {
         $flags = self::resolveFlags($user, $document, $manager, [
             'view' => 'view',

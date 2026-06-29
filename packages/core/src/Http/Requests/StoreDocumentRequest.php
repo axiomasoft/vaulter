@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\CreateDocumentData;
-use DocVault\Enums\DocumentType;
-use DocVault\Support\Config;
-use DocVault\ValueObjects\TipTapContent;
 use Illuminate\Validation\Rule;
+use Vaulter\Data\CreateDocumentData;
+use Vaulter\Enums\DocumentType;
+use Vaulter\Support\Config;
+use Vaulter\ValueObjects\TipTapContent;
 
-final class StoreDocumentRequest extends DocVaultFormRequest
+final class StoreDocumentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

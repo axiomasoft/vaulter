@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentFactory;
-use DocVault\Enums\DocumentType;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Models\Concerns\InteractsWithWorkspace;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Vaulter\Database\Factories\DocumentFactory;
+use Vaulter\Enums\DocumentType;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\InteractsWithWorkspace;
+use Vaulter\Support\Config;
 
 /**
  * A unit of content (rich text, table, markdown, template) stored as TipTap JSON.
@@ -32,10 +32,10 @@ use Illuminate\Support\Carbon;
  */
 class Document extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     use InteractsWithWorkspace;
     use SoftDeletes;

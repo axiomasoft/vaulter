@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentCommentFactory;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Database\Factories\DocumentCommentFactory;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Support\Config;
 
 /**
  * A comment on a document, optionally anchored to a text range and threaded
@@ -31,10 +31,10 @@ use Illuminate\Support\Carbon;
  */
 class DocumentComment extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentCommentFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     protected $guarded = [];
 

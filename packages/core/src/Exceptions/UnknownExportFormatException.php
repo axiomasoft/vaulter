@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Exceptions;
+namespace Vaulter\Exceptions;
 
-final class UnknownExportFormatException extends DocVaultException
+final class UnknownExportFormatException extends VaulterException
 {
     /**
      * @param list<string> $allowed
@@ -14,9 +14,9 @@ final class UnknownExportFormatException extends DocVaultException
         $list = implode(', ', $allowed);
 
         return new self(
-            sprintf('[DocVault] Unknown export format [%s]. ', $format)
+            sprintf('[Vaulter] Unknown export format [%s]. ', $format)
             .sprintf('Why: no exporter is registered for it (available: [%s]). ', $list)
-            .'Fix: register one via config(docvault.exporters) or DocVault::registerExporter(). '
+            .'Fix: register one via config(vaulter.exporters) or Vaulter::registerExporter(). '
             .'Docs: '.self::docs('unknown-export-format'),
         );
     }

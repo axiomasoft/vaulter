@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Events;
+namespace Vaulter\Events;
 
-use DocVault\Models\DocumentVersion;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Vaulter\Models\DocumentVersion;
 
 final readonly class VersionCreated implements ShouldDispatchAfterCommit
 {

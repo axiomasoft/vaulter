@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDocVaultClient, DocVaultApiError } from '../src/client'
+import { createVaulterClient, VaulterApiError } from '../src/client'
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -8,23 +8,23 @@ function jsonResponse(body: unknown, status = 200): Response {
   })
 }
 
-describe('createDocVaultClient', () => {
+describe('createVaulterClient', () => {
   it('lists documents and unwraps the data envelope', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: [{ id: 1, title: 'A' }] }))
-    const client = createDocVaultClient({ baseUrl: '/api/docvault', fetch: fetchMock })
+    const client = createVaulterClient({ baseUrl: '/api/vaulter', fetch: fetchMock })
 
     const documents = await client.documents.list({ workspace_type: 'App\\Project', workspace_id: 1 })
 
     expect(documents).toHaveLength(1)
     const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toContain('/api/docvault/documents?')
+    expect(url).toContain('/api/vaulter/documents?')
     expect(url).toContain('workspace_id=1')
     expect(init.method).toBe('GET')
   })
 
   it('sends a JSON body and CSRF header on create', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: 2, title: 'X' } }, 201))
-    const client = createDocVaultClient({ fetch: fetchMock, csrfToken: 'tok' })
+    const client = createVaulterClient({ fetch: fetchMock, csrfToken: 'tok' })
 
     await client.documents.create({
       workspace_type: 'App\\Project',
@@ -42,30 +42,30 @@ describe('createDocVaultClient', () => {
 
   it('resolves to undefined on a 204 response', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     await expect(client.documents.remove(5)).resolves.toBeUndefined()
   })
 
-  it('throws DocVaultApiError with validation details on failure', async () => {
+  it('throws VaulterApiError with validation details on failure', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ message: 'Not allowed', errors: { title: ['required'] } }, 422),
     )
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     await expect(client.documents.get(1)).rejects.toMatchObject({
       status: 422,
       message: 'Not allowed',
       errors: { title: ['required'] },
     })
-    await expect(client.documents.get(1)).rejects.toBeInstanceOf(DocVaultApiError)
+    await expect(client.documents.get(1)).rejects.toBeInstanceOf(VaulterApiError)
   })
 
   it('creates and resolves comments', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ data: { id: 7, body: 'Hi' } }, 201))
       .mockResolvedValueOnce(jsonResponse({ data: { id: 7, resolved_at: '2026-06-14T00:00:00Z' } }))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const created = await client.comments.create(1, { body: 'Hi' })
     expect(created.id).toBe(7)
@@ -80,7 +80,7 @@ describe('createDocVaultClient', () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ data: { id: 1, token: 'abc', permission: 'view' } }, 201))
       .mockResolvedValueOnce(jsonResponse({ data: { id: 5, title: 'Shared', abilities: { view: true } } }))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const share = await client.shares.create(5, { permission: 'view' })
     expect(share.token).toBe('abc')
@@ -94,7 +94,7 @@ describe('createDocVaultClient', () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ data: [{ id: 1 }] }))
       .mockResolvedValueOnce(jsonResponse({ data: [{ id: 2 }] }))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     await client.documents.list({ workspace_type: 'w', workspace_id: 1, q: 'roadmap' })
     expect(fetchMock.mock.calls[0][0]).toContain('q=roadmap')
@@ -106,7 +106,7 @@ describe('createDocVaultClient', () => {
 
   it('force-deletes a document', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     await expect(client.documents.forceDelete(7)).resolves.toBeUndefined()
     expect(fetchMock.mock.calls[0][0]).toContain('/documents/7/force')
@@ -116,7 +116,7 @@ describe('createDocVaultClient', () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ data: { id: 1, folder_id: 9 } }))
       .mockResolvedValueOnce(jsonResponse({ data: { id: 2, title: 'Copy of X' } }, 201))
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const moved = await client.documents.move(1, 9)
     expect(moved.folder_id).toBe(9)
@@ -133,7 +133,7 @@ describe('createDocVaultClient', () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { action: 'delete', processed: [1, 2], skipped: [] } }),
     )
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const result = await client.documents.bulk({ action: 'delete', ids: [1, 2] })
 
@@ -147,7 +147,7 @@ describe('createDocVaultClient', () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),
     )
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const result = await client.documents.export(3, 'markdown')
 
@@ -157,9 +157,9 @@ describe('createDocVaultClient', () => {
 
   it('requests a collaboration token without a data envelope', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ driver: 'reverb', channel: 'docvault.documents.1', document_id: 1, token: '' }),
+      jsonResponse({ driver: 'reverb', channel: 'vaulter.documents.1', document_id: 1, token: '' }),
     )
-    const client = createDocVaultClient({ fetch: fetchMock })
+    const client = createVaulterClient({ fetch: fetchMock })
 
     const connection = await client.collaboration.token(1)
 

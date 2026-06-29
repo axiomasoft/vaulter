@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
-use DocVault\Contracts\DocumentExporter;
-use DocVault\Contracts\ShareTokenGenerator;
-use DocVault\Contracts\StorageAdapter;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentComment;
-use DocVault\Models\DocumentFolder;
-use DocVault\Models\DocumentPermission;
-use DocVault\Models\DocumentShare;
-use DocVault\Models\DocumentVersion;
+use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Contracts\StorageAdapter;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentComment;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Models\DocumentPermission;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Models\DocumentVersion;
 
 /**
- * Typed accessors over config('docvault.*'). All package code reads configuration
+ * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
 final class Config
@@ -26,7 +26,7 @@ final class Config
     public static function documentModel(): string
     {
         /** @var class-string<Document> $class */
-        $class = config('docvault.models.document', Document::class);
+        $class = config('vaulter.models.document', Document::class);
 
         return $class;
     }
@@ -37,7 +37,7 @@ final class Config
     public static function versionModel(): string
     {
         /** @var class-string<DocumentVersion> $class */
-        $class = config('docvault.models.version', DocumentVersion::class);
+        $class = config('vaulter.models.version', DocumentVersion::class);
 
         return $class;
     }
@@ -48,7 +48,7 @@ final class Config
     public static function folderModel(): string
     {
         /** @var class-string<DocumentFolder> $class */
-        $class = config('docvault.models.folder', DocumentFolder::class);
+        $class = config('vaulter.models.folder', DocumentFolder::class);
 
         return $class;
     }
@@ -59,7 +59,7 @@ final class Config
     public static function permissionModel(): string
     {
         /** @var class-string<DocumentPermission> $class */
-        $class = config('docvault.models.permission', DocumentPermission::class);
+        $class = config('vaulter.models.permission', DocumentPermission::class);
 
         return $class;
     }
@@ -70,7 +70,7 @@ final class Config
     public static function commentModel(): string
     {
         /** @var class-string<DocumentComment> $class */
-        $class = config('docvault.models.comment', DocumentComment::class);
+        $class = config('vaulter.models.comment', DocumentComment::class);
 
         return $class;
     }
@@ -81,14 +81,14 @@ final class Config
     public static function shareModel(): string
     {
         /** @var class-string<DocumentShare> $class */
-        $class = config('docvault.models.share', DocumentShare::class);
+        $class = config('vaulter.models.share', DocumentShare::class);
 
         return $class;
     }
 
     public static function idType(): string
     {
-        $value = config('docvault.id_type', 'id');
+        $value = config('vaulter.id_type', 'id');
 
         return is_string($value) ? $value : 'id';
     }
@@ -100,25 +100,25 @@ final class Config
 
     public static function tenantEnabled(): bool
     {
-        return (bool) config('docvault.tenant.enabled', false);
+        return (bool) config('vaulter.tenant.enabled', false);
     }
 
     public static function tenantColumn(): string
     {
-        $value = config('docvault.tenant.column', 'tenant_id');
+        $value = config('vaulter.tenant.column', 'tenant_id');
 
         return is_string($value) ? $value : 'tenant_id';
     }
 
     public static function tablePrefix(): string
     {
-        $value = config('docvault.table_prefix', 'dv_');
+        $value = config('vaulter.table_prefix', 'v_');
 
-        return is_string($value) ? $value : 'dv_';
+        return is_string($value) ? $value : 'v_';
     }
 
     /**
-     * Resolve a DocVault table name (configured prefix + base name).
+     * Resolve a Vaulter table name (configured prefix + base name).
      */
     public static function table(string $name): string
     {
@@ -127,9 +127,9 @@ final class Config
 
     public static function routePrefix(): string
     {
-        $value = config('docvault.route_prefix', 'api/docvault');
+        $value = config('vaulter.route_prefix', 'api/vaulter');
 
-        return is_string($value) ? $value : 'api/docvault';
+        return is_string($value) ? $value : 'api/vaulter';
     }
 
     /**
@@ -137,19 +137,19 @@ final class Config
      */
     public static function middleware(): array
     {
-        return self::stringList(config('docvault.middleware', ['api']), ['api']);
+        return self::stringList(config('vaulter.middleware', ['api']), ['api']);
     }
 
     public static function maxVersions(): int
     {
-        $value = config('docvault.max_versions', 50);
+        $value = config('vaulter.max_versions', 50);
 
         return is_numeric($value) ? (int) $value : 50;
     }
 
     public static function maxDocumentSizeKb(): int
     {
-        $value = config('docvault.max_document_size_kb', 5120);
+        $value = config('vaulter.max_document_size_kb', 5120);
 
         return is_numeric($value) ? (int) $value : 5120;
     }
@@ -159,21 +159,21 @@ final class Config
      */
     public static function enabledDocumentTypes(): array
     {
-        return self::stringList(config('docvault.enabled_document_types', []), []);
+        return self::stringList(config('vaulter.enabled_document_types', []), []);
     }
 
     public static function collaborationDriverName(): string
     {
-        $value = config('docvault.collaboration.driver', 'reverb');
+        $value = config('vaulter.collaboration.driver', 'reverb');
 
         return is_string($value) ? $value : 'reverb';
     }
 
     public static function channelPrefix(): string
     {
-        $value = config('docvault.collaboration.channel_prefix', 'docvault.documents');
+        $value = config('vaulter.collaboration.channel_prefix', 'vaulter.documents');
 
-        return is_string($value) ? $value : 'docvault.documents';
+        return is_string($value) ? $value : 'vaulter.documents';
     }
 
     /**
@@ -181,7 +181,7 @@ final class Config
      */
     public static function driverConfig(string $name): array
     {
-        $value = config('docvault.collaboration.drivers.'.$name);
+        $value = config('vaulter.collaboration.drivers.'.$name);
 
         /** @var array<string, mixed> $config */
         $config = is_array($value) ? $value : [];
@@ -194,7 +194,7 @@ final class Config
      */
     public static function permissionResolverClass(): ?string
     {
-        $class = config('docvault.permission_resolver');
+        $class = config('vaulter.permission_resolver');
 
         if (!is_string($class) || $class === '') {
             return null;
@@ -210,7 +210,7 @@ final class Config
     public static function storageAdapterClass(): string
     {
         /** @var class-string<StorageAdapter> $class */
-        $class = config('docvault.storage_adapter', DefaultStorageAdapter::class);
+        $class = config('vaulter.storage_adapter', DefaultStorageAdapter::class);
 
         return $class;
     }
@@ -221,7 +221,7 @@ final class Config
     public static function shareTokenGeneratorClass(): string
     {
         /** @var class-string<ShareTokenGenerator> $class */
-        $class = config('docvault.share_token_generator', RandomShareTokenGenerator::class);
+        $class = config('vaulter.share_token_generator', RandomShareTokenGenerator::class);
 
         return $class;
     }
@@ -231,7 +231,7 @@ final class Config
      */
     public static function exporters(): array
     {
-        $value = config('docvault.exporters', []);
+        $value = config('vaulter.exporters', []);
 
         if (!is_array($value)) {
             return [];

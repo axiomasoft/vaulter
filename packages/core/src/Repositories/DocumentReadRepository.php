@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Exceptions\DocumentNotFoundException;
-use DocVault\Models\Document;
-use DocVault\Support\Config;
-use DocVault\ValueObjects\WorkspaceRef;
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Exceptions\DocumentNotFoundException;
+use Vaulter\Models\Document;
+use Vaulter\Support\Config;
+use Vaulter\ValueObjects\WorkspaceRef;
 
 final class DocumentReadRepository
 {

@@ -1,26 +1,26 @@
 # Filament admin
 
-`axioma-studio/docvault-filament` is an optional Filament 5 plugin that adds DocVault management to
+`axioma-studio/vaulter-filament` is an optional Filament 5 plugin that adds Vaulter management to
 your existing Filament panel — list, search, edit, and trash/restore/force-delete documents.
 
 ```bash
-composer require axioma-studio/docvault-filament
+composer require axioma-studio/vaulter-filament
 ```
 
 Register the plugin in your panel provider:
 
 ```php
-use DocVault\Filament\DocVaultPlugin;
+use Vaulter\Filament\VaulterPlugin;
 
 public function panel(Panel $panel): Panel
 {
     return $panel->plugins([
-        DocVaultPlugin::make(),
+        VaulterPlugin::make(),
     ]);
 }
 ```
 
-That adds three resources under the `DocVault` navigation group:
+That adds three resources under the `Vaulter` navigation group:
 
 - **Documents** — a searchable, sortable table (title, type, workspace, created) with a trashed
   filter, an edit form (title, type, workspace) and delete / restore / force-delete actions.
@@ -28,7 +28,7 @@ That adds three resources under the `DocVault` navigation group:
 - **Share links** — list and **revoke** tokenized public shares (read-only; links are minted via the
   API).
 
-Every resource resolves the configured model (`config('docvault.models.*')`), so they work with
+Every resource resolves the configured model (`config('vaulter.models.*')`), so they work with
 swapped / ULID / tenant-aware models too.
 
 ## Why a separate package & CI
@@ -39,6 +39,6 @@ so it never constrains the core package's Laravel 12 / 13 test matrix.
 
 ::: tip Customising
 Need folders, share-links or comment moderation in the panel too? Extend the plugin's `register()`
-in a subclass and add your own Filament resources for `DocVault\Models\DocumentFolder`,
+in a subclass and add your own Filament resources for `Vaulter\Models\DocumentFolder`,
 `DocumentShare`, etc. — they follow the same conventions.
 :::

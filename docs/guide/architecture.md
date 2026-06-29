@@ -1,10 +1,10 @@
 # Architecture
 
-DocVault is a layered, strictly-typed Laravel package. Everything the host application must
-provide is expressed as a contract; everything DocVault owns is final and typed.
+Vaulter is a layered, strictly-typed Laravel package. Everything the host application must
+provide is expressed as a contract; everything Vaulter owns is final and typed.
 
 ```
-Vue (@docvault/vue) ──HTTP/JSON──► Controllers ─► FormRequests ─► DTOs
+Vue (@vaulter/vue) ──HTTP/JSON──► Controllers ─► FormRequests ─► DTOs
                     ──WebSocket──► CollaborationDriver (Reverb | Hocuspocus)
         │
    Actions (final readonly · transactional · dispatch Events)
@@ -18,13 +18,13 @@ Vue (@docvault/vue) ──HTTP/JSON──► Controllers ─► FormRequests ─
 
 - **Controllers / FormRequests / Resources** — thin HTTP edge. Requests validate and build
   DTOs; resources serialize models and embed computed `abilities`.
-- **Actions** (`DocVault\Actions`) — one use case each, `final readonly`, ≤5 dependencies.
+- **Actions** (`Vaulter\Actions`) — one use case each, `final readonly`, ≤5 dependencies.
   They open the transaction, enforce business rules with `ValidationException`, and dispatch
   domain events after commit.
-- **Repositories** (`DocVault\Repositories`) — read/store split. Reads flow through
+- **Repositories** (`Vaulter\Repositories`) — read/store split. Reads flow through
   `DocumentVisibilityService`, which delegates to the host `PermissionResolver`. Stores never
   open transactions or dispatch events.
-- **Models** — resolved exclusively through `DocVault\Support\Config`, so a host app can swap
+- **Models** — resolved exclusively through `Vaulter\Support\Config`, so a host app can swap
   any of them (e.g. a tenant-aware ULID base model).
 - **Value Objects / DTOs / Enums** — `TipTapContent`, `WorkspaceRef`, `PermissionLevel`,
   `DocumentType` (with attribute metadata). All `final readonly`.
@@ -36,8 +36,8 @@ Vue (@docvault/vue) ──HTTP/JSON──► Controllers ─► FormRequests ─
 | `PermissionResolver` | Delegate every authorization decision to the host. |
 | `StorageAdapter` | Pluggable storage for binary attachments. |
 | `CollaborationDriver` | Real-time transport (Reverb default, Hocuspocus optional). |
-| `config('docvault.models')` | Swap any Eloquent model. |
-| `DocVault::registerDocumentType()` | Add custom document types. |
-| Domain `Events` | Hook notifications/audit without DocVault depending on them. |
+| `config('vaulter.models')` | Swap any Eloquent model. |
+| `Vaulter::registerDocumentType()` | Add custom document types. |
+| Domain `Events` | Hook notifications/audit without Vaulter depending on them. |
 
 See the [ADRs](/adr/) for the reasoning behind these decisions.

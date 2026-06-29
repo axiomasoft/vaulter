@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Records of the significant architectural decisions behind DocVault.
+Records of the significant architectural decisions behind Vaulter.
 
 - [ADR-0001 — Collaboration transport](/adr/0001-collaboration-transport)
 - [ADR-0002 — Authorization delegation](/adr/0002-authorization-delegation)

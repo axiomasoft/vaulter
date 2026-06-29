@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models;
+namespace Vaulter\Models;
 
-use DocVault\Database\Factories\DocumentPermissionFactory;
-use DocVault\Enums\PermissionLevel;
-use DocVault\Models\Concerns\HasDocVaultKeys;
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Vaulter\Database\Factories\DocumentPermissionFactory;
+use Vaulter\Enums\PermissionLevel;
+use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Support\Config;
 
 /**
  * A grant of a permission level to a polymorphic subject (user / role / team)
@@ -26,10 +26,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class DocumentPermission extends Model
 {
-    use HasDocVaultKeys;
-
     /** @use HasFactory<DocumentPermissionFactory> */
     use HasFactory;
+
+    use HasVaulterKeys;
 
     protected $guarded = [];
 

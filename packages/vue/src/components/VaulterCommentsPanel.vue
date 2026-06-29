@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useComments } from '../composables/useComments'
-import type { DocVaultComment, DocumentId } from '../types'
+import type { VaulterComment, DocumentId } from '../types'
 
 const props = withDefaults(
   defineProps<{ documentId: DocumentId, autoLoad?: boolean }>(),
@@ -9,8 +9,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  added: [comment: DocVaultComment]
-  resolved: [comment: DocVaultComment]
+  added: [comment: VaulterComment]
+  resolved: [comment: VaulterComment]
 }>()
 
 const { comments, loading, list, add, resolve } = useComments(props.documentId)
@@ -20,7 +20,7 @@ async function submit(body: string): Promise<void> {
   emit('added', comment)
 }
 
-async function markResolved(comment: DocVaultComment): Promise<void> {
+async function markResolved(comment: VaulterComment): Promise<void> {
   const updated = await resolve(comment.id)
   emit('resolved', updated)
 }
@@ -35,13 +35,13 @@ defineExpose({ list, add: submit, resolve: markResolved, comments, loading })
 </script>
 
 <template>
-  <div class="docvault-comments-panel">
+  <div class="vaulter-comments-panel">
     <slot v-if="loading" name="loading">Loading…</slot>
-    <ul v-else class="docvault-comments-panel__list">
+    <ul v-else class="vaulter-comments-panel__list">
       <li
         v-for="comment in comments"
         :key="comment.id"
-        class="docvault-comments-panel__item"
+        class="vaulter-comments-panel__item"
         :data-resolved="comment.resolved_at !== null"
       >
         <slot name="item" :comment="comment" :resolve="() => markResolved(comment)">

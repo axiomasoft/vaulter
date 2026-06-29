@@ -26,3 +26,9 @@ docs/.vitepress/dist/
 # Local tooling artifacts
 *.bak
 .claude/settings.local.json.bak
+
+# AI tooling — machine-specific (абсолютные пути / локальный кэш). Портируемая карта
+# MCP-структуры — .mcp.json.example (плейсхолдеры <ABS_PATH_TO_PROJECT>), он коммитится.
+.mcp.json
+.serena/
+.claude/settings.local.json

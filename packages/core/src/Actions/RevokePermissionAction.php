@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\PermissionRevoked;
-use DocVault\Models\Document;
-use DocVault\Repositories\PermissionStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\PermissionRevoked;
+use Vaulter\Models\Document;
+use Vaulter\Repositories\PermissionStoreRepository;
 
 final readonly class RevokePermissionAction
 {

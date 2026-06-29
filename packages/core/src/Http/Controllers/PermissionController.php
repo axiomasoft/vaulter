@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\GrantPermissionAction;
-use DocVault\Actions\RevokePermissionAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\StorePermissionRequest;
-use DocVault\Http\Resources\DocumentPermissionResource;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\Repositories\PermissionReadRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Actions\GrantPermissionAction;
+use Vaulter\Actions\RevokePermissionAction;
+use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Http\Requests\StorePermissionRequest;
+use Vaulter\Http\Resources\DocumentPermissionResource;
+use Vaulter\Models\Document;
+use Vaulter\Repositories\DocumentReadRepository;
+use Vaulter\Repositories\DocumentVisibilityService;
+use Vaulter\Repositories\PermissionReadRepository;
 
 final class PermissionController extends Controller
 {

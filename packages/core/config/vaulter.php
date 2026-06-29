@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-use DocVault\Collaboration\HocuspocusCollaborationDriver;
-use DocVault\Collaboration\ReverbCollaborationDriver;
-use DocVault\Export\HtmlExporter;
-use DocVault\Export\MarkdownExporter;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentComment;
-use DocVault\Models\DocumentFolder;
-use DocVault\Models\DocumentPermission;
-use DocVault\Models\DocumentShare;
-use DocVault\Models\DocumentVersion;
-use DocVault\Support\DefaultStorageAdapter;
-use DocVault\Support\RandomShareTokenGenerator;
+use Vaulter\Collaboration\HocuspocusCollaborationDriver;
+use Vaulter\Collaboration\ReverbCollaborationDriver;
+use Vaulter\Export\HtmlExporter;
+use Vaulter\Export\MarkdownExporter;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentComment;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Models\DocumentPermission;
+use Vaulter\Models\DocumentShare;
+use Vaulter\Models\DocumentVersion;
+use Vaulter\Support\DefaultStorageAdapter;
+use Vaulter\Support\RandomShareTokenGenerator;
 
 /**
- * DocVault configuration.
+ * Vaulter configuration.
  *
- * Publish: php artisan vendor:publish --tag=docvault-config
+ * Publish: php artisan vendor:publish --tag=vaulter-config
  */
 return [
 
@@ -27,7 +27,7 @@ return [
     | Eloquent models (swappable)
     |--------------------------------------------------------------------------
     | Point these at your own subclasses to add behaviour (ULID keys, tenant
-    | scoping, audit). DocVault always resolves models through this map.
+    | scoping, audit). Vaulter always resolves models through this map.
     */
     'models' => [
         'document' => Document::class,
@@ -44,19 +44,19 @@ return [
     |--------------------------------------------------------------------------
     | 'id'   — auto-incrementing big integers (default).
     | 'ulid' — 26-char ULID string keys (recommended for multi-tenant SaaS).
-    | Consumed by the published migrations and the HasDocVaultKeys concern.
+    | Consumed by the published migrations and the HasVaulterKeys concern.
     */
-    'id_type' => env('DOCVAULT_ID_TYPE', 'id'),
+    'id_type' => env('VAULTER_ID_TYPE', 'id'),
 
     /*
     |--------------------------------------------------------------------------
     | Tenancy
     |--------------------------------------------------------------------------
-    | When enabled the migrations add a tenant column. DocVault does not scope
+    | When enabled the migrations add a tenant column. Vaulter does not scope
     | by it — supply a tenant-aware model (via 'models') that applies your scope.
     */
     'tenant' => [
-        'enabled' => env('DOCVAULT_TENANT_ENABLED', false),
+        'enabled' => env('VAULTER_TENANT_ENABLED', false),
         'column' => 'tenant_id',
     ],
 
@@ -64,17 +64,17 @@ return [
     |--------------------------------------------------------------------------
     | Table prefix
     |--------------------------------------------------------------------------
-    | Prefix for every DocVault table (published migrations and models read it),
+    | Prefix for every Vaulter table (published migrations and models read it),
     | so the package coexists with host tables and naming conventions.
     */
-    'table_prefix' => env('DOCVAULT_TABLE_PREFIX', 'dv_'),
+    'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
 
     /*
     |--------------------------------------------------------------------------
     | Authorization
     |--------------------------------------------------------------------------
-    | FQCN of a \DocVault\Contracts\PermissionResolver implementation, or null
-    | to register one at runtime via DocVault::resolvePermissionsWith(...).
+    | FQCN of a \Vaulter\Contracts\PermissionResolver implementation, or null
+    | to register one at runtime via Vaulter::resolvePermissionsWith(...).
     */
     'permission_resolver' => null,
 
@@ -89,7 +89,7 @@ return [
     |--------------------------------------------------------------------------
     | Share-link token generator
     |--------------------------------------------------------------------------
-    | FQCN of a \DocVault\Contracts\ShareTokenGenerator. Swap to mint short,
+    | FQCN of a \Vaulter\Contracts\ShareTokenGenerator. Swap to mint short,
     | hashed or prefixed tokens (must be unique and fit the token column).
     */
     'share_token_generator' => RandomShareTokenGenerator::class,
@@ -99,7 +99,7 @@ return [
     | API routes
     |--------------------------------------------------------------------------
     */
-    'route_prefix' => env('DOCVAULT_ROUTE_PREFIX', 'api/docvault'),
+    'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
     'middleware' => ['api'],
 
     /*
@@ -122,8 +122,8 @@ return [
     |--------------------------------------------------------------------------
     | Export formats
     |--------------------------------------------------------------------------
-    | Map of format => \DocVault\Contracts\DocumentExporter. Add your own (PDF,
-    | DOCX, …) here, or at runtime via DocVault::registerExporter().
+    | Map of format => \Vaulter\Contracts\DocumentExporter. Add your own (PDF,
+    | DOCX, …) here, or at runtime via Vaulter::registerExporter().
     */
     'exporters' => [
         'html' => HtmlExporter::class,
@@ -138,19 +138,19 @@ return [
     | 'hocuspocus' — external Node Hocuspocus hub (see hocuspocus-server/).
     */
     'collaboration' => [
-        'driver' => env('DOCVAULT_COLLAB_DRIVER', 'reverb'),
-        'channel_prefix' => 'docvault.documents',
+        'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'),
+        'channel_prefix' => 'vaulter.documents',
 
         'drivers' => [
             'reverb' => [
                 'class' => ReverbCollaborationDriver::class,
-                'connection' => env('DOCVAULT_COLLAB_CONNECTION', 'reverb'),
+                'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
             ],
             'hocuspocus' => [
                 'class' => HocuspocusCollaborationDriver::class,
-                'url' => env('DOCVAULT_COLLAB_URL', 'ws://localhost:1234'),
-                'app_id' => env('DOCVAULT_COLLAB_APP_ID'),
-                'secret' => env('DOCVAULT_COLLAB_SECRET'),
+                'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+                'app_id' => env('VAULTER_COLLAB_APP_ID'),
+                'secret' => env('VAULTER_COLLAB_SECRET'),
                 'token_ttl' => 3600,
             ],
         ],

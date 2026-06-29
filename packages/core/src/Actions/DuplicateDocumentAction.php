@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\DocumentCreated;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Events\DocumentCreated;
+use Vaulter\Models\Document;
+use Vaulter\Repositories\DocumentStoreRepository;
 
 final readonly class DuplicateDocumentAction
 {

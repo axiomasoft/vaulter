@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Models\Concerns;
+namespace Vaulter\Models\Concerns;
 
-use DocVault\Support\Config;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Vaulter\Support\Config;
 
 /**
- * Switches the default DocVault models between auto-incrementing and ULID keys
- * based on config('docvault.id_type'). Host apps that swap in their own models
+ * Switches the default Vaulter models between auto-incrementing and ULID keys
+ * based on config('vaulter.id_type'). Host apps that swap in their own models
  * (e.g. a tenant-aware BaseModel) simply omit this trait.
  */
-trait HasDocVaultKeys
+trait HasVaulterKeys
 {
-    public static function bootHasDocVaultKeys(): void
+    public static function bootHasVaulterKeys(): void
     {
         static::creating(static function (Model $model): void {
             if (Config::usesUlids() && $model->getKey() === null) {
@@ -24,7 +24,7 @@ trait HasDocVaultKeys
         });
     }
 
-    public function initializeHasDocVaultKeys(): void
+    public function initializeHasVaulterKeys(): void
     {
         if (Config::usesUlids()) {
             $this->keyType = 'string';

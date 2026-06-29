@@ -20,7 +20,7 @@ the share, including its `token`. The public `GET /shares/{token}` returns the d
 ## Front-end
 
 ```ts
-import { useShares } from '@docvault/vue'
+import { useShares } from '@vaulter/vue'
 
 const { shares, list, create, revoke } = useShares(documentId)
 
@@ -32,21 +32,21 @@ const url = `https://app.example.com/shared/${link.token}`
 Resolve a shared document on the public page:
 
 ```ts
-import { createDocVaultClient } from '@docvault/vue'
+import { createVaulterClient } from '@vaulter/vue'
 
-const client = createDocVaultClient({ baseUrl: '/api/docvault' })
+const client = createVaulterClient({ baseUrl: '/api/vaulter' })
 const shared = await client.shares.resolve(token) // → { title, content, abilities, share }
 ```
 
-Or use the slot-driven `DocVaultSharePanel`:
+Or use the slot-driven `VaulterSharePanel`:
 
 ```vue
-<DocVaultSharePanel :document-id="documentId" @created="copyLink" />
+<VaulterSharePanel :document-id="documentId" @created="copyLink" />
 ```
 
 ## Events
 
 | Event | When |
 |---|---|
-| `DocVault\Events\ShareLinkCreated` | a share link is created |
-| `DocVault\Events\ShareLinkRevoked` | a share link is revoked |
+| `Vaulter\Events\ShareLinkCreated` | a share link is created |
+| `Vaulter\Events\ShareLinkRevoked` | a share link is revoked |

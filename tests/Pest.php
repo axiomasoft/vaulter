@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use DocVault\Tests\TablePrefixTestCase;
-use DocVault\Tests\TestCase;
-use DocVault\Tests\UlidTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Tests\TablePrefixTestCase;
+use Vaulter\Tests\TestCase;
+use Vaulter\Tests\UlidTestCase;
 
 $core = dirname(__DIR__).'/packages/core/tests';
 

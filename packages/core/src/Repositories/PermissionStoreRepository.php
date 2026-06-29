@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Repositories;
+namespace Vaulter\Repositories;
 
-use DocVault\Data\GrantPermissionData;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentPermission;
-use DocVault\Support\Config;
+use Vaulter\Data\GrantPermissionData;
+use Vaulter\Models\Document;
+use Vaulter\Models\DocumentPermission;
+use Vaulter\Support\Config;
 
 final class PermissionStoreRepository
 {

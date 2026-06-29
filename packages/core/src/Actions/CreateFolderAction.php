@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\CreateFolderData;
-use DocVault\Models\DocumentFolder;
-use DocVault\Repositories\FolderStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\CreateFolderData;
+use Vaulter\Models\DocumentFolder;
+use Vaulter\Repositories\FolderStoreRepository;
 
 final readonly class CreateFolderAction
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Tests;
+namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 
@@ -20,7 +20,7 @@ class UlidTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('docvault.id_type', 'ulid');
-        $app['config']->set('docvault.tenant.enabled', true);
+        $app['config']->set('vaulter.id_type', 'ulid');
+        $app['config']->set('vaulter.tenant.enabled', true);
     }
 }
