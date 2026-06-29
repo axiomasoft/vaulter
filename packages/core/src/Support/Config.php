@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageAdapter;
 use Vaulter\Models\Document;
@@ -93,9 +94,68 @@ final class Config
         return is_string($value) ? $value : 'id';
     }
 
+    /**
+     * The active id-strategy key (ulid|uuid7|bigint), default ulid (D9).
+     *
+     * Backward-compat: when ids.default is not explicitly set, derive it from
+     * the legacy id_type (id->bigint, ulid->ulid). When both are present,
+     * ids.default wins.
+     */
+    public static function idStrategy(): string
+    {
+        $explicit = config('vaulter.ids.default');
+
+        if (is_string($explicit) && $explicit !== '') {
+            return $explicit;
+        }
+
+        return self::idStrategyFromLegacyType();
+    }
+
+    /**
+     * @return array<string, class-string<IdStrategy>>
+     */
+    public static function idStrategies(): array
+    {
+        $value = config('vaulter.ids.strategies', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $strategies = [];
+
+        foreach ($value as $key => $class) {
+            if (is_string($key) && is_string($class) && is_a($class, IdStrategy::class, allow_string: true)) {
+                $strategies[$key] = $class;
+            }
+        }
+
+        /** @var array<string, class-string<IdStrategy>> $strategies */
+        return $strategies;
+    }
+
+    /**
+     * Legacy id_type values still drive published migrations and host models.
+     * usesUlids() reflects the resolved strategy so it keeps working whether the
+     * host configures id_type=ulid or the newer ids.default=ulid.
+     */
     public static function usesUlids(): bool
     {
-        return self::idType() === 'ulid';
+        return self::idStrategy() === 'ulid';
+    }
+
+    /**
+     * Map the legacy id_type (id|ulid) onto an id-strategy key.
+     */
+    private static function idStrategyFromLegacyType(): string
+    {
+        return self::idType() === 'ulid' ? 'ulid' : 'bigint';
+    }
+
+    public static function extraDataEnabled(): bool
+    {
+        return (bool) config('vaulter.extra_data.enabled', true);
     }
 
     public static function tenantEnabled(): bool

@@ -36,7 +36,6 @@ class Document extends Model
     use HasFactory;
 
     use HasVaulterKeys;
-
     use InteractsWithWorkspace;
     use SoftDeletes;
 

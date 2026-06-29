@@ -12,6 +12,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 
 final class VaulterServiceProvider extends PackageServiceProvider
@@ -35,6 +36,8 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app->singleton(IdStrategyResolver::class);
+
         $this->app->singleton(VaulterManager::class);
         $this->app->alias(VaulterManager::class, 'vaulter');
 

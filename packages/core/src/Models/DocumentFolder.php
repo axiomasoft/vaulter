@@ -29,7 +29,6 @@ class DocumentFolder extends Model
     use HasFactory;
 
     use HasVaulterKeys;
-
     use InteractsWithWorkspace;
 
     protected $guarded = [];

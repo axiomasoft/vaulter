@@ -36,6 +36,12 @@ abstract class TestCase extends OrchestraTestCase
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
         $app['config']->set('vaulter.middleware', []);
+
+        // Pin the auto-increment strategy for the base suite. The published
+        // config now defaults to ulid (D9); the legacy default-panel document
+        // tests assert bigint keys, so the foundation suite keeps bigint and the
+        // UlidTestCase exercises the ulid path explicitly.
+        $app['config']->set('vaulter.ids.default', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

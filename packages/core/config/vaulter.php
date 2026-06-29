@@ -12,6 +12,9 @@ use Vaulter\Models\DocumentFolder;
 use Vaulter\Models\DocumentPermission;
 use Vaulter\Models\DocumentShare;
 use Vaulter\Models\DocumentVersion;
+use Vaulter\Schema\AutoIncrementIds;
+use Vaulter\Schema\UlidIds;
+use Vaulter\Schema\Uuid7Ids;
 use Vaulter\Support\DefaultStorageAdapter;
 use Vaulter\Support\RandomShareTokenGenerator;
 
@@ -40,13 +43,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Primary key type
+    | Primary key type (LEGACY — kept for backward compatibility)
     |--------------------------------------------------------------------------
-    | 'id'   — auto-incrementing big integers (default).
-    | 'ulid' — 26-char ULID string keys (recommended for multi-tenant SaaS).
-    | Consumed by the published migrations and the HasVaulterKeys concern.
+    | 'id'   — auto-incrementing big integers.
+    | 'ulid' — 26-char ULID string keys.
+    | Superseded by the 'ids' block below. When 'ids.default' is set it wins;
+    | otherwise the strategy is derived from this value (id->bigint, ulid->ulid),
+    | so existing installs keep working unchanged.
     */
     'id_type' => env('VAULTER_ID_TYPE', 'id'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Primary key strategy (D9)
+    |--------------------------------------------------------------------------
+    | The per-strategy class layer that replaces the binary id_type. Default is
+    | ulid so morph keys line up with the Corex/Azgard ecosystem; uuid7 maps onto
+    | native Postgres uuid columns; bigint is the legacy auto-increment path.
+    | Strategy classes are resolved from these FQCNs (config-cache safe — no
+    | closures), so a host may register its own strategy (e.g. Snowflake).
+    */
+    'ids' => [
+        'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint (D9)
+        'strategies' => [
+            'bigint' => AutoIncrementIds::class,
+            'ulid' => UlidIds::class,
+            'uuid7' => Uuid7Ids::class,
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
