@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Vaulter\Enums\BlobStatus;
 use Vaulter\Models\Blob;
 
 /**
@@ -41,7 +42,7 @@ it('хранит state-колонки блоба для CAS-логики M1b', f
     // Read back from the DB so the schema-level column defaults are asserted.
     $blob = makeBlob(['tenant_id' => 9])->fresh();
 
-    expect($blob->status)->toBe('pending')
+    expect($blob->status)->toBe(BlobStatus::Pending)
         ->and($blob->ref_count)->toBe(0)
         ->and($blob->dedup_scope)->toBe('tenant')
         ->and($blob->delete_after_at)->toBeNull();

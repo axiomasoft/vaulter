@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\Broadcast;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
+use Vaulter\Console\ReconcileBlobsCommand;
+use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\CollaborationDriver;
+use Vaulter\Contracts\ContentStore;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Contracts\StorageDriver;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
@@ -30,6 +35,8 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasRoute('api')
             ->hasCommand(MakePanelCommand::class)
             ->hasCommand(PanelMigrationsCommand::class)
+            ->hasCommand(GcBlobsCommand::class)
+            ->hasCommand(ReconcileBlobsCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
@@ -55,6 +62,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->app->alias(VaulterManager::class, 'vaulter');
 
         $this->app->bind(ShareTokenGenerator::class, Config::shareTokenGeneratorClass());
+
+        // CAS services (H.3) — swappable via config('vaulter.cas.*'). StorageDriver
+        // and ContentStore are stateless wrappers (singletons); BlobStore is the
+        // race-free lifecycle orchestrator.
+        $this->app->singleton(StorageDriver::class, Config::storageDriverClass());
+        $this->app->singleton(ContentStore::class, Config::contentStoreClass());
+        $this->app->bind(BlobStore::class, Config::blobStoreClass());
 
         $resolverClass = Config::permissionResolverClass();
 

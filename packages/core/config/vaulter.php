@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Cas\BlobStore;
+use Vaulter\Cas\FlysystemStorageDriver;
+use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
 use Vaulter\Export\HtmlExporter;
@@ -198,10 +201,68 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Storage adapter for binary attachments
+    | Storage adapter for binary attachments (legacy DocDrive)
     |--------------------------------------------------------------------------
     */
     'storage_adapter' => DefaultStorageAdapter::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content-addressed blob store (CAS, M1b / H.3)
+    |--------------------------------------------------------------------------
+    | The swappable CAS services. Point any of these at your own FQCN to change
+    | how bytes are staged/hashed/promoted, which Flysystem disk holds the
+    | canonical objects, or the high-level blob lifecycle. All three are bound in
+    | the provider and resolved through the container (config-cache safe).
+    */
+    'cas' => [
+        'content_store' => Sha256ContentStore::class,
+        'storage_driver' => FlysystemStorageDriver::class,
+        'blob_store' => BlobStore::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deduplication scope (D18 / H.3)
+    |--------------------------------------------------------------------------
+    | The boundary the content address (sha256) is unique within:
+    |  'global'  — one physical object per sha256 across the whole install.
+    |  'tenant'  — unique per (tenant_id, sha256); no cross-tenant existence leak.
+    |  'storage' — unique per (storage_id, sha256).
+    | This drives BOTH the dedup-UNIQUE index (PanelTablesBuilder::defineBlobs)
+    | and the scope-qualified storage_key "<scope>/ab/cd/<sha256>" (H.3 — a
+    | scope-free path would let one scope's GC delete another scope's bytes).
+    | dedup_scope ⊆ encryption scope: plaintext-sha256 dedup never crosses an
+    | encryption boundary (note for the future envelope-encryption slice).
+    */
+    'dedup' => [
+        'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|storage
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Blob garbage collection (H.3)
+    |--------------------------------------------------------------------------
+    | Two-phase GC grace window. A blob whose ref-count cache reaches zero is
+    | tombstoned with delete_after_at = now + grace; only after the grace passes
+    | are its bytes swept. The grace must be ≥ the worst-case multipart-commit
+    | latency so an in-flight upload can resurrect the blob first. Floored at 1h.
+    */
+    'gc' => [
+        'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | CAS storage (H.3)
+    |--------------------------------------------------------------------------
+    | The default Flysystem disk for the canonical CAS objects when a blob's
+    | storage (v_storages.disk) does not pin its own. The CAS bucket must be
+    | UNVERSIONED: never use S3 lifecycle/versioning as a blob-deletion mechanism.
+    */
+    'storage' => [
+        'default_disk' => env('VAULTER_DISK', 'local'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

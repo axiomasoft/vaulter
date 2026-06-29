@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Vaulter\Cas\BlobStore as DefaultBlobStore;
+use Vaulter\Cas\FlysystemStorageDriver;
+use Vaulter\Cas\Sha256ContentStore;
+use Vaulter\Contracts\BlobStore;
+use Vaulter\Contracts\ContentStore;
 use Vaulter\Contracts\DocumentExporter;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageAdapter;
+use Vaulter\Contracts\StorageDriver;
 use Vaulter\Models\Blob;
 use Vaulter\Models\Document;
 use Vaulter\Models\DocumentComment;
@@ -288,6 +294,42 @@ final class Config
         return is_numeric($value) ? (int) $value : 50;
     }
 
+    /**
+     * The dedup scope the content address is unique within (D18 / H.3):
+     * global|tenant|storage. Drives both the dedup-UNIQUE index shape and the
+     * scope-qualified storage_key prefix. Unknown values fall back to 'tenant'.
+     */
+    public static function dedupScope(): string
+    {
+        $value = config('vaulter.dedup.scope', 'tenant');
+
+        return in_array($value, ['global', 'tenant', 'storage'], strict: true) ? $value : 'tenant';
+    }
+
+    /**
+     * The two-phase GC grace window in hours (H.3), floored at 1h so a tombstone
+     * can never be swept before an in-flight multipart upload could resurrect it.
+     */
+    public static function gcGraceHours(int $override = 0): int
+    {
+        $value = $override > 0 ? $override : config('vaulter.gc.grace_hours', 24);
+
+        $hours = is_numeric($value) ? (int) $value : 24;
+
+        return max($hours, 1);
+    }
+
+    /**
+     * The default Flysystem disk for the canonical CAS objects when a blob's
+     * storage row does not pin its own disk.
+     */
+    public static function defaultDisk(): string
+    {
+        $value = config('vaulter.storage.default_disk', 'local');
+
+        return is_string($value) && $value !== '' ? $value : 'local';
+    }
+
     public static function maxDocumentSizeKb(): int
     {
         $value = config('vaulter.max_document_size_kb', 5120);
@@ -354,6 +396,57 @@ final class Config
         $class = config('vaulter.storage_adapter', DefaultStorageAdapter::class);
 
         return $class;
+    }
+
+    /**
+     * The CAS ContentStore implementation (H.3, swappable).
+     *
+     * @return class-string<ContentStore>
+     */
+    public static function contentStoreClass(): string
+    {
+        $class = config('vaulter.cas.content_store', Sha256ContentStore::class);
+
+        if (is_string($class) && is_a($class, ContentStore::class, allow_string: true)) {
+            /** @var class-string<ContentStore> $class */
+            return $class;
+        }
+
+        return Sha256ContentStore::class;
+    }
+
+    /**
+     * The CAS StorageDriver implementation (H.3, swappable).
+     *
+     * @return class-string<StorageDriver>
+     */
+    public static function storageDriverClass(): string
+    {
+        $class = config('vaulter.cas.storage_driver', FlysystemStorageDriver::class);
+
+        if (is_string($class) && is_a($class, StorageDriver::class, allow_string: true)) {
+            /** @var class-string<StorageDriver> $class */
+            return $class;
+        }
+
+        return FlysystemStorageDriver::class;
+    }
+
+    /**
+     * The high-level CAS BlobStore implementation (H.3, swappable).
+     *
+     * @return class-string<BlobStore>
+     */
+    public static function blobStoreClass(): string
+    {
+        $class = config('vaulter.cas.blob_store', DefaultBlobStore::class);
+
+        if (is_string($class) && is_a($class, BlobStore::class, allow_string: true)) {
+            /** @var class-string<BlobStore> $class */
+            return $class;
+        }
+
+        return DefaultBlobStore::class;
     }
 
     /**

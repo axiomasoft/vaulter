@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Panels\Panel;
+use Vaulter\Support\Config;
 
 /**
  * The single source of truth for a storage panel's per-panel table definitions
@@ -232,12 +233,19 @@ final class PanelTablesBuilder
         $table->timestamp('delete_after_at')->nullable();
         $this->extraData(table: $table, panel: $panel);
 
-        // Dedup-unique by scope (D18): tenant_id + storage_id + sha256 keeps the
-        // content address unique within (and only within) its dedup scope, so the
-        // same bytes in two tenants/storages are two distinct rows. Index names are
-        // derived from the table so a per-panel prefixed table never collides.
+        // Dedup-UNIQUE by scope (D18 / H.3) — this index IS the portable race
+        // backbone for concurrent identical uploads: one INSERT wins, the loser
+        // catches the unique violation and re-SELECTs + reuses. The column set is
+        // finalised per config('vaulter.dedup.scope') (this resolves the M1a note
+        // that tenant_id was emitted unconditionally):
+        //   global  → UNIQUE (sha256)              one object install-wide
+        //   tenant  → UNIQUE (tenant_id, sha256)   no cross-tenant existence leak
+        //   storage → UNIQUE (storage_id, sha256)
+        // tenant_id/storage_id columns always exist (the model carries them); only
+        // the UNIQUE index spans the scope-relevant subset. Index names are derived
+        // from the table so a per-panel prefixed table never collides.
         $name = $table->getTable();
-        $table->unique(['tenant_id', 'storage_id', 'sha256'], "{$name}_dedup_uniq");
+        $table->unique($this->dedupUniqueColumns(), "{$name}_dedup_uniq");
         $table->unique('storage_key', "{$name}_storage_key_uniq");
 
         // GC scan support (§2.3): committed orphans past their grace deadline.
@@ -429,6 +437,22 @@ final class PanelTablesBuilder
             'blobs' => $panel->featureEnabled('blobs'),
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             default => false,
+        };
+    }
+
+    /**
+     * The column set for the blob dedup-UNIQUE index, derived from the configured
+     * dedup scope (D18 / H.3). sha256 is always last so the index also serves
+     * content-address lookups within the scope.
+     *
+     * @return list<string>
+     */
+    private function dedupUniqueColumns(): array
+    {
+        return match (Config::dedupScope()) {
+            'global' => ['sha256'],
+            'storage' => ['storage_id', 'sha256'],
+            default => ['tenant_id', 'sha256'],
         };
     }
 

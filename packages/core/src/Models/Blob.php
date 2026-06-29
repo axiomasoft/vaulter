@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Enums\BlobStatus;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Support\Config;
@@ -28,7 +30,7 @@ use Vaulter\Support\Config;
  * @property int             $size_bytes
  * @property string          $disk
  * @property string          $storage_key
- * @property string          $status
+ * @property BlobStatus      $status
  * @property int             $ref_count
  * @property string          $dedup_scope
  * @property string|null     $etag
@@ -73,6 +75,41 @@ class Blob extends Model
     }
 
     /**
+     * GC-candidate scope (§2.3): committed blobs whose ref-count CACHE is zero.
+     * That cache is rebuilt from the edge table by reconciliation, so a committed
+     * blob reaches ref_count<=0 the moment its last edge is detached and
+     * reconciled — that, not a pre-armed deadline, is what arms the mark scan.
+     * The grace window is applied by tombstone() (mark) and enforced by sweep,
+     * NOT here: requiring delete_after_at on a still-committed blob would gate the
+     * scan on a column no commit path ever writes, so a genuinely orphaned blob
+     * would never be tombstoned. This scope only narrows the scan — the real
+     * liveness re-check happens under the per-(scope,sha256) lock (H.3).
+     *
+     * @param  Builder<$this> $query
+     * @return Builder<$this>
+     */
+    public function scopeGarbageCollectable(Builder $query): Builder
+    {
+        return $query
+            ->where('status', BlobStatus::Committed->value)
+            ->where('ref_count', '<=', 0);
+    }
+
+    /**
+     * Tombstoned blobs whose grace window has elapsed — the sweep candidates.
+     *
+     * @param  Builder<$this> $query
+     * @return Builder<$this>
+     */
+    public function scopeSweepable(Builder $query): Builder
+    {
+        return $query
+            ->where('status', BlobStatus::Tombstoned->value)
+            ->whereNotNull('delete_after_at')
+            ->where('delete_after_at', '<', now());
+    }
+
+    /**
      * @return array<string, string>
      */
     #[\Override]
@@ -81,6 +118,7 @@ class Blob extends Model
         return [
             'size_bytes' => 'integer',
             'ref_count' => 'integer',
+            'status' => BlobStatus::class,
             'chunked' => 'boolean',
             'first_seen_at' => 'datetime',
             'committed_at' => 'datetime',
