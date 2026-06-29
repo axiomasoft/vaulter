@@ -23,9 +23,14 @@ final class CasTestHelpers
      */
     public static function makeVersion(int $versionNo = 1, string $name = 'a.bin'): FileVersion
     {
+        // One storage per host owner (the M1c owner-unique index): mint a fresh
+        // owner_id per call so repeated makeVersion()s in one test don't collide.
+        static $owner = 0;
+        $owner++;
+
         $storage = Storage::query()->create([
             'owner_type' => 'team',
-            'owner_id' => 1,
+            'owner_id' => $owner,
             'name' => 'Disk',
         ]);
 

@@ -139,6 +139,11 @@ final class PanelTablesBuilder
         $table->index(['owner_type', 'owner_id']);
         $table->index(['panel', 'status']);
 
+        // Idempotency backbone for get-or-create (M1c): one live storage per
+        // (owner_type, owner_id, panel). A partial unique (driver-aware, added in
+        // afterCreate) lets a soft-deleted row's owner be re-provisioned while a
+        // concurrent first-touch converges on one row via this constraint.
+
         // root_node_id is NOT a DB foreign key: v_storages and v_nodes reference
         // each other (the storage points at its root, every node points at its
         // storage), so a hard FK here would create a chicken-and-egg insert order.
@@ -344,9 +349,50 @@ final class PanelTablesBuilder
      */
     private function afterCreate(Panel $panel, string $entity): void
     {
+        if ($entity === 'storages') {
+            $this->addOwnerUniqueIndex(table: $panel->table('storages'));
+        }
+
         if ($entity === 'nodes') {
             $this->addSiblingUniqueIndex(table: $panel->table('nodes'));
         }
+    }
+
+    /**
+     * One LIVE storage per (owner_type, owner_id, panel) — the M1c get-or-create
+     * idempotency key (§2.1). Driver-aware so the partial (soft-delete-aware)
+     * shape works on Postgres/SQLite, with a MySQL generated-column fallback and a
+     * plain unique on unknown drivers.
+     */
+    private function addOwnerUniqueIndex(string $table): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        $name = "{$table}_owner_panel_uniq";
+
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            DB::statement(
+                "CREATE UNIQUE INDEX {$name} ON {$table} (owner_type, owner_id, panel) ".
+                'WHERE deleted_at IS NULL',
+            );
+
+            return;
+        }
+
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            DB::statement(
+                "ALTER TABLE `{$table}` ADD COLUMN `owner_active` VARCHAR(600) ".
+                'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
+                "THEN CONCAT(`owner_type`, ':', COALESCE(`owner_id`, ''), ':', `panel`) ELSE NULL END) STORED",
+            );
+
+            DB::statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`owner_active`)");
+
+            return;
+        }
+
+        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+            $blueprint->unique(['owner_type', 'owner_id', 'panel'], $name);
+        });
     }
 
     /**

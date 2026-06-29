@@ -28,6 +28,7 @@ use Vaulter\Support\Config;
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
+ * @property-read FileVersion|null $currentVersion
  */
 class File extends Model
 {

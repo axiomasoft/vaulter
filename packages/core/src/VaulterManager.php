@@ -5,14 +5,26 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Model;
+use Vaulter\Actions\Drive\CopyNodeAction;
+use Vaulter\Actions\Drive\CreateFolderAction;
+use Vaulter\Actions\Drive\ForceDeleteNodeAction;
+use Vaulter\Actions\Drive\MoveNodeAction;
+use Vaulter\Actions\Drive\RenameNodeAction;
+use Vaulter\Actions\Drive\RestoreNodeAction;
+use Vaulter\Actions\Drive\TrashNodeAction;
+use Vaulter\Actions\Drive\UploadFileAction;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\DocumentExporter;
 use Vaulter\Contracts\PermissionResolver;
+use Vaulter\Drive\DriveContext;
+use Vaulter\Drive\StorageManager;
 use Vaulter\Exceptions\UnknownExportFormatException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Repositories\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**
@@ -36,6 +48,34 @@ final class VaulterManager
     public function __construct(
         private readonly Container $container,
     ) {}
+
+    /**
+     * Open a Drive handle bound to a host entity's storage within a panel (§2.1).
+     * Get-or-creates the v_storages row (idempotent, root folder auto-provisioned)
+     * and returns an ergonomic DriveContext whose methods delegate to the Drive
+     * Actions/repositories. This is the package's primary integration entry point.
+     */
+    public function for(Model $entity, ?string $panel = null): DriveContext
+    {
+        $panel ??= 'default';
+
+        $storage = $this->container->make(StorageManager::class)->forOwner(owner: $entity, panel: $panel);
+
+        return new DriveContext(
+            storage: $storage,
+            panel: $panel,
+            storages: $this->container->make(StorageManager::class),
+            nodes: $this->container->make(NodeReadRepository::class),
+            createFolder: $this->container->make(CreateFolderAction::class),
+            uploadFile: $this->container->make(UploadFileAction::class),
+            moveNode: $this->container->make(MoveNodeAction::class),
+            renameNode: $this->container->make(RenameNodeAction::class),
+            copyNode: $this->container->make(CopyNodeAction::class),
+            trashNode: $this->container->make(TrashNodeAction::class),
+            restoreNode: $this->container->make(RestoreNodeAction::class),
+            forceDeleteNode: $this->container->make(ForceDeleteNodeAction::class),
+        );
+    }
 
     /**
      * Resolve a storage panel by id (default 'default'). Any future per-panel

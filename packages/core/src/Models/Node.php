@@ -49,6 +49,10 @@ use Vaulter\Support\Config;
  * @property int|string|null $trashed_from_parent_id
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
+ * @property-read Storage          $storage
+ * @property-read Node|null        $parent
+ * @property-read File|null        $file
+ * @property-read FileVersion|null $currentVersion
  */
 class Node extends Model
 {

@@ -19,6 +19,7 @@ use Vaulter\Contracts\ContentStore;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageDriver;
+use Vaulter\Drive\StorageManager;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
@@ -60,6 +61,11 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(VaulterManager::class);
         $this->app->alias(VaulterManager::class, 'vaulter');
+
+        // Drive domain (M1c): the storage get-or-create + root provisioning
+        // service. Its deps (read/store repositories) are auto-resolved; binding it
+        // as a singleton makes the seam explicit for swaps/tests.
+        $this->app->singleton(StorageManager::class);
 
         $this->app->bind(ShareTokenGenerator::class, Config::shareTokenGeneratorClass());
 
