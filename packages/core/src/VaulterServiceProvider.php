@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Broadcast;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Console\MakePanelCommand;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Panels\PanelRegistry;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 
@@ -25,6 +27,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->discoversMigrations()
             ->runsMigrations()
             ->hasRoute('api')
+            ->hasCommand(MakePanelCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
@@ -37,6 +40,14 @@ final class VaulterServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app->singleton(IdStrategyResolver::class);
+
+        $this->app->singleton(
+            PanelRegistry::class,
+            static fn (): PanelRegistry => PanelRegistry::fromConfig(
+                providerClasses: Config::panels(),
+                defaultClass: Config::defaultPanel(),
+            ),
+        );
 
         $this->app->singleton(VaulterManager::class);
         $this->app->alias(VaulterManager::class, 'vaulter');

@@ -10,6 +10,9 @@ use Vaulter\Contracts\DocumentExporter;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Exceptions\UnknownExportFormatException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Panels\Panel;
+use Vaulter\Panels\PanelRegistry;
+use Vaulter\Panels\StoragePanelProvider;
 use Vaulter\Support\Config;
 
 /**
@@ -33,6 +36,42 @@ final class VaulterManager
     public function __construct(
         private readonly Container $container,
     ) {}
+
+    /**
+     * Resolve a storage panel by id (default 'default'). Any future per-panel
+     * resolved state (drivers, exporters) must be keyed BY this panel id, never
+     * a single shared memoization (H.1) — so the registry is the single source
+     * keyed by panel id.
+     */
+    public function panel(string $name = 'default'): Panel
+    {
+        return $this->panels()->get($name);
+    }
+
+    /**
+     * The container-singleton panel registry (one Panel per id).
+     */
+    public function panels(): PanelRegistry
+    {
+        return $this->container->make(PanelRegistry::class);
+    }
+
+    /**
+     * Register a storage panel at runtime, by provider or by an already-built
+     * Panel. The registry validates it (H.1) and keys it by its id.
+     */
+    public function registerPanel(StoragePanelProvider|Panel $panel): void
+    {
+        $registry = $this->panels();
+
+        if ($panel instanceof StoragePanelProvider) {
+            $registry->registerProvider($panel);
+
+            return;
+        }
+
+        $registry->register($panel);
+    }
 
     /**
      * Tell Vaulter how to delegate authorization to the host application.

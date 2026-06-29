@@ -12,6 +12,7 @@ use Vaulter\Models\DocumentFolder;
 use Vaulter\Models\DocumentPermission;
 use Vaulter\Models\DocumentShare;
 use Vaulter\Models\DocumentVersion;
+use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
@@ -71,6 +72,48 @@ return [
             'uuid7' => Uuid7Ids::class,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Storage panels (D11)
+    |--------------------------------------------------------------------------
+    | A storage panel is a named config-envelope bound to ANY host entity, living
+    | over the ONE shared v_* schema WITHOUT its own tables by default (zero
+    | migrations). List your StoragePanelProvider FQCNs here (cache-safe — FQCN
+    | only, no closures); they override the default panel by id. Scaffold one with
+    | `php artisan vaulter:make-panel <name>`.
+    */
+    'panels' => [],
+    'default_panel' => DefaultStoragePanel::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Features
+    |--------------------------------------------------------------------------
+    | Global feature toggles. A panel may override any of these per-panel; these
+    | are the install-wide defaults read by Config::featureEnabled(). Only cheap
+    | sync-path flags belong here — infrastructure features are driver bindings.
+    */
+    'features' => [
+        'blobs' => true,
+        'versions' => true,
+        'grants' => true,
+        'activity' => true,
+        'uploads' => true,
+        'share_links' => false,
+        'document_versions' => false,
+        'public_listing' => false,
+        'reliability' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pipeline handlers (stub)
+    |--------------------------------------------------------------------------
+    | Reserved for the format/pipe registry (ingest_file/create_node/move_node
+    | pipe lists). Empty until the pipeline lands in a later milestone.
+    */
+    'handlers' => [],
 
     /*
     |--------------------------------------------------------------------------

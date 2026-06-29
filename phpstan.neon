@@ -15,3 +15,11 @@ parameters:
         # Eloquent dynamic builder/property magic that Larastan cannot fully model.
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+
+        # HasVaulterPanel is a consumer-facing concern (D13): only the SCAFFOLDED
+        # per-panel models (M1, app/Vaulter/Models/*) and the test fixtures use
+        # it, both outside this src-only analysis scope. It is exercised green by
+        # Pest (tests/Panels/HasVaulterPanelTest). Mirrors chatom's HasChatomPanel.
+        -
+            identifier: trait.unused
+            path: packages/core/src/Models/Concerns/HasVaulterPanel.php

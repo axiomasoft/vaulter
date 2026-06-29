@@ -14,6 +14,9 @@ use Vaulter\Models\DocumentFolder;
 use Vaulter\Models\DocumentPermission;
 use Vaulter\Models\DocumentShare;
 use Vaulter\Models\DocumentVersion;
+use Vaulter\Panels\DefaultStoragePanel;
+use Vaulter\Panels\PanelRegistry;
+use Vaulter\Panels\StoragePanelProvider;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
@@ -307,6 +310,66 @@ final class Config
 
         /** @var array<string, class-string<DocumentExporter>> $exporters */
         return $exporters;
+    }
+
+    /**
+     * The registered storage panel provider FQCNs (config('vaulter.panels')).
+     * Only valid StoragePanelProvider subclasses are returned; the config stays
+     * FQCN-only (cache-safe — no closures).
+     *
+     * @return list<class-string<StoragePanelProvider>>
+     */
+    public static function panels(): array
+    {
+        $value = config('vaulter.panels', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $providers = [];
+
+        foreach ($value as $class) {
+            if (is_string($class) && is_a($class, StoragePanelProvider::class, allow_string: true)) {
+                $providers[] = $class;
+            }
+        }
+
+        /** @var list<class-string<StoragePanelProvider>> $providers */
+        return $providers;
+    }
+
+    /**
+     * The default storage panel provider FQCN (config('vaulter.default_panel')),
+     * falling back to the built-in DefaultStoragePanel.
+     *
+     * @return class-string<StoragePanelProvider>
+     */
+    public static function defaultPanel(): string
+    {
+        $class = config('vaulter.default_panel', DefaultStoragePanel::class);
+
+        if (is_string($class) && is_a($class, StoragePanelProvider::class, allow_string: true)) {
+            return $class;
+        }
+
+        return DefaultStoragePanel::class;
+    }
+
+    /**
+     * Whether a global feature is enabled (config('vaulter.features.{name}')).
+     * When a panel name is given, the panel's own resolution wins (panel override
+     * → panel feature defaults), so a panel may enable/disable a feature locally.
+     */
+    public static function featureEnabled(string $feature, ?string $panel = null): bool
+    {
+        if ($panel !== null) {
+            return app(PanelRegistry::class)->get($panel)->featureEnabled($feature);
+        }
+
+        $value = config("vaulter.features.{$feature}");
+
+        return is_bool($value) ? $value : false;
     }
 
     /**
