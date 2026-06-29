@@ -6,12 +6,18 @@ use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
 use Vaulter\Export\HtmlExporter;
 use Vaulter\Export\MarkdownExporter;
+use Vaulter\Models\Blob;
 use Vaulter\Models\Document;
 use Vaulter\Models\DocumentComment;
 use Vaulter\Models\DocumentFolder;
 use Vaulter\Models\DocumentPermission;
 use Vaulter\Models\DocumentShare;
 use Vaulter\Models\DocumentVersion;
+use Vaulter\Models\File;
+use Vaulter\Models\FileVersion;
+use Vaulter\Models\FileVersionBlob;
+use Vaulter\Models\Node;
+use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
@@ -40,6 +46,40 @@ return [
         'permission' => DocumentPermission::class,
         'comment' => DocumentComment::class,
         'share' => DocumentShare::class,
+
+        // Vaulter Drive entities (M1a).
+        'storage' => Storage::class,
+        'node' => Node::class,
+        'file' => File::class,
+        'file_version' => FileVersion::class,
+        'blob' => Blob::class,
+        'file_version_blob' => FileVersionBlob::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table names (per-entity override)
+    |--------------------------------------------------------------------------
+    | Base table name for each Vaulter entity, resolved as
+    | {table_prefix}{base}. Rename a single entity's table here without changing
+    | the global prefix; PanelTablesBuilder and the models read through this map.
+    */
+    'table_names' => [
+        // DocDrive (legacy v_document* tables) keep their historical names.
+        'documents' => 'documents',
+        'document_folders' => 'document_folders',
+        'document_versions' => 'document_versions',
+        'document_permissions' => 'document_permissions',
+        'document_comments' => 'document_comments',
+        'document_shares' => 'document_shares',
+
+        // Vaulter Drive entities (M1a).
+        'storages' => 'storages',
+        'nodes' => 'nodes',
+        'blobs' => 'blobs',
+        'files' => 'files',
+        'file_versions' => 'file_versions',
+        'file_version_blobs' => 'file_version_blobs',
     ],
 
     /*
@@ -85,6 +125,17 @@ return [
     */
     'panels' => [],
     'default_panel' => DefaultStoragePanel::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Per-panel migration output (D12)
+    |--------------------------------------------------------------------------
+    | Where `vaulter:panel:migrations` writes the generated per-panel migration
+    | for an own-tables panel. null → the host's database/migrations directory.
+    */
+    'migrations' => [
+        'path' => null,
+    ],
 
     /*
     |--------------------------------------------------------------------------

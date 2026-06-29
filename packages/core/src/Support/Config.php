@@ -8,12 +8,18 @@ use Vaulter\Contracts\DocumentExporter;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageAdapter;
+use Vaulter\Models\Blob;
 use Vaulter\Models\Document;
 use Vaulter\Models\DocumentComment;
 use Vaulter\Models\DocumentFolder;
 use Vaulter\Models\DocumentPermission;
 use Vaulter\Models\DocumentShare;
 use Vaulter\Models\DocumentVersion;
+use Vaulter\Models\File;
+use Vaulter\Models\FileVersion;
+use Vaulter\Models\FileVersionBlob;
+use Vaulter\Models\Node;
+use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
@@ -86,6 +92,72 @@ final class Config
     {
         /** @var class-string<DocumentShare> $class */
         $class = config('vaulter.models.share', DocumentShare::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<Storage>
+     */
+    public static function storageModel(): string
+    {
+        /** @var class-string<Storage> $class */
+        $class = config('vaulter.models.storage', Storage::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<Node>
+     */
+    public static function nodeModel(): string
+    {
+        /** @var class-string<Node> $class */
+        $class = config('vaulter.models.node', Node::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<File>
+     */
+    public static function fileModel(): string
+    {
+        /** @var class-string<File> $class */
+        $class = config('vaulter.models.file', File::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<FileVersion>
+     */
+    public static function fileVersionModel(): string
+    {
+        /** @var class-string<FileVersion> $class */
+        $class = config('vaulter.models.file_version', FileVersion::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<Blob>
+     */
+    public static function blobModel(): string
+    {
+        /** @var class-string<Blob> $class */
+        $class = config('vaulter.models.blob', Blob::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<FileVersionBlob>
+     */
+    public static function fileVersionBlobModel(): string
+    {
+        /** @var class-string<FileVersionBlob> $class */
+        $class = config('vaulter.models.file_version_blob', FileVersionBlob::class);
 
         return $class;
     }
@@ -181,11 +253,17 @@ final class Config
     }
 
     /**
-     * Resolve a Vaulter table name (configured prefix + base name).
+     * Resolve a Vaulter table name: the configured prefix plus the base name, or
+     * the base name mapped through config('vaulter.table_names') when present, so
+     * an install may rename a single entity's table without a prefix change.
      */
     public static function table(string $name): string
     {
-        return self::tablePrefix().$name;
+        $mapped = config("vaulter.table_names.{$name}");
+
+        $base = is_string($mapped) && $mapped !== '' ? $mapped : $name;
+
+        return self::tablePrefix().$base;
     }
 
     public static function routePrefix(): string

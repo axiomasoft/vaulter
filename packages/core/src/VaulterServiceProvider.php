@@ -10,6 +10,7 @@ use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Console\MakePanelCommand;
+use Vaulter\Console\PanelMigrationsCommand;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
@@ -28,6 +29,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->runsMigrations()
             ->hasRoute('api')
             ->hasCommand(MakePanelCommand::class)
+            ->hasCommand(PanelMigrationsCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
