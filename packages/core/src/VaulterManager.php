@@ -21,6 +21,7 @@ use Vaulter\Drive\DriveContext;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Exceptions\UnknownExportFormatException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Models\Storage;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
@@ -61,9 +62,21 @@ final class VaulterManager
 
         $storage = $this->container->make(StorageManager::class)->forOwner(owner: $entity, panel: $panel);
 
+        return $this->forStorage(storage: $storage);
+    }
+
+    /**
+     * Open a Drive handle bound to an already-resolved storage row. This is the
+     * seam the HTTP layer uses: a route-model-bound Storage (resolved through the
+     * swappable config('vaulter.models.storage')) maps straight to a DriveContext
+     * without re-deriving the owner. The handle's panel mirrors the storage's own
+     * panel so its Actions run inside the right panel scope.
+     */
+    public function forStorage(Storage $storage): DriveContext
+    {
         return new DriveContext(
             storage: $storage,
-            panel: $panel,
+            panel: $storage->panel,
             storages: $this->container->make(StorageManager::class),
             nodes: $this->container->make(NodeReadRepository::class),
             createFolder: $this->container->make(CreateFolderAction::class),

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -90,7 +92,30 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        $this->registerRouteBindings();
         $this->registerBroadcastChannel();
+    }
+
+    /**
+     * Bind the Drive REST route parameters {storage} and {node} to the SWAPPABLE
+     * models (config('vaulter.models.*')) so the binding keeps resolving when a
+     * host points the config at a subclass. A miss 404s (findOrFail). Node uses
+     * the Drive trash (a trashed_at column), not the SoftDeletes deleted_at, so a
+     * trashed node still resolves by default — restore/force/download need it.
+     */
+    private function registerRouteBindings(): void
+    {
+        Route::bind('storage', static function (string $value): Model {
+            $model = Config::storageModel();
+
+            return $model::query()->findOrFail($value);
+        });
+
+        Route::bind('node', static function (string $value): Model {
+            $model = Config::nodeModel();
+
+            return $model::query()->findOrFail($value);
+        });
     }
 
     private function registerBroadcastChannel(): void
