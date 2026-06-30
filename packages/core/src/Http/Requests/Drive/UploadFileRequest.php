@@ -26,8 +26,18 @@ final class UploadFileRequest extends VaulterFormRequest
      */
     public function rules(): array
     {
+        $fileRules = ['required', 'file', 'max:'.Config::maxUploadKb()];
+
+        // An empty allowlist stays permissive (the default); a configured list
+        // restricts the upload to that mime set via Laravel's `mimetypes` rule.
+        $allowedMimes = Config::allowedUploadMimes();
+
+        if ($allowedMimes !== []) {
+            $fileRules[] = 'mimetypes:'.implode(',', $allowedMimes);
+        }
+
         return [
-            'file' => ['required', 'file', 'max:'.Config::maxDocumentSizeKb()],
+            'file' => $fileRules,
             'parent_id' => ['nullable'],
             'node_id' => ['nullable'],
             'name' => ['nullable', 'string', 'max:255', 'regex:/^[^\/\\\\]+$/'],

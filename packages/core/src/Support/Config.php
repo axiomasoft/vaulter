@@ -683,6 +683,32 @@ final class Config
     }
 
     /**
+     * The hard size ceiling (kilobytes) for a binary Drive upload (§2.4),
+     * enforced by UploadFileRequest. Falls back to the document size limit when
+     * unset, so the upload behaviour is unchanged until a host pins its own
+     * value via config('vaulter.drive.max_upload_kb').
+     */
+    public static function maxUploadKb(): int
+    {
+        $value = config('vaulter.drive.max_upload_kb');
+
+        return is_numeric($value) ? (int) $value : self::maxDocumentSizeKb();
+    }
+
+    /**
+     * The OPTIONAL mime allowlist for binary Drive uploads. An empty list means
+     * permissive (any mime accepted, the default); a non-empty list restricts
+     * uploads to that set through Laravel's `mimetypes` rule. Patterns such as
+     * 'image/*' are passed through verbatim — the rule expands them.
+     *
+     * @return list<string>
+     */
+    public static function allowedUploadMimes(): array
+    {
+        return self::stringList(config('vaulter.drive.allowed_mime', []), []);
+    }
+
+    /**
      * @return list<string>
      */
     public static function enabledDocumentTypes(): array

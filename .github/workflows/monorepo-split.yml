@@ -1,0 +1,53 @@
+name: Monorepo split (PHP)
+
+# Mirrors Filament's release mechanics: on every pushed tag, each PHP package under
+# packages/<name> is force-split into its own read-only repo axioma-studio/vaulter-<name>,
+# and the same tag is propagated (as_tag) so Packagist — which is registered against
+# the SPLIT repos — picks up the new version. The npm packages are released separately
+# by release-npm.yml.
+#
+# PREREQUISITES (one-time, NOT done here):
+#   1. Create the empty target repos: axioma-studio/vaulter-core, axioma-studio/vaulter-filament
+#      (and, later, vaulter-media / vaulter-drive / vaulter-docdrive as those packages land).
+#   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
+#      those split repos.
+#   3. Register the SPLIT repos on Packagist (not this monorepo).
+# Until the repos + secret exist this workflow will fail, so it is authored but dormant.
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  split:
+    name: Split packages/${{ matrix.package }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Extend with media / drive / docdrive as those packages are extracted.
+        package:
+          - core
+          - filament
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Split packages/${{ matrix.package }} → axioma-studio/vaulter-${{ matrix.package }}
+        # Pinned by commit for supply-chain safety; the trailing comment is the version tag.
+        uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5
+        with:
+          package_directory: packages/${{ matrix.package }}
+          repository_organization: axioma-studio
+          repository_name: vaulter-${{ matrix.package }}
+          user_name: Axioma Bot
+          user_email: dev@axioma.studio
+          branch: main
+          # Propagate the pushed tag to the split repo (used internally as as_tag).
+          tag: ${{ github.ref_name }}
+          personal_access_token: ${{ secrets.GH_ACCESS_TOKEN }}

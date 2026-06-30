@@ -573,6 +573,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Drive uploads (binary files)
+    |--------------------------------------------------------------------------
+    | The upload policy for the BINARY Drive path (v_files / v_blobs), kept apart
+    | from the TipTap document limit above so a file disk and a document editor
+    | can be sized independently.
+    |
+    |  - max_upload_kb: hard size ceiling (kilobytes) for an uploaded file,
+    |    enforced by UploadFileRequest. Defaults to max_document_size_kb so the
+    |    behaviour is unchanged until a host pins its own value.
+    |  - allowed_mime: an OPTIONAL mime allowlist. EMPTY = permissive (any mime
+    |    accepted, the default). Listing one or more mimes (e.g. 'application/pdf',
+    |    'image/*') restricts uploads to that set via Laravel's `mimetypes` rule.
+    */
+    'drive' => [
+        'max_upload_kb' => null,
+        'allowed_mime' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Export formats
     |--------------------------------------------------------------------------
     | Map of format => \Vaulter\Contracts\DocumentExporter. Add your own (PDF,

@@ -87,6 +87,66 @@ arch('repositories never depend on the HTTP request')
     ->not->toUse(Request::class);
 
 /**
+ * Layering: HTTP controllers must never touch an Eloquent model STATICALLY
+ * (Model::query/create/where/all/find/…) — persistence goes through repositories
+ * and Actions (M1c-http note). Controllers may still type-hint a model for
+ * route-model binding; this bans the static query/persistence entry points only.
+ *
+ * The model set is the concrete v_* models; the scan strips comments/docblocks so
+ * the rule fires on real code, and anchors on `Model::<verb>(` so unrelated static
+ * calls (Config::table(), NodeKind::File, …) never trip it.
+ */
+test('no HTTP controller statically queries an Eloquent model (M1c-http)', function (): void {
+    $controllers = __DIR__.'/../../src/Http/Controllers';
+
+    $models = collect(scandir(__DIR__.'/../../src/Models') ?: [])
+        ->filter(fn (string $f): bool => str_ends_with($f, '.php'))
+        ->map(fn (string $f): string => substr($f, 0, -4))
+        ->values()
+        ->all();
+
+    expect($models)->not->toBe([]);
+
+    $verbs = 'query|create|where|all|find|findOrFail|firstOrFail|first|firstWhere|'
+        .'insert|update|destroy|updateOrCreate|firstOrCreate|firstOrNew';
+    $names = implode('|', array_map('preg_quote', $models));
+    $pattern = "/\\b({$names})::({$verbs})\\s*\\(/";
+
+    $offenders = [];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($controllers)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        // Strip comments + docblocks so the ban only fires on real code.
+        $code = '';
+
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            $code .= is_array($token) ? $token[1] : $token;
+        }
+
+        if (preg_match($pattern, $code) === 1) {
+            $offenders[] = $file->getPathname();
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+/**
  * H.4 arch-ban: recursive descendant aggregation in request paths is fatal on
  * MariaDB (no correlated CTEs) and degrades on Postgres. No non-test src file may
  * call whereHas('descendants') or withCount('descendants'); subtree work goes

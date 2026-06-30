@@ -1,0 +1,61 @@
+name: Release (npm)
+
+# Publishes the npm packages (@vaulter/vue, later @vaulter/client) via Changesets.
+# On push to main this either opens/updates the "Version Packages" PR (when pending
+# changesets exist) or, once that PR is merged, publishes the bumped packages with
+# OIDC provenance. The PHP packages are released separately by monorepo-split.yml.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Avoid two release runs racing on the same branch.
+concurrency:
+  group: release-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write       # changesets opens/updates the Version Packages PR + tags
+  pull-requests: write  # ...and the PR itself
+  id-token: write       # OIDC provenance for npm publish (NPM_CONFIG_PROVENANCE)
+
+jobs:
+  release:
+    name: Changesets release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history so Changesets can compare against baseBranch (main).
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Build the publishable workspaces BEFORE publish — dist/ is gitignored and
+      # each package ships "files": ["dist"], so an unbuilt dist would publish empty.
+      - name: Build npm workspaces
+        run: npm run build
+
+      - name: Create release PR or publish
+        uses: changesets/action@v1
+        with:
+          # `npm run release` runs `changeset publish` (build already done above);
+          # the action only publishes when there are no pending changesets left —
+          # i.e. right after the Version Packages PR is merged.
+          publish: npm run release
+          version: npm run version
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'

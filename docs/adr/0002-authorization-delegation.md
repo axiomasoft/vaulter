@@ -26,3 +26,8 @@ registers it via `Vaulter::resolvePermissionsWith()` or `config('vaulter.permiss
 - Zero coupling to any RBAC package; works with all of them.
 - The host keeps a single source of truth for permissions.
 - Vaulter stays focused on documents, not access control.
+
+> **Refined by ADR-0007:** the single swappable `PermissionResolver` splits into a
+> pluggable `HostRoleDriver` plus a Vaulter-owned `AccessResolver` over `v_node_grants`,
+> and the **"open when unconfigured"** default is replaced by **fail-loud in production**
+> (the open `NullRoleDriver` is env-gated to non-prod). The delegation principle stands.

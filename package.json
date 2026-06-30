@@ -13,9 +13,13 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "build": "npm run build --workspace @vaulter/vue",
-    "test": "npm run test --workspace @vaulter/vue"
+    "test": "npm run test --workspace @vaulter/vue",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.0",
     "vitepress": "^1.6.3"
   }
 }

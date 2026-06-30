@@ -1,6 +1,7 @@
 # ADR-0003 — Embeddability & data model
 
-**Status:** accepted
+**Status:** superseded — its embeddability mechanics evolve into Storage Panels
+(ADR-0009) and its dual key type into the id-strategy seam (ADR-0011).
 
 ## Context
 
@@ -28,3 +29,8 @@ cannot serve both.
 - Vaulter stays out of the tenancy-enforcement business (the host owns it), avoiding
   cross-tenant-leak responsibility it cannot guarantee.
 - Models are not `final` (they must be extendable); other domain classes remain `final`.
+
+> **Superseded by:** the swappable-model + polymorphic-workspace idea generalises
+> into the config-first **Storage Panels** envelope (ADR-0009), and the binary
+> `id_type` toggle is replaced by the `bigint | ulid | uuid7` **id-strategy** seam
+> (ADR-0011). The host-owned tenancy stance carries forward unchanged.
