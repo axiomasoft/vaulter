@@ -38,6 +38,9 @@ services:
     build:
       context: ../hocuspocus-server
     environment:
+      # Dev stand: NODE_ENV=development opens the Origin allowlist (a published/prod image
+      # defaults to production and REQUIRES VAULTER_COLLAB_ALLOWED_ORIGINS — see config.js).
+      NODE_ENV: "development"
       VAULTER_COLLAB_PORT: "1234"
       VAULTER_COLLAB_HEALTH_PORT: "1235"
       VAULTER_BACKEND_URL: "http://laravel:8000"
