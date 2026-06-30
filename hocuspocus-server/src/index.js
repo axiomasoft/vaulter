@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { Server } from '@hocuspocus/server'
+import { Hocuspocus } from '@hocuspocus/server'
 import { createServer } from 'node:http'
 import { config } from './config.js'
 import { authenticate, storeDocument } from './webhook.js'
@@ -17,7 +17,9 @@ import { authenticate, storeDocument } from './webhook.js'
 //      Yjs snapshot back to collab/store, which persists it into
 //      v_node_document_versions.yjs_state — the binary is the source of truth.
 
-const server = new Server({
+// @hocuspocus/server v2 экспортирует `Server` как singleton-ИНСТАНС, а классом является
+// `Hocuspocus` — поэтому сервер создаём через `new Hocuspocus(...)` (а не `new Server(...)`).
+const server = new Hocuspocus({
   port: config.port,
 
   /**
