@@ -1,104 +1,191 @@
 import 'dotenv/config'
 import { Hocuspocus } from '@hocuspocus/server'
+import { Throttle } from '@hocuspocus/extension-throttle'
 import { createServer } from 'node:http'
-import { config } from './config.js'
+import { config, isOriginAllowed, validateConfig } from './config.js'
 import { authenticate, storeDocument } from './webhook.js'
 
-// Vaulter collaboration hub (M4b-edge).
+// Vaulter collaboration hub (M4b-edge) — the external, env-configured Hocuspocus image.
 //
-// Flow (vaulter-spec.md §10 / master plan §7 / ADR-0001):
+// Flow (vaulter-spec.md §10 / master plan §7 + Addendum A / ADR-0001):
 //   1. The Vue client requests a room JWT from Laravel
 //      (POST /api/vaulter/nodes/{node}/collab/token).
 //   2. VaulterEditor opens a WebSocket here with that JWT as the token and the
 //      ROOM NAME (vaulter.documents.<nodeId>) as the document name.
-//   3. onAuthenticate forwards the JWT + room to the Laravel collab/authenticate
-//      webhook; allowed:false rejects the socket, readOnly gates writes.
-//   4. Yjs syncs edits; onStoreDocument (debounced by the server) ships the binary
-//      Yjs snapshot back to collab/store, which persists it into
+//   3. onConnect enforces the Origin allowlist (CSWSH); onAuthenticate forwards the JWT +
+//      room to the Laravel collab/authenticate webhook; allowed:false rejects the socket,
+//      readOnly gates writes.
+//   4. Yjs syncs edits; onStoreDocument (debounced by the server) ships the binary Yjs
+//      snapshot back to collab/store, which persists it into
 //      v_node_document_versions.yjs_state — the binary is the source of truth.
-
-// @hocuspocus/server v2 экспортирует `Server` как singleton-ИНСТАНС, а классом является
-// `Hocuspocus` — поэтому сервер создаём через `new Hocuspocus(...)` (а не `new Server(...)`).
-const server = new Hocuspocus({
-  port: config.port,
-
-  /**
-   * onAuthenticate — the connect gate. The client presents its room JWT as `token`
-   * and the room name as `documentName`. We delegate the decision to Laravel's
-   * collab/authenticate webhook (the JWT is forwarded as Authorization: Bearer, the
-   * room in the body). A rejected call (allowed:false / non-2xx) throws, which
-   * Hocuspocus turns into a refused connection. The resolved readOnly flag is pushed
-   * onto the connection so the server refuses writes from a read-only viewer, and the
-   * token is stashed on the returned context so onStoreDocument can authenticate the
-   * snapshot write with the SAME room-bound JWT.
-   */
-  async onAuthenticate({ token, documentName, connection }) {
-    if (!token) {
-      throw new Error('Missing collaboration token')
-    }
-
-    const result = await authenticate({ token, room: documentName })
-
-    if (!result.allowed) {
-      throw new Error('Collaboration connection rejected by the Vaulter backend')
-    }
-
-    // The connection object lets us downgrade a viewer/commenter to read-only; the
-    // server then drops their document updates (see Hocuspocus connection.readOnly).
-    if (connection && result.readOnly) {
-      connection.readOnly = true
-    }
-
-    // Returned as the connection `context` — onStoreDocument reads it back to reuse
-    // the room-bound JWT (and to skip storing from a read-only connection).
-    return {
-      token,
-      room: documentName,
-      readOnly: result.readOnly,
-      userId: result.userId,
-    }
-  },
-
-  /**
-   * onStoreDocument — the debounced persistence hook (the @hocuspocus Database/
-   * onStoreDocument seam; the server debounces it). We ship the BINARY Yjs state
-   * (base64) to Laravel's collab/store webhook so it lands in
-   * v_node_document_versions.yjs_state verbatim — we never reconstruct Yjs from JSON.
-   * The call is authenticated with the connection's room-bound JWT (forwarded as
-   * Authorization: Bearer) when available, else the shared webhook secret. A read-only
-   * connection never reaches store (the backend would 403 it anyway).
-   */
-  async onStoreDocument({ documentName, state, document, context, lastContext }) {
-    // The v4 payload renames `context` → `lastContext`; support both so the hook is
-    // version-tolerant.
-    const ctx = context ?? lastContext ?? {}
-
-    if (ctx.readOnly) {
-      // A read-only connection must not persist; the backend forbids it, so skip the
-      // round-trip entirely.
-      return
-    }
-
-    const binary = await encodeBinaryState({ state, document })
-
-    if (binary.length === 0) {
-      return
-    }
-
-    await storeDocument({
-      room: documentName,
-      yjsState: Buffer.from(binary).toString('base64'),
-      token: ctx.token,
-      userId: ctx.userId,
-    })
-  },
-})
+//
+// Hardening (Addendum A.3): Origin allowlist, Throttle (per-IP), maxPayload,
+// perMessageDeflate off, prod liveness/debounce config, optional Redis (multi-instance)
+// + Logger, fail-fast config validation, non-root image, graceful shutdown (Hocuspocus
+// stopOnSignals=true).
 
 /**
- * The binary Yjs update for the document. Hocuspocus' Database extension hands a
- * ready `state: Uint8Array`; the core onStoreDocument hands the `document` (Y.Doc),
- * from which we encode the full update. Either way we ship raw bytes — the Yjs binary
- * is the source of truth.
+ * Build the extension chain. Throttle is registered FIRST (the docs require it before
+ * any other extension) so handshake-flood protection runs ahead of everything. Redis and
+ * Logger are opt-in and lazily imported so the default (single-instance) path stays light.
+ */
+async function buildExtensions() {
+  const extensions = [
+    new Throttle({
+      throttle: config.throttle,
+      consideredSeconds: config.throttleSeconds,
+      banTime: config.banTime,
+    }),
+  ]
+
+  if (config.redisUrl) {
+    // Multi-instance document + awareness sync. ioredis parses the full URL (auth, db,
+    // rediss:// TLS); pub and sub need SEPARATE connections, so createClient mints one each.
+    const { default: IORedis } = await import('ioredis')
+    const { Redis } = await import('@hocuspocus/extension-redis')
+    extensions.push(new Redis({
+      identifier: config.instanceName,
+      createClient: () => new IORedis(config.redisUrl),
+    }))
+  }
+
+  if (config.logEnabled) {
+    const { Logger } = await import('@hocuspocus/extension-logger')
+    // onChange is high-cardinality and expensive at scale — keep it off.
+    extensions.push(new Logger({ onChange: false }))
+  }
+
+  return extensions
+}
+
+/**
+ * onConnect — the Origin gate (CSWSH defence), runs BEFORE onAuthenticate. A browser
+ * supplies an Origin; it must be on the allowlist. A non-browser client (no Origin) is
+ * allowed here and still gated by the auth webhook. Throwing refuses the socket.
+ */
+async function onConnect({ requestHeaders }) {
+  const origin = readOrigin(requestHeaders)
+
+  if (!isOriginAllowed(origin)) {
+    throw new Error(`Collaboration connection refused: origin not allowed (${origin ?? 'none'})`)
+  }
+}
+
+/**
+ * Read the Origin header version-agnostically: Hocuspocus v2 hands a plain
+ * IncomingHttpHeaders object (`headers.origin`), while v4 hands a web `Headers`
+ * (`headers.get('origin')`). Reading the wrong shape would yield undefined and silently
+ * disable the CSWSH allowlist, so support both.
+ */
+function readOrigin(requestHeaders) {
+  if (!requestHeaders) {
+    return undefined
+  }
+  if (typeof requestHeaders.get === 'function') {
+    return requestHeaders.get('origin') ?? undefined
+  }
+  return requestHeaders.origin
+}
+
+/**
+ * onAuthenticate — the connect gate. The client presents its room JWT as `token` and the
+ * room name as `documentName`. We delegate the decision to Laravel's collab/authenticate
+ * webhook (JWT forwarded as Authorization: Bearer, room in the body). A rejected call
+ * (allowed:false / non-2xx) throws → refused connection. readOnly downgrades the
+ * connection so the server drops a viewer's updates; the token is stashed on the context
+ * so onStoreDocument authenticates the snapshot write with the SAME room-bound JWT.
+ */
+async function onAuthenticate({ token, documentName, connection }) {
+  if (!token) {
+    throw new Error('Missing collaboration token')
+  }
+
+  const result = await authenticate({ token, room: documentName })
+
+  if (!result.allowed) {
+    throw new Error('Collaboration connection rejected by the Vaulter backend')
+  }
+
+  if (connection && result.readOnly) {
+    connection.readOnly = true
+  }
+
+  return {
+    token,
+    room: documentName,
+    readOnly: result.readOnly,
+    userId: result.userId,
+  }
+}
+
+/**
+ * onStoreDocument — the debounced persistence hook. Ships the BINARY Yjs state (base64)
+ * to Laravel's collab/store webhook so it lands in v_node_document_versions.yjs_state
+ * verbatim. Authenticated with the connection's room-bound JWT; a read-only connection
+ * never reaches store.
+ */
+async function onStoreDocument({ documentName, state, document, context, lastContext }) {
+  // v4 renames `context` → `lastContext`; support both.
+  const ctx = context ?? lastContext ?? {}
+
+  if (ctx.readOnly) {
+    return
+  }
+
+  const binary = await encodeBinaryState({ state, document })
+
+  if (binary.length === 0) {
+    return
+  }
+
+  await storeDocument({
+    room: documentName,
+    yjsState: Buffer.from(binary).toString('base64'),
+    token: ctx.token,
+    userId: ctx.userId,
+  })
+}
+
+/**
+ * The hardened `ws` server options. maxPayload caps the frame size (the `ws` default is
+ * ~100 MiB, far too high for incremental Yjs updates); perMessageDeflate off trims attack
+ * surface and CPU. In @hocuspocus/server v2.x these are honoured ONLY as the 3rd argument
+ * of `server.listen()` — a `websocketOptions` config KEY on the Hocuspocus constructor is
+ * silently ignored (it only became a config key in v4), so passing it there is a no-op that
+ * leaves the limits at the library defaults. Keep this as the single source so boot() and
+ * the test exercise the exact same options.
+ */
+export function websocketOptions() {
+  return {
+    maxPayload: config.maxPayloadBytes,
+    perMessageDeflate: false,
+  }
+}
+
+/**
+ * Build the Hocuspocus server with the hardened configuration. name/timeout/debounce/
+ * maxDebounce/quiet are production-tuned via env. The WebSocket frame limits are applied at
+ * listen() time (see websocketOptions + boot), not here — v2.x ignores them on the config.
+ */
+async function buildServer() {
+  return new Hocuspocus({
+    name: config.instanceName,
+    port: config.port,
+    timeout: config.timeout,
+    debounce: config.debounce,
+    maxDebounce: config.maxDebounce,
+    quiet: config.quiet,
+    extensions: await buildExtensions(),
+    onConnect,
+    onAuthenticate,
+    onStoreDocument,
+  })
+}
+
+/**
+ * The binary Yjs update for the document. Hocuspocus' Database extension hands a ready
+ * `state: Uint8Array`; the core onStoreDocument hands the `document` (Y.Doc), from which
+ * we encode the full update. Either way we ship raw bytes — the Yjs binary is truth.
  */
 async function encodeBinaryState({ state, document }) {
   if (state instanceof Uint8Array) {
@@ -106,8 +193,6 @@ async function encodeBinaryState({ state, document }) {
   }
 
   if (document && typeof document.transact === 'function') {
-    // yjs is a dependency of @hocuspocus/server; import its encoder lazily so the
-    // hot path stays dependency-light and the module imports cleanly without a Y.Doc.
     const { encodeStateAsUpdate } = await import('yjs')
     return encodeStateAsUpdate(document)
   }
@@ -116,15 +201,14 @@ async function encodeBinaryState({ state, document }) {
 }
 
 /**
- * A tiny HTTP health endpoint for the compose/orchestrator healthcheck. It is served
- * on a SEPARATE port (config.healthPort) so it never interferes with the Hocuspocus
- * WebSocket upgrade handling on the main port.
+ * A tiny HTTP health endpoint for the compose/orchestrator healthcheck, on a SEPARATE
+ * port so it never interferes with the WebSocket upgrade handling on the main port.
  */
 function startHealthEndpoint() {
   const health = createServer((req, res) => {
     if (req.url === '/health' || req.url === '/healthz' || req.url === '/') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ status: 'ok', service: 'vaulter-hocuspocus' }))
+      res.end(JSON.stringify({ status: 'ok', service: 'vaulter-hocuspocus', name: config.instanceName }))
       return
     }
     res.writeHead(404, { 'Content-Type': 'application/json' })
@@ -136,19 +220,42 @@ function startHealthEndpoint() {
     console.log(`Vaulter collab health endpoint on http://0.0.0.0:${config.healthPort}/health`)
   })
 
+  // Hocuspocus handles its own graceful shutdown on SIGINT/SIGTERM (stopOnSignals=true);
+  // close the companion health server alongside so the process can exit cleanly.
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => health.close())
+  }
+
   return health
 }
 
 async function boot() {
+  const problems = validateConfig()
+  if (problems.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error('Vaulter collab hub: invalid configuration:\n - ' + problems.join('\n - '))
+    process.exit(1)
+  }
+
+  if (config.allowAllOrigins || (!config.isProduction && config.allowedOrigins.length === 0)) {
+    // eslint-disable-next-line no-console
+    console.warn('Vaulter collab hub: Origin allowlist is OPEN (dev / "*") — set VAULTER_COLLAB_ALLOWED_ORIGINS in production.')
+  }
+
   startHealthEndpoint()
 
-  await server.listen()
+  const server = await buildServer()
+  // ws options (maxPayload / perMessageDeflate) MUST be passed here — v2.x only reads them
+  // from listen()'s 3rd arg, not the Hocuspocus config (see websocketOptions).
+  await server.listen(config.port, undefined, websocketOptions())
   // eslint-disable-next-line no-console
-  console.log(`Vaulter Hocuspocus hub listening on ws://0.0.0.0:${config.port}`)
+  console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port}`)
+
+  return server
 }
 
-// Only boot when run as the entrypoint — importing this module (e.g. in tests)
-// must not open sockets.
+// Only boot when run as the entrypoint — importing this module (e.g. in tests) must not
+// open sockets.
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   boot().catch((error) => {
     // eslint-disable-next-line no-console
@@ -157,4 +264,5 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   })
 }
 
-export { server }
+export { buildServer, buildExtensions, onConnect }
+// websocketOptions is exported above (function declaration) for boot() + the hardening test.

@@ -11,6 +11,8 @@ build/
 node_modules/
 dist/
 package-lock.json
+# …but the hub image needs its lockfile committed for a reproducible `npm ci` build.
+!hocuspocus-server/package-lock.json
 *.log
 
 # VitePress

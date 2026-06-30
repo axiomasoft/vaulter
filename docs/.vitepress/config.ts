@@ -57,6 +57,7 @@ const guideSidebar = [
     collapsed: false,
     items: [
       { text: 'Realtime Collaboration', link: '/guide/collaboration' },
+      { text: 'Hocuspocus Server (Docker)', link: '/guide/hocuspocus-server' },
       { text: 'Vue package (@vaulter/vue)', link: '/guide/vue' },
       { text: 'Filament admin plugin', link: '/guide/filament' },
     ],

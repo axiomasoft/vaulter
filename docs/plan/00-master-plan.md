@@ -64,7 +64,10 @@
 12. **DocDrive — форматы:** `UniverHandler` (XLSX) сейчас заглушка за флагом `spreadsheets` — доделать (single-user); опц. OnlyOffice/Collabora handlers (BYO-лицензия); PDF/DOCX exporters (seam есть).
 13. **Vue UX:** move/copy используют `window.prompt`-плейсхолдер — заменить на пикер папки-цели. Filament: 1 skipped тест (Filament5+Livewire nested-render snag) — разобраться.
 14. **Прочее из плана:** `vaulter-livewire` (нативные компоненты — future); hash-chaining/партиционирование activity; домержить любые `// M2/seam`-комментарии (storage-scope authz seams в StorageController).
-15. **Hocuspocus-server = внешний переиспользуемый Docker-образ (НЕ копировать в каждый проект).** Сейчас `hocuspocus-server/` лежит в репозитории и тащится физически. Сделать его дистрибутивом: release-pipeline публикует образ `ghcr.io/axioma-studio/vaulter-hocuspocus:<ver>` (см. P2 #4), а потребители **ссылаются** на него в своём compose (`image:`), а не вкладывают исходники. Сервер — **максимально настраиваемый через env**: уже есть `VAULTER_COLLAB_PORT/HEALTH_PORT/BACKEND_URL/API_PREFIX/WEBHOOK_SECRET/WEBHOOK_TIMEOUT_MS`; добавить недостающее (TLS/`wss`, origin-allowlist/CORS, log-level, debounce/maxWait снапшота, Redis-scaling для нескольких инстансов). **Отдельная документация в `docs/`** (своя страница, напр. `docs/guide/hocuspocus-server.md` + пункт в сайдбаре): standalone-запуск, ПОЛНЫЙ контракт env, пример compose со ссылкой на образ, и заметка, что **один образ обслуживает РАЗНЫЕ проекты** — он бэкенд-агностичен, авторизацию/персист делегирует вебхукам конкретного Laravel (`{BACKEND}/{PREFIX}/collab/{authenticate,store}`). Закрепляет вывод P1.1: **collab = Hocuspocus**, а хаб — переиспользуемая инфраструктура, не вендоред-копия. (Reverb для коллаборации НЕ используется — он для уведомлений/бродкаста; см. коммит `refactor(collab): default to hocuspocus`.)
+15. **Hocuspocus-server = внешний переиспользуемый Docker-образ (НЕ копировать в каждый проект).** ✅ **СДЕЛАНО, КОД-РЕВЬЮ ПРОЙДЕНО** (ветка `feat/hocuspocus-external-image`, 5 коммитов). Хаб → дистрибутив: опубликованный `ghcr.io/axioma-studio/vaulter-hocuspocus:<ver>`, потребители ссылаются `image:` (не вкладывают исходники), конфиг — только env, секреты не печём; образ бэкенд-агностичен (авторизацию/персист делегирует вебхукам конкретного Laravel). Включает **security-hardening** (CSWSH/origin-allowlist, wss/TLS, maxPayload, Throttle, graceful shutdown, non-root, `npm ci` из lockfile), env-расширение, отдельную docs-страницу и CI-publish. **Детальный план + полный security-чеклист → «Addendum A» в конце этого файла.** (Закрепляет вывод P1.1: collab = Hocuspocus; Reverb — для уведомлений, не для коллаборации.)
+    - **Реализация:** `092b61b` (security-harden) + `6b6a066` (external-image distribution).
+    - **2 раунда multi-agent код-ревью:** 1-й — `4a20ea3` (3 находки: NODE_ENV-гейт fail-closed, v4-Origin read, CI-provenance дедуп). 2-й — `140b595` (8 находок, adversarially verified, 3 false-positive отброшены), поймал **2 HIGH, пропущенные 1-м раундом**: (а) `maxPayload`/`perMessageDeflate` шли как config-КЛЮЧ `websocketOptions`, который @hocuspocus/server **v2.15 ИГНОРИРУЕТ** (ws оставался на дефолтных ~100 MiB!) → фикс через 3-й арг `server.listen()`, доказано рантайм-пробой (4 MiB применяется) + регресс-тест с negative-control; (б) **throttle спуфится** через клиентские `X-Real-IP`/`X-Forwarded-For` (onUpgrade-strip НЕ доходит до throttle в 2.15 — пробовано) → compose биндит WS-порт на `127.0.0.1`, доки требуют reverse-proxy ПЕРЕЗАПИСЫВАТЬ IP-заголовки (nginx `$remote_addr` / Traefik). Плюс: строгая int-валидация (fail-fast на typo + range-checks), `npm audit` CI-гейт, README→quick-ref, ws-hardening тест. **37 node:test** (было 30), npm check ✓, docker build ✓, prod fail-closed ✓, non-root uid1000 ✓, graceful shutdown ~0.45s ✓, npm audit 0 vuln ✓.
+    - **Остаток:** реальный publish образа в ghcr = **P2 #4** (нужен тег `vaulter-hocuspocus-v*` + secret); `hocuspocus-server/.env.example` (NIT) — permission-protected, исправленный контент предложен на ручной apply.
 
 > **Как продолжить после /clear:** прочитать эту секцию + соответствующий раздел §1–§12 / H.x по теме; работать тем же ритмом (workflow: implement → review[PHPStan/Pint/Pest+канон] → fix-loop → независимая verify → тихий коммит); гейты должны оставаться зелёными.
 
@@ -682,3 +685,87 @@ config-cache arch-гейт; тест middleware-до-`SubstituteBindings`; queue
 
 ## H.7 Разрешения открытых вопросов
 Q4 (deny-ACE) → оставить deny как **вето-после-max, explicit>inherited** (D7′). Q5 (PK) → ulid подтверждён, per-panel выбор только в own-tables (D9′). Q6 (document-блобы) → без изменений; если вложения документов когда-либо пойдут в `v_blobs` — GC/ACL применяются идентично.
+
+---
+
+# Addendum A — Hocuspocus-server как внешний переиспользуемый образ (детальный план; P4 #15)
+
+> Источник истины по задаче «контейнер хаба». Заземлено на ресёрч (Perplexity: Hocuspocus
+> prod-deploy + WS-security + Docker-distribution) и API @hocuspocus/server v2.15 (context7).
+> Цель — закрыть слепые зоны, особенно по БЕЗОПАСНОСТИ. Реализуется на ветке
+> `feat/hocuspocus-external-image`, ритм: implement → review[node --check/--test + boot-smoke]
+> → fix → commit; затем code-review-workflow.
+
+## A.1 Модель дистрибуции (инвариант)
+Хаб — **бэкенд-агностичная инфраструктура**: ОДИН опубликованный OCI-образ
+`ghcr.io/axioma-studio/vaulter-hocuspocus:<semver>` обслуживает РАЗНЫЕ проекты. Потребитель
+**ссылается** (`image:` в своём compose; в проде — `@sha256:`-digest), конфигурирует ТОЛЬКО
+через env, **не вкладывает исходники и не печёт секреты** в образ. Образ environment-agnostic
+и secret-free. Авторизацию/персист хаб делегирует вебхукам конкретного Laravel
+(`{BACKEND}/{PREFIX}/collab/{authenticate,store}`); JWT-секрет хабу НЕ нужен (он лишь релеит токен).
+
+## A.2 Env-контракт (полный, 12-factor; fail-fast валидация на старте)
+**Есть:** `VAULTER_COLLAB_PORT`, `VAULTER_COLLAB_HEALTH_PORT`, `VAULTER_BACKEND_URL`,
+`VAULTER_API_PREFIX`, `VAULTER_LARAVEL_WEBHOOK_URL`, `VAULTER_COLLAB_WEBHOOK_SECRET`,
+`VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS`.
+**Добавить:**
+- `VAULTER_COLLAB_ALLOWED_ORIGINS` — csv точных origin'ов; **обязателен в проде**; пусто ⇒
+  reject всех браузерных; `*` — только dev и с явным warning в логах (CSWSH-защита).
+- `VAULTER_COLLAB_MAX_PAYLOAD_BYTES` — лимит кадра (default 4 MiB; НЕ ws-дефолт 100 MiB).
+- `VAULTER_COLLAB_THROTTLE` / `_THROTTLE_SECONDS` / `_BAN_TIME` — Throttle-ext (per-IP).
+- `VAULTER_COLLAB_TIMEOUT_MS` (30000), `_DEBOUNCE_MS` (5000), `_MAX_DEBOUNCE_MS` (30000).
+- `VAULTER_COLLAB_REDIS_URL` (опц.) ⇒ включает Redis-ext (multi-instance) + `VAULTER_COLLAB_INSTANCE_NAME`.
+- `VAULTER_COLLAB_QUIET` (bool, default true в проде) / `VAULTER_COLLAB_LOG` (on/off Logger-ext).
+- `VAULTER_COLLAB_TRUST_PROXY` (учёт `X-Forwarded-*` за reverse-proxy).
+Старт валидирует обязательные (в проде: backend-url, allowed-origins) и **падает с понятной
+ошибкой**, если их нет.
+
+## A.3 Security-чеклист (по убыванию важности — закрыть слепые зоны)
+1. **CSWSH / Origin-allowlist** — валидировать `Origin` в `onConnect({ request })` против
+   allowlist (ТОЧНОЕ совпадение, без wildcard/substring); reject отсутствующего Origin для
+   браузерных; throw → refuse. ⚠ СЕЙЧАС ОТСУТСТВУЕТ — главная дыра.
+2. **TLS/wss** — терминировать на reverse-proxy (nginx/traefik), блокировать plaintext в проде;
+   хаб слушает `ws` за proxy. Preserve `Host`/`X-Forwarded-Proto`/client-IP. Сниппеты в доке.
+3. **maxPayload** — `websocketOptions.maxPayload` (~4 MiB) + лимит на proxy. ⚠ отсутствует.
+4. **Throttle** — `@hocuspocus/extension-throttle` ПЕРВЫМ в `extensions` (per-IP handshake-rate
+   + ban). ⚠ отсутствует. (Throttle ≠ max-concurrent — жёсткие per-user/doc/tenant капы — бэклог.)
+5. **perMessageDeflate: false** — снизить attack surface/ресурсы. ⚠ дефолт.
+6. **Heartbeat/idle** — Hocuspocus `timeout` (ping/pong, dead-peer); **выровнять с LB idle-timeout**
+   и proxy websocket-timeout, иначе посредник рвёт живые сокеты.
+7. **Auth fail-closed** — уже: webhook `onAuthenticate` (JWT verify в Laravel, readOnly давится
+   на сокете); `allowed:false`/non-2xx ⇒ refuse. JWT TTL короткий (3600).
+8. **No baked secrets** — env-only; `webhook_secret`/`redis_url` инъектятся в рантайме; образ secret-free.
+9. **Non-root + minimal** — `USER node`, alpine/distroless, pinned base, `npm ci` из lockfile.
+10. **Graceful shutdown** — SIGTERM/SIGINT → readiness=false → стоп новых upgrades → дать
+    debounce-окну сброситься → `server.destroy()` → exit; выровнять с preStop/drain ингресса.
+11. **Supply chain** — pinned deps, `npm audit` в CI, SBOM + build-provenance attestation.
+
+## A.4 Образ (Dockerfile)
+Multi-stage (deps→runtime); `node:22-alpine` pinned (+digest опц.); **`npm ci` из КОММИЧЕННОГО
+lockfile** (сейчас `package-lock.json` gitignored глобально — разигнорить
+`hocuspocus-server/package-lock.json`); `USER node` (non-root); OCI-labels
+(`org.opencontainers.image.source/description/licenses`); `.dockerignore`; HEALTHCHECK (есть);
+EXPOSE 1234/1235. Опц. distroless-рантайм + отдельный debug-таргет.
+
+## A.5 CI publish (часть P2 #4)
+`.github/workflows/hocuspocus-image.yml`: на тег `vaulter-hocuspocus-v*` → `docker/metadata-action`
+(semver-теги `1`/`1.2`/`1.2.3`) + buildx multi-arch (`linux/amd64,linux/arm64`) + login ghcr
+(`GITHUB_TOKEN`) + `build-push-action` (`provenance:true, sbom:true`) + `actions/attest@v4`.
+В проде потребители пиннят `@sha256:`-digest. (Сам публикующий прогон — под P2 #4: тег+secret.)
+
+## A.6 Документация
+`docs/guide/hocuspocus-server.md` + пункт в VitePress-сайдбаре (en; ru-перевод — в P3 #7):
+архитектура (ws↔webhook диаграмма), **полный env-контракт таблицей**, security (TLS/wss/origin/
+throttle/maxPayload + nginx/traefik сниппеты), standalone-запуск (`docker run` / compose с `image:`),
+scaling (Redis multi-instance + LB sticky vs Redis pub/sub, caveat «all messages on all instances»),
+graceful shutdown, **multi-project reuse** (один образ — N проектов). README хаба остаётся
+quick-ref со ссылкой на эту страницу.
+
+## A.7 Явно НЕ в этой итерации
+Реальный publish образа в ghcr (нужен тег/secret — P2 #4); полноценный Redis-стенд e2e (опц.);
+per-tenant/-doc concurrent-caps (бэклог); distroless (опц., после alpine-базы).
+
+## A.8 Verification
+`npm run check` + `node --test` (хаб); локальный `docker build` хаба (как в e2e — без pdo);
+boot-smoke: origin-reject (чужой Origin → refuse), maxPayload, graceful shutdown; существующий
+e2e-стенд P1.1 остаётся зелёным (хаб с дефолтным `ALLOWED_ORIGINS` для localhost).

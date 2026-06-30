@@ -13,8 +13,12 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@hocuspocus/server": "^2.13",
+    "@hocuspocus/extension-logger": "^2.15",
+    "@hocuspocus/extension-redis": "^2.15",
+    "@hocuspocus/extension-throttle": "^2.15",
+    "@hocuspocus/server": "^2.15",
     "dotenv": "^16.4.5",
+    "ioredis": "^4.31",
     "yjs": "^13.6"
   },
   "engines": {
