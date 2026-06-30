@@ -278,12 +278,14 @@ deliveries (at-least-once with backoff + DLQ):
     'signature_header'       => 'X-Vaulter-Signature',
     'timestamp_header'       => 'X-Vaulter-Timestamp',
     'event_header'           => 'X-Vaulter-Event',
-    'retention_days'         => 30,
+    'retention_days'         => 30,  // age past which vaulter:prune-webhooks reclaims SETTLED audit rows
     'manage_ability'         => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
 ],
 ```
 
-Gated by the `reliability` feature flag. See the
+Gated by the `reliability` feature flag. `retention_days` (floored at 0) is the window
+`vaulter:prune-webhooks` uses to delete *settled* history — dispatched outbox rows and
+terminal (`delivered`/`dead`) deliveries — while never touching in-flight rows. See the
 [reliability & webhooks recipe](/guide/recipes).
 
 ## Documents & versions

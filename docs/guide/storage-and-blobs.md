@@ -308,7 +308,10 @@ The command prints a per-phase tally — `Tombstoned X, swept Y, skipped Z (grac
 ```php
 // config/vaulter.php
 'gc' => [
-    'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),
+    'grace_hours'        => env('VAULTER_GC_GRACE_HOURS', 24),
+    // The separate, generally more generous window for the orphan disk-walk
+    // (see Reconciliation below). Defaults to gc.grace_hours, floored at 1h.
+    'orphan_grace_hours' => env('VAULTER_ORPHAN_GRACE_HOURS', env('VAULTER_GC_GRACE_HOURS', 24)),
 ],
 ```
 
@@ -358,10 +361,84 @@ Reconciled 1240 blobs, corrected 3 ref_count caches.
 Dangling rows (committed blob, missing object): 01J…ABC, 01J…XYZ
 ```
 
-::: info Orphan objects need a disk walk
-The reverse hazard — bytes on disk with *no* row — is detectable only with a full
-disk listing, which is disk-specific. Reconciliation surfaces the row-side checks;
-the disk walk is left to the operator.
+### Orphan objects: the disk walk
+
+A dangling row is one of two inverse integrity hazards; the other is the **orphan
+object** — bytes on disk that match the committed CAS key layout but have **no blob
+row at all** (a commit that promoted its bytes then rolled the row back, or leaked
+bytes). Detecting it requires walking the *disk*, the inverse of the row-side
+reconcile above. The `--orphans` flag adds that disk-walk to the same command:
+
+```bash
+# Detect orphan objects (report-only) in addition to the row-side reconcile:
+php artisan vaulter:reconcile-blobs --orphans
+
+# Scan a specific disk and override the orphan grace window (hours, floored at 1h):
+php artisan vaulter:reconcile-blobs --orphans --disk=s3 --orphan-grace=48
+
+# DELETE the orphans found — PostgreSQL/MySQL only (refused on SQLite; see below):
+php artisan vaulter:reconcile-blobs --orphans --prune
+```
+
+It prints its own line next to the reconcile tally:
+
+```
+Orphan walk (report-only): scanned 1240, found 2, pruned 0, skipped 1238 (disk s3, grace 24h).
+Orphan objects (bytes with no blob row): t42/ab/cd/abcd…ef, t42/12/34/1234…99
+```
+
+::: warning Report-only by default — and the run FAILS when it finds orphans
+Without `--prune` the walk only **detects and reports** orphans (a safe dry run on
+every driver). Like the dangling-row check, a report-only run that finds any orphan
+**exits non-zero** so cron/CI sees the hazard. Only a `--prune` run that actually
+deleted them exits success.
+:::
+
+The sweep is built to *only ever* touch genuine canonical orphans. Its guards, in
+order:
+
+1. **Exact CAS-key layout, round-trip verified.** A path is a candidate only when it
+   exactly matches `"<scope>/<a>/<b>/<sha256>"` *and* `keyFor(scope, sha256)`
+   re-derives the **same** path — so the shard bytes are the real shard of that
+   digest. Staging/tmp parts, resumable-upload fragments, foreign files and any
+   mis-sharded path never match and are **never** considered for deletion.
+2. **Any blob row means owned.** A matching object that has *any* `v_blobs` row (any
+   status, looked up disk-agnostically since `storage_key` is globally unique) is
+   owned, not an orphan.
+3. **The orphan-grace window.** A row-less object is a deletable orphan only once it
+   is **older than the orphan grace** — a just-promoted object may be a
+   commit-in-progress whose row is not yet durable. Anything younger than the grace
+   (or whose age the disk can't report) is skipped, never deleted.
+4. **Locked recheck before delete.** A `--prune` delete happens under the same
+   per-`(scope, sha256)` lock the GC uses, re-checking both row-absence and the grace
+   *after* taking the lock, then deletes idempotently — so a commit that just created
+   the owning row can never have its bytes swept out from under it.
+
+::: danger `--prune` is refused on SQLite — PostgreSQL/MySQL only
+The prune deletes bytes under a **write-less** critical section, which only serialises
+against a concurrent commit on a driver whose lock orders a no-row-write section
+(PostgreSQL advisory xact lock; MySQL `FOR UPDATE`). On **SQLite** that ordering never
+engages — a concurrent commit could insert the owning row between the recheck and the
+delete — so pruning is **refused** there (the command warns and degrades to
+report-only). **Detection works on every driver**; only the destructive `--prune`
+requires PostgreSQL/MySQL. Run report-only locally, or prune against the production DB.
+:::
+
+::: info A disk that can't be enumerated is skipped, not failed
+The disk-walk needs a CAS content store that can list the disk (a `ListableContentStore`).
+If the active store does **not** implement it, the walk reports `"listing unsupported"`,
+scans nothing, and exits cleanly. A listable store over a backend that returns no entries
+(for example a non-`FilesystemAdapter` disk that can't be enumerated) simply scans **zero**
+objects — equally safe: nothing is enumerated, so nothing is deleted. Either way the
+row-side reconcile result still stands.
+:::
+
+::: details The orphan grace is separate from the GC grace
+The orphan walk uses `config('vaulter.gc.orphan_grace_hours')`
+(env `VAULTER_ORPHAN_GRACE_HOURS`), which **defaults to `gc.grace_hours`** (24) and is
+floored at 1h. Keep it ≥ your worst-case multipart-commit latency for the same reason
+the GC grace must be generous: an in-flight resumable upload can promote its bytes long
+before its row commits, and a fresh object must never be mistaken for an orphan.
 :::
 
 ## Flysystem disks: `local`, S3, and per-storage

@@ -163,6 +163,14 @@ change its grants. A denial 403s through `PermissionDeniedException`.
 | `POST` | `nodes/{node}/grants` | grant/deny a subject (201) |
 | `DELETE` | `nodes/{node}/grants` | revoke a subject's grants (204) |
 
+::: tip Where the grants surface, listing-side
+When the `grants` feature is on and the `database` driver is active, Drive **listings**
+narrow to the actor's grant-reachable candidate set, and `GET {prefix}/shared` returns the
+cross-storage "shared with me" set. Both are documented under
+[Authorization › Access-aware listings](./authorization#access-aware-listings) — including
+the candidate-superset-vs-exact semantics and the open-driver behaviour.
+:::
+
 ::: code-group
 ```bash [grant]
 curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \

@@ -281,13 +281,95 @@ through `canCreateInWorkspace($actor, $storage)`, which delegates straight to th
 driver's `canCreateInWorkspace($actor, $workspaceType, $workspaceId)` lane. See
 [Permission Drivers](./permission-drivers) for how each driver answers it.
 
+## Access-aware listings
+
+The per-action gate above answers *"may this actor do X to this node?"* exactly. Drive
+**listings** (the folder index, search, trash, and the Filament table) ask a different,
+cheaper question — *"which nodes should this actor even see?"* — and answer it with a
+**candidate set**, not the exact algorithm. The distinction matters, so be precise about
+what each guarantees.
+
+### When grant-narrowing applies
+
+A listing narrows to the actor's grant-reachable candidate set **only** when **both**:
+
+1. the **`grants`** feature is on; **and**
+2. the active permission driver is **grant-authoritative** — it declares `v_node_grants`
+   the *sole* authority for read-visibility (`GrantAuthoritativeDriver::isGrantAuthoritative()`).
+
+Only the default **`database`** driver is grant-authoritative out of the box. For the
+**open** drivers (`gate` / `spatie` / `azgard` / `null`) the host's roles govern and
+`v_node_grants` is *not* the source of truth, so narrowing would wrongly hide nodes the
+host role lane allows — **listings stay open and unchanged** there (the safe default).
+
+::: warning A grant-authoritative subclass can opt out
+A host that *subclasses* the `database` resolver to add a role/team lane or a super-admin
+`override()` can now confer access on nodes with **no** grant anchor. Such a subclass MUST
+override `isGrantAuthoritative()` to return `false` — otherwise the listing would hide
+nodes its own role lane allows. The gate keys on this *capability*, not on the driver key
+string. See [Permission Drivers](./permission-drivers).
+:::
+
+### Candidate superset, not exact suppression
+
+When narrowing applies, the listing query is constrained **in SQL** (before pagination)
+to the actor's **candidate** node ids — the grant anchors for the actor's subject-set
+**union** the descendants of every `subtree`-scoped anchor (an `item`-scoped anchor
+contributes only its own node). Nodes with **no grant-reachability** — the common
+"inaccessible" / "not shared with me" case — are hidden.
+
+::: danger The candidate set is a deliberate SUPERSET
+The listing SQL narrows to grant-*reachability*; it does **not** apply the exact
+**deny-veto** or the **`inherit_grants` cut-off** in the query. So a node that a *nearer*
+`deny` revokes (or one past an inherit-cutoff wall) **can still appear in a listing**.
+Pushing that exact suppression into the listing SQL is explicitly **deferred** to a future
+materialised effective-grants read-model. Treat a listing as "candidates the actor
+*probably* can see", never as an authorization decision.
+:::
+
+Two things stay **exact** regardless:
+
+- **Per-action authorization.** Every `show` / mutation still runs the full
+  `AccessResolver` (deny-veto + inherit-cutoff), so a candidate a deny revokes **403s** the
+  moment the actor acts on it. The listing is a visibility hint; the gate is the authority.
+- **The "shared with me" view** below, which re-resolves every candidate exactly.
+
+The narrowing lives in the **query**, never a post-fetch page filter — a post-filter that
+empties a cursor page would null the next-cursor and silently strand later authorized rows.
+The Filament admin table (the `axioma-studio/vaulter-filament` package) applies the **same**
+candidate-SQL narrowing through the public `constrainToAccessible()` seam, so the API and the
+admin UI stay consistent.
+
 ## "Shared with me"
 
 `sharedNodeIds()` runs a fast subject-index pass over `v_node_grants` to collect the
 candidate node ids an actor has any **live allow** grant on. Those candidates are then
 **re-resolved** through the full algorithm by `filterSharedWith()` — because a nearer
 `deny` may have revoked the visibility a raw grant implied, the raw index never decides
-visibility on its own.
+visibility on its own. Unlike the candidate-SQL listings above, this view is **exact**:
+the re-resolution runs over a *bounded* candidate set, so the cost of the full algorithm
+per node is acceptable.
+
+### The `GET /shared` endpoint
+
+The cross-storage "shared with me" listing is exposed at the top level of the Drive prefix
+(default `api/vaulter`) — **not** under a `{storage}`, because the subject index is not
+storage-bound:
+
+```
+GET {prefix}/shared        # e.g. GET /api/vaulter/shared
+```
+
+| Property | Behaviour |
+|---|---|
+| **Gating** | Registered only when the **`grants`** feature is on. |
+| **Auth** | An unauthenticated request gets an **empty** page (never an error). |
+| **Exactness** | Each candidate is **re-resolved** through the full algorithm — a nearer `deny` excludes it. This is the EXACT gate, unlike the candidate-SQL listings. |
+| **Pagination** | A **length-aware** page envelope (`page` / `total`), *not* a cursor — the cross-storage set is post-filtered into a Collection that can't cursor-paginate cleanly. Page size matches the sibling listings' `per_page`. |
+| **Payload** | `NodeResource` items with the owning `storage` eager-loaded (the only cross-storage context the payload carries; the breadcrumb is attached only on `show`). |
+
+On the client, `@vaulter/vue` ships [`useSharedNodes`](./vue) and `VaulterSharedWithMe`
+over this endpoint.
 
 ## Fail-loud: the null driver
 
