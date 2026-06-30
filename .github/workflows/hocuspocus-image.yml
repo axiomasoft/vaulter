@@ -62,7 +62,9 @@ jobs:
           push: ${{ github.event_name != 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          provenance: true
+          # Provenance is attested by the dedicated step below (avoid duplicate
+          # provenance attestations for the same digest); keep the SBOM here.
+          provenance: false
           sbom: true
 
       - name: Attest build provenance

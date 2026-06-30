@@ -64,11 +64,27 @@ async function buildExtensions() {
  * allowed here and still gated by the auth webhook. Throwing refuses the socket.
  */
 async function onConnect({ requestHeaders }) {
-  const origin = requestHeaders?.origin
+  const origin = readOrigin(requestHeaders)
 
   if (!isOriginAllowed(origin)) {
     throw new Error(`Collaboration connection refused: origin not allowed (${origin ?? 'none'})`)
   }
+}
+
+/**
+ * Read the Origin header version-agnostically: Hocuspocus v2 hands a plain
+ * IncomingHttpHeaders object (`headers.origin`), while v4 hands a web `Headers`
+ * (`headers.get('origin')`). Reading the wrong shape would yield undefined and silently
+ * disable the CSWSH allowlist, so support both.
+ */
+function readOrigin(requestHeaders) {
+  if (!requestHeaders) {
+    return undefined
+  }
+  if (typeof requestHeaders.get === 'function') {
+    return requestHeaders.get('origin') ?? undefined
+  }
+  return requestHeaders.origin
 }
 
 /**

@@ -69,6 +69,18 @@ function trimSlashes(value) {
 }
 
 /**
+ * Whether we are in production. FAIL-CLOSED: the value is trimmed + lowercased and ONLY
+ * an explicit non-production value relaxes the hub — anything else (a typo, 'prod',
+ * 'production ' with a stray space, 'staging', unset) is treated as production so the
+ * CSWSH allowlist + boot validation stay enforced. (A naive `=== 'production'` would
+ * silently flip a mistyped NODE_ENV into the permissive branch.)
+ */
+function isProductionEnv(env = process.env) {
+  const nodeEnv = str('NODE_ENV', 'production', env).trim().toLowerCase()
+  return !['development', 'dev', 'test', 'local'].includes(nodeEnv)
+}
+
+/**
  * The base URL the collab/authenticate + collab/store webhooks live under
  * (…/api/vaulter). An explicit VAULTER_LARAVEL_WEBHOOK_URL wins; otherwise it is
  * derived from the backend URL + the API prefix.
@@ -115,7 +127,7 @@ export function buildConfig(env = process.env) {
     instanceName: str('VAULTER_COLLAB_INSTANCE_NAME', 'vaulter-hocuspocus', env),
     quiet: bool('VAULTER_COLLAB_QUIET', true, env),
     logEnabled: bool('VAULTER_COLLAB_LOG', false, env),
-    isProduction: str('NODE_ENV', 'production', env) === 'production',
+    isProduction: isProductionEnv(env),
   }
 }
 

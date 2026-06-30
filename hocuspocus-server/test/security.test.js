@@ -64,3 +64,12 @@ test('validateConfig: a non-positive maxPayload is rejected', () => {
   const problems = validateConfig(dev({ VAULTER_COLLAB_MAX_PAYLOAD_BYTES: '0' }))
   assert.ok(problems.some((p) => p.includes('VAULTER_COLLAB_MAX_PAYLOAD_BYTES')))
 })
+
+test('a non-canonical NODE_ENV is treated as production (fail-closed, not silently dev)', () => {
+  for (const value of ['production ', ' production', 'Production', 'PRODUCTION', 'prod', 'staging', 'typo']) {
+    assert.equal(buildConfig({ NODE_ENV: value }).isProduction, true, `NODE_ENV=${JSON.stringify(value)}`)
+  }
+  for (const value of ['development', 'dev', 'test', 'local', ' Development ']) {
+    assert.equal(buildConfig({ NODE_ENV: value }).isProduction, false, `NODE_ENV=${JSON.stringify(value)}`)
+  }
+})
