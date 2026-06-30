@@ -434,9 +434,17 @@ return [
     | tombstoned with delete_after_at = now + grace; only after the grace passes
     | are its bytes swept. The grace must be ≥ the worst-case multipart-commit
     | latency so an in-flight upload can resurrect the blob first. Floored at 1h.
+    |
+    | orphan_grace_hours is the separate, generally MORE generous window the
+    | `vaulter:reconcile-blobs --orphans` disk-walk applies before it treats an
+    | object that has NO blob row as a deletable orphan. A commit promotes its bytes
+    | BEFORE its row is durable, and a resumable upload may promote then commit much
+    | later, so a fresh row-less object is likely a commit-in-progress, NOT garbage.
+    | Defaults to the GC grace; floored at 1h.
     */
     'gc' => [
         'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),
+        'orphan_grace_hours' => env('VAULTER_ORPHAN_GRACE_HOURS', env('VAULTER_GC_GRACE_HOURS', 24)),
     ],
 
     /*

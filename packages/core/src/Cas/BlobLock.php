@@ -58,6 +58,30 @@ final class BlobLock
         return in_array($this->driver(), ['mysql', 'mariadb'], strict: true);
     }
 
+    /**
+     * Whether a critical section that takes this lock but performs NO database WRITE
+     * is still serialised against a concurrent transaction by THIS driver.
+     *
+     * The orphan prune is exactly such a section (it re-reads under the lock, then
+     * deletes BYTES off disk — no row write). It is safe only when the lock alone
+     * orders it against a concurrent BlobStore::commit of the same content:
+     *
+     *  - pgsql : pg_advisory_xact_lock() is a real mutex held for the whole tx — a
+     *            commit of the same (scope,sha256) blocks on it ⇒ serialised.
+     *  - mysql : findByStorageKey(lock: true) issues SELECT … FOR UPDATE, so the
+     *            recheck contends with the concurrent INSERT ⇒ serialised.
+     *  - sqlite: acquire() is a no-op AND FOR UPDATE is ignored, so a read-only
+     *            critical section never engages SQLite's single-writer lock — a
+     *            concurrent commit can INSERT the owning row between the recheck and
+     *            the byte delete. NOT serialised; the prune must be refused (the GC
+     *            is unaffected — it does a real markDeleting() write that forces the
+     *            write lock).
+     */
+    public function serializesCriticalSection(): bool
+    {
+        return $this->isPostgres() || $this->usesRowLock();
+    }
+
     public function isPostgres(): bool
     {
         return $this->driver() === 'pgsql';

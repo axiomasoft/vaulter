@@ -129,6 +129,39 @@ final readonly class BlobStoreRepository
     }
 
     /**
+     * Look up the blob owning a canonical object by its storage_key — the
+     * row-existence probe the orphan disk-walk runs for each on-disk object (bytes
+     * with NO row are the orphan candidates). $lock takes the MySQL row lock so the
+     * orphan reconciler can RE-CHECK under the per-(scope,sha256) advisory lock that
+     * no row materialised since the cheap scan (a concurrent commit may have just
+     * created it). Any status counts as "owned" — a committed/pending row pins its
+     * bytes, a dangling/tombstoned row is the row-side reconcile/GC's job, never the
+     * orphan sweep's.
+     *
+     * The probe is DISK-AGNOSTIC by default ($disk = null): storage_key is GLOBALLY
+     * UNIQUE (its own single-column index, NOT a composite with disk), so a
+     * canonical object has at most one owning row pinned to whatever disk THAT row
+     * records — which may differ from the disk currently being scanned. Filtering by
+     * the scan disk would read such a cross-disk-owned object as row-less and prune
+     * its LIVE bytes. Pass an explicit $disk only when a disk-qualified probe is
+     * genuinely intended.
+     */
+    public function findByStorageKey(string $storageKey, ?string $disk = null, bool $lock = false): ?Blob
+    {
+        $query = $this->query()->where('storage_key', $storageKey);
+
+        if ($disk !== null) {
+            $query->where('disk', $disk);
+        }
+
+        if ($lock && $this->lock->usesRowLock()) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
+    /**
      * Re-read a single blob FOR UPDATE on MySQL (the row lock that stands in for
      * PG's advisory lock); a plain reload elsewhere. Used by the GC to re-verify
      * state under the lock.

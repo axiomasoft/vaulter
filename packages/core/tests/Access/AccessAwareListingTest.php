@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
@@ -9,6 +10,7 @@ use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Http\Resources\Drive\StorageResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -305,20 +307,42 @@ it('exposes view-only storage abilities for a reader on the root', function (): 
         ->assertJsonPath('data.abilities.manage', false);
 });
 
-it('all storage abilities are false for an unauthenticated request', function (): void {
+it('refuses the storage show for an unauthenticated request on a rooted storage', function (): void {
     $storage = AccessTestHelpers::storage();
     // An Owner grant for user 1 WOULD flip every flag true — but THIS request has no
-    // actor, so the read-only-shell default (all false) must win regardless.
+    // actor, so the controller's View-guard on the rooted storage's root refuses it
+    // (no actor ⇒ no grant ⇒ 403). The storage meta must never reach a guest, so there
+    // is no `data` body to inspect — the all-false-abilities CONTRACT for a null actor
+    // is pinned at the Resource layer below (it can no longer be reached through the
+    // guarded controller on a rooted storage).
     AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
 
     actAsGuest();
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertOk()
-        ->assertJsonPath('data.abilities.view', false)
-        ->assertJsonPath('data.abilities.create_folder', false)
-        ->assertJsonPath('data.abilities.upload', false)
-        ->assertJsonPath('data.abilities.manage', false);
+        ->assertStatus(403);
+});
+
+// ── 10b. The all-false-abilities CONTRACT for a NULL actor, re-expressed at the layer
+// that still reaches it: StorageResource resolves every flag false when the request has
+// no acting user, regardless of an Owner grant on the root. (The controller guard now
+// 403s a guest on a rooted storage BEFORE the Resource renders — see the test above —
+// so this contract lives at the Resource seam, not behind the controller.)
+it('renders all-false storage abilities for a null actor at the Resource layer', function (): void {
+    $storage = AccessTestHelpers::storage();
+    // An Owner grant for user 1 WOULD flip every flag true for THAT actor — but a request
+    // with no user must yield the read-only-shell default (all false), the SAFE default.
+    AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
+
+    // A bare request resolves $request->user() === null — the no-actor path.
+    $abilities = StorageResource::make($storage->refresh())->toArray(Request::create('/'))['abilities'];
+
+    expect($abilities)->toBe([
+        'view' => false,
+        'create_folder' => false,
+        'upload' => false,
+        'manage' => false,
+    ]);
 });
 
 // ── 11. Driver-aware gate: a non-GrantAuthoritativeDriver keeps the listing OPEN.

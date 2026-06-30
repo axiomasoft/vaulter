@@ -27,11 +27,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function defineEnvironment($app): void
     {
         $app['config']->set('database.default', 'testing');
-        $app['config']->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
+        $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
 
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
@@ -53,5 +49,42 @@ abstract class TestCase extends OrchestraTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
+
+    /**
+     * The connection the whole suite runs on. Default: in-memory SQLite — the fast,
+     * dependency-free lane the entire suite uses locally and in the main CI matrix.
+     *
+     * Opt INTO Postgres by exporting DB_CONNECTION=pgsql (plus the DB_* coordinates):
+     * the dedicated pgsql CI job does this to exercise the real advisory-xact-lock /
+     * FOR UPDATE critical sections (race-free blob commit, destructive orphan prune)
+     * that SQLite cannot model — every such test SKIPS unless the live driver is pgsql
+     * (master plan P4 #11). No env, no Postgres needed: the suite stays on SQLite.
+     *
+     * @return array<string, string|bool|null>
+     */
+    protected function suiteDatabaseConnection(): array
+    {
+        if (env('DB_CONNECTION') !== 'pgsql') {
+            return [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+            ];
+        }
+
+        return [
+            'driver' => 'pgsql',
+            'host' => (string) env('DB_HOST', '127.0.0.1'),
+            'port' => (string) env('DB_PORT', '5432'),
+            'database' => (string) env('DB_DATABASE', 'vaulter_test'),
+            'username' => (string) env('DB_USERNAME', 'vaulter'),
+            'password' => (string) env('DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ];
     }
 }

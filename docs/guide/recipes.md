@@ -516,7 +516,8 @@ Schedule::command('vaulter:purge-trash')->daily();
 // Two-phase blob GC: tombstone unreferenced blobs, sweep tombstoned past grace.
 Schedule::command('vaulter:gc-blobs')->hourly();
 
-// Repair ref_count drift / detect orphans (run less often, off-peak).
+// Repair ref_count drift + flag dangling rows (run less often, off-peak).
+// Add --orphans to ALSO disk-walk for orphan objects (report-only; see Storage & Blobs).
 Schedule::command('vaulter:reconcile-blobs')->dailyAt('03:00');
 
 // Reclaim resumable-upload sessions older than uploads.session_ttl_hours.
@@ -548,6 +549,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('vaulter:relay-outbox')->everyMinute();    // outbox → deliveries → queue
 Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes(); // retry failed deliveries
+Schedule::command('vaulter:prune-webhooks')->daily();        // reclaim settled audit history
 ```
 
 Subscriber endpoints are managed through the `webhook-endpoints` routes (gated by the
@@ -556,6 +558,35 @@ Subscriber endpoints are managed through the `webhook-endpoints` routes (gated b
 (`X-Vaulter-Event`); consumers **dedupe on the `event_id`** in the payload, since delivery is
 at-least-once. Tune `config('vaulter.webhooks.*')` (`max_attempts`, `backoff`,
 `disable_after_failures`).
+
+### Pruning settled outbox & webhook history
+
+The relayed outbox rows and terminal webhook deliveries are an append-only audit trail that
+otherwise grows forever. `vaulter:prune-webhooks` reclaims the **settled** rows past a
+retention window — and *only* the settled ones:
+
+```bash
+# Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
+php artisan vaulter:prune-webhooks
+
+# Override the window, or preview the exact counts without deleting anything:
+php artisan vaulter:prune-webhooks --days=7
+php artisan vaulter:prune-webhooks --dry-run
+```
+
+It deletes exactly two kinds of row that never change again:
+
+- **dispatched outbox rows** — status `dispatched`, by `dispatched_at`;
+- **terminal deliveries** — status `delivered` or `dead` (DLQ), by `updated_at` (the
+  terminalisation time).
+
+In-flight rows are **never** touched: a `pending` outbox row (the relay still owns it) and a
+`pending`/`failed` delivery (the due-retry sweep still owns it) are left alone regardless of
+age. `--dry-run` reports the counts it *would* remove without deleting a row. The command is
+gated on the `reliability` feature — with the feature off it no-ops with a notice (the
+`v_outbox` / `v_webhook_*` tables may not exist). The retention default lives at
+`config('vaulter.webhooks.retention_days')` (30, floored at 0). Schedule it alongside the
+relay/retry commands above.
 
 ## Testing with the shipped doubles {#testing}
 

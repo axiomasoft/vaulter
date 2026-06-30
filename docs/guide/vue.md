@@ -153,6 +153,31 @@ const {
 Pass `parentRef` (a ref or getter) to drive navigation externally — when it changes, the list
 reloads.
 
+### `useSharedNodes`
+
+Reactive **"shared with me"** listing over the cross-storage `GET /shared` endpoint — the nodes
+the actor holds a live allow-grant on (re-resolved exactly server-side). A **flat** list: there is
+no `parentId` / `navigate` here, because the set spans storages. The endpoint is **length-aware**
+(`page` / `total`), so paging is `page`-based.
+
+```ts
+import { useSharedNodes } from '@vaulter/vue'
+
+const { nodes, meta, loading, error, hasMore, refresh, loadMore } = useSharedNodes()
+```
+
+| Member | Type | Notes |
+|--------|------|-------|
+| `nodes` | `ShallowRef<Node[]>` | the shared nodes (flat, cross-storage) |
+| `meta` | `ShallowRef<PageMeta \| null>` | page counters + total of the last load |
+| `loading` / `error` | `Ref<boolean>` / `Ref<unknown>` | request state |
+| `hasMore` | `Ref<boolean>` | whether another page exists |
+| `refresh()` | `Promise<Node[]>` | (re)load the first page, replacing the list |
+| `loadMore()` | `Promise<Node[]>` | append the next page (no-op when there is none) |
+
+It does **not** auto-load — call `refresh()` on mount (the idiom the Drive composables share).
+Pass an optional `SharedNodesQuery` (`{ page, perPage }`) to set the initial page / size.
+
 ### `useUpload`
 
 Upload into a storage with progress, exposing both the direct and resumable (tus) paths.
@@ -467,6 +492,75 @@ editor under one of those `componentMap` keys.
 The `DocumentNodeEditorProps` type describes what a mapped editor component receives — `nodeId`,
 `content`, `handler`, `readonly`, `onChange`, and (in collaborative mode) `collaborative`, `ydoc`,
 `connected`, `collaborators`.
+
+### `VaulterSharedWithMe`
+
+The cross-storage **"shared with me"** view over [`useSharedNodes`](#usesharednodes): a **flat**
+listing of the nodes shared with the actor, with no folder navigation (the nodes span storages, so
+every open emits `open-node` for the host to route). It reuses `VaulterNodeList` for the rendering
+and owns only the load / refresh / empty / error chrome plus a "Load more" pager.
+
+**Props**
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `viewMode` | `'list' \| 'grid'` | `'list'` | |
+| `actions` | `NodeAction[]` | `['download','share']` | row actions to offer (still filtered per node abilities) |
+| `query` | `SharedNodesQuery` | `undefined` | initial `{ page, perPage }` |
+
+**Emits**: `open-node(node)` (cross-storage — the host routes it), `node-selected(node)`,
+`action(action, node)`.
+**Slots**: `toolbar` (with `refresh`, `loading`), `title`, `refresh-label`, `error`, `empty`,
+`name` / `context` (per row), `load-more`.
+**Exposes**: `refresh`, `loadMore`.
+
+### `VaulterFolderPicker`
+
+A modal destination picker for **move**: it walks the storage's **folder** tree (folders only) with
+a breadcrumb and a "Move here" action at the current location. Headless to match the rest of the
+Drive — minimal scoped styles, class hooks + slots, navigation is emit-driven. Illegal destinations
+are never offered: the node being moved is hidden from the listing (so you can't descend into its
+own subtree), and "Move here" is disabled at the node's *current* parent (a no-op move) or the node
+itself. The storage root (a `null` parent) is a selectable destination.
+
+**Props**
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `storageId` | `StorageId` | — | required |
+| `node` | `Node` | — | required — the node being moved (its self/subtree + current parent are excluded) |
+| `open` | `boolean` | `false` | whether the picker is shown (re-opening resets to root) |
+| `rootLabel` | `string` | `'Drive'` | label of the root crumb / root destination |
+
+**Emits**: `picked(targetId: NodeId \| null)` (`null` = the storage root), `close()`.
+**Slots**: `header` (with `node`), `folder` (per folder), `loading`, `empty`, `error`, `footer`
+(with `move-here`, `can-move-here`, `current-parent-id`, `cancel`).
+**Exposes**: `goTo`, `moveHere`, `currentParentId`, `folders`, `breadcrumb`, `canMoveHere`,
+`loading`.
+
+### `VaulterNameDialog`
+
+A tiny accessible **name-input** dialog — one text field for "new folder", "rename", or any
+name-entry flow. It mirrors `VaulterFolderPicker`'s modal shape (backdrop + panel, `role="dialog"`,
+Esc / backdrop to close, focus-on-open). On open the field is seeded from `initialValue`, focused
+and **fully selected** (so a rename pre-selects the current name for instant overtyping). `submit`
+carries the **trimmed** value and only fires when non-empty; the confirm button is disabled while
+the trim is empty.
+
+**Props**
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `open` | `boolean` | `false` | whether the dialog is shown |
+| `title` | `string` | `'Name'` | heading text (e.g. `'New folder'` / `'Rename'`) |
+| `label` | `string` | `'Name'` | the input's accessible label |
+| `initialValue` | `string` | `''` | prefill — empty for new-folder, the node name for rename |
+| `confirmLabel` | `string` | `'Save'` | the confirm button's text |
+| `placeholder` | `string` | `''` | the input placeholder |
+
+**Emits**: `submit(name: string)` (trimmed, non-empty only), `close()`.
+**Slots**: `header` (with `title`), `footer` (with `submit`, `cancel`, `value`, `can-submit`).
+**Exposes**: `value`, `submit`.
 
 ### Display helpers
 

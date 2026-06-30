@@ -517,7 +517,37 @@ export interface CursorPage<T> {
   links?: Record<string, unknown>
 }
 
+/**
+ * The `meta` block of a Laravel length-aware (`paginate()` / `LengthAwarePaginator`)
+ * page: 1-based page counters and a row total, unlike the opaque cursors of
+ * {@link CursorMeta}. Used by the "shared with me" endpoint, which wraps an exact
+ * cross-storage re-resolution in a bounded page it cannot cursor-paginate cleanly.
+ */
+export interface PageMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  from: number | null
+  to: number | null
+  path?: string
+  [key: string]: unknown
+}
+
+/** A Laravel length-aware page envelope: `data` plus a page/total `meta` block. */
+export interface Page<T> {
+  data: T[]
+  meta: PageMeta
+  links?: Record<string, unknown>
+}
+
 // ─── Drive request payloads ──────────────────────────────────────────────────
+
+/** Query for the cross-storage "shared with me" listing (length-aware paging). */
+export interface SharedNodesQuery {
+  page?: number
+  perPage?: number
+}
 
 export interface ListNodesQuery {
   parentId?: NodeId | null

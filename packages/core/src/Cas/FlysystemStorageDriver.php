@@ -8,6 +8,8 @@ use DateTimeInterface;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\UnableToRetrieveMetadata;
+use Vaulter\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Support\Config;
 
@@ -18,7 +20,7 @@ use Vaulter\Support\Config;
  * applied only when the underlying disk is an object store, degrading gracefully
  * to a best-effort exists() guard on the local / sqlite-test disk.
  */
-final class FlysystemStorageDriver implements StorageDriver
+final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriver
 {
     public function disk(?string $disk = null): Filesystem
     {
@@ -77,6 +79,45 @@ final class FlysystemStorageDriver implements StorageDriver
 
         if ($filesystem->exists($key)) {
             $filesystem->delete($key);
+        }
+    }
+
+    public function lastModified(string $key, ?string $disk = null): ?int
+    {
+        $filesystem = $this->disk($disk);
+
+        if (!$filesystem->exists($key)) {
+            return null;
+        }
+
+        // The Flysystem-backed adapter returns the mtime as epoch seconds; a disk
+        // that cannot report it throws, which we swallow to a null (treat as
+        // "age unknown" → the caller skips rather than deletes).
+        try {
+            return $filesystem->lastModified($key);
+        } catch (UnableToRetrieveMetadata) {
+            return null;
+        }
+    }
+
+    /**
+     * @return iterable<string>
+     */
+    public function listContents(?string $disk = null): iterable
+    {
+        $filesystem = $this->disk($disk);
+
+        // The recursive listing lives on the wrapped Flysystem operator, not the
+        // Laravel contract; a disk whose adapter we cannot reach yields nothing
+        // rather than throwing (the orphan walk then finds no candidates there).
+        if (!$filesystem instanceof FilesystemAdapter) {
+            return;
+        }
+
+        foreach ($filesystem->getDriver()->listContents('', deep: true) as $attributes) {
+            if ($attributes->isFile()) {
+                yield $attributes->path();
+            }
         }
     }
 

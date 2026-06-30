@@ -486,8 +486,9 @@ final class PanelTablesBuilder
         $table->integer('version_no');
 
         // The TipTap/ProseMirror snapshot (the structural JSON projection). jsonb on
-        // Postgres (the gin index below indexes it); a plain json column elsewhere.
-        $table->json('content')->nullable();
+        // Postgres (the gin jsonb_path_ops index below requires it — a plain json column
+        // is rejected by that operator class); maps to json on MySQL and text on SQLite.
+        $table->jsonb('content')->nullable();
 
         // The binary Yjs CRDT update — the realtime source of truth (M4b). bytea on
         // Postgres, longBlob on MySQL (§2.5 portability note); yjs_state_size caches
@@ -659,7 +660,8 @@ final class PanelTablesBuilder
 
         // The structured payload (before/after, old/new path/role, …). Always
         // present — this is the audit body, distinct from the host extra_data hatch.
-        $table->json('context')->nullable();
+        // jsonb on Postgres (the gin jsonb_path_ops index requires it); json/text elsewhere.
+        $table->jsonb('context')->nullable();
 
         $this->ipColumn(table: $table);
         $table->text('user_agent')->nullable();
@@ -718,6 +720,9 @@ final class PanelTablesBuilder
         $name = $table->getTable();
 
         $table->index(['status', 'available_at'], "{$name}_drain_idx");
+        // The retention sweep (vaulter:prune-webhooks) deletes settled rows by
+        // (status='dispatched', dispatched_at <= threshold) — its own scan cursor.
+        $table->index(['status', 'dispatched_at'], "{$name}_prune_idx");
     }
 
     /**
@@ -743,7 +748,8 @@ final class PanelTablesBuilder
      * v_webhook_deliveries — a single delivery attempt with retry bookkeeping (master
      * plan §2.11 / D14 / M3b), ported from chatom 1:1. Gated on 'reliability'.
      * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
-     * (status, next_retry_at) index is the due-retry sweep cursor.
+     * (status, next_retry_at) index is the due-retry sweep cursor; (status, updated_at)
+     * backs the retention prune of terminal (delivered|dead) rows.
      */
     private function defineWebhookDeliveries(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
@@ -761,6 +767,9 @@ final class PanelTablesBuilder
         $name = $table->getTable();
 
         $table->index(['status', 'next_retry_at'], "{$name}_retry_idx");
+        // The retention sweep (vaulter:prune-webhooks) deletes terminal rows by
+        // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
+        $table->index(['status', 'updated_at'], "{$name}_prune_idx");
 
         $table->foreign('endpoint_id')
             ->references('id')

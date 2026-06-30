@@ -73,3 +73,63 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Postgres lane (master plan P4 #11). The default matrix above runs on in-memory
+  # SQLite, where the CAS concurrency backbone is a no-op: pg_advisory_xact_lock,
+  # FOR UPDATE, SERIALIZABLE and the gin(jsonb_path_ops) indexes only EXIST on a real
+  # server. This job points the CAS suite at Postgres so those paths actually execute —
+  # the destructive orphan prune + lock-then-recheck tests (BlobOrphanPruneTest) run
+  # here instead of skipping, and the full default migration (incl. the v_activity
+  # jsonb gin index) is exercised against pgsql.
+  #
+  # Scope = packages/core/tests/Cas only. Those tests share the single base-TestCase
+  # schema, so RefreshDatabase's transaction strategy is sound on a persistent server.
+  # The wider suite mixes heterogeneous TestCases (Document/Ulid/Spatie/TablePrefix),
+  # each needing a DIFFERENT schema — fine on per-connection SQLite :memory: (migrated
+  # fresh per test) but not on one shared pgsql database without a per-test migrate:fresh.
+  # Running the whole suite on Postgres is a separate follow-up, not part of P4 #11.
+  test-pgsql:
+    name: PHP 8.4 / Postgres (CAS advisory-lock lane)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vaulter -d vaulter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 (with pdo_pgsql)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:12.*" "orchestra/testbench:^10.0" --dev --no-interaction --no-update
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Run the CAS suite on Postgres (advisory-xact-lock / FOR UPDATE / SERIALIZABLE / orphan prune)
+        run: vendor/bin/pest --ci packages/core/tests/Cas
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: vaulter_test
+          DB_USERNAME: vaulter
+          DB_PASSWORD: secret

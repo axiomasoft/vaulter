@@ -6,6 +6,8 @@ namespace Vaulter\Cas;
 
 use RuntimeException;
 use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Contracts\Cas\ListableContentStore;
+use Vaulter\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Cas\StorageDriver;
 
@@ -18,7 +20,7 @@ use Vaulter\Contracts\Cas\StorageDriver;
  * cannot clobber, and on S3 attaches x-amz-checksum-sha256 for server-side
  * verification (config-aware; ignored by the local/sqlite test disk).
  */
-final readonly class Sha256ContentStore implements ContentStore
+final readonly class Sha256ContentStore implements ContentStore, ListableContentStore
 {
     /**
      * Read buffer for streaming the upload into the staged temp file.
@@ -118,6 +120,33 @@ final readonly class Sha256ContentStore implements ContentStore
     public function delete(string $key, ?string $disk = null): void
     {
         $this->driver->delete($key, $disk);
+    }
+
+    public function lastModified(string $key, ?string $disk = null): ?int
+    {
+        // The listing capability lives on the DRIVER, not the base StorageDriver
+        // contract; a non-listable driver cannot report age, so we degrade to null
+        // (age unknown ⇒ the orphan walk skips rather than deletes).
+        if (!$this->driver instanceof ListableStorageDriver) {
+            return null;
+        }
+
+        return $this->driver->lastModified($key, $disk);
+    }
+
+    /**
+     * @return iterable<string>
+     */
+    public function listKeys(?string $disk = null): iterable
+    {
+        // Only delegate when the underlying driver can actually enumerate the disk;
+        // otherwise yield nothing so this store reports no objects rather than
+        // calling a method the base StorageDriver contract no longer carries.
+        if (!$this->driver instanceof ListableStorageDriver) {
+            return;
+        }
+
+        yield from $this->driver->listContents($disk);
     }
 
     public function keyFor(string $scope, string $sha256): string
