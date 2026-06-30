@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useNodes } from '../composables/useNodes'
 import { useVaulterClient } from '../composables/useVaulterClient'
 import VaulterDriveBreadcrumb from './VaulterDriveBreadcrumb.vue'
+import VaulterFolderPicker from './VaulterFolderPicker.vue'
 import VaulterNodeList, { type NodeAction } from './VaulterNodeList.vue'
 import VaulterUploader from './VaulterUploader.vue'
 import type { Node, NodeId, StorageId } from '../types'
@@ -54,6 +55,9 @@ const searchTerm = ref('')
 const breadcrumb: Ref<Node[]> = ref([])
 /** When a search is active we list search hits instead of the folder children. */
 const searchResults = ref<Node[] | null>(null)
+/** The MOVE target picker: which node is being moved, and whether it's shown. */
+const moveTarget = ref<Node | null>(null)
+const pickerOpen = ref(false)
 
 const displayNodes = computed<Node[]>(() => searchResults.value ?? nodes.value)
 
@@ -119,11 +123,9 @@ async function onAction(action: NodeAction, node: Node): Promise<void> {
       break
     }
     case 'move': {
-      // Moving needs a target picker the host owns — emit so it can drive `move`.
-      const target = typeof window !== 'undefined' ? window.prompt('Move into folder id (blank = root)') : null
-      if (target !== null) {
-        await move(node.id, target.trim() === '' ? null : target.trim())
-      }
+      // Open the folder-target picker for this node; the move runs on `picked`.
+      moveTarget.value = node
+      pickerOpen.value = true
       break
     }
     case 'trash': {
@@ -157,6 +159,22 @@ async function onAction(action: NodeAction, node: Node): Promise<void> {
       break
     }
   }
+}
+
+/** The picker chose a destination (null = root) — run the move, then close. */
+async function onMovePicked(targetId: NodeId | null): Promise<void> {
+  const node = moveTarget.value
+  pickerOpen.value = false
+  moveTarget.value = null
+  if (node) {
+    await move(node.id, targetId)
+  }
+}
+
+/** The picker was dismissed — just close, no move. */
+function onMovePickerClose(): void {
+  pickerOpen.value = false
+  moveTarget.value = null
 }
 
 let searchSeq = 0
@@ -270,5 +288,15 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
         </slot>
       </template>
     </VaulterNodeList>
+
+    <VaulterFolderPicker
+      v-if="moveTarget"
+      class="vaulter-drive__folder-picker"
+      :storage-id="storageId"
+      :node="moveTarget"
+      :open="pickerOpen"
+      @picked="onMovePicked"
+      @close="onMovePickerClose"
+    />
   </div>
 </template>

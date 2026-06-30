@@ -3,6 +3,7 @@ import { defineComponent, h, markRaw, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import VaulterDrive from '../src/components/VaulterDrive.vue'
 import VaulterDriveBreadcrumb from '../src/components/VaulterDriveBreadcrumb.vue'
+import VaulterFolderPicker from '../src/components/VaulterFolderPicker.vue'
 import VaulterNodeList from '../src/components/VaulterNodeList.vue'
 import VaulterUploader from '../src/components/VaulterUploader.vue'
 import VaulterNodeGrantsPanel from '../src/components/VaulterNodeGrantsPanel.vue'
@@ -149,10 +150,13 @@ describe('VaulterDrive', () => {
       return Promise.resolve(page(childByParent[String(parent)] ?? []))
     })
     const show = vi.fn().mockResolvedValue(node({ id: 1, kind: 'folder', name: 'Folder', breadcrumb: [] }))
+    const move = vi.fn().mockImplementation((nodeId, intoId) =>
+      Promise.resolve(node({ id: nodeId, kind: 'file', name: 'moved', parent_id: intoId })))
     return {
       list,
       show,
-      client: { nodes: { list, show } } as unknown as Partial<VaulterClient>,
+      move,
+      client: { nodes: { list, show, move } } as unknown as Partial<VaulterClient>,
     }
   }
 
@@ -194,6 +198,224 @@ describe('VaulterDrive', () => {
     expect(list).toHaveBeenLastCalledWith(7, { parentId: 1 })
     expect(wrapper.emitted('open-node')).toBeUndefined()
     expect(wrapper.emitted('navigate')?.[0]).toEqual([1])
+  })
+
+  it('opens the folder picker for the move action and moves to the picked target (no window.prompt)', async () => {
+    // A file that currently lives under folder 99 → the storage root is a valid target.
+    const movable = node({ id: 2, kind: 'file', name: 'doc.txt', parent_id: 99, abilities: { move: true } })
+    const { client, move } = driveClient([movable])
+    // Guard: the old placeholder must never be reached.
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
+    const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
+
+    await flushAll()
+
+    // No picker until the move action fires.
+    expect(wrapper.find('.vaulter-folder-picker').exists()).toBe(false)
+
+    await wrapper.get('.vaulter-node-list__action--move').trigger('click')
+    await flushAll()
+
+    // The picker is now open for this node; window.prompt was NOT used.
+    expect(wrapper.find('.vaulter-folder-picker').exists()).toBe(true)
+    expect(promptSpy).not.toHaveBeenCalled()
+
+    // "Move here" at the root (node lives under 99, so root is legal) → move(2, null).
+    await wrapper.get('.vaulter-folder-picker__move-here').trigger('click')
+    await flushAll()
+
+    expect(move).toHaveBeenCalledWith(2, null)
+    // The picker closes after a successful pick.
+    expect(wrapper.find('.vaulter-folder-picker').exists()).toBe(false)
+
+    promptSpy.mockRestore()
+  })
+})
+
+// ─── VaulterFolderPicker ──────────────────────────────────────────────────────
+
+describe('VaulterFolderPicker', () => {
+  /** A client whose `nodes.list` returns folders/files keyed by parent, plus show. */
+  function pickerClient(childByParent: Record<string, Node[]>) {
+    const list = vi.fn().mockImplementation((_storageId, query?: { parentId?: number | string | null }) => {
+      const parent = query?.parentId ?? null
+      return Promise.resolve(page(childByParent[parent === null ? 'root' : String(parent)] ?? []))
+    })
+    const show = vi.fn().mockImplementation((nodeId) =>
+      Promise.resolve(node({ id: nodeId, kind: 'folder', name: `Folder ${nodeId}`, breadcrumb: [
+        node({ id: nodeId, kind: 'folder', name: `Folder ${nodeId}` }),
+      ] })))
+    return { list, show, client: { nodes: { list, show } } as unknown as Partial<VaulterClient> }
+  }
+
+  it('lists only folders at the current location (files are filtered out)', async () => {
+    const moved = node({ id: 1, kind: 'file', name: 'doc.txt', parent_id: 50 })
+    const { client } = pickerClient({
+      root: [
+        node({ id: 10, kind: 'folder', name: 'Reports' }),
+        node({ id: 11, kind: 'file', name: 'note.txt' }),
+        node({ id: 12, kind: 'folder', name: 'Archive' }),
+      ],
+    })
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const names = wrapper.findAll('.vaulter-folder-picker__folder-name').map((n) => n.text())
+    expect(names).toEqual(['Reports', 'Archive'])
+    // The file is not offered as a destination.
+    expect(names).not.toContain('note.txt')
+  })
+
+  it('excludes the node being moved from the destination list (its subtree is unreachable)', async () => {
+    // Moving folder 10 itself: it must not appear as a navigable destination.
+    const moved = node({ id: 10, kind: 'folder', name: 'Reports', parent_id: null })
+    const { client } = pickerClient({
+      root: [
+        node({ id: 10, kind: 'folder', name: 'Reports' }),
+        node({ id: 12, kind: 'folder', name: 'Archive' }),
+      ],
+    })
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const names = wrapper.findAll('.vaulter-folder-picker__folder-name').map((n) => n.text())
+    expect(names).toEqual(['Archive'])
+    // The moved folder is hidden → the user can never descend into its own subtree.
+    expect(names).not.toContain('Reports')
+  })
+
+  it('keeps the moved folder hidden even when it has descendants (subtree is structurally unreachable)', async () => {
+    // Folder 10 (moved) sits at root AND has a child folder 20. Because 10 is hidden
+    // from the listing, the user can never click into it → 20 is unreachable, so an
+    // illegal move into the node's own subtree can never be offered.
+    const moved = node({ id: 10, kind: 'folder', name: 'Reports', parent_id: null })
+    const { client } = pickerClient({
+      root: [
+        node({ id: 10, kind: 'folder', name: 'Reports' }),
+        node({ id: 12, kind: 'folder', name: 'Archive' }),
+      ],
+      '10': [node({ id: 20, kind: 'folder', name: 'Reports 2026' })],
+    })
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const names = wrapper.findAll('.vaulter-folder-picker__folder-name').map((n) => n.text())
+    // Only Archive is navigable: the moved folder (Reports) is gone, so its child
+    // (Reports 2026), reachable only THROUGH it, can never surface as a destination.
+    expect(names).toEqual(['Archive'])
+    expect(names).not.toContain('Reports')
+    expect(names).not.toContain('Reports 2026')
+  })
+
+  it('ignores a stale folder listing when navigation has moved on (no wrong-destination move)', async () => {
+    // Rapid navigation A→B: B is the current location. If A's (slower) response wins the
+    // listing, "Move here" would target B while showing A — a silent wrong move. The
+    // loadSeq guard must discard the stale A response.
+    const moved = node({ id: 1, kind: 'file', name: 'doc.txt', parent_id: 50 })
+    const deferred: Record<string, (nodes: Node[]) => void> = {}
+    const list = vi.fn().mockImplementation((_storageId, query?: { parentId?: number | string | null }) => {
+      const parent = query?.parentId ?? null
+      if (parent === null) {
+        return Promise.resolve(page([
+          node({ id: 10, kind: 'folder', name: 'A' }),
+          node({ id: 20, kind: 'folder', name: 'B' }),
+        ]))
+      }
+      return new Promise((resolve) => {
+        deferred[String(parent)] = (nodes) => resolve(page(nodes))
+      })
+    })
+    const show = vi.fn().mockResolvedValue(node({ id: 1, kind: 'folder', name: 'x', breadcrumb: [] }))
+    const client = { nodes: { list, show } } as unknown as Partial<VaulterClient>
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+    await flushAll()
+
+    // Navigate into A then B (both loads pending on the deferreds).
+    void (wrapper.vm as unknown as { goTo: (id: number | string | null) => Promise<void> }).goTo(10)
+    void (wrapper.vm as unknown as { goTo: (id: number | string | null) => Promise<void> }).goTo(20)
+
+    // Resolve the CURRENT location (B) first, then the STALE one (A): A must not win.
+    deferred['20']([node({ id: 201, kind: 'folder', name: 'in-B' })])
+    deferred['10']([node({ id: 101, kind: 'folder', name: 'in-A' })])
+    await flushAll()
+
+    const names = wrapper.findAll('.vaulter-folder-picker__folder-name').map((n) => n.text())
+    expect(names).toEqual(['in-B'])
+    expect(names).not.toContain('in-A')
+  })
+
+  it('disables "Move here" at the node\'s CURRENT parent (a no-op move)', async () => {
+    // The node already lives at the root → "Move here" at the root is a no-op.
+    const moved = node({ id: 1, kind: 'file', name: 'doc.txt', parent_id: null })
+    const { client } = pickerClient({ root: [node({ id: 12, kind: 'folder', name: 'Archive' })] })
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const moveHere = wrapper.get('.vaulter-folder-picker__move-here').element as HTMLButtonElement
+    expect(moveHere.disabled).toBe(true)
+  })
+
+  it('emits picked(folderId) after navigating into a folder, and picked(null) for the root', async () => {
+    // Node lives under 99 → both the root and folder 12 are valid destinations.
+    const moved = node({ id: 1, kind: 'file', name: 'doc.txt', parent_id: 99 })
+    const { client } = pickerClient({
+      root: [node({ id: 12, kind: 'folder', name: 'Archive' })],
+      '12': [],
+    })
+    const wrapper = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    // Root is a legal target here → "Move here" emits picked(null).
+    await wrapper.get('.vaulter-folder-picker__move-here').trigger('click')
+    expect(wrapper.emitted('picked')?.[0]).toEqual([null])
+
+    // Navigate INTO folder 12, then "Move here" → picked(12).
+    await wrapper.get('.vaulter-folder-picker__item').trigger('click')
+    await flushAll()
+    await wrapper.get('.vaulter-folder-picker__move-here').trigger('click')
+    expect(wrapper.emitted('picked')?.[1]).toEqual([12])
+  })
+
+  it('emits close on the Cancel button and does not render when closed', async () => {
+    const moved = node({ id: 1, kind: 'file', name: 'doc.txt', parent_id: 99 })
+    const { client } = pickerClient({ root: [] })
+
+    const closed = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: false },
+      ...withClient(client),
+    })
+    expect(closed.find('.vaulter-folder-picker').exists()).toBe(false)
+
+    const open = mount(VaulterFolderPicker, {
+      props: { storageId: 7, node: moved, open: true },
+      ...withClient(client),
+    })
+    await flushAll()
+    await open.get('.vaulter-folder-picker__cancel').trigger('click')
+    expect(open.emitted('close')).toBeTruthy()
   })
 })
 

@@ -80,6 +80,7 @@ export { default as VaulterBreadcrumb } from './components/VaulterBreadcrumb.vue
 // Drive components (M1–M4)
 export { default as VaulterDrive } from './components/VaulterDrive.vue'
 export { default as VaulterDriveBreadcrumb } from './components/VaulterDriveBreadcrumb.vue'
+export { default as VaulterFolderPicker } from './components/VaulterFolderPicker.vue'
 export { default as VaulterNodeList } from './components/VaulterNodeList.vue'
 export type { NodeAction } from './components/VaulterNodeList.vue'
 export { default as VaulterUploader } from './components/VaulterUploader.vue'
