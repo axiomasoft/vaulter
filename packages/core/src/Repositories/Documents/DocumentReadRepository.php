@@ -31,16 +31,21 @@ final class DocumentReadRepository
     }
 
     /**
-     * Search a workspace's documents by title and raw content.
+     * Search a workspace's documents by title and raw content. Case-folded so the
+     * match is case-INSENSITIVE on every driver — a bare `like` is case-sensitive on
+     * PostgreSQL (and case-insensitive on SQLite/MySQL), so "Roadmap" would slip past
+     * a "roadmap" query on PG. Mirrors NodeReadRepository::search. Both columns are
+     * text, so lower() applies portably.
      *
      * @return Builder<Document>
      */
     public function search(WorkspaceRef $workspace, string $term): Builder
     {
-        $like = '%'.$term.'%';
+        $like = '%'.mb_strtolower($term).'%';
 
         return $this->forWorkspace($workspace)->where(function (Builder $query) use ($like): void {
-            $query->where('title', 'like', $like)->orWhere('content', 'like', $like);
+            $query->whereRaw('lower(title) like ?', [$like])
+                ->orWhereRaw('lower(content) like ?', [$like]);
         });
     }
 

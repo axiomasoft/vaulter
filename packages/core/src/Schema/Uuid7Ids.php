@@ -18,7 +18,12 @@ final class Uuid7Ids implements IdStrategy
 {
     public function key(Blueprint $table, string $column = 'id'): void
     {
-        $table->uuid(column: $column)->primary();
+        // Explicit PRIMARY KEY command (not a fluent ->primary() modifier): Laravel
+        // appends fluent indexes after the foreign-key commands, so on PostgreSQL a
+        // self-referencing FK in the same create (v_nodes.parent_id → v_nodes.id) would
+        // be compiled before the PK and rejected. See UlidIds::key() for the full note.
+        $table->uuid(column: $column);
+        $table->primary($column);
     }
 
     public function reference(Blueprint $table, string $column, bool $nullable = false): void
