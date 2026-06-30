@@ -17,24 +17,24 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Export\HtmlExporter;
 use Vaulter\Export\MarkdownExporter;
-use Vaulter\Models\Activity;
-use Vaulter\Models\Blob;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentComment;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Models\DocumentPermission;
-use Vaulter\Models\DocumentShare;
-use Vaulter\Models\DocumentVersion;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\FileVersionBlob;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeDocumentVersion;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Models\NodeShare;
-use Vaulter\Models\Storage;
-use Vaulter\Models\UploadPart;
-use Vaulter\Models\UploadSession;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Models\Documents\DocumentPermission;
+use Vaulter\Models\Documents\DocumentShare;
+use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Models\Documents\NodeDocumentVersion;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Models\Uploads\UploadPart;
+use Vaulter\Models\Uploads\UploadSession;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -219,7 +219,7 @@ return [
     |--------------------------------------------------------------------------
     | Document handlers — the format-extensibility registry (§4.5 / §7 / H.5)
     |--------------------------------------------------------------------------
-    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\DocumentHandler
+    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\Documents\DocumentHandler
     | for a file by mime → extension → capability → priority, falling back to the
     | DownloadOnlyHandler null-object. List FQCNs here (cache-safe — FQCN only, no
     | closures); a host adds a NEW format with ONE class + an entry here (or a tagged
@@ -260,7 +260,7 @@ return [
     |--------------------------------------------------------------------------
     | Authorization — legacy DocDrive resolver
     |--------------------------------------------------------------------------
-    | FQCN of a \Vaulter\Contracts\PermissionResolver implementation, or null
+    | FQCN of a \Vaulter\Contracts\Access\PermissionResolver implementation, or null
     | to register one at runtime via Vaulter::resolvePermissionsWith(...). This is
     | the LEGACY document-path resolver; the Drive ACL uses the host-role driver +
     | AccessResolver below (H.2).
@@ -271,7 +271,7 @@ return [
     |--------------------------------------------------------------------------
     | Host role drivers (D6 / H.2) — the Drive ACL
     |--------------------------------------------------------------------------
-    | The pluggable, per-panel \Vaulter\Contracts\HostRoleDriver lane the
+    | The pluggable, per-panel \Vaulter\Contracts\Access\HostRoleDriver lane the
     | (Vaulter-owned, NON-swappable) AccessResolver combines with v_node_grants.
     | The default 'database' driver is fully standalone — it authorises purely from
     | the grant rows with zero host dependency. Swap to 'gate'/'spatie'/'azgard'
@@ -362,7 +362,7 @@ return [
     | wildcard surfaces as the absolute allow override; 'create_permission' gates workspace
     | creation. Plain strings — cache-safe.
     |
-    | A production host MUST bind \Vaulter\Contracts\AzgardGuard to a real adapter
+    | A production host MUST bind \Vaulter\Contracts\Access\AzgardGuard to a real adapter
     | (delegating to AzGuard hasScopedPermission / Corex ContextGuard hasPermissionIn) and
     | align ulid morphs (vaulter.ids.default=ulid + corex.ids.strategy=Ulid +
     | AZ_GUARD_MORPH_TYPE=ulid), registering workspace/owner types as Corex morph aliases.
@@ -455,7 +455,7 @@ return [
     |--------------------------------------------------------------------------
     | Share-link token generator
     |--------------------------------------------------------------------------
-    | FQCN of a \Vaulter\Contracts\ShareTokenGenerator. Swap to mint short,
+    | FQCN of a \Vaulter\Contracts\Sharing\ShareTokenGenerator. Swap to mint short,
     | hashed or prefixed tokens (must be unique and fit the token column).
     */
     'share_token_generator' => RandomShareTokenGenerator::class,
@@ -468,7 +468,7 @@ return [
     | own bitmask on its own node-set, evaluated in its own pass intersected with
     | item-safety (tenant/trash/quarantine), NEVER unioned with the identity ACL.
     |
-    |  - token_generator: the \Vaulter\Contracts\ShareTokenGenerator used to mint
+    |  - token_generator: the \Vaulter\Contracts\Sharing\ShareTokenGenerator used to mint
     |    the raw bearer token. Only the sha256 HASH of that token is ever stored
     |    (token_hash), with a short token_prefix kept for owner-side UX lookup.
     |  - url_base: the public base a share URL is built from in NodeShareResource
@@ -638,7 +638,7 @@ return [
     |--------------------------------------------------------------------------
     | Export formats
     |--------------------------------------------------------------------------
-    | Map of format => \Vaulter\Contracts\DocumentExporter. Add your own (PDF,
+    | Map of format => \Vaulter\Contracts\Documents\DocumentExporter. Add your own (PDF,
     | DOCX, …) here, or at runtime via Vaulter::registerExporter().
     */
     'exporters' => [

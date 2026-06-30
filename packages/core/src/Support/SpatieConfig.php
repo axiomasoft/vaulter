@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * Typed accessors over config('vaulter.spatie.*') — the spatie/laravel-permission

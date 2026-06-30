@@ -6,8 +6,8 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateFolderData;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Repositories\FolderStoreRepository;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Documents\FolderStoreRepository;
 
 final readonly class CreateFolderAction
 {

@@ -8,11 +8,11 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Abilities\NodeAbilities;
+use Vaulter\Access\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\NodeHandlerResolver;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Node;
 
 /**
  * The read shape of a Drive node (§2.2 / §5): the unified folder|file|document

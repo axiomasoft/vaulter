@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

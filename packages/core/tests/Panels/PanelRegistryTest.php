@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Exceptions\InvalidPanelException;
-use Vaulter\Exceptions\UnknownPanelException;
+use Vaulter\Exceptions\Panels\InvalidPanelException;
+use Vaulter\Exceptions\Panels\UnknownPanelException;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;

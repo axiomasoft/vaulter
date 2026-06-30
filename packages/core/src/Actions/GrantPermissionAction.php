@@ -6,10 +6,10 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\GrantPermissionData;
-use Vaulter\Events\PermissionGranted;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentPermission;
-use Vaulter\Repositories\PermissionStoreRepository;
+use Vaulter\Events\Access\PermissionGranted;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentPermission;
+use Vaulter\Repositories\Access\PermissionStoreRepository;
 
 final readonly class GrantPermissionAction
 {

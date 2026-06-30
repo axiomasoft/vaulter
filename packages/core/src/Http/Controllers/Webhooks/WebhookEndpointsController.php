@@ -18,7 +18,7 @@ use Vaulter\Http\Requests\Webhooks\RegisterWebhookEndpointRequest;
 use Vaulter\Http\Requests\Webhooks\UpdateWebhookEndpointRequest;
 use Vaulter\Http\Resources\Webhooks\WebhookEndpointResource;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Repositories\WebhookEndpointReadRepository;
+use Vaulter\Repositories\Webhooks\WebhookEndpointReadRepository;
 
 /**
  * The webhook-endpoint MANAGEMENT surface (master plan §2.11 / D14 / M3b): list,

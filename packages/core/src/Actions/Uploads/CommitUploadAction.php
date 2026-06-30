@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Vaulter\Actions\Drive\UploadFileAction;
 use Vaulter\Data\UploadFileData;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\Models\UploadSession;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\StorageReadRepository;
-use Vaulter\Repositories\UploadSessionStoreRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Uploads\UploadSession;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Uploads\StagedUpload;
 
 /**

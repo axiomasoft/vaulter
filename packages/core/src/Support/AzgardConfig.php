@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Contracts\AzgardGuard;
+use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
-use Vaulter\Enums\Ability;
+use Vaulter\Enums\Access\Ability;
 
 /**
  * Typed accessors over config('vaulter.azgard.*') — the AzGuard host-role lane's

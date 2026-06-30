@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Models\Blob;
-use Vaulter\Models\FileVersionBlob;
-use Vaulter\Models\Node;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {

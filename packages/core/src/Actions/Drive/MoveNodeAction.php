@@ -6,13 +6,13 @@ namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\MoveNodeData;
-use Vaulter\Events\NodeMoved;
-use Vaulter\Exceptions\CrossStorageMoveException;
-use Vaulter\Exceptions\CycleException;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
+use Vaulter\Events\Drive\NodeMoved;
+use Vaulter\Exceptions\Drive\CrossStorageMoveException;
+use Vaulter\Exceptions\Drive\CycleException;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
 
 /**
  * Re-parent a node within its storage tree — the §2.2 / H.4 single parent_id

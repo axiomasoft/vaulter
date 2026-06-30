@@ -16,7 +16,7 @@ use Override;
 use UnitEnum;
 use Vaulter\Filament\Resources\StorageResource\Pages\ListStorages;
 use Vaulter\Filament\Resources\StorageResource\Pages\ViewStorage;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 
 /**

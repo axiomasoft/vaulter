@@ -6,14 +6,14 @@ namespace Vaulter\Filament\Tests\Fixtures;
 
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantNodeAccessData;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\GrantStoreRepository;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
  * Builders for the Filament resource tests: a fresh storage + a folder under its

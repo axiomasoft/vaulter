@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Vaulter\Enums\PermissionLevel;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentPermission;
+use Vaulter\Enums\Access\PermissionLevel;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentPermission;
 
 /**
  * @extends Factory<DocumentPermission>

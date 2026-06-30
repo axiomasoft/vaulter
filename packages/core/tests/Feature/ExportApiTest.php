@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\DenyResolver;
 use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 21]));

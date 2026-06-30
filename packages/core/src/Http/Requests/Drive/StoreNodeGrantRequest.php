@@ -8,9 +8,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantNodeAccessData;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Rules\Access\RegisteredSubjectType;
 

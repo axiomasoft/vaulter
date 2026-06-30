@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Data;
 
 use DateTimeInterface;
-use Vaulter\Enums\PermissionLevel;
+use Vaulter\Enums\Access\PermissionLevel;
 
 final readonly class CreateShareData
 {

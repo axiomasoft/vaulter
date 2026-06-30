@@ -7,9 +7,9 @@ use Vaulter\Filament\Resources\FolderResource;
 use Vaulter\Filament\Resources\ShareResource;
 use Vaulter\Filament\Tests\Fixtures\CustomDocument;
 use Vaulter\Filament\VaulterPlugin;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Models\DocumentShare;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Models\Documents\DocumentShare;
 
 it('resolves the configured models for every resource', function (): void {
     expect(DocumentResource::getModel())->toBe(Document::class)

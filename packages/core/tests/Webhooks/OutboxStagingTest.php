@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
 use Vaulter\Enums\Webhooks\WebhookEvent;
-use Vaulter\Events\NodeCreated;
-use Vaulter\Models\Node;
+use Vaulter\Events\Drive\NodeCreated;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;

@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\FileVersion;
+use Vaulter\Models\Drive\FileVersion;
 
 /**
  * The read shape of an immutable file version (§2.4): the monotonic version_no,

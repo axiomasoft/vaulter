@@ -7,7 +7,7 @@ namespace Vaulter\Actions\Webhooks;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointData;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Repositories\WebhookEndpointStoreRepository;
+use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
  * Update a webhook endpoint's mutable attributes — url, subscribed events, active

@@ -7,14 +7,14 @@ namespace Vaulter\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\StorageCreated;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\StorageCreated;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Panels\PanelRegistry;
-use Vaulter\Repositories\NodeStoreRepository;
-use Vaulter\Repositories\StorageReadRepository;
-use Vaulter\Repositories\StorageStoreRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\Config;
 
 /**

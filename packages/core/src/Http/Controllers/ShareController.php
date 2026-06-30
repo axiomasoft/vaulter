@@ -9,16 +9,16 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Abilities\DocumentAbilities;
+use Vaulter\Access\Abilities\DocumentAbilities;
 use Vaulter\Actions\CreateShareLinkAction;
 use Vaulter\Actions\RevokeShareLinkAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\StoreShareRequest;
 use Vaulter\Http\Resources\DocumentShareResource;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\Repositories\ShareReadRepository;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Repositories\Sharing\ShareReadRepository;
 
 final class ShareController extends Controller
 {

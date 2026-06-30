@@ -13,13 +13,13 @@ use Vaulter\Actions\CreateFolderAction;
 use Vaulter\Actions\DeleteFolderAction;
 use Vaulter\Actions\MoveFolderAction;
 use Vaulter\Actions\RenameFolderAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\StoreFolderRequest;
 use Vaulter\Http\Resources\DocumentFolderResource;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\Repositories\FolderReadRepository;
-use Vaulter\ValueObjects\WorkspaceRef;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\FolderReadRepository;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 final class FolderController extends Controller
 {

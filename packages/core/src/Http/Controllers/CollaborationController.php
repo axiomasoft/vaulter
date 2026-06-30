@@ -8,11 +8,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Actions\IssueCollaborationTokenAction;
 use Vaulter\Actions\SyncCollaborationStateAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\SyncCollaborationRequest;
 use Vaulter\Http\Resources\DocumentResource;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class CollaborationController extends Controller
 {

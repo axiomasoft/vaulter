@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Enums\DocumentType;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final readonly class CreateDocumentData
 {

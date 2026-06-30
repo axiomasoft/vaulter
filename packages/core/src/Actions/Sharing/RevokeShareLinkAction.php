@@ -6,9 +6,9 @@ namespace Vaulter\Actions\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\NodeShareRevoked;
-use Vaulter\Models\NodeShare;
-use Vaulter\Repositories\NodeShareStoreRepository;
+use Vaulter\Events\Sharing\NodeShareRevoked;
+use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 
 /**
  * Revoke a bearer share-link (§2.7 / M2c). Stamps revoked_at so the share never

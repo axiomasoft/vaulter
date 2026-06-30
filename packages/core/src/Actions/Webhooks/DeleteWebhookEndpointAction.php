@@ -6,7 +6,7 @@ namespace Vaulter\Actions\Webhooks;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Repositories\WebhookEndpointStoreRepository;
+use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
  * Permanently delete a webhook endpoint (master plan §2.11 / D14 / M3b). Its

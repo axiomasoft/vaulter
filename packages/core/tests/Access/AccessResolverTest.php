@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 

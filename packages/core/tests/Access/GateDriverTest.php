@@ -7,9 +7,9 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\NodeRestored;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
+use Vaulter\Events\Drive\NodeRestored;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
 
 /**

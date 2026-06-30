@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Activity;
 
-use Vaulter\Enums\ActivityVerb;
+use Vaulter\Enums\Activity\ActivityVerb;
 
 /**
  * The resolved, ready-to-persist shape of ONE activity row (master plan §2.9 /

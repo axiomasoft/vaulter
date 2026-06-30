@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * The workspace/panel context an access decision is evaluated within (master plan

@@ -23,12 +23,12 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Override;
 use UnitEnum;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\NodeKind;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
 /**

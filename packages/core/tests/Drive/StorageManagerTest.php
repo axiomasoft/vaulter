@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\StorageCreated;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\StorageCreated;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Panels\TeamStoragePanel;
 

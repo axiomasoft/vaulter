@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Data\CreateShareData;
-use Vaulter\Enums\PermissionLevel;
+use Vaulter\Enums\Access\PermissionLevel;
 
 final class StoreShareRequest extends VaulterFormRequest
 {

@@ -8,15 +8,15 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\ActivityVerb;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Activity\ActivityResource;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\ActivityReadRepository;
-use Vaulter\Repositories\NodeReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Activity\ActivityReadRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
  * The read surface over the append-only activity feed (§2.9 / M2c-activity): the

@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\HostRoleDriver;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * A configurable HostRoleDriver stub for the ACL tests: it can simulate a host

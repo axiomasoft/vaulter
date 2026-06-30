@@ -7,7 +7,7 @@ namespace Vaulter\Models\Concerns;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Vaulter\ValueObjects\WorkspaceRef;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 /**
  * Adds the polymorphic workspace relation (workspace_type / workspace_id) and a

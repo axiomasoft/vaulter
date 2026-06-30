@@ -11,13 +11,13 @@ use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Actions\GrantPermissionAction;
 use Vaulter\Actions\RevokePermissionAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\StorePermissionRequest;
 use Vaulter\Http\Resources\DocumentPermissionResource;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\Repositories\PermissionReadRepository;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Access\PermissionReadRepository;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class PermissionController extends Controller
 {

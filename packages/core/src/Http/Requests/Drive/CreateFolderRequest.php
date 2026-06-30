@@ -6,8 +6,8 @@ namespace Vaulter\Http\Requests\Drive;
 
 use Vaulter\Data\CreateDriveFolderData;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * Validates a create-folder request (§2.2) and builds its CreateDriveFolderData

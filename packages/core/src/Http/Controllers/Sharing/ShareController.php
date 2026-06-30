@@ -13,14 +13,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-use Vaulter\Enums\Ability;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Sharing\StoreShareLinkRequest;
 use Vaulter\Http\Resources\Sharing\NodeShareResource;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeShare;
-use Vaulter\Repositories\NodeShareReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\Identity;
 
 /**

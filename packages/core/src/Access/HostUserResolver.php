@@ -6,7 +6,7 @@ namespace Vaulter\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Vaulter\Contracts\HostUserResolver as HostUserResolverContract;
+use Vaulter\Contracts\Collaboration\HostUserResolver as HostUserResolverContract;
 
 /**
  * The default {@see HostUserResolverContract}: materialise a host user by id by

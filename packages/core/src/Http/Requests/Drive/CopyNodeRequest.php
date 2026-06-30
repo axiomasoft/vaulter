@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests\Drive;
 
 use Vaulter\Data\CopyNodeData;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Validates a copy request (§2.4): the source node is route-model resolved, the

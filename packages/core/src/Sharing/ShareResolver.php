@@ -7,11 +7,11 @@ namespace Vaulter\Sharing;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeShare;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\NodeShareReadRepository;
-use Vaulter\Repositories\StorageReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
 
 /**

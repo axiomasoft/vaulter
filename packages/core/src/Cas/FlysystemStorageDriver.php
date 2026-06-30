@@ -8,7 +8,7 @@ use DateTimeInterface;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Contracts\StorageDriver;
+use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Support\Config;
 
 /**

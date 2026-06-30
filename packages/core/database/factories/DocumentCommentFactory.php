@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentComment;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
 
 /**
  * @extends Factory<DocumentComment>

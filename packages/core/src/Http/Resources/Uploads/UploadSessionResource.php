@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Uploads;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\UploadSession;
+use Vaulter\Models\Uploads\UploadSession;
 
 /**
  * The read shape of a resumable-upload session (§2.8 / D16 / M3a): the status the

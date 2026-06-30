@@ -6,8 +6,8 @@ namespace Vaulter\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Abilities\DocumentAbilities;
-use Vaulter\Models\Document;
+use Vaulter\Access\Abilities\DocumentAbilities;
+use Vaulter\Models\Documents\Document;
 use Vaulter\VaulterManager;
 
 /**

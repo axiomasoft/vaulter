@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\NodeKind;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * staudenmeir adjacency relationships resolve over the strategy-driven keys:

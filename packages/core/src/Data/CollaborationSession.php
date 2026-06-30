@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Contracts\NodeCollaborationDriver;
-use Vaulter\Enums\CollaborationDriverType;
+use Vaulter\Contracts\Collaboration\NodeCollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
 
 /**
  * The unified realtime-collaboration session descriptor (master plan §7 / ADR-0001 /

@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Firebase\JWT\JWT;
-use Vaulter\Actions\Document\CreateDocumentNodeAction;
-use Vaulter\Contracts\HostUserResolver;
+use Vaulter\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeDocumentVersion;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Models\Documents\NodeDocumentVersion;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Document\DocumentTestHelpers;

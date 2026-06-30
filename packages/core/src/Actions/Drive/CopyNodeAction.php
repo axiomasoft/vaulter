@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Contracts\BlobStore;
+use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Data\CopyNodeData;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\NodeCopied;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Models\Blob;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\FileVersionBlob;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\FileStoreRepository;
-use Vaulter\Repositories\FileVersionStoreRepository;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
-use Vaulter\Repositories\StorageStoreRepository;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\NodeCopied;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Repositories\Drive\FileVersionStoreRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Repositories\Drive\StorageStoreRepository;
 
 /**
  * Copy a node into a destination (§2.4):

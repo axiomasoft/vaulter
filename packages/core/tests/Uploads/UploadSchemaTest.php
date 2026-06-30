@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Enums\UploadStatus;
-use Vaulter\Repositories\UploadPartStoreRepository;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Enums\Uploads\UploadStatus;
+use Vaulter\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Uploads\UploadTestHelpers;
 

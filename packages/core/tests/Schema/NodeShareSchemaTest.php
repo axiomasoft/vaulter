@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Models\NodeShare;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;

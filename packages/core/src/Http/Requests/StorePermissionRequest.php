@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Data\GrantPermissionData;
-use Vaulter\Enums\PermissionLevel;
+use Vaulter\Enums\Access\PermissionLevel;
 
 final class StorePermissionRequest extends VaulterFormRequest
 {

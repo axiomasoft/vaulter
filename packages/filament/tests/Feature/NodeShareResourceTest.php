@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\NodeShare;
-use Vaulter\Repositories\NodeShareReadRepository;
+use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
 
 it('resolves the configured node-share model (swappable)', function (): void {

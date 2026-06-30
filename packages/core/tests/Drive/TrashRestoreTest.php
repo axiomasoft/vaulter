@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Exceptions\NodeNameConflictException;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {

@@ -7,7 +7,7 @@ namespace Vaulter\Http\Resources\Sharing;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * The PUBLIC read shape of a node reached through a bearer share (§2.7 / M2c). It

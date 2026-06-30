@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Access;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Contracts\HostRoleDriver;
+use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
-use Vaulter\Exceptions\MissingHostRoleDriverException;
+use Vaulter\Exceptions\Access\MissingHostRoleDriverException;
 use Vaulter\Support\Config;
 use Vaulter\Testing\NullRoleDriver;
 

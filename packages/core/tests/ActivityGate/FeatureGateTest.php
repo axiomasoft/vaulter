@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Models\Activity;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

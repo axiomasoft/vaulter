@@ -6,8 +6,8 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Repositories\FolderStoreRepository;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Documents\FolderStoreRepository;
 use Vaulter\Support\Identity;
 
 final readonly class MoveFolderAction

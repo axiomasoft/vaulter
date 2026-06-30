@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Handlers;
 
-use Vaulter\Contracts\DocumentHandler;
-use Vaulter\Enums\DocumentType;
-use Vaulter\ValueObjects\DocumentCapabilities;
-use Vaulter\ValueObjects\FileDescriptor;
-use Vaulter\ValueObjects\HandlerUi;
+use Vaulter\Contracts\Documents\DocumentHandler;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * The built-in rich-text handler (master plan §7 level 1): the TipTap/Yjs editor

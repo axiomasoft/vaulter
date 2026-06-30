@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Enums\UploadStatus;
-use Vaulter\Models\UploadSession;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Enums\Uploads\UploadStatus;
+use Vaulter\Models\Uploads\UploadSession;
 use Vaulter\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Uploads\S3MultipartHandler;
 use Vaulter\Uploads\StagedUpload;

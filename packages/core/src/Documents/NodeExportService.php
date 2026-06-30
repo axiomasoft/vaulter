@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
-use Vaulter\Contracts\DocumentExporter;
-use Vaulter\Enums\Capability;
-use Vaulter\Exceptions\NotADocumentNodeException;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeDocumentVersionReadRepository;
-use Vaulter\ValueObjects\DocumentExport;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Enums\Documents\Capability;
+use Vaulter\Exceptions\Documents\NotADocumentNodeException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Documents\NodeDocumentVersionReadRepository;
+use Vaulter\ValueObjects\Documents\DocumentExport;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 use Vaulter\VaulterManager;
 
 /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * The folded result of the effective-permission algorithm for one (actor, node)

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests\Drive;
 
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Validates a document-content autosave PATCH (§2.5 / M4a). content is the TipTap

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Repositories\GrantReadRepository;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Repositories\Access\GrantReadRepository;
 
 it('resolves the configured grant model (swappable)', function (): void {
     expect(NodeGrantResource::getModel())->toBe(NodeGrant::class);

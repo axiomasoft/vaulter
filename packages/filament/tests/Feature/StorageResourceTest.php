@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Filament\Resources\StorageResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 
 it('resolves the configured storage model (swappable)', function (): void {
     expect(StorageResource::getModel())->toBe(Storage::class);

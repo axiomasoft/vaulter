@@ -6,12 +6,12 @@ namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateDriveFolderData;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\NodeCreated;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\NodeCreated;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
 
 /**
  * Create a kind=folder node under a parent (or the storage root) — §2.2. The

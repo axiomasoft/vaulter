@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Uploads;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Vaulter\Contracts\StorageDriver;
-use Vaulter\Models\Storage;
-use Vaulter\Models\UploadSession;
+use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Uploads\UploadSession;
 
 /**
  * The staged temp for a resumable upload (§2.8 / H.3). The bytes accumulate on the

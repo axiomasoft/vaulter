@@ -10,14 +10,14 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Actions\CreateVersionAction;
 use Vaulter\Actions\RestoreVersionAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\StoreVersionRequest;
 use Vaulter\Http\Resources\DocumentResource;
 use Vaulter\Http\Resources\DocumentVersionResource;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\Repositories\VersionReadRepository;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Repositories\Documents\VersionReadRepository;
 
 final class VersionController extends Controller
 {

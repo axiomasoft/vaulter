@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Vaulter\Exceptions\PermissionDeniedException;
-use Vaulter\Models\Document;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Models\Documents\Document;
 use Vaulter\VaulterManager;
 
 final readonly class IssueCollaborationTokenAction

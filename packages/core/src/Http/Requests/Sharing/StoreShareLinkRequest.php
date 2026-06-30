@@ -7,9 +7,9 @@ namespace Vaulter\Http\Requests\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Data\Sharing\CreateShareLinkData;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

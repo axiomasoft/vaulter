@@ -7,11 +7,11 @@ use Vaulter\Cas\BlobLock;
 use Vaulter\Cas\BlobStore;
 use Vaulter\Cas\FlysystemStorageDriver;
 use Vaulter\Cas\Sha256ContentStore;
-use Vaulter\Contracts\ContentStore;
-use Vaulter\Contracts\StagedObject;
-use Vaulter\Models\Blob;
-use Vaulter\Repositories\BlobStoreRepository;
-use Vaulter\Repositories\FileVersionBlobStoreRepository;
+use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 
 /**
  * Commit atomicity (H.3): if the transaction rolls back, no blob row is left

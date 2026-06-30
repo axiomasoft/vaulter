@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Models\Blob;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * The file ↔ version ↔ blob chain and the v_file_version_blobs edge (the GC

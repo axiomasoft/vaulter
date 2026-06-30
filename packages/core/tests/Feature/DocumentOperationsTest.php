@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Events\DocumentMoved;
+use Vaulter\Events\Documents\DocumentMoved;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentFolder;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentFolder;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\NoCreateResolver;
 use Vaulter\Tests\Fixtures\TestUser;

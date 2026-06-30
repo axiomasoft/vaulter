@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Contracts\NodeCollaborationDriver;
-use Vaulter\Enums\CollaborationDriverType;
+use Vaulter\Contracts\Collaboration\NodeCollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Config;
 

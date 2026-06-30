@@ -7,11 +7,11 @@ use Vaulter\Actions\CreateDocumentAction;
 use Vaulter\Actions\CreateVersionAction;
 use Vaulter\Data\CreateDocumentData;
 use Vaulter\Data\CreateVersionData;
-use Vaulter\Enums\DocumentType;
-use Vaulter\Events\DocumentCreated;
-use Vaulter\Events\VersionCreated;
-use Vaulter\Models\Document;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Events\Documents\DocumentCreated;
+use Vaulter\Events\Documents\VersionCreated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 it('creates a document and dispatches DocumentCreated', function (): void {
     Event::fake([DocumentCreated::class]);

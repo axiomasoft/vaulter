@@ -9,12 +9,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
-use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Data\Sharing\CreateShareLinkData;
 use Vaulter\Data\Sharing\MintedShareLink;
-use Vaulter\Events\NodeShareCreated;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeShareStoreRepository;
+use Vaulter\Events\Sharing\NodeShareCreated;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 

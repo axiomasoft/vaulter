@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\NodeDocumentVersion;
+use Vaulter\Models\Documents\NodeDocumentVersion;
 
 /**
  * The read shape of a node-attached document version (§2.5 / M4a). Read-only — it

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\ActivityVerb;
+use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
-use Vaulter\Models\Activity;
-use Vaulter\Repositories\ActivityReadRepository;
+use Vaulter\Models\Activity\Activity;
+use Vaulter\Repositories\Activity\ActivityReadRepository;
 
 it('resolves the configured activity model (swappable)', function (): void {
     expect(ActivityResource::getModel())->toBe(Activity::class);

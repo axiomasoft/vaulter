@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Sharing;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\NodeShare;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
 
 /**

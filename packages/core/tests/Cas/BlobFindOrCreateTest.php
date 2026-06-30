@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
-use Vaulter\Enums\BlobStatus;
-use Vaulter\Models\Blob;
-use Vaulter\Repositories\BlobStoreRepository;
+use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Repositories\Cas\BlobStoreRepository;
 
 /**
  * find-or-create regressions (H.3): the row id is always real (the ON CONFLICT

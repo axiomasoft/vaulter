@@ -14,20 +14,20 @@ use Vaulter\Actions\Drive\RenameNodeAction;
 use Vaulter\Actions\Drive\RestoreNodeAction;
 use Vaulter\Actions\Drive\TrashNodeAction;
 use Vaulter\Actions\Drive\UploadFileAction;
-use Vaulter\Contracts\CollaborationDriver;
-use Vaulter\Contracts\DocumentExporter;
-use Vaulter\Contracts\DocumentHandler;
-use Vaulter\Contracts\PermissionResolver;
+use Vaulter\Contracts\Access\PermissionResolver;
+use Vaulter\Contracts\Collaboration\CollaborationDriver;
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Documents\DocumentHandlerRegistry;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Drive\StorageManager;
-use Vaulter\Exceptions\UnknownExportFormatException;
+use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Exceptions\VaulterException;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
-use Vaulter\Repositories\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**

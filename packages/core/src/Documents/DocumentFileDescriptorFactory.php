@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
-use Vaulter\Models\Node;
-use Vaulter\ValueObjects\FileDescriptor;
+use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
 
 /**
  * Builds a {@see FileDescriptor} from a {@see Node} for the registry (§4.5). A

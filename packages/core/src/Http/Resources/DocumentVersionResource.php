@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\DocumentVersion;
+use Vaulter\Models\Documents\DocumentVersion;
 
 /**
  * @mixin DocumentVersion

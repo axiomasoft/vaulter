@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 use Illuminate\Http\Request;
-use Vaulter\Models\Node;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
@@ -23,7 +26,7 @@ arch('the AccessResolver is a concrete, non-swappable class')
  * A leak of Node into the contract breaks the swappable-driver boundary.
  */
 arch('the HostRoleDriver contract never references the Node model')
-    ->expect('Vaulter\Contracts\HostRoleDriver')
+    ->expect('Vaulter\Contracts\Access\HostRoleDriver')
     ->not->toUse(Node::class);
 
 /**
@@ -55,7 +58,7 @@ arch('the document handler registry and its handlers are final')
     ->toBeFinal();
 
 arch('the DocumentHandler contract is an interface (H.5)')
-    ->expect('Vaulter\Contracts\DocumentHandler')
+    ->expect('Vaulter\Contracts\Documents\DocumentHandler')
     ->toBeInterface();
 
 arch('actions are final')
@@ -99,9 +102,21 @@ arch('repositories never depend on the HTTP request')
 test('no HTTP controller statically queries an Eloquent model (M1c-http)', function (): void {
     $controllers = __DIR__.'/../../src/Http/Controllers';
 
-    $models = collect(scandir(__DIR__.'/../../src/Models') ?: [])
-        ->filter(fn (string $f): bool => str_ends_with($f, '.php'))
-        ->map(fn (string $f): string => substr($f, 0, -4))
+    // Models now live under per-domain subfolders (Models/Drive, Models/Cas, …)
+    // plus the cross-model Models/Concerns/ traits — recurse and keep the leaf
+    // class names (the Concerns traits ride along harmlessly, they are never a
+    // static-query target).
+    /** @var Iterator<SplFileInfo> $modelFiles */
+    $modelFiles = new RegexIterator(
+        new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(__DIR__.'/../../src/Models'),
+        ),
+        '/\.php$/',
+    );
+
+    $models = collect(iterator_to_array($modelFiles))
+        ->map(fn (SplFileInfo $f): string => $f->getBasename('.php'))
+        ->unique()
         ->values()
         ->all();
 
@@ -144,6 +159,91 @@ test('no HTTP controller statically queries an Eloquent model (M1c-http)', funct
     }
 
     expect($offenders)->toBe([]);
+});
+
+/**
+ * Domain-subfolder boundary (structural refactor): the previously-flat technical
+ * roots are now split by domain — every class lives under a domain subfolder, with
+ * a SHORT, explicit allow-list of cross-cutting classes that legitimately sit at
+ * the technical root (the base exception, the cross-cutting IdStrategy contract,
+ * the cross-model Concerns traits, and the swappable-models base namespace).
+ *
+ * The check: for each split root, every *.php directly in the root dir (depth 0)
+ * must be an allowed root-citizen; everything else has been pushed one level down
+ * into a domain folder.
+ */
+test('split technical roots keep classes in domain subfolders', function (): void {
+    $src = __DIR__.'/../../src';
+
+    // root => list of bare class names allowed to remain at the flat root.
+    $rootsWithAllowed = [
+        'Enums' => [],
+        'Events' => [],
+        'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
+        'Exceptions' => ['VaulterException'],
+        'Repositories' => [],
+        'Contracts' => ['IdStrategy'],
+        'ValueObjects' => [], // VOs split into Drive/ and Documents/.
+    ];
+
+    $offenders = [];
+
+    foreach ($rootsWithAllowed as $root => $allowed) {
+        $dir = "{$src}/{$root}";
+
+        foreach (scandir($dir) ?: [] as $entry) {
+            if (!str_ends_with($entry, '.php')) {
+                continue;
+            }
+
+            $class = substr($entry, 0, -4);
+
+            if (!in_array($class, $allowed, true)) {
+                $offenders[] = "{$root}/{$entry}";
+            }
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+/**
+ * The split domains live under the canonical domain set. Spot-check one class per
+ * (root × domain) cell so a regression that drops a class back into a flat root —
+ * or into a non-canonical domain name — trips here with a clear message naming the
+ * exact FQCN that drifted.
+ */
+test('split classes resolve under their canonical domain namespace', function (): void {
+    // String literals (NOT ::class) so the check is independent of imports: each
+    // class MUST exist at exactly this canonical per-domain FQCN. A regression that
+    // leaves a class flat or under a wrong domain makes class_exists() false here.
+    $expected = [
+        'Vaulter\Models\Drive\Node',
+        'Vaulter\Models\Cas\Blob',
+        'Vaulter\Models\Access\NodeGrant',
+        'Vaulter\Models\Sharing\NodeShare',
+        'Vaulter\Models\Uploads\UploadSession',
+        'Vaulter\Models\Activity\Activity',
+        'Vaulter\Models\Documents\Document',
+        'Vaulter\Enums\Drive\NodeKind',
+        'Vaulter\Enums\Access\Ability',
+        'Vaulter\Events\Sharing\ShareLinkCreated',
+        'Vaulter\Exceptions\Drive\CycleException',
+        'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
+        'Vaulter\Exceptions\Panels\UnknownPanelException',
+        'Vaulter\Repositories\Drive\NodeReadRepository',
+        'Vaulter\Contracts\Cas\BlobStore',
+        'Vaulter\Contracts\Access\HostRoleDriver',
+        'Vaulter\ValueObjects\Documents\TipTapContent',
+        'Vaulter\Access\Abilities\NodeAbilities',
+    ];
+
+    $missing = array_values(array_filter(
+        $expected,
+        fn (string $fqcn): bool => !class_exists($fqcn) && !interface_exists($fqcn),
+    ));
+
+    expect($missing)->toBe([]);
 });
 
 /**

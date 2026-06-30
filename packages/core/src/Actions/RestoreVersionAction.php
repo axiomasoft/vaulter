@@ -6,10 +6,10 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Events\VersionRestored;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentVersion;
-use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Events\Documents\VersionRestored;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Support\Identity;
 
 final readonly class RestoreVersionAction

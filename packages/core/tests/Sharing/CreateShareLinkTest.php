@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Hash;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Data\Sharing\CreateShareLinkData;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
-use Vaulter\Events\NodeShareCreated;
-use Vaulter\Events\NodeShareRevoked;
-use Vaulter\Models\NodeShare;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
+use Vaulter\Events\Sharing\NodeShareCreated;
+use Vaulter\Events\Sharing\NodeShareRevoked;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;
 

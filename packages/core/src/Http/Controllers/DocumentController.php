@@ -15,16 +15,16 @@ use Vaulter\Actions\ForceDeleteDocumentAction;
 use Vaulter\Actions\MoveDocumentAction;
 use Vaulter\Actions\RestoreDocumentAction;
 use Vaulter\Actions\UpdateDocumentAction;
-use Vaulter\Exceptions\DocumentNotFoundException;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Documents\DocumentNotFoundException;
 use Vaulter\Http\Requests\MoveDocumentRequest;
 use Vaulter\Http\Requests\StoreDocumentRequest;
 use Vaulter\Http\Requests\UpdateDocumentRequest;
 use Vaulter\Http\Resources\DocumentResource;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\ValueObjects\WorkspaceRef;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 final class DocumentController extends Controller
 {

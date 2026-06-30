@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Command for CreateNamedVersionAction (§2.5 / M4a): snapshot a document node's

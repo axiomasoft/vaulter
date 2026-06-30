@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\PermissionRevoked;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\PermissionStoreRepository;
+use Vaulter\Events\Access\PermissionRevoked;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\PermissionStoreRepository;
 
 final readonly class RevokePermissionAction
 {

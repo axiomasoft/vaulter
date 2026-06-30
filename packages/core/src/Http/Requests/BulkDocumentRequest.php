@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Enums\BulkAction;
+use Vaulter\Enums\Drive\BulkAction;
 
 final class BulkDocumentRequest extends VaulterFormRequest
 {

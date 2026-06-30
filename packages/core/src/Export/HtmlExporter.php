@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Export;
 
-use Vaulter\Contracts\DocumentExporter;
-use Vaulter\Enums\ExportFormat;
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Enums\Documents\ExportFormat;
 use Vaulter\Support\TipTapRenderer;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class HtmlExporter implements DocumentExporter
 {

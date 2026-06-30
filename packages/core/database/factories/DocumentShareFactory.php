@@ -6,9 +6,9 @@ namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Vaulter\Enums\PermissionLevel;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentShare;
+use Vaulter\Enums\Access\PermissionLevel;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentShare;
 
 /**
  * @extends Factory<DocumentShare>

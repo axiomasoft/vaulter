@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\AzgardGuard;
-use Vaulter\Contracts\HostRoleDriver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Support\AzgardConfig;
 
 /**

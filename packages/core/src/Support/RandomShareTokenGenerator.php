@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Illuminate\Support\Str;
-use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 
 /**
  * Default share-token generator: a 48-character random alphanumeric string.

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Models\Blob;
-use Vaulter\Models\File;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {

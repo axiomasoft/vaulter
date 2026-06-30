@@ -6,10 +6,10 @@ namespace Vaulter\Collaboration;
 
 use Firebase\JWT\JWT;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Vaulter\Contracts\CollaborationDriver;
-use Vaulter\Enums\CollaborationDriverType;
+use Vaulter\Contracts\Collaboration\CollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;

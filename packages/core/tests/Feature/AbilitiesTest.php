@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Abilities\DocumentAbilities;
+use Vaulter\Access\Abilities\DocumentAbilities;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Tests\Fixtures\ViewOnlyResolver;
 use Vaulter\VaulterManager;
 

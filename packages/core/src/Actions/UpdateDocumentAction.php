@@ -6,9 +6,9 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\UpdateDocumentData;
-use Vaulter\Events\DocumentUpdated;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Events\Documents\DocumentUpdated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Support\Config;
 
 final readonly class UpdateDocumentAction

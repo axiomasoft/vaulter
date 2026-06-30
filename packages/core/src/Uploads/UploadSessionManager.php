@@ -8,12 +8,12 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Contracts\UploadProtocolHandler;
+use Vaulter\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Data\Uploads\UploadInitData;
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Enums\UploadStatus;
-use Vaulter\Models\UploadSession;
-use Vaulter\Repositories\UploadSessionStoreRepository;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Enums\Uploads\UploadStatus;
+use Vaulter\Models\Uploads\UploadSession;
+use Vaulter\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
 /**

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\IdStrategy;
-use Vaulter\Exceptions\UnknownIdStrategyException;
+use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\UlidIds;

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Vaulter\Contracts\CollaborationDriver;
-use Vaulter\Enums\CollaborationDriverType;
-use Vaulter\Models\Document;
+use Vaulter\Contracts\Collaboration\CollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;

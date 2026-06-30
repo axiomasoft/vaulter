@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Contracts\BlobStore;
+use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Data\UploadFileData;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\FileUploaded;
-use Vaulter\Events\NodeVersionCommitted;
-use Vaulter\Exceptions\NodeNameConflictException;
-use Vaulter\Exceptions\QuotaExceededException;
-use Vaulter\Models\Blob;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\FileStoreRepository;
-use Vaulter\Repositories\FileVersionStoreRepository;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
-use Vaulter\Repositories\StorageStoreRepository;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\FileUploaded;
+use Vaulter\Events\Drive\NodeVersionCommitted;
+use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Exceptions\Drive\QuotaExceededException;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Repositories\Drive\FileVersionStoreRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Repositories\Drive\StorageStoreRepository;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit

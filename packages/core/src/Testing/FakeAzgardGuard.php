@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Testing;
 
-use Vaulter\Contracts\AzgardGuard;
+use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 
 /**

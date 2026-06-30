@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Contracts\HostRoleDriver;
+use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 

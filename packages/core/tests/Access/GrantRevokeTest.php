@@ -8,13 +8,13 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Data\Access\GrantNodeAccessData;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Events\NodeGrantCreated;
-use Vaulter\Events\NodeGrantRevoked;
-use Vaulter\Models\NodeGrant;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\Access\NodeGrantRevoked;
+use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {

@@ -6,10 +6,10 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateCommentData;
-use Vaulter\Events\CommentAdded;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentComment;
-use Vaulter\Repositories\CommentStoreRepository;
+use Vaulter\Events\Documents\CommentAdded;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Documents\CommentStoreRepository;
 
 final readonly class AddCommentAction
 {

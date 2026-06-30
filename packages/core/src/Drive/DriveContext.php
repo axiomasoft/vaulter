@@ -20,9 +20,9 @@ use Vaulter\Data\CreateDriveFolderData;
 use Vaulter\Data\MoveNodeData;
 use Vaulter\Data\RenameNodeData;
 use Vaulter\Data\UploadFileData;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\NodeReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
  * The ergonomic Drive handle bound to one (Storage, panel) for a host entity —

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Requests\Uploads;
 
-use Vaulter\Enums\UploadProtocol;
+use Vaulter\Enums\Uploads\UploadProtocol;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

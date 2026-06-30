@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Actions\Document\PersistYjsSnapshotAction;
-use Vaulter\Models\Node;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Actions\Documents\PersistYjsSnapshotAction;
+use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Command for {@see PersistYjsSnapshotAction} (§7 / M4b) —

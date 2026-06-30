@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Repositories\FolderStoreRepository;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Documents\FolderStoreRepository;
 
 final readonly class RenameFolderAction
 {

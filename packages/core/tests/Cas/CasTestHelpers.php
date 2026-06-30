@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Cas;
 
-use Vaulter\Enums\NodeKind;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * Shared builders for the CAS slice tests (M1b): a real Storage→Node→File→Version

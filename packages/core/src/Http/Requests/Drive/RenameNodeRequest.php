@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests\Drive;
 
 use Vaulter\Data\RenameNodeData;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Validates a rename request (§2.2) and builds its RenameNodeData command. The

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Command for MoveNodeAction (§2.2 / H.4): re-parent $node under $into (null =

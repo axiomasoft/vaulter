@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Vaulter\Drivers\Permission\GatePermissionResolver;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * Typed accessors over config('vaulter.gate.*') — the Gate host-role lane's ability

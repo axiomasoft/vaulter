@@ -6,13 +6,13 @@ namespace Vaulter\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
-use Vaulter\Contracts\DocumentExporter;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\ExportDocumentRequest;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 use Vaulter\VaulterManager;
 
 final class ExportController extends Controller

@@ -12,14 +12,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Actions\AddCommentAction;
 use Vaulter\Actions\DeleteCommentAction;
 use Vaulter\Actions\ResolveCommentAction;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Requests\StoreCommentRequest;
 use Vaulter\Http\Resources\DocumentCommentResource;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentComment;
-use Vaulter\Repositories\CommentReadRepository;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\CommentReadRepository;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class CommentController extends Controller
 {

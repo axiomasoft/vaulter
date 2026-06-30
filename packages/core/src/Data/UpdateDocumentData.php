@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Partial update — null fields are left unchanged.

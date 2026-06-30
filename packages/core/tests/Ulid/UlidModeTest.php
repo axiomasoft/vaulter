@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Support\Config;
 
 it('derives the ulid strategy from the legacy id_type (BC)', function (): void {

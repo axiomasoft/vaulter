@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Collaboration;
 
 use Firebase\JWT\JWT;
-use Vaulter\Contracts\NodeCollaborationDriver;
+use Vaulter\Contracts\Collaboration\NodeCollaborationDriver;
 use Vaulter\Data\CollaborationSession;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\CollaborationDriverType;
-use Vaulter\Exceptions\CollaborationConfigException;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Exceptions\Documents\CollaborationConfigException;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 

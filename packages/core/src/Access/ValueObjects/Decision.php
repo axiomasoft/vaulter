@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * A single resolved access statement (master plan H.2): a level + its effect +

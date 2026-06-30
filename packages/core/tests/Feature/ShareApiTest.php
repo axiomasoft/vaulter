@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentShare;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentShare;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Fixtures\ViewOnlyResolver;

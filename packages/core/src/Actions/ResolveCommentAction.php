@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\CommentResolved;
-use Vaulter\Models\DocumentComment;
-use Vaulter\Repositories\CommentStoreRepository;
+use Vaulter\Events\Documents\CommentResolved;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Documents\CommentStoreRepository;
 
 final readonly class ResolveCommentAction
 {

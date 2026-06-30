@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Vaulter\Contracts\IdStrategy;
-use Vaulter\Exceptions\UnknownIdStrategyException;
+use Vaulter\Exceptions\Schema\UnknownIdStrategyException;
 use Vaulter\Support\Config;
 
 /**

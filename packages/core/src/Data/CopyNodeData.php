@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Command for CopyNodeAction (§2.4): copy $node into $into (null = storage root).

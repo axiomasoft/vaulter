@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\ShareTokenGenerator;
+use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\TestUser;
 

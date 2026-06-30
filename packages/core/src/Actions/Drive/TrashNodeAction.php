@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\NodeTrashed;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
+use Vaulter\Events\Drive\NodeTrashed;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
 
 /**
  * Soft-trash a node and its whole subtree atomically (§2.10 / D17). The trashed

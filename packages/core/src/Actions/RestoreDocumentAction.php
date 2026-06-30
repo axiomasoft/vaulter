@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\DocumentRestored;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Events\Documents\DocumentRestored;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
 
 final readonly class RestoreDocumentAction
 {

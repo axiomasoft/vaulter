@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\Actions\Document\CreateDocumentNodeAction;
+use Vaulter\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Collaboration\HocuspocusNodeCollaborationDriver;
 use Vaulter\Collaboration\NodeCollaborationDriverManager;
 use Vaulter\Collaboration\ReverbNodeCollaborationDriver;
 use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\CollaborationDriverType;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Document\DocumentTestHelpers;
 

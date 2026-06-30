@@ -17,10 +17,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 use UnitEnum;
-use Vaulter\Enums\ActivityVerb;
+use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
-use Vaulter\Models\Activity;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Support\Config;
 
 /**

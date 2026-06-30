@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\NodeKind;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

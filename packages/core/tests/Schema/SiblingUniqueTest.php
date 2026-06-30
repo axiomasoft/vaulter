@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * The sibling-unique guard (§2.2) must reject a duplicate LIVE sibling name but

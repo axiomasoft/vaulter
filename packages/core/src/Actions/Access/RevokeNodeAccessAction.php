@@ -6,9 +6,9 @@ namespace Vaulter\Actions\Access;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Events\NodeGrantRevoked;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\GrantStoreRepository;
+use Vaulter\Events\Access\NodeGrantRevoked;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
  * Revoke every grant a subject holds on a node (§2.6 / H.2): both effects, both

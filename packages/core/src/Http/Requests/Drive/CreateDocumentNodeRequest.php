@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Requests\Drive;
 
-use Vaulter\Enums\DocumentType;
+use Vaulter\Enums\Documents\DocumentType;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Validates a create-document-node request (§2.5 / M4a). The destination parent +

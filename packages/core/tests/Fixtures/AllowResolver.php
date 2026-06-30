@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Fixtures;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Vaulter\Contracts\PermissionResolver;
-use Vaulter\Models\Document;
+use Vaulter\Contracts\Access\PermissionResolver;
+use Vaulter\Models\Documents\Document;
 
 final class AllowResolver implements PermissionResolver
 {

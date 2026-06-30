@@ -8,20 +8,20 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Actions\Document\PersistYjsSnapshotAction;
+use Vaulter\Actions\Documents\PersistYjsSnapshotAction;
 use Vaulter\Collaboration\CollaborationCall;
-use Vaulter\Contracts\HostUserResolver;
+use Vaulter\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Data\PersistYjsSnapshotData;
 use Vaulter\Documents\CollaborationSessionService;
-use Vaulter\Enums\Ability;
-use Vaulter\Exceptions\NotADocumentNodeException;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Documents\NotADocumentNodeException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Middleware\ResolveCollaborationCall;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The M4b realtime-collaboration HTTP surface for document nodes (master plan §7 /

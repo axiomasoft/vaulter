@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Uploads;
 
 use Illuminate\Validation\ValidationException;
-use Vaulter\Contracts\UploadProtocolHandler;
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Models\UploadSession;
-use Vaulter\Repositories\UploadSessionStoreRepository;
+use Vaulter\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Models\Uploads\UploadSession;
+use Vaulter\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
 /**

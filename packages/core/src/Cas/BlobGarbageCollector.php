@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
-use Vaulter\Contracts\ContentStore;
-use Vaulter\Enums\BlobStatus;
-use Vaulter\Models\Blob;
-use Vaulter\Repositories\BlobStoreRepository;
-use Vaulter\Repositories\FileVersionBlobStoreRepository;
+use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 use Vaulter\Support\Config;
 
 /**

@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests\Drive;
 
 use Vaulter\Data\MoveNodeData;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Validates a move request (§2.2): the node being moved is route-model resolved,

@@ -7,9 +7,9 @@ namespace Vaulter\Data\Access;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 
 /**
  * The command DTO for granting (or denying) a subject access to a node (§2.6).

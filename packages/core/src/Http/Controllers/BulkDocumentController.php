@@ -9,11 +9,11 @@ use Vaulter\Actions\DeleteDocumentAction;
 use Vaulter\Actions\ForceDeleteDocumentAction;
 use Vaulter\Actions\MoveDocumentAction;
 use Vaulter\Actions\RestoreDocumentAction;
-use Vaulter\Enums\BulkAction;
+use Vaulter\Enums\Drive\BulkAction;
 use Vaulter\Http\Requests\BulkDocumentRequest;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentReadRepository;
-use Vaulter\Repositories\DocumentVisibilityService;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class BulkDocumentController extends Controller
 {

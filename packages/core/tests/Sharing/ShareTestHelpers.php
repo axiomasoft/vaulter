@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeShare;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 

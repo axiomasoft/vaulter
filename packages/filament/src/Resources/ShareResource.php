@@ -14,9 +14,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Override;
 use UnitEnum;
-use Vaulter\Enums\PermissionLevel;
+use Vaulter\Enums\Access\PermissionLevel;
 use Vaulter\Filament\Resources\ShareResource\Pages\ListShares;
-use Vaulter\Models\DocumentShare;
+use Vaulter\Models\Documents\DocumentShare;
 use Vaulter\Support\Config;
 
 final class ShareResource extends Resource

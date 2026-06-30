@@ -13,14 +13,14 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Enums\Ability;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Drive\DestroyNodeGrantRequest;
 use Vaulter\Http\Requests\Drive\StoreNodeGrantRequest;
 use Vaulter\Http\Resources\Drive\NodeGrantResource;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\GrantReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Access\GrantReadRepository;
 
 /**
  * The per-node ACL surface (§2.6 / H.2): list, grant and revoke node grants. Every

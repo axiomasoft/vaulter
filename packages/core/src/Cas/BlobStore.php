@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Cas;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Contracts\BlobStore as BlobStoreContract;
-use Vaulter\Contracts\ContentStore;
-use Vaulter\Models\Blob;
-use Vaulter\Models\FileVersion;
-use Vaulter\Repositories\BlobStoreRepository;
-use Vaulter\Repositories\FileVersionBlobStoreRepository;
+use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
+use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 use Vaulter\Support\Config;
 
 /**

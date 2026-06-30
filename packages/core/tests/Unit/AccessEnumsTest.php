@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\Permission;
 
 /**
  * The bitmask/level/ability mapping (master plan §2.6 / H.2): the single int the

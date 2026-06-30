@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Contracts\HostRoleDriver;
+use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Exceptions\MissingHostRoleDriverException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Exceptions\Access\MissingHostRoleDriverException;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 it('authorises purely from grants with no host roles (standalone database lane)', function (): void {

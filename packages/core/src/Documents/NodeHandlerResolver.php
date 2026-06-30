@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
-use Vaulter\Enums\Capability;
-use Vaulter\Models\Node;
-use Vaulter\ValueObjects\HandlerDescriptor;
+use Vaulter\Enums\Documents\Capability;
+use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\HandlerDescriptor;
 
 /**
  * A READ-ONLY evaluator that resolves the HANDLER DESCRIPTOR for a node (§4.5 / §5 /

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests;
 
 use Vaulter\Data\UpdateDocumentData;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class UpdateDocumentRequest extends VaulterFormRequest
 {

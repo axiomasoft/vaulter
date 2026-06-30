@@ -6,8 +6,8 @@ namespace Vaulter\Policies;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Models\Drive\Node;
 
 /**
  * The Drive authorization policy (§6 / H.2): a thin delegation to the Vaulter-owned

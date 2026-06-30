@@ -6,13 +6,13 @@ namespace Vaulter\Uploads;
 
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
-use Vaulter\Contracts\StorageDriver;
-use Vaulter\Contracts\UploadProtocolHandler;
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Models\UploadPart;
-use Vaulter\Models\UploadSession;
-use Vaulter\Repositories\UploadPartStoreRepository;
-use Vaulter\Repositories\UploadSessionStoreRepository;
+use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Models\Uploads\UploadPart;
+use Vaulter\Models\Uploads\UploadSession;
+use Vaulter\Repositories\Uploads\UploadPartStoreRepository;
+use Vaulter\Repositories\Uploads\UploadSessionStoreRepository;
 
 /**
  * The S3-style multipart handler (§2.8 / D16 / M3a). When the session's disk is an

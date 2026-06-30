@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for CreateFolderAction (§2.2): create a kind=folder node under a parent

@@ -7,7 +7,7 @@ namespace Vaulter\Http\Controllers\Drive;
 use Illuminate\Http\Request;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\StorageResource;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * Read surface for a storage container (§2.1): its meta, the root node the client

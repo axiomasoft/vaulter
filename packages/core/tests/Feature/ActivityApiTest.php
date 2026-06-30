@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\ActivityVerb;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Models\Activity;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

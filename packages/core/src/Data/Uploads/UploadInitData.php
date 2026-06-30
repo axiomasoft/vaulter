@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Uploads;
 
-use Vaulter\Enums\UploadProtocol;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Uploads\UploadProtocol;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for UploadSessionManager::initiate (§2.8 / D16 / M3a): everything needed

@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Vaulter\Actions\CreateDocumentAction;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Data\CreateDocumentData;
-use Vaulter\Enums\DocumentType;
-use Vaulter\Exceptions\UnknownDocumentTypeException;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Exceptions\Documents\UnknownDocumentTypeException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\TestUser;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 beforeEach(function (): void {
     config()->set('vaulter.collaboration.driver', 'hocuspocus');

@@ -9,15 +9,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Contracts\StorageDriver;
-use Vaulter\Enums\Ability;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
-use Vaulter\Models\Blob;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\FileVersionReadRepository;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\FileVersionReadRepository;
 
 /**
  * Stream a file node's bytes (master plan §2.7 download). The version to serve is

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Requests;
 
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class SyncCollaborationRequest extends VaulterFormRequest
 {

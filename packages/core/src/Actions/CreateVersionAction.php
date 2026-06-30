@@ -6,10 +6,10 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateVersionData;
-use Vaulter\Events\VersionCreated;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentVersion;
-use Vaulter\Repositories\VersionStoreRepository;
+use Vaulter\Events\Documents\VersionCreated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Repositories\Documents\VersionStoreRepository;
 use Vaulter\Support\Config;
 
 final readonly class CreateVersionAction

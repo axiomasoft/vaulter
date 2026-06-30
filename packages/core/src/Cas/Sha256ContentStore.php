@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Cas;
 
 use RuntimeException;
-use Vaulter\Contracts\ContentStore;
-use Vaulter\Contracts\StagedObject;
-use Vaulter\Contracts\StorageDriver;
+use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Contracts\Cas\StorageDriver;
 
 /**
  * The default ContentStore (H.3): hash the LOCAL staged temp file, never the live

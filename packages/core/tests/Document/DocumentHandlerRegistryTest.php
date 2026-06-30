@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\DocumentHandler;
+use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Handlers\UniverHandler;
-use Vaulter\Enums\Capability;
+use Vaulter\Enums\Documents\Capability;
 use Vaulter\Facades\Vaulter;
-use Vaulter\ValueObjects\DocumentCapabilities;
-use Vaulter\ValueObjects\FileDescriptor;
-use Vaulter\ValueObjects\HandlerUi;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Vaulter\Data\Webhooks\RegisteredWebhookEndpoint;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointData;
-use Vaulter\Repositories\WebhookEndpointStoreRepository;
+use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
  * Register a webhook endpoint (master plan §2.11 / D14 / M3b). It GENERATES the

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Tests\Access\AccessTestHelpers;

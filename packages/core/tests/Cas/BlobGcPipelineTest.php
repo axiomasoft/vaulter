@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobGarbageCollector;
 use Vaulter\Cas\BlobReconciler;
-use Vaulter\Contracts\BlobStore;
-use Vaulter\Enums\BlobStatus;
+use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Tests\Cas\CasTestHelpers;
 
 /**

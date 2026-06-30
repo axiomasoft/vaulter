@@ -6,7 +6,7 @@ use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Tests\Fixtures\DenyResolver;
 use Vaulter\Tests\Fixtures\TestUser;
 

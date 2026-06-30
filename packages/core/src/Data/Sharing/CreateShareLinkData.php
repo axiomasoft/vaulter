@@ -6,8 +6,8 @@ namespace Vaulter\Data\Sharing;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 
 /**
  * The command DTO for minting a bearer share-link on a node (§2.7 / M2c). Carries

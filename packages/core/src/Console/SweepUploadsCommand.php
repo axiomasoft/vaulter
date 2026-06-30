@@ -6,7 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Vaulter\Repositories\UploadSessionReadRepository;
+use Vaulter\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Uploads\UploadSessionManager;
 
 /**

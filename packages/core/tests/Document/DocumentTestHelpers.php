@@ -7,7 +7,7 @@ namespace Vaulter\Tests\Document;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Builders for the M4a DocDrive tests: a Drive handle and a quick TipTap document.

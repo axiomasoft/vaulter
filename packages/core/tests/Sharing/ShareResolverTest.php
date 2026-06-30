@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Tests\Access\AccessTestHelpers;

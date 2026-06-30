@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Vaulter\Enums\DocumentType;
-use Vaulter\Models\Document;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Models\Documents\Document;
 
 /**
  * @extends Factory<Document>

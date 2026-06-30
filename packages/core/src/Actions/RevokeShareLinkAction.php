@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Events\ShareLinkRevoked;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentShare;
-use Vaulter\Repositories\ShareStoreRepository;
+use Vaulter\Events\Sharing\ShareLinkRevoked;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentShare;
+use Vaulter\Repositories\Sharing\ShareStoreRepository;
 
 final readonly class RevokeShareLinkAction
 {

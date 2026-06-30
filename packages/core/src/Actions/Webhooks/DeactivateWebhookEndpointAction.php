@@ -6,7 +6,7 @@ namespace Vaulter\Actions\Webhooks;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Repositories\WebhookEndpointStoreRepository;
+use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
  * Deactivate a webhook endpoint (master plan §2.11 / D14 / M3b): flip is_active off so

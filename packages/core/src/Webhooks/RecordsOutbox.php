@@ -7,20 +7,20 @@ namespace Vaulter\Webhooks;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use Vaulter\Events\FileUploaded;
-use Vaulter\Events\NodeCopied;
-use Vaulter\Events\NodeCreated;
-use Vaulter\Events\NodeForceDeleted;
-use Vaulter\Events\NodeGrantCreated;
-use Vaulter\Events\NodeGrantRevoked;
-use Vaulter\Events\NodeMoved;
-use Vaulter\Events\NodeRenamed;
-use Vaulter\Events\NodeRestored;
-use Vaulter\Events\NodeShareCreated;
-use Vaulter\Events\NodeShareRevoked;
-use Vaulter\Events\NodeTrashed;
-use Vaulter\Events\NodeVersionCommitted;
-use Vaulter\Events\StorageCreated;
+use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\Access\NodeGrantRevoked;
+use Vaulter\Events\Drive\FileUploaded;
+use Vaulter\Events\Drive\NodeCopied;
+use Vaulter\Events\Drive\NodeCreated;
+use Vaulter\Events\Drive\NodeForceDeleted;
+use Vaulter\Events\Drive\NodeMoved;
+use Vaulter\Events\Drive\NodeRenamed;
+use Vaulter\Events\Drive\NodeRestored;
+use Vaulter\Events\Drive\NodeTrashed;
+use Vaulter\Events\Drive\NodeVersionCommitted;
+use Vaulter\Events\Drive\StorageCreated;
+use Vaulter\Events\Sharing\NodeShareCreated;
+use Vaulter\Events\Sharing\NodeShareRevoked;
 
 /**
  * The Laravel event subscriber that stages domain events in the transactional

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Support\TipTapRenderer;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 function sampleDocument(): TipTapContent
 {

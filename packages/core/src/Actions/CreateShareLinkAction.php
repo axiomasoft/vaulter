@@ -6,10 +6,10 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateShareData;
-use Vaulter\Events\ShareLinkCreated;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentShare;
-use Vaulter\Repositories\ShareStoreRepository;
+use Vaulter\Events\Sharing\ShareLinkCreated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentShare;
+use Vaulter\Repositories\Sharing\ShareStoreRepository;
 
 final readonly class CreateShareLinkAction
 {

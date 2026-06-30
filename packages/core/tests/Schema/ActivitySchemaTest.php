@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Enums\ActivityVerb;
-use Vaulter\Models\Activity;
+use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Support\Config;
 
 /**

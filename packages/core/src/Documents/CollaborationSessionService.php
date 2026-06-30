@@ -8,10 +8,10 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Collaboration\NodeCollaborationDriverManager;
 use Vaulter\Data\CollaborationSession;
-use Vaulter\Enums\Ability;
-use Vaulter\Exceptions\NotADocumentNodeException;
-use Vaulter\Exceptions\PermissionDeniedException;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Documents\NotADocumentNodeException;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /**

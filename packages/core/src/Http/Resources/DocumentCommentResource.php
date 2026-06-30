@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\DocumentComment;
+use Vaulter\Models\Documents\DocumentComment;
 
 /**
  * @mixin DocumentComment

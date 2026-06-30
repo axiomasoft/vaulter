@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Contracts\StorageAdapter;
+use Vaulter\Contracts\Cas\StorageAdapter;
 
 /**
  * No-op default. Real binary persistence (filesystem disk, S3, …) is wired in a

@@ -8,8 +8,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\HostRoleDriver;
-use Vaulter\Enums\Effect;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Access\Effect;
 
 /**
  * The fail-loud OPEN host-role driver (master plan H.2 / D6″). It grants every

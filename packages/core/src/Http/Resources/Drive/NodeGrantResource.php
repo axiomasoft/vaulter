@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\NodeGrant;
+use Vaulter\Models\Access\NodeGrant;
 
 /**
  * The read shape of a node grant (§2.6): the subject, level, effect, scope and

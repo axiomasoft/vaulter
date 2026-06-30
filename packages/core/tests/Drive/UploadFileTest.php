@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\FileUploaded;
-use Vaulter\Events\NodeVersionCommitted;
-use Vaulter\Exceptions\QuotaExceededException;
-use Vaulter\Models\Blob;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\Node;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\FileUploaded;
+use Vaulter\Events\Drive\NodeVersionCommitted;
+use Vaulter\Exceptions\Drive\QuotaExceededException;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {

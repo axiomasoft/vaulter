@@ -6,9 +6,9 @@ namespace Vaulter\Http\Requests;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Data\CreateDocumentData;
-use Vaulter\Enums\DocumentType;
+use Vaulter\Enums\Documents\DocumentType;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class StoreDocumentRequest extends VaulterFormRequest
 {

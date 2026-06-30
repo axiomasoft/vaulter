@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\HostRoleDriver;
-use Vaulter\Enums\Effect;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Access\Effect;
 
 /**
  * The default, standalone host-role driver (master plan §6 / H.2) — the zero-host-

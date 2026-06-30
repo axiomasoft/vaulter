@@ -17,7 +17,7 @@ use UnitEnum;
 use Vaulter\Filament\Resources\FolderResource\Pages\CreateFolder;
 use Vaulter\Filament\Resources\FolderResource\Pages\EditFolder;
 use Vaulter\Filament\Resources\FolderResource\Pages\ListFolders;
-use Vaulter\Models\DocumentFolder;
+use Vaulter\Models\Documents\DocumentFolder;
 use Vaulter\Support\Config;
 
 final class FolderResource extends Resource

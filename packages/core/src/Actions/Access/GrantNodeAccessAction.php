@@ -6,10 +6,10 @@ namespace Vaulter\Actions\Access;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\Access\GrantNodeAccessData;
-use Vaulter\Events\NodeGrantCreated;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Repositories\GrantStoreRepository;
+use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
  * Grant (or deny) a subject access to a node (§2.6 / H.2). Idempotent on the

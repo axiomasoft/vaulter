@@ -28,14 +28,14 @@ use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Data\Sharing\CreateShareLinkData;
 use Vaulter\Data\Sharing\MintedShareLink;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Enums\Permission;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeShare;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
 
 /**

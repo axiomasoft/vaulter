@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobReconciler;
-use Vaulter\Contracts\BlobStore;
+use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Tests\Cas\CasTestHelpers;
 
 /**

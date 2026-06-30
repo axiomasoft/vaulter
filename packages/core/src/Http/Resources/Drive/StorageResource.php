@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Drive\Storage;
 
 /**
  * The read shape of a storage container (§2.1): its meta, the root node the

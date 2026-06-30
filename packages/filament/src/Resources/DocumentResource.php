@@ -21,10 +21,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Override;
 use UnitEnum;
-use Vaulter\Enums\DocumentType;
+use Vaulter\Enums\Documents\DocumentType;
 use Vaulter\Filament\Resources\DocumentResource\Pages\EditDocument;
 use Vaulter\Filament\Resources\DocumentResource\Pages\ListDocuments;
-use Vaulter\Models\Document;
+use Vaulter\Models\Documents\Document;
 use Vaulter\Support\Config;
 
 final class DocumentResource extends Resource

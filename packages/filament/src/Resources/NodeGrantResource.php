@@ -25,14 +25,14 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Data\Access\GrantNodeAccessData;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
 use Vaulter\Filament\Support\PanelActor;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeGrant;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
 /**

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Panels;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Exceptions\InvalidPanelException;
-use Vaulter\Exceptions\UnknownPanelException;
+use Vaulter\Exceptions\Panels\InvalidPanelException;
+use Vaulter\Exceptions\Panels\UnknownPanelException;
 
 /**
  * The central registry of resolved storage panels: one place that owns every

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Sharing;
 
-use Vaulter\Models\NodeShare;
+use Vaulter\Models\Sharing\NodeShare;
 
 /**
  * The result of minting a bearer share-link (§2.7 / M2c) — the ONLY place the raw

@@ -6,11 +6,11 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateDocumentData;
-use Vaulter\Enums\DocumentType;
-use Vaulter\Events\DocumentCreated;
-use Vaulter\Exceptions\UnknownDocumentTypeException;
-use Vaulter\Models\Document;
-use Vaulter\Repositories\DocumentStoreRepository;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Events\Documents\DocumentCreated;
+use Vaulter\Exceptions\Documents\UnknownDocumentTypeException;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Support\Config;
 
 final readonly class CreateDocumentAction

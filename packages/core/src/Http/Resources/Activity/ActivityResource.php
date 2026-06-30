@@ -6,7 +6,7 @@ namespace Vaulter\Http\Resources\Activity;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\Activity;
+use Vaulter\Models\Activity\Activity;
 
 /**
  * The read shape of an activity row (§2.9 / M2c-activity). It exposes the verb, the

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Blob;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 

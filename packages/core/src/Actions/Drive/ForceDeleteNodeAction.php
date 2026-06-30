@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Drive;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Contracts\BlobStore;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Events\NodeForceDeleted;
-use Vaulter\Models\File;
-use Vaulter\Models\FileVersion;
-use Vaulter\Models\FileVersionBlob;
-use Vaulter\Models\Node;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\NodeStoreRepository;
-use Vaulter\Repositories\StorageStoreRepository;
+use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\Drive\NodeForceDeleted;
+use Vaulter\Models\Drive\File;
+use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Repositories\Drive\StorageStoreRepository;
 
 /**
  * Permanently soft-delete a node and its subtree (§2.10 stage 2). The order

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Activity;
 
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Models\Activity;
+use Vaulter\Models\Activity\Activity;
 
 /**
  * Builders for the M2c-activity feed tests (§2.9): inspect the append-only rows the

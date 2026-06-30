@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Cas;
 
 use RuntimeException;
-use Vaulter\Contracts\StagedObject;
+use Vaulter\Contracts\Cas\StagedObject;
 
 /**
  * A StagedObject backed by a local seekable temp file (H.3). The sha256 was

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\ValueObjects\WorkspaceRef;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 it('treats numeric and string ids as equal', function (): void {
     expect(WorkspaceRef::make('App\\Project', 5)->equals(new WorkspaceRef('App\\Project', '5')))->toBeTrue();

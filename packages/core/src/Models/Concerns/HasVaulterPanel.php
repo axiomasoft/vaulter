@@ -19,7 +19,7 @@ use Vaulter\Panels\PanelRegistry;
  *
  * A consumer model opts in by declaring the panel and entity it belongs to:
  *
- *     final class ProjectNode extends Vaulter\Models\Node
+ *     final class ProjectNode extends Vaulter\Models\Drive\Node
  *     {
  *         use HasVaulterPanel;
  *

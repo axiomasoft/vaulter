@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Sharing;
 
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeShare;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
 
 /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
+use Vaulter\Models\Drive\Node;
 
 /**
  * Command for RenameNodeAction (§2.2): rename $node in place, subject to the

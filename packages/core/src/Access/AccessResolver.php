@@ -11,15 +11,15 @@ use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\HostRoleDriver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\Effect;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Models\Node;
-use Vaulter\Models\NodeGrant;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\GrantReadRepository;
-use Vaulter\Repositories\StorageReadRepository;
+use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Access\GrantReadRepository;
+use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Support\Identity;
 
 /**

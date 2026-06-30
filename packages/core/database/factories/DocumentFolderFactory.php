@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Vaulter\Models\DocumentFolder;
+use Vaulter\Models\Documents\DocumentFolder;
 
 /**
  * @extends Factory<DocumentFolder>

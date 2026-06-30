@@ -7,7 +7,7 @@ namespace Vaulter\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Actions\Drive\ForceDeleteNodeAction;
-use Vaulter\Repositories\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**

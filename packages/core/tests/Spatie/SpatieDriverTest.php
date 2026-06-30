@@ -10,10 +10,10 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\GrantLevel;
-use Vaulter\Enums\GrantScope;
-use Vaulter\Models\Storage;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SpatieUser;
 

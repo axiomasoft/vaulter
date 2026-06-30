@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Data;
 
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\ValueObjects\TipTapContent;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Command for CreateDocumentNodeAction (§2.5 / M4a): create a kind=document node

@@ -6,11 +6,11 @@ namespace Vaulter\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Events\DocumentMoved;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentFolder;
-use Vaulter\Repositories\DocumentStoreRepository;
-use Vaulter\Repositories\FolderReadRepository;
+use Vaulter\Events\Documents\DocumentMoved;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Repositories\Documents\FolderReadRepository;
 use Vaulter\Support\Identity;
 
 final readonly class MoveDocumentAction

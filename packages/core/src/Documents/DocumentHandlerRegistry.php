@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Documents;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Contracts\DocumentHandler;
+use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Enums\Capability;
+use Vaulter\Enums\Documents\Capability;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\FileDescriptor;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
 
 /**
  * THE format-extensibility engine (master plan §4.5 / §7 / H.5). Resolves the best

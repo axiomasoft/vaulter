@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Events\CommentAdded;
+use Vaulter\Events\Documents\CommentAdded;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Document;
-use Vaulter\Models\DocumentComment;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
 use Vaulter\Tests\Fixtures\AllowResolver;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Fixtures\ViewOnlyResolver;

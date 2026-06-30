@@ -12,9 +12,9 @@ use Illuminate\Http\Response;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Drive\DriveContext;
-use Vaulter\Enums\Ability;
-use Vaulter\Enums\NodeKind;
-use Vaulter\Exceptions\PermissionDeniedException;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Drive\CopyNodeRequest;
 use Vaulter\Http\Requests\Drive\CreateFolderRequest;
@@ -22,10 +22,10 @@ use Vaulter\Http\Requests\Drive\MoveNodeRequest;
 use Vaulter\Http\Requests\Drive\RenameNodeRequest;
 use Vaulter\Http\Requests\Drive\UploadFileRequest;
 use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Models\Node;
-use Vaulter\Models\Storage;
-use Vaulter\Repositories\NodeReadRepository;
-use Vaulter\Repositories\StorageReadRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\VaulterManager;
 
 /**
