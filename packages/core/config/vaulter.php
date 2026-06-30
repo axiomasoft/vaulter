@@ -27,6 +27,8 @@ use Vaulter\Models\Node;
 use Vaulter\Models\NodeGrant;
 use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
+use Vaulter\Models\UploadPart;
+use Vaulter\Models\UploadSession;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
@@ -66,6 +68,8 @@ return [
         'file_version_blob' => FileVersionBlob::class,
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
+        'upload_session' => UploadSession::class,
+        'upload_part' => UploadPart::class,
         'activity' => Activity::class,
     ],
 
@@ -95,6 +99,8 @@ return [
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
         'node_shares' => 'node_shares',
+        'upload_sessions' => 'upload_sessions',
+        'upload_parts' => 'upload_parts',
         'activity' => 'activity',
     ],
 
@@ -399,6 +405,39 @@ return [
     */
     'trash' => [
         'retention_days' => env('VAULTER_TRASH_RETENTION_DAYS', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resumable uploads (D16 / §2.8 / M3a)
+    |--------------------------------------------------------------------------
+    | Large files upload resumably (tus.io on ANY disk; S3-multipart on object
+    | stores), then the assembled staged bytes go through the SAME race-free
+    | BlobStore.commit (H.3 — server recomputes sha256 from the assembled staged
+    | file; the client sha256 / S3 ETag is NEVER trusted as the content address).
+    |
+    |  - max_bytes: the hard ceiling on a session's declared total size (0 = ∞).
+    |  - chunk_size: the advertised default chunk size (a hint; the server still
+    |    accepts any PATCH/part size up to the remaining bytes).
+    |  - session_ttl_hours: a session not committed in this window is swept by
+    |    `php artisan vaulter:sweep-uploads` (staged temp + S3 multipart reclaimed,
+    |    status → expired). PAIR this with an S3 bucket lifecycle rule
+    |    `AbortIncompleteMultipartUpload` so an abandoned multipart never lingers as
+    |    storage cost — the sweeper aborts in-flight multiparts it KNOWS about; the
+    |    lifecycle rule is the backstop for any it does not.
+    |  - tus.enabled: gate the tus resumable endpoints (independent of the 'uploads'
+    |    schema feature flag).
+    |
+    | The 'uploads' feature flag (features below) gates BOTH the v_upload_sessions /
+    | v_upload_parts schema AND the resumable route group.
+    */
+    'uploads' => [
+        'max_bytes' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 GiB
+        'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608), // 8 MiB
+        'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
+        'tus' => [
+            'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
+        ],
     ],
 
     /*

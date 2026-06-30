@@ -20,6 +20,7 @@ use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
 use Vaulter\Console\PurgeTrashCommand;
 use Vaulter\Console\ReconcileBlobsCommand;
+use Vaulter\Console\SweepUploadsCommand;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\ContentStore;
@@ -33,6 +34,7 @@ use Vaulter\Panels\PanelRegistry;
 use Vaulter\Policies\NodePolicy;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
+use Vaulter\Uploads\UploadSessionManager;
 
 final class VaulterServiceProvider extends PackageServiceProvider
 {
@@ -49,6 +51,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasCommand(GcBlobsCommand::class)
             ->hasCommand(ReconcileBlobsCommand::class)
             ->hasCommand(PurgeTrashCommand::class)
+            ->hasCommand(SweepUploadsCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
@@ -77,6 +80,12 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // service. Its deps (read/store repositories) are auto-resolved; binding it
         // as a singleton makes the seam explicit for swaps/tests.
         $this->app->singleton(StorageManager::class);
+
+        // Resumable uploads (M3a / §2.8): the lifecycle coordinator. Its deps
+        // (StagedUpload + the store repository) auto-resolve; binding it as a
+        // singleton makes the seam explicit for swaps/tests. The two protocol
+        // handlers (tus / S3-multipart) auto-resolve through the container.
+        $this->app->singleton(UploadSessionManager::class);
 
         // The bearer share-link generator (M2c / §2.7). nodeShareTokenGeneratorClass
         // reads config('vaulter.share.token_generator') and falls back to the legacy

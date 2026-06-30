@@ -30,6 +30,8 @@ use Vaulter\Models\Node;
 use Vaulter\Models\NodeGrant;
 use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
+use Vaulter\Models\UploadPart;
+use Vaulter\Models\UploadSession;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
@@ -203,6 +205,80 @@ final class Config
         $class = config('vaulter.models.activity', Activity::class);
 
         return $class;
+    }
+
+    /**
+     * @return class-string<UploadSession>
+     */
+    public static function uploadSessionModel(): string
+    {
+        /** @var class-string<UploadSession> $class */
+        $class = config('vaulter.models.upload_session', UploadSession::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<UploadPart>
+     */
+    public static function uploadPartModel(): string
+    {
+        /** @var class-string<UploadPart> $class */
+        $class = config('vaulter.models.upload_part', UploadPart::class);
+
+        return $class;
+    }
+
+    /**
+     * The hard ceiling (in bytes) on a resumable upload's declared total size
+     * (§2.8 / M3a). A session whose total exceeds this is rejected at initiate; a
+     * tus stream that overruns it is rejected at PATCH. 0 = unlimited.
+     */
+    public static function uploadMaxBytes(): int
+    {
+        $value = config('vaulter.uploads.max_bytes', 5_368_709_120); // 5 GiB
+
+        $bytes = is_numeric($value) ? (int) $value : 5_368_709_120;
+
+        return max($bytes, 0);
+    }
+
+    /**
+     * The advertised default chunk size (in bytes) for a resumable upload (§2.8) —
+     * a hint surfaced to clients; the server still accepts any PATCH/part size up to
+     * the remaining bytes. Floored at 1.
+     */
+    public static function uploadChunkSize(): int
+    {
+        $value = config('vaulter.uploads.chunk_size', 8_388_608); // 8 MiB
+
+        $bytes = is_numeric($value) ? (int) $value : 8_388_608;
+
+        return max($bytes, 1);
+    }
+
+    /**
+     * The session TTL in hours (§2.8): a session not committed within this window is
+     * swept (its staged temp + S3 multipart reclaimed, status → expired). The
+     * initiate path sets expires_at = now + this. Floored at 1.
+     */
+    public static function uploadSessionTtlHours(): int
+    {
+        $value = config('vaulter.uploads.session_ttl_hours', 24);
+
+        $hours = is_numeric($value) ? (int) $value : 24;
+
+        return max($hours, 1);
+    }
+
+    /**
+     * Whether the tus.io resumable endpoints are enabled (§2.8). When false the tus
+     * route group still mounts but the controller refuses with 403 (the feature is
+     * config-gated independently of the 'uploads' schema flag).
+     */
+    public static function tusEnabled(): bool
+    {
+        return (bool) config('vaulter.uploads.tus.enabled', true);
     }
 
     /**

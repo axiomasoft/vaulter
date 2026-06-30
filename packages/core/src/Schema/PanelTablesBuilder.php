@@ -48,6 +48,8 @@ final class PanelTablesBuilder
         'file_version_blobs',
         'node_grants',
         'node_shares',
+        'upload_sessions',
+        'upload_parts',
         'activity',
     ];
 
@@ -98,6 +100,8 @@ final class PanelTablesBuilder
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, panel: $panel, ids: $ids),
+                'upload_sessions' => $this->defineUploadSessions(table: $table, panel: $panel, ids: $ids),
+                'upload_parts' => $this->defineUploadParts(table: $table, panel: $panel, ids: $ids),
                 'activity' => $this->defineActivity(table: $table, panel: $panel, ids: $ids),
                 default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
             };
@@ -456,6 +460,111 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_upload_sessions — the resumable-ingest session (§2.8 / D16 / M3a). Gated on
+     * 'uploads'. upload_id is the client-facing UNIQUE handle (the S3 uploadId / tus
+     * resource id). received_bytes is the AUTHORITATIVE server-side tus offset — the
+     * client never decides where to resume. status drives the lifecycle
+     * (initiated→uploading→assembled→committed, with abort/expire). assembled_blob_id
+     * points at the blob produced by BlobStore.commit on completion (H.3 — server
+     * recompute, never the client/ETag hash). Two target shapes share one row:
+     *   - new file    → target_parent_id (null = root) + target_name;
+     *   - new version → node_id (the existing kind=file node).
+     */
+    private function defineUploadSessions(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'storage_id');
+
+        // The client handle: a UUID (S3 uploadId / tus resource id) the resumable
+        // endpoints address the session by. UNIQUE — the resume key.
+        $table->uuid('upload_id');
+
+        // Targets (§2.8): a NEW-VERSION upload pins node_id; a NEW-FILE upload pins
+        // target_parent_id (null = storage root) + target_name. No DB FK on node_id /
+        // target_parent_id: a session may outlive a concurrently-moved node and the
+        // sweeper must still reclaim it.
+        $ids->reference(table: $table, column: 'node_id', nullable: true);
+        $ids->reference(table: $table, column: 'target_parent_id', nullable: true);
+        $table->string('target_name')->nullable();
+
+        $table->string('protocol', 16)->default('tus');
+        $table->string('status', 16)->default('initiated');
+
+        // The client-DECLARED sha256 (optional). It is NEVER trusted as the content
+        // address — BlobStore.commit recomputes sha256 from the assembled staged file
+        // (H.3). It is kept only as an optional integrity cross-check.
+        $table->char('expected_sha256', 64)->nullable();
+        $table->bigInteger('total_size_bytes')->nullable();
+
+        // The authoritative server-side resume offset (tus Upload-Offset). A HEAD
+        // returns this; a PATCH advances it.
+        $table->bigInteger('received_bytes')->default(0);
+        $table->bigInteger('chunk_size')->nullable();
+        $table->string('mime_type', 191)->nullable();
+
+        // Inline manifest for the small-part fast path (§2.8): a denormalised parts
+        // list a session may carry without spilling to v_upload_parts.
+        $table->json('parts')->nullable();
+
+        // The blob the assembled bytes deduped/committed into (set at commit).
+        $ids->reference(table: $table, column: 'assembled_blob_id', nullable: true);
+
+        // The tus Upload-Metadata (decoded key→value map) — distinct from the host
+        // extra_data hatch.
+        $table->json('metadata')->nullable();
+        $this->extraData(table: $table, panel: $panel);
+
+        $table->timestamp('expires_at')->nullable();
+        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        // upload_id is the resume key — UNIQUE so two sessions can never collide on a
+        // handle (the loser of a mint race retries with a fresh uuid).
+        $table->unique('upload_id', "{$name}_upload_id_uniq");
+
+        // The sweeper scan axis (§2.8): stale OPEN sessions past expires_at. The
+        // (status, expires_at) composite is added driver-aware in afterCreate so the
+        // index name stays distinct per prefixed panel table.
+        $table->index('storage_id', "{$name}_storage_idx");
+
+        $table->foreign('storage_id')
+            ->references('id')
+            ->on($panel->table('storages'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * v_upload_parts — the normalised per-part record (§2.8 / D16 / M3a). Gated on
+     * 'uploads'. The composite primary key (upload_session_id, part_no) is the S3
+     * re-upload semantics: re-uploading a part REPLACES its row (a fresh PUT of part
+     * N supersedes the prior etag/size). temp_blob_id is the optional staged-blob
+     * handle for a part proxied through the CAS; received_at marks the last write.
+     */
+    private function defineUploadParts(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->reference(table: $table, column: 'upload_session_id');
+        $table->integer('part_no');
+        $table->bigInteger('byte_offset')->default(0);
+        $table->bigInteger('size_bytes')->default(0);
+        $table->char('part_sha256', 64)->nullable();
+        $table->string('etag')->nullable();
+        $ids->reference(table: $table, column: 'temp_blob_id', nullable: true);
+        $table->timestamp('received_at')->nullable();
+
+        // Re-upload REPLACES (S3 semantics): the (session, part_no) pair is the
+        // primary key, so a second PUT of part N updates the same row.
+        $table->primary(['upload_session_id', 'part_no'], "{$table->getTable()}_pk");
+
+        $table->foreign('upload_session_id')
+            ->references('id')
+            ->on($panel->table('upload_sessions'))
+            ->cascadeOnDelete();
+    }
+
+    /**
      * v_activity — the append-only audit/activity feed (§2.9 / M2c-activity). Gated
      * on 'activity'. ONE row per domain event; recipients are resolved at READ by
      * scoping the feed to a storage/node — there is NEVER a per-affected-user
@@ -535,6 +644,10 @@ final class PanelTablesBuilder
             $this->addShareExpiryIndex(table: $panel->table('node_shares'));
         }
 
+        if ($entity === 'upload_sessions') {
+            $this->addUploadSweeperIndex(table: $panel->table('upload_sessions'));
+        }
+
         if ($entity === 'activity') {
             $this->addActivityCreatedAtIndex(table: $panel->table('activity'));
             $this->addActivityContextGinIndex(table: $panel->table('activity'));
@@ -589,6 +702,19 @@ final class PanelTablesBuilder
 
         Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->index('expires_at', $name);
+        });
+    }
+
+    /**
+     * The §2.8 sweeper index: (status, expires_at). The leading status narrows to the
+     * open sessions; expires_at is the cursor the sweeper scans for stale rows. A
+     * plain composite btree on every driver — there is no partial predicate here (the
+     * status filter is the leading column), so no driver split is needed.
+     */
+    private function addUploadSweeperIndex(string $table): void
+    {
+        Schema::table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->index(['status', 'expires_at'], "{$table}_sweeper_idx");
         });
     }
 
@@ -772,6 +898,7 @@ final class PanelTablesBuilder
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             'node_grants' => $panel->featureEnabled('grants'),
             'node_shares' => $panel->featureEnabled('share_links'),
+            'upload_sessions', 'upload_parts' => $panel->featureEnabled('uploads'),
             'activity' => $panel->featureEnabled('activity'),
             default => false,
         };

@@ -19,6 +19,8 @@ use Vaulter\Http\Controllers\PermissionController;
 use Vaulter\Http\Controllers\ShareController;
 use Vaulter\Http\Controllers\Sharing\PublicShareController;
 use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
+use Vaulter\Http\Controllers\Uploads\S3MultipartController;
+use Vaulter\Http\Controllers\Uploads\TusUploadController;
 use Vaulter\Http\Controllers\VersionController;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Support\Config;
@@ -102,6 +104,34 @@ Route::prefix(Config::routePrefix())
             Route::get('storages/{storage}/trash', [NodeController::class, 'trashed']);
             Route::post('storages/{storage}/folders', [NodeController::class, 'storeFolder']);
             Route::post('storages/{storage}/uploads', [NodeController::class, 'upload']);
+
+            /*
+            |------------------------------------------------------------------
+            | Resumable uploads (§2.8 / D16 / M3a)
+            |------------------------------------------------------------------
+            | Large files upload resumably, then the assembled staged bytes go
+            | through the SAME race-free BlobStore.commit (H.3). Gated on the
+            | 'uploads' feature. {upload_id} is the client UNIQUE handle (a plain
+            | scalar, NOT route-model bound — the controller resolves the session
+            | and asserts it belongs to an authorized target). tus group: create
+            | (POST), HEAD (Upload-Offset), PATCH (chunk), DELETE (abort), status
+            | (GET). S3 group: parts (POST), complete (POST). Authorized via
+            | AccessResolver — Create in the target folder / Edit for a new version.
+            */
+            if (Config::featureEnabled('uploads')) {
+                // tus.io CORE — create lives under the storage; the resumable ops
+                // address the session by its upload_id handle.
+                Route::post('storages/{storage}/resumable-uploads', [TusUploadController::class, 'create']);
+
+                Route::get('resumable-uploads/{upload_id}', [TusUploadController::class, 'status']);
+                Route::match(['head'], 'resumable-uploads/{upload_id}', [TusUploadController::class, 'head']);
+                Route::patch('resumable-uploads/{upload_id}', [TusUploadController::class, 'patch']);
+                Route::delete('resumable-uploads/{upload_id}', [TusUploadController::class, 'abort']);
+
+                // S3-style multipart — parts + complete on the same session handle.
+                Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartController::class, 'parts']);
+                Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartController::class, 'complete']);
+            }
 
             // Append-only activity feed (§2.9 / M2c-activity). Recipients resolved at
             // READ by scoping to the storage/node — no notification rows. Authorized
