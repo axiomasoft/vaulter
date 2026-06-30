@@ -45,6 +45,19 @@ arch('no debug helpers leak into the package')
     ->expect(['dd', 'dump', 'ray', 'var_dump', 'die'])
     ->not->toBeUsed();
 
+/**
+ * H.5 — the format-extensibility registry is a concrete, final source of truth (one
+ * bounded registry per concern, no god-object). The DocumentHandler contract is an
+ * interface; the built-in handlers are final; the registry is final.
+ */
+arch('the document handler registry and its handlers are final')
+    ->expect('Vaulter\Documents')
+    ->toBeFinal();
+
+arch('the DocumentHandler contract is an interface (H.5)')
+    ->expect('Vaulter\Contracts\DocumentHandler')
+    ->toBeInterface();
+
 arch('actions are final')
     ->expect('Vaulter\Actions')
     ->toBeFinal();

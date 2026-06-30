@@ -42,6 +42,16 @@ enum NodeKind: string
     case Shortcut = 'shortcut';
 
     /**
+     * Whether this is a DocDrive document leaf (payload in v_node_document_versions).
+     * Built-in sugar over the kind discriminator — the DocumentHandlerRegistry, not
+     * this enum, decides what a node can actually do (H.5).
+     */
+    public function isDocument(): bool
+    {
+        return $this === self::Document;
+    }
+
+    /**
      * @return list<string>
      */
     public static function values(): array

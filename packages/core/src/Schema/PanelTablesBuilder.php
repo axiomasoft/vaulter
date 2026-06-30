@@ -48,6 +48,7 @@ final class PanelTablesBuilder
         'file_version_blobs',
         'node_grants',
         'node_shares',
+        'node_document_versions',
         'upload_sessions',
         'upload_parts',
         'activity',
@@ -103,6 +104,7 @@ final class PanelTablesBuilder
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, panel: $panel, ids: $ids),
+                'node_document_versions' => $this->defineDocumentVersions(table: $table, panel: $panel, ids: $ids),
                 'upload_sessions' => $this->defineUploadSessions(table: $table, panel: $panel, ids: $ids),
                 'upload_parts' => $this->defineUploadParts(table: $table, panel: $panel, ids: $ids),
                 'activity' => $this->defineActivity(table: $table, panel: $panel, ids: $ids),
@@ -466,6 +468,61 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_node_document_versions — the NODE-attached, append-only document version
+     * (master plan §2.5 / M4a). Gated on 'document_versions'. DISTINCT from the legacy
+     * document_id-attached v_document_versions (that table is untouched); this one
+     * hangs off a kind=document node via node_id (cascade). version_no is monotonic
+     * per node (unique). content is the TipTap/ProseMirror JSON projection; yjs_state
+     * is the binary Yjs CRDT update (the M4b collaboration source of truth), with
+     * yjs_state_size caching its length. Append-only — created_at only, no
+     * updated_at / soft-delete.
+     */
+    private function defineDocumentVersions(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'node_id');
+
+        $table->integer('version_no');
+
+        // The TipTap/ProseMirror snapshot (the structural JSON projection). jsonb on
+        // Postgres (the gin index below indexes it); a plain json column elsewhere.
+        $table->json('content')->nullable();
+
+        // The binary Yjs CRDT update — the realtime source of truth (M4b). bytea on
+        // Postgres, longBlob on MySQL (§2.5 portability note); yjs_state_size caches
+        // its byte length so a list never streams the blob to size it.
+        $this->binaryColumn(table: $table, column: 'yjs_state');
+        $table->integer('yjs_state_size')->nullable();
+
+        $table->string('format', 16)->default('tiptap');
+        $table->char('content_hash', 64)->nullable();
+        $table->string('snapshot_label')->nullable();
+        $table->boolean('is_autosave')->default(false);
+        $table->string('status', 12)->default('committed')->index();
+        $table->boolean('keep_forever')->default(false);
+
+        $this->extraData(table: $table, panel: $panel);
+        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        $table->timestamp('created_at')->nullable();
+
+        $name = $table->getTable();
+
+        // version_no is monotonic per node — the unique index is the append-only
+        // backbone (two concurrent commits serialise on it).
+        $table->unique(['node_id', 'version_no'], "{$name}_no_uniq");
+
+        // The autosave-vs-named history cursor (§2.5): the head autosave lookup and
+        // the named-version listing both scan this.
+        $table->index(['node_id', 'is_autosave', 'created_at'], "{$name}_history_idx");
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($panel->table('nodes'))
+            ->cascadeOnDelete();
+    }
+
+    /**
      * v_upload_sessions — the resumable-ingest session (§2.8 / D16 / M3a). Gated on
      * 'uploads'. upload_id is the client-facing UNIQUE handle (the S3 uploadId / tus
      * resource id). received_bytes is the AUTHORITATIVE server-side tus offset — the
@@ -733,6 +790,10 @@ final class PanelTablesBuilder
             $this->addShareExpiryIndex(table: $panel->table('node_shares'));
         }
 
+        if ($entity === 'node_document_versions') {
+            $this->addDocumentContentGinIndex(table: $panel->table('node_document_versions'));
+        }
+
         if ($entity === 'upload_sessions') {
             $this->addUploadSweeperIndex(table: $panel->table('upload_sessions'));
         }
@@ -768,6 +829,21 @@ final class PanelTablesBuilder
         }
 
         DB::statement("CREATE INDEX {$table}_context_gin ON {$table} USING gin (context jsonb_path_ops)");
+    }
+
+    /**
+     * The OPTIONAL gin(content jsonb_path_ops) index for document-version content
+     * containment queries (§2.5). Postgres-only (gin + jsonb); on SQLite/MySQL
+     * content is a plain json column and the index is skipped — the history is read
+     * by (node_id, version_no) / (node_id, is_autosave), all btree-covered.
+     */
+    private function addDocumentContentGinIndex(string $table): void
+    {
+        if (Schema::getConnection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        DB::statement("CREATE INDEX {$table}_content_gin ON {$table} USING gin (content jsonb_path_ops)");
     }
 
     /**
@@ -964,6 +1040,24 @@ final class PanelTablesBuilder
     }
 
     /**
+     * A nullable binary column (§2.5 yjs_state). longBlob on MySQL/MariaDB (the
+     * §2.5 portability note — Yjs state can outgrow a plain blob); a portable
+     * binary() (bytea on Postgres) everywhere else.
+     */
+    private function binaryColumn(Blueprint $table, string $column): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            $table->longText($column)->nullable()->charset('binary');
+
+            return;
+        }
+
+        $table->binary($column)->nullable();
+    }
+
+    /**
      * The optional extra_data jsonb escape hatch (D13), gated per panel.
      */
     private function extraData(Blueprint $table, Panel $panel): void
@@ -987,6 +1081,7 @@ final class PanelTablesBuilder
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             'node_grants' => $panel->featureEnabled('grants'),
             'node_shares' => $panel->featureEnabled('share_links'),
+            'node_document_versions' => $panel->featureEnabled('document_versions'),
             'upload_sessions', 'upload_parts' => $panel->featureEnabled('uploads'),
             'activity' => $panel->featureEnabled('activity'),
             'outbox', 'webhook_endpoints', 'webhook_deliveries' => $panel->featureEnabled('reliability'),

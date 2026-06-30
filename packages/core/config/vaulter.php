@@ -7,6 +7,10 @@ use Vaulter\Cas\FlysystemStorageDriver;
 use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
+use Vaulter\Documents\Handlers\DownloadOnlyHandler;
+use Vaulter\Documents\Handlers\PreviewHandler;
+use Vaulter\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Handlers\UniverHandler;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
@@ -24,6 +28,7 @@ use Vaulter\Models\File;
 use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
+use Vaulter\Models\NodeDocumentVersion;
 use Vaulter\Models\NodeGrant;
 use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
@@ -71,6 +76,11 @@ return [
         'file_version_blob' => FileVersionBlob::class,
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
+
+        // DocDrive (M4a) — the NODE-attached document version (§2.5), distinct from
+        // the legacy 'version' (document_id-attached) entry above.
+        'node_document_version' => NodeDocumentVersion::class,
+
         'upload_session' => UploadSession::class,
         'upload_part' => UploadPart::class,
         'activity' => Activity::class,
@@ -107,6 +117,11 @@ return [
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
         'node_shares' => 'node_shares',
+
+        // DocDrive (M4a) — the NODE-attached document version (§2.5). A distinct
+        // table from the legacy 'document_versions' above (document_id-attached).
+        'node_document_versions' => 'node_document_versions',
+
         'upload_sessions' => 'upload_sessions',
         'upload_parts' => 'upload_parts',
         'activity' => 'activity',
@@ -188,19 +203,36 @@ return [
         'activity' => true,
         'uploads' => true,
         'share_links' => false,
+
+        // DocDrive (M4a). 'document_versions' gates the v_node_document_versions
+        // schema + the document-node Actions/HTTP (default off → opt-in).
+        // 'spreadsheets' gates the feature-flagged UniverHandler (xlsx editing).
         'document_versions' => false,
+        'spreadsheets' => false,
+
         'public_listing' => false,
         'reliability' => true,
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Pipeline handlers (stub)
+    | Document handlers — the format-extensibility registry (§4.5 / §7 / H.5)
     |--------------------------------------------------------------------------
-    | Reserved for the format/pipe registry (ingest_file/create_node/move_node
-    | pipe lists). Empty until the pipeline lands in a later milestone.
+    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\DocumentHandler
+    | for a file by mime → extension → capability → priority, falling back to the
+    | DownloadOnlyHandler null-object. List FQCNs here (cache-safe — FQCN only, no
+    | closures); a host adds a NEW format with ONE class + an entry here (or a tagged
+    | 'vaulter.handlers' binding, or Vaulter::registerHandler() at runtime) — NO
+    | migration, NO core change, NOT gated by any sealed enum (H.5).
+    |
+    | UniverHandler (xlsx) is appended by the service provider ONLY when the
+    | 'spreadsheets' feature is on, so a stock install never routes xlsx to it.
     */
-    'handlers' => [],
+    'handlers' => [
+        TipTapHandler::class,
+        PreviewHandler::class,
+        DownloadOnlyHandler::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -509,11 +541,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Versioning
+    | Versioning (legacy DocDrive)
     |--------------------------------------------------------------------------
     | Max stored versions per document (0 = unlimited); oldest are pruned.
     */
     'max_versions' => 50,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Document node versions (M4a / §2.5)
+    |--------------------------------------------------------------------------
+    | The NODE-attached document version history (v_node_document_versions).
+    |  - max: stored versions per node before pruning (0 = unlimited); the oldest
+    |    NON-keep_forever versions are pruned past this. Falls back to max_versions.
+    |  - autosave_debounce_seconds: an autosave within this window of the head
+    |    autosave version UPDATES it in place (no new row), so a typing session does
+    |    not flood the history; a named version always creates a fresh row.
+    */
+    'versions' => [
+        'max' => 50,
+        'autosave_debounce_seconds' => 30,
+    ],
 
     /*
     |--------------------------------------------------------------------------

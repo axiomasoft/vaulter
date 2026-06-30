@@ -10,6 +10,7 @@ use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\ContentStore;
 use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\DocumentHandler;
 use Vaulter\Contracts\HostRoleDriver;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
@@ -27,6 +28,7 @@ use Vaulter\Models\File;
 use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
+use Vaulter\Models\NodeDocumentVersion;
 use Vaulter\Models\NodeGrant;
 use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
@@ -175,6 +177,48 @@ final class Config
         $class = config('vaulter.models.file_version_blob', FileVersionBlob::class);
 
         return $class;
+    }
+
+    /**
+     * The NEW node-attached document-version model (§2.5 / M4a) — distinct from the
+     * legacy document_id-attached versionModel(). Swappable via
+     * config('vaulter.models.node_document_version').
+     *
+     * @return class-string<NodeDocumentVersion>
+     */
+    public static function nodeDocumentVersionModel(): string
+    {
+        /** @var class-string<NodeDocumentVersion> $class */
+        $class = config('vaulter.models.node_document_version', NodeDocumentVersion::class);
+
+        return $class;
+    }
+
+    /**
+     * The max document-versions kept per node before pruning (§2.5), excluding
+     * keep_forever versions. 0 = unlimited. Reads config('vaulter.versions.max')
+     * with a fallback to the legacy max_versions key.
+     */
+    public static function maxDocumentVersions(): int
+    {
+        $value = config('vaulter.versions.max', config('vaulter.max_versions', 50));
+
+        return is_numeric($value) ? (int) $value : 50;
+    }
+
+    /**
+     * The autosave debounce window in seconds (§2.5 / M4a): an autosave within this
+     * window of the head autosave version UPDATES it in place rather than creating a
+     * new row, so a typing session does not flood the history. Floored at 0 (0 =
+     * every autosave overwrites the head autosave version).
+     */
+    public static function autosaveDebounceSeconds(): int
+    {
+        $value = config('vaulter.versions.autosave_debounce_seconds', 30);
+
+        $seconds = is_numeric($value) ? (int) $value : 30;
+
+        return max($seconds, 0);
     }
 
     /**
@@ -817,6 +861,34 @@ final class Config
         $days = is_numeric($value) ? (int) $value : 30;
 
         return max($days, 0);
+    }
+
+    /**
+     * The registered document handler FQCNs (config('vaulter.handlers')) — the
+     * format-extensibility registry source (§4.5 / H.5). Only valid DocumentHandler
+     * subclasses are returned; the config stays FQCN-only (cache-safe — no closures),
+     * so a runtime-registered format works with no migration and no core change.
+     *
+     * @return list<class-string<DocumentHandler>>
+     */
+    public static function documentHandlers(): array
+    {
+        $value = config('vaulter.handlers', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $handlers = [];
+
+        foreach ($value as $class) {
+            if (is_string($class) && is_a($class, DocumentHandler::class, allow_string: true)) {
+                $handlers[] = $class;
+            }
+        }
+
+        /** @var list<class-string<DocumentHandler>> $handlers */
+        return $handlers;
     }
 
     /**

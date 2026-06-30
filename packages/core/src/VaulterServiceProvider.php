@@ -30,6 +30,8 @@ use Vaulter\Contracts\HostRoleDriver;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageDriver;
+use Vaulter\Documents\DocumentHandlerRegistry;
+use Vaulter\Documents\Handlers\UniverHandler;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Models\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -136,6 +138,26 @@ final class VaulterServiceProvider extends PackageServiceProvider
             CollaborationDriver::class,
             fn (): CollaborationDriver => $this->app->make(VaulterManager::class)->driver(),
         );
+
+        $this->registerDocumentHandlers();
+    }
+
+    /**
+     * Wire the document-handler registry (§4.5 / §7 / H.5 / M4a). The registry is a
+     * singleton (it memoises the merged handler set + resolutions). The
+     * feature-flagged UniverHandler is added to the tagged 'vaulter.handlers' set
+     * ONLY when the 'spreadsheets' feature is on, so a stock install never resolves
+     * xlsx to it (xlsx then falls to DownloadOnly). The default handlers are loaded
+     * from config (FQCN, cache-safe) inside the registry — the tag is purely the
+     * conditional/host extension channel.
+     */
+    private function registerDocumentHandlers(): void
+    {
+        $this->app->singleton(DocumentHandlerRegistry::class);
+
+        if (Config::featureEnabled('spreadsheets')) {
+            $this->app->tag([UniverHandler::class], 'vaulter.handlers');
+        }
     }
 
     public function packageBooted(): void

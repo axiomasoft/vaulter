@@ -16,7 +16,9 @@ use Vaulter\Actions\Drive\TrashNodeAction;
 use Vaulter\Actions\Drive\UploadFileAction;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\DocumentHandler;
 use Vaulter\Contracts\PermissionResolver;
+use Vaulter\Documents\DocumentHandlerRegistry;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Exceptions\UnknownExportFormatException;
@@ -167,6 +169,29 @@ final class VaulterManager
     public function documentTypes(): array
     {
         return $this->documentTypes;
+    }
+
+    /**
+     * Register a custom document handler at runtime — the format-extensibility seam
+     * (§4.5 / H.5). Thin delegation to the container-bound DocumentHandlerRegistry
+     * (the single source of truth); accepts an FQCN or an instance. A NEW format is
+     * a one-class + this call — no migration, no core change.
+     *
+     * @param DocumentHandler|class-string<DocumentHandler> $handler
+     */
+    public function registerHandler(DocumentHandler|string $handler): void
+    {
+        $this->container->make(DocumentHandlerRegistry::class)->register($handler);
+    }
+
+    /**
+     * The container-bound document handler registry (§4.5). The single source of
+     * truth for format resolution — kept here as a thin accessor so callers reach it
+     * through the facade without inflating the manager.
+     */
+    public function handlers(): DocumentHandlerRegistry
+    {
+        return $this->container->make(DocumentHandlerRegistry::class);
     }
 
     /**

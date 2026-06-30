@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Documents\NodeHandlerResolver;
+use Vaulter\Enums\NodeKind;
 use Vaulter\Models\Node;
 
 /**
@@ -97,7 +99,28 @@ final class NodeResource extends JsonResource
                 ? null
                 : self::collection($this->breadcrumb),
             'abilities' => $this->abilities($request, $node),
+            // The resolved format handler (§4.5 / H.5): id + capabilities + ui so the
+            // Vue client routes the node to the right editor/preview/download surface.
+            // A folder has no payload, so it carries no handler descriptor.
+            'handler' => $this->handler($node),
         ];
+    }
+
+    /**
+     * The handler descriptor for a leaf node (file/document/shortcut) — resolved
+     * through the registry by the node's server-trusted mime/extension (H.5). Null
+     * for a folder. Resolved lazily via the container so the Resource stays a pure
+     * transform and only computes it when serialising a leaf.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function handler(Node $node): ?array
+    {
+        if ($node->kind === NodeKind::Folder) {
+            return null;
+        }
+
+        return app(NodeHandlerResolver::class)->describe($node)->toArray();
     }
 
     /**

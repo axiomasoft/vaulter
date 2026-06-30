@@ -9,6 +9,7 @@ use Vaulter\Http\Controllers\BulkDocumentController;
 use Vaulter\Http\Controllers\CollaborationController;
 use Vaulter\Http\Controllers\CommentController;
 use Vaulter\Http\Controllers\DocumentController;
+use Vaulter\Http\Controllers\Drive\DocumentNodeController;
 use Vaulter\Http\Controllers\Drive\DownloadController;
 use Vaulter\Http\Controllers\Drive\GrantController;
 use Vaulter\Http\Controllers\Drive\NodeController;
@@ -105,6 +106,31 @@ Route::prefix(Config::routePrefix())
             Route::get('storages/{storage}/trash', [NodeController::class, 'trashed']);
             Route::post('storages/{storage}/folders', [NodeController::class, 'storeFolder']);
             Route::post('storages/{storage}/uploads', [NodeController::class, 'upload']);
+
+            /*
+            |------------------------------------------------------------------
+            | DocDrive — document nodes (§2.5 / §7 / M4a)
+            |------------------------------------------------------------------
+            | Create a kind=document node, read/autosave its content, snapshot
+            | named versions, restore a prior version, resolve its handler
+            | descriptor and export it. Gated on the 'document_versions' feature
+            | (the v_node_document_versions schema). The fixed sub-segments
+            | (content/versions/handler/export) sit BEFORE the catch-all /{node}
+            | routes below so they never shadow them. Authorized via the
+            | AccessResolver (Create on the destination, View to read, Edit to
+            | write).
+            */
+            if (Config::featureEnabled('document_versions')) {
+                Route::post('storages/{storage}/documents', [DocumentNodeController::class, 'store']);
+
+                Route::get('nodes/{node}/content', [DocumentNodeController::class, 'content']);
+                Route::patch('nodes/{node}/content', [DocumentNodeController::class, 'update']);
+                Route::get('nodes/{node}/document-versions', [DocumentNodeController::class, 'versions']);
+                Route::post('nodes/{node}/document-versions', [DocumentNodeController::class, 'storeVersion']);
+                Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
+                Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
+                Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
+            }
 
             /*
             |------------------------------------------------------------------

@@ -24,7 +24,8 @@
         "phpstan/phpstan": "^2.0",
         "larastan/larastan": "^3.0",
         "infection/infection": "^0.33",
-        "firebase/php-jwt": "^6.0"
+        "firebase/php-jwt": "^6.0",
+        "spatie/laravel-permission": "^8.0"
     },
     "autoload-dev": {
         "psr-4": {

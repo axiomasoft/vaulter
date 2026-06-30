@@ -23,3 +23,13 @@ parameters:
         -
             identifier: trait.unused
             path: packages/core/src/Models/Concerns/HasVaulterPanel.php
+
+        # NullRoleDriver implements the HostRoleDriver contract, whose override()
+        # is ?Effect (a real driver returns null when it has no opinion). The OPEN
+        # null-driver always returns Effect::Allow by design (H.2 / D6″), so the
+        # concrete body never hits the null branch — but the declared type must stay
+        # nullable to satisfy the interface. The over-strict return.unusedType is
+        # scoped to this env-gated test-support class only.
+        -
+            identifier: return.unusedType
+            path: packages/core/src/Testing/NullRoleDriver.php
