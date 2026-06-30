@@ -1,31 +1,45 @@
 ---
 layout: home
+title: Vaulter
+description: Embeddable document & file management for Laravel — Storage Panels, a unified node tree, content-addressed blobs, pluggable authorization and realtime collaboration.
 
 hero:
   name: Vaulter
-  text: Documents, versioned and collaborative.
-  tagline: An embeddable document-management package for Laravel — file manager, TipTap editor, version history and real-time collaboration, wired into your app's own roles.
+  text: Embeddable document & file management for Laravel
+  tagline: Storage Panels, a unified node tree, content-addressed blobs, pluggable authorization, and realtime collaboration — embedded in your app.
   actions:
     - theme: brand
-      text: Get Started →
+      text: Quick Start
       link: /guide/quick-start
     - theme: alt
-      text: What is Vaulter?
+      text: Why Vaulter?
       link: /guide/introduction
     - theme: alt
-      text: View on GitHub
+      text: GitHub
       link: https://github.com/axioma-studio/vaulter
 
 features:
-  - title: 📂 File manager
-    details: A folder tree and document list (Google Drive style) you embed as a single Vue component.
-  - title: 📝 TipTap editor
-    details: Rich-text, markdown, table and template documents stored as TipTap JSON, with version history.
-  - title: 🤝 Real-time collaboration
-    details: Yjs + Hocuspocus for conflict-free multi-user editing, with presence and snapshots.
-  - title: 🔌 Bring your own roles
-    details: Vaulter never ships an auth system — it delegates every check to a PermissionResolver you implement.
+  - title: Storage Panels
+    details: Configure isolated drives per host entity over one shared schema — zero-migration scaffolding.
+    link: /guide/storage-panels
+  - title: Unified node tree
+    details: Folders, files, documents and shortcuts in one v_nodes tree per storage.
+    link: /guide/drive
+  - title: Content-addressed blobs
+    details: sha256 deduplication with a two-phase, race-free garbage collector.
+    link: /guide/storage-and-blobs
+  - title: Pluggable authorization
+    details: A Vaulter-owned ACL engine plus swappable role drivers (database, Gate, Spatie, AzGuard).
+    link: /guide/authorization
+  - title: Realtime collaboration
+    details: TipTap/Yjs editing over Laravel Reverb or an external Hocuspocus hub.
+    link: /guide/collaboration
+  - title: Vue + Filament
+    details: The @vaulter/vue Drive UI and a Filament 5 admin plugin, ready to embed.
+    link: /guide/vue
 ---
 
-> **Status:** early scaffold (`0.0.x`). The structure, tooling and docs are in place;
-> features land along the milestones in the project specification.
+::: tip New here?
+Start with **[Quick Start](/guide/quick-start)** for the ≤60-second happy path, or read
+**[What is Vaulter?](/guide/introduction)** for the mental model first.
+:::
