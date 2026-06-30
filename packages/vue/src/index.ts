@@ -83,6 +83,7 @@ export { default as VaulterBreadcrumb } from './components/VaulterBreadcrumb.vue
 export { default as VaulterDrive } from './components/VaulterDrive.vue'
 export { default as VaulterDriveBreadcrumb } from './components/VaulterDriveBreadcrumb.vue'
 export { default as VaulterFolderPicker } from './components/VaulterFolderPicker.vue'
+export { default as VaulterNameDialog } from './components/VaulterNameDialog.vue'
 export { default as VaulterNodeList } from './components/VaulterNodeList.vue'
 export type { NodeAction } from './components/VaulterNodeList.vue'
 export { default as VaulterUploader } from './components/VaulterUploader.vue'

@@ -4,6 +4,7 @@ import { useNodes } from '../composables/useNodes'
 import { useVaulterClient } from '../composables/useVaulterClient'
 import VaulterDriveBreadcrumb from './VaulterDriveBreadcrumb.vue'
 import VaulterFolderPicker from './VaulterFolderPicker.vue'
+import VaulterNameDialog from './VaulterNameDialog.vue'
 import VaulterNodeList, { type NodeAction } from './VaulterNodeList.vue'
 import VaulterUploader from './VaulterUploader.vue'
 import type { Node, NodeId, StorageId } from '../types'
@@ -59,6 +60,18 @@ const searchResults = ref<Node[] | null>(null)
 const moveTarget = ref<Node | null>(null)
 const pickerOpen = ref(false)
 
+/**
+ * The NAME-input dialog state, shared by new-folder and rename (replaces the old
+ * browser name prompts). One instance serves both via the `mode`: 'new' creates a
+ * folder from the entered name; 'rename' renames `node` (skipping an unchanged
+ * name). `null` = closed. The `open` flag drives the dialog's open→seed/focus.
+ */
+type NameDialogState =
+  | { mode: 'new', title: string, initialValue: string }
+  | { mode: 'rename', node: Node, title: string, initialValue: string }
+const nameDialog = ref<NameDialogState | null>(null)
+const nameDialogOpen = ref(false)
+
 const displayNodes = computed<Node[]>(() => searchResults.value ?? nodes.value)
 
 function defaultConfirm(message: string): boolean {
@@ -106,20 +119,18 @@ function onOpen(node: Node): void {
   emit('open-node', node)
 }
 
-async function onNewFolder(): Promise<void> {
-  const name = typeof window !== 'undefined' ? window.prompt('Folder name') : null
-  if (name) {
-    await createFolder({ name })
-  }
+function onNewFolder(): void {
+  // Open the name dialog in "new folder" mode; createFolder runs on `submit`.
+  nameDialog.value = { mode: 'new', title: 'New folder', initialValue: '' }
+  nameDialogOpen.value = true
 }
 
 async function onAction(action: NodeAction, node: Node): Promise<void> {
   switch (action) {
     case 'rename': {
-      const name = typeof window !== 'undefined' ? window.prompt('Rename to', node.name) : null
-      if (name && name !== node.name) {
-        await rename(node.id, name)
-      }
+      // Open the name dialog prefilled with the current name; rename runs on `submit`.
+      nameDialog.value = { mode: 'rename', node, title: 'Rename', initialValue: node.name }
+      nameDialogOpen.value = true
       break
     }
     case 'move': {
@@ -175,6 +186,31 @@ async function onMovePicked(targetId: NodeId | null): Promise<void> {
 function onMovePickerClose(): void {
   pickerOpen.value = false
   moveTarget.value = null
+}
+
+/**
+ * The name dialog confirmed a (trimmed, non-empty) name — run the right mutation
+ * for the active mode, then close. Rename skips an unchanged name (the backend
+ * would reject the no-op); new-folder always creates. Mirrors onMovePicked.
+ */
+async function onNameSubmit(name: string): Promise<void> {
+  const state = nameDialog.value
+  nameDialogOpen.value = false
+  nameDialog.value = null
+  if (!state) {
+    return
+  }
+  if (state.mode === 'new') {
+    await createFolder({ name })
+  } else if (name !== state.node.name) {
+    await rename(state.node.id, name)
+  }
+}
+
+/** The name dialog was dismissed — just close, no mutation. */
+function onNameDialogClose(): void {
+  nameDialogOpen.value = false
+  nameDialog.value = null
 }
 
 let searchSeq = 0
@@ -297,6 +333,18 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
       :open="pickerOpen"
       @picked="onMovePicked"
       @close="onMovePickerClose"
+    />
+
+    <VaulterNameDialog
+      v-if="nameDialog"
+      class="vaulter-drive__name-dialog"
+      :open="nameDialogOpen"
+      :title="nameDialog.title"
+      :initial-value="nameDialog.initialValue"
+      :confirm-label="nameDialog.mode === 'rename' ? 'Rename' : 'Create'"
+      placeholder="Name"
+      @submit="onNameSubmit"
+      @close="onNameDialogClose"
     />
   </div>
 </template>

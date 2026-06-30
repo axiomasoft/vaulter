@@ -13,6 +13,7 @@ import VaulterVersionHistory from './components/VaulterVersionHistory.vue'
 import VaulterDrive from './components/VaulterDrive.vue'
 import VaulterDriveBreadcrumb from './components/VaulterDriveBreadcrumb.vue'
 import VaulterFolderPicker from './components/VaulterFolderPicker.vue'
+import VaulterNameDialog from './components/VaulterNameDialog.vue'
 import VaulterNodeList from './components/VaulterNodeList.vue'
 import VaulterUploader from './components/VaulterUploader.vue'
 import VaulterNodeGrantsPanel from './components/VaulterNodeGrantsPanel.vue'
@@ -47,6 +48,7 @@ export const VaulterPlugin = {
     app.component('VaulterDrive', VaulterDrive)
     app.component('VaulterDriveBreadcrumb', VaulterDriveBreadcrumb)
     app.component('VaulterFolderPicker', VaulterFolderPicker)
+    app.component('VaulterNameDialog', VaulterNameDialog)
     app.component('VaulterNodeList', VaulterNodeList)
     app.component('VaulterUploader', VaulterUploader)
     app.component('VaulterNodeGrantsPanel', VaulterNodeGrantsPanel)

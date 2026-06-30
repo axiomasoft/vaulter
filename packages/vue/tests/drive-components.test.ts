@@ -4,6 +4,7 @@ import { mount } from '@vue/test-utils'
 import VaulterDrive from '../src/components/VaulterDrive.vue'
 import VaulterDriveBreadcrumb from '../src/components/VaulterDriveBreadcrumb.vue'
 import VaulterFolderPicker from '../src/components/VaulterFolderPicker.vue'
+import VaulterNameDialog from '../src/components/VaulterNameDialog.vue'
 import VaulterNodeList from '../src/components/VaulterNodeList.vue'
 import VaulterUploader from '../src/components/VaulterUploader.vue'
 import VaulterNodeGrantsPanel from '../src/components/VaulterNodeGrantsPanel.vue'
@@ -152,11 +153,17 @@ describe('VaulterDrive', () => {
     const show = vi.fn().mockResolvedValue(node({ id: 1, kind: 'folder', name: 'Folder', breadcrumb: [] }))
     const move = vi.fn().mockImplementation((nodeId, intoId) =>
       Promise.resolve(node({ id: nodeId, kind: 'file', name: 'moved', parent_id: intoId })))
+    const createFolder = vi.fn().mockImplementation((_storageId, payload: { name: string, parentId?: number | null }) =>
+      Promise.resolve(node({ id: 500, kind: 'folder', name: payload.name, parent_id: payload.parentId ?? null })))
+    const rename = vi.fn().mockImplementation((nodeId, name: string) =>
+      Promise.resolve(node({ id: nodeId, kind: 'file', name })))
     return {
       list,
       show,
       move,
-      client: { nodes: { list, show, move } } as unknown as Partial<VaulterClient>,
+      createFolder,
+      rename,
+      client: { nodes: { list, show, move, createFolder, rename } } as unknown as Partial<VaulterClient>,
     }
   }
 
@@ -229,6 +236,172 @@ describe('VaulterDrive', () => {
     expect(wrapper.find('.vaulter-folder-picker').exists()).toBe(false)
 
     promptSpy.mockRestore()
+  })
+
+  it('opens the name dialog for "new folder" and creates the folder with the typed name (no window.prompt)', async () => {
+    const { client, createFolder } = driveClient([])
+    // Guard: the old browser prompt must never be reached.
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
+    const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
+
+    await flushAll()
+
+    // No dialog until "New folder" is clicked.
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(false)
+
+    await wrapper.get('.vaulter-drive__new-folder').trigger('click')
+    await flushAll()
+
+    // The dialog opened (empty, titled) and window.prompt was NOT used.
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(true)
+    expect(promptSpy).not.toHaveBeenCalled()
+    const field = wrapper.get('.vaulter-name-dialog__input').element as HTMLInputElement
+    expect(field.value).toBe('')
+
+    // Type a name and confirm → createFolder({ name }) (parentId resolved to root null).
+    await wrapper.get('.vaulter-name-dialog__input').setValue('Invoices')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    expect(createFolder).toHaveBeenCalledWith(7, { name: 'Invoices', parentId: null })
+    // The dialog closes after a successful submit.
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(false)
+
+    promptSpy.mockRestore()
+  })
+
+  it('opens the name dialog prefilled for "rename" and renames with the new name (no window.prompt)', async () => {
+    const target = node({ id: 3, kind: 'file', name: 'old.txt', abilities: { rename: true } })
+    const { client, rename } = driveClient([target])
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
+    const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
+
+    await flushAll()
+
+    await wrapper.get('.vaulter-node-list__action--rename').trigger('click')
+    await flushAll()
+
+    // The dialog opened PREFILLED with the current name; window.prompt was NOT used.
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(true)
+    expect(promptSpy).not.toHaveBeenCalled()
+    const field = wrapper.get('.vaulter-name-dialog__input').element as HTMLInputElement
+    expect(field.value).toBe('old.txt')
+
+    // Overtype with a new name and confirm → rename(id, newName).
+    await wrapper.get('.vaulter-name-dialog__input').setValue('new.txt')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    expect(rename).toHaveBeenCalledWith(3, 'new.txt')
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(false)
+
+    promptSpy.mockRestore()
+  })
+
+  it('does NOT rename when the name is unchanged (skips the no-op the backend rejects)', async () => {
+    const target = node({ id: 3, kind: 'file', name: 'same.txt', abilities: { rename: true } })
+    const { client, rename } = driveClient([target])
+    const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
+
+    await flushAll()
+
+    await wrapper.get('.vaulter-node-list__action--rename').trigger('click')
+    await flushAll()
+
+    // Confirm without changing the prefilled name → no rename call, dialog still closes.
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    expect(rename).not.toHaveBeenCalled()
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(false)
+  })
+})
+
+// ─── VaulterNameDialog ────────────────────────────────────────────────────────
+
+describe('VaulterNameDialog', () => {
+  it('does not render when closed and seeds the field from initialValue on open', async () => {
+    const closed = mount(VaulterNameDialog, { props: { open: false, initialValue: 'seed' } })
+    expect(closed.find('.vaulter-name-dialog').exists()).toBe(false)
+
+    const open = mount(VaulterNameDialog, { props: { open: true, initialValue: 'seed', title: 'Rename' } })
+    await nextTick()
+    const field = open.get('.vaulter-name-dialog__input').element as HTMLInputElement
+    expect(field.value).toBe('seed')
+    // The title surfaces in the header and as the dialog's aria-label.
+    expect(open.get('.vaulter-name-dialog__title').text()).toBe('Rename')
+    expect(open.get('.vaulter-name-dialog').attributes('aria-label')).toBe('Rename')
+  })
+
+  it('re-seeds from initialValue each time it re-opens (no stale value leaks through)', async () => {
+    const wrapper = mount(VaulterNameDialog, { props: { open: true, initialValue: 'first' } })
+    await nextTick()
+    // User edits, then the dialog closes without submitting.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('edited')
+    await wrapper.setProps({ open: false })
+    await nextTick()
+    // Re-open with a fresh seed → the edited value is gone.
+    await wrapper.setProps({ open: true, initialValue: 'second' })
+    await nextTick()
+    const field = wrapper.get('.vaulter-name-dialog__input').element as HTMLInputElement
+    expect(field.value).toBe('second')
+  })
+
+  it('disables confirm while the trimmed value is empty and enables it once non-blank', async () => {
+    const wrapper = mount(VaulterNameDialog, { props: { open: true, initialValue: '' } })
+    await nextTick()
+    const submit = () => wrapper.get('.vaulter-name-dialog__submit').element as HTMLButtonElement
+
+    // Empty → disabled.
+    expect(submit().disabled).toBe(true)
+    // Whitespace-only still counts as empty (trimmed) → disabled.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('   ')
+    expect(submit().disabled).toBe(true)
+    // Real text → enabled.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('hello')
+    expect(submit().disabled).toBe(false)
+  })
+
+  it('emits submit with the TRIMMED value on confirm, and never submits a blank', async () => {
+    const wrapper = mount(VaulterNameDialog, { props: { open: true, initialValue: '' } })
+    await nextTick()
+
+    // A blank confirm emits nothing.
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    expect(wrapper.emitted('submit')).toBeUndefined()
+
+    // Padded text → submit carries it trimmed.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('  Reports  ')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    expect(wrapper.emitted('submit')?.[0]).toEqual(['Reports'])
+  })
+
+  it('submits (trimmed) on Enter in the field', async () => {
+    const wrapper = mount(VaulterNameDialog, { props: { open: true, initialValue: '' } })
+    await nextTick()
+
+    await wrapper.get('.vaulter-name-dialog__input').setValue('  Typed  ')
+    await wrapper.get('.vaulter-name-dialog__input').trigger('keydown.enter')
+    expect(wrapper.emitted('submit')?.[0]).toEqual(['Typed'])
+  })
+
+  it('emits close on Cancel, on backdrop click and on Esc (no submit)', async () => {
+    const onCancel = mount(VaulterNameDialog, { props: { open: true, initialValue: 'x' } })
+    await nextTick()
+    await onCancel.get('.vaulter-name-dialog__cancel').trigger('click')
+    expect(onCancel.emitted('close')).toBeTruthy()
+    expect(onCancel.emitted('submit')).toBeUndefined()
+
+    const onBackdrop = mount(VaulterNameDialog, { props: { open: true, initialValue: 'x' } })
+    await nextTick()
+    await onBackdrop.get('.vaulter-name-dialog__backdrop').trigger('click')
+    expect(onBackdrop.emitted('close')).toBeTruthy()
+
+    const onEsc = mount(VaulterNameDialog, { props: { open: true, initialValue: 'x' } })
+    await nextTick()
+    await onEsc.get('.vaulter-name-dialog').trigger('keydown', { key: 'Escape' })
+    expect(onEsc.emitted('close')).toBeTruthy()
+    expect(onEsc.emitted('submit')).toBeUndefined()
   })
 })
 
