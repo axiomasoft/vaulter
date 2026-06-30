@@ -718,6 +718,9 @@ final class PanelTablesBuilder
         $name = $table->getTable();
 
         $table->index(['status', 'available_at'], "{$name}_drain_idx");
+        // The retention sweep (vaulter:prune-webhooks) deletes settled rows by
+        // (status='dispatched', dispatched_at <= threshold) — its own scan cursor.
+        $table->index(['status', 'dispatched_at'], "{$name}_prune_idx");
     }
 
     /**
@@ -743,7 +746,8 @@ final class PanelTablesBuilder
      * v_webhook_deliveries — a single delivery attempt with retry bookkeeping (master
      * plan §2.11 / D14 / M3b), ported from chatom 1:1. Gated on 'reliability'.
      * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
-     * (status, next_retry_at) index is the due-retry sweep cursor.
+     * (status, next_retry_at) index is the due-retry sweep cursor; (status, updated_at)
+     * backs the retention prune of terminal (delivered|dead) rows.
      */
     private function defineWebhookDeliveries(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
@@ -761,6 +765,9 @@ final class PanelTablesBuilder
         $name = $table->getTable();
 
         $table->index(['status', 'next_retry_at'], "{$name}_retry_idx");
+        // The retention sweep (vaulter:prune-webhooks) deletes terminal rows by
+        // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
+        $table->index(['status', 'updated_at'], "{$name}_prune_idx");
 
         $table->foreign('endpoint_id')
             ->references('id')

@@ -21,6 +21,7 @@ use Vaulter\Activity\RecordsActivity;
 use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
+use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\PurgeTrashCommand;
 use Vaulter\Console\ReconcileBlobsCommand;
 use Vaulter\Console\RelayOutboxCommand;
@@ -66,6 +67,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasCommand(SweepUploadsCommand::class)
             ->hasCommand(RelayOutboxCommand::class)
             ->hasCommand(RetryWebhooksCommand::class)
+            ->hasCommand(PruneWebhooksCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
