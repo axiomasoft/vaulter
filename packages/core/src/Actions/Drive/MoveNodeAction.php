@@ -22,7 +22,8 @@ use Vaulter\Repositories\NodeStoreRepository;
  *      descendants (checked via the bounded subtree, NOT whereHas('descendants'));
  *   3. sibling-name conflict at the destination.
  *
- * M2 authorize() seam: authorize 'move' on the node + destination here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class MoveNodeAction
 {
@@ -33,7 +34,6 @@ final readonly class MoveNodeAction
 
     public function execute(MoveNodeData $data): Node
     {
-        // M2 seam: authorize 'move' on $data->node into $data->into here.
 
         $node = $data->node;
         $into = $data->into;

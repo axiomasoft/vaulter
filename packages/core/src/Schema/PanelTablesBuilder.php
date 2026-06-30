@@ -46,6 +46,7 @@ final class PanelTablesBuilder
         'files',
         'file_versions',
         'file_version_blobs',
+        'node_grants',
     ];
 
     /**
@@ -93,6 +94,7 @@ final class PanelTablesBuilder
                 'files' => $this->defineFiles(table: $table, panel: $panel, ids: $ids),
                 'file_versions' => $this->defineFileVersions(table: $table, panel: $panel, ids: $ids),
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
+                'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
                 default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
             };
         });
@@ -344,6 +346,52 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_node_grants — the per-node ACL grant with inheritance (§2.6 / H.2). Gated
+     * on 'grants'. The (node_id, subject_type, subject_id, scope, effect) live-row
+     * UNIQUE (added driver-aware in afterCreate) keeps one allow + one deny per
+     * subject/scope per node; the (subject_type, subject_id) index backs the
+     * "shared with me" fast pass.
+     */
+    private function defineNodeGrants(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'node_id');
+
+        // Subject morph: a registered alias (user|role|team), never a raw FQCN.
+        $ids->reference(table: $table, column: 'subject_id');
+        $table->string('subject_type');
+
+        $table->string('level', 16)->index();
+        $table->unsignedInteger('permissions')->default(0);
+        $table->string('effect', 5)->default('allow')->index();
+        $table->string('scope', 8)->default('subtree');
+
+        // Reserved for the OPTIONAL materialised effective-grants read-model — the
+        // source of truth in M2a is the direct rows + the tree, so these stay
+        // false/null (the inherited walk is computed, not stored).
+        $table->boolean('inherited')->default(false)->index();
+        $ids->reference(table: $table, column: 'inherited_from_node_id', nullable: true);
+
+        $table->timestamp('expires_at')->nullable()->index();
+        $ids->actor(table: $table, column: 'granted_by', nullable: true);
+        $this->extraData(table: $table, panel: $panel);
+        $table->softDeletes();
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        // "Shared with me": every node a subject is granted access to (§2.6).
+        $table->index(['subject_type', 'subject_id'], "{$name}_subject_idx");
+        $table->index(['node_id', 'effect'], "{$name}_node_effect_idx");
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($panel->table('nodes'))
+            ->cascadeOnDelete();
+    }
+
+    /**
      * Post-create hooks that cannot be expressed inside the Blueprint, currently
      * the driver-aware sibling-unique guard on v_nodes.
      */
@@ -356,6 +404,48 @@ final class PanelTablesBuilder
         if ($entity === 'nodes') {
             $this->addSiblingUniqueIndex(table: $panel->table('nodes'));
         }
+
+        if ($entity === 'node_grants') {
+            $this->addGrantUniqueIndex(table: $panel->table('node_grants'));
+        }
+    }
+
+    /**
+     * One LIVE grant per (node_id, subject_type, subject_id, scope, effect) — the
+     * §2.6 grant-unique key. Driver-aware: a partial (soft-delete-aware) index on
+     * Postgres/SQLite, a MySQL generated-column fallback, a plain unique elsewhere.
+     */
+    private function addGrantUniqueIndex(string $table): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        $name = "{$table}_grant_uniq";
+
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            DB::statement(
+                "CREATE UNIQUE INDEX {$name} ON {$table} ".
+                '(node_id, subject_type, subject_id, scope, effect) '.
+                'WHERE deleted_at IS NULL',
+            );
+
+            return;
+        }
+
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            DB::statement(
+                "ALTER TABLE `{$table}` ADD COLUMN `grant_active` VARCHAR(700) ".
+                'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
+                "THEN CONCAT(`node_id`, ':', `subject_type`, ':', `subject_id`, ':', `scope`, ':', `effect`) ".
+                'ELSE NULL END) STORED',
+            );
+
+            DB::statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`grant_active`)");
+
+            return;
+        }
+
+        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+            $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $name);
+        });
     }
 
     /**
@@ -482,6 +572,7 @@ final class PanelTablesBuilder
             'storages', 'nodes' => true,
             'blobs' => $panel->featureEnabled('blobs'),
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
+            'node_grants' => $panel->featureEnabled('grants'),
             default => false,
         };
     }

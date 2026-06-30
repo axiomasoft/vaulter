@@ -31,8 +31,10 @@ use Vaulter\Repositories\NodeReadRepository;
  * no business logic, only the convenience of a pre-resolved storage + the
  * stream-normalisation that keeps the Actions free of HTTP/PSR types.
  *
- * Authorization is NOT applied here (M2 wires HostRoleDriver/AccessResolver into
- * the Actions' authorize() seam); operations run open in this slice.
+ * Authorization (M2a / H.2) is enforced at the HTTP controller boundary
+ * (NodeController + AccessResolver) before these methods are reached — the handle
+ * itself stays a pure delegation surface and performs no access checks, mirroring
+ * the legacy DocumentVisibilityService placement canon.
  */
 final readonly class DriveContext
 {

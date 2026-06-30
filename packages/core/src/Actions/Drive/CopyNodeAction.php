@@ -32,7 +32,8 @@ use Vaulter\Repositories\StorageStoreRepository;
  * size even though the blob is shared (the quota models what the storage holds
  * logically, not the deduped physical footprint).
  *
- * M2 authorize() seam: authorize 'copy' on the source + destination here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class CopyNodeAction
 {
@@ -47,7 +48,6 @@ final readonly class CopyNodeAction
 
     public function execute(CopyNodeData $data): Node
     {
-        // M2 seam: authorize 'copy' on $data->node into $data->into here.
 
         $source = $data->node;
         $destParentId = $data->into?->id;

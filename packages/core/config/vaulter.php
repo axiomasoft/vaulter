@@ -7,6 +7,7 @@ use Vaulter\Cas\FlysystemStorageDriver;
 use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
+use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Export\HtmlExporter;
 use Vaulter\Export\MarkdownExporter;
 use Vaulter\Models\Blob;
@@ -20,6 +21,7 @@ use Vaulter\Models\File;
 use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
+use Vaulter\Models\NodeGrant;
 use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
@@ -27,6 +29,7 @@ use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
 use Vaulter\Support\DefaultStorageAdapter;
 use Vaulter\Support\RandomShareTokenGenerator;
+use Vaulter\Testing\NullRoleDriver;
 
 /**
  * Vaulter configuration.
@@ -57,6 +60,7 @@ return [
         'file_version' => FileVersion::class,
         'blob' => Blob::class,
         'file_version_blob' => FileVersionBlob::class,
+        'grant' => NodeGrant::class,
     ],
 
     /*
@@ -83,6 +87,7 @@ return [
         'files' => 'files',
         'file_versions' => 'file_versions',
         'file_version_blobs' => 'file_version_blobs',
+        'node_grants' => 'node_grants',
     ],
 
     /*
@@ -192,12 +197,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Authorization
+    | Authorization — legacy DocDrive resolver
     |--------------------------------------------------------------------------
     | FQCN of a \Vaulter\Contracts\PermissionResolver implementation, or null
-    | to register one at runtime via Vaulter::resolvePermissionsWith(...).
+    | to register one at runtime via Vaulter::resolvePermissionsWith(...). This is
+    | the LEGACY document-path resolver; the Drive ACL uses the host-role driver +
+    | AccessResolver below (H.2).
     */
     'permission_resolver' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Host role drivers (D6 / H.2) — the Drive ACL
+    |--------------------------------------------------------------------------
+    | The pluggable, per-panel \Vaulter\Contracts\HostRoleDriver lane the
+    | (Vaulter-owned, NON-swappable) AccessResolver combines with v_node_grants.
+    | The default 'database' driver is fully standalone — it authorises purely from
+    | the grant rows with zero host dependency. Swap to 'gate'/'spatie'/'azgard'
+    | (M2b) or register your own FQCN here (config-cache safe — no closures).
+    |
+    | Null-driver fail-loud (H.2 / D6″): a 'null' driver (open, env-gated) is
+    | selectable ONLY in non-production. Production config validation rejects a
+    | panel bound to it; bind a real driver before deploying.
+    */
+    'drivers' => [
+        'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+    ],
+
+    'permission_drivers' => [
+        'database' => DatabasePermissionResolver::class,
+        // 'gate'   => …  (M2b)
+        // 'spatie' => …  (M2b)
+        // 'azgard' => …  (M2b)
+        'null' => NullRoleDriver::class, // non-prod only
+    ],
 
     /*
     |--------------------------------------------------------------------------

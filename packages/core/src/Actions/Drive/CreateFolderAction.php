@@ -19,8 +19,9 @@ use Vaulter\Repositories\NodeStoreRepository;
  * rather than silently auto-renamed: Drive never invents a name behind the
  * caller's back.
  *
- * M2 authorize() seam: an `$this->authorize(...)` call would slot in here before
- * the transaction (HostRoleDriver / AccessResolver) — this slice runs open.
+ * Authorization (M2a / H.2) is enforced UPSTREAM at the HTTP controller boundary
+ * (NodeController::guardCreate → AccessResolver), so the Action stays pure: it
+ * receives an already-authorized parent/storage and only does the row work.
  */
 final readonly class CreateFolderAction
 {
@@ -31,8 +32,6 @@ final readonly class CreateFolderAction
 
     public function execute(CreateDriveFolderData $data): Node
     {
-        // M2 seam: authorize 'create' on $data->parent ?? storage-root here.
-
         $parentId = $data->parent?->id;
 
         if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $data->name)) {

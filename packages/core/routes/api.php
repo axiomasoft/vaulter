@@ -9,6 +9,7 @@ use Vaulter\Http\Controllers\CollaborationController;
 use Vaulter\Http\Controllers\CommentController;
 use Vaulter\Http\Controllers\DocumentController;
 use Vaulter\Http\Controllers\Drive\DownloadController;
+use Vaulter\Http\Controllers\Drive\GrantController;
 use Vaulter\Http\Controllers\Drive\NodeController;
 use Vaulter\Http\Controllers\Drive\StorageController;
 use Vaulter\Http\Controllers\ExportController;
@@ -108,5 +109,11 @@ Route::prefix(Config::routePrefix())
 
             Route::get('nodes/{node}/download', [DownloadController::class, 'current']);
             Route::get('nodes/{node}/versions/{version}/download', [DownloadController::class, 'version']);
+
+            // Per-node ACL grants (§2.6 / H.2). The fixed /grants segment sits before
+            // the catch-all /{node} so it never shadows the node routes above.
+            Route::get('nodes/{node}/grants', [GrantController::class, 'index']);
+            Route::post('nodes/{node}/grants', [GrantController::class, 'store']);
+            Route::delete('nodes/{node}/grants', [GrantController::class, 'destroy']);
         });
     });

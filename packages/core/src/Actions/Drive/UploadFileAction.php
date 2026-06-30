@@ -37,7 +37,8 @@ use Vaulter\Repositories\StorageStoreRepository;
  *     current_version_id, mark the prior head superseded, and adjust used_bytes by
  *     the SIZE DELTA (new size − previous head size), not the full size.
  *
- * M2 authorize() seam: an `$this->authorize(...)` call slots in before staging.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class UploadFileAction
 {
@@ -52,7 +53,6 @@ final readonly class UploadFileAction
 
     public function execute(UploadFileData $data): Node
     {
-        // M2 seam: authorize 'upload' on the target node / destination parent here.
 
         $probedSize = $this->probeSize($data->stream);
         $previousSize = $this->previousHeadSize($data);

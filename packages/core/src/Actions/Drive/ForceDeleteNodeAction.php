@@ -26,7 +26,8 @@ use Vaulter\Repositories\StorageStoreRepository;
  *   3. decrement used_bytes by the freed LIVE size (§1.5 — trash kept the bytes;
  *      forceDelete is where the quota is actually reclaimed).
  *
- * M2 authorize() seam: authorize 'forceDelete' on the node here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class ForceDeleteNodeAction
 {
@@ -39,7 +40,6 @@ final readonly class ForceDeleteNodeAction
 
     public function execute(Node $node, int|string|null $actorId = null): void
     {
-        // M2 seam: authorize 'forceDelete' on $node here.
 
         $subtree = $this->nodes->subtree($node);
         $ids = $subtree->modelKeys();

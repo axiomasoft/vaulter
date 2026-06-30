@@ -7,10 +7,12 @@ namespace Vaulter;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
@@ -18,11 +20,14 @@ use Vaulter\Console\ReconcileBlobsCommand;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\CollaborationDriver;
 use Vaulter\Contracts\ContentStore;
+use Vaulter\Contracts\HostRoleDriver;
 use Vaulter\Contracts\PermissionResolver;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageDriver;
 use Vaulter\Drive\StorageManager;
+use Vaulter\Models\Node;
 use Vaulter\Panels\PanelRegistry;
+use Vaulter\Policies\NodePolicy;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 
@@ -84,6 +89,25 @@ final class VaulterServiceProvider extends PackageServiceProvider
             $this->app->bind(PermissionResolver::class, $resolverClass);
         }
 
+        // Drive ACL (M2a / H.2): the host-role driver manager resolves the
+        // configured HostRoleDriver (default 'database'), keyed per driver-key, and
+        // enforces the null-driver fail-loud guard in production (D6″). The
+        // AccessResolver (Vaulter-owned, NON-swappable) is auto-wired from it.
+        $this->app->singleton(
+            HostRoleDriverManager::class,
+            fn (): HostRoleDriverManager => new HostRoleDriverManager(
+                container: $this->app,
+                isProduction: $this->app->environment('production'),
+            ),
+        );
+
+        // The contract binding resolves the active driver — so a host that injects
+        // HostRoleDriver directly (or swaps it in tests) gets the configured lane.
+        $this->app->bind(
+            HostRoleDriver::class,
+            fn (): HostRoleDriver => $this->app->make(HostRoleDriverManager::class)->driver(),
+        );
+
         $this->app->bind(
             CollaborationDriver::class,
             fn (): CollaborationDriver => $this->app->make(VaulterManager::class)->driver(),
@@ -94,6 +118,23 @@ final class VaulterServiceProvider extends PackageServiceProvider
     {
         $this->registerRouteBindings();
         $this->registerBroadcastChannel();
+        $this->registerPolicies();
+    }
+
+    /**
+     * Register the NodePolicy against the SWAPPABLE node model (config('vaulter.
+     * models.node')) so $this->authorize('view', $node) routes through the
+     * AccessResolver. A host subclass of Node is governed by the same policy.
+     */
+    private function registerPolicies(): void
+    {
+        Gate::policy(Config::nodeModel(), NodePolicy::class);
+
+        // Cover the base model too, so a host that route-binds the base Node (not a
+        // subclass) still hits the policy.
+        if (Config::nodeModel() !== Node::class) {
+            Gate::policy(Node::class, NodePolicy::class);
+        }
     }
 
     /**

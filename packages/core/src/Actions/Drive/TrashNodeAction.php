@@ -20,7 +20,8 @@ use Vaulter\Repositories\NodeStoreRepository;
  * forceDelete (§1.5: quota counts what is physically retained, and a restore must
  * bring the bytes back). The decrement happens only in ForceDeleteNodeAction.
  *
- * M2 authorize() seam: authorize 'trash' on the node here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class TrashNodeAction
 {
@@ -31,7 +32,6 @@ final readonly class TrashNodeAction
 
     public function execute(Node $node, int|string|null $actorId = null): Node
     {
-        // M2 seam: authorize 'trash' on $node here.
 
         if ($node->trashed_at !== null) {
             return $node;

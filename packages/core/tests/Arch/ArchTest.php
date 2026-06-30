@@ -2,10 +2,44 @@
 
 declare(strict_types=1);
 use Illuminate\Http\Request;
+use Vaulter\Models\Node;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
     ->toUseStrictTypes();
+
+/**
+ * H.2 — the AccessResolver is Vaulter-OWNED and NOT swappable: it is a concrete
+ * final class, never an interface/contract. Only the HostRoleDriver lane is
+ * pluggable. (If someone made AccessResolver a contract, this fails.)
+ */
+arch('the AccessResolver is a concrete, non-swappable class')
+    ->expect('Vaulter\Access\AccessResolver')
+    ->not->toBeInterface();
+
+/**
+ * H.2 — the HostRoleDriver contract is node-blind and identity-model-agnostic: it
+ * must NEVER reference the Node model (it deals only in Subject/AclScope/Decision).
+ * A leak of Node into the contract breaks the swappable-driver boundary.
+ */
+arch('the HostRoleDriver contract never references the Node model')
+    ->expect('Vaulter\Contracts\HostRoleDriver')
+    ->not->toUse(Node::class);
+
+/**
+ * H.2 — the host-role drivers are final (a SemVer-frozen public surface) and live
+ * under Drivers\Permission.
+ */
+arch('host-role drivers are final')
+    ->expect('Vaulter\Drivers\Permission')
+    ->toBeClasses();
+
+/**
+ * The ACL value objects are immutable (H.2 VOs: Subject/AclScope/Decision/GrantSet).
+ */
+arch('access value objects are readonly')
+    ->expect('Vaulter\Access\ValueObjects')
+    ->toBeReadonly();
 
 arch('no debug helpers leak into the package')
     ->expect(['dd', 'dump', 'ray', 'var_dump', 'die'])

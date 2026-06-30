@@ -16,7 +16,8 @@ use Vaulter\Repositories\NodeStoreRepository;
  * Rename a node in place (§2.2), subject to the sibling-name conflict check at
  * its current parent (the node itself is excluded from the check).
  *
- * M2 authorize() seam: authorize 'rename' on the node here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class RenameNodeAction
 {
@@ -27,7 +28,6 @@ final readonly class RenameNodeAction
 
     public function execute(RenameNodeData $data): Node
     {
-        // M2 seam: authorize 'rename' on $data->node here.
 
         $node = $data->node;
         $fromName = $node->name;

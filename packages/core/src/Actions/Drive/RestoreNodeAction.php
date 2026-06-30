@@ -21,7 +21,8 @@ use Vaulter\Support\Config;
  *   - if a LIVE sibling now owns the node's name at the resolved destination,
  *     throw NodeNameConflictException — the caller renames then retries.
  *
- * M2 authorize() seam: authorize 'restore' on the node here.
+ * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+ * boundary (NodeController + AccessResolver); this Action stays pure.
  */
 final readonly class RestoreNodeAction
 {
@@ -32,7 +33,6 @@ final readonly class RestoreNodeAction
 
     public function execute(Node $node, int|string|null $actorId = null): Node
     {
-        // M2 seam: authorize 'restore' on $node here.
 
         if ($node->trashed_at === null) {
             return $node;

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Resources\Drive;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Abilities\NodeAbilities;
+use Vaulter\Access\AccessResolver;
 use Vaulter\Models\Node;
 
 /**
@@ -14,10 +17,9 @@ use Vaulter\Models\Node;
  * leaf the Vue client renders. Read-only — it transforms an already-loaded Node
  * and the optional children/breadcrumb collections handed to it, never queries.
  *
- * The `abilities` object is embedded NOW as a stable placeholder so the client
- * contract does not shift when M2 wires authorization: this slice ships an
- * all-true shape (endpoints run open behind the route middleware), and M2 fills
- * each flag from the AccessResolver against $request->user().
+ * The `abilities` object is filled by the AccessResolver (§2.6 / H.2) for the
+ * request's actor, so the client renders only the actions that actor may perform
+ * on this node. With no acting user every flag is false (a read-only shell).
  *
  * @mixin Node
  */
@@ -94,32 +96,26 @@ final class NodeResource extends JsonResource
             'breadcrumb' => $this->breadcrumb === null
                 ? null
                 : self::collection($this->breadcrumb),
-            'abilities' => $this->abilities(),
+            'abilities' => $this->abilities($request, $node),
         ];
     }
 
     /**
-     * The ability shape the Vue client binds against. M2 replaces these literals
-     * with AccessResolver decisions for $request->user() on this node; until then
-     * every endpoint is open behind the route middleware and the shape advertises
-     * that.
+     * The ability map the Vue client binds against, resolved through the
+     * AccessResolver for the request's actor on this node (H.2). No acting user ⇒
+     * an all-false map (a read-only shell), never a mis-advertised action.
      *
      * @return array<string, bool>
      */
-    private function abilities(): array
+    private function abilities(Request $request, Node $node): array
     {
-        // M2: populate from the AccessResolver — view/edit/move/copy/trash/restore/
-        // delete/upload/rename for the authenticated actor on this node.
-        return [
-            'view' => true,
-            'rename' => true,
-            'move' => true,
-            'copy' => true,
-            'upload' => true,
-            'trash' => true,
-            'restore' => true,
-            'delete' => true,
-            'download' => true,
-        ];
+        $user = $request->user();
+        $actor = $user instanceof Authorizable ? $user : null;
+
+        return NodeAbilities::for(
+            actor: $actor,
+            node: $node,
+            resolver: app(AccessResolver::class),
+        )->toArray();
     }
 }

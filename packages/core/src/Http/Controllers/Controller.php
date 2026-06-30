@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 abstract class Controller
 {
+    use AuthorizesRequests;
+
     protected function actorId(Request $request): int|string|null
     {
         $id = $request->user()?->getAuthIdentifier();

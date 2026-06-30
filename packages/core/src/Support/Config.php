@@ -10,6 +10,7 @@ use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\ContentStore;
 use Vaulter\Contracts\DocumentExporter;
+use Vaulter\Contracts\HostRoleDriver;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageAdapter;
@@ -25,6 +26,7 @@ use Vaulter\Models\File;
 use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
+use Vaulter\Models\NodeGrant;
 use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
@@ -166,6 +168,54 @@ final class Config
         $class = config('vaulter.models.file_version_blob', FileVersionBlob::class);
 
         return $class;
+    }
+
+    /**
+     * @return class-string<NodeGrant>
+     */
+    public static function grantModel(): string
+    {
+        /** @var class-string<NodeGrant> $class */
+        $class = config('vaulter.models.grant', NodeGrant::class);
+
+        return $class;
+    }
+
+    /**
+     * The selected host-role driver key (H.2), default 'database' (the standalone
+     * zero-host-dependency lane).
+     */
+    public static function permissionDriver(): string
+    {
+        $value = config('vaulter.drivers.permission', 'database');
+
+        return is_string($value) && $value !== '' ? $value : 'database';
+    }
+
+    /**
+     * The driver-key → FQCN map for the host-role drivers (H.2). Only valid
+     * HostRoleDriver subclasses are returned (cache-safe — FQCN only).
+     *
+     * @return array<string, class-string<HostRoleDriver>>
+     */
+    public static function permissionDrivers(): array
+    {
+        $value = config('vaulter.permission_drivers', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $drivers = [];
+
+        foreach ($value as $key => $class) {
+            if (is_string($key) && is_string($class) && is_a($class, HostRoleDriver::class, allow_string: true)) {
+                $drivers[$key] = $class;
+            }
+        }
+
+        /** @var array<string, class-string<HostRoleDriver>> $drivers */
+        return $drivers;
     }
 
     public static function idType(): string

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Controllers\Drive;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\StorageDriver;
+use Vaulter\Enums\Ability;
+use Vaulter\Exceptions\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Blob;
 use Vaulter\Models\FileVersion;
@@ -37,6 +41,7 @@ final class DownloadController extends Controller
     public function __construct(
         private readonly FileVersionReadRepository $versions,
         private readonly StorageDriver $driver,
+        private readonly AccessResolver $access,
     ) {}
 
     /**
@@ -44,7 +49,8 @@ final class DownloadController extends Controller
      */
     public function current(Request $request, Storage $storage, Node $node): StreamedResponse|RedirectResponse
     {
-        // M2: authorize 'download' on $node.
+        $this->guardDownload($request, $node);
+
         $version = $this->versions->head($node);
 
         return $this->stream($node, $version, $storage);
@@ -59,10 +65,25 @@ final class DownloadController extends Controller
         Node $node,
         int|string $version,
     ): StreamedResponse|RedirectResponse {
-        // M2: authorize 'download' on $node.
+        $this->guardDownload($request, $node);
+
         $resolved = $this->versions->forNode($node, $version);
 
         return $this->stream($node, $resolved, $storage);
+    }
+
+    /**
+     * Authorize the Download ability (READ bit) on the node through the
+     * AccessResolver (H.2), 403ing on denial. An unauthenticated request is denied.
+     */
+    private function guardDownload(Request $request, Node $node): void
+    {
+        $user = $request->user();
+        $actor = $user instanceof Authorizable ? $user : null;
+
+        if ($actor === null || !$this->access->can($actor, Ability::Download, $node)) {
+            throw PermissionDeniedException::forAbility(Ability::Download->value);
+        }
     }
 
     private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse|RedirectResponse

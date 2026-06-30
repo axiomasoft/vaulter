@@ -54,6 +54,12 @@ final class DriveSchemaAssertions
                 'file_version_id', 'blob_id', 'role', 'ordinal', 'offset_bytes',
                 'length_bytes',
             ]],
+            ['v_node_grants', [
+                'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'level',
+                'permissions', 'effect', 'scope', 'inherited', 'inherited_from_node_id',
+                'expires_at', 'granted_by', 'extra_data', 'deleted_at', 'created_at',
+                'updated_at',
+            ]],
         ];
     }
 
