@@ -1,57 +1,65 @@
 # Vaulter collaboration hub (Hocuspocus)
 
-The optional Node service that fronts realtime document editing for Vaulter (M4b).
-It is **only** needed when the collaboration driver is `hocuspocus`; the default
-`reverb` driver needs no extra service.
+The Node service that powers Vaulter's realtime **document collaboration** (Yjs/TipTap).
+It is designed to be consumed as an **external, reusable image** — one published image
+(`ghcr.io/axioma-studio/vaulter-hocuspocus`) serves many projects. You **reference** it and
+configure it entirely through environment variables; you never copy its source into your app.
+
+> **This is the collaboration backend.** Laravel Reverb is a general broadcast bus
+> (notifications, presence) and is **not** a collaboration transport — the `reverb`
+> collaboration driver is deprecated. Collaborative editing runs on this hub.
+
+> **📖 The authoritative docs live in [`docs/guide/hocuspocus-server.md`](../docs/guide/hocuspocus-server.md):**
+> the full environment contract, security hardening (TLS/wss, Origin allowlist, throttle +
+> reverse-proxy IP headers, maxPayload), multi-instance scaling, and graceful shutdown.
+> This README is a quick reference only.
 
 ## How it fits
 
 ```
 Vue client ──ws(token=room JWT, doc=room name)──▶  this hub
                                                      │
+   onConnect ── Origin allowlist (CSWSH) ───────────┤
    onAuthenticate ─POST /collab/authenticate────────┤  (forwards the JWT)
    onStoreDocument ─POST /collab/store──────────────▶  Laravel (api/vaulter)
                                                         persists yjs_state (bytea)
 ```
 
-1. The client calls `POST /api/vaulter/nodes/{node}/collab/token` on Laravel and
-   gets a room JWT (`{room, sub, readOnly, exp}` HS256) plus the hub `url`.
-2. It opens a WebSocket to this hub with that JWT as the **token** and the
-   **room name** (`vaulter.documents.<nodeId>`) as the document name.
-3. `onAuthenticate` forwards the JWT + room to `POST {laravel}/api/vaulter/collab/authenticate`.
-   `{allowed:false}` (or any non-2xx) refuses the socket; `readOnly` downgrades the
-   connection so the server drops a viewer's edits.
-4. `onStoreDocument` (debounced by the server) base64-encodes the **binary** Yjs state
-   and POSTs it to `POST {laravel}/api/vaulter/collab/store`, which persists it into
-   `v_node_document_versions.yjs_state`. The Yjs binary is the source of truth — the
-   hub never reconstructs it from JSON.
+1. The client calls `POST /api/vaulter/nodes/{node}/collab/token` on Laravel and gets a
+   room JWT (`{room, sub, readOnly, exp}` HS256) plus the hub `url`.
+2. It opens a WebSocket to this hub with that JWT as the **token** and the **room name**
+   (`vaulter.documents.<nodeId>`) as the document name.
+3. The hub validates the `Origin`, then `onAuthenticate` forwards the JWT + room to
+   `POST {laravel}/api/vaulter/collab/authenticate`. `{allowed:false}` (or any non-2xx)
+   refuses the socket; `readOnly` downgrades the connection so the server drops a viewer's edits.
+4. `onStoreDocument` (debounced) base64-encodes the **binary** Yjs state and POSTs it to
+   `POST {laravel}/api/vaulter/collab/store`, which persists it into
+   `v_node_document_versions.yjs_state`. The Yjs binary is the source of truth.
 
-The webhook calls authenticate with the connection's room-bound JWT (forwarded as
-`Authorization: Bearer …`) and, when configured, the shared `X-Vaulter-Collab-Secret`
-header. The Laravel endpoints are never open — a call with neither is 401'd.
+The hub does **not** need the JWT signing secret — Laravel mints the token and the client
+forwards it; the hub only relays it to the webhooks, which verify the signature themselves.
 
-## Environment contract
+## Environment contract (quick reference)
 
-> `.env.example` in this repo is a protected file. The authoritative contract is here.
-> Copy these into the service's environment (compose `environment:` / a real `.env`).
+All configuration is via environment variables (12-factor; no secrets baked into the image).
+The hub **validates on startup and fails fast** when a required production value is missing or
+a numeric value is malformed. The most common variables:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `VAULTER_COLLAB_PORT` | `1234` | WebSocket port the hub listens on (the client connects to `ws://host:PORT`). |
-| `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP health port — `GET /health` → `200 {"status":"ok"}` for the compose healthcheck. |
-| `VAULTER_BACKEND_URL` | `http://localhost` | Laravel app base URL the hub calls back into (no trailing slash). In Docker, the app service name or `host.docker.internal`. |
-| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter API route prefix. Webhooks resolve to `{VAULTER_BACKEND_URL}/{VAULTER_API_PREFIX}/collab/{authenticate,store}`. |
-| `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Optional explicit full webhook base (`…/api/vaulter`). Overrides the two values above (reverse proxy / split host). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. **Must equal** the Laravel `vaulter.collaboration.webhook_secret` (`VAULTER_COLLAB_WEBHOOK_SECRET` on the Laravel side). When unset, the hub authenticates the webhooks with the forwarded room JWT alone. |
-| `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout in ms. |
+| `VAULTER_BACKEND_URL` | `http://localhost` | Laravel base URL the hub calls back into. **Required in production.** |
+| `VAULTER_COLLAB_ALLOWED_ORIGINS` | *(empty)* | CSWSH allowlist — exact browser origins. **Required in production** (`*` = dev only). |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Optional shared secret (`X-Vaulter-Collab-Secret`); must match the Laravel config. |
+| `VAULTER_COLLAB_PORT` / `_HEALTH_PORT` | `1234` / `1235` | WebSocket port / HTTP `GET /health` port. |
+| `NODE_ENV` | `production` | `production` enforces the allowlist + backend URL. The published image defaults to it. |
 
-The hub does **not** need the JWT signing secret (`VAULTER_COLLAB_SECRET` on the
-Laravel side, `vaulter.collaboration.drivers.hocuspocus.secret`). Laravel mints the
-room JWT and the client forwards it; the hub only relays that token to the webhooks,
-which verify the signature themselves.
+**The full contract** — security (`MAX_PAYLOAD_BYTES`, `THROTTLE*`, `BAN_TIME`), liveness
+(`TIMEOUT_MS`, `DEBOUNCE_MS`, `MAX_DEBOUNCE_MS`), scaling (`REDIS_URL`, `INSTANCE_NAME`),
+webhook routing (`API_PREFIX`, `LARAVEL_WEBHOOK_URL`, `WEBHOOK_TIMEOUT_MS`) and ops
+(`QUIET`, `LOG`) — is documented in [`docs/guide/hocuspocus-server.md`](../docs/guide/hocuspocus-server.md).
 
-On the Laravel side, point the client at this hub with
-`VAULTER_COLLAB_DRIVER=hocuspocus` and `VAULTER_COLLAB_URL=ws://<hub-host>:1234`.
+On the Laravel side, point the client at this hub with `VAULTER_COLLAB_DRIVER=hocuspocus`
+and `VAULTER_COLLAB_URL=ws://<hub-host>:1234`.
 
 ## Run
 
@@ -63,42 +71,24 @@ npm run check        # node --check on every source file (syntax gate)
 npm test             # node:test unit suite (mocks fetch; no running stack)
 ```
 
-## Compose note
+## Docker
 
-`docker-compose.yml` builds and runs the hub. Add a healthcheck against the health
-port so dependents wait for readiness:
+The reference [`docker-compose.yml`](./docker-compose.yml) pulls the published image (or
+`build: .` for local dev) and shows the full security/scaling env surface. The multi-stage
+[`Dockerfile`](./Dockerfile) runs as the non-root `node` user from a committed lockfile; the
+image is built and pushed to GHCR by `.github/workflows/hocuspocus-image.yml` on a
+`vaulter-hocuspocus-v*` tag (multi-arch, with SBOM + build-provenance attestation).
 
-```yaml
-services:
-  vaulter-collab:
-    build: .
-    image: vaulter/hocuspocus-server:dev
-    ports:
-      - "${VAULTER_COLLAB_PORT:-1234}:1234"
-    environment:
-      VAULTER_COLLAB_PORT: 1234
-      VAULTER_COLLAB_HEALTH_PORT: 1235
-      VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
-      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    restart: unless-stopped
-```
-
-The published image is built/pushed by the release pipeline — building it is out of
-scope for this slice.
+> **Security:** never expose the WebSocket port directly — bind it to loopback / your private
+> network and front it with a TLS reverse proxy that **overwrites** `X-Real-IP` /
+> `X-Forwarded-For` (the per-IP throttle trusts those headers). See the guide.
 
 ## Verification
 
 - Syntax: `npm run check` (`node --check` per file).
-- Unit: `npm test` — `node:test` covers the webhook seam (bearer/secret headers,
-  base64 yjs_state, allowed/readOnly parsing, fail-closed on non-2xx) and the webhook
-  base URL derivation, all with a mocked `fetch`.
-- **Needs a running stack (out of scope here):** a true end-to-end realtime check —
-  two browsers editing through a live hub + Laravel + Postgres, the JWT actually
-  verified, and the snapshot landing in `v_node_document_versions`. That requires the
-  compose stack up and is documented, not executed, in this slice.
-```
+- Unit: `npm test` — `node:test` covers the webhook seam (bearer/secret headers, base64
+  `yjs_state`, allowed/readOnly parsing, fail-closed on non-2xx), the Origin allowlist + CSWSH
+  policy, fail-fast config validation, and that the `maxPayload`/`perMessageDeflate` hardening
+  actually reaches the underlying `ws` server — all with a mocked `fetch` / ephemeral ports.
+- A true end-to-end realtime check (two browsers through a live hub + Laravel + Postgres) lives
+  in the repo's `e2e/` stand (`make e2e-*`), not here.

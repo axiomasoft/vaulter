@@ -12,7 +12,12 @@ services:
     image: ghcr.io/axioma-studio/vaulter-hocuspocus:latest
     # build: .   # ← local dev: build from source instead of pulling the published image
     ports:
-      - "${VAULTER_COLLAB_PORT:-1234}:1234"
+      # Bound to 127.0.0.1 by default: the WS port must NOT face the internet directly.
+      # The per-IP Throttle keys on the X-Real-IP / X-Forwarded-For headers, which a directly
+      # connected client can SPOOF to bypass the ban — so always front the hub with a TLS
+      # reverse proxy that OVERWRITES those headers (see docs/guide/hocuspocus-server.md). To
+      # expose it for a remote proxy on another host, change this to "${VAULTER_COLLAB_PORT:-1234}:1234".
+      - "127.0.0.1:${VAULTER_COLLAB_PORT:-1234}:1234"
     environment:
       # — Connectivity —
       VAULTER_COLLAB_PORT: 1234
@@ -29,6 +34,7 @@ services:
       VAULTER_COLLAB_ALLOWED_ORIGINS: ${VAULTER_COLLAB_ALLOWED_ORIGINS:-}
       VAULTER_COLLAB_MAX_PAYLOAD_BYTES: ${VAULTER_COLLAB_MAX_PAYLOAD_BYTES:-4194304}
       VAULTER_COLLAB_THROTTLE: ${VAULTER_COLLAB_THROTTLE:-15}
+      VAULTER_COLLAB_THROTTLE_SECONDS: ${VAULTER_COLLAB_THROTTLE_SECONDS:-60}
       VAULTER_COLLAB_BAN_TIME: ${VAULTER_COLLAB_BAN_TIME:-5}
 
       # — Liveness / persistence pressure —

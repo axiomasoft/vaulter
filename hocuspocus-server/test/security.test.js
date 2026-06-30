@@ -73,3 +73,41 @@ test('a non-canonical NODE_ENV is treated as production (fail-closed, not silent
     assert.equal(buildConfig({ NODE_ENV: value }).isProduction, false, `NODE_ENV=${JSON.stringify(value)}`)
   }
 })
+
+// Numeric env validation: a typo must fail fast at boot rather than silently boot a
+// misconfigured hub (master plan Addendum A.2 fail-fast; review finding #6).
+
+test('validateConfig: a malformed integer (trailing garbage / non-numeric) is rejected', () => {
+  for (const bad of ['12a34', '4.5', 'abc', '0x10', '15 30']) {
+    const problems = validateConfig(dev({ VAULTER_COLLAB_PORT: bad }))
+    assert.ok(
+      problems.some((p) => p.includes('VAULTER_COLLAB_PORT') && p.includes('valid integer')),
+      `VAULTER_COLLAB_PORT=${JSON.stringify(bad)} should be flagged`,
+    )
+  }
+})
+
+test('validateConfig: a port outside 1..65535 is rejected', () => {
+  assert.ok(validateConfig(dev({ VAULTER_COLLAB_PORT: '0' })).some((p) => p.includes('VAULTER_COLLAB_PORT')))
+  assert.ok(validateConfig(dev({ VAULTER_COLLAB_PORT: '70000' })).some((p) => p.includes('VAULTER_COLLAB_PORT')))
+})
+
+test('validateConfig: the WS port and the health port must differ', () => {
+  const problems = validateConfig(dev({ VAULTER_COLLAB_PORT: '1234', VAULTER_COLLAB_HEALTH_PORT: '1234' }))
+  assert.ok(problems.some((p) => p.includes('must differ')))
+})
+
+test('validateConfig: a negative throttle window is rejected', () => {
+  const problems = validateConfig(dev({ VAULTER_COLLAB_THROTTLE: '-1' }))
+  assert.ok(problems.some((p) => p.includes('VAULTER_COLLAB_THROTTLE')))
+})
+
+test('validateConfig: a well-formed dev config with custom numerics stays valid', () => {
+  const problems = validateConfig(dev({
+    VAULTER_COLLAB_PORT: '2000',
+    VAULTER_COLLAB_HEALTH_PORT: '2001',
+    VAULTER_COLLAB_THROTTLE: '30',
+    VAULTER_COLLAB_THROTTLE_SECONDS: '120',
+  }))
+  assert.deepEqual(problems, [])
+})

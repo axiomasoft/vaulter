@@ -44,8 +44,14 @@ function str(name, fallback = undefined, env = process.env) {
 
 function int(name, fallback, env = process.env) {
   const raw = env[name]
-  const parsed = raw === undefined ? NaN : Number.parseInt(raw, 10)
-  return Number.isFinite(parsed) ? parsed : fallback
+  if (raw === undefined || raw.trim() === '') {
+    return fallback
+  }
+  // STRICT: only a clean integer is accepted. parseInt('30abc')===30 and parseInt('-5')===-5
+  // would silently boot a misconfigured hub — instead return NaN so validateConfig() reports
+  // the offending variable and the process fails fast at boot rather than running wrong.
+  const trimmed = raw.trim()
+  return /^-?\d+$/.test(trimmed) ? Number.parseInt(trimmed, 10) : NaN
 }
 
 function bool(name, fallback, env = process.env) {
@@ -169,8 +175,37 @@ export function validateConfig(conf = config) {
   if (conf.isProduction && conf.allowedOrigins.length === 0) {
     problems.push('VAULTER_COLLAB_ALLOWED_ORIGINS is required in production (CSWSH defence); set explicit origins or "*" for dev only.')
   }
-  if (!Number.isFinite(conf.maxPayloadBytes) || conf.maxPayloadBytes <= 0) {
-    problems.push('VAULTER_COLLAB_MAX_PAYLOAD_BYTES must be a positive integer.')
+
+  // Numeric guards: int() yields NaN for a malformed value (e.g. '12a34', '4.5'), so a typo in
+  // any of these fails fast at boot with the offending variable named, rather than silently
+  // booting a misconfigured hub. Ports are bound to the valid TCP range and must differ.
+  const numeric = [
+    { key: 'port', env: 'VAULTER_COLLAB_PORT', min: 1, max: 65535 },
+    { key: 'healthPort', env: 'VAULTER_COLLAB_HEALTH_PORT', min: 1, max: 65535 },
+    { key: 'maxPayloadBytes', env: 'VAULTER_COLLAB_MAX_PAYLOAD_BYTES', min: 1 },
+    { key: 'throttle', env: 'VAULTER_COLLAB_THROTTLE', min: 1 },
+    { key: 'throttleSeconds', env: 'VAULTER_COLLAB_THROTTLE_SECONDS', min: 1 },
+    { key: 'banTime', env: 'VAULTER_COLLAB_BAN_TIME', min: 0 },
+    { key: 'webhookTimeoutMs', env: 'VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS', min: 1 },
+    { key: 'timeout', env: 'VAULTER_COLLAB_TIMEOUT_MS', min: 0 },
+    { key: 'debounce', env: 'VAULTER_COLLAB_DEBOUNCE_MS', min: 0 },
+    { key: 'maxDebounce', env: 'VAULTER_COLLAB_MAX_DEBOUNCE_MS', min: 0 },
+  ]
+  for (const { key, env, min, max } of numeric) {
+    const value = conf[key]
+    if (!Number.isInteger(value)) {
+      problems.push(`${env} must be a valid integer.`)
+      continue
+    }
+    if (value < min) {
+      problems.push(`${env} must be >= ${min}.`)
+    }
+    if (max !== undefined && value > max) {
+      problems.push(`${env} must be <= ${max}.`)
+    }
+  }
+  if (Number.isInteger(conf.port) && conf.port === conf.healthPort) {
+    problems.push('VAULTER_COLLAB_PORT and VAULTER_COLLAB_HEALTH_PORT must differ.')
   }
 
   return problems

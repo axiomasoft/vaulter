@@ -15,7 +15,7 @@ variables, and never copy its source into your app:
 services:
   vaulter-collab:
     image: ghcr.io/axioma-studio/vaulter-hocuspocus:1   # pin @sha256:… in production
-    ports: ["1234:1234"]
+    ports: ["127.0.0.1:1234:1234"]   # loopback only — front it with a TLS reverse proxy
     environment:
       VAULTER_BACKEND_URL: "https://app.example.com"
       VAULTER_COLLAB_ALLOWED_ORIGINS: "https://app.example.com"
@@ -108,11 +108,20 @@ missing.
 - **Set `VAULTER_COLLAB_ALLOWED_ORIGINS`** to your exact app origins. Never use `*` in
   production. (The hub won't boot in `production` without it.)
 - **Keep `MAX_PAYLOAD` small** — Yjs updates are incremental and tiny; a low cap blunts
-  oversized-message DoS.
+  oversized-message DoS. (The hub now applies this cap to the underlying `ws` server; the
+  library default of ~100 MiB is never used.)
 - The **room JWT is short-lived** and bound to exactly one node; the webhook re-checks
   access, so a viewer can never write (the server drops their updates).
+- **Never expose the WebSocket port (1234) directly to the internet.** Bind it to the host
+  loopback / your private network and reach it only through the reverse proxy. The reference
+  `docker-compose.yml` publishes it on `127.0.0.1` for exactly this reason.
+- **The per-IP throttle trusts proxy headers — the proxy MUST set them.** The Throttle
+  extension derives the client IP from `X-Real-IP` / `X-Forwarded-For`, falling back to the
+  socket address. A client that reaches the hub directly can forge those headers and bypass
+  the handshake-flood ban entirely. So the reverse proxy must **overwrite** (not append) both
+  headers with the real client address, and the hub must not be reachable except through it.
 
-Minimal nginx upgrade block:
+Minimal nginx upgrade block (note the IP headers — they are load-bearing for the throttle):
 
 ```nginx
 location /collab/ {
@@ -122,9 +131,17 @@ location /collab/ {
     proxy_set_header Connection "upgrade";
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
+    # OVERWRITE the client IP so a forged X-Real-IP / X-Forwarded-For can't defeat the throttle.
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_read_timeout 75s;   # > the hub heartbeat, but finite
 }
 ```
+
+Traefik does this for you: `forwardedHeaders` is honoured only from `trustedIPs`, so leaving
+the default (trust nothing) makes Traefik rewrite `X-Forwarded-For`/`X-Real-IP` from the real
+connection. Behind any proxy, restrict `trustedIPs`/`set_real_ip_from` to the proxy itself and
+keep the hub off any public interface.
 
 ## Scaling (multi-instance)
 

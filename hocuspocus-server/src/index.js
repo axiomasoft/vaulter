@@ -147,9 +147,25 @@ async function onStoreDocument({ documentName, state, document, context, lastCon
 }
 
 /**
- * Build the Hocuspocus server with the hardened configuration. WebSocket limits go through
- * websocketOptions (maxPayload caps frame size; perMessageDeflate off reduces attack
- * surface). name/timeout/debounce/maxDebounce/quiet are production-tuned via env.
+ * The hardened `ws` server options. maxPayload caps the frame size (the `ws` default is
+ * ~100 MiB, far too high for incremental Yjs updates); perMessageDeflate off trims attack
+ * surface and CPU. In @hocuspocus/server v2.x these are honoured ONLY as the 3rd argument
+ * of `server.listen()` — a `websocketOptions` config KEY on the Hocuspocus constructor is
+ * silently ignored (it only became a config key in v4), so passing it there is a no-op that
+ * leaves the limits at the library defaults. Keep this as the single source so boot() and
+ * the test exercise the exact same options.
+ */
+export function websocketOptions() {
+  return {
+    maxPayload: config.maxPayloadBytes,
+    perMessageDeflate: false,
+  }
+}
+
+/**
+ * Build the Hocuspocus server with the hardened configuration. name/timeout/debounce/
+ * maxDebounce/quiet are production-tuned via env. The WebSocket frame limits are applied at
+ * listen() time (see websocketOptions + boot), not here — v2.x ignores them on the config.
  */
 async function buildServer() {
   return new Hocuspocus({
@@ -160,10 +176,6 @@ async function buildServer() {
     maxDebounce: config.maxDebounce,
     quiet: config.quiet,
     extensions: await buildExtensions(),
-    websocketOptions: {
-      maxPayload: config.maxPayloadBytes,
-      perMessageDeflate: false,
-    },
     onConnect,
     onAuthenticate,
     onStoreDocument,
@@ -233,7 +245,9 @@ async function boot() {
   startHealthEndpoint()
 
   const server = await buildServer()
-  await server.listen()
+  // ws options (maxPayload / perMessageDeflate) MUST be passed here — v2.x only reads them
+  // from listen()'s 3rd arg, not the Hocuspocus config (see websocketOptions).
+  await server.listen(config.port, undefined, websocketOptions())
   // eslint-disable-next-line no-console
   console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port}`)
 
@@ -251,3 +265,4 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export { buildServer, buildExtensions, onConnect }
+// websocketOptions is exported above (function declaration) for boot() + the hardening test.
