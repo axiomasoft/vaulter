@@ -1,0 +1,28 @@
+{
+  "name": "vaulter-e2e",
+  "private": true,
+  "type": "module",
+  "description": "In-repo end-to-end stand for Vaulter realtime collaboration (P1.1): Vite playground + Playwright, driven against the live testbench host + Hocuspocus hub.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5273",
+    "smoke": "node scripts/headless-smoke.mjs",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^2.15",
+    "@tiptap/extension-collaboration": "^2.10",
+    "@tiptap/pm": "^2.10",
+    "@tiptap/starter-kit": "^2.10",
+    "@tiptap/vue-3": "^2.10",
+    "vue": "^3.5",
+    "yjs": "^13.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49",
+    "@vitejs/plugin-vue": "^5.2",
+    "vite": "^6.0"
+  }
+}

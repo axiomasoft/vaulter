@@ -1,4 +1,5 @@
-.PHONY: help lint lint-check stan rector rector-fix mutate quality quality-fix test ci
+.PHONY: help lint lint-check stan rector rector-fix mutate quality quality-fix test ci \
+        e2e-migrate e2e-laravel e2e-hub e2e-smoke e2e-test e2e-up e2e-down
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -30,3 +31,26 @@ test: ## Run test suite with coverage
 
 ci: quality test ## Full CI pass (quality + tests)
 	@echo "\033[32m✅ CI passed\033[0m"
+
+# ── Realtime-collaboration e2e stand (P1.1 — see e2e/README.md) ──────────────────────
+e2e-migrate: ## e2e: migrate the host DB (persistent SQLite by default)
+	vendor/bin/testbench migrate:fresh --force
+
+e2e-laravel: ## e2e: serve the live Laravel host (:8000)
+	vendor/bin/testbench serve --host 127.0.0.1 --port 8000
+
+e2e-hub: ## e2e: run the Hocuspocus collaboration hub (:1234)
+	cd hocuspocus-server && npm install --no-audit --no-fund && \
+		VAULTER_BACKEND_URL=http://localhost:8000 VAULTER_API_PREFIX=api/vaulter node src/index.js
+
+e2e-smoke: ## e2e: headless 2-client collab smoke (stack must be up)
+	cd e2e && npm install --no-audit --no-fund && npm run smoke
+
+e2e-test: ## e2e: Playwright 2-browser collab e2e (stack must be up)
+	cd e2e && npm install --no-audit --no-fund && npm test
+
+e2e-up: ## e2e: bring up the full stack (postgres+laravel+hub+vite) via docker-compose
+	cd e2e && docker compose up --build -d
+
+e2e-down: ## e2e: tear down the docker-compose stack
+	cd e2e && docker compose down -v

@@ -654,14 +654,22 @@ return [
     | node's version); TipTap JSON is the derived projection. The transport is
     | swappable behind the driver:
     |
-    |   'reverb'     — Yjs over Laravel Reverb (no extra service; default). The
-    |                  Vue client joins the PRIVATE broadcast channel for the room
-    |                  (channel_prefix.nodeId); Laravel's channel-auth endpoint
-    |                  gates it through the AccessResolver. No room JWT is minted.
-    |   'hocuspocus' — an external Node Hocuspocus hub (see hocuspocus-server/).
+    |   'hocuspocus' — the RECOMMENDED collaborative-editing transport (default).
+    |                  An external Node Hocuspocus hub (see hocuspocus-server/) —
+    |                  the Yjs collaboration backend TipTap documents and maintains.
     |                  The client connects to the hub URL with a signed room JWT;
     |                  the hub's onAuthenticate/onStoreDocument call BACK into the
-    |                  collab/authenticate + collab/store webhooks below.
+    |                  collab/authenticate + collab/store webhooks below. This is the
+    |                  only path with awareness sync + server-debounced persistence
+    |                  and a real read-only guarantee on the socket.
+    |   'reverb'     — DEPRECATED for Yjs document editing. Reverb is Laravel's
+    |                  general broadcast bus (Pusher protocol) — great for app
+    |                  notifications/presence/activity, but it relays peer client-
+    |                  events without server-side content gating, so it cannot
+    |                  enforce read-only on the socket nor debounce persistence the
+    |                  way a Yjs backend does. Pushing Yjs through it is a custom
+    |                  protocol, not a standard TipTap integration. Kept only for
+    |                  backward compatibility; use 'hocuspocus' for collaboration.
     |
     | channel_prefix is the room namespace; a room is ALWAYS prefix.nodeId so a
     | token is bound to exactly one node (no cross-node access).
@@ -672,7 +680,7 @@ return [
     | both the room-JWT signing key AND the key the webhooks verify a JWT against.
     */
     'collaboration' => [
-        'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'),
+        'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),
         'channel_prefix' => 'vaulter.documents',
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
 

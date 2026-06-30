@@ -164,15 +164,23 @@ final class NodeCollaborationController extends Controller
     }
 
     /**
-     * The node id a webhook body addresses: the `node_id` field, or the `room` field
-     * normalised back through the channel prefix (the hub may send either).
+     * The node id a webhook body addresses: the `node_id` field, or the `room` field,
+     * each normalised back through the channel prefix (the hub may send either, and it
+     * sends node_id EQUAL to the room name — see hocuspocus-server/src/webhook.js).
      */
     private function nodeId(Request $request): int|string
     {
         $nodeId = $request->input('node_id');
 
-        if (is_int($nodeId) || (is_string($nodeId) && $nodeId !== '')) {
+        if (is_int($nodeId)) {
             return $nodeId;
+        }
+
+        // Хаб шлёт node_id РАВНЫМ имени комнаты (vaulter.documents.<id>), а не голым
+        // ключом — нормализуем через префикс канала; для голого id nodeIdFromRoom()
+        // возвращает значение как есть (без префикса — no-op).
+        if (is_string($nodeId) && $nodeId !== '') {
+            return Config::nodeIdFromRoom($nodeId);
         }
 
         $room = $request->input('room');

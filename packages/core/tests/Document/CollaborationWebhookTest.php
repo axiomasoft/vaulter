@@ -191,6 +191,30 @@ it('rejects a store call with a tampered JWT', function (): void {
         ->assertStatus(401);
 });
 
+it('resolves the node when the hub sends node_id EQUAL to the room name (regression)', function (): void {
+    config()->set('vaulter.collaboration.webhook_secret', null);
+    $node = webhookDocumentNode();
+    $room = Config::collaborationRoom($node->getKey());
+    $yjs = 'hub-room-shaped-node-id';
+
+    // Регрессия: Node-хаб (hocuspocus-server/src/webhook.js) шлёт node_id РАВНЫМ имени
+    // комнаты (vaulter.documents.<id>), а не голым ключом — контроллер обязан его
+    // нормализовать, иначе find('vaulter.documents.N') даёт 404 и снапшот теряется.
+    test()->postJson('api/vaulter/collab/store', [
+        'room' => $room,
+        'node_id' => $room,
+        'yjs_state' => base64_encode($yjs),
+    ], ['Authorization' => 'Bearer '.roomJwt($node, readOnly: false)])
+        ->assertOk()
+        ->assertJsonPath('data.node_id', $node->getKey());
+
+    expect(NodeDocumentVersion::query()
+        ->where('node_id', $node->getKey())
+        ->orderByDesc('version_no')
+        ->firstOrFail()
+        ->yjs_state)->toBe($yjs);
+});
+
 // ── collab/authenticate ─────────────────────────────────────────────────────────────
 
 it('authenticates a good room JWT and answers allowed + readOnly from the ability', function (): void {
@@ -204,6 +228,22 @@ it('authenticates a good room JWT and answers allowed + readOnly from the abilit
         ->assertJsonPath('allowed', true)
         ->assertJsonPath('readOnly', false)
         ->assertJsonPath('user.id', '1');
+});
+
+it('authenticates when the hub sends node_id EQUAL to the room name (regression)', function (): void {
+    config()->set('vaulter.collaboration.webhook_secret', null);
+    $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 1);
+    $room = Config::collaborationRoom($node->getKey());
+
+    // Тот же перекос node_id==room, что в collab/store — но на пути authenticate:
+    // нерезолвленный узел дал бы allowed:false и хаб отказал бы writer'у в коннекте.
+    test()->postJson('api/vaulter/collab/authenticate', [
+        'room' => $room,
+        'node_id' => $room,
+    ], ['Authorization' => 'Bearer '.roomJwt($node, readOnly: false, actorId: 1)])
+        ->assertOk()
+        ->assertJsonPath('allowed', true)
+        ->assertJsonPath('readOnly', false);
 });
 
 it('answers readOnly=true when the user is only a commenter', function (): void {

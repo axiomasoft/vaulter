@@ -87,6 +87,9 @@ it('grants and revokes a permission', function (): void {
 
 it('issues a collaboration token', function (): void {
     Vaulter::resolvePermissionsWith(new AllowResolver);
+    // The default transport is now hocuspocus; this legacy document endpoint is pinned
+    // to the reverb driver explicitly (it authenticates via the channel, no JWT secret).
+    config()->set('vaulter.collaboration.driver', 'reverb');
     $document = Document::factory()->create();
 
     $this->postJson(sprintf('api/vaulter/documents/%s/collab/token', $document->id))
