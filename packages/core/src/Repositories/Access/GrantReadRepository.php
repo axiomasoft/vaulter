@@ -66,6 +66,39 @@ final class GrantReadRepository
     }
 
     /**
+     * Every live, non-expired ALLOW grant addressed to the subject-set across ALL
+     * nodes (the §2.6 subject index, unbounded by an ancestor chain). The
+     * access-aware listing seam (NodeReadRepository::queryForUser) reads these as
+     * the candidate ANCHORS: an item-scoped anchor contributes only its own node,
+     * a subtree-scoped anchor additionally contributes its descendants. The caller
+     * still re-resolves each candidate through the AccessResolver, because a nearer
+     * deny may revoke a row (H.2) — this never decides visibility on its own.
+     *
+     * @param  list<Subject>              $subjects
+     * @return Collection<int, NodeGrant>
+     */
+    public function allowAnchorsFor(array $subjects, Carbon $now): Collection
+    {
+        if ($subjects === []) {
+            /** @var Collection<int, NodeGrant> $empty */
+            $empty = new Collection;
+
+            return $empty;
+        }
+
+        $model = Config::grantModel();
+
+        /** @var Collection<int, NodeGrant> $grants */
+        $grants = $model::query()
+            ->forSubjects($subjects)
+            ->notExpired($now)
+            ->where('effect', 'allow')
+            ->get();
+
+        return $grants;
+    }
+
+    /**
      * The distinct node ids a subject-set has ANY grant on — the "shared with me"
      * fast pass (§2.6 subject index). The caller re-resolves each node through the
      * AccessResolver, because a nearer deny may have revoked a row (H.2).

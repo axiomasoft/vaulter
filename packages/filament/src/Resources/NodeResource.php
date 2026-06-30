@@ -29,6 +29,7 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**
@@ -38,10 +39,20 @@ use Vaulter\Support\Config;
  * Drive Actions (rename/move/trash/restore/forceDelete) through the DriveContext —
  * NEVER a direct Eloquent write.
  *
- * Authorization is the core AccessResolver: each row action is gated by the acting
- * admin's {@see Ability} on that node (Edit→rename, Move→move, Trash→trash,
- * Restore→restore, Delete→forceDelete), so the panel never bypasses the ACL. The
- * model resolves through {@see Config::nodeModel()} so a swapped Node is still
+ * Authorization is the core AccessResolver. The TABLE scopes to the acting admin's
+ * grant-reachable CANDIDATE set (P1 #3): {@see getEloquentQuery()} narrows the query
+ * through {@see NodeReadRepository::constrainToAccessible()}, the same candidate-SQL
+ * the API listing uses — so the two surfaces are CONSISTENT. That narrowing is a
+ * deliberate SUPERSET: it hides nodes the admin has no grant-reachability to, but does
+ * NOT apply the exact deny-veto / inherit-cutoff in the listing SQL (a node a nearer
+ * deny revokes can still appear in the table); that exact listing suppression is
+ * DEFERRED to the H.4 materialised effective-grants read-model.
+ *
+ * Per-ROW ACTIONS remain EXACTLY gated: each row action is gated by the acting admin's
+ * {@see Ability} on that node through the AccessResolver (Edit→rename, Move→move,
+ * Trash→trash, Restore→restore, Delete→forceDelete), with the full deny-veto applied,
+ * so the panel never bypasses the ACL even though the table lists the candidate set.
+ * The model resolves through {@see Config::nodeModel()} so a swapped Node is still
  * governed here.
  */
 final class NodeResource extends Resource
@@ -182,7 +193,24 @@ final class NodeResource extends Resource
         // Trashed nodes carry trashed_at (a soft-trash, not the Eloquent soft-delete);
         // surface both so the Trashed filter can flip between them, but keep the
         // hard-deleted (deleted_at) rows hidden.
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+        $query = parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+
+        // Access-aware listing (P1 #3): narrow the table to the acting admin's
+        // grant-reachable CANDIDATE set when grant-filtering applies (a grant-
+        // authoritative driver + 'grants' feature); a no-op for the open drivers. The
+        // candidate set is a SUPERSET — it hides nodes with no grant-reachability but
+        // does NOT apply the exact deny-veto in the listing SQL (deferred to the H.4
+        // read-model); per-ROW ACTIONS stay exactly gated by the AccessResolver. No
+        // acting user ⇒ an empty table (a panel never lists nodes for nobody). The
+        // repository constrains WITHOUT a trashed-state filter, so the Trashed filter
+        // still flips between live and trashed within the accessible set.
+        $actor = PanelActor::current();
+
+        if ($actor === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return app(NodeReadRepository::class)->constrainToAccessible($query, $actor);
     }
 
     /**

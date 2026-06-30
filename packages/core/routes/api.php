@@ -101,6 +101,15 @@ Route::prefix(Config::routePrefix())
         | force, download) sit before the catch-all /{node} so they never shadow it.
         */
         Route::middleware(SubstituteBindings::class)->group(static function (): void {
+            // "Shared with me" (§2.6 / H.2) — CROSS-STORAGE: the subject index is not
+            // storage-bound, so this sits at the top level, NOT under a {storage}.
+            // Gated on the 'grants' feature (the v_node_grants ACL); the fixed
+            // segment sits before the catch-all /{node} routes so it never shadows
+            // them. Authorized in the controller (no actor ⇒ empty).
+            if (Config::featureEnabled('grants')) {
+                Route::get('shared', [NodeController::class, 'shared']);
+            }
+
             Route::get('storages/{storage}', [StorageController::class, 'show']);
 
             Route::get('storages/{storage}/nodes', [NodeController::class, 'index']);

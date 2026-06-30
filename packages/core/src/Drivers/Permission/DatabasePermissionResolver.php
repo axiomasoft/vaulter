@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Enums\Access\Effect;
 
@@ -28,9 +29,22 @@ use Vaulter\Enums\Access\Effect;
  *
  * This is the out-of-the-box driver and what makes the Database lane work in a
  * clean Laravel app with no host AuthZ.
+ *
+ * It is {@see GrantAuthoritativeDriver} and {@see isGrantAuthoritative()} returns true:
+ * v_node_grants is its SOLE authority (no roles, no override, no workspace-role gate), so
+ * the access-aware listing may safely narrow to the actor's grant-reachable candidate set.
+ * A host that SUBCLASSES this to add a role lane / override MUST override
+ * isGrantAuthoritative() to return false, or the listing would wrongly hide nodes that
+ * lane allows (the interface alone is inherited and cannot be un-declared).
  */
-class DatabasePermissionResolver implements HostRoleDriver
+class DatabasePermissionResolver implements GrantAuthoritativeDriver, HostRoleDriver
 {
+    public function isGrantAuthoritative(): bool
+    {
+        // The standalone lane has no roles/override — v_node_grants is the sole authority.
+        return true;
+    }
+
     public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
     {
         // No external roles — every decision is an ACL row, resolved by the
