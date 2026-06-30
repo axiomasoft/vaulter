@@ -11,6 +11,7 @@ use Vaulter\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Handlers\UniverHandler;
+use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
@@ -288,7 +289,12 @@ return [
         'database' => DatabasePermissionResolver::class,
         'gate' => GatePermissionResolver::class,
         'spatie' => SpatiePermissionResolver::class,
-        // 'azgard' => …  (deferred — needs Corex/Azgard morph alignment, see H.2)
+        // AzGuard lane (H.2 / ADR-0007): the driver talks ONLY to the Vaulter-owned
+        // AzgardGuard seam, so core has no azguard/corex dependency. A production host
+        // binds a real AzgardGuard adapter (delegating to AzGuard hasScopedPermission /
+        // Corex ContextGuard hasPermissionIn) AND aligns ulid morphs — see the azgard
+        // sub-config below.
+        'azgard' => AzgardPermissionResolver::class,
         'null' => NullRoleDriver::class, // non-prod only
     ],
 
@@ -341,6 +347,43 @@ return [
         'teams' => env('VAULTER_SPATIE_TEAMS', false),
         'role_subject_type' => 'role',
         'team_subject_type' => 'team',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | AzGuard driver — Ability→permission map (H.2 / ADR-0007)
+    |--------------------------------------------------------------------------
+    | Used only when drivers.permission = 'azgard'. The AzgardPermissionResolver talks
+    | exclusively to the Vaulter-owned AzgardGuard seam (no azguard/corex dependency in
+    | core). Unlike the Gate/Spatie maps (keyed by GrantLevel) AzGuard is action-centric,
+    | so 'permissions' maps a Vaulter Ability to an AzGuard permission key — the resolver
+    | asks hasPermissionIn(workspaceType, workspaceId, permission) (the workspace-scoped
+    | role lane of the composite order node-ACL → workspace-role → global). The SuperAdmin
+    | wildcard surfaces as the absolute allow override; 'create_permission' gates workspace
+    | creation. Plain strings — cache-safe.
+    |
+    | A production host MUST bind \Vaulter\Contracts\AzgardGuard to a real adapter
+    | (delegating to AzGuard hasScopedPermission / Corex ContextGuard hasPermissionIn) and
+    | align ulid morphs (vaulter.ids.default=ulid + corex.ids.strategy=Ulid +
+    | AZ_GUARD_MORPH_TYPE=ulid), registering workspace/owner types as Corex morph aliases.
+    | No real binding ships by default — tests bind \Vaulter\Testing\FakeAzgardGuard.
+    */
+    'azgard' => [
+        'permissions' => [
+            'view' => 'documents.view',
+            'download' => 'documents.download',
+            'comment' => 'documents.comment',
+            'edit' => 'documents.update',
+            'create' => 'documents.create',
+            'move' => 'documents.update',
+            'copy' => 'documents.update',
+            'trash' => 'documents.delete',
+            'delete' => 'documents.delete',
+            'restore' => 'documents.delete',
+            'share' => 'documents.manage',
+            'manage' => 'documents.manage',
+        ],
+        'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
     ],
 
     /*
