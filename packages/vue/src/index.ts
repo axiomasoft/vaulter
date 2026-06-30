@@ -44,14 +44,29 @@ export { useActivity } from './composables/useActivity'
 export type { UseActivityReturn } from './composables/useActivity'
 export { useDocumentNode } from './composables/useDocumentNode'
 export type { UseDocumentNodeOptions, UseDocumentNodeReturn } from './composables/useDocumentNode'
+export { useNodeCollaboration } from './composables/useNodeCollaboration'
+export type {
+  UseNodeCollaborationOptions,
+  UseNodeCollaborationReturn,
+} from './composables/useNodeCollaboration'
 
-// Collaboration transport
+// Collaboration transport (legacy document-centric)
 export { createCollaborationSession } from './collaboration'
 export type {
   CollaborationProviderHandle,
   CollaborationSession,
   CreateCollaborationOptions,
 } from './collaboration'
+
+// Node collaboration transport (M4b)
+export { createNodeCollaborationSession } from './nodeCollaboration'
+export type {
+  AwarenessLike,
+  Collaborator,
+  CreateNodeCollaborationOptions,
+  NodeCollaborationProviderHandle,
+  NodeCollaborationSessionHandle,
+} from './nodeCollaboration'
 
 // Components
 export { default as VaulterFileManager } from './components/VaulterFileManager.vue'

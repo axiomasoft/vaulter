@@ -20,6 +20,7 @@ import type {
   HandlerDescriptor,
   ListNodesQuery,
   Node,
+  NodeCollaborationSession,
   NodeDocumentExport,
   NodeGrant,
   NodeShare,
@@ -164,6 +165,16 @@ export interface VaulterClient {
   }
   collaboration: {
     token(documentId: DocumentId): Promise<CollaborationConnection>
+  }
+
+  /**
+   * The M4b node-collaboration handshake: mint a realtime session for a document
+   * NODE (the Drive surface), distinct from the legacy document-centric
+   * `collaboration` namespace. Returns the transport-agnostic
+   * {@link NodeCollaborationSession} the Yjs binding consumes.
+   */
+  nodeCollaboration: {
+    token(nodeId: NodeId): Promise<NodeCollaborationSession>
   }
 
   // ─── Drive (M1–M4) ───────────────────────────────────────────────────────
@@ -428,6 +439,10 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     },
     collaboration: {
       token: (documentId) => request<CollaborationConnection>('POST', `/documents/${documentId}/collab/token`, { body: {} }),
+    },
+    nodeCollaboration: {
+      token: (nodeId) =>
+        unwrap(request<Envelope<NodeCollaborationSession>>('POST', `/nodes/${nodeId}/collab/token`, { body: {} })),
     },
 
     // ─── Drive (M1–M4) ─────────────────────────────────────────────────────

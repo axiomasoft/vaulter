@@ -16,6 +16,7 @@ import type {
   HandlerDescriptor,
   Node,
   NodeAbilities,
+  NodeCollaborationSession,
   NodeGrant,
   NodeShare,
   NodeShareCreated,
@@ -372,55 +373,171 @@ describe('VaulterDocumentNode', () => {
     ui: { component: 'BinaryDownload', route: null, props: {} },
   }
 
-  function docClient(handler: HandlerDescriptor) {
+  /**
+   * A fake client. `collabSession` (when set) makes the node collab/token endpoint
+   * resolve a Hocuspocus session; absent → the token fetch rejects and the component
+   * falls back to the M4a autosave path.
+   */
+  function docClient(handler: HandlerDescriptor, collabSession?: NodeCollaborationSession) {
+    const updateContent = vi.fn().mockResolvedValue({ id: 2, node_id: 20, version_no: 2 })
     return {
-      documentNodes: {
-        handler: vi.fn().mockResolvedValue(handler),
-        content: vi.fn().mockResolvedValue({
-          id: 1, node_id: 20, version_no: 1, format: 'richtext', snapshot_label: null,
-          is_autosave: false, keep_forever: false, status: 'committed', content_hash: null,
-          yjs_state_size: null, created_by: null, created_at: null,
-          content: { type: 'doc', content: [] },
-        }),
-        updateContent: vi.fn(),
-      },
-    } as unknown as Partial<VaulterClient>
+      client: {
+        documentNodes: {
+          handler: vi.fn().mockResolvedValue(handler),
+          content: vi.fn().mockResolvedValue({
+            id: 1, node_id: 20, version_no: 1, format: 'richtext', snapshot_label: null,
+            is_autosave: false, keep_forever: false, status: 'committed', content_hash: null,
+            yjs_state_size: null, created_by: null, created_at: null,
+            content: { type: 'doc', content: [] },
+          }),
+          updateContent,
+        },
+        nodeCollaboration: {
+          token: collabSession
+            ? vi.fn().mockResolvedValue(collabSession)
+            : vi.fn().mockRejectedValue(new Error('collab unavailable')),
+        },
+      } as unknown as Partial<VaulterClient>,
+      updateContent,
+    }
+  }
+
+  const hocuspocusSession = (readOnly: boolean): NodeCollaborationSession => ({
+    driver: 'hocuspocus', room: 'vaulter.documents.20', node_id: 20,
+    read_only: readOnly, token: 'jwt', url: 'ws://hub:1234', connection: null,
+  })
+
+  // A stub Hocuspocus provider — no real socket. Lets the session build in a test.
+  function stubProviders() {
+    return {
+      createHocuspocusProvider: vi.fn().mockReturnValue({
+        awareness: null,
+        isConnected: () => true,
+        onConnectionChange: () => () => {},
+        destroy: vi.fn(),
+      }),
+    }
   }
 
   // markRaw mirrors how real hosts pass imported SFCs (non-reactive) into the map.
+  // It renders its collaborative + readonly props so the test can assert the mode.
   const StubEditor = markRaw(defineComponent({
     name: 'StubEditor',
-    props: { nodeId: { type: [Number, String], required: true }, handler: { type: Object, required: true } },
-    setup: () => () => h('div', { class: 'stub-editor' }, 'editor-mounted'),
+    props: {
+      nodeId: { type: [Number, String], required: true },
+      handler: { type: Object, required: true },
+      readonly: { type: Boolean, default: false },
+      collaborative: { type: Boolean, default: false },
+      ydoc: { type: Object, default: null },
+    },
+    setup: (props) => () => h('div', {
+      class: 'stub-editor',
+      'data-collaborative': props.collaborative ? 'true' : 'false',
+      'data-readonly': props.readonly ? 'true' : 'false',
+      'data-has-ydoc': props.ydoc ? 'true' : 'false',
+    }, 'editor-mounted'),
   }))
 
   it('mounts the mapped editor for a TipTap document handler', async () => {
+    const { client } = docClient(tiptapHandler, hocuspocusSession(false))
     const wrapper = mount(VaulterDocumentNode, {
-      props: { nodeId: 20, componentMap: { VaulterEditor: StubEditor } },
-      ...withClient(docClient(tiptapHandler)),
+      props: {
+        nodeId: 20,
+        componentMap: { VaulterEditor: StubEditor },
+        collaborationProviders: stubProviders(),
+      },
+      ...withClient(client),
     })
 
-    await nextTick()
-    await Promise.resolve()
-    await nextTick()
-    await Promise.resolve()
-    await nextTick()
+    await flushAll()
 
     expect(wrapper.find('.stub-editor').exists()).toBe(true)
     expect(wrapper.emitted('ready')?.[0]?.[0]).toMatchObject({ id: 'richtext' })
   })
 
-  it('renders the preview/download fallback for an unmapped handler', async () => {
+  it('mounts the editor in COLLABORATIVE mode for a collaborative handler', async () => {
+    const { client, updateContent } = docClient(tiptapHandler, hocuspocusSession(false))
     const wrapper = mount(VaulterDocumentNode, {
-      props: { nodeId: 20 },
-      ...withClient(docClient(fileHandler)),
+      props: {
+        nodeId: 20,
+        componentMap: { VaulterEditor: StubEditor },
+        collaborationProviders: stubProviders(),
+      },
+      ...withClient(client),
     })
 
-    await nextTick()
-    await Promise.resolve()
-    await nextTick()
-    await Promise.resolve()
-    await nextTick()
+    await flushAll()
+
+    const editor = wrapper.find('.stub-editor')
+    expect(editor.attributes('data-collaborative')).toBe('true')
+    // The shared Y.Doc is handed to the editor and writes go through Yjs (no autosave).
+    expect(editor.attributes('data-has-ydoc')).toBe('true')
+    expect(wrapper.emitted('collaborating')?.[0]?.[0]).toBe(false)
+    expect(updateContent).not.toHaveBeenCalled()
+  })
+
+  it('respects a read-only collaboration session', async () => {
+    const { client } = docClient(tiptapHandler, hocuspocusSession(true))
+    const wrapper = mount(VaulterDocumentNode, {
+      props: {
+        nodeId: 20,
+        componentMap: { VaulterEditor: StubEditor },
+        collaborationProviders: stubProviders(),
+      },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const editor = wrapper.find('.stub-editor')
+    expect(editor.attributes('data-collaborative')).toBe('true')
+    expect(editor.attributes('data-readonly')).toBe('true')
+    expect(wrapper.emitted('collaborating')?.[0]?.[0]).toBe(true)
+  })
+
+  it('falls back to the autosave (non-collaborative) path when collab is unavailable', async () => {
+    // No collab session → the token fetch rejects → autosave path.
+    const { client } = docClient(tiptapHandler)
+    const wrapper = mount(VaulterDocumentNode, {
+      props: { nodeId: 20, componentMap: { VaulterEditor: StubEditor } },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const editor = wrapper.find('.stub-editor')
+    expect(editor.exists()).toBe(true)
+    expect(editor.attributes('data-collaborative')).toBe('false')
+    expect(wrapper.emitted('collaborating')).toBeUndefined()
+  })
+
+  it('uses the autosave path for a NON-collaborative handler (never opens a session)', async () => {
+    const { client } = docClient({
+      ...tiptapHandler,
+      capabilities: { ...tiptapHandler.capabilities, collaborative: false },
+    }, hocuspocusSession(false))
+
+    const wrapper = mount(VaulterDocumentNode, {
+      props: { nodeId: 20, componentMap: { VaulterEditor: StubEditor } },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    const editor = wrapper.find('.stub-editor')
+    expect(editor.attributes('data-collaborative')).toBe('false')
+    // token() is never called for a non-collaborative handler.
+    expect((client.nodeCollaboration!.token as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled()
+  })
+
+  it('renders the preview/download fallback for an unmapped handler', async () => {
+    const { client } = docClient(fileHandler)
+    const wrapper = mount(VaulterDocumentNode, {
+      props: { nodeId: 20 },
+      ...withClient(client),
+    })
+
+    await flushAll()
 
     expect(wrapper.find('.stub-editor').exists()).toBe(false)
     expect(wrapper.find('.vaulter-document-node__fallback').exists()).toBe(true)

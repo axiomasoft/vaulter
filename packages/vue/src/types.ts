@@ -147,6 +147,35 @@ export type CollaborationConnection =
   | ReverbCollaborationConnection
   | HocuspocusCollaborationConnection
 
+/** The collaboration transport a node session runs over (M4b). */
+export type CollaborationDriver = 'reverb' | 'hocuspocus'
+
+/**
+ * The realtime-collaboration session descriptor the M4b node endpoint returns
+ * (`POST nodes/{node}/collab/token` → `data`). It mirrors the backend
+ * `CollaborationSession::toArray()` and is the ONE shape the Vue Yjs binding consumes
+ * regardless of transport:
+ *
+ *   - driver     — the chosen transport (`reverb` | `hocuspocus`).
+ *   - room       — the room/channel name, always `channel_prefix.nodeId`.
+ *   - node_id    — the document node the room maps to.
+ *   - read_only  — encoded from the actor's ability (view/comment → true, edit → false);
+ *                  the client mounts a read-only editor when true.
+ *   - token      — the room access handle: a signed JWT for Hocuspocus, the private
+ *                  channel name for Reverb.
+ *   - url        — the websocket URL for the Hocuspocus hub; null for Reverb.
+ *   - connection — the Laravel broadcast connection name for Reverb; null for Hocuspocus.
+ */
+export interface NodeCollaborationSession {
+  driver: CollaborationDriver
+  room: string
+  node_id: NodeId
+  read_only: boolean
+  token: string
+  url: string | null
+  connection: string | null
+}
+
 // ─── Request payloads ────────────────────────────────────────────────────────
 
 export interface ListDocumentsQuery {
