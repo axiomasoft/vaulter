@@ -665,6 +665,25 @@ final class Config
     }
 
     /**
+     * The orphan-object grace window in hours (H.3) — how old a bytes-without-a-row
+     * object must be before the disk-walk treats it as a deletable orphan. An
+     * in-flight commit promotes its bytes BEFORE its row is durable, so a fresh
+     * object may be a commit-in-progress, not an orphan; this grace is deliberately
+     * generous (a resumable upload can promote then commit much later). Defaults to
+     * the GC grace, floored at 1h.
+     */
+    public static function orphanGraceHours(int $override = 0): int
+    {
+        $default = config('vaulter.gc.grace_hours', 24);
+
+        $value = $override > 0 ? $override : config('vaulter.gc.orphan_grace_hours', $default);
+
+        $hours = is_numeric($value) ? (int) $value : 24;
+
+        return max($hours, 1);
+    }
+
+    /**
      * The default Flysystem disk for the canonical CAS objects when a blob's
      * storage row does not pin its own disk.
      */

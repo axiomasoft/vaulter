@@ -110,9 +110,9 @@ final readonly class BlobStore implements BlobStoreContract
 
     /**
      * The scope SEGMENT baked into the storage_key (H.3): the dedup-scope value as
-     * a path-safe string. global → 'global'; tenant → 't<id>' (or 'tenant-null'
-     * when tenancy is off); storage → 's<id>'. Distinct scopes therefore never
-     * resolve to the same physical object.
+     * a path-safe string. global → 'global'; tenant → 't<id>' (or 'tnull' when
+     * tenancy is off); storage → 's<id>' (or 'snull'). Distinct scopes therefore
+     * never resolve to the same physical object.
      */
     private function scopeSegment(string $dedupScope, ?int $tenantId, ?int $storageId): string
     {
