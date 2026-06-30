@@ -486,8 +486,9 @@ final class PanelTablesBuilder
         $table->integer('version_no');
 
         // The TipTap/ProseMirror snapshot (the structural JSON projection). jsonb on
-        // Postgres (the gin index below indexes it); a plain json column elsewhere.
-        $table->json('content')->nullable();
+        // Postgres (the gin jsonb_path_ops index below requires it — a plain json column
+        // is rejected by that operator class); maps to json on MySQL and text on SQLite.
+        $table->jsonb('content')->nullable();
 
         // The binary Yjs CRDT update — the realtime source of truth (M4b). bytea on
         // Postgres, longBlob on MySQL (§2.5 portability note); yjs_state_size caches
@@ -659,7 +660,8 @@ final class PanelTablesBuilder
 
         // The structured payload (before/after, old/new path/role, …). Always
         // present — this is the audit body, distinct from the host extra_data hatch.
-        $table->json('context')->nullable();
+        // jsonb on Postgres (the gin jsonb_path_ops index requires it); json/text elsewhere.
+        $table->jsonb('context')->nullable();
 
         $this->ipColumn(table: $table);
         $table->text('user_agent')->nullable();

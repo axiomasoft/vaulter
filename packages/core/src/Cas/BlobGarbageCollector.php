@@ -206,12 +206,19 @@ final readonly class BlobGarbageCollector
      * ignored). It precedes even the advisory lock, which is allowed: SET
      * TRANSACTION only forbids a prior data statement, not a prior SET.
      *
+     * The raise is skipped when this is NOT a top-level transaction (transactionLevel
+     * > 1) — i.e. the GC unit runs nested inside a caller's open transaction (a host
+     * wrapping the sweep, or RefreshDatabase in tests). PostgreSQL forbids changing the
+     * isolation level once a transaction has issued a data statement, so SET would 25001;
+     * the only valid behaviour is to inherit the enclosing transaction's isolation. The
+     * advisory lock + FOR UPDATE still serialise the critical section either way.
+     *
      * @param \Closure(Blob): bool $work
      */
     private function lockedTransaction(Blob $candidate, \Closure $work, bool $serializable = false): bool
     {
         return DB::transaction(function () use ($candidate, $work, $serializable): bool {
-            if ($serializable && $this->lock->isPostgres()) {
+            if ($serializable && $this->lock->isPostgres() && DB::connection()->transactionLevel() <= 1) {
                 DB::statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
             }
 
