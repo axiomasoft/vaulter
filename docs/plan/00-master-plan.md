@@ -4,6 +4,71 @@
 >
 > Зонтичный бренд: **Vaulter**. Диск: **Vaulter Drive**. Движок документов: **DocDrive**. Файловый слой: **Vaulter Media** (standalone). После реализации этот файл мигрирует в `docs/` (VitePress), а `docs/plan/` удаляется — см. §8.
 
+---
+
+# 🔖 СТАТУС РЕАЛИЗАЦИИ И ОСТАВШИЕСЯ РАБОТЫ (читать первым)
+
+> Эта секция — единственный источник правды по прогрессу. Ниже разделы §1–§12 + «Финализация дизайна / H.1–H.7» — это исходный design-doc (всё ещё актуален как спецификация). Ветка: **`refactor/vaulter`**, PR **#20** (`refactor/vaulter` → `main`). Базовый `main` был ещё DocVault-namespaced; в ветку влит `origin/main` (#17/#19 уже присутствовали как `bc6ee1a`/`921805f`). Если PR смержен — новые работы вести от обновлённого `main` новыми ветками.
+
+## ✅ Сделано (24 коммита, все гейты зелёные: core 551 · filament 52 · vue 79 · hocuspocus 13; PHPStan max 0; Pint ✓; types 100%; docs:build ✓)
+
+| Область | Коммит | Что есть |
+|---|---|---|
+| Hardened-план | `613b741` | этот документ (+ H.1–H.7 свод) |
+| CI rename-фикс | `81d9245` | @docvault→@vaulter в workflows |
+| id-стратегии | `852ce25` | ulid/uuid7/bigint + VaulterSchema/HasVaulterKeys |
+| Storage Panels | `84f36b5` | config-first, zero-migration, make-panel, PanelRegistry |
+| Drive schema/models/generator | `ef62ec5` | PanelTablesBuilder, v_storages/v_nodes/v_files/v_blobs/…, adjacency Node, panel:migrations |
+| **Race-free CAS** | `5797feb` | BlobStore, sha256-дедуп, two-phase GC + resurrection, Flysystem |
+| Drive домен | `273ce73` | `Vaulter::for()`, действия folder/upload/move/copy/rename/trash/restore, квота |
+| Drive REST | `fe92ce3` | контроллеры/ресурсы/маршруты + стриминг-download |
+| **ACL deny-veto** | `c1e3cd6` | AccessResolver + Database-драйвер + grants + abilities |
+| Драйверы Gate/Spatie | `2e18c02` | + Spatie v8 team-switch |
+| Шеры + корзина | `83d828b` | bearer-ссылки (token-hash), public, purge-trash |
+| Activity | `e529ef3` | append-only лента, one-row-per-event |
+| Resumable uploads | `05d8f2e` | tus-core + S3-multipart → CAS commit |
+| Outbox + webhooks | `a40d1a7` | HMAC/backoff/DLQ |
+| DocDrive | `f4d6899` | DocumentHandler-реестр (новый формат без миграции), document-узлы + версии |
+| Filament-админка | `927344a` | Storage/Node/Grant/Share/Activity ресурсы |
+| ADR 0005-0013 + release-infra | `a106eec` | changesets + monorepo-split (dormant) + core polish |
+| Vue клиент+composables | `5bc4e4e` | typed Drive client, useNodes/useUpload/… |
+| Vue компоненты | `a10cdce` | VaulterDrive/Uploader/панели/DocumentNode |
+| Azgard-драйвер | `015da6b` | AzgardGuard-шов (без hard-dep), fake-tested |
+| Collab-backend | `985a63b` | JWT-токены + hocuspocus-вебхуки + Yjs-persist |
+| Domain-restructure | `b1fe4b0` | technical roots + domain subfolders (147 файлов) |
+| Collab-edge | `e5265ab` | hocuspocus-server onAuth/onStore + Vue Yjs |
+| Docs overhaul | `4300472` | полная VitePress-доку, en+ru core |
+
+**4 драйвера прав:** Database (дефолт) · Gate · Spatie · Azgard. **Всё в `packages/core`** под доменными namespace (Option A — физический split пакетов отложен).
+
+## ⏳ ОСТАВШИЕСЯ РАБОТЫ (приоритизировано — это то, что «надо доделать»)
+
+### P1 — Функциональное закрытие
+1. **Realtime-коллаборация e2e.** Вся обвязка есть (collab-backend PHP `985a63b` + hocuspocus-server + Vue Yjs `e5265ab`), но НЕ проверена вживую. Поднять стек (Reverb ИЛИ Hocuspocus + Laravel + Postgres через `hocuspocus-server/docker-compose.yml`), прогнать 2 клиента: JWT реально верифицируется вебхуком, `readOnly` соблюдается на живом сокете, debounced-снапшот падает в `v_node_document_versions.yjs_state`. Желательно Playwright-e2e (скилл `quality:playwright-e2e`). Доделать `.env.example` hocuspocus-server (был permission-protected — есть только README).
+2. **Azgard — реальная интеграция (не fake).** Сейчас `AzgardPermissionResolver` тестируется против `Vaulter\Contracts\Access\AzgardGuard` + `FakeAzgardGuard`. Нужно: реальный адаптер, делегирующий в AzGuard `hasScopedPermission` / Corex `TenantContextGuard::hasPermissionIn`; выравнивание `vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`; регистрация `workspace_type`/`owner_type` как Corex морф-алиасов; интеграционные Pest-тесты с реально подключёнными `axioma-studio/azguard` + `corex` (path-repo dev-deps) ИЛИ в хосте FlexCRM. Возможно — отдельный пакет `vaulter-permissions-azgard` (см. карту пакетов §«Карта пакетов»). Заменить плейсхолдер `App\Vaulter\AllowAuthenticatedResolver` во FlexCRM.
+3. **Access-aware листинг (core-seam).** `NodeReadRepository::queryForUser()` ещё нет — Filament/Vue листят открытое дерево, гейтят только ДЕЙСТВИЯ через AccessResolver. Добавить scope, фильтрующий узлы по правам субъекта (для «shared with me» / скрытия недоступного в списках). И `StorageResource.abilities` сейчас `true` — наполнить из AccessResolver (storage-scope authz).
+
+### P2 — Релиз и упаковка
+4. **Активировать release-pipeline.** Создать split-репо `axioma-studio/vaulter-core`(+`-filament`, позже `-media/-drive/-docdrive`), завести secret `GH_ACCESS_TOKEN`, зарегистрировать на Packagist; первый changeset + релиз; опубликовать `@vaulter/vue` в npm; собрать+запушить образ `ghcr.io/axioma-studio/vaulter-hocuspocus`. Файлы готовы: `.github/workflows/{release-npm,monorepo-split}.yml`, `.changeset/`.
+5. **Физический split пакетов (опц., Option B).** Вынести `vaulter-media` (CAS + per-file ACL, standalone — владелец это хотел как переиспользуемый), затем `vaulter-drive`/`vaulter-docdrive` из core в отдельные composer-пакеты (path-repo + свои composer.json + ServiceProvider). Сейчас всё в `packages/core/src/{Cas,Drive,Documents,…}` под namespace — извлечение механическое. Добавить per-package CI-джобы.
+6. **`vaulter-medialibrary-bridge`** (опц.) — входной мост: импорт spatie/laravel-medialibrary media → v_nodes/v_blobs. Не построен.
+
+### P3 — Документация
+7. **Полный ru-перевод** доков. Переведён core-путь (introduction/quick-start/installation/configuration/collaboration + concepts storage-panels/authorization). Остальное (`/reference/*`, recipes, filament, vue, internals, остальные guide) — en. Допереводить + донастроить ru-сайдбар.
+8. (опц.) Гранулярная IA доков (`/concepts//usage//api/` split) — сейчас плоский `docs/guide/*` + `docs/reference/*`, билдится; разбивать только если нужно.
+
+### P4 — Легаси, масштаб, мелочи
+9. **Легаси DocVault-путь.** `v_documents/v_document_*` + модели `Models/Documents/{Document,DocumentVersion,DocumentFolder,DocumentComment,DocumentPermission,DocumentShare}` + их тесты ещё живы (intact). Решить: strangler-бэкфилл `v_documents → v_nodes` и депрекейт, или оставить. Мост для FlexCRM legacy editor-collection (MediaLibrary).
+10. **ACL-кэш (H.4).** Сейчас on-read CTE-обход предков. При нагрузке добавить version-stamped кэш (`acl_version/tree_version/subject_version/model_version`, length-prefixed ключ — НЕ `:`-склейка, CVE-2026-48096) + материализованный effective-grants / ltree-closure read-model. Не построено (по плану — «когда профайлинг потребует»).
+11. **CAS — добить:** orphan-object disk-walk в `vaulter:reconcile-blobs` (сейчас только row-side); конкурентный **PG**-тест advisory-locks (CI=sqlite → добавить pgsql-джоб); prune settled-outbox (seam `webhooks.retention_days` есть).
+12. **DocDrive — форматы:** `UniverHandler` (XLSX) сейчас заглушка за флагом `spreadsheets` — доделать (single-user); опц. OnlyOffice/Collabora handlers (BYO-лицензия); PDF/DOCX exporters (seam есть).
+13. **Vue UX:** move/copy используют `window.prompt`-плейсхолдер — заменить на пикер папки-цели. Filament: 1 skipped тест (Filament5+Livewire nested-render snag) — разобраться.
+14. **Прочее из плана:** `vaulter-livewire` (нативные компоненты — future); hash-chaining/партиционирование activity; домержить любые `// M2/seam`-комментарии (storage-scope authz seams в StorageController).
+
+> **Как продолжить после /clear:** прочитать эту секцию + соответствующий раздел §1–§12 / H.x по теме; работать тем же ритмом (workflow: implement → review[PHPStan/Pint/Pest+канон] → fix-loop → независимая verify → тихий коммит); гейты должны оставаться зелёными.
+
+---
+
 ## Context — зачем это
 
 `vaulter` только что переименован из DocVault (commit `ac140fc`). Сегодня это **документо-центричный** пакет: TipTap-документы, версии, коллаборация (Reverb/Hocuspocus), таблицы `v_documents/v_document_folders/v_document_versions/v_document_permissions/v_document_comments/v_document_shares`. Архитектура зрелая и уже совпадает с каноном экосистемы: swappable-модели, `id_type`, опц. `tenant_id`, `table_prefix`, контракты `PermissionResolver/StorageAdapter/ShareTokenGenerator/DocumentExporter/CollaborationDriver`, read/store-репозитории, `final readonly` Actions, типизированный `Support\Config`, `VaulterManager`+фасад, типизированный Vue-клиент.
