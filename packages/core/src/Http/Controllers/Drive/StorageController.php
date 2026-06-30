@@ -39,15 +39,15 @@ final class StorageController extends Controller
      * Guard View on the storage root before exposing the meta. Edge cases (matched to
      * NodeController's semantics):
      *
-     *   - No root node yet (root_node_id null / the row missing): there is no viewable
-     *     node to gate on, so an AUTHENTICATED actor opens the storage (a freshly
-     *     provisioned-but-unrooted shell its owner just created; StorageResource returns
-     *     all-false abilities). An UNAUTHENTICATED caller is denied — storage meta (name,
-     *     owner, quota) must never reach a guest, matching the package's deny-on-missing-
-     *     root convention (ActivityController/DocumentNodeController).
-     *   - Null actor (unauthenticated): denied in BOTH branches — when a root exists,
-     *     no actor ⇒ no grant ⇒ 403 (exactly NodeController::guard); when no root exists,
-     *     the no-root branch denies the actor-less request before exposing the meta.
+     *   - No root node (root_node_id null / the row missing): a storage is ALWAYS
+     *     provisioned with its root folder in one transaction (StorageManager::provision),
+     *     so a missing root is a corrupt/transient state with no node to authorize against.
+     *     It 404s for EVERYONE — never leaking the meta (name, owner, quota) to a grantless
+     *     actor — matching the package's deny-on-missing-root convention (ActivityController
+     *     "a miss is a corrupt state and 404s" / DocumentNodeController::driveRoot abort(404)).
+     *   - Null actor (unauthenticated): denied on a rooted storage — no actor ⇒ no grant
+     *     ⇒ 403 (exactly NodeController::guard); on a rootless storage the 404 above fires
+     *     first, so the meta never reaches an actor-less caller either way.
      *   - Open drivers (gate/spatie/azgard/null): $access->can delegates to the active
      *     host-role driver, so an open driver decides exactly as it does for the node
      *     listings — the database driver is never hard-coded here.
@@ -56,16 +56,14 @@ final class StorageController extends Controller
     {
         $root = $this->root($storage);
 
-        if ($root instanceof Node) {
-            $this->guard($request, Ability::View, $root);
-        } elseif ($this->authorizable($request) === null) {
-            // No root node to gate on, but the meta must never reach an UNAUTHENTICATED
-            // caller (the route runs under `api` with no auth guard). An authenticated
-            // actor still opens a freshly provisioned-but-unrooted storage (its owner's
-            // shell); a guest is denied — matching the package's deny-on-missing-root
-            // convention (ActivityController/DocumentNodeController) for the no-actor case.
-            throw PermissionDeniedException::forAbility(Ability::View->value);
+        if (!$root instanceof Node) {
+            // No root folder to gate View on. Provisioning is transactional (the root is
+            // born with the storage), so this is a corrupt/transient row, not a viewable
+            // "unrooted shell": 404 for everyone rather than serving the meta ungated.
+            abort(404);
         }
+
+        $this->guard($request, Ability::View, $root);
 
         return StorageResource::make($storage);
     }

@@ -19,9 +19,9 @@ use Vaulter\Tests\Fixtures\TestUser;
  *
  *   - a rooted storage opens ONLY when the actor holds a View-implying grant on the
  *     root; a missing grant, a deny-veto on the root, and a guest all 403;
- *   - an un-ROOTED storage (root_node_id null) has no node to gate on — an
- *     AUTHENTICATED actor opens the read-only shell (all-false abilities), but a
- *     guest is still denied (the storage meta must never reach an actor-less caller);
+ *   - an un-ROOTED storage (root_node_id null) has no node to gate on and is a
+ *     corrupt/transient state (provisioning is transactional) — it 404s for EVERYONE,
+ *     authenticated or not, so the meta never leaks to a grantless actor;
  *   - on an OPEN (null) driver `$access->can` delegates to the driver, so the show is
  *     open for any authenticated actor regardless of grants.
  *
@@ -115,37 +115,34 @@ it('refuses a rooted storage show for an unauthenticated guest', function (): vo
         ->assertStatus(403);
 });
 
-// ── (e) No-root storage (root_node_id null): authenticated actor → 200 + all-false
-//        abilities; unauthenticated guest → 403 (the deny-without-actor decision).
-it('opens a no-root storage for an authenticated actor with all-false abilities', function (): void {
+// ── (e) No-root storage (root_node_id null): 404 for EVERYONE. Provisioning is
+//        transactional (the root is born with the storage — StorageManager::provision),
+//        so a missing root is a corrupt/transient state with no node to authorize on, not
+//        a viewable "shell". It must never leak the meta (name/owner/quota) to a grantless
+//        actor — matching ActivityController/DocumentNodeController's deny-on-missing-root.
+it('404s a no-root storage show for an authenticated grantless actor (no meta leak)', function (): void {
     $storage = AccessTestHelpers::storage();
 
-    // Null the root: a freshly provisioned-but-unrooted shell. There is no node to gate
-    // on, so an AUTHENTICATED actor opens it; the Resource returns all-false abilities
-    // (no root ⇒ the read-only-shell default).
+    // Null the root (a hard-deleted root leaves root_node_id dangling — it is NOT a DB FK).
+    // The acting user (id=1) holds NO grant anywhere: a 200 here would be an IDOR leak of
+    // the storage owner/name/quota to any authenticated caller.
     $storage->forceFill(['root_node_id' => null])->save();
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertOk()
-        ->assertJsonPath('data.id', $storage->getKey())
-        ->assertJsonPath('data.root_node_id', null)
-        ->assertJsonPath('data.abilities.view', false)
-        ->assertJsonPath('data.abilities.create_folder', false)
-        ->assertJsonPath('data.abilities.upload', false)
-        ->assertJsonPath('data.abilities.manage', false);
+        ->assertStatus(404);
 });
 
-it('refuses a no-root storage show for an unauthenticated guest', function (): void {
+it('404s a no-root storage show for an unauthenticated guest', function (): void {
     $storage = AccessTestHelpers::storage();
 
-    // No root AND no actor: the controller denies BEFORE exposing the meta — the storage
-    // name/owner/quota must never reach an actor-less caller (deny-on-missing-root).
+    // No root AND no actor: still 404 — the corrupt-state miss fires before any meta is
+    // shaped, so the name/owner/quota never reach an actor-less caller either.
     $storage->forceFill(['root_node_id' => null])->save();
 
     actAsStorageGuest();
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(403);
+        ->assertStatus(404);
 });
 
 // ── open-driver passthrough: on the OPEN null driver $access->can delegates to the
