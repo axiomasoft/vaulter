@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories;
 
+use Illuminate\Contracts\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Vaulter\Models\Node;
 use Vaulter\Models\Storage;
 use Vaulter\Support\Config;
@@ -156,6 +158,34 @@ final class NodeReadRepository
             ->treeOf($storage->id)
             ->whereNotNull('trashed_at')
             ->orderByDesc('trashed_at');
+    }
+
+    /**
+     * The trashed nodes whose trashed_at is at or before $threshold — the
+     * purge-trash candidates past their retention window (§2.10). Only ROOTS of a
+     * trash operation are returned: a node whose own parent is itself trashed is
+     * skipped, because force-deleting an ancestor's subtree already reclaims it (so
+     * a child is never purged twice). Returns a Builder so the command chunks it.
+     *
+     * @return Builder<Node>
+     */
+    public function trashedBefore(Carbon $threshold): Builder
+    {
+        $model = Config::nodeModel();
+        $table = (new $model)->getTable();
+
+        return $this->query()
+            ->whereNotNull('trashed_at')
+            ->where('trashed_at', '<=', $threshold)
+            // Skip descendants whose own parent is also trashed — the trashed
+            // ancestor is the purge root and its subtree force-delete covers them.
+            ->whereNotExists(static function (QueryBuilder $sub) use ($table): void {
+                $sub->selectRaw('1')
+                    ->from($table.' as parent_node')
+                    ->whereColumn('parent_node.id', $table.'.parent_id')
+                    ->whereNotNull('parent_node.trashed_at');
+            })
+            ->orderBy('trashed_at');
     }
 
     /**

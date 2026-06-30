@@ -27,6 +27,7 @@ use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
 use Vaulter\Models\NodeGrant;
+use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
@@ -177,6 +178,17 @@ final class Config
     {
         /** @var class-string<NodeGrant> $class */
         $class = config('vaulter.models.grant', NodeGrant::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<NodeShare>
+     */
+    public static function nodeShareModel(): string
+    {
+        /** @var class-string<NodeShare> $class */
+        $class = config('vaulter.models.node_share', NodeShare::class);
 
         return $class;
     }
@@ -508,6 +520,64 @@ final class Config
         $class = config('vaulter.share_token_generator', RandomShareTokenGenerator::class);
 
         return $class;
+    }
+
+    /**
+     * The bearer share-link token generator (M2c / §2.7), read from
+     * config('vaulter.share.token_generator') with a fallback to the legacy
+     * top-level key so a host that only set the old key keeps working. Only a
+     * valid ShareTokenGenerator FQCN is returned (cache-safe — FQCN only).
+     *
+     * @return class-string<ShareTokenGenerator>
+     */
+    public static function nodeShareTokenGeneratorClass(): string
+    {
+        $class = config('vaulter.share.token_generator', config('vaulter.share_token_generator'));
+
+        if (is_string($class) && is_a($class, ShareTokenGenerator::class, allow_string: true)) {
+            /** @var class-string<ShareTokenGenerator> $class */
+            return $class;
+        }
+
+        return RandomShareTokenGenerator::class;
+    }
+
+    /**
+     * The public base a bearer share URL is built from (NodeShareResource appends
+     * the raw token). Default '/share'.
+     */
+    public static function shareUrlBase(): string
+    {
+        $value = config('vaulter.share.url_base', '/share');
+
+        return is_string($value) && $value !== '' ? rtrim($value, '/') : '/share';
+    }
+
+    /**
+     * How many leading characters of the raw bearer token are stored as the
+     * non-secret token_prefix for owner-side UX lookup (§2.7). Floored at 1.
+     */
+    public static function sharePrefixLength(): int
+    {
+        $value = config('vaulter.share.prefix_length', 8);
+
+        $length = is_numeric($value) ? (int) $value : 8;
+
+        return max($length, 1);
+    }
+
+    /**
+     * The trash retention window in days (D17 / §2.10) before a trashed node's
+     * subtree is permanently purged. Default 30, floored at 0 (0 = purge as soon
+     * as a node is trashed).
+     */
+    public static function trashRetentionDays(): int
+    {
+        $value = config('vaulter.trash.retention_days', 30);
+
+        $days = is_numeric($value) ? (int) $value : 30;
+
+        return max($days, 0);
     }
 
     /**

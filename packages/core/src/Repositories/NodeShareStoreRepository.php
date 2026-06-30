@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Repositories;
+
+use Illuminate\Support\Carbon;
+use Vaulter\Models\Node;
+use Vaulter\Models\NodeShare;
+use Vaulter\Support\Config;
+
+/**
+ * Write-side row work for v_node_shares (§2.7 / M2c). It persists ONLY the token's
+ * sha256 hash + prefix (never the raw token), and owns the atomic, max_uses-bounded
+ * use-count increment. Opens NO transactions and dispatches NO events — the Action
+ * does. Authorization and token minting/hashing happen upstream (Action); this is
+ * pure row work.
+ */
+final class NodeShareStoreRepository
+{
+    /**
+     * Persist a new bearer share on a node. The caller has already hashed the raw
+     * token (only $tokenHash + $tokenPrefix reach the DB) and hashed any password.
+     */
+    public function create(
+        Node $node,
+        string $tokenHash,
+        string $tokenPrefix,
+        int $permissions,
+        string $level,
+        string $scope,
+        ?string $passwordHash,
+        bool $requireLogin,
+        bool $allowDiscovery,
+        ?Carbon $expiresAt,
+        ?int $maxUses,
+        int|string|null $grantedBy,
+    ): NodeShare {
+        $model = Config::nodeShareModel();
+
+        /** @var NodeShare $share */
+        $share = new $model;
+        $share->fill([
+            'tenant_id' => $node->tenant_id,
+            'node_id' => $node->getKey(),
+            'token_hash' => $tokenHash,
+            'token_prefix' => $tokenPrefix,
+            'permissions' => $permissions,
+            'level' => $level,
+            'scope' => $scope,
+            'password_hash' => $passwordHash,
+            'require_login' => $requireLogin,
+            'allow_discovery' => $allowDiscovery,
+            'expires_at' => $expiresAt,
+            'max_uses' => $maxUses,
+            'use_count' => 0,
+            'granted_by' => $grantedBy,
+        ]);
+        $share->save();
+
+        return $share->refresh();
+    }
+
+    /**
+     * Revoke a share by stamping revoked_at (idempotent — a re-revoke is a no-op).
+     * Returns true when this call actually flipped it from live to revoked.
+     */
+    public function revoke(NodeShare $share, Carbon $now): bool
+    {
+        if ($share->revoked_at !== null) {
+            return false;
+        }
+
+        $share->forceFill(['revoked_at' => $now])->save();
+
+        return true;
+    }
+
+    /**
+     * Atomically consume one use of a share, bounded by max_uses (§2.7). A single
+     * conditional UPDATE increments use_count only while it is still below
+     * max_uses (or max_uses is null/unbounded), so two concurrent public hits can
+     * never push it past the budget. Returns true when a use was consumed.
+     */
+    public function consumeUse(NodeShare $share): bool
+    {
+        $model = Config::nodeShareModel();
+
+        $query = $model::query()
+            ->whereKey($share->getKey())
+            ->whereNull('revoked_at');
+
+        if ($share->max_uses !== null) {
+            // The atomic guard: only rows still under budget are bumped.
+            $query->whereColumn('use_count', '<', 'max_uses');
+        }
+
+        $affected = $query->increment('use_count');
+
+        return $affected > 0;
+    }
+}

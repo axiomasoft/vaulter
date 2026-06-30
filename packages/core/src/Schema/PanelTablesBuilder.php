@@ -47,6 +47,7 @@ final class PanelTablesBuilder
         'file_versions',
         'file_version_blobs',
         'node_grants',
+        'node_shares',
     ];
 
     /**
@@ -95,6 +96,7 @@ final class PanelTablesBuilder
                 'file_versions' => $this->defineFileVersions(table: $table, panel: $panel, ids: $ids),
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
+                'node_shares' => $this->defineNodeShares(table: $table, panel: $panel, ids: $ids),
                 default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
             };
         });
@@ -392,6 +394,66 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_node_shares — the bearer share-link, the SEPARATE public sharing channel
+     * (§2.7 / M2c). Gated on 'share_links'. ONLY the sha256 token_hash is stored
+     * (UNIQUE — the raw token is never persisted); token_prefix backs owner-side UX
+     * lookup without revealing the token. The partial (expires_at) WHERE
+     * revoked_at IS NULL index (added driver-aware in afterCreate) backs the
+     * live-share sweep/lookup.
+     */
+    private function defineNodeShares(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'node_id');
+
+        // ONLY the hash is stored — the raw bearer token is returned once at mint
+        // and never persisted (§2.7 hardening). token_prefix is a non-secret
+        // leading slice kept purely for owner-side UX lookup.
+        $table->char('token_hash', 64);
+        $table->string('token_prefix', 16)->index();
+
+        // A share grants EXACTLY this bitmask on its node-set (default READ); level
+        // is the human-facing label that mirrors the bits.
+        $table->unsignedInteger('permissions')->default(1);
+        $table->string('level', 16)->default('reader');
+        $table->string('scope', 8)->default('item');
+
+        // Optional access gates (§2.7): a hashed password, a require-login flag and
+        // a discovery flag (whether the share may be listed/indexed).
+        $table->string('password_hash')->nullable();
+        $table->boolean('require_login')->default(false);
+        $table->boolean('allow_discovery')->default(false);
+
+        // Lifecycle bounds: an optional expiry, an optional atomic use budget and a
+        // revocation tombstone (§2.7). use_count is incremented atomically and
+        // bounded by max_uses.
+        $table->timestamp('expires_at')->nullable();
+        $table->unsignedInteger('max_uses')->nullable();
+        $table->unsignedInteger('use_count')->default(0);
+        $table->timestamp('revoked_at')->nullable()->index();
+
+        $ids->actor(table: $table, column: 'granted_by', nullable: true);
+        $this->extraData(table: $table, panel: $panel);
+        $table->softDeletes();
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        // token_hash is the bearer lookup key — UNIQUE so two shares can never
+        // collide on a token (the loser of a mint race retries with a fresh token).
+        $table->unique('token_hash', "{$name}_token_hash_uniq");
+
+        // Owner-side "shares on this node" listing (§2.7).
+        $table->index(['node_id', 'revoked_at'], "{$name}_node_revoked_idx");
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($panel->table('nodes'))
+            ->cascadeOnDelete();
+    }
+
+    /**
      * Post-create hooks that cannot be expressed inside the Blueprint, currently
      * the driver-aware sibling-unique guard on v_nodes.
      */
@@ -408,6 +470,34 @@ final class PanelTablesBuilder
         if ($entity === 'node_grants') {
             $this->addGrantUniqueIndex(table: $panel->table('node_grants'));
         }
+
+        if ($entity === 'node_shares') {
+            $this->addShareExpiryIndex(table: $panel->table('node_shares'));
+        }
+    }
+
+    /**
+     * The §2.7 partial expiry index: (expires_at) WHERE revoked_at IS NULL — the
+     * sweep of live, expiring shares. Driver-aware: a real partial index on
+     * Postgres/SQLite, a plain (expires_at) index elsewhere (the WHERE is then
+     * applied at query time by the Live scope).
+     */
+    private function addShareExpiryIndex(string $table): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        $name = "{$table}_expiry_live_idx";
+
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            DB::statement(
+                "CREATE INDEX {$name} ON {$table} (expires_at) WHERE revoked_at IS NULL",
+            );
+
+            return;
+        }
+
+        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+            $blueprint->index('expires_at', $name);
+        });
     }
 
     /**
@@ -573,6 +663,7 @@ final class PanelTablesBuilder
             'blobs' => $panel->featureEnabled('blobs'),
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             'node_grants' => $panel->featureEnabled('grants'),
+            'node_shares' => $panel->featureEnabled('share_links'),
             default => false,
         };
     }

@@ -16,6 +16,7 @@ use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
+use Vaulter\Console\PurgeTrashCommand;
 use Vaulter\Console\ReconcileBlobsCommand;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\CollaborationDriver;
@@ -45,6 +46,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasCommand(PanelMigrationsCommand::class)
             ->hasCommand(GcBlobsCommand::class)
             ->hasCommand(ReconcileBlobsCommand::class)
+            ->hasCommand(PurgeTrashCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
@@ -74,7 +76,11 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // as a singleton makes the seam explicit for swaps/tests.
         $this->app->singleton(StorageManager::class);
 
-        $this->app->bind(ShareTokenGenerator::class, Config::shareTokenGeneratorClass());
+        // The bearer share-link generator (M2c / §2.7). nodeShareTokenGeneratorClass
+        // reads config('vaulter.share.token_generator') and falls back to the legacy
+        // top-level key, so the one binding serves both the Drive bearer links and
+        // the legacy DocDrive shares (both default to RandomShareTokenGenerator).
+        $this->app->bind(ShareTokenGenerator::class, Config::nodeShareTokenGeneratorClass());
 
         // CAS services (H.3) — swappable via config('vaulter.cas.*'). StorageDriver
         // and ContentStore are stateless wrappers (singletons); BlobStore is the

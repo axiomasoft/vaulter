@@ -16,7 +16,10 @@ use Vaulter\Http\Controllers\ExportController;
 use Vaulter\Http\Controllers\FolderController;
 use Vaulter\Http\Controllers\PermissionController;
 use Vaulter\Http\Controllers\ShareController;
+use Vaulter\Http\Controllers\Sharing\PublicShareController;
+use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
 use Vaulter\Http\Controllers\VersionController;
+use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Support\Config;
 
 /*
@@ -115,5 +118,32 @@ Route::prefix(Config::routePrefix())
             Route::get('nodes/{node}/grants', [GrantController::class, 'index']);
             Route::post('nodes/{node}/grants', [GrantController::class, 'store']);
             Route::delete('nodes/{node}/grants', [GrantController::class, 'destroy']);
+
+            // Bearer share-links — the AUTHENTICATED OWNER surface (§2.7 / M2c).
+            // Authorized via AccessResolver Ability::Share on the node. create()
+            // returns the raw token once; index() never exposes it. The fixed
+            // /shares segment sits before the catch-all /{node}. The {share} id is a
+            // plain scalar (not route-model bound) — the controller verifies it
+            // belongs to the authorized node before revoking.
+            Route::get('nodes/{node}/shares', [NodeShareController::class, 'index']);
+            Route::post('nodes/{node}/shares', [NodeShareController::class, 'store']);
+            Route::delete('nodes/{node}/shares/{share}', [NodeShareController::class, 'destroy']);
+        });
+
+        /*
+        |----------------------------------------------------------------------
+        | Bearer share-links — the PUBLIC, token-resolved surface (§2.7 / M2c)
+        |----------------------------------------------------------------------
+        | The SEPARATE sharing channel. These routes carry NO auth middleware —
+        | only ResolveShareToken, which hashes the {token}, resolves the LIVE
+        | share, runs the timing-safe compare + password / require-login gates,
+        | intersects with item-safety and stashes a ShareContext. A share grants
+        | EXACTLY its bitmask on its node-set — the identity ACL is never consulted
+        | here. An optional already-authenticated host user satisfies require_login.
+        */
+        Route::middleware(ResolveShareToken::class)->group(static function (): void {
+            Route::get('share/{token}', [PublicShareController::class, 'show']);
+            Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
+            Route::get('share/{token}/download', [PublicShareController::class, 'download']);
         });
     });

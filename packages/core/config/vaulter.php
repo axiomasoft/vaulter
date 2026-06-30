@@ -24,6 +24,7 @@ use Vaulter\Models\FileVersion;
 use Vaulter\Models\FileVersionBlob;
 use Vaulter\Models\Node;
 use Vaulter\Models\NodeGrant;
+use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
@@ -63,6 +64,7 @@ return [
         'blob' => Blob::class,
         'file_version_blob' => FileVersionBlob::class,
         'grant' => NodeGrant::class,
+        'node_share' => NodeShare::class,
     ],
 
     /*
@@ -90,6 +92,7 @@ return [
         'file_versions' => 'file_versions',
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
+        'node_shares' => 'node_shares',
     ],
 
     /*
@@ -358,6 +361,42 @@ return [
     | hashed or prefixed tokens (must be unique and fit the token column).
     */
     'share_token_generator' => RandomShareTokenGenerator::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bearer share links (M2c / §2.7)
+    |--------------------------------------------------------------------------
+    | The SEPARATE public sharing channel — a bearer token granting exactly its
+    | own bitmask on its own node-set, evaluated in its own pass intersected with
+    | item-safety (tenant/trash/quarantine), NEVER unioned with the identity ACL.
+    |
+    |  - token_generator: the \Vaulter\Contracts\ShareTokenGenerator used to mint
+    |    the raw bearer token. Only the sha256 HASH of that token is ever stored
+    |    (token_hash), with a short token_prefix kept for owner-side UX lookup.
+    |  - url_base: the public base a share URL is built from in NodeShareResource
+    |    (the raw token is appended). The token itself is returned to the creator
+    |    exactly once; the resource never re-exposes it.
+    |  - prefix_length: how many leading characters of the raw token are stored as
+    |    the (non-secret) token_prefix.
+    */
+    'share' => [
+        'token_generator' => RandomShareTokenGenerator::class,
+        'url_base' => env('VAULTER_SHARE_URL_BASE', '/share'),
+        'prefix_length' => 8,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Trash purge (D17 / §2.10)
+    |--------------------------------------------------------------------------
+    | The retention window before a trashed node's subtree is permanently
+    | force-deleted by `php artisan vaulter:purge-trash` (schedulable). A node
+    | whose trashed_at is older than now() - retention_days is purged; its blob
+    | edges detach so the bytes become GC-eligible.
+    */
+    'trash' => [
+        'retention_days' => env('VAULTER_TRASH_RETENTION_DAYS', 30),
+    ],
 
     /*
     |--------------------------------------------------------------------------
