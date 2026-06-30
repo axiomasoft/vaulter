@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Command\Command;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -51,7 +52,10 @@ it('vaulter:reconcile-blobs --orphans --prune на sqlite: отказ, байт�
 
     // The prune was refused on sqlite — the orphan bytes survive.
     Storage::disk('local')->assertExists($orphanKey);
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'the FAILURE exit is the SQLite prune-refusal premise; PG/MySQL prune succeeds.',
+);
 
 it('vaulter:reconcile-blobs --orphans на чистом диске → SUCCESS', function (): void {
     // No orphan seeded — a clean disk reconciles cleanly.

@@ -103,4 +103,7 @@ it('BlobLock на sqlite: advisory-lock — no-op, single-writer сериали�
     });
 
     expect($reached)->toBeTrue();
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'asserts the SQLite no-op lock premise; on PG/MySQL the lock is a real mutex.',
+);

@@ -219,7 +219,10 @@ it('prune отказан на sqlite: pruneSupported=false, байты живы,
         ->and($report['pruned'])->toBe(0)
         ->and($report['orphans'])->toBe([$orphanKey]);
     Storage::disk('local')->assertExists($orphanKey);
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'prune-refusal is the SQLite premise; PG/MySQL support prune (covered in BlobOrphanPruneTest).',
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. Listing unsupported — a non-listable store refuses the walk cleanly.
