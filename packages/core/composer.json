@@ -35,10 +35,12 @@
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "spatie/laravel-permission": "^8.0"
     },
     "suggest": {
         "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
+        "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0).",
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions."
     },
     "autoload": {

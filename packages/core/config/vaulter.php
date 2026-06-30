@@ -8,6 +8,8 @@ use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Collaboration\HocuspocusCollaborationDriver;
 use Vaulter\Collaboration\ReverbCollaborationDriver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+use Vaulter\Drivers\Permission\GatePermissionResolver;
+use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Export\HtmlExporter;
 use Vaulter\Export\MarkdownExporter;
 use Vaulter\Models\Blob;
@@ -226,10 +228,61 @@ return [
 
     'permission_drivers' => [
         'database' => DatabasePermissionResolver::class,
-        // 'gate'   => …  (M2b)
-        // 'spatie' => …  (M2b)
-        // 'azgard' => …  (M2b)
+        'gate' => GatePermissionResolver::class,
+        'spatie' => SpatiePermissionResolver::class,
+        // 'azgard' => …  (deferred — needs Corex/Azgard morph alignment, see H.2)
         'null' => NullRoleDriver::class, // non-prod only
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gate driver — ability map (H.2)
+    |--------------------------------------------------------------------------
+    | Used only when drivers.permission = 'gate'. The GatePermissionResolver asks
+    | the Laravel Gate these abilities (node-blind — it passes the panel/workspace
+    | context, never a Node). 'abilities' maps a Vaulter GrantLevel to a host gate
+    | ability; the HIGHEST allowed level becomes the actor's role grant. 'super_
+    | ability' short-circuits to full access; 'create_ability' gates workspace
+    | creation (passed [workspaceType, workspaceId]). Plain strings — cache-safe.
+    */
+    'gate' => [
+        'abilities' => [
+            'reader' => 'vaulter.view',
+            'commenter' => 'vaulter.comment',
+            'writer' => 'vaulter.edit',
+            'organizer' => 'vaulter.organize',
+            'owner' => 'vaulter.manage',
+        ],
+        'super_ability' => env('VAULTER_GATE_SUPER_ABILITY', 'vaulter.super'),
+        'create_ability' => env('VAULTER_GATE_CREATE_ABILITY', 'vaulter.create'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Spatie driver — permission map (H.2 / D22)
+    |--------------------------------------------------------------------------
+    | Used only when drivers.permission = 'spatie' AND spatie/laravel-permission is
+    | installed (the driver guards every API touch behind class_exists, so core has
+    | no hard dependency). 'permissions' maps a GrantLevel to a spatie permission
+    | name checked via hasPermissionTo(), team-scoped to the workspace; the FULL v8
+    | team-switch dance lives inside the driver. 'super_permission' overrides;
+    | 'create_permission' gates workspace creation. 'teams' falls back here only when
+    | the host's own config('permission.teams') is unset; 'role_subject_type'/
+    | 'team_subject_type' are the morph aliases role/team grant rows are addressed to.
+    */
+    'spatie' => [
+        'permissions' => [
+            'reader' => 'vaulter.view',
+            'commenter' => 'vaulter.comment',
+            'writer' => 'vaulter.edit',
+            'organizer' => 'vaulter.organize',
+            'owner' => 'vaulter.manage',
+        ],
+        'super_permission' => env('VAULTER_SPATIE_SUPER_PERMISSION', 'vaulter.super'),
+        'create_permission' => env('VAULTER_SPATIE_CREATE_PERMISSION', 'vaulter.create'),
+        'teams' => env('VAULTER_SPATIE_TEAMS', false),
+        'role_subject_type' => 'role',
+        'team_subject_type' => 'team',
     ],
 
     /*
