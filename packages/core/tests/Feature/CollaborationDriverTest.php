@@ -28,9 +28,13 @@ it('builds a reverb connection config', function (): void {
 
     $config = Vaulter::driver()->connectionConfig($document, $user);
 
+    // Reverb authenticates out-of-band (the private channel auth endpoint), so the
+    // "token" the client uses IS the channel name it subscribes to — a usable handle
+    // for both transports rather than an opaque empty string (M4b deliverable #1).
     expect($config['driver'])->toBe('reverb')
         ->and($config['channel'])->toContain('vaulter.documents.')
-        ->and($config['token'])->toBe('');
+        ->and($config['connection'])->toBe('reverb')
+        ->and($config['token'])->toBe($config['channel']);
 });
 
 it('denies the channel when the resolver denies edit', function (): void {

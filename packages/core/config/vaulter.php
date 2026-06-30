@@ -648,14 +648,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Real-time collaboration
+    | Real-time collaboration (M4 / §7 / ADR-0001)
     |--------------------------------------------------------------------------
-    | 'reverb'     — Yjs over Laravel Reverb (no extra service; default).
-    | 'hocuspocus' — external Node Hocuspocus hub (see hocuspocus-server/).
+    | Yjs is the SOURCE OF TRUTH (the binary CRDT state stored on a document
+    | node's version); TipTap JSON is the derived projection. The transport is
+    | swappable behind the driver:
+    |
+    |   'reverb'     — Yjs over Laravel Reverb (no extra service; default). The
+    |                  Vue client joins the PRIVATE broadcast channel for the room
+    |                  (channel_prefix.nodeId); Laravel's channel-auth endpoint
+    |                  gates it through the AccessResolver. No room JWT is minted.
+    |   'hocuspocus' — an external Node Hocuspocus hub (see hocuspocus-server/).
+    |                  The client connects to the hub URL with a signed room JWT;
+    |                  the hub's onAuthenticate/onStoreDocument call BACK into the
+    |                  collab/authenticate + collab/store webhooks below.
+    |
+    | channel_prefix is the room namespace; a room is ALWAYS prefix.nodeId so a
+    | token is bound to exactly one node (no cross-node access).
+    |
+    | webhook_secret is the shared secret the Node hub presents on the server-to-
+    | server webhook endpoints. When null/empty the webhook surface accepts ONLY a
+    | valid signed JWT (it is NEVER open). The driver-level hocuspocus.secret is
+    | both the room-JWT signing key AND the key the webhooks verify a JWT against.
     */
     'collaboration' => [
         'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'),
         'channel_prefix' => 'vaulter.documents',
+        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
 
         'drivers' => [
             'reverb' => [

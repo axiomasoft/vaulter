@@ -12,6 +12,7 @@ use Vaulter\Http\Controllers\DocumentController;
 use Vaulter\Http\Controllers\Drive\DocumentNodeController;
 use Vaulter\Http\Controllers\Drive\DownloadController;
 use Vaulter\Http\Controllers\Drive\GrantController;
+use Vaulter\Http\Controllers\Drive\NodeCollaborationController;
 use Vaulter\Http\Controllers\Drive\NodeController;
 use Vaulter\Http\Controllers\Drive\StorageController;
 use Vaulter\Http\Controllers\ExportController;
@@ -24,6 +25,7 @@ use Vaulter\Http\Controllers\Uploads\S3MultipartController;
 use Vaulter\Http\Controllers\Uploads\TusUploadController;
 use Vaulter\Http\Controllers\VersionController;
 use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
+use Vaulter\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Support\Config;
 
@@ -130,6 +132,13 @@ Route::prefix(Config::routePrefix())
                 Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
                 Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
                 Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
+
+                // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
+                // authorized via the AccessResolver (≥ View/Comment to connect,
+                // read-only unless Edit), returning the transport-agnostic
+                // CollaborationSession descriptor. The fixed /collab/token segment
+                // sits before the catch-all /{node} routes so it never shadows them.
+                Route::post('nodes/{node}/collab/token', [NodeCollaborationController::class, 'token']);
             }
 
             /*
@@ -198,6 +207,26 @@ Route::prefix(Config::routePrefix())
             // sits before the catch-all /{node}.
             Route::get('nodes/{node}/activity', [ActivityController::class, 'forNode']);
         });
+
+        /*
+        |----------------------------------------------------------------------
+        | Realtime collaboration webhooks (§7 / ADR-0001 / M4b)
+        |----------------------------------------------------------------------
+        | The SERVER-TO-SERVER surface the Node Hocuspocus hub calls back into:
+        | onAuthenticate → collab/authenticate, onStoreDocument → collab/store.
+        | These carry NO auth middleware — only ResolveCollaborationCall, which
+        | authenticates the caller via the shared webhook secret OR a valid signed
+        | room JWT (never open) and stashes the resolved call. The node is resolved
+        | from the BODY (room/node_id), not route-model bound, and a JWT call may
+        | only address its own room (a token for node A cannot store to node B).
+        | Gated on the 'document_versions' feature.
+        */
+        if (Config::featureEnabled('document_versions')) {
+            Route::middleware(ResolveCollaborationCall::class)->group(static function (): void {
+                Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
+                Route::post('collab/store', [NodeCollaborationController::class, 'store']);
+            });
+        }
 
         /*
         |----------------------------------------------------------------------

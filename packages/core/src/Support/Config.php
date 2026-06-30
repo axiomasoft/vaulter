@@ -744,6 +744,96 @@ final class Config
     }
 
     /**
+     * The Laravel broadcast connection the Reverb collaboration transport uses
+     * (config('vaulter.collaboration.drivers.reverb.connection'), default 'reverb').
+     * The Vue client opens its Echo connection against this name; the room is the
+     * private broadcast channel the auth endpoint gates.
+     */
+    public static function reverbConnection(): string
+    {
+        $value = config('vaulter.collaboration.drivers.reverb.connection', 'reverb');
+
+        return is_string($value) && $value !== '' ? $value : 'reverb';
+    }
+
+    /**
+     * The collaboration room name for a node (M4b) — channel_prefix.nodeId. This is
+     * the single source of the room handle: the Reverb private broadcast channel, the
+     * Hocuspocus JWT `room` claim and the webhook `room` body all derive from it, so a
+     * token is bound to EXACTLY one node (no cross-node access, H-hardening). Accepts
+     * the raw Eloquent key (typed mixed) and stringifies it.
+     */
+    public static function collaborationRoom(mixed $nodeId): string
+    {
+        return self::channelPrefix().'.'.Identity::stringify($nodeId);
+    }
+
+    /**
+     * The node id a collaboration room name resolves back to — the inverse of
+     * {@see collaborationRoom()}. The webhook endpoints accept either the bare node id
+     * or the full prefixed room and normalise through here so the Node hub may send
+     * whichever it holds. Returns the input unchanged when it carries no prefix.
+     */
+    public static function nodeIdFromRoom(string $room): string
+    {
+        $prefix = self::channelPrefix().'.';
+
+        if (str_starts_with($room, $prefix)) {
+            return substr($room, strlen($prefix));
+        }
+
+        return $room;
+    }
+
+    /**
+     * The shared secret the Node Hocuspocus hub presents on the server-to-server
+     * webhook endpoints (collab/authenticate, collab/store). Null/empty ⇒ the
+     * webhook surface accepts ONLY a valid signed JWT (never open). Set via
+     * VAULTER_COLLAB_WEBHOOK_SECRET.
+     */
+    public static function collaborationWebhookSecret(): ?string
+    {
+        $value = config('vaulter.collaboration.webhook_secret');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The HS256 signing secret the Hocuspocus driver mints room JWTs with, also the
+     * key the webhook endpoints verify an incoming JWT against
+     * (config('vaulter.collaboration.drivers.hocuspocus.secret')). Null/empty ⇒ no JWT
+     * path is available.
+     */
+    public static function collaborationJwtSecret(): ?string
+    {
+        $value = config('vaulter.collaboration.drivers.hocuspocus.secret');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The TTL (seconds) a minted room JWT is valid for
+     * (config('vaulter.collaboration.drivers.hocuspocus.token_ttl'), default 3600).
+     */
+    public static function collaborationTokenTtl(): int
+    {
+        $value = config('vaulter.collaboration.drivers.hocuspocus.token_ttl', 3600);
+
+        return is_numeric($value) ? (int) $value : 3600;
+    }
+
+    /**
+     * The Hocuspocus hub websocket URL the Vue client connects to
+     * (config('vaulter.collaboration.drivers.hocuspocus.url')). Null when unset.
+     */
+    public static function collaborationHubUrl(): ?string
+    {
+        $value = config('vaulter.collaboration.drivers.hocuspocus.url');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
      * @return class-string|null
      */
     public static function permissionResolverClass(): ?string
