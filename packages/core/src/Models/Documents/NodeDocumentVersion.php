@@ -7,6 +7,7 @@ namespace Vaulter\Models\Documents;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Casts\BinaryString;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Drive\Node;
@@ -89,6 +90,9 @@ class NodeDocumentVersion extends Model
     {
         return [
             'content' => 'array',
+            // Postgres returns bytea as a stream resource; normalise to a string on every
+            // driver so consumers (copy/restore actions, collab load) never see a resource.
+            'yjs_state' => BinaryString::class,
             'version_no' => 'integer',
             'yjs_state_size' => 'integer',
             'is_autosave' => 'boolean',

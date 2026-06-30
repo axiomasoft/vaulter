@@ -77,19 +77,19 @@ jobs:
   # Postgres lane (master plan P4 #11). The default matrix above runs on in-memory
   # SQLite, where the CAS concurrency backbone is a no-op: pg_advisory_xact_lock,
   # FOR UPDATE, SERIALIZABLE and the gin(jsonb_path_ops) indexes only EXIST on a real
-  # server. This job points the CAS suite at Postgres so those paths actually execute —
-  # the destructive orphan prune + lock-then-recheck tests (BlobOrphanPruneTest) run
-  # here instead of skipping, and the full default migration (incl. the v_activity
-  # jsonb gin index) is exercised against pgsql.
+  # server. This job points the binary/concurrency-sensitive suites at Postgres so those
+  # paths actually execute: the destructive orphan prune + lock-then-recheck tests
+  # (BlobOrphanPruneTest) run here instead of skipping, the full default migration (incl.
+  # the v_activity jsonb gin index) is exercised against pgsql, and the yjs_state bytea
+  # round-trip (NUL-safe binary) is verified on a real bytea column.
   #
-  # Scope = packages/core/tests/Cas only. Those tests share the single base-TestCase
-  # schema, so RefreshDatabase's transaction strategy is sound on a persistent server.
-  # The wider suite mixes heterogeneous TestCases (Document/Ulid/Spatie/TablePrefix),
-  # each needing a DIFFERENT schema — fine on per-connection SQLite :memory: (migrated
-  # fresh per test) but not on one shared pgsql database without a per-test migrate:fresh.
-  # Running the whole suite on Postgres is a separate follow-up, not part of P4 #11.
+  # Each suite is its OWN pest STEP (Cas, then Document). A pest process migrates the
+  # schema once (RefreshDatabase migrate:fresh at start), so one process hosts only ONE
+  # TestCase schema; Cas uses the base TestCase, Document uses DocumentTestCase, hence two
+  # steps. The remaining heterogeneous TestCases (Ulid/Spatie/TablePrefix) would each need
+  # their own step too; bringing the WHOLE suite onto Postgres is a separate follow-up.
   test-pgsql:
-    name: PHP 8.4 / Postgres (CAS advisory-lock lane)
+    name: PHP 8.4 / Postgres (binary + advisory-lock lane)
     runs-on: ubuntu-latest
 
     services:
@@ -124,8 +124,22 @@ jobs:
           composer require "laravel/framework:12.*" "orchestra/testbench:^10.0" --dev --no-interaction --no-update
           composer update --prefer-dist --no-interaction --no-progress
 
+      # Each suite runs as its OWN pest invocation: RefreshDatabase migrate:fresh's at
+      # process start, so a per-step (= per-TestCase-schema) run is clean on the shared
+      # database. Two TestCases in ONE invocation would NOT be (the schema is migrated
+      # once per process) — that is the heterogeneous-suite limitation noted above.
       - name: Run the CAS suite on Postgres (advisory-xact-lock / FOR UPDATE / SERIALIZABLE / orphan prune)
         run: vendor/bin/pest --ci packages/core/tests/Cas
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: vaulter_test
+          DB_USERNAME: vaulter
+          DB_PASSWORD: secret
+
+      - name: Run the Document suite on Postgres (yjs_state bytea NUL-safe round-trip)
+        run: vendor/bin/pest --ci packages/core/tests/Document
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
