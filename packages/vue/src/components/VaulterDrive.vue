@@ -82,6 +82,31 @@ async function confirmAction(message: string): Promise<boolean> {
   return props.confirm ? props.confirm(message) : defaultConfirm(message)
 }
 
+/**
+ * Run a node mutation, surfacing any failure into the shared `error` ref instead of
+ * leaving an unhandled promise rejection. The dialogs/pickers dismiss BEFORE the
+ * mutation is awaited, so a server reject (422 validation, 403 authorization, a name
+ * conflict) would otherwise vanish with no feedback — the user would see neither the
+ * change nor an error. `error` is cleared on the next `refresh`.
+ */
+async function runMutation(action: () => Promise<unknown>): Promise<void> {
+  try {
+    await action()
+  } catch (caught) {
+    error.value = caught
+  }
+}
+
+/** A human-readable line for the current error — the API/Error message when present,
+ *  else a neutral fallback (the error covers BOTH a failed listing and a failed mutation). */
+const errorMessage = computed<string>(() => {
+  const caught = error.value
+  if (caught instanceof Error && caught.message !== '') {
+    return caught.message
+  }
+  return 'Something went wrong.'
+})
+
 /** Refresh the breadcrumb for the current folder (root → here), if not at root. */
 async function refreshBreadcrumb(): Promise<void> {
   if (parentId.value == null) {
@@ -141,20 +166,22 @@ async function onAction(action: NodeAction, node: Node): Promise<void> {
     }
     case 'trash': {
       if (await confirmAction(`Move "${node.name}" to trash?`)) {
-        await trash(node.id)
-        if (String(selectedId.value) === String(node.id)) {
-          selectedId.value = null
-        }
+        await runMutation(async () => {
+          await trash(node.id)
+          if (String(selectedId.value) === String(node.id)) {
+            selectedId.value = null
+          }
+        })
       }
       break
     }
     case 'restore': {
-      await restore(node.id)
+      await runMutation(() => restore(node.id))
       break
     }
     case 'forceDelete': {
       if (await confirmAction(`Permanently delete "${node.name}"? This cannot be undone.`)) {
-        await forceDelete(node.id)
+        await runMutation(() => forceDelete(node.id))
       }
       break
     }
@@ -178,7 +205,7 @@ async function onMovePicked(targetId: NodeId | null): Promise<void> {
   pickerOpen.value = false
   moveTarget.value = null
   if (node) {
-    await move(node.id, targetId)
+    await runMutation(() => move(node.id, targetId))
   }
 }
 
@@ -201,9 +228,9 @@ async function onNameSubmit(name: string): Promise<void> {
     return
   }
   if (state.mode === 'new') {
-    await createFolder({ name })
+    await runMutation(() => createFolder({ name }))
   } else if (name !== state.node.name) {
-    await rename(state.node.id, name)
+    await runMutation(() => rename(state.node.id, name))
   }
 }
 
@@ -304,7 +331,7 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
     />
 
     <p v-if="error" class="vaulter-drive__error" role="alert">
-      <slot name="error" :error="error">Could not load this folder.</slot>
+      <slot name="error" :error="error" :message="errorMessage">{{ errorMessage }}</slot>
     </p>
 
     <VaulterNodeList

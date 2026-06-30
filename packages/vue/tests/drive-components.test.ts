@@ -270,6 +270,27 @@ describe('VaulterDrive', () => {
     promptSpy.mockRestore()
   })
 
+  it('surfaces a failed mutation in the error region instead of swallowing it (dialog dismissed before the await)', async () => {
+    const { client, createFolder } = driveClient([])
+    // The backend rejects the create (e.g. a 422/409) AFTER the dialog has been dismissed.
+    createFolder.mockRejectedValueOnce(new Error('A folder named "Invoices" already exists.'))
+    const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
+    await flushAll()
+
+    await wrapper.get('.vaulter-drive__new-folder').trigger('click')
+    await flushAll()
+    await wrapper.get('.vaulter-name-dialog__input').setValue('Invoices')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await flushAll()
+
+    // The mutation was attempted, the dialog closed — and the rejection is now visible,
+    // not lost as an unhandled promise rejection.
+    expect(createFolder).toHaveBeenCalled()
+    expect(wrapper.find('.vaulter-name-dialog').exists()).toBe(false)
+    const error = wrapper.get('.vaulter-drive__error')
+    expect(error.text()).toContain('already exists')
+  })
+
   it('opens the name dialog prefilled for "rename" and renames with the new name (no window.prompt)', async () => {
     const target = node({ id: 3, kind: 'file', name: 'old.txt', abilities: { rename: true } })
     const { client, rename } = driveClient([target])
@@ -372,6 +393,38 @@ describe('VaulterNameDialog', () => {
 
     // Padded text → submit carries it trimmed.
     await wrapper.get('.vaulter-name-dialog__input').setValue('  Reports  ')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    expect(wrapper.emitted('submit')?.[0]).toEqual(['Reports'])
+  })
+
+  it('blocks a name with a path separator and a too-long name (mirrors DriveNameRules), showing an inline error', async () => {
+    const wrapper = mount(VaulterNameDialog, { props: { open: true, initialValue: '' } })
+    await nextTick()
+    const submit = () => wrapper.get('.vaulter-name-dialog__submit').element as HTMLButtonElement
+    const error = () => wrapper.find('.vaulter-name-dialog__error')
+
+    // A forward slash makes it a path, not a segment → disabled + error + no submit.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('a/b')
+    expect(submit().disabled).toBe(true)
+    expect(error().exists()).toBe(true)
+    expect(error().text()).toContain('path separators')
+    await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
+    await wrapper.get('.vaulter-name-dialog__input').trigger('keydown.enter')
+    expect(wrapper.emitted('submit')).toBeUndefined()
+
+    // A backslash is rejected too.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('a\\b')
+    expect(submit().disabled).toBe(true)
+
+    // Over 255 chars → disabled with the length message.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('x'.repeat(256))
+    expect(submit().disabled).toBe(true)
+    expect(error().text()).toContain('255')
+
+    // Back to a legal segment → enabled, error gone, submit fires.
+    await wrapper.get('.vaulter-name-dialog__input').setValue('Reports')
+    expect(submit().disabled).toBe(false)
+    expect(wrapper.find('.vaulter-name-dialog__error').exists()).toBe(false)
     await wrapper.get('.vaulter-name-dialog__submit').trigger('click')
     expect(wrapper.emitted('submit')?.[0]).toEqual(['Reports'])
   })
