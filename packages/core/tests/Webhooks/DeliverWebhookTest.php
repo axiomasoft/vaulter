@@ -217,7 +217,7 @@ it('is a no-op when re-run on an already-delivered delivery', function (): void 
 it('is a no-op when the delivery row no longer exists', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
-    (new DeliverWebhook(deliveryId: 'missing-delivery-id'))
+    (new DeliverWebhook(deliveryId: '999999999'))
         ->handle(app(WebhookSigner::class));
 
     Http::assertNothingSent();

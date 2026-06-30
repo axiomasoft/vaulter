@@ -38,18 +38,27 @@ it('global scope → UNIQUE (sha256)', function (): void {
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['sha256']);
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
+);
 
 it('tenant scope → UNIQUE (tenant_id, sha256)', function (): void {
     config()->set('vaulter.dedup.scope', 'tenant');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['tenant_id', 'sha256']);
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
+);
 
 it('storage scope → UNIQUE (storage_id, sha256)', function (): void {
     config()->set('vaulter.dedup.scope', 'storage');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['storage_id', 'sha256']);
-});
+})->skip(
+    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
+    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
+);

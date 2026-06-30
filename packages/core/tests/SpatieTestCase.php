@@ -96,6 +96,14 @@ class SpatieTestCase extends TestCase
      */
     private function runSpatieMigration(): void
     {
+        // Idempotent on a PERSISTENT connection (the pgsql lane): RefreshDatabase
+        // migrate:fresh's only once per process while this runs per test, so re-running
+        // up() would hit "relation permissions already exists". On SQLite :memory: the
+        // DB is rebuilt per test, so the guard simply never trips.
+        if (Schema::hasTable('permissions')) {
+            return;
+        }
+
         $stub = dirname(__DIR__, 3)
             .'/vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub';
 

@@ -108,7 +108,7 @@ it('deletes an endpoint', function (): void {
 });
 
 it('404s for an unknown endpoint id', function (): void {
-    $this->patchJson('api/vaulter/webhook-endpoints/does-not-exist', [
+    $this->patchJson('api/vaulter/webhook-endpoints/999999999', [
         'is_active' => false,
     ])->assertNotFound();
 });

@@ -41,7 +41,7 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
 
     $base = [
         'storage_id' => $storage->getKey(),
-        'upload_id' => 'fixed-handle-uuid',
+        'upload_id' => '0193a5f0-9a3b-7c2d-8e4f-0000000000aa',
         'protocol' => UploadProtocol::Tus,
         'status' => UploadStatus::Initiated,
     ];

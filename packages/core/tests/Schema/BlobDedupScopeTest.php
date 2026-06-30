@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 
@@ -24,8 +25,14 @@ function makeBlob(array $overrides = []): Blob
 it('отвергает одинаковый sha256 в одном scope', function (): void {
     makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/x']);
 
-    expect(fn () => makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/y']))
-        ->toThrow(QueryException::class);
+    // Run the violating insert inside a SAVEPOINT (nested DB::transaction): on PostgreSQL
+    // a UNIQUE violation aborts the WHOLE enclosing transaction — here the RefreshDatabase
+    // wrapper — so a raw insert would poison the connection for the rest of the suite
+    // ("current transaction is aborted"). The savepoint rolls back just the failed insert,
+    // exactly as the production BlobStore commit does. SQLite tolerates either form.
+    expect(fn () => DB::transaction(
+        fn () => makeBlob(['tenant_id' => 1, 'storage_id' => 1, 'storage_key' => 't1/aa/aa/y']),
+    ))->toThrow(QueryException::class);
 });
 
 it('допускает одинаковый sha256 в разных scope', function (): void {
