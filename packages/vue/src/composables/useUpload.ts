@@ -1,6 +1,6 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
-import type { ResumableUploadOptions } from '../client'
+import type { ResumableUploadOptions, VaulterClient } from '../client'
 import type { DirectUploadOptions, Node, StorageId } from '../types'
 
 export interface UseUploadReturn {
@@ -23,9 +23,12 @@ export interface UseUploadReturn {
 /**
  * Upload into a storage with progress, exposing both the simple direct path and the
  * resumable (tus) path. Progress reflects the active resumable upload.
+ *
+ * `client` is normally injected; pass a pre-resolved client when spinning up a
+ * per-file uploader OUTSIDE the `setup()` injection context (e.g. one instance per
+ * dropped file), where `inject()` is no longer available.
  */
-export function useUpload(storageId: StorageId): UseUploadReturn {
-  const client = useVaulterClient()
+export function useUpload(storageId: StorageId, client: VaulterClient = useVaulterClient()): UseUploadReturn {
   const uploading = ref(false)
   const error = ref<unknown>(null)
   const sent = ref(0)

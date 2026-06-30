@@ -62,6 +62,22 @@ export { default as VaulterCommentsPanel } from './components/VaulterCommentsPan
 export { default as VaulterSharePanel } from './components/VaulterSharePanel.vue'
 export { default as VaulterBreadcrumb } from './components/VaulterBreadcrumb.vue'
 
+// Drive components (M1–M4)
+export { default as VaulterDrive } from './components/VaulterDrive.vue'
+export { default as VaulterDriveBreadcrumb } from './components/VaulterDriveBreadcrumb.vue'
+export { default as VaulterNodeList } from './components/VaulterNodeList.vue'
+export type { NodeAction } from './components/VaulterNodeList.vue'
+export { default as VaulterUploader } from './components/VaulterUploader.vue'
+export { default as VaulterNodeGrantsPanel } from './components/VaulterNodeGrantsPanel.vue'
+export type { GrantSubject } from './components/VaulterNodeGrantsPanel.vue'
+export { default as VaulterNodeSharePanel } from './components/VaulterNodeSharePanel.vue'
+export { default as VaulterDocumentNode } from './components/VaulterDocumentNode.vue'
+export type { DocumentNodeEditorProps } from './components/VaulterDocumentNode.vue'
+
+// Drive display helpers
+export { humanByteSize, nodeIconKind } from './components/drive/nodeDisplay'
+export type { NodeIconKind } from './components/drive/nodeDisplay'
+
 // Types
 export type * from './types'
 

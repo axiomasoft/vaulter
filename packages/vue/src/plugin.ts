@@ -9,6 +9,14 @@ import VaulterFileManager from './components/VaulterFileManager.vue'
 import VaulterPermissionsPanel from './components/VaulterPermissionsPanel.vue'
 import VaulterSharePanel from './components/VaulterSharePanel.vue'
 import VaulterVersionHistory from './components/VaulterVersionHistory.vue'
+// Drive components (M1–M4)
+import VaulterDrive from './components/VaulterDrive.vue'
+import VaulterDriveBreadcrumb from './components/VaulterDriveBreadcrumb.vue'
+import VaulterNodeList from './components/VaulterNodeList.vue'
+import VaulterUploader from './components/VaulterUploader.vue'
+import VaulterNodeGrantsPanel from './components/VaulterNodeGrantsPanel.vue'
+import VaulterNodeSharePanel from './components/VaulterNodeSharePanel.vue'
+import VaulterDocumentNode from './components/VaulterDocumentNode.vue'
 
 export interface VaulterPluginOptions extends VaulterClientOptions {
   /** Provide a pre-built client instead of constructing one from the options. */
@@ -32,5 +40,14 @@ export const VaulterPlugin = {
     app.component('VaulterCommentsPanel', VaulterCommentsPanel)
     app.component('VaulterSharePanel', VaulterSharePanel)
     app.component('VaulterBreadcrumb', VaulterBreadcrumb)
+
+    // Drive components (additive — the legacy components above stay).
+    app.component('VaulterDrive', VaulterDrive)
+    app.component('VaulterDriveBreadcrumb', VaulterDriveBreadcrumb)
+    app.component('VaulterNodeList', VaulterNodeList)
+    app.component('VaulterUploader', VaulterUploader)
+    app.component('VaulterNodeGrantsPanel', VaulterNodeGrantsPanel)
+    app.component('VaulterNodeSharePanel', VaulterNodeSharePanel)
+    app.component('VaulterDocumentNode', VaulterDocumentNode)
   },
 }
