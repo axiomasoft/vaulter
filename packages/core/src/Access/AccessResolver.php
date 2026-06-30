@@ -403,7 +403,12 @@ final class AccessResolver
 
     private function storageOf(Node $node): Storage
     {
-        $storage = $this->storages->find($node->storage_id);
+        // Prefer an already-loaded storage relation (e.g. sharedWith eager-loads it)
+        // so a bulk re-resolution does NOT fire one storage query per node; fall back
+        // to the read repository for a node loaded without it.
+        $storage = $node->relationLoaded('storage')
+            ? $node->getRelation('storage')
+            : $this->storages->find($node->storage_id);
 
         if (!$storage instanceof Storage) {
             // A node always belongs to a storage (FK cascade); a missing storage is

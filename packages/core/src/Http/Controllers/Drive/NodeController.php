@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Http\Controllers\Drive;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Enums\Access\Ability;
@@ -36,10 +37,23 @@ use Vaulter\VaulterManager;
  * resolved (swappable models bound in the provider) and the rest is repository
  * work.
  *
- * Authorization (M2a / H.2): every method guards the relevant Ability on the node
- * (or canCreate on the destination) through the AccessResolver before acting; a
- * denial 403s via PermissionDeniedException. Listings filter per node so a nearer
- * deny revokes a row.
+ * Authorization (M2a / H.2): every per-ACTION method guards the relevant Ability on
+ * the node (or canCreate on the destination) through the AccessResolver before acting,
+ * EXACTLY (deny-veto + inherit-cutoff applied); a denial 403s via
+ * PermissionDeniedException.
+ *
+ * LISTINGS (index/search/trash) follow a CANDIDATE-SET semantic (P1 #3): the query is
+ * narrowed to the actor's grant-reachable candidate set in SQL BEFORE pagination
+ * (constrainToAccessible), so nodes with no grant-reachability — the common
+ * "inaccessible" / "not shared with me" case — are hidden. This narrowing is a
+ * deliberate SUPERSET that does NOT apply the exact deny-veto / inherit-cutoff in the
+ * listing SQL (a node a nearer deny revokes can still list); that exact listing
+ * suppression is DEFERRED to the H.4 materialised effective-grants read-model. The
+ * narrowing is in the QUERY, never a post-fetch page filter — a post-filter that
+ * empties a cursor page makes nextCursor() null and strands later authorized rows.
+ * This matches the Filament table (also candidate-SQL). The cross-storage "shared with
+ * me" view re-resolves each candidate EXACTLY (bounded set). For the open drivers
+ * (gate/spatie/azgard/null) grant-filtering does not apply and listings stay OPEN.
  */
 final class NodeController extends Controller
 {
@@ -53,6 +67,16 @@ final class NodeController extends Controller
     /**
      * List the direct children of a folder (or the storage root when no parent is
      * given), cursor-paginated for large folders.
+     *
+     * Access-aware narrowing (P1 #3): when grant-filtering applies the children query
+     * is constrained to the actor's grant-reachable CANDIDATE set BEFORE pagination,
+     * so a folder the actor has no grant-reachability to yields zero candidate children
+     * and never leaks. The narrowing is a SUPERSET (see the controller docblock): the
+     * exact deny-veto suppression in listings is deferred to the H.4 read-model, while
+     * per-ACTION authorization (show/mutations) stays exact via the AccessResolver.
+     * Pushing the narrowing into the SQL — not post-filtering the fetched page — keeps
+     * the cursor honest: a post-filter that empties a page makes nextCursor() null and
+     * silently strands the rest of the listing.
      */
     public function index(Request $request, Storage $storage): AnonymousResourceCollection
     {
@@ -62,12 +86,54 @@ final class NodeController extends Controller
 
         $this->guard($request, Ability::View, $parent);
 
-        $children = $this->nodes
-            ->children(storage: $storage, parent: $parent)
+        $children = $this->narrowToAccessible($request, $this->nodes->children(storage: $storage, parent: $parent))
             ->cursorPaginate(perPage: $this->perPage($request))
             ->withQueryString();
 
         return NodeResource::collection($children);
+    }
+
+    /**
+     * The "shared with me" view (§2.6 / H.2): the nodes the actor holds a live
+     * allow-grant on, re-resolved through the full algorithm so a nearer deny that
+     * revokes a row excludes it (the EXACT gate over a bounded candidate set). Cross-
+     * storage by nature — the subject index is not storage-bound. An unauthenticated
+     * request sees nothing.
+     *
+     * BOUNDED (P1 #3 / finding G): the set is cross-storage and unbounded, and the
+     * exact re-resolution returns a post-filter Collection that cannot cursor-paginate
+     * cleanly. So the resolved collection is wrapped in a LengthAwarePaginator at the
+     * same per_page as the sibling listings — a simple page envelope (page/total),
+     * NOT a cursor envelope it cannot honestly back.
+     */
+    public function shared(Request $request): AnonymousResourceCollection
+    {
+        $actor = $this->authorizable($request);
+
+        if ($actor === null) {
+            return NodeResource::collection(new LengthAwarePaginator(
+                items: [],
+                total: 0,
+                perPage: $this->perPage($request),
+            ));
+        }
+
+        $shared = $this->nodes->sharedWith($actor);
+        $perPage = $this->perPage($request);
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        $paginated = new LengthAwarePaginator(
+            items: $shared->forPage(page: $page, perPage: $perPage)->values(),
+            total: $shared->count(),
+            perPage: $perPage,
+            currentPage: $page,
+            options: [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ],
+        );
+
+        return NodeResource::collection($paginated);
     }
 
     /**
@@ -233,36 +299,34 @@ final class NodeController extends Controller
     }
 
     /**
-     * Name search within the storage tree (live nodes only), cursor-paginated.
+     * Name search within the storage tree (live nodes only), cursor-paginated. The
+     * results are narrowed to the actor's grant-reachable candidate set BEFORE
+     * pagination (P1 #3) — same candidate-SQL semantic as index(), so a match the
+     * actor has no grant-reachability to never leaks and the cursor stays honest.
      */
     public function search(Request $request, Storage $storage): AnonymousResourceCollection
     {
         $term = $request->string('q')->toString();
 
-        $results = $this->nodes
-            ->search(storage: $storage, term: $term)
+        $results = $this->narrowToAccessible($request, $this->nodes->search(storage: $storage, term: $term))
             ->cursorPaginate(perPage: $this->perPage($request))
             ->withQueryString();
-
-        // Per-node visibility: a match the actor cannot View is dropped from the
-        // page (H.2 — a nearer deny revokes a row). Pagination keeps its cursor.
-        $this->filterPage($request, $results, Ability::View);
 
         return NodeResource::collection($results);
     }
 
     /**
-     * The trash view: trashed (not yet force-deleted) nodes for the storage.
+     * The trash view: trashed (not yet force-deleted) nodes for the storage, narrowed
+     * to the actor's grant-reachable candidate set BEFORE pagination (P1 #3 — same
+     * candidate-SQL semantic as index(), cursor stays honest). The candidate set is
+     * grant-reachability, NOT a per-row Restore check: per-ACTION authorization
+     * (restore/forceDelete) stays exact via the AccessResolver on the mutation.
      */
     public function trashed(Request $request, Storage $storage): AnonymousResourceCollection
     {
-        $results = $this->nodes
-            ->trashed(storage: $storage)
+        $results = $this->narrowToAccessible($request, $this->nodes->trashed(storage: $storage))
             ->cursorPaginate(perPage: $this->perPage($request))
             ->withQueryString();
-
-        // Only nodes the actor may Restore (DELETE bit) belong in their trash view.
-        $this->filterPage($request, $results, Ability::Restore);
 
         return NodeResource::collection($results);
     }
@@ -353,27 +417,29 @@ final class NodeController extends Controller
     }
 
     /**
-     * Drop from the current page every node the actor may not perform $ability on
-     * (per-node visibility for the search/trash listings, H.2). The cursor is
-     * preserved; only the page's collection is narrowed.
+     * Narrow a listing query to the actor's grant-reachable candidate set BEFORE it is
+     * paginated (P1 #3) — the access-aware listing seam. A no-op when grant-filtering
+     * does not apply (open drivers); an empty result for an unauthenticated request (no
+     * actor ⇒ no grant ⇒ no candidate). The narrowing lives in the SQL so the cursor
+     * never strands later rows, and the per-row exact gate stays on the per-ACTION path
+     * (show/mutations through the AccessResolver), not on the listing.
      *
-     * @param CursorPaginator<int, Node> $page
+     * @param  Builder<Node> $query
+     * @return Builder<Node>
      */
-    private function filterPage(Request $request, CursorPaginator $page, Ability $ability): void
+    private function narrowToAccessible(Request $request, Builder $query): Builder
     {
+        if (!$this->nodes->grantFilteringApplies()) {
+            return $query;
+        }
+
         $actor = $this->authorizable($request);
 
         if ($actor === null) {
-            $page->setCollection($page->getCollection()->take(0)->values());
-
-            return;
+            return $query->whereRaw('1 = 0');
         }
 
-        $page->setCollection(
-            $page->getCollection()
-                ->filter(fn (Node $node): bool => $this->access->can($actor, $ability, $node))
-                ->values(),
-        );
+        return $this->nodes->constrainToAccessible($query, $actor);
     }
 
     /**
