@@ -20,6 +20,8 @@ use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
 use Vaulter\Console\PurgeTrashCommand;
 use Vaulter\Console\ReconcileBlobsCommand;
+use Vaulter\Console\RelayOutboxCommand;
+use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Console\SweepUploadsCommand;
 use Vaulter\Contracts\BlobStore;
 use Vaulter\Contracts\CollaborationDriver;
@@ -30,11 +32,14 @@ use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageDriver;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Models\Node;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Policies\NodePolicy;
+use Vaulter\Policies\WebhookEndpointPolicy;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 use Vaulter\Uploads\UploadSessionManager;
+use Vaulter\Webhooks\RecordsOutbox;
 
 final class VaulterServiceProvider extends PackageServiceProvider
 {
@@ -52,6 +57,8 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasCommand(ReconcileBlobsCommand::class)
             ->hasCommand(PurgeTrashCommand::class)
             ->hasCommand(SweepUploadsCommand::class)
+            ->hasCommand(RelayOutboxCommand::class)
+            ->hasCommand(RetryWebhooksCommand::class)
             ->hasInstallCommand(static function (InstallCommand $command): void {
                 $command
                     ->publishConfigFile()
@@ -137,6 +144,26 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->registerBroadcastChannel();
         $this->registerPolicies();
         $this->registerActivitySubscriber();
+        $this->registerOutboxSubscriber();
+    }
+
+    /**
+     * Wire the transactional outbox (§2.11 / D14 / M3b): subscribe the RecordsOutbox
+     * listener to the Drive domain events so each one stages ONE v_outbox row for
+     * reliable webhook fan-out (idempotent by event_id). The events are
+     * ShouldDispatchAfterCommit, so staging runs on the after-commit boundary — the
+     * documented, non-invasive transactional-outbox seam (the same one the activity
+     * feed uses; see RecordsOutbox for the crash-window caveat). Gated on the global
+     * 'reliability' feature; when off, no listener is registered and the events fire
+     * unobserved by the outbox.
+     */
+    private function registerOutboxSubscriber(): void
+    {
+        if (!Config::featureEnabled('reliability')) {
+            return;
+        }
+
+        Event::subscribe(RecordsOutbox::class);
     }
 
     /**
@@ -168,6 +195,14 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // subclass) still hits the policy.
         if (Config::nodeModel() !== Node::class) {
             Gate::policy(Node::class, NodePolicy::class);
+        }
+
+        // The webhook-endpoint management surface (§2.11 / D14 / M3b) is a global
+        // admin resource, authorized by the WebhookEndpointPolicy (manage ability).
+        Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
+
+        if (Config::webhookEndpointModel() !== WebhookEndpoint::class) {
+            Gate::policy(Config::webhookEndpointModel(), WebhookEndpointPolicy::class);
         }
     }
 

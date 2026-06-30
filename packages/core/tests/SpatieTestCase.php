@@ -52,6 +52,15 @@ class SpatieTestCase extends TestCase
         // sqlite needs spatie's testing fix so the team columns are created even when
         // the migration runs before teams config in some boot orders.
         $app['config']->set('permission.testing', true);
+
+        // Pin spatie's permission cache to the array store. spatie's migration up()
+        // and the driver's forgetCachedPermissions() flush config('permission.cache.store'),
+        // which falls back to cache.default — that resolves to the `database` store in
+        // this Testbench env (no `cache` table on the :memory: connection), so a real
+        // flush throws "no such table: cache". Keeping the permission cache in-memory
+        // makes these tests independent of the ambient cache driver and of suite order.
+        $app['config']->set('cache.default', 'array');
+        $app['config']->set('permission.cache.store', 'array');
     }
 
     #[\Override]

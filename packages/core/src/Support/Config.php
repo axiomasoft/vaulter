@@ -32,6 +32,9 @@ use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
 use Vaulter\Models\UploadPart;
 use Vaulter\Models\UploadSession;
+use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
@@ -227,6 +230,154 @@ final class Config
         $class = config('vaulter.models.upload_part', UploadPart::class);
 
         return $class;
+    }
+
+    /**
+     * @return class-string<Outbox>
+     */
+    public static function outboxModel(): string
+    {
+        /** @var class-string<Outbox> $class */
+        $class = config('vaulter.models.outbox', Outbox::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<WebhookEndpoint>
+     */
+    public static function webhookEndpointModel(): string
+    {
+        /** @var class-string<WebhookEndpoint> $class */
+        $class = config('vaulter.models.webhook_endpoint', WebhookEndpoint::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<WebhookDelivery>
+     */
+    public static function webhookDeliveryModel(): string
+    {
+        /** @var class-string<WebhookDelivery> $class */
+        $class = config('vaulter.models.webhook_delivery', WebhookDelivery::class);
+
+        return $class;
+    }
+
+    /**
+     * The HTTP request timeout (seconds) for a single webhook delivery POST
+     * (§2.11). Floored at 1.
+     */
+    public static function webhookTimeout(): int
+    {
+        $value = config('vaulter.webhooks.timeout', 5);
+
+        $seconds = is_numeric($value) ? (int) $value : 5;
+
+        return max($seconds, 1);
+    }
+
+    /**
+     * The total number of delivery attempts before a webhook delivery is parked
+     * dead (DLQ, §2.11). Floored at 1.
+     */
+    public static function webhookMaxAttempts(): int
+    {
+        $value = config('vaulter.webhooks.max_attempts', 5);
+
+        $attempts = is_numeric($value) ? (int) $value : 5;
+
+        return max($attempts, 1);
+    }
+
+    /**
+     * The backoff delay (seconds) before retrying after the given 1-based attempt
+     * number failed (§2.11). Past the configured tail the last entry caps further
+     * retries; an empty schedule means retry immediately (0).
+     */
+    public static function webhookBackoff(int $attempt): int
+    {
+        $schedule = config('vaulter.webhooks.backoff', [10, 30, 60, 300, 1800]);
+
+        if (!is_array($schedule) || $schedule === []) {
+            return 0;
+        }
+
+        $values = array_values(array_map(static fn (mixed $seconds): int => is_numeric($seconds) ? (int) $seconds : 0, $schedule));
+
+        $index = max(0, $attempt - 1);
+
+        return $values[$index] ?? $values[array_key_last($values)];
+    }
+
+    /**
+     * The number of consecutive endpoint failures that flips an endpoint's
+     * is_active off (the §2.11 circuit breaker). Floored at 1.
+     */
+    public static function webhookDisableAfterFailures(): int
+    {
+        $value = config('vaulter.webhooks.disable_after_failures', 10);
+
+        $failures = is_numeric($value) ? (int) $value : 10;
+
+        return max($failures, 1);
+    }
+
+    /**
+     * The HMAC-SHA256 signature header name the delivery POST carries (§2.11).
+     */
+    public static function webhookSignatureHeader(): string
+    {
+        $value = config('vaulter.webhooks.signature_header', 'X-Vaulter-Signature');
+
+        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Signature';
+    }
+
+    /**
+     * The replay-resistance timestamp header name the delivery POST carries
+     * (§2.11) — the signed payload includes this timestamp.
+     */
+    public static function webhookTimestampHeader(): string
+    {
+        $value = config('vaulter.webhooks.timestamp_header', 'X-Vaulter-Timestamp');
+
+        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Timestamp';
+    }
+
+    /**
+     * The event-name header the delivery POST carries (§2.11).
+     */
+    public static function webhookEventHeader(): string
+    {
+        $value = config('vaulter.webhooks.event_header', 'X-Vaulter-Event');
+
+        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Event';
+    }
+
+    /**
+     * The age in days past which dispatched outbox rows and terminal webhook
+     * deliveries are eligible for pruning (§2.11). Default 30, floored at 0.
+     */
+    public static function webhookRetentionDays(): int
+    {
+        $value = config('vaulter.webhooks.retention_days', 30);
+
+        $days = is_numeric($value) ? (int) $value : 30;
+
+        return max($days, 0);
+    }
+
+    /**
+     * The Gate ability gating the webhook-endpoint management surface (§2.11). Null
+     * means "no host ability defined" — the policy then allows any authenticated user
+     * (the route still requires auth). A host MUST define this in production.
+     */
+    public static function webhookManageAbility(): ?string
+    {
+        $value = config('vaulter.webhooks.manage_ability');
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**

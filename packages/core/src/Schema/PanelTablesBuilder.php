@@ -51,6 +51,9 @@ final class PanelTablesBuilder
         'upload_sessions',
         'upload_parts',
         'activity',
+        'outbox',
+        'webhook_endpoints',
+        'webhook_deliveries',
     ];
 
     /**
@@ -103,6 +106,9 @@ final class PanelTablesBuilder
                 'upload_sessions' => $this->defineUploadSessions(table: $table, panel: $panel, ids: $ids),
                 'upload_parts' => $this->defineUploadParts(table: $table, panel: $panel, ids: $ids),
                 'activity' => $this->defineActivity(table: $table, panel: $panel, ids: $ids),
+                'outbox' => $this->defineOutbox(table: $table, panel: $panel, ids: $ids),
+                'webhook_endpoints' => $this->defineWebhookEndpoints(table: $table, panel: $panel, ids: $ids),
+                'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, panel: $panel, ids: $ids),
                 default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
             };
         });
@@ -623,6 +629,89 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_outbox — the transactional-outbox staging table (master plan §2.11 / D14 /
+     * M3b), ported from chatom 1:1. Gated on 'reliability'. ONE row per domain event,
+     * idempotent by event_id (UNIQUE) so the same event never stages a duplicate and
+     * the relay drains each row exactly once.
+     *
+     * The id honours the panel id strategy; panel is the discriminator (a row is
+     * fanned out for its panel's endpoints); topic is an optional routing hint
+     * (e.g. the storage/node id). status defaults 'pending'; the relay flips it to
+     * 'dispatched' under a row lock. The (status, available_at) index is the relay's
+     * drain cursor.
+     */
+    private function defineOutbox(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+
+        // event_id is the idempotency key — a stable, caller-supplied string (NOT a
+        // Vaulter entity reference), so it is a plain unique string column independent
+        // of the panel id strategy.
+        $table->string('event_id')->unique();
+        $this->panelDiscriminator(table: $table);
+        $table->string('topic')->nullable();
+        $table->string('event');
+        $table->json('payload');
+        $table->timestamp('available_at');
+        $table->timestamp('dispatched_at')->nullable();
+        $table->unsignedInteger('attempts')->default(0);
+        $table->string('status')->default('pending');
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        $table->index(['status', 'available_at'], "{$name}_drain_idx");
+    }
+
+    /**
+     * v_webhook_endpoints — the subscriber endpoints (master plan §2.11 / D14 / M3b),
+     * ported from chatom 1:1. Gated on 'reliability'. events is the JSON subscription
+     * list (matched in PHP for driver portability); signing_secret signs the
+     * deliveries (HMAC-SHA256); failure_count drives the circuit breaker.
+     */
+    private function defineWebhookEndpoints(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+
+        $table->string('url');
+        $table->json('events');
+        $table->string('signing_secret');
+        $table->boolean('is_active')->default(true)->index();
+        $table->timestamp('last_triggered_at')->nullable();
+        $table->unsignedInteger('failure_count')->default(0);
+        $table->timestamps();
+    }
+
+    /**
+     * v_webhook_deliveries — a single delivery attempt with retry bookkeeping (master
+     * plan §2.11 / D14 / M3b), ported from chatom 1:1. Gated on 'reliability'.
+     * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
+     * (status, next_retry_at) index is the due-retry sweep cursor.
+     */
+    private function defineWebhookDeliveries(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $ids->reference(table: $table, column: 'endpoint_id', nullable: false);
+
+        $table->string('event');
+        $table->json('payload');
+        $table->string('status');
+        $table->unsignedInteger('attempts')->default(0);
+        $table->timestamp('next_retry_at')->nullable();
+        $table->text('last_error')->nullable();
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        $table->index(['status', 'next_retry_at'], "{$name}_retry_idx");
+
+        $table->foreign('endpoint_id')
+            ->references('id')
+            ->on($panel->table('webhook_endpoints'))
+            ->cascadeOnDelete();
+    }
+
+    /**
      * Post-create hooks that cannot be expressed inside the Blueprint, currently
      * the driver-aware sibling-unique guard on v_nodes.
      */
@@ -900,6 +989,7 @@ final class PanelTablesBuilder
             'node_shares' => $panel->featureEnabled('share_links'),
             'upload_sessions', 'upload_parts' => $panel->featureEnabled('uploads'),
             'activity' => $panel->featureEnabled('activity'),
+            'outbox', 'webhook_endpoints', 'webhook_deliveries' => $panel->featureEnabled('reliability'),
             default => false,
         };
     }

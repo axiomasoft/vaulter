@@ -22,6 +22,7 @@ use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
 use Vaulter\Http\Controllers\Uploads\S3MultipartController;
 use Vaulter\Http\Controllers\Uploads\TusUploadController;
 use Vaulter\Http\Controllers\VersionController;
+use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Support\Config;
 
@@ -171,6 +172,26 @@ Route::prefix(Config::routePrefix())
             // sits before the catch-all /{node}.
             Route::get('nodes/{node}/activity', [ActivityController::class, 'forNode']);
         });
+
+        /*
+        |----------------------------------------------------------------------
+        | Webhook-endpoint management (§2.11 / D14 / M3b)
+        |----------------------------------------------------------------------
+        | The GLOBAL admin surface for subscriber endpoints — register/list/update/
+        | deactivate/delete. NOT node-scoped: every action is gated by the
+        | WebhookEndpointPolicy manage ability (Gate::authorize in the controller).
+        | register() returns the signing_secret exactly once. Gated on the
+        | 'reliability' feature so the routes only mount when the outbox/webhook schema
+        | exists. The {endpoint} id is a plain scalar (the model is swappable, not
+        | route-model bound) — the controller resolves it via the read repository.
+        */
+        if (Config::featureEnabled('reliability')) {
+            Route::get('webhook-endpoints', [WebhookEndpointsController::class, 'index']);
+            Route::post('webhook-endpoints', [WebhookEndpointsController::class, 'store']);
+            Route::patch('webhook-endpoints/{endpoint}', [WebhookEndpointsController::class, 'update']);
+            Route::post('webhook-endpoints/{endpoint}/deactivate', [WebhookEndpointsController::class, 'deactivate']);
+            Route::delete('webhook-endpoints/{endpoint}', [WebhookEndpointsController::class, 'destroy']);
+        }
 
         /*
         |----------------------------------------------------------------------

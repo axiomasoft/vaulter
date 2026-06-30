@@ -29,6 +29,9 @@ use Vaulter\Models\NodeShare;
 use Vaulter\Models\Storage;
 use Vaulter\Models\UploadPart;
 use Vaulter\Models\UploadSession;
+use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
@@ -71,6 +74,11 @@ return [
         'upload_session' => UploadSession::class,
         'upload_part' => UploadPart::class,
         'activity' => Activity::class,
+
+        // Reliability layer (M3b / §2.11) — transactional outbox + webhooks.
+        'outbox' => Outbox::class,
+        'webhook_endpoint' => WebhookEndpoint::class,
+        'webhook_delivery' => WebhookDelivery::class,
     ],
 
     /*
@@ -102,6 +110,12 @@ return [
         'upload_sessions' => 'upload_sessions',
         'upload_parts' => 'upload_parts',
         'activity' => 'activity',
+
+        // Reliability layer (M3b / §2.11) — v_outbox, v_webhook_endpoints,
+        // v_webhook_deliveries.
+        'outbox' => 'outbox',
+        'webhook_endpoints' => 'webhook_endpoints',
+        'webhook_deliveries' => 'webhook_deliveries',
     ],
 
     /*
@@ -438,6 +452,51 @@ return [
         'tus' => [
             'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reliability — transactional outbox + webhooks (D14 / §2.11 / M3b)
+    |--------------------------------------------------------------------------
+    | Ported from chatom 1:1. A domain event is staged in v_outbox in the same
+    | request as the mutation (after-commit subscriber — see OutboxRecorder), then
+    | the relay (vaulter:relay-outbox) fans each pending row out into one signed
+    | v_webhook_deliveries row per subscribed active endpoint and queues the HTTP
+    | POST. At-least-once with exponential backoff + DLQ; consumers DEDUPE on the
+    | event_id carried in the payload (the outbox is idempotent by event_id, the
+    | delivery may be re-queued).
+    |
+    |  - timeout: HTTP request timeout (seconds) for a single delivery POST.
+    |  - max_attempts: total attempts before a delivery is parked dead (DLQ).
+    |  - backoff: per-attempt retry delay (seconds); the tail entry caps further
+    |    retries.
+    |  - disable_after_failures: consecutive dead deliveries that flip an endpoint's
+    |    is_active off (circuit breaker against a permanently broken receiver).
+    |  - signature_header / event_header: the HMAC-SHA256 signature + event-name
+    |    headers the delivery POST carries; the signature is over the exact JSON
+    |    body and a timestamp (timestamp_header) to make it replay-resistant.
+    |  - retention_days: the age past which dispatched outbox rows and terminal
+    |    deliveries become eligible for pruning.
+    |
+    | The 'reliability' feature flag (features above) gates BOTH the v_outbox /
+    | v_webhook_* schema AND the outbox subscriber + endpoint routes.
+    */
+    'webhooks' => [
+        'timeout' => 5,
+        'max_attempts' => 5,
+        'backoff' => [10, 30, 60, 300, 1800],
+        'disable_after_failures' => 10,
+        'signature_header' => 'X-Vaulter-Signature',
+        'timestamp_header' => 'X-Vaulter-Timestamp',
+        'event_header' => 'X-Vaulter-Event',
+        'retention_days' => 30,
+
+        // The Gate ability that gates the webhook-endpoint management surface
+        // (register/update/deactivate/delete). The host defines this ability; until
+        // it does, an authenticated user is allowed (the route still requires auth) —
+        // a host MUST tighten this in production. Set to null to allow any
+        // authenticated user explicitly.
+        'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
     ],
 
     /*
