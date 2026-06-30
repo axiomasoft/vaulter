@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\CreateDocumentAction;
-use DocVault\Actions\DeleteDocumentAction;
-use DocVault\Actions\DuplicateDocumentAction;
-use DocVault\Actions\ForceDeleteDocumentAction;
-use DocVault\Actions\MoveDocumentAction;
-use DocVault\Actions\RestoreDocumentAction;
-use DocVault\Actions\UpdateDocumentAction;
-use DocVault\Exceptions\DocumentNotFoundException;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\MoveDocumentRequest;
-use DocVault\Http\Requests\StoreDocumentRequest;
-use DocVault\Http\Requests\UpdateDocumentRequest;
-use DocVault\Http\Resources\DocumentResource;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\ValueObjects\WorkspaceRef;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Vaulter\Actions\CreateDocumentAction;
+use Vaulter\Actions\DeleteDocumentAction;
+use Vaulter\Actions\DuplicateDocumentAction;
+use Vaulter\Actions\ForceDeleteDocumentAction;
+use Vaulter\Actions\MoveDocumentAction;
+use Vaulter\Actions\RestoreDocumentAction;
+use Vaulter\Actions\UpdateDocumentAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Documents\DocumentNotFoundException;
+use Vaulter\Http\Requests\MoveDocumentRequest;
+use Vaulter\Http\Requests\StoreDocumentRequest;
+use Vaulter\Http\Requests\UpdateDocumentRequest;
+use Vaulter\Http\Resources\DocumentResource;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 final class DocumentController extends Controller
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Data;
+namespace Vaulter\Data;
 
 use DateTimeInterface;
-use DocVault\Enums\PermissionLevel;
+use Vaulter\Enums\Access\PermissionLevel;
 
 final readonly class CreateShareData
 {

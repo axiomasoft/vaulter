@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Vaulter\Panels\Panel;
+use Vaulter\Panels\StoragePanelProvider;
+
+/**
+ * Storage panel provider for the "{{ id }}" panel.
+ *
+ * You own this class. By default this panel is a zero-migration config envelope
+ * over the shared v_* schema — edit feature flags, the fill/present hooks and
+ * pipes below. Register it by adding {{ class }}::class to config('vaulter.panels').
+ *
+ * Set a tablePrefix() ONLY for the rare own-tables mode (D12); then run
+ * `vaulter:panel:migrations {{ id }}` to generate the per-panel tables.
+ */
+final class {{ class }} extends StoragePanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('{{ id }}')
+            ->storageType('{{ storage_type }}'){{ host }}{{ prefix }}{{ id_strategy }}{{ grants }};
+    }
+}

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Resources;
+namespace Vaulter\Http\Resources;
 
-use DocVault\Abilities\DocumentAbilities;
-use DocVault\DocVaultManager;
-use DocVault\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Access\Abilities\DocumentAbilities;
+use Vaulter\Models\Documents\Document;
+use Vaulter\VaulterManager;
 
 /**
  * @mixin Document
@@ -23,7 +23,7 @@ final class DocumentResource extends JsonResource
     {
         /** @var Document $document */
         $document = $this->resource;
-        $manager = app(DocVaultManager::class);
+        $manager = app(VaulterManager::class);
 
         return [
             'id' => $document->getKey(),

@@ -1,6 +1,6 @@
 # Abilities (frontend integration)
 
-DocVault computes per-document permissions server-side and ships them to the front-end, so
+Vaulter computes per-document permissions server-side and ships them to the front-end, so
 your Vue components render only the actions the user may perform. No extra API round-trips,
 no permission logic duplicated in JavaScript.
 
@@ -22,19 +22,19 @@ The Vue editor reads `document.abilities.edit` to decide whether to mount in rea
 
 ## Building your own ability DTO
 
-Extend `DocVault\Abilities\AbilitiesDto` and map ability keys to resolver actions:
+Extend `Vaulter\Abilities\AbilitiesDto` and map ability keys to resolver actions:
 
 ```php
-use DocVault\Abilities\AbilitiesDto;
-use DocVault\DocVaultManager;
-use DocVault\Models\Document;
+use Vaulter\Abilities\AbilitiesDto;
+use Vaulter\VaulterManager;
+use Vaulter\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 final readonly class ExportAbilities extends AbilitiesDto
 {
     public function __construct(public bool $export) {}
 
-    public static function for(?Authenticatable $user, Document $document, DocVaultManager $manager): self
+    public static function for(?Authenticatable $user, Document $document, VaulterManager $manager): self
     {
         $flags = self::resolveFlags($user, $document, $manager, ['export' => 'manage']);
 

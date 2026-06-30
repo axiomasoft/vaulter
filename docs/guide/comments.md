@@ -21,7 +21,7 @@ A comment carries an `author` (the authenticated user, polymorphic), a `body`, a
 ## Front-end
 
 ```ts
-import { useComments } from '@docvault/vue'
+import { useComments } from '@vaulter/vue'
 
 const { comments, list, add, resolve } = useComments(documentId)
 
@@ -32,18 +32,18 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 Or drop in the slot-driven panel:
 
 ```vue
-<DocVaultCommentsPanel :document-id="documentId" @added="scrollToBottom">
+<VaulterCommentsPanel :document-id="documentId" @added="scrollToBottom">
   <template #item="{ comment, resolve }">
     <CommentBubble :comment="comment" @resolve="resolve" />
   </template>
-</DocVaultCommentsPanel>
+</VaulterCommentsPanel>
 ```
 
 ## Events
 
 | Event | Type | When |
 |---|---|---|
-| `DocVault\Events\CommentAdded` | broadcast (`comment.added`) | a comment is posted |
-| `DocVault\Events\CommentResolved` | domain (after commit) | a comment is resolved |
+| `Vaulter\Events\CommentAdded` | broadcast (`comment.added`) | a comment is posted |
+| `Vaulter\Events\CommentResolved` | domain (after commit) | a comment is resolved |
 
 Listen for these in your app to send notifications or mirror activity.

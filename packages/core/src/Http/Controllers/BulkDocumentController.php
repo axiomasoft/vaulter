@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\DeleteDocumentAction;
-use DocVault\Actions\ForceDeleteDocumentAction;
-use DocVault\Actions\MoveDocumentAction;
-use DocVault\Actions\RestoreDocumentAction;
-use DocVault\Enums\BulkAction;
-use DocVault\Http\Requests\BulkDocumentRequest;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
 use Illuminate\Http\JsonResponse;
+use Vaulter\Actions\DeleteDocumentAction;
+use Vaulter\Actions\ForceDeleteDocumentAction;
+use Vaulter\Actions\MoveDocumentAction;
+use Vaulter\Actions\RestoreDocumentAction;
+use Vaulter\Enums\Drive\BulkAction;
+use Vaulter\Http\Requests\BulkDocumentRequest;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class BulkDocumentController extends Controller
 {

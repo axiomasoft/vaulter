@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Collaboration;
+namespace Vaulter\Collaboration;
 
-use DocVault\Contracts\CollaborationDriver;
-use DocVault\DocVaultManager;
-use DocVault\Enums\CollaborationDriverType;
-use DocVault\Models\Document;
-use DocVault\Support\Config;
-use DocVault\Support\Identity;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Contracts\Collaboration\CollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
  * Default driver: Yjs over Laravel Reverb. The front-end joins a private channel
@@ -19,7 +19,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 final readonly class ReverbCollaborationDriver implements CollaborationDriver
 {
     public function __construct(
-        private DocVaultManager $manager,
+        private VaulterManager $manager,
     ) {}
 
     public function type(): CollaborationDriverType
@@ -44,15 +44,24 @@ final readonly class ReverbCollaborationDriver implements CollaborationDriver
         return [
             'driver' => $this->type()->value,
             'channel' => $this->channelName($document),
+            'connection' => Config::reverbConnection(),
             'document_id' => $document->getKey(),
             'token' => $this->issueToken($document, $user),
         ];
     }
 
+    /**
+     * Reverb authenticates out-of-band: the front-end joins the PRIVATE broadcast
+     * channel for the room and Laravel's channel-auth endpoint authorizes it (the
+     * registered channel callback delegates to authorizeChannel → the host
+     * PermissionResolver). There is no separate room JWT to mint — the connection
+     * descriptor the client uses IS the channel name it subscribes to, which the
+     * auth endpoint then gates. We return that channel name so a single accessor
+     * yields a usable handle for either transport instead of an opaque empty string.
+     */
     public function issueToken(Document $document, Authenticatable $user): string
     {
-        // Reverb authorizes via the private-channel auth endpoint; no room token needed.
-        return '';
+        return $this->channelName($document);
     }
 
     private function channelName(Document $document): string

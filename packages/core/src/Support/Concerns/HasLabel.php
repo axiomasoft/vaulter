@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support\Concerns;
+namespace Vaulter\Support\Concerns;
 
-use DocVault\Attributes\Label;
-use DocVault\Support\EnumCaseAttributeResolver;
 use Illuminate\Support\Str;
+use Vaulter\Attributes\Label;
+use Vaulter\Support\EnumCaseAttributeResolver;
 
 /**
  * @phpstan-require-implements \UnitEnum

@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import DocVaultBreadcrumb from '../src/components/DocVaultBreadcrumb.vue'
-import DocVaultCommentsPanel from '../src/components/DocVaultCommentsPanel.vue'
-import DocVaultEditor from '../src/components/DocVaultEditor.vue'
-import DocVaultFileManager from '../src/components/DocVaultFileManager.vue'
-import DocVaultPermissionsPanel from '../src/components/DocVaultPermissionsPanel.vue'
-import DocVaultSharePanel from '../src/components/DocVaultSharePanel.vue'
-import DocVaultVersionHistory from '../src/components/DocVaultVersionHistory.vue'
-import { docVaultClientKey } from '../src/composables/useDocVaultClient'
-import type { DocVaultClient } from '../src/client'
+import VaulterBreadcrumb from '../src/components/VaulterBreadcrumb.vue'
+import VaulterCommentsPanel from '../src/components/VaulterCommentsPanel.vue'
+import VaulterEditor from '../src/components/VaulterEditor.vue'
+import VaulterFileManager from '../src/components/VaulterFileManager.vue'
+import VaulterPermissionsPanel from '../src/components/VaulterPermissionsPanel.vue'
+import VaulterSharePanel from '../src/components/VaulterSharePanel.vue'
+import VaulterVersionHistory from '../src/components/VaulterVersionHistory.vue'
+import { docVaultClientKey } from '../src/composables/useVaulterClient'
+import type { VaulterClient } from '../src/client'
 
-function mockClient(): DocVaultClient {
+function mockClient(): VaulterClient {
   return {
     documents: {
       list: vi.fn().mockResolvedValue([]),
@@ -32,47 +32,47 @@ function mockClient(): DocVaultClient {
     comments: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), resolve: vi.fn(), remove: vi.fn() },
     shares: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), revoke: vi.fn(), resolve: vi.fn() },
     collaboration: { token: vi.fn() },
-  } as unknown as DocVaultClient
+  } as unknown as VaulterClient
 }
 
-function withClient(client: DocVaultClient = mockClient()) {
+function withClient(client: VaulterClient = mockClient()) {
   return { global: { provide: { [docVaultClientKey as symbol]: client } } }
 }
 
-describe('@docvault/vue components', () => {
+describe('@vaulter/vue components', () => {
   it('mounts the file manager and loads workspace documents', async () => {
     const client = mockClient()
-    const wrapper = mount(DocVaultFileManager, {
+    const wrapper = mount(VaulterFileManager, {
       props: { workspaceType: 'App\\Project', workspaceId: 1 },
       ...withClient(client),
     })
 
-    expect(wrapper.classes()).toContain('docvault-file-manager')
+    expect(wrapper.classes()).toContain('vaulter-file-manager')
     await Promise.resolve()
     expect(client.documents.list).toHaveBeenCalledWith({ workspace_type: 'App\\Project', workspace_id: 1 })
   })
 
   it('mounts the editor', () => {
-    const wrapper = mount(DocVaultEditor, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(wrapper.classes()).toContain('docvault-editor')
+    const wrapper = mount(VaulterEditor, { props: { documentId: 1, autoLoad: false }, ...withClient() })
+    expect(wrapper.classes()).toContain('vaulter-editor')
   })
 
   it('mounts version history, permissions and comments panels', () => {
-    expect(mount(DocVaultVersionHistory, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
-    expect(mount(DocVaultPermissionsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
+    expect(mount(VaulterVersionHistory, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
+    expect(mount(VaulterPermissionsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
 
-    const comments = mount(DocVaultCommentsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(comments.classes()).toContain('docvault-comments-panel')
+    const comments = mount(VaulterCommentsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
+    expect(comments.classes()).toContain('vaulter-comments-panel')
 
-    const shares = mount(DocVaultSharePanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(shares.classes()).toContain('docvault-share-panel')
+    const shares = mount(VaulterSharePanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
+    expect(shares.classes()).toContain('vaulter-share-panel')
   })
 
   it('renders the breadcrumb without a client and emits navigate', async () => {
-    const wrapper = mount(DocVaultBreadcrumb, { props: { path: [] } })
-    expect(wrapper.classes()).toContain('docvault-breadcrumb')
+    const wrapper = mount(VaulterBreadcrumb, { props: { path: [] } })
+    expect(wrapper.classes()).toContain('vaulter-breadcrumb')
 
-    await wrapper.get('.docvault-breadcrumb__root').trigger('click')
+    await wrapper.get('.vaulter-breadcrumb__root').trigger('click')
     expect(wrapper.emitted('navigate')?.[0]).toEqual([null])
   })
 })

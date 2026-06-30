@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use DocVault\Actions\CreateDocumentAction;
-use DocVault\Actions\CreateVersionAction;
-use DocVault\Data\CreateDocumentData;
-use DocVault\Data\CreateVersionData;
-use DocVault\Enums\DocumentType;
-use DocVault\Events\DocumentCreated;
-use DocVault\Events\VersionCreated;
-use DocVault\Models\Document;
-use DocVault\ValueObjects\TipTapContent;
 use Illuminate\Support\Facades\Event;
+use Vaulter\Actions\CreateDocumentAction;
+use Vaulter\Actions\CreateVersionAction;
+use Vaulter\Data\CreateDocumentData;
+use Vaulter\Data\CreateVersionData;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Events\Documents\DocumentCreated;
+use Vaulter\Events\Documents\VersionCreated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 it('creates a document and dispatches DocumentCreated', function (): void {
     Event::fake([DocumentCreated::class]);
@@ -28,12 +28,12 @@ it('creates a document and dispatches DocumentCreated', function (): void {
     expect($document->title)->toBe('Specification')
         ->and($document->type)->toBe(DocumentType::RichText);
 
-    $this->assertDatabaseHas('dv_documents', ['title' => 'Specification']);
+    $this->assertDatabaseHas('v_documents', ['title' => 'Specification']);
     Event::assertDispatched(DocumentCreated::class);
 });
 
 it('prunes versions beyond the configured maximum', function (): void {
-    config(['docvault.max_versions' => 2]);
+    config(['vaulter.max_versions' => 2]);
     Event::fake([VersionCreated::class]);
 
     $document = Document::factory()->create();

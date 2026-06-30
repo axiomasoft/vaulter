@@ -15,7 +15,7 @@ export interface UsePermissionsReturn {
 
 /**
  * Reactive helpers over a document's computed abilities (as shipped in
- * `DocVaultDocument.abilities`). Missing abilities resolve to `false`.
+ * `VaulterDocument.abilities`). Missing abilities resolve to `false`.
  */
 export function usePermissions(
   source: MaybeRefOrGetter<DocumentAbilities | null | undefined>,

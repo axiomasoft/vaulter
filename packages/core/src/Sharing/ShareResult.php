@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Sharing;
+
+/**
+ * The resolver's result envelope (§2.7 / M2c): a {@see ShareResolution} status plus
+ * the {@see ShareContext} when (and only when) the status is Ok. Immutable — the
+ * public HTTP layer reads the status to choose 404 / 401 / proceed.
+ */
+final readonly class ShareResult
+{
+    private function __construct(
+        public ShareResolution $resolution,
+        public ?ShareContext $context,
+    ) {}
+
+    public static function ok(ShareContext $context): self
+    {
+        return new self(resolution: ShareResolution::Ok, context: $context);
+    }
+
+    public static function notFound(): self
+    {
+        return new self(resolution: ShareResolution::NotFound, context: null);
+    }
+
+    public static function passwordRequired(): self
+    {
+        return new self(resolution: ShareResolution::PasswordRequired, context: null);
+    }
+
+    public static function loginRequired(): self
+    {
+        return new self(resolution: ShareResolution::LoginRequired, context: null);
+    }
+
+    public function isOk(): bool
+    {
+        return $this->resolution->isOk();
+    }
+}

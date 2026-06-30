@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Resources;
+namespace Vaulter\Http\Resources;
 
-use DocVault\Models\DocumentComment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Models\Documents\DocumentComment;
 
 /**
  * @mixin DocumentComment

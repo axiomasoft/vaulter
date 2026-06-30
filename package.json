@@ -1,9 +1,9 @@
 {
-  "name": "doc-vault",
+  "name": "vaulter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "DocVault monorepo — Vue components, Hocuspocus collaboration server and VitePress documentation.",
+  "description": "Vaulter monorepo — Vue components, Hocuspocus collaboration server and VitePress documentation.",
   "workspaces": [
     "packages/vue",
     "hocuspocus-server"
@@ -12,10 +12,14 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "build": "npm run build --workspace @docvault/vue",
-    "test": "npm run test --workspace @docvault/vue"
+    "build": "npm run build --workspace @vaulter/vue",
+    "test": "npm run test --workspace @vaulter/vue",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.0",
     "vitepress": "^1.6.3"
   }
 }

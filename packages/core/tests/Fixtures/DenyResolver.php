@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Tests\Fixtures;
+namespace Vaulter\Tests\Fixtures;
 
-use DocVault\Contracts\PermissionResolver;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Contracts\Access\PermissionResolver;
+use Vaulter\Models\Documents\Document;
 
 final class DenyResolver implements PermissionResolver
 {

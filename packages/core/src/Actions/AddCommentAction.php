@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\CreateCommentData;
-use DocVault\Events\CommentAdded;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentComment;
-use DocVault\Repositories\CommentStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\CreateCommentData;
+use Vaulter\Events\Documents\CommentAdded;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Documents\CommentStoreRepository;
 
 final readonly class AddCommentAction
 {

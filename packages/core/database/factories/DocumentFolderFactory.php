@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Database\Factories;
+namespace Vaulter\Database\Factories;
 
-use DocVault\Models\DocumentFolder;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Vaulter\Models\Documents\DocumentFolder;
 
 /**
  * @extends Factory<DocumentFolder>

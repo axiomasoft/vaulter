@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\IssueCollaborationTokenAction;
-use DocVault\Actions\SyncCollaborationStateAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\SyncCollaborationRequest;
-use DocVault\Http\Resources\DocumentResource;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Actions\IssueCollaborationTokenAction;
+use Vaulter\Actions\SyncCollaborationStateAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\SyncCollaborationRequest;
+use Vaulter\Http\Resources\DocumentResource;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class CollaborationController extends Controller
 {

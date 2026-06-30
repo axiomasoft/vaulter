@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/docvault-core",
+    "name": "axioma-studio/vaulter-core",
     "description": "Embeddable document management for Laravel — file manager, TipTap editor, version history and real-time collaboration, integrated through adapters.",
     "type": "library",
     "license": "MIT",
@@ -13,7 +13,7 @@
         "editor",
         "file-manager"
     ],
-    "homepage": "https://github.com/axioma-studio/doc-vault",
+    "homepage": "https://github.com/axioma-studio/vaulter",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
@@ -21,43 +21,46 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/axioma-studio/doc-vault/issues",
-        "source": "https://github.com/axioma-studio/doc-vault"
+        "issues": "https://github.com/axioma-studio/vaulter/issues",
+        "source": "https://github.com/axioma-studio/vaulter"
     },
     "require": {
         "php": "^8.4",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/database": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0",
-        "spatie/laravel-package-tools": "^1.92"
+        "spatie/laravel-package-tools": "^1.92",
+        "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "spatie/laravel-permission": "^8.0"
     },
     "suggest": {
         "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
-        "axioma-studio/docvault-filament": "Filament admin UI for documents, folders and permissions."
+        "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0).",
+        "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions."
     },
     "autoload": {
         "psr-4": {
-            "DocVault\\": "src/"
+            "Vaulter\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "DocVault\\Tests\\": "tests/",
-            "DocVault\\Database\\Factories\\": "database/factories/"
+            "Vaulter\\Tests\\": "tests/",
+            "Vaulter\\Database\\Factories\\": "database/factories/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "DocVault\\DocVaultServiceProvider"
+                "Vaulter\\VaulterServiceProvider"
             ],
             "aliases": {
-                "DocVault": "DocVault\\Facades\\DocVault"
+                "Vaulter": "Vaulter\\Facades\\Vaulter"
             }
         },
         "branch-alias": {

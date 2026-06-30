@@ -1,10 +1,10 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
-import { useDocVaultClient } from './useDocVaultClient'
+import { useVaulterClient } from './useVaulterClient'
 import type {
   BulkDocumentsPayload,
   BulkResult,
   CreateDocumentPayload,
-  DocVaultDocument,
+  VaulterDocument,
   DocumentId,
   ListDocumentsQuery,
   UpdateDocumentPayload,
@@ -12,16 +12,16 @@ import type {
 } from '../types'
 
 export interface UseDocumentsReturn {
-  documents: ShallowRef<DocVaultDocument[]>
-  trashed: ShallowRef<DocVaultDocument[]>
+  documents: ShallowRef<VaulterDocument[]>
+  trashed: ShallowRef<VaulterDocument[]>
   loading: Ref<boolean>
   error: Ref<unknown>
-  list: (query: ListDocumentsQuery) => Promise<DocVaultDocument[]>
-  listTrashed: (query: WorkspaceQuery) => Promise<DocVaultDocument[]>
-  create: (payload: CreateDocumentPayload) => Promise<DocVaultDocument>
-  update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<DocVaultDocument>
-  move: (id: DocumentId, folderId: DocumentId | null) => Promise<DocVaultDocument>
-  duplicate: (id: DocumentId) => Promise<DocVaultDocument>
+  list: (query: ListDocumentsQuery) => Promise<VaulterDocument[]>
+  listTrashed: (query: WorkspaceQuery) => Promise<VaulterDocument[]>
+  create: (payload: CreateDocumentPayload) => Promise<VaulterDocument>
+  update: (id: DocumentId, payload: UpdateDocumentPayload) => Promise<VaulterDocument>
+  move: (id: DocumentId, folderId: DocumentId | null) => Promise<VaulterDocument>
+  duplicate: (id: DocumentId) => Promise<VaulterDocument>
   remove: (id: DocumentId) => Promise<void>
   forceDelete: (id: DocumentId) => Promise<void>
   bulk: (payload: BulkDocumentsPayload) => Promise<BulkResult>
@@ -31,13 +31,13 @@ export interface UseDocumentsReturn {
  * Reactive CRUD over a workspace's documents, backed by the injected client.
  */
 export function useDocuments(): UseDocumentsReturn {
-  const client = useDocVaultClient()
-  const documents = shallowRef<DocVaultDocument[]>([])
-  const trashed = shallowRef<DocVaultDocument[]>([])
+  const client = useVaulterClient()
+  const documents = shallowRef<VaulterDocument[]>([])
+  const trashed = shallowRef<VaulterDocument[]>([])
   const loading = ref(false)
   const error = ref<unknown>(null)
 
-  async function list(query: ListDocumentsQuery): Promise<DocVaultDocument[]> {
+  async function list(query: ListDocumentsQuery): Promise<VaulterDocument[]> {
     loading.value = true
     error.value = null
     try {
@@ -51,30 +51,30 @@ export function useDocuments(): UseDocumentsReturn {
     }
   }
 
-  async function listTrashed(query: WorkspaceQuery): Promise<DocVaultDocument[]> {
+  async function listTrashed(query: WorkspaceQuery): Promise<VaulterDocument[]> {
     trashed.value = await client.documents.trashed(query)
     return trashed.value
   }
 
-  async function create(payload: CreateDocumentPayload): Promise<DocVaultDocument> {
+  async function create(payload: CreateDocumentPayload): Promise<VaulterDocument> {
     const created = await client.documents.create(payload)
     documents.value = [...documents.value, created]
     return created
   }
 
-  async function update(id: DocumentId, payload: UpdateDocumentPayload): Promise<DocVaultDocument> {
+  async function update(id: DocumentId, payload: UpdateDocumentPayload): Promise<VaulterDocument> {
     const updated = await client.documents.update(id, payload)
     documents.value = documents.value.map((doc) => (doc.id === id ? updated : doc))
     return updated
   }
 
-  async function move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument> {
+  async function move(id: DocumentId, folderId: DocumentId | null): Promise<VaulterDocument> {
     const moved = await client.documents.move(id, folderId)
     documents.value = documents.value.map((doc) => (doc.id === id ? moved : doc))
     return moved
   }
 
-  async function duplicate(id: DocumentId): Promise<DocVaultDocument> {
+  async function duplicate(id: DocumentId): Promise<VaulterDocument> {
     const copy = await client.documents.duplicate(id)
     documents.value = [...documents.value, copy]
     return copy

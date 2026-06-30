@@ -68,7 +68,7 @@ export function createCollaborationSession(
 
   if (!options.createReverbProvider) {
     throw new Error(
-      '[DocVault] The reverb collaboration driver requires a `createReverbProvider` to bridge '
+      '[Vaulter] The reverb collaboration driver requires a `createReverbProvider` to bridge '
       + 'Laravel Echo/Reverb to Yjs. See the collaboration guide.',
     )
   }

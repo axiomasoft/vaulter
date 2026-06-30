@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use DocVault\Abilities\DocumentAbilities;
-use DocVault\DocVaultManager;
-use DocVault\Facades\DocVault;
-use DocVault\Models\Document;
-use DocVault\Tests\Fixtures\ViewOnlyResolver;
+use Vaulter\Access\Abilities\DocumentAbilities;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Tests\Fixtures\ViewOnlyResolver;
+use Vaulter\VaulterManager;
 
 it('computes per-document abilities from the resolver', function (): void {
-    DocVault::resolvePermissionsWith(new ViewOnlyResolver);
+    Vaulter::resolvePermissionsWith(new ViewOnlyResolver);
     $document = Document::factory()->create();
 
-    $abilities = DocumentAbilities::for(null, $document, app(DocVaultManager::class));
+    $abilities = DocumentAbilities::for(null, $document, app(VaulterManager::class));
 
     expect($abilities->toArray())->toBe([
         'view' => false,
@@ -26,7 +26,7 @@ it('computes per-document abilities from the resolver', function (): void {
 it('grants all abilities when no resolver is configured', function (): void {
     $document = Document::factory()->create();
 
-    $abilities = DocumentAbilities::for(null, $document, app(DocVaultManager::class));
+    $abilities = DocumentAbilities::for(null, $document, app(VaulterManager::class));
 
     expect($abilities->view)->toBeTrue()
         ->and($abilities->manage)->toBeTrue();

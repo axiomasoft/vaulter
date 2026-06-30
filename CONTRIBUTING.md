@@ -1,6 +1,6 @@
-# Contributing to DocVault
+# Contributing to Vaulter
 
-Thanks for your interest in DocVault! This is a monorepo containing a Laravel package,
+Thanks for your interest in Vaulter! This is a monorepo containing a Laravel package,
 Vue components, a Node collaboration server and the documentation site.
 
 ## Prerequisites
@@ -12,8 +12,8 @@ Vue components, a Node collaboration server and the documentation site.
 ## Setup
 
 ```bash
-git clone https://github.com/axioma-studio/doc-vault.git
-cd doc-vault
+git clone https://github.com/axioma-studio/vaulter.git
+cd vaulter
 composer install     # path-linked packages under packages/*
 npm install          # npm workspaces (packages/vue, hocuspocus-server) + docs
 ```
@@ -37,7 +37,7 @@ Run `make ci` before opening a PR.
 ## Development workflow (JS)
 
 ```bash
-npm run build        # build @docvault/vue (Vite library)
+npm run build        # build @vaulter/vue (Vite library)
 npm test             # Vitest
 npm run docs:dev     # VitePress docs dev server
 ```
@@ -46,13 +46,13 @@ npm run docs:dev     # VitePress docs dev server
 
 - **Commits & PR titles:** Conventional Commits (`feat:`, `fix:`, `docs:`, …) — enforced in CI.
 - **Branches:** `feat/**`, `fix/**`, `hotfix/**`.
-- **Namespaces:** core is `DocVault\` (`packages/core/src`); new integration packages live
-  under `packages/<name>` with `DocVault\<Name>\` (AzGuard convention).
+- **Namespaces:** core is `Vaulter\` (`packages/core/src`); new integration packages live
+  under `packages/<name>` with `Vaulter\<Name>\` (AzGuard convention).
 - **Docs:** plain Markdown only — no `[[wikilinks]]` (docs are synced to the Brain vault,
   which rejects wikilinks).
 
 ## Documentation sync
 
 The `docs/` folder is two-way synced with the Brain vault project
-`05 - Projects/03 - OpenSource/DocVault/` via `brain sync docs`. Edit on either side; the
+`05 - Projects/03 - OpenSource/Vaulter/` via `brain sync docs`. Edit on either side; the
 CLI performs a git 3-way merge. Always preview with `brain sync docs --dry-run` first.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Database\Factories;
+namespace Vaulter\Database\Factories;
 
-use DocVault\Enums\PermissionLevel;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentShare;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Vaulter\Enums\Access\PermissionLevel;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentShare;
 
 /**
  * @extends Factory<DocumentShare>

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
-final class SyncCollaborationRequest extends DocVaultFormRequest
+final class SyncCollaborationRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

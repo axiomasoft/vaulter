@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\GrantPermissionData;
-use DocVault\Enums\PermissionLevel;
 use Illuminate\Validation\Rule;
+use Vaulter\Data\GrantPermissionData;
+use Vaulter\Enums\Access\PermissionLevel;
 
-final class StorePermissionRequest extends DocVaultFormRequest
+final class StorePermissionRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

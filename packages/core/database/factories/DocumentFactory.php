@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Database\Factories;
+namespace Vaulter\Database\Factories;
 
-use DocVault\Enums\DocumentType;
-use DocVault\Models\Document;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Models\Documents\Document;
 
 /**
  * @extends Factory<Document>

@@ -6,11 +6,11 @@ The document list accepts a `q` term, matched (case-insensitively) against the t
 the raw content, scoped to the workspace and filtered by the `view` ability:
 
 ```
-GET /api/docvault/documents?workspace_type=App\Models\Project&workspace_id=1&q=roadmap
+GET /api/vaulter/documents?workspace_type=App\Models\Project&workspace_id=1&q=roadmap
 ```
 
 ```ts
-import { useDocuments } from '@docvault/vue'
+import { useDocuments } from '@vaulter/vue'
 
 const { documents, list } = useDocuments()
 await list({ workspace_type: 'App\\Models\\Project', workspace_id: 1, q: 'roadmap' })
@@ -18,7 +18,7 @@ await list({ workspace_type: 'App\\Models\\Project', workspace_id: 1, q: 'roadma
 
 ::: tip Scaling search
 The default search uses a `LIKE` scan — fine for typical workspaces. For large datasets, swap in
-a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('docvault.models.document')`
+a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaulter.models.document')`
 at a searchable model and overriding the read repository.
 :::
 
@@ -39,7 +39,7 @@ await listTrashed({ workspace_type: 'App\\Models\\Project', workspace_id: 1 })
 await forceDelete(documentId) // permanent — dispatches DocumentPurged
 ```
 
-A permanent delete dispatches `DocVault\Events\DocumentPurged` (distinct from the reversible
+A permanent delete dispatches `Vaulter\Events\DocumentPurged` (distinct from the reversible
 `DocumentDeleted`), so your app can treat hard deletes differently in audit logs.
 
 ## Move & duplicate
@@ -67,7 +67,7 @@ const copy = await duplicate(documentId)
 reporting which were processed vs skipped (denied / missing):
 
 ```
-POST /api/docvault/documents/bulk
+POST /api/vaulter/documents/bulk
 { "action": "move", "ids": [1, 2, 3], "folder_id": 9 }
 → { "data": { "action": "move", "processed": [1, 3], "skipped": [2] } }
 ```

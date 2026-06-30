@@ -2,32 +2,32 @@
 
 declare(strict_types=1);
 
-use DocVault\Actions\CreateDocumentAction;
-use DocVault\Collaboration\HocuspocusCollaborationDriver;
-use DocVault\Data\CreateDocumentData;
-use DocVault\Enums\DocumentType;
-use DocVault\Exceptions\UnknownDocumentTypeException;
-use DocVault\Facades\DocVault;
-use DocVault\Models\Document;
-use DocVault\Tests\Fixtures\AllowResolver;
-use DocVault\Tests\Fixtures\TestUser;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Actions\CreateDocumentAction;
+use Vaulter\Collaboration\HocuspocusCollaborationDriver;
+use Vaulter\Data\CreateDocumentData;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Exceptions\Documents\UnknownDocumentTypeException;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Tests\Fixtures\AllowResolver;
+use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 beforeEach(function (): void {
-    config()->set('docvault.collaboration.driver', 'hocuspocus');
-    config()->set('docvault.collaboration.drivers.hocuspocus.secret', 'test-secret');
-    config()->set('docvault.collaboration.drivers.hocuspocus.url', 'ws://localhost:1234');
+    config()->set('vaulter.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'test-secret');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.url', 'ws://localhost:1234');
 });
 
 it('resolves the hocuspocus driver when configured as default', function (): void {
-    expect(DocVault::driver())->toBeInstanceOf(HocuspocusCollaborationDriver::class);
+    expect(Vaulter::driver())->toBeInstanceOf(HocuspocusCollaborationDriver::class);
 });
 
 it('builds a hocuspocus connection config with a signed room token', function (): void {
     $document = Document::factory()->create();
     $user = (new TestUser)->forceFill(['id' => 7]);
 
-    $config = DocVault::driver()->connectionConfig($document, $user);
+    $config = Vaulter::driver()->connectionConfig($document, $user);
 
     expect($config['driver'])->toBe('hocuspocus')
         ->and($config['url'])->toBe('ws://localhost:1234')
@@ -36,14 +36,14 @@ it('builds a hocuspocus connection config with a signed room token', function ()
 });
 
 it('authorizes the channel through the resolver', function (): void {
-    DocVault::resolvePermissionsWith(new AllowResolver);
+    Vaulter::resolvePermissionsWith(new AllowResolver);
     $document = Document::factory()->create();
 
-    expect(DocVault::driver()->authorizeChannel((new TestUser)->forceFill(['id' => 1]), $document))->toBeTrue();
+    expect(Vaulter::driver()->authorizeChannel((new TestUser)->forceFill(['id' => 1]), $document))->toBeTrue();
 });
 
 it('rejects a disabled document type in the create action', function (): void {
-    config()->set('docvault.enabled_document_types', ['markdown']);
+    config()->set('vaulter.enabled_document_types', ['markdown']);
 
     app(CreateDocumentAction::class)->execute(new CreateDocumentData(
         workspaceType: 'App\\Project',

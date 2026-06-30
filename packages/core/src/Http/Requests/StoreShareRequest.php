@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\CreateShareData;
-use DocVault\Enums\PermissionLevel;
 use Illuminate\Validation\Rule;
+use Vaulter\Data\CreateShareData;
+use Vaulter\Enums\Access\PermissionLevel;
 
-final class StoreShareRequest extends DocVaultFormRequest
+final class StoreShareRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\AddCommentAction;
-use DocVault\Actions\DeleteCommentAction;
-use DocVault\Actions\ResolveCommentAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\StoreCommentRequest;
-use DocVault\Http\Resources\DocumentCommentResource;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentComment;
-use DocVault\Repositories\CommentReadRepository;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Actions\AddCommentAction;
+use Vaulter\Actions\DeleteCommentAction;
+use Vaulter\Actions\ResolveCommentAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\StoreCommentRequest;
+use Vaulter\Http\Resources\DocumentCommentResource;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\CommentReadRepository;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
 
 final class CommentController extends Controller
 {

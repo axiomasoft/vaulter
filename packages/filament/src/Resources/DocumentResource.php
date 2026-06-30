@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources;
+namespace Vaulter\Filament\Resources;
 
 use BackedEnum;
-use DocVault\Enums\DocumentType;
-use DocVault\Filament\Resources\DocumentResource\Pages\EditDocument;
-use DocVault\Filament\Resources\DocumentResource\Pages\ListDocuments;
-use DocVault\Models\Document;
-use DocVault\Support\Config;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -26,6 +21,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Override;
 use UnitEnum;
+use Vaulter\Enums\Documents\DocumentType;
+use Vaulter\Filament\Resources\DocumentResource\Pages\EditDocument;
+use Vaulter\Filament\Resources\DocumentResource\Pages\ListDocuments;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Support\Config;
 
 final class DocumentResource extends Resource
 {
@@ -33,7 +33,7 @@ final class DocumentResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string|UnitEnum|null $navigationGroup = 'DocVault';
+    protected static string|UnitEnum|null $navigationGroup = 'Vaulter';
 
     protected static ?string $recordTitleAttribute = 'title';
 

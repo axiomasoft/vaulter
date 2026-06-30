@@ -1,7 +1,7 @@
 # Error Reference
 
-Every DocVault exception extends `DocVault\Exceptions\DocVaultException` and carries a
-message in the form `[DocVault] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
+Every Vaulter exception extends `Vaulter\Exceptions\VaulterException` and carries a
+message in the form `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
 points at the matching anchor below.
 
 ## document-not-found
@@ -18,8 +18,8 @@ action. Grant the required level or adjust the resolver. The API maps this to `4
 ## unknown-document-type
 
 `UnknownDocumentTypeException` — the supplied `type` is not in
-`config('docvault.enabled_document_types')`. Enable it, or register a custom type via
-`DocVault::registerDocumentType()`.
+`config('vaulter.enabled_document_types')`. Enable it, or register a custom type via
+`Vaulter::registerDocumentType()`.
 
 ## invalid-tiptap-content
 
@@ -29,12 +29,12 @@ action. Grant the required level or adjust the resolver. The API maps this to `4
 ## content-too-large
 
 `InvalidTipTapContentException::tooLarge()` — the content exceeds
-`config('docvault.max_document_size_kb')`. Split the document or raise the limit.
+`config('vaulter.max_document_size_kb')`. Split the document or raise the limit.
 
 ## unknown-collaboration-driver
 
-`DocVaultException` from `DocVault::driver()` — the named driver is not registered under
-`config('docvault.collaboration.drivers')`. Add an entry whose `class` implements
+`VaulterException` from `Vaulter::driver()` — the named driver is not registered under
+`config('vaulter.collaboration.drivers')`. Add an entry whose `class` implements
 `CollaborationDriver`.
 
 ## missing-jwt
@@ -44,5 +44,5 @@ The Hocuspocus driver needs `firebase/php-jwt` to mint room tokens. Run
 
 ## missing-collab-secret
 
-The Hocuspocus driver needs `DOCVAULT_COLLAB_SECRET`. Set the shared secret in your
+The Hocuspocus driver needs `VAULTER_COLLAB_SECRET`. Set the shared secret in your
 environment.

@@ -18,8 +18,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-      name: 'DocVaultVue',
-      fileName: 'docvault-vue',
+      name: 'VaulterVue',
+      fileName: 'vaulter-vue',
     },
     rollupOptions: {
       external: ['vue', 'yjs', /^@tiptap\//, /^@hocuspocus\//],

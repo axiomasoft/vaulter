@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Events\DocumentMoved;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentFolder;
-use DocVault\Repositories\DocumentStoreRepository;
-use DocVault\Repositories\FolderReadRepository;
-use DocVault\Support\Identity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Events\Documents\DocumentMoved;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Repositories\Documents\FolderReadRepository;
+use Vaulter\Support\Identity;
 
 final readonly class MoveDocumentAction
 {

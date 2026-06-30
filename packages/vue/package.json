@@ -1,20 +1,20 @@
 {
-  "name": "@docvault/vue",
+  "name": "@vaulter/vue",
   "version": "0.1.0",
-  "description": "Vue 3 + TypeScript components, composables and API client for DocVault.",
+  "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
   "type": "module",
   "files": [
     "dist"
   ],
-  "main": "./dist/docvault-vue.umd.cjs",
-  "module": "./dist/docvault-vue.js",
+  "main": "./dist/vaulter-vue.umd.cjs",
+  "module": "./dist/vaulter-vue.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/docvault-vue.js",
-      "require": "./dist/docvault-vue.umd.cjs"
+      "import": "./dist/vaulter-vue.js",
+      "require": "./dist/vaulter-vue.umd.cjs"
     }
   },
   "scripts": {

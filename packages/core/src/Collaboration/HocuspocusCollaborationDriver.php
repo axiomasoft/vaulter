@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Collaboration;
+namespace Vaulter\Collaboration;
 
-use DocVault\Contracts\CollaborationDriver;
-use DocVault\DocVaultManager;
-use DocVault\Enums\CollaborationDriverType;
-use DocVault\Exceptions\DocVaultException;
-use DocVault\Models\Document;
-use DocVault\Support\Config;
-use DocVault\Support\Identity;
 use Firebase\JWT\JWT;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Contracts\Collaboration\CollaborationDriver;
+use Vaulter\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
  * Optional driver targeting an external Node Hocuspocus hub (see hocuspocus-server/).
@@ -21,7 +21,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 final readonly class HocuspocusCollaborationDriver implements CollaborationDriver
 {
     public function __construct(
-        private DocVaultManager $manager,
+        private VaulterManager $manager,
     ) {}
 
     public function type(): CollaborationDriverType
@@ -56,10 +56,10 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
     public function issueToken(Document $document, Authenticatable $user): string
     {
         if (!class_exists(JWT::class)) {
-            throw new DocVaultException(
-                '[DocVault] The Hocuspocus driver requires firebase/php-jwt. '
+            throw new VaulterException(
+                '[Vaulter] The Hocuspocus driver requires firebase/php-jwt. '
                 .'Fix: composer require firebase/php-jwt. '
-                .'Docs: https://github.com/axioma-studio/doc-vault/blob/main/docs/guide/errors.md#missing-jwt',
+                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#missing-jwt',
             );
         }
 
@@ -67,10 +67,10 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
         $secret = $config['secret'] ?? null;
 
         if (!is_string($secret) || $secret === '') {
-            throw new DocVaultException(
-                '[DocVault] Missing DOCVAULT_COLLAB_SECRET for the Hocuspocus driver. '
+            throw new VaulterException(
+                '[Vaulter] Missing VAULTER_COLLAB_SECRET for the Hocuspocus driver. '
                 .'Fix: set the shared secret in your environment. '
-                .'Docs: https://github.com/axioma-studio/doc-vault/blob/main/docs/guide/errors.md#missing-collab-secret',
+                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#missing-collab-secret',
             );
         }
 

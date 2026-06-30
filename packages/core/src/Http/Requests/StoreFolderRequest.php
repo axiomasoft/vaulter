@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Data\CreateFolderData;
+use Vaulter\Data\CreateFolderData;
 
-final class StoreFolderRequest extends DocVaultFormRequest
+final class StoreFolderRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

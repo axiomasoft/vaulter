@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Models\DocumentComment;
-use DocVault\Repositories\CommentStoreRepository;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Models\Documents\DocumentComment;
+use Vaulter\Repositories\Documents\CommentStoreRepository;
 
 final readonly class DeleteCommentAction
 {

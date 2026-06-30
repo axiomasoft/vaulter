@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\DocVaultManager;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Models\Document;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Models\Documents\Document;
+use Vaulter\VaulterManager;
 
 final readonly class IssueCollaborationTokenAction
 {
     public function __construct(
-        private DocVaultManager $manager,
+        private VaulterManager $manager,
     ) {}
 
     /**

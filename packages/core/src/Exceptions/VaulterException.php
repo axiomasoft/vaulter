@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions;
+
+use RuntimeException;
+
+/**
+ * Base for every Vaulter error — catch this to handle all package failures.
+ */
+class VaulterException extends RuntimeException
+{
+    protected static function docs(string $anchor): string
+    {
+        return 'https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+    }
+}

@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Abilities\DocumentAbilities;
-use DocVault\Actions\CreateShareLinkAction;
-use DocVault\Actions\RevokeShareLinkAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\StoreShareRequest;
-use DocVault\Http\Resources\DocumentShareResource;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\Repositories\ShareReadRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Access\Abilities\DocumentAbilities;
+use Vaulter\Actions\CreateShareLinkAction;
+use Vaulter\Actions\RevokeShareLinkAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\StoreShareRequest;
+use Vaulter\Http\Resources\DocumentShareResource;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Repositories\Sharing\ShareReadRepository;
 
 final class ShareController extends Controller
 {

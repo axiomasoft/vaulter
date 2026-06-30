@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use DocVault\DocVaultManager;
-use DocVault\Facades\DocVault;
+use Vaulter\Facades\Vaulter;
+use Vaulter\VaulterManager;
 
-it('merges the docvault config', function (): void {
-    expect(config('docvault.route_prefix'))->toBe('api/docvault')
-        ->and(config('docvault.enabled_document_types'))->toContain('richtext');
+it('merges the vaulter config', function (): void {
+    expect(config('vaulter.route_prefix'))->toBe('api/vaulter')
+        ->and(config('vaulter.enabled_document_types'))->toContain('richtext');
 });
 
 it('binds the manager as a singleton', function (): void {
-    expect(app('docvault'))->toBeInstanceOf(DocVaultManager::class)
-        ->and(app('docvault'))->toBe(app(DocVaultManager::class));
+    expect(app('vaulter'))->toBeInstanceOf(VaulterManager::class)
+        ->and(app('vaulter'))->toBe(app(VaulterManager::class));
 });
 
 it('registers the API routes', function (): void {
@@ -20,14 +20,14 @@ it('registers the API routes', function (): void {
         ->map(fn ($route): string => $route->uri());
 
     expect($uris)
-        ->toContain('api/docvault/documents')
-        ->toContain('api/docvault/documents/{documentId}/versions')
-        ->toContain('api/docvault/folders');
+        ->toContain('api/vaulter/documents')
+        ->toContain('api/vaulter/documents/{documentId}/versions')
+        ->toContain('api/vaulter/folders');
 });
 
-it('exposes the DocVault facade', function (): void {
-    DocVault::registerDocumentType('spreadsheet', ['label' => 'Spreadsheet']);
+it('exposes the Vaulter facade', function (): void {
+    Vaulter::registerDocumentType('spreadsheet', ['label' => 'Spreadsheet']);
 
-    expect(DocVault::documentTypes())->toHaveKey('spreadsheet')
-        ->and(DocVault::permissionResolver())->toBeNull();
+    expect(Vaulter::documentTypes())->toHaveKey('spreadsheet')
+        ->and(Vaulter::permissionResolver())->toBeNull();
 });

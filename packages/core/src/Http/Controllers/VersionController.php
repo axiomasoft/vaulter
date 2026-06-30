@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\CreateVersionAction;
-use DocVault\Actions\RestoreVersionAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\StoreVersionRequest;
-use DocVault\Http\Resources\DocumentResource;
-use DocVault\Http\Resources\DocumentVersionResource;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\Repositories\VersionReadRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Actions\CreateVersionAction;
+use Vaulter\Actions\RestoreVersionAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\StoreVersionRequest;
+use Vaulter\Http\Resources\DocumentResource;
+use Vaulter\Http\Resources\DocumentVersionResource;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Repositories\Documents\VersionReadRepository;
 
 final class VersionController extends Controller
 {

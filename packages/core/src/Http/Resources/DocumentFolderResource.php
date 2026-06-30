@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Resources;
+namespace Vaulter\Http\Resources;
 
-use DocVault\Models\DocumentFolder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Models\Documents\DocumentFolder;
 
 /**
  * @mixin DocumentFolder

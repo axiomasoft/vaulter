@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use DocVault\Exceptions\InvalidTipTapContentException;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 it('accepts a valid TipTap document', function (): void {
     $content = TipTapContent::fromArray(['type' => 'doc', 'content' => []]);

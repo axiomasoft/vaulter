@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Support;
+namespace Vaulter\Support;
 
-use DocVault\Enums\ExportFormat;
-use DocVault\ValueObjects\TipTapContent;
+use Vaulter\Enums\Documents\ExportFormat;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Supports the common node

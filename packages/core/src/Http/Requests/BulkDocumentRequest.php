@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\Enums\BulkAction;
 use Illuminate\Validation\Rule;
+use Vaulter\Enums\Drive\BulkAction;
 
-final class BulkDocumentRequest extends DocVaultFormRequest
+final class BulkDocumentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>

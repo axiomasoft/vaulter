@@ -15,7 +15,7 @@ on:
 
 jobs:
   filament:
-    name: docvault-filament (Filament 5)
+    name: vaulter-filament (Filament 5)
     runs-on: ubuntu-latest
 
     steps:

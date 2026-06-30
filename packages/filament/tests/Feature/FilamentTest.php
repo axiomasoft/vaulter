@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use DocVault\Filament\DocVaultPlugin;
-use DocVault\Filament\Resources\DocumentResource;
-use DocVault\Filament\Resources\FolderResource;
-use DocVault\Filament\Resources\ShareResource;
-use DocVault\Filament\Tests\Fixtures\CustomDocument;
-use DocVault\Models\Document;
-use DocVault\Models\DocumentFolder;
-use DocVault\Models\DocumentShare;
+use Vaulter\Filament\Resources\DocumentResource;
+use Vaulter\Filament\Resources\FolderResource;
+use Vaulter\Filament\Resources\ShareResource;
+use Vaulter\Filament\Tests\Fixtures\CustomDocument;
+use Vaulter\Filament\VaulterPlugin;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Models\Documents\DocumentShare;
 
 it('resolves the configured models for every resource', function (): void {
     expect(DocumentResource::getModel())->toBe(Document::class)
@@ -22,15 +22,15 @@ it('marks share links as not creatable in the panel', function (): void {
 });
 
 it('respects a swapped document model', function (): void {
-    config()->set('docvault.models.document', CustomDocument::class);
+    config()->set('vaulter.models.document', CustomDocument::class);
 
     expect(DocumentResource::getModel())->toBe(CustomDocument::class);
 });
 
 it('identifies the plugin', function (): void {
-    expect(DocVaultPlugin::make()->getId())->toBe('docvault');
+    expect(VaulterPlugin::make()->getId())->toBe('vaulter');
 });
 
 it('loads the package config', function (): void {
-    expect(config('docvault-filament.navigation_group'))->toBe('DocVault');
+    expect(config('vaulter-filament.navigation_group'))->toBe('Vaulter');
 });

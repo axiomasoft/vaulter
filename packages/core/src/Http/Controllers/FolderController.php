@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Actions\CreateFolderAction;
-use DocVault\Actions\DeleteFolderAction;
-use DocVault\Actions\MoveFolderAction;
-use DocVault\Actions\RenameFolderAction;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\StoreFolderRequest;
-use DocVault\Http\Resources\DocumentFolderResource;
-use DocVault\Models\DocumentFolder;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\Repositories\FolderReadRepository;
-use DocVault\ValueObjects\WorkspaceRef;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Actions\CreateFolderAction;
+use Vaulter\Actions\DeleteFolderAction;
+use Vaulter\Actions\MoveFolderAction;
+use Vaulter\Actions\RenameFolderAction;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\StoreFolderRequest;
+use Vaulter\Http\Resources\DocumentFolderResource;
+use Vaulter\Models\Documents\DocumentFolder;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\FolderReadRepository;
+use Vaulter\ValueObjects\Drive\WorkspaceRef;
 
 final class FolderController extends Controller
 {

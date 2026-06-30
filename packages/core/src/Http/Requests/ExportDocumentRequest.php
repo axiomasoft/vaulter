@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Requests;
+namespace Vaulter\Http\Requests;
 
-use DocVault\DocVaultManager;
 use Illuminate\Validation\Rule;
+use Vaulter\VaulterManager;
 
-final class ExportDocumentRequest extends DocVaultFormRequest
+final class ExportDocumentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>
@@ -31,6 +31,6 @@ final class ExportDocumentRequest extends DocVaultFormRequest
      */
     private function exporterFormats(): array
     {
-        return app(DocVaultManager::class)->exporterFormats();
+        return app(VaulterManager::class)->exporterFormats();
     }
 }

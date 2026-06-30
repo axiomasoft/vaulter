@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Http\Controllers;
+namespace Vaulter\Http\Controllers;
 
-use DocVault\Contracts\DocumentExporter;
-use DocVault\DocVaultManager;
-use DocVault\Exceptions\PermissionDeniedException;
-use DocVault\Http\Requests\ExportDocumentRequest;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentReadRepository;
-use DocVault\Repositories\DocumentVisibilityService;
-use DocVault\ValueObjects\TipTapContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Http\Requests\ExportDocumentRequest;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Access\DocumentVisibilityService;
+use Vaulter\Repositories\Documents\DocumentReadRepository;
+use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\VaulterManager;
 
 final class ExportController extends Controller
 {
     public function __construct(
         private readonly DocumentReadRepository $documents,
         private readonly DocumentVisibilityService $visibility,
-        private readonly DocVaultManager $manager,
+        private readonly VaulterManager $manager,
     ) {}
 
     public function show(ExportDocumentRequest $request, int|string $documentId): JsonResponse

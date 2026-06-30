@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources\FolderResource\Pages;
+namespace Vaulter\Filament\Resources\FolderResource\Pages;
 
-use DocVault\Filament\Resources\FolderResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Override;
+use Vaulter\Filament\Resources\FolderResource;
 
 final class EditFolder extends EditRecord
 {

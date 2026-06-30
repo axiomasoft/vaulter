@@ -1,9 +1,9 @@
 {
-    "name": "axioma-studio/docvault-monorepo",
-    "description": "DocVault — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
+    "name": "axioma-studio/vaulter-monorepo",
+    "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
     "type": "project",
     "license": "MIT",
-    "homepage": "https://github.com/axioma-studio/doc-vault",
+    "homepage": "https://github.com/axioma-studio/vaulter",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
@@ -12,7 +12,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "axioma-studio/docvault-core": "@dev"
+        "axioma-studio/vaulter-core": "@dev"
     },
     "require-dev": {
         "laravel/pint": "^1.13",
@@ -24,12 +24,13 @@
         "phpstan/phpstan": "^2.0",
         "larastan/larastan": "^3.0",
         "infection/infection": "^0.33",
-        "firebase/php-jwt": "^6.0"
+        "firebase/php-jwt": "^6.0",
+        "spatie/laravel-permission": "^8.0"
     },
     "autoload-dev": {
         "psr-4": {
-            "DocVault\\Tests\\": "packages/core/tests/",
-            "DocVault\\Database\\Factories\\": "packages/core/database/factories/"
+            "Vaulter\\Tests\\": "packages/core/tests/",
+            "Vaulter\\Database\\Factories\\": "packages/core/database/factories/"
         }
     },
     "repositories": [

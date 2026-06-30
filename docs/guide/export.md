@@ -1,43 +1,278 @@
+---
+title: Export
+description: Render a document's TipTap content to HTML or Markdown, and register your own exporter (PDF, DOCX, …) with no core change.
+outline: deep
+---
+
 # Export
 
 Render a document's TipTap content to **HTML** or **Markdown** for download, email, or display
-outside the editor. Exporting requires the **`view`** ability.
+outside the editor — and plug in your own exporter (PDF, DOCX, …) without touching core. Both
+the node-attached [document path](./documents.md) and the legacy document path share the same
+exporter registry.
 
-The renderer (`DocVault\Support\TipTapRenderer`) handles the common node and mark set —
-headings, paragraphs, bullet/ordered lists, blockquotes, code blocks, horizontal rules, and the
-bold / italic / strike / code / link marks — with HTML output escaped. Unknown nodes fall back to
-rendering their children.
+## The exporter contract
 
-## API
+An exporter implements `Vaulter\Contracts\Documents\DocumentExporter`:
 
-| Method | URL | Query | Ability |
+```php
+namespace Vaulter\Contracts\Documents;
+
+use Vaulter\ValueObjects\Documents\TipTapContent;
+
+interface DocumentExporter
+{
+    /** The format key (e.g. 'html', 'pdf') — also echoed in the API response. */
+    public function format(): string;
+
+    public function mimeType(): string;
+
+    /** File extension, without the dot. */
+    public function extension(): string;
+
+    public function export(TipTapContent $content): string;
+}
+```
+
+Binary formats return an encoded string (e.g. base64) and advertise the matching mime type.
+
+## Built-in exporters
+
+Two ship with the package, registered in config:
+
+```php
+// config/vaulter.php
+'exporters' => [
+    'html'     => Vaulter\Export\HtmlExporter::class,
+    'markdown' => Vaulter\Export\MarkdownExporter::class,
+],
+```
+
+| Format | Class | mime | extension |
 |---|---|---|---|
-| GET | `/documents/{id}/export` | `format=html` (default) \| `markdown` | `view` |
+| `html` | `HtmlExporter` | `text/html` | `html` |
+| `markdown` | `MarkdownExporter` | `text/markdown` | `md` |
 
-Returns `{ data: { format, content, filename } }`. An unsupported format yields `422`.
+Both delegate to `Vaulter\Support\TipTapRenderer`, which handles the common node and mark set —
+headings, paragraphs, bullet/ordered lists, list items, blockquotes, code blocks, horizontal
+rules and hard breaks, plus the **bold / italic / strike / code / link** marks — with HTML
+output escaped (`htmlspecialchars`). Unknown nodes fall back to rendering their children, so an
+unrecognised node never breaks an export.
 
-## Front-end
+::: tip Default format
+When no `format` query is given, both export endpoints default to `html`.
+:::
+
+## Exporting a document node
+
+`GET {prefix}/nodes/{node}/export` renders a [document node's](./documents.md) head content.
+It requires the `View` ability on the node (and the node must be `kind=document`). This route
+is part of the DocDrive surface, gated on the **`document_versions`** feature.
+
+::: code-group
+
+```ts [Vue — composable]
+import { useDocumentNode } from '@vaulter/vue'
+
+const { exportAs } = useDocumentNode(nodeId)
+
+const result = await exportAs('markdown')
+// → { format: 'markdown', content: '# …', mime_type: 'text/markdown', filename: 'notes.md' }
+```
+
+```bash [HTTP]
+# GET {prefix}/nodes/{node}/export?format=html|markdown
+curl 'https://app.test/api/vaulter/nodes/77/export?format=markdown'
+# → { "data": { "format": "markdown", "content": "# …",
+#               "mime_type": "text/markdown", "filename": "notes.md" } }
+```
+
+```ts [Vue — client directly]
+import { useVaulterClient } from '@vaulter/vue'
+
+const client = useVaulterClient()
+const result = await client.documentNodes.export(nodeId, 'html')
+```
+
+:::
+
+The node export response is a `NodeDocumentExport` (`Vaulter\ValueObjects\Documents\DocumentExport`),
+which **includes `mime_type`**:
 
 ```ts
-import { useDocumentExport } from '@docvault/vue'
+interface NodeDocumentExport {
+  format: string        // the exporter's format key
+  content: string       // the rendered output
+  mime_type: string     // the exporter's mime type
+  filename: string      // derived from the node name + the exporter extension
+}
+```
+
+::: info Export gated by handler capability
+A node only exposes export formats when its resolved handler is **editable or previewable**
+(`NodeExportService::availableFormats`). A download-only node (an archive, an unknown binary)
+exposes no export formats. See [Document Handlers](./document-handlers.md).
+:::
+
+## Exporting a legacy document
+
+`GET {prefix}/documents/{id}/export` renders a legacy (document-id-attached) document. It
+requires the **`view`** ability (checked through `DocumentVisibilityService`).
+
+::: code-group
+
+```ts [Vue — composable]
+import { useDocumentExport } from '@vaulter/vue'
 
 const { fetch, download, exporting } = useDocumentExport(documentId)
 
 const { content } = await fetch('markdown') // get the rendered string
-await download('html')                      // trigger a browser download
+await download('html')                       // trigger a browser download
 ```
 
-Or call the client directly:
+```bash [HTTP]
+# GET {prefix}/documents/{id}/export?format=html|markdown
+curl 'https://app.test/api/vaulter/documents/9/export?format=html'
+# → { "data": { "format": "html", "content": "<h1>…</h1>",
+#               "filename": "my-doc.html", "mime_type": "text/html" } }
+```
 
-```ts
-import { createDocVaultClient } from '@docvault/vue'
+```ts [Vue — client directly]
+import { useVaulterClient } from '@vaulter/vue'
 
-const client = createDocVaultClient({ baseUrl: '/api/docvault' })
+const client = useVaulterClient()
 const exported = await client.documents.export(documentId, 'html')
 // → { format: 'html', content: '<h1>…</h1>', filename: 'my-doc.html' }
 ```
 
-::: tip PDF / DOCX
-PDF and DOCX export are intentionally out of scope (they require heavy renderers). Convert the
-HTML output with your tool of choice, or layer a dedicated exporter on top.
 :::
+
+The `useDocumentExport().download()` helper builds a `Blob` from the rendered string and
+triggers a browser download (a no-op outside a DOM environment). The legacy filename is the
+document title slugged + the exporter extension; an unknown `format` is rejected by the
+request's validation rule (`422`) against the registered exporter formats.
+
+## Registering your own exporter (PDF / DOCX)
+
+Heavy converters (PDF, DOCX) are intentionally **not** bundled — they need large renderers.
+They are a clean registerable seam: implement `DocumentExporter` and register it. No core
+change.
+
+### 1. Implement the exporter
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Vaulter\Exporters;
+
+use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Support\TipTapRenderer;
+use Vaulter\ValueObjects\Documents\TipTapContent;
+
+final class PdfExporter implements DocumentExporter
+{
+    public function __construct(
+        private readonly TipTapRenderer $renderer,   // reuse the built-in HTML renderer
+    ) {}
+
+    public function format(): string
+    {
+        return 'pdf';
+    }
+
+    public function mimeType(): string
+    {
+        return 'application/pdf';
+    }
+
+    public function extension(): string
+    {
+        return 'pdf';
+    }
+
+    public function export(TipTapContent $content): string
+    {
+        // Render the TipTap doc to HTML, then to a PDF with your library of choice
+        // (e.g. dompdf / wkhtmltopdf / a service). A BINARY format returns an
+        // ENCODED string (base64 here) and advertises its mime above.
+        $html = $this->renderer->toHtml($content);
+
+        $pdfBytes = MyPdfLibrary::fromHtml($html);   // your renderer
+
+        return base64_encode($pdfBytes);
+    }
+}
+```
+
+::: tip Binary formats
+For binary output (PDF, DOCX), return an **encoded** string (base64 above) and advertise the
+real mime type. The client decodes it back to bytes for download.
+:::
+
+### 2. Register it
+
+::: code-group
+
+```php [config — cache-safe FQCN map]
+// config/vaulter.php — add to the exporters map (format => FQCN)
+'exporters' => [
+    'html'     => Vaulter\Export\HtmlExporter::class,
+    'markdown' => Vaulter\Export\MarkdownExporter::class,
+    'pdf'      => App\Vaulter\Exporters\PdfExporter::class,   // [!code ++]
+],
+```
+
+```php [runtime — Vaulter::registerExporter]
+// In a service provider's boot() — pass an INSTANCE
+use Vaulter\Facades\Vaulter;
+use App\Vaulter\Exporters\PdfExporter;
+
+Vaulter::registerExporter(app(PdfExporter::class));
+```
+
+:::
+
+::: tip Config vs runtime
+`config('vaulter.exporters')` is an FQCN map (config-cache safe, resolved through the
+container on first use). `Vaulter::registerExporter()` takes an already-built instance — the
+runtime seam. A runtime-registered exporter wins over a config one with the same key.
+:::
+
+### 3. Use it
+
+`?format=pdf` now resolves to your exporter on both export endpoints, and it shows up in the
+node's `availableFormats` (when the handler is exportable):
+
+```bash
+curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
+# → { "data": { "format": "pdf", "content": "<base64…>",
+#               "mime_type": "application/pdf", "filename": "notes.pdf" } }
+```
+
+`Vaulter::exporterFormats()` returns every registered format (config + runtime, de-duplicated)
+— the list the request validation and `availableFormats` draw from.
+
+## Errors
+
+| Exception / status | When |
+|---|---|
+| `Exceptions\Documents\UnknownExportFormatException` | An export requests a format with no registered exporter (the message lists the available ones). |
+| `422 Unprocessable` | The legacy `documents/{id}/export` `format` query is not a registered exporter format (validation rule). |
+| `Exceptions\Documents\NotADocumentNodeException` | The node export targets a node that is not `kind=document`. |
+
+## Reference
+
+- Contract — `Vaulter\Contracts\Documents\DocumentExporter`
+- Built-ins — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
+- Renderer — `Vaulter\Support\TipTapRenderer` (`toHtml`, `toMarkdown`)
+- Node export — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)
+- Manager seam — `Vaulter\VaulterManager::registerExporter()` / `::exporter()` / `::exporterFormats()`
+- Enum — `Vaulter\Enums\Documents\ExportFormat`
+
+## Next
+
+- [Document Nodes](./documents.md) — create, edit and version the content you export.
+- [Document Handlers](./document-handlers.md) — which surface a node opens in, and adding a new
+  format with no migration.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Filament\Resources\FolderResource\Pages;
+namespace Vaulter\Filament\Resources\FolderResource\Pages;
 
-use DocVault\Filament\Resources\FolderResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Override;
+use Vaulter\Filament\Resources\FolderResource;
 
 final class ListFolders extends ListRecords
 {

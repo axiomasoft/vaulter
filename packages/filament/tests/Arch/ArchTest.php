@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use DocVault\Filament\DocVaultPlugin;
 use Filament\Contracts\Plugin;
+use Vaulter\Filament\VaulterPlugin;
 
 arch('all package code declares strict types')
-    ->expect('DocVault\Filament')
+    ->expect('Vaulter\Filament')
     ->toUseStrictTypes();
 
 arch('the plugin implements the Filament plugin contract')
-    ->expect(DocVaultPlugin::class)
+    ->expect(VaulterPlugin::class)
     ->toImplement(Plugin::class);
 
 arch('no debug helpers leak into the package')

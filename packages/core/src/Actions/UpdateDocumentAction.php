@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DocVault\Actions;
+namespace Vaulter\Actions;
 
-use DocVault\Data\UpdateDocumentData;
-use DocVault\Events\DocumentUpdated;
-use DocVault\Models\Document;
-use DocVault\Repositories\DocumentStoreRepository;
-use DocVault\Support\Config;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Data\UpdateDocumentData;
+use Vaulter\Events\Documents\DocumentUpdated;
+use Vaulter\Models\Documents\Document;
+use Vaulter\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Support\Config;
 
 final readonly class UpdateDocumentAction
 {

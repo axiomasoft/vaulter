@@ -29,7 +29,7 @@ describe('createCollaborationSession', () => {
     const doc = new YDoc()
     const connection: CollaborationConnection = {
       driver: 'reverb',
-      channel: 'docvault.documents.1',
+      channel: 'vaulter.documents.1',
       document_id: 1,
       token: '',
     }
@@ -37,14 +37,14 @@ describe('createCollaborationSession', () => {
     const session = createCollaborationSession(connection, { doc, createReverbProvider: factory })
 
     expect(session.transport).toBe('reverb')
-    expect(factory).toHaveBeenCalledWith({ channel: 'docvault.documents.1', token: '', document: doc })
+    expect(factory).toHaveBeenCalledWith({ channel: 'vaulter.documents.1', token: '', document: doc })
   })
 
   it('throws for the reverb driver without a provider factory', () => {
     const doc = new YDoc()
     const connection: CollaborationConnection = {
       driver: 'reverb',
-      channel: 'docvault.documents.1',
+      channel: 'vaulter.documents.1',
       document_id: 1,
       token: '',
     }

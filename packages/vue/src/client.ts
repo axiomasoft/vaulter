@@ -1,33 +1,59 @@
 import type {
+  Activity,
   BulkDocumentsPayload,
   BulkResult,
   CollaborationConnection,
   CreateCommentPayload,
+  CreateDocumentNodePayload,
   CreateDocumentPayload,
+  CreateDriveFolderPayload,
   CreateFolderPayload,
+  CreateNodeSharePayload,
   CreateSharePayload,
+  CreateUploadSessionPayload,
   CreateVersionPayload,
-  DocVaultClientOptions,
-  DocVaultComment,
-  DocVaultDocument,
+  CursorPage,
+  CursorQuery,
+  DirectUploadOptions,
+  DocumentVersion,
+  GrantNodeAccessPayload,
+  HandlerDescriptor,
+  ListNodesQuery,
+  Node,
+  NodeCollaborationSession,
+  NodeDocumentExport,
+  NodeGrant,
+  NodeShare,
+  NodeShareCreated,
+  RevokeNodeAccessPayload,
+  SharedNode,
+  Storage,
+  UpdateDocumentContentOptions,
+  UploadSession,
+  VaulterClientOptions,
+  VaulterComment,
+  VaulterDocument,
   DocumentExport,
   ExportFormat,
-  DocVaultFolder,
-  DocVaultPermission,
-  DocVaultShare,
-  DocVaultVersion,
+  VaulterFolder,
+  VaulterPermission,
+  VaulterShare,
+  VaulterVersion,
   DocumentId,
   GrantPermissionPayload,
   ListDocumentsQuery,
   ListFoldersQuery,
+  NodeId,
   SharedDocument,
+  StorageId,
+  TipTapDocument,
   UpdateDocumentPayload,
   UpdateFolderPayload,
   WorkspaceQuery,
 } from './types'
 
-/** Error thrown for non-2xx DocVault API responses. */
-export class DocVaultApiError extends Error {
+/** Error thrown for non-2xx Vaulter API responses. */
+export class VaulterApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
@@ -35,11 +61,11 @@ export class DocVaultApiError extends Error {
     public readonly response?: Response,
   ) {
     super(message)
-    this.name = 'DocVaultApiError'
+    this.name = 'VaulterApiError'
   }
 
-  static async fromResponse(response: Response): Promise<DocVaultApiError> {
-    let message = `DocVault API error (${response.status})`
+  static async fromResponse(response: Response): Promise<VaulterApiError> {
+    let message = `Vaulter API error (${response.status})`
     let errors: Record<string, string[]> = {}
 
     try {
@@ -54,13 +80,23 @@ export class DocVaultApiError extends Error {
       // Non-JSON error body — keep the default message.
     }
 
-    return new DocVaultApiError(response.status, message, errors, response)
+    return new VaulterApiError(response.status, message, errors, response)
   }
 }
 
 interface RequestInitLike {
   body?: unknown
   query?: object
+  /** Extra per-request headers (merged over the client defaults). */
+  headers?: Record<string, string>
+}
+
+/** A low-level request that hands back the raw `Response` (header/stream reads). */
+interface RawRequestInit {
+  query?: object
+  headers?: Record<string, string>
+  /** A raw body sent as-is (no JSON serialisation, no Content-Type default). */
+  body?: BodyInit | null
 }
 
 function toQueryString(query?: object): string {
@@ -84,56 +120,187 @@ interface Envelope<T> {
   data: T
 }
 
-export interface DocVaultClient {
+export interface VaulterClient {
   documents: {
-    list(query: ListDocumentsQuery): Promise<DocVaultDocument[]>
-    trashed(query: WorkspaceQuery): Promise<DocVaultDocument[]>
-    get(id: DocumentId): Promise<DocVaultDocument>
-    create(payload: CreateDocumentPayload): Promise<DocVaultDocument>
-    update(id: DocumentId, payload: UpdateDocumentPayload): Promise<DocVaultDocument>
+    list(query: ListDocumentsQuery): Promise<VaulterDocument[]>
+    trashed(query: WorkspaceQuery): Promise<VaulterDocument[]>
+    get(id: DocumentId): Promise<VaulterDocument>
+    create(payload: CreateDocumentPayload): Promise<VaulterDocument>
+    update(id: DocumentId, payload: UpdateDocumentPayload): Promise<VaulterDocument>
     remove(id: DocumentId): Promise<void>
     forceDelete(id: DocumentId): Promise<void>
-    restore(id: DocumentId): Promise<DocVaultDocument>
-    move(id: DocumentId, folderId: DocumentId | null): Promise<DocVaultDocument>
-    duplicate(id: DocumentId): Promise<DocVaultDocument>
+    restore(id: DocumentId): Promise<VaulterDocument>
+    move(id: DocumentId, folderId: DocumentId | null): Promise<VaulterDocument>
+    duplicate(id: DocumentId): Promise<VaulterDocument>
     bulk(payload: BulkDocumentsPayload): Promise<BulkResult>
     export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
   }
   versions: {
-    list(documentId: DocumentId): Promise<DocVaultVersion[]>
-    create(documentId: DocumentId, payload?: CreateVersionPayload): Promise<DocVaultVersion>
-    restore(documentId: DocumentId, versionId: DocumentId): Promise<DocVaultDocument>
+    list(documentId: DocumentId): Promise<VaulterVersion[]>
+    create(documentId: DocumentId, payload?: CreateVersionPayload): Promise<VaulterVersion>
+    restore(documentId: DocumentId, versionId: DocumentId): Promise<VaulterDocument>
   }
   folders: {
-    list(query: ListFoldersQuery): Promise<DocVaultFolder[]>
-    create(payload: CreateFolderPayload): Promise<DocVaultFolder>
-    update(id: DocumentId, payload: UpdateFolderPayload): Promise<DocVaultFolder>
+    list(query: ListFoldersQuery): Promise<VaulterFolder[]>
+    create(payload: CreateFolderPayload): Promise<VaulterFolder>
+    update(id: DocumentId, payload: UpdateFolderPayload): Promise<VaulterFolder>
     remove(id: DocumentId): Promise<void>
   }
   permissions: {
-    list(documentId: DocumentId): Promise<DocVaultPermission[]>
-    grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<DocVaultPermission>
+    list(documentId: DocumentId): Promise<VaulterPermission[]>
+    grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<VaulterPermission>
     revoke(documentId: DocumentId, permissionId: DocumentId): Promise<void>
   }
   comments: {
-    list(documentId: DocumentId): Promise<DocVaultComment[]>
-    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<DocVaultComment>
-    resolve(documentId: DocumentId, commentId: DocumentId): Promise<DocVaultComment>
+    list(documentId: DocumentId): Promise<VaulterComment[]>
+    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<VaulterComment>
+    resolve(documentId: DocumentId, commentId: DocumentId): Promise<VaulterComment>
     remove(documentId: DocumentId, commentId: DocumentId): Promise<void>
   }
   shares: {
-    list(documentId: DocumentId): Promise<DocVaultShare[]>
-    create(documentId: DocumentId, payload: CreateSharePayload): Promise<DocVaultShare>
+    list(documentId: DocumentId): Promise<VaulterShare[]>
+    create(documentId: DocumentId, payload: CreateSharePayload): Promise<VaulterShare>
     revoke(documentId: DocumentId, shareId: DocumentId): Promise<void>
     resolve(token: string): Promise<SharedDocument>
   }
   collaboration: {
     token(documentId: DocumentId): Promise<CollaborationConnection>
   }
+
+  /**
+   * The M4b node-collaboration handshake: mint a realtime session for a document
+   * NODE (the Drive surface), distinct from the legacy document-centric
+   * `collaboration` namespace. Returns the transport-agnostic
+   * {@link NodeCollaborationSession} the Yjs binding consumes.
+   */
+  nodeCollaboration: {
+    token(nodeId: NodeId): Promise<NodeCollaborationSession>
+  }
+
+  // ─── Drive (M1–M4) ───────────────────────────────────────────────────────
+
+  storages: {
+    /** A single storage container with its root node + usage accounting. */
+    get(storageId: StorageId): Promise<Storage>
+  }
+
+  nodes: {
+    /** List the direct children of a folder (or the storage root). Cursor-paged. */
+    list(storageId: StorageId, query?: ListNodesQuery): Promise<CursorPage<Node>>
+    /** A single node plus its breadcrumb (a folder also carries its children). */
+    show(nodeId: NodeId): Promise<Node>
+    createFolder(storageId: StorageId, payload: CreateDriveFolderPayload): Promise<Node>
+    rename(nodeId: NodeId, name: string): Promise<Node>
+    move(nodeId: NodeId, intoId: NodeId | null): Promise<Node>
+    copy(nodeId: NodeId, intoId: NodeId | null): Promise<Node>
+    trash(nodeId: NodeId): Promise<Node>
+    restore(nodeId: NodeId): Promise<Node>
+    forceDelete(nodeId: NodeId): Promise<void>
+    search(storageId: StorageId, term: string, query?: CursorQuery): Promise<CursorPage<Node>>
+    trashed(storageId: StorageId, query?: CursorQuery): Promise<CursorPage<Node>>
+    /** The (relative) URL the browser hits to stream the node's current head. */
+    downloadUrl(nodeId: NodeId): string
+    /** Fetch the node's current-head bytes as a Blob. */
+    download(nodeId: NodeId): Promise<Blob>
+    versionDownloadUrl(nodeId: NodeId, versionId: NodeId): string
+  }
+
+  uploads: {
+    /** A simple direct (single-request) upload. */
+    upload(storageId: StorageId, file: Blob, options?: DirectUploadOptions): Promise<Node>
+    /** Open a resumable session (tus by default; pass `protocol: 's3'` for S3). */
+    createSession(storageId: StorageId, payload?: CreateUploadSessionPayload): Promise<UploadSession>
+    /** Poll a session's status. */
+    status(uploadId: string): Promise<UploadSession>
+    /** The tus HEAD: read the authoritative server-side Upload-Offset. */
+    head(uploadId: string): Promise<number>
+    /** The tus PATCH: append one chunk at `offset`. Returns the new offset, or the
+     *  created node once all bytes are in. */
+    patch(uploadId: string, chunk: BodyInit, offset: number): Promise<TusPatchResult>
+    /** The tus DELETE: abort the session. */
+    abort(uploadId: string): Promise<void>
+    /** S3-multipart: record one numbered part. */
+    putPart(uploadId: string, partNo: number, byteOffset: number, chunk: BodyInit): Promise<S3PartResult>
+    /** S3-multipart: complete → assemble → commit. Returns the created node. */
+    complete(uploadId: string): Promise<Node>
+    /** A hand-rolled resumable uploader that drives a session chunk by chunk. */
+    resumable(storageId: StorageId, file: Blob, options?: ResumableUploadOptions): ResumableUpload
+  }
+
+  grants: {
+    list(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<NodeGrant>>
+    grant(nodeId: NodeId, payload: GrantNodeAccessPayload): Promise<NodeGrant>
+    /** Revoke a subject's grant on the node. */
+    revoke(nodeId: NodeId, payload: RevokeNodeAccessPayload): Promise<void>
+  }
+
+  nodeShares: {
+    list(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<NodeShare>>
+    /** Mint a share-link — the response carries the raw token EXACTLY ONCE. */
+    create(nodeId: NodeId, payload?: CreateNodeSharePayload): Promise<NodeShareCreated>
+    revoke(nodeId: NodeId, shareId: NodeId): Promise<void>
+    /** Resolve a public token-shared node (the separate sharing channel). */
+    publicResolve(token: string): Promise<SharedNode>
+    /** List the in-scope children of a subtree-shared folder. */
+    publicNodes(token: string): Promise<SharedNode[]>
+    /** The (relative) URL the browser hits to download a shared file. */
+    publicDownloadUrl(token: string): string
+  }
+
+  activity: {
+    forStorage(storageId: StorageId, query?: CursorQuery): Promise<CursorPage<Activity>>
+    forNode(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<Activity>>
+  }
+
+  documentNodes: {
+    /** Create a kind=document node under a folder (or the storage root). */
+    createNode(storageId: StorageId, payload: CreateDocumentNodePayload): Promise<Node>
+    /** The document node's current-head content (a single version with content). */
+    content(nodeId: NodeId): Promise<DocumentVersion>
+    /** Autosave the content; pass `{ autosave }` only for symmetry — the route is
+     *  the same PATCH either way. */
+    updateContent(
+      nodeId: NodeId,
+      content: TipTapDocument,
+      options?: UpdateDocumentContentOptions & { autosave?: boolean },
+    ): Promise<DocumentVersion>
+    versions(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<DocumentVersion>>
+    createNamedVersion(nodeId: NodeId, label: string, keepForever?: boolean): Promise<DocumentVersion>
+    restoreVersion(nodeId: NodeId, versionId: NodeId): Promise<DocumentVersion>
+    export(nodeId: NodeId, format?: string): Promise<NodeDocumentExport>
+    handler(nodeId: NodeId): Promise<HandlerDescriptor>
+  }
 }
 
-export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVaultClient {
-  const baseUrl = (options.baseUrl ?? '/api/docvault').replace(/\/+$/, '')
+/** The result of a tus PATCH: either the advanced offset, or the created node. */
+export type TusPatchResult =
+  | { complete: false, offset: number }
+  | { complete: true, offset: number, node: Node }
+
+export interface S3PartResult {
+  part_no: number
+  size: number
+  etag: string
+}
+
+export interface ResumableUploadOptions extends CreateUploadSessionPayload {
+  /** Chunk size in bytes for the tus PATCH loop (default 5 MiB). */
+  chunkSize?: number
+  /** Progress callback: (bytesSent, totalBytes). */
+  onProgress?: (sent: number, total: number) => void
+}
+
+/** A driveable resumable upload (hand-rolled, no external tus dependency). */
+export interface ResumableUpload {
+  /** Run the upload to completion, resuming from the server offset. Resolves to the
+   *  created node. */
+  start(): Promise<Node>
+  /** Request abort — the in-flight loop stops and the session is DELETE-aborted. */
+  abort(): Promise<void>
+}
+
+export function createVaulterClient(options: VaulterClientOptions = {}): VaulterClient {
+  const baseUrl = (options.baseUrl ?? '/api/vaulter').replace(/\/+$/, '')
   const fetchImpl = options.fetch ?? globalThis.fetch
 
   function resolveHeaders(): Record<string, string> {
@@ -156,12 +323,13 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
         Accept: 'application/json',
         ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
         ...resolveHeaders(),
+        ...init.headers,
       },
       body: hasBody ? JSON.stringify(init.body) : undefined,
     })
 
     if (!response.ok) {
-      throw await DocVaultApiError.fromResponse(response)
+      throw await VaulterApiError.fromResponse(response)
     }
 
     if (response.status === 204) {
@@ -171,64 +339,379 @@ export function createDocVaultClient(options: DocVaultClientOptions = {}): DocVa
     return (await response.json()) as T
   }
 
+  /**
+   * A low-level request that returns the raw `Response` (for the tus header reads
+   * and the binary download streams). The raw body is sent as-is — no JSON
+   * serialisation, no Content-Type default. The CSRF header and client defaults
+   * still apply; `VaulterApiError` is still thrown on a non-2xx.
+   */
+  async function rawRequest(method: string, path: string, init: RawRequestInit = {}): Promise<Response> {
+    const response = await fetchImpl(`${baseUrl}${path}${toQueryString(init.query)}`, {
+      method,
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        ...resolveHeaders(),
+        ...init.headers,
+      },
+      body: init.body ?? undefined,
+    })
+
+    if (!response.ok) {
+      throw await VaulterApiError.fromResponse(response)
+    }
+
+    return response
+  }
+
   async function unwrap<T>(promise: Promise<Envelope<T>>): Promise<T> {
     return (await promise).data
   }
 
-  return {
+  /** The absolute (or base-prefixed) URL for a path — for `<a href>`/`<img src>`. */
+  function urlFor(path: string): string {
+    return `${baseUrl}${path}`
+  }
+
+  /** A cursor-pagination query: `?cursor=…&per_page=…`. */
+  function cursorQuery(query?: CursorQuery): Record<string, string | number> {
+    const params: Record<string, string | number> = {}
+    if (query?.cursor != null) {
+      params.cursor = query.cursor
+    }
+    if (query?.perPage != null) {
+      params.per_page = query.perPage
+    }
+    return params
+  }
+
+  const client: VaulterClient = {
     documents: {
-      list: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents', { query })),
-      trashed: (query) => unwrap(request<Envelope<DocVaultDocument[]>>('GET', '/documents/trash', { query })),
-      get: (id) => unwrap(request<Envelope<DocVaultDocument>>('GET', `/documents/${id}`)),
-      create: (payload) => unwrap(request<Envelope<DocVaultDocument>>('POST', '/documents', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}`, { body: payload })),
+      list: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents', { query })),
+      trashed: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents/trash', { query })),
+      get: (id) => unwrap(request<Envelope<VaulterDocument>>('GET', `/documents/${id}`)),
+      create: (payload) => unwrap(request<Envelope<VaulterDocument>>('POST', '/documents', { body: payload })),
+      update: (id, payload) => unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/documents/${id}`),
       forceDelete: (id) => request<void>('DELETE', `/documents/${id}/force`),
-      restore: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/restore`)),
+      restore: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/restore`)),
       move: (id, folderId) =>
-        unwrap(request<Envelope<DocVaultDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
-      duplicate: (id) => unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${id}/duplicate`)),
+        unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
+      duplicate: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/duplicate`)),
       bulk: (payload) => unwrap(request<Envelope<BulkResult>>('POST', '/documents/bulk', { body: payload })),
       export: (id, format) =>
         unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
     },
     versions: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultVersion[]>>('GET', `/documents/${documentId}/versions`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterVersion[]>>('GET', `/documents/${documentId}/versions`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultVersion>>('POST', `/documents/${documentId}/versions`, { body: payload ?? {} })),
+        unwrap(request<Envelope<VaulterVersion>>('POST', `/documents/${documentId}/versions`, { body: payload ?? {} })),
       restore: (documentId, versionId) =>
-        unwrap(request<Envelope<DocVaultDocument>>('POST', `/documents/${documentId}/versions/${versionId}/restore`)),
+        unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${documentId}/versions/${versionId}/restore`)),
     },
     folders: {
-      list: (query) => unwrap(request<Envelope<DocVaultFolder[]>>('GET', '/folders', { query })),
-      create: (payload) => unwrap(request<Envelope<DocVaultFolder>>('POST', '/folders', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<DocVaultFolder>>('PATCH', `/folders/${id}`, { body: payload })),
+      list: (query) => unwrap(request<Envelope<VaulterFolder[]>>('GET', '/folders', { query })),
+      create: (payload) => unwrap(request<Envelope<VaulterFolder>>('POST', '/folders', { body: payload })),
+      update: (id, payload) => unwrap(request<Envelope<VaulterFolder>>('PATCH', `/folders/${id}`, { body: payload })),
       remove: (id) => request<void>('DELETE', `/folders/${id}`),
     },
     permissions: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultPermission[]>>('GET', `/documents/${documentId}/permissions`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterPermission[]>>('GET', `/documents/${documentId}/permissions`)),
       grant: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
+        unwrap(request<Envelope<VaulterPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
       revoke: (documentId, permissionId) =>
         request<void>('DELETE', `/documents/${documentId}/permissions/${permissionId}`),
     },
     comments: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultComment[]>>('GET', `/documents/${documentId}/comments`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterComment[]>>('GET', `/documents/${documentId}/comments`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
+        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
       resolve: (documentId, commentId) =>
-        unwrap(request<Envelope<DocVaultComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
+        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
       remove: (documentId, commentId) => request<void>('DELETE', `/documents/${documentId}/comments/${commentId}`),
     },
     shares: {
-      list: (documentId) => unwrap(request<Envelope<DocVaultShare[]>>('GET', `/documents/${documentId}/shares`)),
+      list: (documentId) => unwrap(request<Envelope<VaulterShare[]>>('GET', `/documents/${documentId}/shares`)),
       create: (documentId, payload) =>
-        unwrap(request<Envelope<DocVaultShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
+        unwrap(request<Envelope<VaulterShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
       revoke: (documentId, shareId) => request<void>('DELETE', `/documents/${documentId}/shares/${shareId}`),
       resolve: (token) => unwrap(request<Envelope<SharedDocument>>('GET', `/shares/${token}`)),
     },
     collaboration: {
       token: (documentId) => request<CollaborationConnection>('POST', `/documents/${documentId}/collab/token`, { body: {} }),
     },
+    nodeCollaboration: {
+      token: (nodeId) =>
+        unwrap(request<Envelope<NodeCollaborationSession>>('POST', `/nodes/${nodeId}/collab/token`, { body: {} })),
+    },
+
+    // ─── Drive (M1–M4) ─────────────────────────────────────────────────────
+
+    storages: {
+      get: (storageId) => unwrap(request<Envelope<Storage>>('GET', `/storages/${storageId}`)),
+    },
+
+    nodes: {
+      list: (storageId, query) =>
+        request<CursorPage<Node>>('GET', `/storages/${storageId}/nodes`, {
+          query: {
+            ...(query?.parentId != null ? { parent_id: query.parentId } : {}),
+            ...cursorQuery(query),
+          },
+        }),
+      show: (nodeId) => unwrap(request<Envelope<Node>>('GET', `/nodes/${nodeId}`)),
+      createFolder: (storageId, payload) =>
+        unwrap(request<Envelope<Node>>('POST', `/storages/${storageId}/folders`, {
+          body: { name: payload.name, parent_id: payload.parentId ?? null },
+        })),
+      rename: (nodeId, name) =>
+        unwrap(request<Envelope<Node>>('PATCH', `/nodes/${nodeId}`, { body: { name } })),
+      move: (nodeId, intoId) =>
+        unwrap(request<Envelope<Node>>('POST', `/nodes/${nodeId}/move`, { body: { parent_id: intoId } })),
+      copy: (nodeId, intoId) =>
+        unwrap(request<Envelope<Node>>('POST', `/nodes/${nodeId}/copy`, { body: { parent_id: intoId } })),
+      trash: (nodeId) => unwrap(request<Envelope<Node>>('DELETE', `/nodes/${nodeId}`)),
+      restore: (nodeId) => unwrap(request<Envelope<Node>>('POST', `/nodes/${nodeId}/restore`)),
+      forceDelete: (nodeId) => request<void>('DELETE', `/nodes/${nodeId}/force`),
+      search: (storageId, term, query) =>
+        request<CursorPage<Node>>('GET', `/storages/${storageId}/search`, {
+          query: { q: term, ...cursorQuery(query) },
+        }),
+      trashed: (storageId, query) =>
+        request<CursorPage<Node>>('GET', `/storages/${storageId}/trash`, { query: cursorQuery(query) }),
+      downloadUrl: (nodeId) => urlFor(`/nodes/${nodeId}/download`),
+      download: async (nodeId) => (await rawRequest('GET', `/nodes/${nodeId}/download`)).blob(),
+      versionDownloadUrl: (nodeId, versionId) => urlFor(`/nodes/${nodeId}/versions/${versionId}/download`),
+    },
+
+    uploads: {
+      upload: (storageId, file, options) => {
+        const form = new FormData()
+        form.append('file', file)
+        if (options?.parentId != null) {
+          form.append('parent_id', String(options.parentId))
+        }
+        if (options?.nodeId != null) {
+          form.append('node_id', String(options.nodeId))
+        }
+        if (options?.name != null) {
+          form.append('name', options.name)
+        }
+        // FormData drives its own multipart Content-Type/boundary — never set it.
+        return rawRequest('POST', `/storages/${storageId}/uploads`, { body: form })
+          .then((response) => response.json())
+          .then((body: Envelope<Node>) => body.data)
+      },
+      createSession: (storageId, payload) =>
+        unwrap(request<Envelope<UploadSession>>('POST', `/storages/${storageId}/resumable-uploads`, {
+          body: sessionBody(payload),
+        })),
+      status: (uploadId) =>
+        unwrap(request<Envelope<UploadSession>>('GET', `/resumable-uploads/${uploadId}`)),
+      head: async (uploadId) => {
+        const response = await rawRequest('HEAD', `/resumable-uploads/${uploadId}`, {
+          headers: { 'Tus-Resumable': '1.0.0' },
+        })
+        return Number(response.headers.get('Upload-Offset') ?? '0')
+      },
+      patch: async (uploadId, chunk, offset) => {
+        const response = await rawRequest('PATCH', `/resumable-uploads/${uploadId}`, {
+          headers: {
+            'Tus-Resumable': '1.0.0',
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': String(offset),
+          },
+          body: chunk,
+        })
+        const newOffset = Number(response.headers.get('Upload-Offset') ?? String(offset))
+        // 204 = more chunks expected; 201 = all bytes in, the node is created.
+        if (response.status === 201) {
+          const body = (await response.json()) as Envelope<Node>
+          return { complete: true, offset: newOffset, node: body.data }
+        }
+        return { complete: false, offset: newOffset }
+      },
+      abort: async (uploadId) => {
+        await rawRequest('DELETE', `/resumable-uploads/${uploadId}`, {
+          headers: { 'Tus-Resumable': '1.0.0' },
+        })
+      },
+      putPart: (uploadId, partNo, byteOffset, chunk) =>
+        rawRequest('POST', `/resumable-uploads/${uploadId}/parts`, {
+          query: { part_no: partNo, byte_offset: byteOffset },
+          body: chunk,
+        }).then((response) => response.json() as Promise<S3PartResult>),
+      complete: (uploadId) =>
+        unwrap(request<Envelope<Node>>('POST', `/resumable-uploads/${uploadId}/complete`, { body: {} })),
+      resumable: (storageId, file, options) => createResumableUpload(driveUploads(), storageId, file, options),
+    },
+
+    grants: {
+      list: (nodeId, query) =>
+        request<CursorPage<NodeGrant>>('GET', `/nodes/${nodeId}/grants`, { query: cursorQuery(query) }),
+      grant: (nodeId, payload) =>
+        unwrap(request<Envelope<NodeGrant>>('POST', `/nodes/${nodeId}/grants`, {
+          body: {
+            subject_type: payload.subjectType,
+            subject_id: payload.subjectId,
+            level: payload.level,
+            effect: payload.effect,
+            scope: payload.scope,
+            permissions: payload.permissions,
+            expires_at: payload.expiresAt,
+          },
+        })),
+      revoke: (nodeId, payload) =>
+        request<void>('DELETE', `/nodes/${nodeId}/grants`, {
+          body: { subject_type: payload.subjectType, subject_id: payload.subjectId },
+        }),
+    },
+
+    nodeShares: {
+      list: (nodeId, query) =>
+        request<CursorPage<NodeShare>>('GET', `/nodes/${nodeId}/shares`, { query: cursorQuery(query) }),
+      create: (nodeId, payload) =>
+        unwrap(request<Envelope<NodeShareCreated>>('POST', `/nodes/${nodeId}/shares`, {
+          body: {
+            permissions: payload?.permissions,
+            level: payload?.level,
+            scope: payload?.scope,
+            password: payload?.password,
+            require_login: payload?.requireLogin,
+            allow_discovery: payload?.allowDiscovery,
+            expires_at: payload?.expiresAt,
+            max_uses: payload?.maxUses,
+          },
+        })),
+      revoke: (nodeId, shareId) => request<void>('DELETE', `/nodes/${nodeId}/shares/${shareId}`),
+      publicResolve: (token) => unwrap(request<Envelope<SharedNode>>('GET', `/share/${token}`)),
+      publicNodes: (token) => unwrap(request<Envelope<SharedNode[]>>('GET', `/share/${token}/nodes`)),
+      publicDownloadUrl: (token) => urlFor(`/share/${token}/download`),
+    },
+
+    activity: {
+      forStorage: (storageId, query) =>
+        request<CursorPage<Activity>>('GET', `/storages/${storageId}/activity`, { query: cursorQuery(query) }),
+      forNode: (nodeId, query) =>
+        request<CursorPage<Activity>>('GET', `/nodes/${nodeId}/activity`, { query: cursorQuery(query) }),
+    },
+
+    documentNodes: {
+      createNode: (storageId, payload) =>
+        unwrap(request<Envelope<Node>>('POST', `/storages/${storageId}/documents`, {
+          body: {
+            name: payload.name,
+            parent_id: payload.parentId ?? null,
+            format: payload.format,
+            content: payload.content,
+          },
+        })),
+      content: (nodeId) =>
+        unwrap(request<Envelope<DocumentVersion>>('GET', `/nodes/${nodeId}/content`)),
+      updateContent: (nodeId, content, options) =>
+        unwrap(request<Envelope<DocumentVersion>>('PATCH', `/nodes/${nodeId}/content`, {
+          body: { content, yjs_state: options?.yjsState },
+        })),
+      versions: (nodeId, query) =>
+        request<CursorPage<DocumentVersion>>('GET', `/nodes/${nodeId}/document-versions`, {
+          query: cursorQuery(query),
+        }),
+      createNamedVersion: (nodeId, label, keepForever) =>
+        unwrap(request<Envelope<DocumentVersion>>('POST', `/nodes/${nodeId}/document-versions`, {
+          body: { label, keep_forever: keepForever },
+        })),
+      restoreVersion: (nodeId, versionId) =>
+        unwrap(request<Envelope<DocumentVersion>>('POST', `/nodes/${nodeId}/document-versions/${versionId}/restore`)),
+      export: (nodeId, format) =>
+        unwrap(request<Envelope<NodeDocumentExport>>('GET', `/nodes/${nodeId}/export`, {
+          query: format ? { format } : undefined,
+        })),
+      handler: (nodeId) =>
+        unwrap(request<Envelope<HandlerDescriptor>>('GET', `/nodes/${nodeId}/handler`)),
+    },
   }
+
+  /**
+   * Serialise the camelCase session payload to the snake_case the create endpoint
+   * validates (omitting undefined keys keeps the request lean).
+   */
+  function sessionBody(payload?: CreateUploadSessionPayload): Record<string, unknown> {
+    return {
+      protocol: payload?.protocol,
+      parent_id: payload?.parentId,
+      node_id: payload?.nodeId,
+      name: payload?.name,
+      total_size_bytes: payload?.totalSizeBytes,
+      expected_sha256: payload?.expectedSha256,
+      mime_type: payload?.mimeType,
+      metadata: payload?.metadata,
+    }
+  }
+
+  // The uploads namespace references itself from `resumable()`; capture it lazily so
+  // the resumable helper drives the same session/patch methods the client exposes.
+  function driveUploads(): VaulterClient['uploads'] {
+    return client.uploads
+  }
+
+  return client
+}
+
+/**
+ * A hand-rolled resumable uploader (no external tus dependency): open a session,
+ * then loop reading the server's authoritative Upload-Offset and PATCHing the next
+ * slice until the server returns the created node. Resumable by construction — it
+ * always resumes from the SERVER offset, never its own guess (H.3).
+ */
+function createResumableUpload(
+  uploads: VaulterClient['uploads'],
+  storageId: StorageId,
+  file: Blob,
+  options?: ResumableUploadOptions,
+): ResumableUpload {
+  const chunkSize = options?.chunkSize ?? 5 * 1024 * 1024
+  const total = file.size
+  let uploadId: string | null = null
+  let aborted = false
+
+  async function start(): Promise<Node> {
+    const session = await uploads.createSession(storageId, {
+      protocol: 'tus',
+      totalSizeBytes: total,
+      ...options,
+    })
+    uploadId = session.upload_id
+
+    // Resume from whatever the server already holds.
+    let offset = await uploads.head(uploadId)
+    options?.onProgress?.(offset, total)
+
+    while (offset < total) {
+      if (aborted) {
+        throw new Error('[Vaulter] Resumable upload aborted.')
+      }
+
+      const slice = file.slice(offset, Math.min(offset + chunkSize, total))
+      const result = await uploads.patch(uploadId, slice, offset)
+      offset = result.offset
+      options?.onProgress?.(Math.min(offset, total), total)
+
+      if (result.complete) {
+        return result.node
+      }
+    }
+
+    // A zero-byte (or boundary-aligned) upload finishes without the 201 in-loop —
+    // the server completes on the final chunk; if not, the status carries the node.
+    throw new Error('[Vaulter] Resumable upload ended without a created node.')
+  }
+
+  async function abort(): Promise<void> {
+    aborted = true
+    if (uploadId !== null) {
+      await uploads.abort(uploadId)
+    }
+  }
+
+  return { start, abort }
 }
