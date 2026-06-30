@@ -1,6 +1,12 @@
 // Client
 export { createVaulterClient, VaulterApiError } from './client'
-export type { VaulterClient } from './client'
+export type {
+  VaulterClient,
+  ResumableUpload,
+  ResumableUploadOptions,
+  TusPatchResult,
+  S3PartResult,
+} from './client'
 
 // Plugin
 export { VaulterPlugin, provideVaulterClient } from './plugin'
@@ -22,6 +28,22 @@ export { useShares } from './composables/useShares'
 export type { UseSharesReturn } from './composables/useShares'
 export { useDocumentExport } from './composables/useDocumentExport'
 export type { UseDocumentExportReturn } from './composables/useDocumentExport'
+
+// Drive composables (M1–M4)
+export { useStorage } from './composables/useStorage'
+export type { UseStorageReturn } from './composables/useStorage'
+export { useNodes } from './composables/useNodes'
+export type { UseNodesReturn } from './composables/useNodes'
+export { useUpload } from './composables/useUpload'
+export type { UseUploadReturn } from './composables/useUpload'
+export { useNodeGrants } from './composables/useNodeGrants'
+export type { UseNodeGrantsReturn } from './composables/useNodeGrants'
+export { useNodeShares } from './composables/useNodeShares'
+export type { UseNodeSharesReturn } from './composables/useNodeShares'
+export { useActivity } from './composables/useActivity'
+export type { UseActivityReturn } from './composables/useActivity'
+export { useDocumentNode } from './composables/useDocumentNode'
+export type { UseDocumentNodeOptions, UseDocumentNodeReturn } from './composables/useDocumentNode'
 
 // Collaboration transport
 export { createCollaborationSession } from './collaboration'
