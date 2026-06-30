@@ -12,6 +12,7 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Export\HtmlExporter;
 use Vaulter\Export\MarkdownExporter;
+use Vaulter\Models\Activity;
 use Vaulter\Models\Blob;
 use Vaulter\Models\Document;
 use Vaulter\Models\DocumentComment;
@@ -65,6 +66,7 @@ return [
         'file_version_blob' => FileVersionBlob::class,
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
+        'activity' => Activity::class,
     ],
 
     /*
@@ -93,6 +95,7 @@ return [
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
         'node_shares' => 'node_shares',
+        'activity' => 'activity',
     ],
 
     /*

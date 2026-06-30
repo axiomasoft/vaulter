@@ -15,6 +15,7 @@ use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\ShareTokenGenerator;
 use Vaulter\Contracts\StorageAdapter;
 use Vaulter\Contracts\StorageDriver;
+use Vaulter\Models\Activity;
 use Vaulter\Models\Blob;
 use Vaulter\Models\Document;
 use Vaulter\Models\DocumentComment;
@@ -189,6 +190,17 @@ final class Config
     {
         /** @var class-string<NodeShare> $class */
         $class = config('vaulter.models.node_share', NodeShare::class);
+
+        return $class;
+    }
+
+    /**
+     * @return class-string<Activity>
+     */
+    public static function activityModel(): string
+    {
+        /** @var class-string<Activity> $class */
+        $class = config('vaulter.models.activity', Activity::class);
 
         return $class;
     }

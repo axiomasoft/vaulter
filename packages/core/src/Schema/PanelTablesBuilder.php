@@ -48,6 +48,7 @@ final class PanelTablesBuilder
         'file_version_blobs',
         'node_grants',
         'node_shares',
+        'activity',
     ];
 
     /**
@@ -97,6 +98,7 @@ final class PanelTablesBuilder
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, panel: $panel, ids: $ids),
+                'activity' => $this->defineActivity(table: $table, panel: $panel, ids: $ids),
                 default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
             };
         });
@@ -454,6 +456,64 @@ final class PanelTablesBuilder
     }
 
     /**
+     * v_activity — the append-only audit/activity feed (§2.9 / M2c-activity). Gated
+     * on 'activity'. ONE row per domain event; recipients are resolved at READ by
+     * scoping the feed to a storage/node — there is NEVER a per-affected-user
+     * fan-out (anti-NC-explosion, §1.5).
+     *
+     * Append-only: NO updated_at, NO soft-delete. The id honours the panel id
+     * strategy (recommend uuid7 — time-ordered — but bigint/ulid all keep the
+     * (created_at desc) index canonical). The actor and target are nullable morphs
+     * (a console/queue write may have no actor; a storage.created row has no node
+     * target). ip is inet on Postgres, a portable varchar(45) elsewhere.
+     */
+    private function defineActivity(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'storage_id', nullable: true);
+
+        // Actor morph — the acting host user (nullable: a system/console write has
+        // no actor). actor_id is an actor reference (no DB FK to the host's table).
+        $ids->actor(table: $table, column: 'actor_id', nullable: true);
+        $table->string('actor_type')->nullable();
+
+        $table->string('verb')->index();
+
+        // Target morph — the subject of the verb (nullable: e.g. nothing for a
+        // storage-level row). No DB FK: the target may be any model, swappable.
+        $ids->reference(table: $table, column: 'target_id', nullable: true);
+        $table->string('target_type')->nullable();
+
+        // The structured payload (before/after, old/new path/role, …). Always
+        // present — this is the audit body, distinct from the host extra_data hatch.
+        $table->json('context')->nullable();
+
+        $this->ipColumn(table: $table);
+        $table->text('user_agent')->nullable();
+
+        // request_id is an opaque per-request CORRELATION id (X-Request-Id / a
+        // minted uuid), NOT a Vaulter entity reference — so it is a fixed nullable
+        // uuid column independent of the panel id strategy (§2.9 "request_id uuid").
+        $table->uuid('request_id')->nullable();
+
+        $this->extraData(table: $table, panel: $panel);
+
+        // Append-only: created_at ONLY. No timestamps()/softDeletes() — there is no
+        // update or delete path for an audit row.
+        $table->timestamp('created_at')->nullable()->index();
+
+        $name = $table->getTable();
+
+        // §2.9 feed indexes — every read axis is newest-first. The leading column is
+        // the scope/filter; created_at is the cursor tail.
+        $table->index(['actor_type', 'actor_id', 'created_at'], "{$name}_actor_idx");
+        $table->index(['target_type', 'target_id', 'created_at'], "{$name}_target_idx");
+        $table->index(['verb', 'created_at'], "{$name}_verb_idx");
+        $table->index(['storage_id', 'created_at'], "{$name}_storage_idx");
+    }
+
+    /**
      * Post-create hooks that cannot be expressed inside the Blueprint, currently
      * the driver-aware sibling-unique guard on v_nodes.
      */
@@ -474,6 +534,38 @@ final class PanelTablesBuilder
         if ($entity === 'node_shares') {
             $this->addShareExpiryIndex(table: $panel->table('node_shares'));
         }
+
+        if ($entity === 'activity') {
+            $this->addActivityCreatedAtIndex(table: $panel->table('activity'));
+            $this->addActivityContextGinIndex(table: $panel->table('activity'));
+        }
+    }
+
+    /**
+     * The plain (created_at desc) feed index (§2.9). Added here rather than inline
+     * because the column is added last (a fresh-row tail) and naming it off the
+     * table keeps a per-panel prefixed table's index distinct.
+     */
+    private function addActivityCreatedAtIndex(string $table): void
+    {
+        Schema::table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->index('created_at', "{$table}_created_idx");
+        });
+    }
+
+    /**
+     * The OPTIONAL gin(context) index for jsonb containment queries (§2.9). Only
+     * Postgres has gin + jsonb; on SQLite/MySQL context is a plain json column and
+     * the index is skipped (the feed never queries by context shape — it scopes by
+     * storage/node/actor/verb, all covered by btree indexes).
+     */
+    private function addActivityContextGinIndex(string $table): void
+    {
+        if (Schema::getConnection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        DB::statement("CREATE INDEX {$table}_context_gin ON {$table} USING gin (context jsonb_path_ops)");
     }
 
     /**
@@ -641,6 +733,22 @@ final class PanelTablesBuilder
     }
 
     /**
+     * The activity ip column (§2.9). A native inet on Postgres (efficient,
+     * type-checked); a portable varchar(45) (max IPv6 length) everywhere else. The
+     * Activity model casts it to a plain string either way.
+     */
+    private function ipColumn(Blueprint $table): void
+    {
+        if (Schema::getConnection()->getDriverName() === 'pgsql') {
+            $table->ipAddress('ip')->nullable();
+
+            return;
+        }
+
+        $table->string('ip', 45)->nullable();
+    }
+
+    /**
      * The optional extra_data jsonb escape hatch (D13), gated per panel.
      */
     private function extraData(Blueprint $table, Panel $panel): void
@@ -664,6 +772,7 @@ final class PanelTablesBuilder
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             'node_grants' => $panel->featureEnabled('grants'),
             'node_shares' => $panel->featureEnabled('share_links'),
+            'activity' => $panel->featureEnabled('activity'),
             default => false,
         };
     }

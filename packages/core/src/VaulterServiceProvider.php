@@ -7,12 +7,14 @@ namespace Vaulter;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Activity\RecordsActivity;
 use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
@@ -125,6 +127,23 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->registerRouteBindings();
         $this->registerBroadcastChannel();
         $this->registerPolicies();
+        $this->registerActivitySubscriber();
+    }
+
+    /**
+     * Wire the append-only activity feed (§2.9 / M2c-activity): subscribe the
+     * RecordsActivity listener to the Drive domain events so each one writes EXACTLY
+     * ONE row (recipients resolved at READ — no fan-out, §1.5). Gated on the global
+     * 'activity' feature so a host can switch off auditing entirely; when off, no
+     * listener is registered and the events fire unobserved.
+     */
+    private function registerActivitySubscriber(): void
+    {
+        if (!Config::featureEnabled('activity')) {
+            return;
+        }
+
+        Event::subscribe(RecordsActivity::class);
     }
 
     /**

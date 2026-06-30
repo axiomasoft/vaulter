@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
+use Vaulter\Http\Controllers\Activity\ActivityController;
 use Vaulter\Http\Controllers\BulkDocumentController;
 use Vaulter\Http\Controllers\CollaborationController;
 use Vaulter\Http\Controllers\CommentController;
@@ -102,6 +103,12 @@ Route::prefix(Config::routePrefix())
             Route::post('storages/{storage}/folders', [NodeController::class, 'storeFolder']);
             Route::post('storages/{storage}/uploads', [NodeController::class, 'upload']);
 
+            // Append-only activity feed (§2.9 / M2c-activity). Recipients resolved at
+            // READ by scoping to the storage/node — no notification rows. Authorized
+            // via AccessResolver Ability::View on the storage root / node. The fixed
+            // /activity segment sits before the catch-all /{node}.
+            Route::get('storages/{storage}/activity', [ActivityController::class, 'forStorage']);
+
             Route::get('nodes/{node}', [NodeController::class, 'show']);
             Route::patch('nodes/{node}', [NodeController::class, 'rename']);
             Route::post('nodes/{node}/move', [NodeController::class, 'move']);
@@ -128,6 +135,11 @@ Route::prefix(Config::routePrefix())
             Route::get('nodes/{node}/shares', [NodeShareController::class, 'index']);
             Route::post('nodes/{node}/shares', [NodeShareController::class, 'store']);
             Route::delete('nodes/{node}/shares/{share}', [NodeShareController::class, 'destroy']);
+
+            // Per-node activity feed (§2.9 / M2c-activity). Authorized via
+            // AccessResolver Ability::View on the node. The fixed /activity segment
+            // sits before the catch-all /{node}.
+            Route::get('nodes/{node}/activity', [ActivityController::class, 'forNode']);
         });
 
         /*
