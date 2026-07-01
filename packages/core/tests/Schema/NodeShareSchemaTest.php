@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
@@ -42,7 +43,10 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
 
     $model::query()->create($base);
 
-    expect(static fn () => $model::query()->create($base))->toThrow(QueryException::class);
+    // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
+    // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
+    expect(static fn () => DB::transaction(fn () => $model::query()->create($base)))
+        ->toThrow(QueryException::class);
 });
 
 it('stores the token hash, never the raw token', function (): void {

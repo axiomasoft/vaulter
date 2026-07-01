@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -67,11 +68,15 @@ it('ребро version<->blob — это GC-истина через pivot', func
 });
 
 it('version_no монотонно уникален на файл', function (): void {
-    expect(fn () => FileVersion::query()->create([
+    // SAVEPOINT the violating insert: on PostgreSQL a UNIQUE violation aborts the whole
+    // enclosing RefreshDatabase transaction, poisoning the connection for the rest of the
+    // suite; the nested DB::transaction rolls back only the failed insert. SQLite tolerates
+    // either form (see BlobDedupScopeTest for the reference rationale).
+    expect(fn () => DB::transaction(fn () => FileVersion::query()->create([
         'file_id' => $this->file->getKey(),
         'version_no' => 1,
         'content_sha256' => str_repeat('c', 64),
         'size_bytes' => 1,
         'original_name' => 'a.pdf',
-    ]))->toThrow(QueryException::class);
+    ])))->toThrow(QueryException::class);
 });

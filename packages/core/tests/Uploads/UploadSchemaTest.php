@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Enums\Uploads\UploadProtocol;
 use Vaulter\Enums\Uploads\UploadStatus;
@@ -48,7 +49,10 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
 
     $model::query()->create($base);
 
-    expect(static fn () => $model::query()->create($base))->toThrow(QueryException::class);
+    // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
+    // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
+    expect(static fn () => DB::transaction(fn () => $model::query()->create($base)))
+        ->toThrow(QueryException::class);
 });
 
 it('a part re-upload REPLACES on the (session, part_no) composite primary key', function (): void {

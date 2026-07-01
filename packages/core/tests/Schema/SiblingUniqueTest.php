@@ -38,7 +38,9 @@ it('отвергает дубль имени живого сиблинга в т
 
     makeNode($storage, 'report', ['parent_id' => $parent->getKey()]);
 
-    expect(fn () => makeNode($storage, 'report', ['parent_id' => $parent->getKey()]))
+    // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
+    // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
+    expect(fn () => DB::transaction(fn () => makeNode($storage, 'report', ['parent_id' => $parent->getKey()])))
         ->toThrow(QueryException::class);
 });
 

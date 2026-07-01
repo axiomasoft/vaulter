@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -30,8 +31,11 @@ it('rejects a duplicate live grant on the same (node, subject, scope, effect)', 
 
     AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
 
-    expect(fn (): mixed => AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item))
-        ->toThrow(UniqueConstraintViolationException::class);
+    // SAVEPOINT the violating grant: on PostgreSQL the UNIQUE violation would otherwise
+    // abort the enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
+    expect(fn (): mixed => DB::transaction(
+        fn () => AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item),
+    ))->toThrow(UniqueConstraintViolationException::class);
 });
 
 it('allows an allow AND a deny for the same subject/scope (distinct effect)', function (): void {
