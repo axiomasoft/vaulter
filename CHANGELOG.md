@@ -31,6 +31,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   their table names. A dev-only, idempotent `drop_legacy_docvault_tables` migration drops
   any pre-existing `v_document*` tables. Use `Vaulter::for()` and the node/document
   endpoints instead.
+- **BREAKING (pre-1.0): `@vaulter/vue` dropped the legacy document-centric surface**
+  (ADR-0014 step 4), which called the removed `/documents`, `/folders`, `/documents/*`
+  endpoints. Removed: the client namespaces `documents`, `versions`, `folders`,
+  `permissions`, `shares` and legacy `collaboration`; the composables `useDocuments`,
+  `usePermissions`, `useShares`, `useDocumentExport`, `useCollaboration`, `useVaulterEditor`;
+  the components `VaulterFileManager`, `VaulterEditor`, `VaulterVersionHistory`,
+  `VaulterPermissionsPanel`, `VaulterSharePanel`, `VaulterBreadcrumb`; and the legacy
+  `createCollaborationSession` transport. Use the Drive surface instead — `client.nodes`/
+  `useNodes`/`VaulterDrive`, `client.grants`/`useNodeGrants`, `client.nodeShares`/
+  `useNodeShares`, `useDocumentNode`, `useNodeCollaboration`. `useComments` /
+  `VaulterCommentsPanel` were repointed to the node comment API (`/nodes/{node}/comments`,
+  prop `nodeId` instead of `documentId`).
 
 ### Added
 - **Config-first Storage Panels** — `Vaulter::for()`, per-panel table prefixes and id strategy

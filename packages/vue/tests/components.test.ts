@@ -1,37 +1,20 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import VaulterBreadcrumb from '../src/components/VaulterBreadcrumb.vue'
+import { flushPromises } from '@vue/test-utils'
 import VaulterCommentsPanel from '../src/components/VaulterCommentsPanel.vue'
-import VaulterEditor from '../src/components/VaulterEditor.vue'
-import VaulterFileManager from '../src/components/VaulterFileManager.vue'
-import VaulterPermissionsPanel from '../src/components/VaulterPermissionsPanel.vue'
-import VaulterSharePanel from '../src/components/VaulterSharePanel.vue'
-import VaulterVersionHistory from '../src/components/VaulterVersionHistory.vue'
 import { docVaultClientKey } from '../src/composables/useVaulterClient'
 import type { VaulterClient } from '../src/client'
 
-function mockClient(): VaulterClient {
+/** A node-only client mock exposing just the comment surface the panel drives. */
+function mockClient(overrides: Partial<VaulterClient['comments']> = {}): VaulterClient {
   return {
-    documents: {
+    comments: {
       list: vi.fn().mockResolvedValue([]),
-      trashed: vi.fn().mockResolvedValue([]),
-      get: vi.fn(),
       create: vi.fn(),
-      update: vi.fn(),
+      resolve: vi.fn(),
       remove: vi.fn(),
-      forceDelete: vi.fn(),
-      restore: vi.fn(),
-      move: vi.fn(),
-      duplicate: vi.fn(),
-      bulk: vi.fn(),
-      export: vi.fn(),
+      ...overrides,
     },
-    versions: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), restore: vi.fn() },
-    folders: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), update: vi.fn(), remove: vi.fn() },
-    permissions: { list: vi.fn().mockResolvedValue([]), grant: vi.fn(), revoke: vi.fn() },
-    comments: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), resolve: vi.fn(), remove: vi.fn() },
-    shares: { list: vi.fn().mockResolvedValue([]), create: vi.fn(), revoke: vi.fn(), resolve: vi.fn() },
-    collaboration: { token: vi.fn() },
   } as unknown as VaulterClient
 }
 
@@ -39,40 +22,30 @@ function withClient(client: VaulterClient = mockClient()) {
   return { global: { provide: { [docVaultClientKey as symbol]: client } } }
 }
 
-describe('@vaulter/vue components', () => {
-  it('mounts the file manager and loads workspace documents', async () => {
-    const client = mockClient()
-    const wrapper = mount(VaulterFileManager, {
-      props: { workspaceType: 'App\\Project', workspaceId: 1 },
+describe('VaulterCommentsPanel (node — ADR-0014)', () => {
+  it('mounts and loads the node\'s comments on mount', async () => {
+    const client = mockClient({
+      list: vi.fn().mockResolvedValue([
+        { id: 1, node_id: 42, parent_id: null, author: { type: 'user', id: 1 }, body: 'Hi', anchor: null, resolved_at: null, created_at: null },
+      ]),
+    })
+    const wrapper = mount(VaulterCommentsPanel, {
+      props: { nodeId: 42 },
       ...withClient(client),
     })
 
-    expect(wrapper.classes()).toContain('vaulter-file-manager')
-    await Promise.resolve()
-    expect(client.documents.list).toHaveBeenCalledWith({ workspace_type: 'App\\Project', workspace_id: 1 })
+    expect(wrapper.classes()).toContain('vaulter-comments-panel')
+    await flushPromises()
+    expect(client.comments.list).toHaveBeenCalledWith(42)
   })
 
-  it('mounts the editor', () => {
-    const wrapper = mount(VaulterEditor, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(wrapper.classes()).toContain('vaulter-editor')
-  })
+  it('does not auto-load when autoLoad is false', () => {
+    const client = mockClient()
+    mount(VaulterCommentsPanel, {
+      props: { nodeId: 42, autoLoad: false },
+      ...withClient(client),
+    })
 
-  it('mounts version history, permissions and comments panels', () => {
-    expect(mount(VaulterVersionHistory, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
-    expect(mount(VaulterPermissionsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() }).exists()).toBe(true)
-
-    const comments = mount(VaulterCommentsPanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(comments.classes()).toContain('vaulter-comments-panel')
-
-    const shares = mount(VaulterSharePanel, { props: { documentId: 1, autoLoad: false }, ...withClient() })
-    expect(shares.classes()).toContain('vaulter-share-panel')
-  })
-
-  it('renders the breadcrumb without a client and emits navigate', async () => {
-    const wrapper = mount(VaulterBreadcrumb, { props: { path: [] } })
-    expect(wrapper.classes()).toContain('vaulter-breadcrumb')
-
-    await wrapper.get('.vaulter-breadcrumb__root').trigger('click')
-    expect(wrapper.emitted('navigate')?.[0]).toEqual([null])
+    expect(client.comments.list).not.toHaveBeenCalled()
   })
 })

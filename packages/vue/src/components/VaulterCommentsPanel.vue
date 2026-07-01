@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useComments } from '../composables/useComments'
-import type { VaulterComment, DocumentId } from '../types'
+import type { VaulterComment, NodeId } from '../types'
 
 const props = withDefaults(
-  defineProps<{ documentId: DocumentId, autoLoad?: boolean }>(),
+  defineProps<{ nodeId: NodeId, autoLoad?: boolean }>(),
   { autoLoad: true },
 )
 
@@ -13,7 +13,7 @@ const emit = defineEmits<{
   resolved: [comment: VaulterComment]
 }>()
 
-const { comments, loading, list, add, resolve } = useComments(props.documentId)
+const { comments, loading, list, add, resolve } = useComments(props.nodeId)
 
 async function submit(body: string): Promise<void> {
   const comment = await add({ body })
