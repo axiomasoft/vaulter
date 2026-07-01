@@ -156,7 +156,7 @@ it('S3 multipart: POST parts → POST complete → committed node', function ():
 });
 
 it('404s an unknown upload_id', function (): void {
-    $this->getJson('api/vaulter/resumable-uploads/does-not-exist')->assertNotFound();
+    $this->getJson('api/vaulter/resumable-uploads/0193a5f0-9a3b-7c2d-8e4f-0000000000ff')->assertNotFound();
 });
 
 it('refuses the tus surface when tus is disabled', function (): void {
