@@ -7,11 +7,15 @@ name: Monorepo split (PHP)
 # by release-npm.yml.
 #
 # PREREQUISITES (one-time, NOT done here):
-#   1. Create the empty target repos: axioma-studio/vaulter-core, axioma-studio/vaulter-filament
-#      (and, later, vaulter-media / vaulter-drive / vaulter-docdrive as those packages land).
+#   1. Create the empty target repos: axioma-studio/vaulter-core, axioma-studio/vaulter-filament,
+#      axioma-studio/vaulter-permissions-azgard (and, later, vaulter-media / vaulter-drive /
+#      vaulter-docdrive as those packages land).
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
-#   3. Register the SPLIT repos on Packagist (not this monorepo).
+#   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-permissions-azgard
+#      hard-depends on axioma-studio/azguard-core (^0.2), so keep that package resolvable on
+#      Packagist before registering the bridge (its local path-repositories are dev-only and
+#      Composer ignores a dependency's own `repositories`, so consumers are unaffected).
 # Until the repos + secret exist this workflow will fail, so it is authored but dormant.
 on:
   push:
@@ -33,6 +37,7 @@ jobs:
         package:
           - core
           - filament
+          - permissions-azgard
 
     steps:
       - name: Checkout

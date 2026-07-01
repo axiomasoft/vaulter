@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Re-platformed into an embeddable virtual document storage** (#20). The document/folder
+  model gave way to a **Drive** domain — storages and a recursive node tree (folders/files) —
+  backed by a content-addressable blob store (CAS). Collaboration became **node-attached** and
+  standardised on **Hocuspocus** (Reverb is now for notifications, not collaboration). The
+  release artifacts are the split Composer packages `vaulter-core`, `vaulter-filament`,
+  `vaulter-permissions-azgard` and the npm package `@vaulter/vue`.
+
 ### Added
+- **Config-first Storage Panels** — `Vaulter::for()`, per-panel table prefixes and id strategy
+  (`bigint` | `ulid` | `uuid7`), with a per-panel schema/migration generator.
+- **Content-addressable blob store (CAS)** — scoped dedup (global/tenant/storage), race-safe
+  commit (advisory-lock on Postgres), two-phase garbage collection and a reconcile command.
+- **Composite ACL** — `AccessResolver` over node grants, host-role drivers and share links, with
+  access-aware listing; **four permission drivers**: Database (default), Gate, Spatie and AzGuard.
+- **Real-time collaboration (node-attached)** — Hocuspocus driver, Yjs snapshot persistence and a
+  TipTap projection; JWT-authenticated rooms bound to a single node.
+- **Resumable uploads** — tus + S3-multipart, server-recomputed content hashes, a sweep command.
+- **Append-only activity feed** and **transactional-outbox webhooks** with a single relay-sweep
+  owner and idempotent delivery.
+- **Handler-aware documents** — rich-text (TipTap) and opaque snapshots (e.g. the Univer
+  spreadsheet handler), plus a handler-aware create-path (`mime` resolves the node's handler).
+- **AzGuard bridge** (`axioma-studio/vaulter-permissions-azgard`) — a real `AzgardGuard` adapter
+  delegating to AzGuard scoped roles and workspace-context checks, keeping core AzGuard-free.
+- **Vue client** (`@vaulter/vue`) — Drive components (folder-picker, no `window.prompt`),
+  shared-with-me view, node-collaboration composables and the headless spreadsheet shell.
+- **Full Postgres portability lane** running the schema-portable suite against real Postgres
+  alongside the default in-memory SQLite.
 - **Pluggable export formats**: register a `\Vaulter\Contracts\DocumentExporter` via
   `config('vaulter.exporters')` or `Vaulter::registerExporter()` to export documents to custom
   formats (PDF, DOCX, …) alongside the built-in HTML and Markdown. The export response now also
