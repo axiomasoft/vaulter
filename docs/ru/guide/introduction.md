@@ -103,7 +103,7 @@ Vaulter::resolvePermissionsWith($resolver);       // легаси-резолве
 Vaulter::driver();                                // CollaborationDriver
 ```
 
-Полная поверхность — в [справочнике API](/reference/facade).
+Полная поверхность — в [справочнике API](/ru/reference/facade).
 
 ## Чего Vaulter не делает
 
