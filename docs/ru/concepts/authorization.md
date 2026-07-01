@@ -224,8 +224,8 @@ public function allows(Ability $ability): bool
 }
 ```
 
-На клиенте привязывайтесь к этим флагам — см. помощник `usePermissions` из `@vaulter/vue`
-(`canView`/`canEdit`/`canManage`/`canDelete`).
+На клиенте каждый ресурс узла отдаёт свою карту `abilities` — привязывайте UI напрямую к этим
+флагам (отсутствующее право трактуется как `false`).
 
 ## Гейт создания (узла ещё нет)
 

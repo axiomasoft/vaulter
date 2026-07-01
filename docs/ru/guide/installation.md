@@ -86,9 +86,8 @@ import { VaulterPlugin } from '@vaulter/vue'
 app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 ```
 
-Это глобально регистрирует Drive-компоненты (`VaulterDrive`, `VaulterUploader`, …) и легаси-
-компоненты (`VaulterFileManager`, `VaulterEditor`, …), а также передаёт API-клиент в каждую
-composable-функцию.
+Это глобально регистрирует Drive-компоненты (`VaulterDrive`, `VaulterUploader`,
+`VaulterCommentsPanel`, …), а также передаёт API-клиент в каждую composable-функцию.
 
 ::: tip Сборка ассетов
 `@vaulter/vue` поставляется собранными ESM/UMD-бандлами и типами TypeScript — отдельного шага

@@ -261,16 +261,17 @@ shows a read-only shell rather than mis-advertising actions).
 }
 ```
 
-On the client, bind against the resolved flags — see the Vue
-[`usePermissions`](../guide/vue) helper, which exposes `canView`/`canEdit`/
-`canManage`/`canDelete` computed refs over an `abilities` object.
+On the client, every node resource ships its resolved `abilities` map — bind your UI directly
+against those flags (a missing ability is falsy):
 
 ```vue
 <script setup lang="ts">
-import { usePermissions } from '@vaulter/vue'
+import { computed } from 'vue'
+import type { Node } from '@vaulter/vue'
 
-const props = defineProps<{ node: { abilities: Record<string, boolean> } }>()
-const { canEdit, canManage } = usePermissions(() => props.node.abilities)
+const props = defineProps<{ node: Node }>()
+const canEdit = computed(() => props.node.abilities?.edit ?? false)
+const canManage = computed(() => props.node.abilities?.manage ?? false)
 </script>
 ```
 

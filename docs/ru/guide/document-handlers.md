@@ -363,13 +363,13 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.handlers');
 ```vue
 <script setup lang="ts">
 import { VaulterDocumentNode } from '@vaulter/vue'
-import VaulterEditor from '@vaulter/vue'   // a TipTap editor the host supplies
+import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
 import AppCsvPreview from './AppCsvPreview.vue'
 
 // Map a handler's `ui.component` (or its `id`) to the component to mount.
 const componentMap = {
-  VaulterDocEditor: VaulterEditor,   // the TipTap handler's ui.component
-  AppCsvPreview,                     // our CSV handler's ui.component
+  VaulterEditor: AppTipTapEditor,   // the TipTap handler's ui.component
+  AppCsvPreview,                    // our CSV handler's ui.component
 }
 </script>
 

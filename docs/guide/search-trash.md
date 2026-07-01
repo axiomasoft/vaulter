@@ -2,80 +2,67 @@
 
 ## Search
 
-The document list accepts a `q` term, matched (case-insensitively) against the title **and**
-the raw content, scoped to the workspace and filtered by the `view` ability:
+A storage's node tree accepts a `q` term, matched (case-insensitively) against the node name,
+scoped to the storage and filtered by the `view` ability:
 
 ```
-GET /api/vaulter/documents?workspace_type=App\Models\Project&workspace_id=1&q=roadmap
+GET /api/vaulter/storages/{storage}/search?q=roadmap
 ```
 
 ```ts
-import { useDocuments } from '@vaulter/vue'
+import { useVaulterClient } from '@vaulter/vue'
 
-const { documents, list } = useDocuments()
-await list({ workspace_type: 'App\\Models\\Project', workspace_id: 1, q: 'roadmap' })
+const client = useVaulterClient()
+const page = await client.nodes.search(storageId, 'roadmap')
 ```
 
 ::: tip Scaling search
-The default search uses a `LIKE` scan — fine for typical workspaces. For large datasets, swap in
-a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaulter.models.document')`
+The default search uses a `LIKE` scan — fine for typical storages. For large datasets, swap in
+a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaulter.models.node')`
 at a searchable model and overriding the read repository.
 :::
 
 ## Trash
 
-Deleting a document soft-deletes it. The trash can be listed, restored, or permanently purged.
+Deleting a node soft-deletes it (and its subtree). The trash can be listed, restored, or
+permanently purged.
 
 | Method | URL | Ability |
 |---|---|---|
-| GET | `/documents/trash` | `view` |
-| POST | `/documents/{id}/restore` | `manage` |
-| DELETE | `/documents/{id}/force` | `manage` |
+| GET | `/storages/{storage}/trash` | `view` |
+| DELETE | `/nodes/{node}` | `edit` |
+| POST | `/nodes/{node}/restore` | `edit` |
+| DELETE | `/nodes/{node}/force` | `manage` |
 
 ```ts
-const { trashed, listTrashed, forceDelete } = useDocuments()
+const client = useVaulterClient()
 
-await listTrashed({ workspace_type: 'App\\Models\\Project', workspace_id: 1 })
-await forceDelete(documentId) // permanent — dispatches DocumentPurged
+const trashed = await client.nodes.trashed(storageId)
+await client.nodes.trash(nodeId)        // reversible soft-delete
+await client.nodes.restore(nodeId)      // bring it back
+await client.nodes.forceDelete(nodeId)  // permanent
 ```
 
-A permanent delete dispatches `Vaulter\Events\DocumentPurged` (distinct from the reversible
-`DocumentDeleted`), so your app can treat hard deletes differently in audit logs.
+Both the reversible delete and the permanent purge are recorded in the
+[activity feed](./activity.md), so your app can treat hard deletes differently in audit logs.
 
-## Move & duplicate
+## Move & copy
 
 | Method | URL | Ability |
 |---|---|---|
-| PATCH | `/documents/{id}/move` | `edit` |
-| POST | `/documents/{id}/duplicate` | `view` + `create` |
+| POST | `/nodes/{node}/move` | `edit` |
+| POST | `/nodes/{node}/copy` | `edit` (source) + `create` (destination) |
 
-`move` accepts `{ folder_id: id \| null }` (null moves to the root); moving into a folder from a
-different workspace is rejected with `422`, and a successful move dispatches `DocumentMoved`.
-`duplicate` clones the document (title prefixed with `Copy of `) into the same workspace/folder and
-dispatches `DocumentCreated`.
-
-```ts
-const { move, duplicate } = useDocuments()
-
-await move(documentId, folderId)   // or move(documentId, null) to un-file
-const copy = await duplicate(documentId)
-```
-
-## Bulk operations
-
-`POST /documents/bulk` applies one action to many documents, authorizing each individually and
-reporting which were processed vs skipped (denied / missing):
-
-```
-POST /api/vaulter/documents/bulk
-{ "action": "move", "ids": [1, 2, 3], "folder_id": 9 }
-→ { "data": { "action": "move", "processed": [1, 3], "skipped": [2] } }
-```
-
-Actions: `delete`, `restore`, `move` (with `folder_id`), `force-delete` — each gated by the same
-ability as its single-document counterpart (`delete` / `manage` / `edit` / `manage`).
+`move` and `copy` accept `{ parent_id: id \| null }` (null targets the storage root). Moving a node
+into its own subtree is rejected with `422`; `copy` clones the node (and, for a folder, its subtree)
+into the destination.
 
 ```ts
-const { bulk } = useDocuments()
-await bulk({ action: 'delete', ids: selectedIds })
+const client = useVaulterClient()
+
+await client.nodes.move(nodeId, folderId)   // or move(nodeId, null) to un-file
+const copy = await client.nodes.copy(nodeId, folderId)
 ```
+
+For listing and folder operations backed by reactive state, use the
+[`useNodes` composable](./vue.md#drive-composables).

@@ -327,9 +327,9 @@ onBeforeUnmount(disconnect)
 See [Realtime collaboration](/guide/collaboration) for the transport details.
 
 ::: details Other composables
-The package also exports `useStorage` (load a single storage), `useActivity` (the activity feed) and
-the legacy document-centric composables (`useDocuments`, `useVaulterEditor`, `useCollaboration`,
-`useComments`, `useShares`, `usePermissions`, `useDocumentExport`). Full coverage lives in
+The package also exports `useStorage` (load a single storage), `useActivity` (the activity feed),
+`useComments` (a node's comment thread), `useNodeGrants` / `useNodeShares` (per-node ACL and
+share-links) and `useSpreadsheet` (the headless workbook shell). Full coverage lives in
 [Vue composables](/guide/vue).
 :::
 
@@ -576,11 +576,9 @@ nodeIconKind(node)         // 'folder' | 'document' | 'image' | 'pdf' | 'archive
 `nodeIconKind` collapses several mime families (image/pdf/archive/audio/video) into one visual
 bucket; restyle via the `vaulter-node-icon--<bucket>` class or the per-row `icon` slot.
 
-::: details Legacy components
-The package also exports the legacy document-centric components: `VaulterFileManager`,
-`VaulterEditor`, `VaulterVersionHistory`, `VaulterPermissionsPanel`, `VaulterCommentsPanel`,
-`VaulterSharePanel`, `VaulterBreadcrumb`. New apps should prefer the Drive components above. Full
-coverage lives in [Vue components](/guide/vue).
+::: details Comments panel
+The package also exports `VaulterCommentsPanel` — the slot-driven thread for a document node's
+comments (prop `node-id`). See [Comments](/guide/comments) for its API.
 :::
 
 ## Worked example: a file manager
@@ -595,9 +593,9 @@ import {
   VaulterDrive,
   VaulterDocumentNode,
   VaulterNodeGrantsPanel,
-  VaulterEditor, // the host-supplied TipTap editor (legacy slice-1 component)
   type Node,
 } from '@vaulter/vue'
+import AppTipTapEditor from './AppTipTapEditor.vue' // the host-supplied TipTap editor
 
 const props = defineProps<{ storageId: string }>()
 
@@ -608,7 +606,7 @@ const grantsNode = shallowRef<Node | null>(null)
 
 // Map the handler's ui.component to a concrete editor. The built-in TipTap keys
 // (VaulterEditor / tiptap / richtext / rich-text) resolve to the host editor below.
-const componentMap = { VaulterEditor }
+const componentMap = { VaulterEditor: AppTipTapEditor }
 
 function onOpenNode(node: Node) {
   if (node.kind === 'document') {

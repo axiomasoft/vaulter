@@ -372,13 +372,13 @@ maps to. The mapping is a prop, so a host registers its own editors per handler 
 ```vue
 <script setup lang="ts">
 import { VaulterDocumentNode } from '@vaulter/vue'
-import VaulterEditor from '@vaulter/vue'   // a TipTap editor the host supplies
+import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
 import AppCsvPreview from './AppCsvPreview.vue'
 
 // Map a handler's `ui.component` (or its `id`) to the component to mount.
 const componentMap = {
-  VaulterDocEditor: VaulterEditor,   // the TipTap handler's ui.component
-  AppCsvPreview,                     // our CSV handler's ui.component
+  VaulterEditor: AppTipTapEditor,   // the TipTap handler's ui.component
+  AppCsvPreview,                    // our CSV handler's ui.component
 }
 </script>
 

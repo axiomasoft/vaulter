@@ -330,10 +330,10 @@ onBeforeUnmount(disconnect)
 Про детали транспорта см. [Совместное редактирование в реальном времени](/ru/guide/collaboration).
 
 ::: details Прочие composable-функции
-Пакет также экспортирует `useStorage` (загрузить одно хранилище), `useActivity` (лента активности) и
-легаси-composable-функции, ориентированные на документы (`useDocuments`, `useVaulterEditor`,
-`useCollaboration`, `useComments`, `useShares`, `usePermissions`, `useDocumentExport`). Полное покрытие
-живёт в [Vue composables](/ru/guide/vue).
+Пакет также экспортирует `useStorage` (загрузить одно хранилище), `useActivity` (лента активности),
+`useComments` (ветка комментариев узла), `useNodeGrants` / `useNodeShares` (ACL узла и share-ссылки)
+и `useSpreadsheet` (безголовая оболочка книги). Полное покрытие живёт в
+[Vue composables](/ru/guide/vue).
 :::
 
 ## Компоненты
@@ -580,11 +580,9 @@ nodeIconKind(node)         // 'folder' | 'document' | 'image' | 'pdf' | 'archive
 `nodeIconKind` сворачивает несколько mime-семейств (image/pdf/archive/audio/video) в одну визуальную
 корзину; перестилизуйте через класс `vaulter-node-icon--<bucket>` или построчный слот `icon`.
 
-::: details Легаси-компоненты
-Пакет также экспортирует легаси-компоненты, ориентированные на документы: `VaulterFileManager`,
-`VaulterEditor`, `VaulterVersionHistory`, `VaulterPermissionsPanel`, `VaulterCommentsPanel`,
-`VaulterSharePanel`, `VaulterBreadcrumb`. Новым приложениям стоит предпочесть Drive-компоненты выше. Полное
-покрытие живёт в [Vue components](/ru/guide/vue).
+::: details Панель комментариев
+Пакет также экспортирует `VaulterCommentsPanel` — панель со слотами для ветки комментариев
+узла-документа (prop `node-id`). Её API см. в [Комментариях](/ru/guide/comments).
 :::
 
 ## Разобранный пример: файловый менеджер
@@ -599,9 +597,9 @@ import {
   VaulterDrive,
   VaulterDocumentNode,
   VaulterNodeGrantsPanel,
-  VaulterEditor, // the host-supplied TipTap editor (legacy slice-1 component)
   type Node,
 } from '@vaulter/vue'
+import AppTipTapEditor from './AppTipTapEditor.vue' // the host-supplied TipTap editor
 
 const props = defineProps<{ storageId: string }>()
 
@@ -612,7 +610,7 @@ const grantsNode = shallowRef<Node | null>(null)
 
 // Map the handler's ui.component to a concrete editor. The built-in TipTap keys
 // (VaulterEditor / tiptap / richtext / rich-text) resolve to the host editor below.
-const componentMap = { VaulterEditor }
+const componentMap = { VaulterEditor: AppTipTapEditor }
 
 function onOpenNode(node: Node) {
   if (node.kind === 'document') {
