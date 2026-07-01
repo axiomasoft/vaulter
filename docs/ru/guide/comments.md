@@ -1,19 +1,18 @@
 # Комментарии
 
-Документы поддерживают ветвящиеся, при желании привязанные к тексту комментарии. Чтобы оставить
-комментарий, нужно право (ability) **`comment`** из вашего `PermissionResolver`; для
-разрешения комментария требуется `comment`; для удаления — `manage`. Новые комментарии
-транслируются в приватный канал документа (`comment.added`), поэтому открытые редакторы
-показывают их вживую.
+Узлы-документы поддерживают ветвящиеся, при желании привязанные к тексту комментарии. Для чтения
+нужно право **`view`**; чтобы оставить комментарий — **`comment`**; для разрешения или удаления —
+быть **автором** комментария либо иметь **`manage`** на узле. Комментарии включаются фичей
+`comments` и транслируются, поэтому открытые редакторы показывают их вживую.
 
 ## API
 
 | Метод | URL | Право (ability) |
 |---|---|---|
-| GET | `/documents/{id}/comments` | `view` |
-| POST | `/documents/{id}/comments` | `comment` |
-| POST | `/documents/{id}/comments/{commentId}/resolve` | `comment` |
-| DELETE | `/documents/{id}/comments/{commentId}` | `manage` |
+| GET | `/nodes/{node}/comments` | `view` |
+| POST | `/nodes/{node}/comments` | `comment` |
+| POST | `/nodes/{node}/comments/{commentId}/resolve` | автор или `manage` |
+| DELETE | `/nodes/{node}/comments/{commentId}` | автор или `manage` |
 
 Комментарий несёт `author` (аутентифицированный пользователь, полиморфно), `body`,
 опциональный `anchor` (JSON с описанием диапазона текста, к которому он привязан),
@@ -24,7 +23,7 @@
 ```ts
 import { useComments } from '@vaulter/vue'
 
-const { comments, list, add, resolve } = useComments(documentId)
+const { comments, list, add, resolve } = useComments(nodeId)
 
 await list()
 await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
@@ -33,7 +32,7 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 Или подключите готовую панель со слотами:
 
 ```vue
-<VaulterCommentsPanel :document-id="documentId" @added="scrollToBottom">
+<VaulterCommentsPanel :node-id="nodeId" @added="scrollToBottom">
   <template #item="{ comment, resolve }">
     <CommentBubble :comment="comment" @resolve="resolve" />
   </template>
@@ -44,7 +43,8 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 
 | Событие | Тип | Когда |
 |---|---|---|
-| `Vaulter\Events\CommentAdded` | broadcast (`comment.added`) | комментарий опубликован |
-| `Vaulter\Events\CommentResolved` | domain (после коммита) | комментарий разрешён |
+| `Vaulter\Events\Documents\NodeCommentAdded` | broadcast | комментарий опубликован |
+| `Vaulter\Events\Documents\NodeCommentResolved` | domain (после коммита) | комментарий разрешён |
+| `Vaulter\Events\Documents\NodeCommentDeleted` | domain (после коммита) | комментарий удалён |
 
 Слушайте эти события в своём приложении, чтобы отправлять уведомления или отражать активность.

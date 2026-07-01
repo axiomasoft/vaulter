@@ -86,10 +86,10 @@ import { VaulterPlugin } from '@vaulter/vue'
 app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 ```
 
-This globally registers the Drive components (`VaulterDrive`, `VaulterUploader`, …) and the
-legacy components (`VaulterFileManager`, `VaulterEditor`, …), and provides the API client to
-every composable. See [Frontend overview](/guide/vue) for the alternatives
-(`createVaulterClient` + `provideVaulterClient`) and SSR wiring.
+This globally registers the Drive components (`VaulterDrive`, `VaulterUploader`,
+`VaulterCommentsPanel`, …) and provides the API client to every composable. See
+[Frontend overview](/guide/vue) for the alternatives (`createVaulterClient` +
+`provideVaulterClient`) and SSR wiring.
 
 ::: tip Asset build
 `@vaulter/vue` ships built ESM/UMD bundles and TypeScript types — there is no extra build

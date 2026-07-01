@@ -6,10 +6,9 @@ outline: deep
 
 # Экспорт
 
-Рендерите TipTap-содержимое документа в **HTML** или **Markdown** — для скачивания, отправки по
-почте или показа за пределами редактора — и подключайте собственный экспортёр (PDF, DOCX, …), не
-трогая ядро. И новый [документный путь на узлах](./documents.md), и легаси-документный путь
-используют один и тот же реестр экспортёров.
+Рендерите TipTap-содержимое узла-документа в **HTML** или **Markdown** — для скачивания, отправки
+по почте или показа за пределами редактора — и подключайте собственный экспортёр (PDF, DOCX, …), не
+трогая ядро. Экспорт работает по [документному пути на узлах](./documents.md).
 
 ## Контракт экспортёра
 
@@ -115,44 +114,6 @@ interface NodeDocumentExport {
 неизвестный бинарник) не отдаёт ни одного формата экспорта. См.
 [Обработчики документов](./document-handlers.md).
 :::
-
-## Экспорт легаси-документа
-
-`GET {prefix}/documents/{id}/export` рендерит легаси-документ (привязанный к document-id). Требует
-право (ability) **`view`** (проверяется через `DocumentVisibilityService`).
-
-::: code-group
-
-```ts [Vue — composable]
-import { useDocumentExport } from '@vaulter/vue'
-
-const { fetch, download, exporting } = useDocumentExport(documentId)
-
-const { content } = await fetch('markdown') // get the rendered string
-await download('html')                       // trigger a browser download
-```
-
-```bash [HTTP]
-# GET {prefix}/documents/{id}/export?format=html|markdown
-curl 'https://app.test/api/vaulter/documents/9/export?format=html'
-# → { "data": { "format": "html", "content": "<h1>…</h1>",
-#               "filename": "my-doc.html", "mime_type": "text/html" } }
-```
-
-```ts [Vue — client directly]
-import { useVaulterClient } from '@vaulter/vue'
-
-const client = useVaulterClient()
-const exported = await client.documents.export(documentId, 'html')
-// → { format: 'html', content: '<h1>…</h1>', filename: 'my-doc.html' }
-```
-
-:::
-
-Хелпер `useDocumentExport().download()` собирает `Blob` из отрендеренной строки и запускает
-скачивание в браузере (за пределами DOM-окружения ничего не делает). Имя файла для легаси —
-это slug из заголовка документа плюс расширение экспортёра; неизвестный `format` отклоняется
-правилом валидации запроса (`422`) по списку зарегистрированных форматов экспортёров.
 
 ## Регистрация собственного экспортёра (PDF / DOCX)
 

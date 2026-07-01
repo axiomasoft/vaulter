@@ -6,10 +6,9 @@ outline: deep
 
 # Export
 
-Render a document's TipTap content to **HTML** or **Markdown** for download, email, or display
-outside the editor — and plug in your own exporter (PDF, DOCX, …) without touching core. Both
-the node-attached [document path](./documents.md) and the legacy document path share the same
-exporter registry.
+Render a document node's TipTap content to **HTML** or **Markdown** for download, email, or
+display outside the editor — and plug in your own exporter (PDF, DOCX, …) without touching core.
+Export runs over the node-attached [document path](./documents.md).
 
 ## The exporter contract
 
@@ -113,44 +112,6 @@ A node only exposes export formats when its resolved handler is **editable or pr
 (`NodeExportService::availableFormats`). A download-only node (an archive, an unknown binary)
 exposes no export formats. See [Document Handlers](./document-handlers.md).
 :::
-
-## Exporting a legacy document
-
-`GET {prefix}/documents/{id}/export` renders a legacy (document-id-attached) document. It
-requires the **`view`** ability (checked through `DocumentVisibilityService`).
-
-::: code-group
-
-```ts [Vue — composable]
-import { useDocumentExport } from '@vaulter/vue'
-
-const { fetch, download, exporting } = useDocumentExport(documentId)
-
-const { content } = await fetch('markdown') // get the rendered string
-await download('html')                       // trigger a browser download
-```
-
-```bash [HTTP]
-# GET {prefix}/documents/{id}/export?format=html|markdown
-curl 'https://app.test/api/vaulter/documents/9/export?format=html'
-# → { "data": { "format": "html", "content": "<h1>…</h1>",
-#               "filename": "my-doc.html", "mime_type": "text/html" } }
-```
-
-```ts [Vue — client directly]
-import { useVaulterClient } from '@vaulter/vue'
-
-const client = useVaulterClient()
-const exported = await client.documents.export(documentId, 'html')
-// → { format: 'html', content: '<h1>…</h1>', filename: 'my-doc.html' }
-```
-
-:::
-
-The `useDocumentExport().download()` helper builds a `Blob` from the rendered string and
-triggers a browser download (a no-op outside a DOM environment). The legacy filename is the
-document title slugged + the exporter extension; an unknown `format` is rejected by the
-request's validation rule (`422`) against the registered exporter formats.
 
 ## Registering your own exporter (PDF / DOCX)
 

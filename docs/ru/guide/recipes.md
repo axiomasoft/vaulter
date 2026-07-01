@@ -467,7 +467,7 @@ Vaulter::registerExporter(new \App\Vaulter\PdfExporter());
 :::
 
 После этого он доступен по `GET nodes/{node}/export?format=pdf` и через Vue-composable
-`useDocumentExport`.
+`useDocumentNode(nodeId).exportAs('pdf')`.
 
 ## Своя форма share-токена {#share-token}
 

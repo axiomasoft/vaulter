@@ -464,7 +464,7 @@ Vaulter::registerExporter(new \App\Vaulter\PdfExporter());
 :::
 
 It is then reachable at `GET nodes/{node}/export?format=pdf` and via the Vue
-`useDocumentExport` composable.
+`useDocumentNode(nodeId).exportAs('pdf')` composable.
 
 ## Custom share-token shape {#share-token}
 

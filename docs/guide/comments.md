@@ -1,18 +1,18 @@
 # Comments
 
-Documents support threaded, optionally anchored comments. Posting a comment requires the
-**`comment`** ability from your `PermissionResolver`; resolving requires `comment`; deleting
-requires `manage`. New comments are broadcast on the document's private channel
-(`comment.added`) so open editors can show them live.
+Document **nodes** support threaded, optionally anchored comments. Reading requires the
+**`view`** ability; posting requires **`comment`**; resolving or deleting requires being the
+comment's **author** or holding **`manage`** on the node. Comments are gated on the `comments`
+feature and are broadcast so open editors can show them live.
 
 ## API
 
 | Method | URL | Ability |
 |---|---|---|
-| GET | `/documents/{id}/comments` | `view` |
-| POST | `/documents/{id}/comments` | `comment` |
-| POST | `/documents/{id}/comments/{commentId}/resolve` | `comment` |
-| DELETE | `/documents/{id}/comments/{commentId}` | `manage` |
+| GET | `/nodes/{node}/comments` | `view` |
+| POST | `/nodes/{node}/comments` | `comment` |
+| POST | `/nodes/{node}/comments/{commentId}/resolve` | author or `manage` |
+| DELETE | `/nodes/{node}/comments/{commentId}` | author or `manage` |
 
 A comment carries an `author` (the authenticated user, polymorphic), a `body`, an optional
 `anchor` (JSON describing the text range it pins to), a `parent_id` for threads, and a
@@ -23,7 +23,7 @@ A comment carries an `author` (the authenticated user, polymorphic), a `body`, a
 ```ts
 import { useComments } from '@vaulter/vue'
 
-const { comments, list, add, resolve } = useComments(documentId)
+const { comments, list, add, resolve } = useComments(nodeId)
 
 await list()
 await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
@@ -32,7 +32,7 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 Or drop in the slot-driven panel:
 
 ```vue
-<VaulterCommentsPanel :document-id="documentId" @added="scrollToBottom">
+<VaulterCommentsPanel :node-id="nodeId" @added="scrollToBottom">
   <template #item="{ comment, resolve }">
     <CommentBubble :comment="comment" @resolve="resolve" />
   </template>
@@ -43,7 +43,8 @@ Or drop in the slot-driven panel:
 
 | Event | Type | When |
 |---|---|---|
-| `Vaulter\Events\CommentAdded` | broadcast (`comment.added`) | a comment is posted |
-| `Vaulter\Events\CommentResolved` | domain (after commit) | a comment is resolved |
+| `Vaulter\Events\Documents\NodeCommentAdded` | broadcast | a comment is posted |
+| `Vaulter\Events\Documents\NodeCommentResolved` | domain (after commit) | a comment is resolved |
+| `Vaulter\Events\Documents\NodeCommentDeleted` | domain (after commit) | a comment is deleted |
 
 Listen for these in your app to send notifications or mirror activity.
