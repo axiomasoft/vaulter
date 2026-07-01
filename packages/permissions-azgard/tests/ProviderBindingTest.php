@@ -36,12 +36,3 @@ it('binds the deny-all null guard for a user that is not AzGuard-backed', functi
 
     expect(app(AzgardGuard::class))->toBeInstanceOf(NullAzgardGuard::class);
 });
-
-it('honours a host override of the super-admin permission key via config', function (): void {
-    config()->set('vaulter-azgard.super_admin_permission', 'root');
-
-    $user = SpyAzgardUser::make()->grantGlobal(['root']);
-    $this->actingAs($user);
-
-    expect(app(AzgardGuard::class)->isSuperAdmin())->toBeTrue();
-});

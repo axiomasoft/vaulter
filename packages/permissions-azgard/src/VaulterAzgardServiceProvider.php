@@ -40,15 +40,11 @@ final class VaulterAzgardServiceProvider extends ServiceProvider
                 return new NullAzgardGuard;
             }
 
-            $config = $app->make('config');
-
-            $panelId = $config->get('vaulter-azgard.panel_id');
-            $superAdmin = $config->get('vaulter-azgard.super_admin_permission', '*');
+            $panelId = $app->make('config')->get('vaulter-azgard.panel_id');
 
             return new AzgardGuardAdapter(
                 user: $user,
                 panelId: is_string($panelId) && $panelId !== '' ? $panelId : null,
-                superAdminPermission: is_string($superAdmin) && $superAdmin !== '' ? $superAdmin : '*',
             );
         });
     }

@@ -19,10 +19,11 @@ use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
  *
  * The three translations:
  *   - hasScopedPermission — narrows the seam's `object $entity` to an Eloquent `Model`
- *     (AzGuard scopes roles to model rows); a non-Model entity yields false;
+ *     (AzGuard scopes roles to model rows, and keeps that idiomatic type; the narrowing
+ *     is the adapter's boundary job); a non-Model entity yields false;
  *   - hasPermissionIn — a straight pass-through to the workspace-context check;
- *   - isSuperAdmin — the AzGuard SuperAdmin wildcard, surfaced as a `hasPermission('*')`
- *     probe (the wildcard key is configurable).
+ *   - isSuperAdmin — AzGuard's first-class super-admin check (0.2+), so the wildcard
+ *     convention lives in AzGuard, not here.
  *
  * $panelId threads AzGuard's panel context: null lets AzGuard resolve the panel from
  * each permission key's first segment (the default — `documents.view` → the `documents`
@@ -33,7 +34,6 @@ final readonly class AzgardGuardAdapter implements AzgardGuard
     public function __construct(
         private AzgardBackedUser $user,
         private ?string $panelId = null,
-        private string $superAdminPermission = '*',
     ) {}
 
     public function hasScopedPermission(string $permission, object $entity): bool
@@ -49,6 +49,6 @@ final readonly class AzgardGuardAdapter implements AzgardGuard
 
     public function isSuperAdmin(): bool
     {
-        return $this->user->hasPermission($this->superAdminPermission, $this->panelId);
+        return $this->user->isSuperAdmin($this->panelId);
     }
 }

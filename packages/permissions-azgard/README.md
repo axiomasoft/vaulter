@@ -56,8 +56,10 @@ Select the driver in `config/vaulter.php`:
    }
    ```
 
-   `HasAzGuard` + `HasScopedRoles` already declare every `AzgardBackedUser` method, so no
-   method bodies are needed — only the `implements` clause.
+   `AzgardBackedUser` simply composes AzGuard's own public contracts (0.2+) —
+   `AzGuard\Contracts\HasPermissions` + `HasScopedRoles` — so the `HasAzGuard` +
+   `HasScopedRoles` traits already declare every method: no bodies needed, only the
+   `implements` clause. (Requires `axioma-studio/azguard-core: ^0.2`.)
 
 2. **The context lane** (`hasPermissionIn`) resolves through AzGuard's bound `ContextGuard`
    — install `axioma-studio/azguard-context` (or the CoreX tenancy provider) so workspace
@@ -77,15 +79,17 @@ Select the driver in `config/vaulter.php`:
 | Key | Default | Meaning |
 |---|---|---|
 | `panel_id` | `null` | AzGuard panel threaded through checks; `null` lets AzGuard resolve it per permission key. |
-| `super_admin_permission` | `*` | The permission whose grant means global super-admin. |
+
+Super-admin is AzGuard's own first-class `isSuperAdmin()` (0.2+) — the adapter forwards to
+it, so the wildcard convention lives in AzGuard, not here.
 
 ## Tests
 
 The suite proves the adapter's translation and its integration with the **real** Vaulter
 `AzgardPermissionResolver` across every lane (super-admin override, workspace-role →
-grant-level, create gate), plus the provider binding. It needs the `axioma-studio/azguard-*`
-sibling packages as path repositories (an ecosystem-local concern), so it runs in the
-monorepo / host CI, not Vaulter's standalone matrix.
+grant-level, create gate), plus the provider binding. It needs `axioma-studio/azguard-core`
+as a path repository (an ecosystem-local concern), so it runs in the monorepo / host CI,
+not Vaulter's standalone matrix.
 
 ```bash
 composer install && composer test

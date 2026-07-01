@@ -51,17 +51,14 @@ it('passes a workspace-context check straight through', function (): void {
     ]);
 });
 
-it('maps super-admin to the configurable wildcard permission probe', function (): void {
+it('delegates super-admin to AzGuard\'s first-class check', function (): void {
+    // isSuperAdmin() is AzGuard's own (0.2+): the adapter no longer probes a wildcard
+    // key itself — it just forwards, so the wildcard convention lives in AzGuard.
     $wildcardUser = SpyAzgardUser::make()->grantGlobal(['*']);
     $plainUser = SpyAzgardUser::make()->grantGlobal(['documents.view']);
 
     expect((new AzgardGuardAdapter($wildcardUser))->isSuperAdmin())->toBeTrue()
         ->and((new AzgardGuardAdapter($plainUser))->isSuperAdmin())->toBeFalse();
-
-    // A host may rename the wildcard key.
-    $customUser = SpyAzgardUser::make()->grantGlobal(['root']);
-    expect((new AzgardGuardAdapter($customUser, superAdminPermission: 'root'))->isSuperAdmin())->toBeTrue();
-    expect($customUser->globalCalls[0]['permission'])->toBe('root');
 });
 
 it('the null guard denies every probe (safe pass-through)', function (): void {

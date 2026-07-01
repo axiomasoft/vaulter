@@ -1,6 +1,6 @@
 {
     "name": "axioma-studio/vaulter-permissions-azgard",
-    "description": "AzGuard/Corex permission bridge for Vaulter — a real AzgardGuard adapter delegating to AzGuard scoped roles and the Corex tenant context, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
+    "description": "AzGuard permission bridge for Vaulter — a real AzgardGuard adapter delegating to AzGuard's scoped roles and workspace-context checks, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "authorization", "permissions", "azguard", "corex", "vaulter"],
@@ -14,12 +14,11 @@
     "require": {
         "php": "^8.4",
         "axioma-studio/vaulter-core": "*",
-        "axioma-studio/azguard-core": "*|dev-fix/coverage-gate as 0.1.99|dev-main as 0.1.99",
+        "axioma-studio/azguard-core": "^0.2",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0"
     },
     "require-dev": {
-        "axioma-studio/azguard-context": "*",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
         "orchestra/testbench": "^10.0|^11.0",
@@ -54,13 +53,6 @@
         {
             "type": "path",
             "url": "../../../azguard/packages/core",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../../../azguard/packages/context",
             "options": {
                 "symlink": true
             }
