@@ -15,6 +15,7 @@ const guideSidebar = [
       { text: 'Quick Start', link: '/guide/quick-start' },
       { text: 'Installation', link: '/guide/installation' },
       { text: 'Configuration', link: '/guide/configuration' },
+      { text: 'Database compatibility', link: '/guide/database-compatibility' },
     ],
   },
   {
