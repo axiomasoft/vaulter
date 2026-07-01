@@ -1,18 +1,11 @@
 import type {
   Activity,
-  BulkDocumentsPayload,
-  BulkResult,
-  CollaborationConnection,
   CreateCommentPayload,
   CreateDocumentNodePayload,
-  CreateDocumentPayload,
   CreateWorkbookNodePayload,
   CreateDriveFolderPayload,
-  CreateFolderPayload,
   CreateNodeSharePayload,
-  CreateSharePayload,
   CreateUploadSessionPayload,
-  CreateVersionPayload,
   CursorPage,
   CursorQuery,
   DirectUploadOptions,
@@ -35,26 +28,11 @@ import type {
   UploadSession,
   VaulterClientOptions,
   VaulterComment,
-  VaulterDocument,
-  DocumentExport,
-  ExportFormat,
-  VaulterFolder,
-  VaulterPermission,
-  VaulterShare,
-  VaulterVersion,
-  DocumentId,
-  GrantPermissionPayload,
-  ListDocumentsQuery,
-  ListFoldersQuery,
   NodeId,
-  SharedDocument,
   SpreadsheetVersion,
   SpreadsheetWorkbook,
   StorageId,
   TipTapDocument,
-  UpdateDocumentPayload,
-  UpdateFolderPayload,
-  WorkspaceQuery,
 } from './types'
 
 /** The default mime a spreadsheet (workbook) node is created with — routes to the
@@ -130,56 +108,20 @@ interface Envelope<T> {
 }
 
 export interface VaulterClient {
-  documents: {
-    list(query: ListDocumentsQuery): Promise<VaulterDocument[]>
-    trashed(query: WorkspaceQuery): Promise<VaulterDocument[]>
-    get(id: DocumentId): Promise<VaulterDocument>
-    create(payload: CreateDocumentPayload): Promise<VaulterDocument>
-    update(id: DocumentId, payload: UpdateDocumentPayload): Promise<VaulterDocument>
-    remove(id: DocumentId): Promise<void>
-    forceDelete(id: DocumentId): Promise<void>
-    restore(id: DocumentId): Promise<VaulterDocument>
-    move(id: DocumentId, folderId: DocumentId | null): Promise<VaulterDocument>
-    duplicate(id: DocumentId): Promise<VaulterDocument>
-    bulk(payload: BulkDocumentsPayload): Promise<BulkResult>
-    export(id: DocumentId, format?: ExportFormat): Promise<DocumentExport>
-  }
-  versions: {
-    list(documentId: DocumentId): Promise<VaulterVersion[]>
-    create(documentId: DocumentId, payload?: CreateVersionPayload): Promise<VaulterVersion>
-    restore(documentId: DocumentId, versionId: DocumentId): Promise<VaulterDocument>
-  }
-  folders: {
-    list(query: ListFoldersQuery): Promise<VaulterFolder[]>
-    create(payload: CreateFolderPayload): Promise<VaulterFolder>
-    update(id: DocumentId, payload: UpdateFolderPayload): Promise<VaulterFolder>
-    remove(id: DocumentId): Promise<void>
-  }
-  permissions: {
-    list(documentId: DocumentId): Promise<VaulterPermission[]>
-    grant(documentId: DocumentId, payload: GrantPermissionPayload): Promise<VaulterPermission>
-    revoke(documentId: DocumentId, permissionId: DocumentId): Promise<void>
-  }
+  /**
+   * Threaded comments on a document NODE (`/nodes/{node}/comments`) — the canonical
+   * comment surface after the legacy document_id-bound path was excised (ADR-0014).
+   */
   comments: {
-    list(documentId: DocumentId): Promise<VaulterComment[]>
-    create(documentId: DocumentId, payload: CreateCommentPayload): Promise<VaulterComment>
-    resolve(documentId: DocumentId, commentId: DocumentId): Promise<VaulterComment>
-    remove(documentId: DocumentId, commentId: DocumentId): Promise<void>
-  }
-  shares: {
-    list(documentId: DocumentId): Promise<VaulterShare[]>
-    create(documentId: DocumentId, payload: CreateSharePayload): Promise<VaulterShare>
-    revoke(documentId: DocumentId, shareId: DocumentId): Promise<void>
-    resolve(token: string): Promise<SharedDocument>
-  }
-  collaboration: {
-    token(documentId: DocumentId): Promise<CollaborationConnection>
+    list(nodeId: NodeId): Promise<VaulterComment[]>
+    create(nodeId: NodeId, payload: CreateCommentPayload): Promise<VaulterComment>
+    resolve(nodeId: NodeId, commentId: NodeId): Promise<VaulterComment>
+    remove(nodeId: NodeId, commentId: NodeId): Promise<void>
   }
 
   /**
    * The M4b node-collaboration handshake: mint a realtime session for a document
-   * NODE (the Drive surface), distinct from the legacy document-centric
-   * `collaboration` namespace. Returns the transport-agnostic
+   * NODE (the Drive surface). Returns the transport-agnostic
    * {@link NodeCollaborationSession} the Yjs binding consumes.
    */
   nodeCollaboration: {
@@ -428,59 +370,13 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
   }
 
   const client: VaulterClient = {
-    documents: {
-      list: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents', { query })),
-      trashed: (query) => unwrap(request<Envelope<VaulterDocument[]>>('GET', '/documents/trash', { query })),
-      get: (id) => unwrap(request<Envelope<VaulterDocument>>('GET', `/documents/${id}`)),
-      create: (payload) => unwrap(request<Envelope<VaulterDocument>>('POST', '/documents', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}`, { body: payload })),
-      remove: (id) => request<void>('DELETE', `/documents/${id}`),
-      forceDelete: (id) => request<void>('DELETE', `/documents/${id}/force`),
-      restore: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/restore`)),
-      move: (id, folderId) =>
-        unwrap(request<Envelope<VaulterDocument>>('PATCH', `/documents/${id}/move`, { body: { folder_id: folderId } })),
-      duplicate: (id) => unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${id}/duplicate`)),
-      bulk: (payload) => unwrap(request<Envelope<BulkResult>>('POST', '/documents/bulk', { body: payload })),
-      export: (id, format) =>
-        unwrap(request<Envelope<DocumentExport>>('GET', `/documents/${id}/export`, { query: format ? { format } : undefined })),
-    },
-    versions: {
-      list: (documentId) => unwrap(request<Envelope<VaulterVersion[]>>('GET', `/documents/${documentId}/versions`)),
-      create: (documentId, payload) =>
-        unwrap(request<Envelope<VaulterVersion>>('POST', `/documents/${documentId}/versions`, { body: payload ?? {} })),
-      restore: (documentId, versionId) =>
-        unwrap(request<Envelope<VaulterDocument>>('POST', `/documents/${documentId}/versions/${versionId}/restore`)),
-    },
-    folders: {
-      list: (query) => unwrap(request<Envelope<VaulterFolder[]>>('GET', '/folders', { query })),
-      create: (payload) => unwrap(request<Envelope<VaulterFolder>>('POST', '/folders', { body: payload })),
-      update: (id, payload) => unwrap(request<Envelope<VaulterFolder>>('PATCH', `/folders/${id}`, { body: payload })),
-      remove: (id) => request<void>('DELETE', `/folders/${id}`),
-    },
-    permissions: {
-      list: (documentId) => unwrap(request<Envelope<VaulterPermission[]>>('GET', `/documents/${documentId}/permissions`)),
-      grant: (documentId, payload) =>
-        unwrap(request<Envelope<VaulterPermission>>('POST', `/documents/${documentId}/permissions`, { body: payload })),
-      revoke: (documentId, permissionId) =>
-        request<void>('DELETE', `/documents/${documentId}/permissions/${permissionId}`),
-    },
     comments: {
-      list: (documentId) => unwrap(request<Envelope<VaulterComment[]>>('GET', `/documents/${documentId}/comments`)),
-      create: (documentId, payload) =>
-        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments`, { body: payload })),
-      resolve: (documentId, commentId) =>
-        unwrap(request<Envelope<VaulterComment>>('POST', `/documents/${documentId}/comments/${commentId}/resolve`)),
-      remove: (documentId, commentId) => request<void>('DELETE', `/documents/${documentId}/comments/${commentId}`),
-    },
-    shares: {
-      list: (documentId) => unwrap(request<Envelope<VaulterShare[]>>('GET', `/documents/${documentId}/shares`)),
-      create: (documentId, payload) =>
-        unwrap(request<Envelope<VaulterShare>>('POST', `/documents/${documentId}/shares`, { body: payload })),
-      revoke: (documentId, shareId) => request<void>('DELETE', `/documents/${documentId}/shares/${shareId}`),
-      resolve: (token) => unwrap(request<Envelope<SharedDocument>>('GET', `/shares/${token}`)),
-    },
-    collaboration: {
-      token: (documentId) => request<CollaborationConnection>('POST', `/documents/${documentId}/collab/token`, { body: {} }),
+      list: (nodeId) => unwrap(request<Envelope<VaulterComment[]>>('GET', `/nodes/${nodeId}/comments`)),
+      create: (nodeId, payload) =>
+        unwrap(request<Envelope<VaulterComment>>('POST', `/nodes/${nodeId}/comments`, { body: payload })),
+      resolve: (nodeId, commentId) =>
+        unwrap(request<Envelope<VaulterComment>>('POST', `/nodes/${nodeId}/comments/${commentId}/resolve`)),
+      remove: (nodeId, commentId) => request<void>('DELETE', `/nodes/${nodeId}/comments/${commentId}`),
     },
     nodeCollaboration: {
       token: (nodeId) =>

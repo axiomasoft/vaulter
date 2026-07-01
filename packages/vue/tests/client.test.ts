@@ -8,161 +8,57 @@ function jsonResponse(body: unknown, status = 200): Response {
   })
 }
 
-describe('createVaulterClient', () => {
-  it('lists documents and unwraps the data envelope', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: [{ id: 1, title: 'A' }] }))
+describe('createVaulterClient — node comments (ADR-0014)', () => {
+  it('lists a node\'s comments and unwraps the data envelope', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: [{ id: 7, body: 'Hi' }] }))
     const client = createVaulterClient({ baseUrl: '/api/vaulter', fetch: fetchMock })
 
-    const documents = await client.documents.list({ workspace_type: 'App\\Project', workspace_id: 1 })
+    const comments = await client.comments.list(1)
 
-    expect(documents).toHaveLength(1)
+    expect(comments).toHaveLength(1)
     const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toContain('/api/vaulter/documents?')
-    expect(url).toContain('workspace_id=1')
+    expect(url).toBe('/api/vaulter/nodes/1/comments')
     expect(init.method).toBe('GET')
   })
 
-  it('sends a JSON body and CSRF header on create', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: 2, title: 'X' } }, 201))
+  it('creates and resolves a node comment, sending CSRF + JSON body', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, body: 'Hi' } }, 201))
+      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, resolved_at: '2026-06-14T00:00:00Z' } }))
     const client = createVaulterClient({ fetch: fetchMock, csrfToken: 'tok' })
 
-    await client.documents.create({
-      workspace_type: 'App\\Project',
-      workspace_id: 1,
-      type: 'richtext',
-      title: 'X',
-      content: { type: 'doc', content: [] },
-    })
+    const created = await client.comments.create(1, { body: 'Hi' })
+    expect(created.id).toBe(7)
+    const [createUrl, createInit] = fetchMock.mock.calls[0]
+    expect(createUrl).toBe('/api/vaulter/nodes/1/comments')
+    expect(createInit.method).toBe('POST')
+    expect(createInit.headers['X-CSRF-TOKEN']).toBe('tok')
+    expect(JSON.parse(createInit.body).body).toBe('Hi')
 
-    const [, init] = fetchMock.mock.calls[0]
-    expect(init.method).toBe('POST')
-    expect(init.headers['X-CSRF-TOKEN']).toBe('tok')
-    expect(JSON.parse(init.body).title).toBe('X')
+    const resolved = await client.comments.resolve(1, 7)
+    expect(resolved.resolved_at).not.toBeNull()
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/vaulter/nodes/1/comments/7/resolve')
   })
 
-  it('resolves to undefined on a 204 response', async () => {
+  it('removes a node comment and resolves to undefined on a 204', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     const client = createVaulterClient({ fetch: fetchMock })
 
-    await expect(client.documents.remove(5)).resolves.toBeUndefined()
+    await expect(client.comments.remove(1, 7)).resolves.toBeUndefined()
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/vaulter/nodes/1/comments/7')
   })
 
   it('throws VaulterApiError with validation details on failure', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ message: 'Not allowed', errors: { title: ['required'] } }, 422),
+      jsonResponse({ message: 'Not allowed', errors: { body: ['required'] } }, 422),
     )
     const client = createVaulterClient({ fetch: fetchMock })
 
-    await expect(client.documents.get(1)).rejects.toMatchObject({
+    await expect(client.comments.create(1, { body: '' })).rejects.toMatchObject({
       status: 422,
       message: 'Not allowed',
-      errors: { title: ['required'] },
+      errors: { body: ['required'] },
     })
-    await expect(client.documents.get(1)).rejects.toBeInstanceOf(VaulterApiError)
-  })
-
-  it('creates and resolves comments', async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, body: 'Hi' } }, 201))
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 7, resolved_at: '2026-06-14T00:00:00Z' } }))
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const created = await client.comments.create(1, { body: 'Hi' })
-    expect(created.id).toBe(7)
-
-    const resolved = await client.comments.resolve(1, 7)
-    expect(resolved.resolved_at).not.toBeNull()
-
-    expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/comments/7/resolve')
-  })
-
-  it('creates a share and resolves a shared document by token', async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 1, token: 'abc', permission: 'view' } }, 201))
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 5, title: 'Shared', abilities: { view: true } } }))
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const share = await client.shares.create(5, { permission: 'view' })
-    expect(share.token).toBe('abc')
-
-    const shared = await client.shares.resolve('abc')
-    expect(shared.title).toBe('Shared')
-    expect(fetchMock.mock.calls[1][0]).toContain('/shares/abc')
-  })
-
-  it('searches via the q query and lists the trash', async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(jsonResponse({ data: [{ id: 1 }] }))
-      .mockResolvedValueOnce(jsonResponse({ data: [{ id: 2 }] }))
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    await client.documents.list({ workspace_type: 'w', workspace_id: 1, q: 'roadmap' })
-    expect(fetchMock.mock.calls[0][0]).toContain('q=roadmap')
-
-    const trashed = await client.documents.trashed({ workspace_type: 'w', workspace_id: 1 })
-    expect(trashed).toHaveLength(1)
-    expect(fetchMock.mock.calls[1][0]).toContain('/documents/trash?')
-  })
-
-  it('force-deletes a document', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    await expect(client.documents.forceDelete(7)).resolves.toBeUndefined()
-    expect(fetchMock.mock.calls[0][0]).toContain('/documents/7/force')
-  })
-
-  it('moves and duplicates a document', async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 1, folder_id: 9 } }))
-      .mockResolvedValueOnce(jsonResponse({ data: { id: 2, title: 'Copy of X' } }, 201))
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const moved = await client.documents.move(1, 9)
-    expect(moved.folder_id).toBe(9)
-    const [, moveInit] = fetchMock.mock.calls[0]
-    expect(moveInit.method).toBe('PATCH')
-    expect(JSON.parse(moveInit.body).folder_id).toBe(9)
-
-    const copy = await client.documents.duplicate(1)
-    expect(copy.title).toBe('Copy of X')
-    expect(fetchMock.mock.calls[1][0]).toContain('/documents/1/duplicate')
-  })
-
-  it('performs a bulk action', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ data: { action: 'delete', processed: [1, 2], skipped: [] } }),
-    )
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const result = await client.documents.bulk({ action: 'delete', ids: [1, 2] })
-
-    expect(result.processed).toHaveLength(2)
-    const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toContain('/documents/bulk')
-    expect(JSON.parse(init.body).action).toBe('delete')
-  })
-
-  it('exports a document, passing the format query', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ data: { format: 'markdown', content: '# Hi', filename: 'hi.md' } }),
-    )
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const result = await client.documents.export(3, 'markdown')
-
-    expect(result.content).toBe('# Hi')
-    expect(fetchMock.mock.calls[0][0]).toContain('/documents/3/export?format=markdown')
-  })
-
-  it('requests a collaboration token without a data envelope', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ driver: 'reverb', channel: 'vaulter.documents.1', document_id: 1, token: '' }),
-    )
-    const client = createVaulterClient({ fetch: fetchMock })
-
-    const connection = await client.collaboration.token(1)
-
-    expect(connection.driver).toBe('reverb')
+    await expect(client.comments.create(1, { body: '' })).rejects.toBeInstanceOf(VaulterApiError)
   })
 })

@@ -3,26 +3,7 @@
  * returned by `axioma-studio/vaulter-core`.
  */
 
-export type DocumentId = number | string
 export type WorkspaceId = number | string
-
-export interface WorkspaceRef {
-  type: string
-  id: WorkspaceId
-}
-
-/** Built-in document types; host apps may register additional string types. */
-export type DocumentTypeName = 'richtext' | 'table' | 'markdown' | 'template' | (string & {})
-
-export type PermissionLevelName = 'view' | 'comment' | 'edit' | 'manage'
-
-export interface DocumentAbilities {
-  view: boolean
-  comment: boolean
-  edit: boolean
-  manage: boolean
-  delete: boolean
-}
 
 /** A TipTap JSON document. */
 export interface TipTapDocument {
@@ -31,72 +12,14 @@ export interface TipTapDocument {
   [key: string]: unknown
 }
 
-export interface VaulterDocument {
-  id: DocumentId
-  workspace: WorkspaceRef
-  folder_id: DocumentId | null
-  type: DocumentTypeName
-  title: string
-  content: TipTapDocument | null
-  meta: Record<string, unknown> | null
-  created_at: string | null
-  updated_at: string | null
-  abilities: DocumentAbilities
-}
-
-export interface VaulterVersion {
-  id: DocumentId
-  document_id: DocumentId
-  snapshot_label: string | null
-  created_by: DocumentId | null
-  created_at: string | null
-}
-
-export interface VaulterFolder {
-  id: DocumentId
-  workspace: WorkspaceRef
-  parent_id: DocumentId | null
-  name: string
-  order: number
-}
-
-export interface VaulterPermission {
-  id: DocumentId
-  document_id: DocumentId
-  subject: {
-    type: string
-    id: WorkspaceId
-  }
-  permission: PermissionLevelName
-  granted_by: DocumentId | null
-}
-
-export type BulkAction = 'delete' | 'restore' | 'move' | 'force-delete'
-
-export interface BulkDocumentsPayload {
-  action: BulkAction
-  ids: DocumentId[]
-  folder_id?: DocumentId | null
-}
-
-export interface BulkResult {
-  action: BulkAction
-  processed: DocumentId[]
-  skipped: DocumentId[]
-}
-
-export type ExportFormat = 'html' | 'markdown'
-
-export interface DocumentExport {
-  format: ExportFormat
-  content: string
-  filename: string
-}
-
+/**
+ * A threaded, anchorable comment on a document NODE (`/nodes/{node}/comments`) — the
+ * canonical comment surface after ADR-0014.
+ */
 export interface VaulterComment {
-  id: DocumentId
-  document_id: DocumentId
-  parent_id: DocumentId | null
+  id: NodeId
+  node_id: NodeId
+  parent_id: NodeId | null
   author: {
     type: string
     id: WorkspaceId
@@ -106,46 +29,6 @@ export interface VaulterComment {
   resolved_at: string | null
   created_at: string | null
 }
-
-export interface VaulterShare {
-  id: DocumentId
-  document_id: DocumentId
-  token: string
-  permission: PermissionLevelName
-  expires_at: string | null
-  created_at: string | null
-}
-
-/** The public, token-resolved view of a shared document. */
-export interface SharedDocument {
-  id: DocumentId
-  type: DocumentTypeName
-  title: string
-  content: TipTapDocument | null
-  abilities: DocumentAbilities
-  share: {
-    permission: PermissionLevelName
-    expires_at: string | null
-  }
-}
-
-export interface ReverbCollaborationConnection {
-  driver: 'reverb'
-  channel: string
-  document_id: DocumentId
-  token: string
-}
-
-export interface HocuspocusCollaborationConnection {
-  driver: 'hocuspocus'
-  url: string | null
-  room: string
-  token: string
-}
-
-export type CollaborationConnection =
-  | ReverbCollaborationConnection
-  | HocuspocusCollaborationConnection
 
 /** The collaboration transport a node session runs over (M4b). */
 export type CollaborationDriver = 'reverb' | 'hocuspocus'
@@ -178,73 +61,10 @@ export interface NodeCollaborationSession {
 
 // ─── Request payloads ────────────────────────────────────────────────────────
 
-export interface ListDocumentsQuery {
-  workspace_type: string
-  workspace_id: WorkspaceId
-  folder_id?: DocumentId | null
-  type?: DocumentTypeName
-  /** Full-text term (matched against title and content). */
-  q?: string
-}
-
-export interface WorkspaceQuery {
-  workspace_type: string
-  workspace_id: WorkspaceId
-}
-
-export interface CreateDocumentPayload {
-  workspace_type: string
-  workspace_id: WorkspaceId
-  type: DocumentTypeName
-  title: string
-  content: TipTapDocument
-  folder_id?: DocumentId | null
-  meta?: Record<string, unknown> | null
-}
-
-export interface UpdateDocumentPayload {
-  title?: string
-  content?: TipTapDocument
-  meta?: Record<string, unknown> | null
-}
-
-export interface CreateVersionPayload {
-  snapshot_label?: string | null
-}
-
-export interface ListFoldersQuery {
-  workspace_type: string
-  workspace_id: WorkspaceId
-}
-
-export interface CreateFolderPayload {
-  workspace_type: string
-  workspace_id: WorkspaceId
-  name: string
-  parent_id?: DocumentId | null
-  order?: number
-}
-
-export interface UpdateFolderPayload {
-  name?: string
-  parent_id?: DocumentId | null
-}
-
-export interface GrantPermissionPayload {
-  subject_type: string
-  subject_id: WorkspaceId
-  permission: PermissionLevelName
-}
-
 export interface CreateCommentPayload {
   body: string
-  parent_id?: DocumentId | null
+  parent_id?: NodeId | null
   anchor?: Record<string, unknown> | null
-}
-
-export interface CreateSharePayload {
-  permission: Extract<PermissionLevelName, 'view' | 'comment' | 'edit'>
-  expires_at?: string | null
 }
 
 export interface VaulterClientOptions {
@@ -262,7 +82,7 @@ export interface VaulterClientOptions {
 //
 // The unified `v_nodes` file/folder/document tree the Drive surface exposes. These
 // DTOs mirror `Vaulter\Http\Resources\Drive\*`, `…\Sharing\*`, `…\Activity\*` and
-// `…\Uploads\*`. They are additive — the legacy document-centric types above stay.
+// `…\Uploads\*` — the single canonical document path after ADR-0014.
 
 export type NodeId = number | string
 export type StorageId = number | string
