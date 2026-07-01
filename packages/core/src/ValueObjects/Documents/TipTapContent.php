@@ -50,9 +50,14 @@ final readonly class TipTapContent implements DocumentContent
         return hash('sha256', (string) json_encode($this->doc));
     }
 
+    public function sizeInBytes(): int
+    {
+        return mb_strlen((string) json_encode($this->doc), '8bit');
+    }
+
     public function sizeInKb(): float
     {
-        return mb_strlen((string) json_encode($this->doc), '8bit') / 1024;
+        return $this->sizeInBytes() / 1024;
     }
 
     public function ensureWithin(int $maxKb): self

@@ -6,7 +6,6 @@ namespace Vaulter\Actions\Documents;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\Documents\Handlers\TipTapHandler;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Events\Documents\DocumentNodeCreated;
 use Vaulter\Exceptions\Drive\NodeNameConflictException;
@@ -15,18 +14,18 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Documents\NodeDocumentVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\DocumentContentHasher;
 
 /**
  * Create a kind=document node under a folder (or the storage root) with its initial
- * v1 document version from TipTap content (§2.5 / M4a). One outer transaction: the
+ * v1 document version from the given content (§2.5 / M4a). One outer transaction: the
  * node row, the v1 version and the head repoint commit atomically, then a single
  * after-commit event fires.
  *
  * The node mirrors the file-node shape so the unified tree + Drive Actions (move/
  * rename/trash) apply unchanged — quota and the sibling-unique guard come for free.
- * The node carries the Vaulter document mime so the DocumentHandlerRegistry always
- * routes it to the TipTap editor regardless of a title extension.
+ * The node carries the mime its resolved handler declares (the request resolves it):
+ * the synthetic Vaulter document mime routes to the TipTap editor, while an xlsx mime
+ * routes a spreadsheet node to the Univer handler — both via the same registry (§7).
  *
  * Authorization is enforced UPSTREAM at the controller (canCreate on the
  * destination) — the Action stays pure and only does the row work.
@@ -53,8 +52,8 @@ final readonly class CreateDocumentNodeAction
                 'parent_id' => $parentId,
                 'kind' => NodeKind::Document,
                 'name' => $data->name,
-                'mime_type' => TipTapHandler::DOCUMENT_MIME,
-                'size_bytes' => $data->content->sizeInKb() > 0 ? (int) ($data->content->sizeInKb() * 1024) : 0,
+                'mime_type' => $data->mimeType,
+                'size_bytes' => $data->content->sizeInBytes(),
                 'owner_id' => $data->actorId,
                 'created_by' => $data->actorId,
             ]);
@@ -80,7 +79,7 @@ final readonly class CreateDocumentNodeAction
             'version_no' => 1,
             'content' => $data->content->toArray(),
             'format' => $data->format,
-            'content_hash' => DocumentContentHasher::hash($data->content),
+            'content_hash' => $data->content->contentHash(),
             'is_autosave' => false,
             'status' => 'committed',
             'created_by' => $data->actorId,

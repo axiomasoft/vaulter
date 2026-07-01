@@ -633,6 +633,19 @@ export interface CreateDocumentNodePayload {
   format?: DocumentFormatName
 }
 
+/**
+ * Create a NON-rich-text (spreadsheet) document node. `mime` selects the format the
+ * backend resolves a handler for (defaults to the xlsx sheet mime → the Univer
+ * handler); `workbook` is the opaque initial snapshot the core stores verbatim. Needs
+ * the `spreadsheets` feature enabled server-side, else the create is rejected.
+ */
+export interface CreateWorkbookNodePayload {
+  name: string
+  workbook?: SpreadsheetWorkbook
+  parentId?: NodeId | null
+  mime?: string
+}
+
 export interface UpdateDocumentContentOptions {
   /** The optional base64-encoded Yjs CRDT update (the realtime source of truth). */
   yjsState?: string
