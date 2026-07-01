@@ -33,3 +33,12 @@ parameters:
         -
             identifier: return.unusedType
             path: packages/core/src/Testing/NullRoleDriver.php
+
+        # The commit path stages the upload stream INTO the CAS inside the transaction
+        # (uploadFile->execute), which may consume + fclose it; the finally re-guards
+        # with is_resource() to avoid a double-close. PHPStan proves the stream is a
+        # resource from the entry guard and cannot see that runtime mutation, so it
+        # flags the (genuinely necessary) re-check as always-true. Scoped to this line.
+        -
+            identifier: if.alwaysTrue
+            path: packages/core/src/Actions/Uploads/CommitUploadAction.php
