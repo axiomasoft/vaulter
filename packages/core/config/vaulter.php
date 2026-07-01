@@ -5,8 +5,6 @@ declare(strict_types=1);
 use Vaulter\Cas\BlobStore;
 use Vaulter\Cas\FlysystemStorageDriver;
 use Vaulter\Cas\Sha256ContentStore;
-use Vaulter\Collaboration\HocuspocusCollaborationDriver;
-use Vaulter\Collaboration\ReverbCollaborationDriver;
 use Vaulter\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Handlers\TipTapHandler;
@@ -20,12 +18,7 @@ use Vaulter\Export\MarkdownExporter;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Documents\Document;
-use Vaulter\Models\Documents\DocumentComment;
-use Vaulter\Models\Documents\DocumentFolder;
-use Vaulter\Models\Documents\DocumentPermission;
-use Vaulter\Models\Documents\DocumentShare;
-use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Models\Documents\NodeComment;
 use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileVersion;
@@ -61,13 +54,6 @@ return [
     | scoping, audit). Vaulter always resolves models through this map.
     */
     'models' => [
-        'document' => Document::class,
-        'version' => DocumentVersion::class,
-        'folder' => DocumentFolder::class,
-        'permission' => DocumentPermission::class,
-        'comment' => DocumentComment::class,
-        'share' => DocumentShare::class,
-
         // Vaulter Drive entities (M1a).
         'storage' => Storage::class,
         'node' => Node::class,
@@ -78,8 +64,12 @@ return [
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
 
-        // DocDrive (M4a) — the NODE-attached document version (§2.5), distinct from
-        // the legacy 'version' (document_id-attached) entry above.
+        // ADR-0014 — the NODE-attached comment (v_node_comments), the canonical
+        // comment surface after the legacy document_id-bound path was excised.
+        'node_comment' => NodeComment::class,
+
+        // DocDrive (M4a) — the NODE-attached document version (§2.5), the canonical
+        // version history (v_node_document_versions) on kind=document nodes.
         'node_document_version' => NodeDocumentVersion::class,
 
         'upload_session' => UploadSession::class,
@@ -101,14 +91,6 @@ return [
     | the global prefix; PanelTablesBuilder and the models read through this map.
     */
     'table_names' => [
-        // DocDrive (legacy v_document* tables) keep their historical names.
-        'documents' => 'documents',
-        'document_folders' => 'document_folders',
-        'document_versions' => 'document_versions',
-        'document_permissions' => 'document_permissions',
-        'document_comments' => 'document_comments',
-        'document_shares' => 'document_shares',
-
         // Vaulter Drive entities (M1a).
         'storages' => 'storages',
         'nodes' => 'nodes',
@@ -118,9 +100,9 @@ return [
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
         'node_shares' => 'node_shares',
+        'node_comments' => 'node_comments',
 
-        // DocDrive (M4a) — the NODE-attached document version (§2.5). A distinct
-        // table from the legacy 'document_versions' above (document_id-attached).
+        // DocDrive (M4a) — the NODE-attached document version history (§2.5).
         'node_document_versions' => 'node_document_versions',
 
         'upload_sessions' => 'upload_sessions',
@@ -205,6 +187,10 @@ return [
         'uploads' => true,
         'share_links' => false,
 
+        // ADR-0014 шаг 1 — gates the v_node_comments schema + the node-comment
+        // Actions/HTTP (default off → opt-in, additive over the legacy DocVault).
+        'comments' => false,
+
         // DocDrive (M4a). 'document_versions' gates the v_node_document_versions
         // schema + the document-node Actions/HTTP (default off → opt-in).
         // 'spreadsheets' gates the feature-flagged UniverHandler (xlsx editing).
@@ -255,17 +241,6 @@ return [
     | so the package coexists with host tables and naming conventions.
     */
     'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authorization — legacy DocDrive resolver
-    |--------------------------------------------------------------------------
-    | FQCN of a \Vaulter\Contracts\Access\PermissionResolver implementation, or null
-    | to register one at runtime via Vaulter::resolvePermissionsWith(...). This is
-    | the LEGACY document-path resolver; the Drive ACL uses the host-role driver +
-    | AccessResolver below (H.2).
-    */
-    'permission_resolver' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -694,11 +669,9 @@ return [
 
         'drivers' => [
             'reverb' => [
-                'class' => ReverbCollaborationDriver::class,
                 'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
             ],
             'hocuspocus' => [
-                'class' => HocuspocusCollaborationDriver::class,
                 'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
                 'app_id' => env('VAULTER_COLLAB_APP_ID'),
                 'secret' => env('VAULTER_COLLAB_SECRET'),

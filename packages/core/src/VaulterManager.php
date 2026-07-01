@@ -14,15 +14,12 @@ use Vaulter\Actions\Drive\RenameNodeAction;
 use Vaulter\Actions\Drive\RestoreNodeAction;
 use Vaulter\Actions\Drive\TrashNodeAction;
 use Vaulter\Actions\Drive\UploadFileAction;
-use Vaulter\Contracts\Access\PermissionResolver;
-use Vaulter\Contracts\Collaboration\CollaborationDriver;
 use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Documents\DocumentHandlerRegistry;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Exceptions\Documents\UnknownExportFormatException;
-use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
@@ -31,13 +28,11 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**
- * Public entry point for host-app integration: register the permission resolver,
- * extend the document-type registry, and resolve the collaboration driver.
+ * Public entry point for host-app integration: open Drive handles, register storage
+ * panels, extend the document-type/handler/exporter registries.
  */
 final class VaulterManager
 {
-    private ?PermissionResolver $permissionResolver = null;
-
     /**
      * @var array<string, array<string, mixed>>
      */
@@ -129,31 +124,6 @@ final class VaulterManager
     }
 
     /**
-     * Tell Vaulter how to delegate authorization to the host application.
-     */
-    public function resolvePermissionsWith(PermissionResolver $resolver): void
-    {
-        $this->permissionResolver = $resolver;
-    }
-
-    public function permissionResolver(): ?PermissionResolver
-    {
-        if ($this->permissionResolver instanceof PermissionResolver) {
-            return $this->permissionResolver;
-        }
-
-        $class = Config::permissionResolverClass();
-
-        if ($class === null) {
-            return null;
-        }
-
-        $resolver = $this->container->make($class);
-
-        return $this->permissionResolver = $resolver instanceof PermissionResolver ? $resolver : null;
-    }
-
-    /**
      * Register a custom document type.
      *
      * @param array<string, mixed> $definition
@@ -229,28 +199,5 @@ final class VaulterManager
             ...array_keys(Config::exporters()),
             ...array_keys($this->exporters),
         ]));
-    }
-
-    /**
-     * Resolve a collaboration driver (defaults to config('vaulter.collaboration.driver')).
-     */
-    public function driver(?string $name = null): CollaborationDriver
-    {
-        $name ??= Config::collaborationDriverName();
-        $config = Config::driverConfig($name);
-        $class = $config['class'] ?? null;
-
-        if (!is_string($class) || !is_a($class, CollaborationDriver::class, allow_string: true)) {
-            throw new VaulterException(
-                sprintf('[Vaulter] Unknown collaboration driver [%s]. ', $name)
-                .'Fix: add it under config(vaulter.collaboration.drivers) with a "class" implementing CollaborationDriver. '
-                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
-            );
-        }
-
-        /** @var CollaborationDriver $driver */
-        $driver = $this->container->make($class);
-
-        return $driver;
     }
 }

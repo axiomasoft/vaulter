@@ -27,7 +27,7 @@ use Vaulter\Support\Config;
  * row; it lists and inspects.
  *
  * The model resolves through {@see Config::storageModel()} so a host that swaps the
- * Storage model still gets governed here (mirrors the legacy DocumentResource).
+ * Storage model still gets governed here.
  */
 final class StorageResource extends Resource
 {

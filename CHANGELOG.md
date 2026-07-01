@@ -15,6 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   release artifacts are the split Composer packages `vaulter-core`, `vaulter-filament`,
   `vaulter-permissions-azgard` and the npm package `@vaulter/vue`.
 
+### Removed
+- **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
+  (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
+  nodes with node-attached comments and versions). Removed: the `Document`,
+  `DocumentFolder`, `DocumentVersion`, `DocumentPermission`, `DocumentComment` and
+  `DocumentShare` models and their `v_document*` tables and migrations; the legacy
+  document/folder/version/permission/comment/share repositories, controllers, Actions,
+  events, resources and requests; the `Document`-bound collaboration driver
+  (`Contracts\Collaboration\CollaborationDriver` + its Reverb/Hocuspocus implementations
+  and `Vaulter::driver()`); the `Contracts\Access\PermissionResolver` seam
+  (`Vaulter::resolvePermissionsWith()` / `permissionResolver()` and the
+  `vaulter.permission_resolver` config key); and the
+  `vaulter.models.{document,version,folder,permission,comment,share}` config entries with
+  their table names. A dev-only, idempotent `drop_legacy_docvault_tables` migration drops
+  any pre-existing `v_document*` tables. Use `Vaulter::for()` and the node/document
+  endpoints instead.
+
 ### Added
 - **Config-first Storage Panels** — `Vaulter::for()`, per-panel table prefixes and id strategy
   (`bigint` | `ulid` | `uuid7`), with a per-panel schema/migration generator.

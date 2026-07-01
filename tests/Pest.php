@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
+use Vaulter\Tests\Comment\CommentsTestCase;
 use Vaulter\Tests\Document\DocumentTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
@@ -47,6 +48,13 @@ uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in(
 // folder so the base binding above does not also claim them.
 uses(DocumentTestCase::class, RefreshDatabase::class)->in(
     $core.'/Document',
+);
+
+// The node-comment (ADR-0014 шаг 1) HTTP tests boot the package with the 'comments'
+// feature ON so the routes register at boot; kept in their own top-level folder so the
+// base binding never also claims them.
+uses(CommentsTestCase::class, RefreshDatabase::class)->in(
+    $core.'/Comment',
 );
 
 uses(UlidTestCase::class, RefreshDatabase::class)->in(

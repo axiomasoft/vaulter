@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
-use Vaulter\Models\Documents\Document;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Support\Config;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('derives the ulid strategy from the legacy id_type (BC)', function (): void {
     // ids.default is cleared in UlidTestCase; the strategy must fall back to the
@@ -17,18 +17,15 @@ it('derives the ulid strategy from the legacy id_type (BC)', function (): void {
 });
 
 it('uses ULID keys when configured', function (): void {
-    $document = Document::factory()->create([
-        'workspace_type' => 'App\\Project',
-        'workspace_id' => (string) Str::ulid(),
-    ]);
+    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
 
-    expect($document->getKey())->toBeString()
-        ->and(strlen((string) $document->getKey()))->toBe(26);
+    expect($storage->getKey())->toBeString()
+        ->and(strlen((string) $storage->getKey()))->toBe(26);
 
-    $this->assertDatabaseHas('v_documents', ['id' => $document->getKey()]);
+    $this->assertDatabaseHas('v_storages', ['id' => $storage->getKey()]);
 });
 
 it('adds the tenant column when tenancy is enabled', function (): void {
-    expect(Schema::hasColumn('v_documents', 'tenant_id'))->toBeTrue()
-        ->and(Schema::hasColumn('v_document_versions', 'tenant_id'))->toBeTrue();
+    expect(Schema::hasColumn('v_nodes', 'tenant_id'))->toBeTrue()
+        ->and(Schema::hasColumn('v_files', 'tenant_id'))->toBeTrue();
 });
