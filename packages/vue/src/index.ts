@@ -46,6 +46,8 @@ export { useActivity } from './composables/useActivity'
 export type { UseActivityReturn } from './composables/useActivity'
 export { useDocumentNode } from './composables/useDocumentNode'
 export type { UseDocumentNodeOptions, UseDocumentNodeReturn } from './composables/useDocumentNode'
+export { useSpreadsheet } from './composables/useSpreadsheet'
+export type { UseSpreadsheetOptions, UseSpreadsheetReturn } from './composables/useSpreadsheet'
 export { useNodeCollaboration } from './composables/useNodeCollaboration'
 export type {
   UseNodeCollaborationOptions,
@@ -92,6 +94,7 @@ export type { GrantSubject } from './components/VaulterNodeGrantsPanel.vue'
 export { default as VaulterNodeSharePanel } from './components/VaulterNodeSharePanel.vue'
 export { default as VaulterDocumentNode } from './components/VaulterDocumentNode.vue'
 export type { DocumentNodeEditorProps } from './components/VaulterDocumentNode.vue'
+export { default as VaulterSpreadsheet } from './components/VaulterSpreadsheet.vue'
 export { default as VaulterSharedWithMe } from './components/VaulterSharedWithMe.vue'
 
 // Drive display helpers
