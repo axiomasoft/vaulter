@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests;
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionServiceProvider;
 
 /**
@@ -68,47 +66,12 @@ class SpatieTestCase extends TestCase
     {
         parent::defineDatabaseMigrations();
 
-        $this->createUsersTable();
-        $this->runSpatieMigration();
-    }
-
-    /**
-     * A minimal users table to back the HasRoles actor (the host normally owns this).
-     */
-    private function createUsersTable(): void
-    {
-        if (Schema::hasTable('users')) {
-            return;
-        }
-
-        Schema::create('users', static function (Blueprint $table): void {
-            $table->id();
-            $table->string('name')->nullable();
-            $table->string('email')->nullable();
-        });
-    }
-
-    /**
-     * Run spatie's create_permission_tables migration. It ships as a .php.stub
-     * (so it is not auto-discovered); we require it directly — it returns an
-     * anonymous Migration whose up() reads config('permission.*') at run time, so
-     * teams are honoured because defineEnvironment set them first.
-     */
-    private function runSpatieMigration(): void
-    {
-        // Idempotent on a PERSISTENT connection (the pgsql lane): RefreshDatabase
-        // migrate:fresh's only once per process while this runs per test, so re-running
-        // up() would hit "relation permissions already exists". On SQLite :memory: the
-        // DB is rebuilt per test, so the guard simply never trips.
-        if (Schema::hasTable('permissions')) {
-            return;
-        }
-
-        $stub = dirname(__DIR__, 3)
-            .'/vendor/spatie/laravel-permission/database/migrations/create_permission_tables.php.stub';
-
-        $migration = require $stub;
-
-        $migration->up();
+        // Register the users + spatie permission tables as MIGRATIONS (see
+        // tests/database/migrations) rather than creating them by hand here. That puts
+        // them on RefreshDatabase's one-time migrate:fresh path — committed once and
+        // durable across the per-test transaction on a PERSISTENT connection (the pgsql
+        // lane), exactly like the package's own migrations. Hand-run DDL in this hook
+        // does not survive that transaction and re-runs into "relation already exists".
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
     }
 }

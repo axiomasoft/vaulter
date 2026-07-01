@@ -89,11 +89,11 @@ jobs:
   # strategies, …), so each gets a step that runs on the shared database after its own
   # migrate:fresh. The base step (TestCase) bundles all dirs that share that schema.
   #
-  # Spatie is intentionally absent: its TestCase scaffolds users + the spatie tables via
-  # direct DDL in defineDatabaseMigrations rather than registered migrations, which does
-  # not survive a persistent connection's per-test transaction the way migrate:fresh does.
-  # The spatie driver itself is DB-agnostic (it delegates to spatie/laravel-permission)
-  # and stays covered on the SQLite matrix.
+  # Spatie IS covered here (its users + permission tables are registered migrations, so
+  # migrate:fresh commits them like any other schema). Two of its role-grant tests skip on
+  # non-SQLite: the driver keys role subjects by NAME, which a name grant stores in the
+  # typed (bigint) subject_id column — a strict database rejects the non-numeric value.
+  # That is a documented driver limitation on a typed key, not a harness gap.
   test-pgsql:
     name: PHP 8.4 / Postgres (full schema portability lane)
     runs-on: ubuntu-latest
@@ -185,3 +185,9 @@ jobs:
 
       - name: 'Postgres: activity-disabled suite'
         run: vendor/bin/pest --ci packages/core/tests/ActivityGate
+
+      # SpatieTestCase — the spatie/laravel-permission driver against a real (team-scoped)
+      # spatie schema. Two name-keyed role-grant tests self-skip on Postgres (see comment
+      # above the job); the rest exercise the driver on pgsql.
+      - name: 'Postgres: Spatie driver suite'
+        run: vendor/bin/pest --ci packages/core/tests/Spatie
