@@ -18,19 +18,14 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Access\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Activity\RecordsActivity;
-use Vaulter\Console\GcBlobsCommand;
 use Vaulter\Console\MakePanelCommand;
 use Vaulter\Console\PanelMigrationsCommand;
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\PurgeTrashCommand;
-use Vaulter\Console\ReconcileBlobsCommand;
 use Vaulter\Console\RelayOutboxCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Console\SweepUploadsCommand;
 use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Documents\DocumentHandlerRegistry;
@@ -59,8 +54,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasRoute('api')
             ->hasCommand(MakePanelCommand::class)
             ->hasCommand(PanelMigrationsCommand::class)
-            ->hasCommand(GcBlobsCommand::class)
-            ->hasCommand(ReconcileBlobsCommand::class)
             ->hasCommand(PurgeTrashCommand::class)
             ->hasCommand(SweepUploadsCommand::class)
             ->hasCommand(RelayOutboxCommand::class)
@@ -107,12 +100,10 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // the legacy DocDrive shares (both default to RandomShareTokenGenerator).
         $this->app->bind(ShareTokenGenerator::class, Config::nodeShareTokenGeneratorClass());
 
-        // CAS services (H.3) — swappable via config('vaulter.cas.*'). StorageDriver
-        // and ContentStore are stateless wrappers (singletons); BlobStore is the
-        // race-free lifecycle orchestrator.
-        $this->app->singleton(StorageDriver::class, Config::storageDriverClass());
-        $this->app->singleton(ContentStore::class, Config::contentStoreClass());
-        $this->app->bind(BlobStore::class, Config::blobStoreClass());
+        // CAS services (H.3) — the concrete ContentStore/StorageDriver/BlobStore
+        // engine now lives in axioma-studio/vaulter-media (P2 #5, D2/D3); its
+        // provider binds them against the Contracts\Cas\* seam this package owns.
+        // Core resolves those contracts from the container when a host installs it.
 
         // Drive ACL (M2a / H.2): the host-role driver manager resolves the
         // configured HostRoleDriver (default 'database'), keyed per driver-key, and

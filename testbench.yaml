@@ -3,6 +3,7 @@
 # НЕ участвует в обычных тестах (Pest гоняет SQLite :memory:); это отдельный стенд.
 providers:
   - Vaulter\VaulterServiceProvider
+  - Vaulter\Media\VaulterMediaServiceProvider
   - Vaulter\Tests\E2E\E2eServiceProvider
 
 env:

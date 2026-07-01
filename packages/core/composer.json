@@ -41,7 +41,8 @@
     "suggest": {
         "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
         "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0).",
-        "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions."
+        "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
+        "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning."
     },
     "autoload": {
         "psr-4": {
