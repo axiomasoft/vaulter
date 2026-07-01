@@ -15,3 +15,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0011 — Id strategy](/adr/0011-id-strategy)
 - [ADR-0012 — Dedup scope](/adr/0012-dedup-scope)
 - [ADR-0013 — Two sharing channels kept separate](/adr/0013-two-sharing-channels)
+- [ADR-0014 — Legacy DocVault: build parity, then excise from core](/adr/0014-legacy-docvault-strangler)

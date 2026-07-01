@@ -107,6 +107,7 @@ const adrSidebar = [
       { text: '0011 — Id strategy', link: '/adr/0011-id-strategy' },
       { text: '0012 — Dedup scope', link: '/adr/0012-dedup-scope' },
       { text: '0013 — Two sharing channels', link: '/adr/0013-two-sharing-channels' },
+      { text: '0014 — Legacy DocVault excise', link: '/adr/0014-legacy-docvault-strangler' },
     ],
   },
 ]
