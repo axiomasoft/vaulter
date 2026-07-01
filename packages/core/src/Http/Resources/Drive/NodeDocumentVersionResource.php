@@ -53,7 +53,10 @@ final class NodeDocumentVersionResource extends JsonResource
             'yjs_state_size' => $version->yjs_state_size,
             'created_by' => $version->created_by,
             'created_at' => $version->created_at,
-            'content' => $this->withContent ? $version->tipTapContent()->toArray() : null,
+            // The raw stored content — a TipTap doc for rich-text handlers, or a handler's
+            // opaque snapshot (e.g. a Univer workbook) verbatim. Returned as persisted so a
+            // non-rich-text editor gets its own shape back, not a decayed TipTap projection.
+            'content' => $this->withContent ? $version->content : null,
         ];
     }
 }

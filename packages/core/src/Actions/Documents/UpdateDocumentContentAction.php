@@ -15,7 +15,6 @@ use Vaulter\Repositories\Documents\NodeDocumentVersionReadRepository;
 use Vaulter\Repositories\Documents\NodeDocumentVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
-use Vaulter\Support\DocumentContentHasher;
 
 /**
  * Write a document node's content — the AUTOSAVE path (§2.5 / M4a). Within the
@@ -123,7 +122,7 @@ final readonly class UpdateDocumentContentAction
     {
         return [
             'content' => $data->content->toArray(),
-            'content_hash' => DocumentContentHasher::hash($data->content),
+            'content_hash' => $data->content->contentHash(),
             'yjs_state' => $data->yjsState,
             'yjs_state_size' => $data->yjsState === null ? null : mb_strlen($data->yjsState, '8bit'),
         ];

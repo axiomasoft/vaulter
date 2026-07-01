@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Documents;
 
+use Vaulter\Contracts\Documents\DocumentContent;
 use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 
 /**
  * Immutable wrapper around a validated TipTap JSON document
- * ({"type":"doc","content":[...]}).
+ * ({"type":"doc","content":[...]}). The rich-text {@see DocumentContent}.
  */
-final readonly class TipTapContent
+final readonly class TipTapContent implements DocumentContent
 {
     /**
      * @param array<string, mixed> $doc
@@ -42,6 +43,11 @@ final readonly class TipTapContent
     public function toArray(): array
     {
         return $this->doc;
+    }
+
+    public function contentHash(): string
+    {
+        return hash('sha256', (string) json_encode($this->doc));
     }
 
     public function sizeInKb(): float

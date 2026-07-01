@@ -19,12 +19,21 @@ namespace Vaulter\ValueObjects\Documents;
  */
 final readonly class DocumentCapabilities
 {
+    /**
+     * @param bool $richText Whether this handler's editable content is a TipTap rich-text
+     *                       doc ({"type":"doc"}). Defaults TRUE — the historical shape. A
+     *                       non-rich-text editor (e.g. the spreadsheet handler) sets it
+     *                       FALSE, and the content write path then stores its JSON snapshot
+     *                       verbatim (OpaqueDocumentContent) instead of validating and
+     *                       projecting it as TipTap.
+     */
     public function __construct(
         public bool $editable = false,
         public bool $previewable = false,
         public bool $downloadable = true,
         public bool $thumbnailable = false,
         public bool $collaborative = false,
+        public bool $richText = true,
     ) {}
 
     /**
@@ -47,6 +56,7 @@ final readonly class DocumentCapabilities
             'downloadable' => $this->downloadable,
             'thumbnailable' => $this->thumbnailable,
             'collaborative' => $this->collaborative,
+            'rich_text' => $this->richText,
         ];
     }
 }
