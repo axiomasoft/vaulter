@@ -73,7 +73,8 @@ final class DocumentNodeController extends Controller
             name: $request->name(),
             content: $request->content(),
             parent: $parent,
-            format: $request->documentFormat(),
+            format: $request->versionFormat(),
+            mimeType: $request->nodeMimeType(),
             actorId: $this->actorId($request),
         ));
 

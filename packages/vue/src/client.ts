@@ -6,6 +6,7 @@ import type {
   CreateCommentPayload,
   CreateDocumentNodePayload,
   CreateDocumentPayload,
+  CreateWorkbookNodePayload,
   CreateDriveFolderPayload,
   CreateFolderPayload,
   CreateNodeSharePayload,
@@ -55,6 +56,10 @@ import type {
   UpdateFolderPayload,
   WorkspaceQuery,
 } from './types'
+
+/** The default mime a spreadsheet (workbook) node is created with — routes to the
+ *  server-side Univer handler when the `spreadsheets` feature is enabled. */
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 /** Error thrown for non-2xx Vaulter API responses. */
 export class VaulterApiError extends Error {
@@ -266,6 +271,10 @@ export interface VaulterClient {
   documentNodes: {
     /** Create a kind=document node under a folder (or the storage root). */
     createNode(storageId: StorageId, payload: CreateDocumentNodePayload): Promise<Node>
+    /** Create a NON-rich-text (spreadsheet) document node — the same create route
+     *  typed for an opaque workbook, defaulting to the xlsx mime so the backend
+     *  resolves the Univer handler. Requires the `spreadsheets` feature server-side. */
+    createWorkbookNode(storageId: StorageId, payload: CreateWorkbookNodePayload): Promise<Node>
     /** The document node's current-head content (a single version with content). */
     content(nodeId: NodeId): Promise<DocumentVersion>
     /** Autosave the content; pass `{ autosave }` only for symmetry — the route is
@@ -639,6 +648,15 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
             parent_id: payload.parentId ?? null,
             format: payload.format,
             content: payload.content,
+          },
+        })),
+      createWorkbookNode: (storageId, payload) =>
+        unwrap(request<Envelope<Node>>('POST', `/storages/${storageId}/documents`, {
+          body: {
+            name: payload.name,
+            parent_id: payload.parentId ?? null,
+            mime: payload.mime ?? XLSX_MIME,
+            content: payload.workbook,
           },
         })),
       content: (nodeId) =>

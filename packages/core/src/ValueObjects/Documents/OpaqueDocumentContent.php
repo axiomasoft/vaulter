@@ -43,4 +43,9 @@ final readonly class OpaqueDocumentContent implements DocumentContent
     {
         return hash('sha256', (string) json_encode($this->data));
     }
+
+    public function sizeInBytes(): int
+    {
+        return mb_strlen((string) json_encode($this->data), '8bit');
+    }
 }
