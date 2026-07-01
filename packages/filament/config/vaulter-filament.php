@@ -15,10 +15,10 @@ return [
     |--------------------------------------------------------------------------
     | Enabled resources
     |--------------------------------------------------------------------------
-    | Toggle which Vaulter Filament resources the plugin registers. The NEW
-    | Drive/permissions domain (storage, node, grant, share, activity) and the
-    | LEGACY document surface (document, folder, legacy_share) can each be turned
-    | off independently. Every entry defaults to true when omitted.
+    | Toggle which Vaulter Filament resources the plugin registers — the
+    | Drive/permissions domain (storage, node, grant, share, activity) over the
+    | unified v_nodes tree. Each can be turned off independently; every entry
+    | defaults to true when omitted.
     */
     'resources' => [
         // Drive / permissions domain (M1–M4 core).
@@ -27,10 +27,5 @@ return [
         'grant' => true,
         'share' => true,
         'activity' => true,
-
-        // Legacy document-centric surface.
-        'document' => true,
-        'folder' => true,
-        'legacy_share' => true,
     ],
 ];

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Filament\Facades\Filament;
 use Filament\Panel;
 use Vaulter\Filament\Resources\ActivityResource;
-use Vaulter\Filament\Resources\DocumentResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
@@ -14,6 +13,10 @@ use Vaulter\Filament\VaulterPlugin;
 
 it('identifies the plugin', function (): void {
     expect(VaulterPlugin::make()->getId())->toBe('vaulter');
+});
+
+it('loads the package config', function (): void {
+    expect(config('vaulter-filament.navigation_group'))->toBe('Vaulter');
 });
 
 it('registers the Drive/permissions resources on the panel', function (): void {
@@ -26,12 +29,6 @@ it('registers the Drive/permissions resources on the panel', function (): void {
         ->toContain(NodeGrantResource::class)
         ->toContain(NodeShareResource::class)
         ->toContain(ActivityResource::class);
-});
-
-it('keeps the legacy document resources registered', function (): void {
-    $resources = Filament::getPanel('admin')->getResources();
-
-    expect($resources)->toContain(DocumentResource::class);
 });
 
 it('localizes the getPlugin cast through current()', function (): void {

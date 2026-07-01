@@ -8,12 +8,9 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
 use Vaulter\Filament\Resources\ActivityResource;
-use Vaulter\Filament\Resources\DocumentResource;
-use Vaulter\Filament\Resources\FolderResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
-use Vaulter\Filament\Resources\ShareResource;
 use Vaulter\Filament\Resources\StorageResource;
 
 /**
@@ -74,8 +71,7 @@ final class VaulterPlugin implements Plugin
 
     /**
      * The resource classes to register, each gated by its config toggle (default
-     * on). The order places the Drive/permissions domain first, then the legacy
-     * document surface.
+     * on) — the Drive/permissions domain over the unified v_nodes tree.
      *
      * @return array<int, class-string>
      */
@@ -87,9 +83,6 @@ final class VaulterPlugin implements Plugin
             'grant' => NodeGrantResource::class,
             'share' => NodeShareResource::class,
             'activity' => ActivityResource::class,
-            'document' => DocumentResource::class,
-            'folder' => FolderResource::class,
-            'legacy_share' => ShareResource::class,
         ];
 
         $resources = [];
