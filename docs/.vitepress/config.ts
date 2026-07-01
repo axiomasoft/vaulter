@@ -125,21 +125,76 @@ const ruGuideSidebar = [
       { text: 'Быстрый старт', link: '/ru/guide/quick-start' },
       { text: 'Установка', link: '/ru/guide/installation' },
       { text: 'Конфигурация', link: '/ru/guide/configuration' },
+      { text: 'Совместимость с БД', link: '/ru/guide/database-compatibility' },
     ],
   },
   {
-    text: 'Концепции',
+    text: 'Основные концепции',
     collapsed: false,
     items: [
+      { text: 'Архитектура', link: '/ru/guide/architecture' },
       { text: 'Storage Panels', link: '/ru/concepts/storage-panels' },
-      { text: 'Авторизация', link: '/ru/concepts/authorization' },
+      { text: 'Drive — хранилища, папки и узлы', link: '/ru/guide/drive' },
+      { text: 'Хранилище и блобы', link: '/ru/guide/storage-and-blobs' },
+      { text: 'Обработчики документов', link: '/ru/guide/document-handlers' },
     ],
   },
   {
-    text: 'Возможности',
+    text: 'Работа с контентом',
+    collapsed: false,
+    items: [
+      { text: 'Документы-узлы', link: '/ru/guide/documents' },
+      { text: 'Загрузки', link: '/ru/guide/uploads' },
+      { text: 'Корзина и восстановление', link: '/ru/guide/trash' },
+      { text: 'Поиск и корзина', link: '/ru/guide/search-trash' },
+      { text: 'Публичные ссылки', link: '/ru/guide/sharing' },
+      { text: 'Комментарии', link: '/ru/guide/comments' },
+      { text: 'Экспорт', link: '/ru/guide/export' },
+    ],
+  },
+  {
+    text: 'Авторизация',
+    collapsed: false,
+    items: [
+      { text: 'Авторизация', link: '/ru/concepts/authorization' },
+      { text: 'Драйверы прав', link: '/ru/guide/permission-drivers' },
+      { text: 'Гранты', link: '/ru/guide/grants' },
+      { text: 'Права (abilities)', link: '/ru/guide/abilities' },
+      { text: 'Мультитенантность', link: '/ru/guide/multi-tenancy' },
+    ],
+  },
+  {
+    text: 'Realtime и интерфейс',
     collapsed: false,
     items: [
       { text: 'Совместное редактирование', link: '/ru/guide/collaboration' },
+      { text: 'Hocuspocus-сервер (Docker)', link: '/ru/guide/hocuspocus-server' },
+      { text: 'Vue-пакет (@vaulter/vue)', link: '/ru/guide/vue' },
+      { text: 'Плагин Filament', link: '/ru/guide/filament' },
+    ],
+  },
+  {
+    text: 'Дальше',
+    collapsed: false,
+    items: [
+      { text: 'Рецепты', link: '/ru/guide/recipes' },
+      { text: 'Диагностика', link: '/ru/guide/troubleshooting' },
+      { text: 'Справочник ошибок', link: '/ru/guide/errors' },
+    ],
+  },
+]
+
+const ruReferenceSidebar = [
+  {
+    text: 'Справочник API',
+    collapsed: false,
+    items: [
+      { text: 'Фасад и Manager', link: '/ru/reference/facade' },
+      { text: 'REST API', link: '/ru/reference/rest-api' },
+      { text: 'Ключи конфигурации', link: '/ru/reference/configuration' },
+      { text: 'Контракты', link: '/ru/reference/contracts' },
+      { text: 'События', link: '/ru/reference/events' },
+      { text: 'Artisan-команды', link: '/ru/reference/commands' },
     ],
   },
 ]
@@ -190,14 +245,14 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Руководство', link: '/ru/guide/introduction', activeMatch: '/ru/guide/' },
-          { text: 'Концепции', link: '/ru/concepts/storage-panels', activeMatch: '/ru/concepts/' },
-          { text: 'Reference (EN)', link: '/reference/facade' },
+          { text: 'Справочник', link: '/ru/reference/facade', activeMatch: '/ru/reference/' },
           { text: 'ADRs (EN)', link: '/adr/' },
           { text: 'GitHub', link: repo },
         ],
         sidebar: {
           '/ru/guide/': ruGuideSidebar,
           '/ru/concepts/': ruGuideSidebar,
+          '/ru/reference/': ruReferenceSidebar,
         },
       },
     },
