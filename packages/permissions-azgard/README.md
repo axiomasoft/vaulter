@@ -85,11 +85,21 @@ it, so the wildcard convention lives in AzGuard, not here.
 
 ## Tests
 
-The suite proves the adapter's translation and its integration with the **real** Vaulter
-`AzgardPermissionResolver` across every lane (super-admin override, workspace-role →
-grant-level, create gate), plus the provider binding. It needs `axioma-studio/azguard-core`
-as a path repository (an ecosystem-local concern), so it runs in the monorepo / host CI,
-not Vaulter's standalone matrix.
+Two tiers:
+
+- **Adapter / provider / Vaulter-resolver** — the adapter's translation and its integration
+  with the **real** Vaulter `AzgardPermissionResolver` across every lane (super-admin
+  override, workspace-role → grant-level, create gate), plus the provider binding, driven by
+  a controllable user double.
+- **`tests/RealAzgard/` — full real-ecosystem e2e** — a real Eloquent AzGuard user with real
+  roles / DB-backed **scoped roles** / grant sources, the real **azguard-context**
+  `ContextGuard`, and the real adapter → real Vaulter resolver. Proves the adapter's calls
+  actually resolve through AzGuard's own engine (super-admin wildcard, workspace-context
+  permission → Writer, create gate, scope-precise entity check).
+
+Both need the `axioma-studio/azguard-*` sibling packages as path repositories (an
+ecosystem-local concern), so the suite runs in the monorepo / host CI, not Vaulter's
+standalone matrix.
 
 ```bash
 composer install && composer test
