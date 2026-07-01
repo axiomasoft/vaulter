@@ -48,6 +48,7 @@ final class PanelTablesBuilder
         'file_version_blobs',
         'node_grants',
         'node_shares',
+        'node_comments',
         'node_document_versions',
         'upload_sessions',
         'upload_parts',
@@ -104,6 +105,7 @@ final class PanelTablesBuilder
                 'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, panel: $panel, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, panel: $panel, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, panel: $panel, ids: $ids),
+                'node_comments' => $this->defineNodeComments(table: $table, panel: $panel, ids: $ids),
                 'node_document_versions' => $this->defineDocumentVersions(table: $table, panel: $panel, ids: $ids),
                 'upload_sessions' => $this->defineUploadSessions(table: $table, panel: $panel, ids: $ids),
                 'upload_parts' => $this->defineUploadParts(table: $table, panel: $panel, ids: $ids),
@@ -464,6 +466,66 @@ final class PanelTablesBuilder
         $table->foreign('node_id')
             ->references('id')
             ->on($panel->table('nodes'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * v_node_comments — the NODE-attached, threaded, anchorable comment (ADR-0014
+     * шаг 1 — parity with the legacy document_id-attached v_document_comments, which
+     * stays untouched). Gated on 'comments'. A comment hangs off ANY node via node_id
+     * (cascade); parent_id is a self-FK for threading (a reply cascades when its parent
+     * is deleted). The author is a morph to a REGISTERED alias (user|…) written via
+     * getMorphClass(), never a raw FQCN. anchor is the optional text-range descriptor
+     * (jsonb on Postgres, json/text elsewhere). resolved_at/resolved_by mark a thread
+     * closed. No soft-delete — a delete is permanent (legacy parity: hard delete).
+     */
+    private function defineNodeComments(Blueprint $table, Panel $panel, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table, ids: $ids);
+        $ids->reference(table: $table, column: 'node_id');
+
+        // Threading: a reply points at its parent comment (same table). Nullable —
+        // a top-level comment has no parent.
+        $ids->reference(table: $table, column: 'parent_id', nullable: true);
+
+        // Author morph: a registered alias (user|…), never a raw FQCN — the Data layer
+        // writes $user->getMorphClass() (honours the host's enforceMorphMap).
+        $ids->reference(table: $table, column: 'author_id');
+        $table->string('author_type');
+
+        $table->text('body');
+
+        // The optional anchor (a text-range / selection descriptor). jsonb on Postgres
+        // (json/text elsewhere) — never queried by shape, so no gin index.
+        $table->jsonb('anchor')->nullable();
+
+        // Resolution tombstone: when + by whom the thread was marked resolved.
+        $table->timestamp('resolved_at')->nullable();
+        $ids->actor(table: $table, column: 'resolved_by', nullable: true);
+
+        $this->extraData(table: $table, panel: $panel);
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        // The per-node comment feed (oldest-first listing): node_id is the scope,
+        // created_at the cursor. Index names are derived from the table so a per-panel
+        // prefixed table never collides.
+        $table->index(['node_id', 'created_at'], "{$name}_node_created_idx");
+
+        // Threading lookup: a parent's replies.
+        $table->index('parent_id', "{$name}_parent_idx");
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($panel->table('nodes'))
+            ->cascadeOnDelete();
+
+        // Self-FK: deleting a parent comment cascades to its replies.
+        $table->foreign('parent_id')
+            ->references('id')
+            ->on($panel->table('node_comments'))
             ->cascadeOnDelete();
     }
 
@@ -1090,6 +1152,7 @@ final class PanelTablesBuilder
             'files', 'file_versions', 'file_version_blobs' => $panel->featureEnabled('versions'),
             'node_grants' => $panel->featureEnabled('grants'),
             'node_shares' => $panel->featureEnabled('share_links'),
+            'node_comments' => $panel->featureEnabled('comments'),
             'node_document_versions' => $panel->featureEnabled('document_versions'),
             'upload_sessions', 'upload_parts' => $panel->featureEnabled('uploads'),
             'activity' => $panel->featureEnabled('activity'),

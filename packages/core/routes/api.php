@@ -13,6 +13,7 @@ use Vaulter\Http\Controllers\Drive\DocumentNodeController;
 use Vaulter\Http\Controllers\Drive\DownloadController;
 use Vaulter\Http\Controllers\Drive\GrantController;
 use Vaulter\Http\Controllers\Drive\NodeCollaborationController;
+use Vaulter\Http\Controllers\Drive\NodeCommentController;
 use Vaulter\Http\Controllers\Drive\NodeController;
 use Vaulter\Http\Controllers\Drive\StorageController;
 use Vaulter\Http\Controllers\ExportController;
@@ -215,6 +216,20 @@ Route::prefix(Config::routePrefix())
             // AccessResolver Ability::View on the node. The fixed /activity segment
             // sits before the catch-all /{node}.
             Route::get('nodes/{node}/activity', [ActivityController::class, 'forNode']);
+
+            // NODE-attached comments (ADR-0014 шаг 1) — the additive twin of the
+            // legacy document_id-bound comments. Gated on the 'comments' feature.
+            // Authorized via AccessResolver: read ≥ View, create = Comment, resolve/
+            // delete = the AUTHOR or Manage. {comment} is a plain scalar (the model is
+            // swappable, not route-model bound) — the controller resolves it and
+            // asserts it belongs to the bound node. The fixed /comments segment sits
+            // before the catch-all /{node}.
+            if (Config::featureEnabled('comments')) {
+                Route::get('nodes/{node}/comments', [NodeCommentController::class, 'index']);
+                Route::post('nodes/{node}/comments', [NodeCommentController::class, 'store']);
+                Route::post('nodes/{node}/comments/{comment}/resolve', [NodeCommentController::class, 'resolve']);
+                Route::delete('nodes/{node}/comments/{comment}', [NodeCommentController::class, 'destroy']);
+            }
         });
 
         /*

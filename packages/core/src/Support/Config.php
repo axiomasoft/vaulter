@@ -25,6 +25,7 @@ use Vaulter\Models\Documents\DocumentFolder;
 use Vaulter\Models\Documents\DocumentPermission;
 use Vaulter\Models\Documents\DocumentShare;
 use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Models\Documents\NodeComment;
 use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileVersion;
@@ -239,6 +240,20 @@ final class Config
     {
         /** @var class-string<NodeShare> $class */
         $class = config('vaulter.models.node_share', NodeShare::class);
+
+        return $class;
+    }
+
+    /**
+     * The NODE-attached comment model (ADR-0014 шаг 1), distinct from the legacy
+     * document_id-attached {@see commentModel()}.
+     *
+     * @return class-string<NodeComment>
+     */
+    public static function nodeCommentModel(): string
+    {
+        /** @var class-string<NodeComment> $class */
+        $class = config('vaulter.models.node_comment', NodeComment::class);
 
         return $class;
     }

@@ -26,6 +26,7 @@ use Vaulter\Models\Documents\DocumentFolder;
 use Vaulter\Models\Documents\DocumentPermission;
 use Vaulter\Models\Documents\DocumentShare;
 use Vaulter\Models\Documents\DocumentVersion;
+use Vaulter\Models\Documents\NodeComment;
 use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileVersion;
@@ -78,6 +79,10 @@ return [
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
 
+        // ADR-0014 шаг 1 — the NODE-attached comment (parity with the legacy
+        // 'comment' above, which stays the document_id-attached DocumentComment).
+        'node_comment' => NodeComment::class,
+
         // DocDrive (M4a) — the NODE-attached document version (§2.5), distinct from
         // the legacy 'version' (document_id-attached) entry above.
         'node_document_version' => NodeDocumentVersion::class,
@@ -118,6 +123,7 @@ return [
         'file_version_blobs' => 'file_version_blobs',
         'node_grants' => 'node_grants',
         'node_shares' => 'node_shares',
+        'node_comments' => 'node_comments',
 
         // DocDrive (M4a) — the NODE-attached document version (§2.5). A distinct
         // table from the legacy 'document_versions' above (document_id-attached).
@@ -204,6 +210,10 @@ return [
         'activity' => true,
         'uploads' => true,
         'share_links' => false,
+
+        // ADR-0014 шаг 1 — gates the v_node_comments schema + the node-comment
+        // Actions/HTTP (default off → opt-in, additive over the legacy DocVault).
+        'comments' => false,
 
         // DocDrive (M4a). 'document_versions' gates the v_node_document_versions
         // schema + the document-node Actions/HTTP (default off → opt-in).
