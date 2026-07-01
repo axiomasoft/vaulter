@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
@@ -293,8 +294,14 @@ final class NodeReadRepository
      * and the cross-storage "shared with me" view re-resolves each candidate exactly
      * via {@see sharedWith()}.
      *
-     * @param  Builder<Node> $query
-     * @return Builder<Node>
+     * Generic over the concrete model so a Node-typed base (the core listing paths) and
+     * a Filament resource's `Builder<Model>` both compose without a variance clash — the
+     * narrowing is key-based, never model-specific.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel> $query
+     * @return Builder<TModel>
      */
     public function constrainToAccessible(Builder $query, Authorizable $actor): Builder
     {
@@ -485,9 +492,11 @@ final class NodeReadRepository
      * the narrowing never HARD-ERRORS on a wide candidate set. A list at or under the
      * cap compiles to a single whereIn (no nesting overhead).
      *
-     * @param  Builder<Node>    $query
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
      * @param  list<int|string> $ids
-     * @return Builder<Node>
+     * @return Builder<TModel>
      */
     private function whereKeyInChunked(Builder $query, array $ids): Builder
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Support\Config;
@@ -45,7 +46,9 @@ it('creates v_webhook_deliveries with every §2.11 column', function (): void {
 it('enforces the event_id UNIQUE idempotency key on v_outbox', function (): void {
     WebhookTestHelpers::outbox(['event_id' => 'dup']);
 
-    expect(fn () => WebhookTestHelpers::outbox(['event_id' => 'dup']))
+    // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
+    // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
+    expect(fn () => DB::transaction(fn () => WebhookTestHelpers::outbox(['event_id' => 'dup'])))
         ->toThrow(QueryException::class);
 });
 
