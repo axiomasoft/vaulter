@@ -417,6 +417,23 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
       expect(fetchMock.mock.calls[4][0]).toBe('/api/vaulter/nodes/20/handler')
     })
 
+    it('creates a spreadsheet node handler-aware — defaults to the xlsx mime + opaque workbook', async () => {
+      const workbook = { id: 'wb1', sheets: {} }
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: 21, kind: 'document' } }, 201))
+      const client = createVaulterClient({ fetch: fetchMock })
+
+      const node = await client.documentNodes.createWorkbookNode(7, { name: 'Budget.xlsx', workbook, parentId: 5 })
+
+      expect(node.id).toBe(21)
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/vaulter/storages/7/documents')
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+        name: 'Budget.xlsx',
+        parent_id: 5,
+        mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        content: workbook,
+      })
+    })
+
     it('snapshots a named version and restores a prior version', async () => {
       const fetchMock = vi.fn()
         .mockResolvedValueOnce(jsonResponse({ data: { id: 40, snapshot_label: 'v1', keep_forever: true } }, 201))

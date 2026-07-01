@@ -187,6 +187,18 @@ the Yjs lane) is **not** in the default config list. The service provider adds i
 
 With the flag off, xlsx falls through to `DownloadOnlyHandler`. It is the proof that the
 one-class + register extensibility works for a non-rich-text editor.
+
+The create path is **handler-aware**: pass a `mime` to `POST {prefix}/storages/{storage}/documents`
+and the node is born on the matching handler — its content is stored the handler's way
+(a validated TipTap doc for a rich-text handler, an opaque snapshot otherwise) and the node is
+stamped with the handler's canonical mime so a later read re-resolves the same editor. With no
+`mime`, the node is a rich-text TipTap document (the default). A `mime` that resolves to a
+non-editable handler (e.g. xlsx while `spreadsheets` is off) is rejected `422`.
+
+```ts
+// @vaulter/vue — create a spreadsheet node natively (defaults to the xlsx mime)
+await client.documentNodes.createWorkbookNode(storageId, { name: 'Budget.xlsx', workbook })
+```
 :::
 
 ## Resolving a node's handler

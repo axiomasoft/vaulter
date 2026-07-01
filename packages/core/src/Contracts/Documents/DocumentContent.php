@@ -33,4 +33,11 @@ interface DocumentContent
      * new row when the content did not actually change.
      */
     public function contentHash(): string;
+
+    /**
+     * The byte size of the canonical JSON payload — the write path stamps it on the
+     * node's size_bytes so a document node participates in quota the same as a file,
+     * regardless of whether the payload is a TipTap doc or an opaque snapshot.
+     */
+    public function sizeInBytes(): int;
 }
