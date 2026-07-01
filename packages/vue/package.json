@@ -1,9 +1,31 @@
 {
   "name": "@vaulter/vue",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "vue",
+    "tiptap",
+    "collaboration",
+    "documents",
+    "file-manager",
+    "vaulter"
+  ],
+  "homepage": "https://github.com/axioma-studio/vaulter#readme",
+  "bugs": "https://github.com/axioma-studio/vaulter/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axioma-studio/vaulter.git",
+    "directory": "packages/vue"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist"
   ],
