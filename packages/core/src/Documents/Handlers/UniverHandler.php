@@ -65,6 +65,9 @@ final class UniverHandler implements DocumentHandler
             // Single-user in v1: Univer collaboration is a separate OT engine, not
             // the Yjs/Hocuspocus lane (§7 level 2).
             collaborative: false,
+            // The content is a Univer workbook snapshot, NOT a TipTap doc — the write
+            // path stores it verbatim (OpaqueDocumentContent), no type:doc validation.
+            richText: false,
         );
     }
 

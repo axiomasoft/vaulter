@@ -47,6 +47,8 @@ import type {
   ListFoldersQuery,
   NodeId,
   SharedDocument,
+  SpreadsheetVersion,
+  SpreadsheetWorkbook,
   StorageId,
   TipTapDocument,
   UpdateDocumentPayload,
@@ -278,6 +280,16 @@ export interface VaulterClient {
     restoreVersion(nodeId: NodeId, versionId: NodeId): Promise<DocumentVersion>
     export(nodeId: NodeId, format?: string): Promise<NodeDocumentExport>
     handler(nodeId: NodeId): Promise<HandlerDescriptor>
+    /** The head content of a NON-rich-text node, typed as an opaque workbook snapshot
+     *  (same route as `content`, different content shape). */
+    workbook(nodeId: NodeId): Promise<SpreadsheetVersion>
+    /** Autosave a non-rich-text node's opaque snapshot (same PATCH route as
+     *  `updateContent`; the backend stores it verbatim for a richText=false handler). */
+    updateWorkbook(
+      nodeId: NodeId,
+      workbook: SpreadsheetWorkbook,
+      options?: UpdateDocumentContentOptions & { autosave?: boolean },
+    ): Promise<SpreadsheetVersion>
   }
 }
 
@@ -651,6 +663,12 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
         })),
       handler: (nodeId) =>
         unwrap(request<Envelope<HandlerDescriptor>>('GET', `/nodes/${nodeId}/handler`)),
+      workbook: (nodeId) =>
+        unwrap(request<Envelope<SpreadsheetVersion>>('GET', `/nodes/${nodeId}/content`)),
+      updateWorkbook: (nodeId, workbook, options) =>
+        unwrap(request<Envelope<SpreadsheetVersion>>('PATCH', `/nodes/${nodeId}/content`, {
+          body: { content: workbook, yjs_state: options?.yjsState },
+        })),
     },
   }
 

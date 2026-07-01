@@ -19,6 +19,7 @@ import VaulterUploader from './components/VaulterUploader.vue'
 import VaulterNodeGrantsPanel from './components/VaulterNodeGrantsPanel.vue'
 import VaulterNodeSharePanel from './components/VaulterNodeSharePanel.vue'
 import VaulterDocumentNode from './components/VaulterDocumentNode.vue'
+import VaulterSpreadsheet from './components/VaulterSpreadsheet.vue'
 import VaulterSharedWithMe from './components/VaulterSharedWithMe.vue'
 
 export interface VaulterPluginOptions extends VaulterClientOptions {
@@ -54,6 +55,7 @@ export const VaulterPlugin = {
     app.component('VaulterNodeGrantsPanel', VaulterNodeGrantsPanel)
     app.component('VaulterNodeSharePanel', VaulterNodeSharePanel)
     app.component('VaulterDocumentNode', VaulterDocumentNode)
+    app.component('VaulterSpreadsheet', VaulterSpreadsheet)
     app.component('VaulterSharedWithMe', VaulterSharedWithMe)
   },
 }

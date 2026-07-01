@@ -480,6 +480,19 @@ export interface DocumentVersion {
   content: TipTapDocument | null
 }
 
+/**
+ * An opaque document-content snapshot for a NON-rich-text handler (e.g. a Univer
+ * spreadsheet workbook). The core stores and returns it verbatim; @vaulter/vue never
+ * interprets its shape — the concrete editor (mounted in the VaulterSpreadsheet slot)
+ * owns it.
+ */
+export type SpreadsheetWorkbook = Record<string, unknown>
+
+/** A document version whose `content` is an opaque workbook rather than a TipTap doc. */
+export interface SpreadsheetVersion extends Omit<DocumentVersion, 'content'> {
+  content: SpreadsheetWorkbook | null
+}
+
 /** A resumable-upload session (`UploadSessionResource`). */
 export type UploadProtocol = 'tus' | 's3' | (string & {})
 
