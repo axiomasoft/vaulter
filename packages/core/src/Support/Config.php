@@ -19,12 +19,6 @@ use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Documents\Document;
-use Vaulter\Models\Documents\DocumentComment;
-use Vaulter\Models\Documents\DocumentFolder;
-use Vaulter\Models\Documents\DocumentPermission;
-use Vaulter\Models\Documents\DocumentShare;
-use Vaulter\Models\Documents\DocumentVersion;
 use Vaulter\Models\Documents\NodeComment;
 use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Models\Drive\File;
@@ -48,72 +42,6 @@ use Vaulter\Panels\StoragePanelProvider;
  */
 final class Config
 {
-    /**
-     * @return class-string<Document>
-     */
-    public static function documentModel(): string
-    {
-        /** @var class-string<Document> $class */
-        $class = config('vaulter.models.document', Document::class);
-
-        return $class;
-    }
-
-    /**
-     * @return class-string<DocumentVersion>
-     */
-    public static function versionModel(): string
-    {
-        /** @var class-string<DocumentVersion> $class */
-        $class = config('vaulter.models.version', DocumentVersion::class);
-
-        return $class;
-    }
-
-    /**
-     * @return class-string<DocumentFolder>
-     */
-    public static function folderModel(): string
-    {
-        /** @var class-string<DocumentFolder> $class */
-        $class = config('vaulter.models.folder', DocumentFolder::class);
-
-        return $class;
-    }
-
-    /**
-     * @return class-string<DocumentPermission>
-     */
-    public static function permissionModel(): string
-    {
-        /** @var class-string<DocumentPermission> $class */
-        $class = config('vaulter.models.permission', DocumentPermission::class);
-
-        return $class;
-    }
-
-    /**
-     * @return class-string<DocumentComment>
-     */
-    public static function commentModel(): string
-    {
-        /** @var class-string<DocumentComment> $class */
-        $class = config('vaulter.models.comment', DocumentComment::class);
-
-        return $class;
-    }
-
-    /**
-     * @return class-string<DocumentShare>
-     */
-    public static function shareModel(): string
-    {
-        /** @var class-string<DocumentShare> $class */
-        $class = config('vaulter.models.share', DocumentShare::class);
-
-        return $class;
-    }
-
     /**
      * @return class-string<Storage>
      */
@@ -181,8 +109,8 @@ final class Config
     }
 
     /**
-     * The NEW node-attached document-version model (§2.5 / M4a) — distinct from the
-     * legacy document_id-attached versionModel(). Swappable via
+     * The node-attached document-version model (§2.5 / M4a) — the canonical version
+     * history on kind=document nodes. Swappable via
      * config('vaulter.models.node_document_version').
      *
      * @return class-string<NodeDocumentVersion>
@@ -245,8 +173,8 @@ final class Config
     }
 
     /**
-     * The NODE-attached comment model (ADR-0014 шаг 1), distinct from the legacy
-     * document_id-attached {@see commentModel()}.
+     * The NODE-attached comment model (ADR-0014) — the canonical comment surface
+     * (v_node_comments) after the legacy document_id-bound path was excised.
      *
      * @return class-string<NodeComment>
      */
@@ -865,21 +793,6 @@ final class Config
         $value = config('vaulter.collaboration.drivers.hocuspocus.url');
 
         return is_string($value) && $value !== '' ? $value : null;
-    }
-
-    /**
-     * @return class-string|null
-     */
-    public static function permissionResolverClass(): ?string
-    {
-        $class = config('vaulter.permission_resolver');
-
-        if (!is_string($class) || $class === '') {
-            return null;
-        }
-
-        /** @var class-string $class */
-        return $class;
     }
 
     /**

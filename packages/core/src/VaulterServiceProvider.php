@@ -28,11 +28,9 @@ use Vaulter\Console\RelayOutboxCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Console\SweepUploadsCommand;
 use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Contracts\Access\PermissionResolver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Contracts\Collaboration\CollaborationDriver;
 use Vaulter\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Documents\DocumentHandlerRegistry;
@@ -116,12 +114,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->app->singleton(ContentStore::class, Config::contentStoreClass());
         $this->app->bind(BlobStore::class, Config::blobStoreClass());
 
-        $resolverClass = Config::permissionResolverClass();
-
-        if ($resolverClass !== null) {
-            $this->app->bind(PermissionResolver::class, $resolverClass);
-        }
-
         // Drive ACL (M2a / H.2): the host-role driver manager resolves the
         // configured HostRoleDriver (default 'database'), keyed per driver-key, and
         // enforces the null-driver fail-loud guard in production (D6″). The
@@ -139,11 +131,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->app->bind(
             HostRoleDriver::class,
             fn (): HostRoleDriver => $this->app->make(HostRoleDriverManager::class)->driver(),
-        );
-
-        $this->app->bind(
-            CollaborationDriver::class,
-            fn (): CollaborationDriver => $this->app->make(VaulterManager::class)->driver(),
         );
 
         // The host-user resolver seam (M4b): the collaboration webhook resolves the
@@ -264,35 +251,24 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     /**
      * Authorize the private collaboration room channel (channel_prefix.{id}). The
-     * room id is a NODE id (M4b) or, for the legacy v_documents path, a Document id —
-     * both share the channel_prefix. We try the node path first when the
-     * 'document_versions' feature is on: a kind=document node authorizes through the
+     * room id is a NODE id (M4b): a kind=document node authorizes through the
      * Vaulter-owned AccessResolver (Ability::View to connect at all; read-only vs
-     * writable is encoded in the issued session, not the channel). When no node
-     * resolves we fall back to the legacy Document-bound driver, so both editors keep
-     * working over one channel. The Reverb transport authenticates the socket here;
-     * there is no separate room token.
+     * writable is encoded in the issued session, not the channel). Gated on the
+     * 'document_versions' feature. The Reverb transport authenticates the socket
+     * here; there is no separate room token.
      */
     private function registerBroadcastChannel(): void
     {
         Broadcast::channel(
             Config::channelPrefix().'.{roomId}',
-            static function (Authenticatable $user, int|string $roomId): bool {
-                if (Config::featureEnabled('document_versions')
-                    && self::authorizeNodeRoom($user, $roomId)
-                ) {
-                    return true;
-                }
-
-                return self::authorizeDocumentRoom($user, $roomId);
-            },
+            static fn (Authenticatable $user, int|string $roomId): bool => Config::featureEnabled('document_versions')
+                && self::authorizeNodeRoom($user, $roomId),
         );
     }
 
     /**
      * Authorize a node room: the id resolves to a kind=document node the actor may at
-     * least View through the AccessResolver. Returns false (not a hard deny of the
-     * whole channel) when the id is not a document node, so the legacy fallback runs.
+     * least View through the AccessResolver.
      */
     private static function authorizeNodeRoom(Authenticatable $user, int|string $roomId): bool
     {
@@ -308,21 +284,5 @@ final class VaulterServiceProvider extends PackageServiceProvider
         }
 
         return app(AccessResolver::class)->can($user, Ability::View, $node);
-    }
-
-    /**
-     * Authorize the legacy v_documents room (the document_id-attached path): delegate
-     * to the legacy Document-bound collaboration driver's channel check.
-     */
-    private static function authorizeDocumentRoom(Authenticatable $user, int|string $roomId): bool
-    {
-        $model = Config::documentModel();
-        $document = $model::query()->find($roomId);
-
-        if ($document === null) {
-            return false;
-        }
-
-        return app(VaulterManager::class)->driver()->authorizeChannel($user, $document);
     }
 }

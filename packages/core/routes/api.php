@@ -5,10 +5,6 @@ declare(strict_types=1);
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Http\Controllers\Activity\ActivityController;
-use Vaulter\Http\Controllers\BulkDocumentController;
-use Vaulter\Http\Controllers\CollaborationController;
-use Vaulter\Http\Controllers\CommentController;
-use Vaulter\Http\Controllers\DocumentController;
 use Vaulter\Http\Controllers\Drive\DocumentNodeController;
 use Vaulter\Http\Controllers\Drive\DownloadController;
 use Vaulter\Http\Controllers\Drive\GrantController;
@@ -16,15 +12,10 @@ use Vaulter\Http\Controllers\Drive\NodeCollaborationController;
 use Vaulter\Http\Controllers\Drive\NodeCommentController;
 use Vaulter\Http\Controllers\Drive\NodeController;
 use Vaulter\Http\Controllers\Drive\StorageController;
-use Vaulter\Http\Controllers\ExportController;
-use Vaulter\Http\Controllers\FolderController;
-use Vaulter\Http\Controllers\PermissionController;
-use Vaulter\Http\Controllers\ShareController;
 use Vaulter\Http\Controllers\Sharing\PublicShareController;
 use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
 use Vaulter\Http\Controllers\Uploads\S3MultipartController;
 use Vaulter\Http\Controllers\Uploads\TusUploadController;
-use Vaulter\Http\Controllers\VersionController;
 use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
 use Vaulter\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Http\Middleware\ResolveShareToken;
@@ -40,52 +31,6 @@ use Vaulter\Support\Config;
 Route::prefix(Config::routePrefix())
     ->middleware(Config::middleware())
     ->group(static function (): void {
-        // Documents
-        Route::get('documents', [DocumentController::class, 'index']); // supports ?q= search
-        Route::get('documents/trash', [DocumentController::class, 'trash']); // before /{id}
-        Route::post('documents/bulk', BulkDocumentController::class);
-        Route::post('documents', [DocumentController::class, 'store']);
-        Route::get('documents/{id}', [DocumentController::class, 'show']);
-        Route::patch('documents/{id}', [DocumentController::class, 'update']);
-        Route::delete('documents/{id}', [DocumentController::class, 'destroy']);
-        Route::delete('documents/{id}/force', [DocumentController::class, 'forceDestroy']);
-        Route::post('documents/{id}/restore', [DocumentController::class, 'restore']);
-        Route::patch('documents/{id}/move', [DocumentController::class, 'move']);
-        Route::post('documents/{id}/duplicate', [DocumentController::class, 'duplicate']);
-        Route::get('documents/{documentId}/export', [ExportController::class, 'show']);
-
-        // Versions
-        Route::get('documents/{documentId}/versions', [VersionController::class, 'index']);
-        Route::post('documents/{documentId}/versions', [VersionController::class, 'store']);
-        Route::post('documents/{documentId}/versions/{versionId}/restore', [VersionController::class, 'restore']);
-
-        // Permissions
-        Route::get('documents/{documentId}/permissions', [PermissionController::class, 'index']);
-        Route::post('documents/{documentId}/permissions', [PermissionController::class, 'store']);
-        Route::delete('documents/{documentId}/permissions/{permissionId}', [PermissionController::class, 'destroy']);
-
-        // Comments
-        Route::get('documents/{documentId}/comments', [CommentController::class, 'index']);
-        Route::post('documents/{documentId}/comments', [CommentController::class, 'store']);
-        Route::post('documents/{documentId}/comments/{commentId}/resolve', [CommentController::class, 'resolve']);
-        Route::delete('documents/{documentId}/comments/{commentId}', [CommentController::class, 'destroy']);
-
-        // Share links
-        Route::get('documents/{documentId}/shares', [ShareController::class, 'index']);
-        Route::post('documents/{documentId}/shares', [ShareController::class, 'store']);
-        Route::delete('documents/{documentId}/shares/{shareId}', [ShareController::class, 'destroy']);
-        Route::get('shares/{token}', [ShareController::class, 'resolve']);
-
-        // Collaboration
-        Route::post('documents/{documentId}/collab/token', [CollaborationController::class, 'token']);
-        Route::post('documents/{documentId}/collab/sync', [CollaborationController::class, 'sync']);
-
-        // Folders
-        Route::get('folders', [FolderController::class, 'index']);
-        Route::post('folders', [FolderController::class, 'store']);
-        Route::patch('folders/{id}', [FolderController::class, 'update']);
-        Route::delete('folders/{id}', [FolderController::class, 'destroy']);
-
         /*
         |----------------------------------------------------------------------
         | Drive (M1c) — the unified v_nodes file/folder tree

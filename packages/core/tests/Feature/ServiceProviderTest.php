@@ -20,14 +20,13 @@ it('registers the API routes', function (): void {
         ->map(fn ($route): string => $route->uri());
 
     expect($uris)
-        ->toContain('api/vaulter/documents')
-        ->toContain('api/vaulter/documents/{documentId}/versions')
-        ->toContain('api/vaulter/folders');
+        ->toContain('api/vaulter/storages/{storage}')
+        ->toContain('api/vaulter/storages/{storage}/nodes')
+        ->toContain('api/vaulter/nodes/{node}');
 });
 
 it('exposes the Vaulter facade', function (): void {
     Vaulter::registerDocumentType('spreadsheet', ['label' => 'Spreadsheet']);
 
-    expect(Vaulter::documentTypes())->toHaveKey('spreadsheet')
-        ->and(Vaulter::permissionResolver())->toBeNull();
+    expect(Vaulter::documentTypes())->toHaveKey('spreadsheet');
 });
