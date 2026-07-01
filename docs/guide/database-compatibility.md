@@ -62,23 +62,14 @@ Node- and document-name search is **case-folded** (`lower(col) like lower(?)`), 
 matches regardless of case on every engine — including Postgres, whose `like` is
 case-sensitive (unlike SQLite/MySQL). No configuration needed.
 
-## Known limitation — Spatie role grants on a typed key
+## Spatie role grants and the typed subject key
 
-If you use the optional [`spatie` permission driver](/guide/permission-drivers), be aware of
-one edge on strict databases:
-
-The Spatie driver identifies **role** subjects by their **name** (e.g. `editor`). A node grant
-addressed to a role therefore stores that name in `v_node_grants.subject_id` — a column typed
-to your id strategy. Under **`bigint` or `uuid7`**, Postgres (and MySQL) reject a non-numeric /
-non-uuid value, so **role-based node grants fail on those strategies**. They work on:
-
-- **SQLite** (loose typing), or
-- the **`ulid`** strategy (`char(26)` tolerates a short string), or
-- direct **user/permission** grants (unaffected — only role-*name* subjects hit this).
-
-If you need role-based node grants on Postgres, use the `ulid` strategy or the default
-`database` driver. This is a property of name-keyed role subjects on a typed `subject_id`
-column, not a bug in the resolver.
+If you use the optional [`spatie` permission driver](/guide/permission-drivers): a node grant
+addressed to a spatie **role** stores that role's **primary key** in `v_node_grants.subject_id`
+— the same typed handle every subject uses (a user's key, a team's key). So role grants fit the
+typed `subject_id` column and work on **every database and every id strategy**, exactly like
+user and permission grants. Address a role grant by the role's key (`$role->getKey()`), not its
+name.
 
 ## Running your own tests on Postgres
 

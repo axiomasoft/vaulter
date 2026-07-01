@@ -223,9 +223,12 @@ final class SpatiePermissionResolver implements HostRoleDriver
     }
 
     /**
-     * The actor's spatie role keys, used to build role Subjects. Reads getRoleNames()
-     * (the role names are the grant subject ids hosts address). Restores nothing —
-     * a read of the roles relation is side-effect free.
+     * The actor's spatie role keys, used to build role Subjects. Reads the role model
+     * PRIMARY KEYS — the same handle every other subject uses (a user's key, a team's
+     * key), so a role grant's subject_id fits the typed id-strategy column on strict
+     * databases (a role NAME would be rejected by a bigint/uuid subject_id on Postgres
+     * or MySQL). The `roles` relation is the SAME team-scoped collection getRoleNames()
+     * reads, so team isolation is preserved; the read is side-effect free.
      *
      * @return list<int|string>
      */
@@ -235,13 +238,15 @@ final class SpatiePermissionResolver implements HostRoleDriver
             return [];
         }
 
-        /** @var iterable<int|string> $names */
-        $names = $actor->getRoleNames();
+        /** @var iterable<Model> $roles */
+        $roles = $actor->roles;
 
         $keys = [];
 
-        foreach ($names as $name) {
-            $keys[] = $name;
+        foreach ($roles as $role) {
+            /** @var int|string $key */
+            $key = $role->getKey();
+            $keys[] = $key;
         }
 
         return $keys;

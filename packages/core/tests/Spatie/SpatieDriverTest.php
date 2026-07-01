@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -80,15 +79,16 @@ it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', func
     $role = Role::findOrCreate('editor', 'web');
     $user->assignRole($role);
 
-    // The driver expands the actor into role Subjects; a grant addressed to that role
-    // must therefore resolve through the AccessResolver.
+    // The driver expands the actor into role Subjects keyed by the role's PRIMARY KEY
+    // (the same handle every subject uses); a grant addressed to that role must therefore
+    // resolve through the AccessResolver.
     $subjects = (new SpatiePermissionResolver)->subjectsFor($user);
     $roleSubjects = array_values(array_filter($subjects, fn (Subject $s): bool => $s->type === 'role'));
 
     expect($roleSubjects)->toHaveCount(1)
-        ->and($roleSubjects[0]->id)->toBe('editor');
+        ->and($roleSubjects[0]->id)->toBe($role->getKey());
 
-    // Now wire a grant to that role on a node and confirm the resolver allows it.
+    // Now wire a grant to that role (by its key) on a node and confirm the resolver allows it.
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'role-granted');
 
@@ -96,20 +96,12 @@ it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', func
         $folder,
         GrantLevel::Writer,
         scope: GrantScope::Item,
-        subjectId: 'editor',
+        subjectId: $role->getKey(),
         subjectType: 'role',
     );
 
     expect(app(AccessResolver::class)->can($user, Ability::Edit, $folder))->toBeTrue();
-})->skip(
-    // The spatie driver keys role subjects by NAME (subjectsFor returns id='editor'), so a
-    // role grant stores that name in v_node_grants.subject_id. That column is the id-strategy
-    // type — under bigint (the base suite) a strict database rejects a non-numeric name; it
-    // only rides through on SQLite's loose typing (a char/ulid subject_id would tolerate it).
-    // A real limitation of name-keyed role grants on a typed subject_id, not a harness snag.
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'name-keyed spatie role grants need a string-compatible subject_id; bigint (base) rejects it on strict DBs.',
-);
+});
 
 it('isolates two teams — a permission in team A does not leak into team B', function (): void {
     $user = spatieUser();
@@ -232,7 +224,7 @@ it('expires a time-boxed role grant at read time', function (): void {
         $folder,
         GrantLevel::Writer,
         scope: GrantScope::Item,
-        subjectId: 'temp',
+        subjectId: $role->getKey(),
         subjectType: 'role',
         expiresAt: Carbon::now()->subHour(),
     );
@@ -241,9 +233,4 @@ it('expires a time-boxed role grant at read time', function (): void {
     expect(app(AccessResolver::class)->can($user, Ability::Edit, $folder))->toBeFalse();
 
     Carbon::setTestNow();
-})->skip(
-    // As above: a name-keyed role grant ('temp') stored in the typed bigint subject_id is
-    // rejected by a strict database; SQLite's loose typing is the only reason it inserts.
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'name-keyed spatie role grants need a string-compatible subject_id; bigint (base) rejects it on strict DBs.',
-);
+});
