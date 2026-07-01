@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Cas\BlobStore as DefaultBlobStore;
-use Vaulter\Cas\FlysystemStorageDriver;
-use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -813,14 +810,16 @@ final class Config
      */
     public static function contentStoreClass(): string
     {
-        $class = config('vaulter.cas.content_store', Sha256ContentStore::class);
+        $class = config('vaulter.cas.content_store');
 
         if (is_string($class) && is_a($class, ContentStore::class, allow_string: true)) {
             /** @var class-string<ContentStore> $class */
             return $class;
         }
 
-        return Sha256ContentStore::class;
+        throw new \RuntimeException(
+            'CAS content store not configured — install axioma-studio/vaulter-media (it owns the vaulter.cas.content_store default).',
+        );
     }
 
     /**
@@ -830,14 +829,16 @@ final class Config
      */
     public static function storageDriverClass(): string
     {
-        $class = config('vaulter.cas.storage_driver', FlysystemStorageDriver::class);
+        $class = config('vaulter.cas.storage_driver');
 
         if (is_string($class) && is_a($class, StorageDriver::class, allow_string: true)) {
             /** @var class-string<StorageDriver> $class */
             return $class;
         }
 
-        return FlysystemStorageDriver::class;
+        throw new \RuntimeException(
+            'CAS storage driver not configured — install axioma-studio/vaulter-media (it owns the vaulter.cas.storage_driver default).',
+        );
     }
 
     /**
@@ -847,14 +848,16 @@ final class Config
      */
     public static function blobStoreClass(): string
     {
-        $class = config('vaulter.cas.blob_store', DefaultBlobStore::class);
+        $class = config('vaulter.cas.blob_store');
 
         if (is_string($class) && is_a($class, BlobStore::class, allow_string: true)) {
             /** @var class-string<BlobStore> $class */
             return $class;
         }
 
-        return DefaultBlobStore::class;
+        throw new \RuntimeException(
+            'CAS blob store not configured — install axioma-studio/vaulter-media (it owns the vaulter.cas.blob_store default).',
+        );
     }
 
     /**

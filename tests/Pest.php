@@ -19,7 +19,6 @@ $core = dirname(__DIR__).'/packages/core/tests';
 uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Access',
     $core.'/Activity',
-    $core.'/Cas',
     $core.'/Drive',
     $core.'/Feature',
     $core.'/Panels',

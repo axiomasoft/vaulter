@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": "^8.4",
-        "axioma-studio/vaulter-core": "@dev"
+        "axioma-studio/vaulter-core": "@dev",
+        "axioma-studio/vaulter-media": "@dev"
     },
     "require-dev": {
         "laravel/pint": "^1.13",

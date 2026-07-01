@@ -140,15 +140,15 @@ jobs:
       # One step per TestCase schema (each pest process migrate:fresh's its own schema on
       # the shared database). The DB_* coordinates come from the job-level env above.
 
-      # base TestCase — HTTP surface, ACL, schema, CAS (advisory-xact-lock / FOR UPDATE /
-      # SERIALIZABLE / orphan prune), webhooks, uploads, the v_activity jsonb gin index,
-      # and the case-folded document search.
+      # base TestCase — HTTP surface, ACL, schema, webhooks, uploads, the v_activity
+      # jsonb gin index, and the case-folded document search. The CAS Postgres lane
+      # (advisory-xact-lock / FOR UPDATE / SERIALIZABLE / orphan prune) moved to the
+      # vaulter-media package with the engine — see .github/workflows/media.yml.
       - name: 'Postgres: base TestCase suite'
         run: >-
           vendor/bin/pest --ci
           packages/core/tests/Access
           packages/core/tests/Activity
-          packages/core/tests/Cas
           packages/core/tests/Drive
           packages/core/tests/Feature
           packages/core/tests/Panels

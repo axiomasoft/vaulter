@@ -6,6 +6,7 @@ namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
@@ -18,6 +19,10 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             VaulterServiceProvider::class,
+            // The CAS engine (ContentStore/StorageDriver/BlobStore) lives in the
+            // vaulter-media package (P2 #5); the core Drive upload/download/copy
+            // suites resolve those bindings through its provider.
+            VaulterMediaServiceProvider::class,
         ];
     }
 

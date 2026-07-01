@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Cas\BlobStore;
-use Vaulter\Cas\FlysystemStorageDriver;
-use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Handlers\TipTapHandler;
@@ -372,16 +369,13 @@ return [
     |--------------------------------------------------------------------------
     | Content-addressed blob store (CAS, M1b / H.3)
     |--------------------------------------------------------------------------
-    | The swappable CAS services. Point any of these at your own FQCN to change
-    | how bytes are staged/hashed/promoted, which Flysystem disk holds the
-    | canonical objects, or the high-level blob lifecycle. All three are bound in
-    | the provider and resolved through the container (config-cache safe).
+    | The swappable CAS engine (content_store / storage_driver / blob_store) is
+    | OWNED by the axioma-studio/vaulter-media package (P2 #5, D2/D3): its provider
+    | merges the concrete-class defaults under this same `vaulter.cas.*` key, so a
+    | host keeps reading/overriding config('vaulter.cas.content_store') etc. with
+    | no path change. The dedup/gc/storage knobs below stay in core because the
+    | v_blobs SCHEMA (core-owned) reads dedup.scope regardless of that package.
     */
-    'cas' => [
-        'content_store' => Sha256ContentStore::class,
-        'storage_driver' => FlysystemStorageDriver::class,
-        'blob_store' => BlobStore::class,
-    ],
 
     /*
     |--------------------------------------------------------------------------

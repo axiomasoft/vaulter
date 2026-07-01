@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "hint_template": "[intent-router] bias (non-authoritative): top={name} score={score}{runners}",
+  "commands": [
+    {
+      "name": "/task:design",
+      "weight": 1,
+      "keywords": [
+        "спроектир",
+        "проектир",
+        "дизайн",
+        "архитектур",
+        "design",
+        "architecture",
+        "adr",
+        "распланируй",
+        "продумай",
+        "схему",
+        "модель данных",
+        "concept"
+      ]
+    },
+    {
+      "name": "/task:dev",
+      "weight": 1,
+      "keywords": [
+        "сделай",
+        "добавь",
+        "реализуй",
+        "построй",
+        "напиши",
+        "внедри",
+        "build",
+        "implement",
+        "feature",
+        "фича",
+        "эндпоинт",
+        "endpoint",
+        "команду",
+        "миграци",
+        "интеграци"
+      ]
+    },
+    {
+      "name": "/task:research",
+      "weight": 1,
+      "keywords": [
+        "исследуй",
+        "research",
+        "сравни",
+        "compare",
+        "разузнай",
+        "investigate",
+        "актуально",
+        "best practice",
+        "варианты",
+        "какой лучше",
+        "изучи"
+      ]
+    },
+    {
+      "name": "/task:review",
+      "weight": 1,
+      "keywords": [
+        "ревью",
+        "отревьюй",
+        "review",
+        "audit",
+        "аудит",
+        "diff",
+        "pr",
+        "проверь код",
+        "code review",
+        "посмотри дифф"
+      ]
+    },
+    {
+      "name": "/task:fix",
+      "weight": 1,
+      "keywords": [
+        "почини",
+        "fix",
+        "баг",
+        "bug",
+        "опечатк",
+        "typo",
+        "поправь",
+        "мелкая правка",
+        "small fix",
+        "сломал"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "name": "@vaulter-contribution-reviewer",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "внешнем",
+        "vaulter",
+        "нужен",
+        "ревью",
+        "уважением",
+        "времени",
+        "контрибьютора",
+        "severity-градация",
+        "находок",
+        "проверка",
+        "формата"
+      ]
+    },
+    {
+      "name": "@vaulter-issue-triager",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "входящем",
+        "потоке",
+        "vaulter",
+        "накопились",
+        "новые",
+        "issues",
+        "надо",
+        "затриажить",
+        "классифицировать",
+        "bug",
+        "feature"
+      ]
+    },
+    {
+      "name": "@vaulter-release-conductor",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "пора",
+        "выпустить",
+        "релиз",
+        "vaulter",
+        "определить",
+        "версию",
+        "semver",
+        "собрать",
+        "changelog",
+        "мерженных",
+        "заранее"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "skill:ecosystem-mcp",
+      "weight": 1,
+      "keywords": [
+        "mcp-инструменты",
+        "доступны",
+        "этом",
+        "проекте",
+        "agent-memory",
+        "общая",
+        "память",
+        "контекст",
+        "экосистемы",
+        "serena",
+        "граф",
+        "кода"
+      ]
+    },
+    {
+      "name": "skill:ecosystem-setup",
+      "weight": 1,
+      "keywords": [
+        "настраивать",
+        "перенастраивать",
+        "этот",
+        "проект",
+        "экосистемы",
+        "academici",
+        "дерево",
+        "решений",
+        "тулинга",
+        "скиллы",
+        "плагины",
+        "память"
+      ]
+    }
+  ]
+}

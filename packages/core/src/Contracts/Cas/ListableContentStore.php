@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
-use Vaulter\Cas\BlobReconciler;
-use Vaulter\Cas\Sha256ContentStore;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 
 /**
  * A capability a {@see ContentStore} implements to declare it can ENUMERATE stored
  * objects and report their age (master plan P4 #11 / H.3) — the consumer seam the
- * orphan disk-walk ({@see BlobReconciler::sweepOrphans()}) walks to
+ * orphan disk-walk (the CAS reconciler's sweepOrphans, in vaulter-media) walks to
  * find bytes that have no blob row.
  *
  * This is deliberately a SEPARATE capability, not extra methods on the public
@@ -19,7 +17,7 @@ use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
  * adding to that contract would be a hard BC break for every external implementation.
  * A store opts IN by implementing this; its ABSENCE is the conservative, BC-safe
  * default — the orphan walk then refuses cleanly (listing reported unsupported and
- * skipped, never a fatal error). The standalone {@see Sha256ContentStore}
+ * skipped, never a fatal error). The standalone sha256 content store (vaulter-media)
  * implements it, delegating to the underlying driver only when that driver is itself
  * a {@see ListableStorageDriver} (otherwise it too reports no listing capability).
  */

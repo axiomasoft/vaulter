@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "packs": {
+    "role-maintainer": {
+      "version": "0.2.0",
+      "source": "harness:configs/claude-code/agent-packs/role-maintainer",
+      "answers": {
+        "PACK_PREFIX": "vaulter"
+      },
+      "files": [
+        {
+          "src": "agents/issue-triager.md",
+          "target": ".claude/agents/vaulter-issue-triager.md",
+          "kind": "template",
+          "base_sha256": "76a43b22f0d6ee407f70530b2ba7d133a802a1805908740e90318d584e67b59f",
+          "local_modified": false
+        },
+        {
+          "src": "agents/contribution-reviewer.md",
+          "target": ".claude/agents/vaulter-contribution-reviewer.md",
+          "kind": "template",
+          "base_sha256": "e275a2467eb8880e0d2cbea2913a4acbd43267fea41942fb96005d932de7d417",
+          "local_modified": false
+        },
+        {
+          "src": "agents/release-conductor.md",
+          "target": ".claude/agents/vaulter-release-conductor.md",
+          "kind": "template",
+          "base_sha256": "4a83653b1cecfcb14c33b7f08f938702a858ede9cd8e4fd0a2484924d5e12453",
+          "local_modified": false
+        }
+      ],
+      "removed_optional": []
+    }
+  }
+}
