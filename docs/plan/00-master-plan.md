@@ -1,5 +1,11 @@
 # Vaulter — план разработки платформы виртуального хранилища (монорепо)
 
+> **Примечание (пост-факт):** этот документ — decision-лог допереименования. Упоминаемый ниже
+> рабочий нейминг **DocDrive** — то же самое, что впоследствии вышло под именем пакета
+> `axioma-studio/vaulter-documents` (namespace **Vaulter Documents**). Актуальное имя и историю
+> переименования см. в `CHANGELOG.md`; тело документа ниже не переписано намеренно (исторический
+> протокол решений).
+
 > Статус: рабочий план для пошаговой реализации (chatom-уровень детализации). Postgres-first, MySQL-портируемо. Заземлён на: текущий код `v_*` Vaulter, эталонный пакет **chatom** (механика панелей/схемы/id-стратегий), и поколоночное исследование Nextcloud/ownCloud, Google Drive, Seafile/Git/Dropbox/S3.
 >
 > Зонтичный бренд: **Vaulter**. Диск: **Vaulter Drive**. Движок документов: **DocDrive**. Файловый слой: **Vaulter Media** (standalone). После реализации этот файл мигрирует в `docs/` (VitePress), а `docs/plan/` удаляется — см. §8.
@@ -50,7 +56,7 @@
 
 ### P2 — Релиз и упаковка
 4. **Активировать release-pipeline.** 🟡 **КОД-ЧАСТЬ ГОТОВА** — осталось внешнее (владелец). Сделано в репо: `monorepo-split.yml` (matrix `core`+`filament`+**`permissions-azgard`**, danharrin/monorepo-split pinned-by-SHA, tag-triggered, prereqs в шапке), `release-npm.yml` (Changesets + OIDC provenance для `@vaulter/vue`, root-scripts `build/version/release` есть), первый changeset `.changeset/initial-release.md` + `CHANGELOG.md` (re-platform #20 + новые подсистемы/пакеты), Packagist-метаданные выровнены (`support`+`branch-alias dev-main→0.1.x-dev` на filament/permissions-azgard, `vaulter-core: "*"`→**`self.version`** — Filament-паттерн: на CI path-repo core = `dev-<sha>` detached-HEAD, `^0.1` бы не сматчился, а `self.version` трекает версию самого сателлита; на Packagist = точный lockstep-пин `0.1.0`; core уже полн), npm publish-метаданные `@vaulter/vue` (`publishConfig.access=public+provenance`, `repository.directory`, `homepage`/`bugs`/`keywords`/`sideEffects`). **RELEASE-ЧЕКЛИСТ ВЛАДЕЛЬЦА (нельзя из репо):** (1) создать пустые split-репо `axioma-studio/vaulter-{core,filament,permissions-azgard}`; (2) org/repo-secret `GH_ACCESS_TOKEN` (PAT `repo`-scope) + `NPM_TOKEN`; (3) Packagist-регистрация на СПЛИТ-репо (не монорепо), причём для `vaulter-permissions-azgard` держать `axioma-studio/azguard-core ^0.2` резолвимым на Packagist (path-repo у него dev-only, консюмерам не мешает); (4) npm publish access на scope `@vaulter`; (5) прогнать первый релиз: смёржить «Version Packages» PR (npm) и `git tag v0.1.0 && git push --tags` (PHP-split); (6) собрать+запушить `ghcr.io/axioma-studio/vaulter-hocuspocus:<ver>` (workflow `hocuspocus-image.yml`, см. Addendum A). Инвариант соблюдён: AzGuard-исходники не трогали, ядро azgard-free.
-5. **Физический split пакетов (опц., Option B).** Вынести `vaulter-media` (CAS + per-file ACL, standalone — владелец это хотел как переиспользуемый), затем `vaulter-drive`/`vaulter-docdrive` из core в отдельные composer-пакеты (path-repo + свои composer.json + ServiceProvider). Сейчас всё в `packages/core/src/{Cas,Drive,Documents,…}` под namespace — извлечение механическое. Добавить per-package CI-джобы.
+5. **Физический split пакетов (опц., Option B).** `vaulter-media` (CAS) — ✅ **ИЗВЛЕЧЁН** (PR #42, `docs/plan/p2-5-vaulter-media-extraction.md`). Дальше `vaulter-drive`/`vaulter-docdrive`. **Целевая топология зафиксирована → `docs/plan/p2-5-option-b-topology.md` (ADR-0015):** core = kernel + единый владелец схемы (Node/дерево/все `v_*`/storage-core-модели/ACL/Sharing/Activity остаются); `vaulter-drive` = файл/upload-поведение (requires core+media), `vaulter-docdrive` = документный движок (requires только core); `PanelTablesBuilder` НЕ режется; фазы Kernel-harden → Drive → DocDrive. `filament` остаётся core-only.
 6. **`vaulter-medialibrary-bridge`** (опц.) — входной мост: импорт spatie/laravel-medialibrary media → v_nodes/v_blobs. Не построен.
 
 ### P3 — Документация

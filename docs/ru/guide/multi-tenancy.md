@@ -61,7 +61,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ::: tip
 Флаг `tenant.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и
 миграции. Сам Vaulter читает его лишь для того, чтобы решить, применять ли опциональную
-колонку на таблицах **легаси-DocDrive** (`Vaulter\Support\VaulterSchema::tenant()` условный);
+колонку на таблицах **легаси-DocVault** (`Vaulter\Support\VaulterSchema::tenant()` условный);
 современные таблицы Drive выпускают колонку безусловно, как объяснено выше.
 :::
 
@@ -100,11 +100,11 @@ $storage = $this->store->create([
 ```
 
 Если хотите заполнять `tenant_id`, ваша подставленная модель `Storage` должна его ставить.
-Дальше он распространяется автоматически: `Vaulter\Actions\Drive\UploadFileAction` читает его
+Дальше он распространяется автоматически: `Vaulter\Drive\Actions\UploadFileAction` читает его
 прямо со строки хранилища и передаёт в blob store:
 
 ```php
-// Vaulter\Actions\Drive\UploadFileAction
+// Vaulter\Drive\Actions\UploadFileAction
 $blob = $this->blobs->commit(
     stream:    $data->stream,
     tenantId:  $data->storage->tenant_id,   // ← со строки хранилища, заполнено хостом

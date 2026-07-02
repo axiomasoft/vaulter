@@ -23,26 +23,28 @@ php artisan vendor:publish --tag=vaulter-config
 
 ```php
 'models' => [
-    // Легаси DocDrive (путь, привязанный к document_id)
-    'document'   => \Vaulter\Models\Documents\Document::class,
-    'version'    => \Vaulter\Models\Documents\DocumentVersion::class,
-    'folder'     => \Vaulter\Models\Documents\DocumentFolder::class,
-    'permission' => \Vaulter\Models\Documents\DocumentPermission::class,
-    'comment'    => \Vaulter\Models\Documents\DocumentComment::class,
-    'share'      => \Vaulter\Models\Documents\DocumentShare::class,
-
-    // Vaulter Drive
+    // Сущности Vaulter Drive
     'storage'    => \Vaulter\Models\Drive\Storage::class,
     'node'       => \Vaulter\Models\Drive\Node::class,
     'file'       => \Vaulter\Models\Drive\File::class,
     'blob'       => \Vaulter\Models\Cas\Blob::class,
     'grant'      => \Vaulter\Models\Access\NodeGrant::class,
     'node_share' => \Vaulter\Models\Sharing\NodeShare::class,
-    // …а также file_version, file_version_blob, node_document_version,
-    //    upload_session, upload_part, activity, outbox, webhook_endpoint,
-    //    webhook_delivery
+    // …а также file_version, file_version_blob, activity, outbox,
+    //    webhook_endpoint, webhook_delivery
 ],
 ```
+
+::: info Модели, которыми владеют Drive/Documents
+`upload_session` / `upload_part` принадлежат `axioma-studio/vaulter-drive`; модели
+`node_comment` / `node_document_version`, привязанные к узлу, принадлежат
+`axioma-studio/vaulter-documents`. Ни одна из них не поставляет значение по умолчанию
+здесь — каждый пакет мержит свою запись через собственный
+`config/vaulter-drive.php` / `config/vaulter-documents.php` и бросает исключение при
+резолве без установленного пакета. Легаси-модели, привязанные к `document_id`
+(`document`, `version`, `folder`, `permission`, `comment`, `share`), были полностью
+исключены — см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
+:::
 
 Vaulter route-биндит `{storage}` и `{node}` к тому, что здесь указано, поэтому наследник хоста
 продолжает резолвиться.
@@ -185,9 +187,9 @@ Drive ACL комбинирует собственный `AccessResolver` со **
 
 ```php
 'cas' => [
-    'content_store'  => \Vaulter\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Cas\BlobStore::class,
+    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
 ],
 
 'dedup' => [

@@ -11,12 +11,17 @@ into an existing application — it brings a Google-Drive-style file manager, a 
 editor with version history, and realtime collaboration — and it delegates every
 authorization decision back to your app's own role system.
 
-Vaulter ships as two packages:
+Vaulter ships as a set of packages — install the ones your app needs:
 
-- **`axioma-studio/vaulter-core`** — the Laravel package (models, REST API, CAS, ACL, Artisan commands).
+- **`axioma-studio/vaulter-core`** — the shared kernel (authorization, CAS contracts, sharing,
+  panels, Artisan commands). Required by every other backend package.
+- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::for()` / `DriveContext`.
+  Pulls in `axioma-studio/vaulter-media` (the CAS engine) automatically.
+- **`axioma-studio/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
 
-A Filament 5 admin plugin (`axioma-studio/vaulter-filament`) is available separately.
+A Filament 5 admin plugin (`axioma-studio/vaulter-filament`) is available separately. See
+[Installation](/guide/installation) for the exact `composer require` per feature set.
 
 ## Is it for me?
 

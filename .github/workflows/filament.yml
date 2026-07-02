@@ -45,3 +45,7 @@ jobs:
       - name: Tests (Pest)
         working-directory: packages/filament
         run: vendor/bin/pest --ci
+
+      - name: Type coverage (100%)
+        working-directory: packages/filament
+        run: vendor/bin/pest --type-coverage --min=100

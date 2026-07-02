@@ -11,7 +11,6 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
-use Vaulter\Events\Drive\NodeCreated;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Activity\Activity;
@@ -249,7 +248,7 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     $recorder = app(ActivityRecorder::class);
 
     Activity::query()->delete();
-    $recorder->recordNodeCreated(new NodeCreated(node: $node, actorId: 7));
+    $recorder->recordForNode(verb: ActivityVerb::NodeCreated, node: $node, actorId: 7);
 
     $row = Activity::query()->firstOrFail();
 

@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Documents;
 
 use Vaulter\Contracts\Documents\DocumentContent;
-use Vaulter\Documents\Handlers\UniverHandler;
 
 /**
  * A document version payload the core stores VERBATIM, without imposing the TipTap
- * shape (§7 level 2). Used by non-rich-text handlers — e.g. the spreadsheet
- * {@see UniverHandler}, whose content is a Univer workbook
- * snapshot, not a `{"type":"doc"}` document. The core never interprets it; it round-
- * trips the JSON and hashes it for autosave dedup.
+ * shape (§7 level 2). Used by non-rich-text handlers — e.g. the vaulter-documents
+ * spreadsheet handler, whose content is a Univer workbook snapshot, not a
+ * `{"type":"doc"}` document. The core never interprets it; it round-trips the JSON
+ * and hashes it for autosave dedup.
  */
 final readonly class OpaqueDocumentContent implements DocumentContent
 {

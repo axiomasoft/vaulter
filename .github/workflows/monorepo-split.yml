@@ -8,8 +8,8 @@ name: Monorepo split (PHP)
 #
 # PREREQUISITES (one-time, NOT done here):
 #   1. Create the empty target repos: axioma-studio/vaulter-core, axioma-studio/vaulter-media,
-#      axioma-studio/vaulter-filament, axioma-studio/vaulter-permissions-azgard (and, later,
-#      vaulter-drive / vaulter-docdrive as those packages land).
+#      axioma-studio/vaulter-drive, axioma-studio/vaulter-documents, axioma-studio/vaulter-filament,
+#      axioma-studio/vaulter-permissions-azgard.
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
 #   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-permissions-azgard
@@ -33,10 +33,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Extend with drive / docdrive as those packages are extracted.
         package:
           - core
           - media
+          - drive
+          - documents
           - filament
           - permissions-azgard
 

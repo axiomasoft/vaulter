@@ -4,7 +4,7 @@
 
 ## Context
 
-Vaulter ships both PHP packages (`vaulter-core`, `-media`, `-drive`, `-docdrive`,
+Vaulter ships both PHP packages (`vaulter-core`, `-media`, `-drive`, `-documents`,
 `-filament`) and npm packages (`@vaulter/vue`, later `@vaulter/client`) from one
 repository. The two ecosystems version and publish on different cadences and to
 different registries (Packagist vs npm), so a single release flow cannot serve both.

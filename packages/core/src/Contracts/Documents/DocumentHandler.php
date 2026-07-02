@@ -13,7 +13,7 @@ use Vaulter\ValueObjects\Documents\HandlerUi;
  * (master plan §4.5 / §7 / H.5). A handler claims a set of mime types (exact or
  * wildcards like "image/*") and/or extensions, declares its capabilities and its
  * front-end mount descriptor per file, and the {@see
- * \Vaulter\Documents\DocumentHandlerRegistry} resolves the best one for a
+ * \Vaulter\Documents\Documents\DocumentHandlerRegistry} resolves the best one for a
  * FileDescriptor.
  *
  * Adding a NEW format is a ONE-CLASS + register operation: implement this interface

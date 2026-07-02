@@ -11,12 +11,17 @@ outline: deep
 Drive, редактор документов на TipTap с историей версий и совместное редактирование в реальном
 времени — а все решения об авторизации делегирует обратно вашей системе ролей.
 
-Vaulter поставляется двумя пакетами:
+Vaulter поставляется набором пакетов — подключайте те, что нужны вашему приложению:
 
-- **`axioma-studio/vaulter-core`** — Laravel-пакет (модели, REST API, CAS, ACL, Artisan-команды).
+- **`axioma-studio/vaulter-core`** — общее ядро (авторизация, контракты CAS, sharing, панели,
+  Artisan-команды). Требуется для любого другого backend-пакета.
+- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::for()` / `DriveContext`.
+  Автоматически подтягивает `axioma-studio/vaulter-media` (движок CAS).
+- **`axioma-studio/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
 
-Админ-плагин для Filament 5 (`axioma-studio/vaulter-filament`) поставляется отдельно.
+Админ-плагин для Filament 5 (`axioma-studio/vaulter-filament`) поставляется отдельно. Точные
+команды `composer require` под нужный набор функций — в [Установке](/ru/guide/installation).
 
 ## Подойдёт ли мне?
 

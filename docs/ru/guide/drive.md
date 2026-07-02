@@ -323,16 +323,16 @@ $children = $drive->list($folder);          // содержимое папки
 
 | Событие | Диспетчится |
 |---|---|
-| `Vaulter\Events\Drive\StorageCreated` | первый провижининг хранилища |
-| `Vaulter\Events\Drive\NodeCreated` | `createFolder()` |
-| `Vaulter\Events\Drive\FileUploaded` | `upload()` (новый файл) |
-| `Vaulter\Events\Drive\NodeVersionCommitted` | `uploadVersion()` / резюмируемый коммит |
-| `Vaulter\Events\Drive\NodeMoved` | `move()` |
-| `Vaulter\Events\Drive\NodeRenamed` | `rename()` |
-| `Vaulter\Events\Drive\NodeCopied` | `copy()` |
-| `Vaulter\Events\Drive\NodeTrashed` | `trash()` |
-| `Vaulter\Events\Drive\NodeRestored` | `restore()` |
-| `Vaulter\Events\Drive\NodeForceDeleted` | `forceDelete()` |
+| `Vaulter\Drive\Events\StorageCreated` | первый провижининг хранилища |
+| `Vaulter\Drive\Events\NodeCreated` | `createFolder()` |
+| `Vaulter\Drive\Events\FileUploaded` | `upload()` (новый файл) |
+| `Vaulter\Drive\Events\NodeVersionCommitted` | `uploadVersion()` / резюмируемый коммит |
+| `Vaulter\Drive\Events\NodeMoved` | `move()` |
+| `Vaulter\Drive\Events\NodeRenamed` | `rename()` |
+| `Vaulter\Drive\Events\NodeCopied` | `copy()` |
+| `Vaulter\Drive\Events\NodeTrashed` | `trash()` |
+| `Vaulter\Drive\Events\NodeRestored` | `restore()` |
+| `Vaulter\Drive\Events\NodeForceDeleted` | `forceDelete()` |
 
 Полные полезные нагрузки — в [справочнике событий](/ru/reference/events).
 

@@ -266,7 +266,7 @@ bytes are streamed straight off the storage driver (never buffered in memory) wi
 
 ---
 
-## Document nodes (DocDrive)
+## Document nodes (Documents)
 
 Rich-text/Yjs document nodes (`DocumentNodeController`). **Gated on the
 `document_versions` feature.** See [Editing](/guide/documents) and
@@ -704,7 +704,7 @@ Every action is gated by the `WebhookEndpointPolicy` manage ability. See
 
 The pre-Drive document surface (`DocumentController` and friends) remains mounted
 for backward compatibility. New integrations should prefer the
-[Drive](#drive) and [document-node](#document-nodes-docdrive) routes above.
+[Drive](#drive) and [document-node](#document-nodes-documents) routes above.
 
 ### Documents
 

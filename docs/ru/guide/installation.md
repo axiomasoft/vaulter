@@ -17,11 +17,21 @@ PHP `^8.4`, Laravel `^12.0 || ^13.0` и (для UI) Vue `^3.4` / Node `>=20`. П
 
 ## 1. Бэкенд — Laravel-пакет
 
-Подключите core-пакет:
+Сам по себе `axioma-studio/vaulter-core` не даёт ни Drive, ни функций редактирования
+документов — это общее ядро (авторизация, контракты CAS, sharing, панели). Подключите
+именно те пакеты, которые нужны вашему приложению:
 
 ```bash
-composer require axioma-studio/vaulter-core
+# Drive (папки/файлы/загрузки) — автоматически подтягивает axioma-studio/vaulter-media (CAS)
+composer require axioma-studio/vaulter-drive
+
+# Документные узлы (редактирование TipTap/Yjs, версии, комментарии) — не зависит от Drive
+composer require axioma-studio/vaulter-documents
 ```
+
+Любая из команд также подтянет `axioma-studio/vaulter-core` как зависимость, поэтому
+установка одного `axioma-studio/vaulter-core` имеет смысл только если вы планируете сами
+реализовать все доменные контракты без Drive и Documents.
 
 Затем выполните встроенную команду установки — она публикует конфиг, публикует миграции и
 предлагает их запустить:

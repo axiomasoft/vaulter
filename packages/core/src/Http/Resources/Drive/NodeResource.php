@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Documents\NodeHandlerResolver;
+use Vaulter\Contracts\Documents\NodeHandlerResolver;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 
@@ -112,11 +112,16 @@ final class NodeResource extends JsonResource
      * for a folder. Resolved lazily via the container so the Resource stays a pure
      * transform and only computes it when serialising a leaf.
      *
+     * The {@see NodeHandlerResolver} contract is bound by vaulter-documents (P2 #5):
+     * a host running Drive WITHOUT documents still lists/serializes file nodes through
+     * this same resource, so an absent binding degrades to null rather than throwing
+     * — the format-handler surface is documents's addition, not a Drive requirement.
+     *
      * @return array<string, mixed>|null
      */
     private function handler(Node $node): ?array
     {
-        if ($node->kind === NodeKind::Folder) {
+        if ($node->kind === NodeKind::Folder || !app()->bound(NodeHandlerResolver::class)) {
             return null;
         }
 

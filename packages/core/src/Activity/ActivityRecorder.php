@@ -9,16 +9,6 @@ use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
-use Vaulter\Events\Drive\FileUploaded;
-use Vaulter\Events\Drive\NodeCopied;
-use Vaulter\Events\Drive\NodeCreated;
-use Vaulter\Events\Drive\NodeForceDeleted;
-use Vaulter\Events\Drive\NodeMoved;
-use Vaulter\Events\Drive\NodeRenamed;
-use Vaulter\Events\Drive\NodeRestored;
-use Vaulter\Events\Drive\NodeTrashed;
-use Vaulter\Events\Drive\NodeVersionCommitted;
-use Vaulter\Events\Drive\StorageCreated;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Activity\Activity;
@@ -33,11 +23,17 @@ use Vaulter\Support\RequestContext;
  * (verb, actor, target morph, storage, context) and hands it to the
  * ActivityStoreRepository.
  *
- * The actor is taken from the event payload (every Drive event carries the acting
- * user's id) with a fallback to the authenticated host user; the actor MORPH TYPE
- * comes from that authenticated user. ip / user-agent / request-id are captured
- * from the current request via {@see RequestContext}, degrading to null off the
- * HTTP lifecycle (console/queue).
+ * Kernel domains (Access grants, Sharing links) map their own events here; the Drive
+ * behaviour package (P2 #5 / ADR-0015) maps its file/folder/upload events through the
+ * PUBLIC {@see record()} / {@see recordForNode()} seam — core no longer references any
+ * Vaulter\Drive\Events\* class, so the audit feed keeps its identical one-row contract
+ * whether or not vaulter-drive is installed.
+ *
+ * The actor is taken from the event payload (every Drive/kernel event carries the
+ * acting user's id) with a fallback to the authenticated host user; the actor MORPH
+ * TYPE comes from that authenticated user. ip / user-agent / request-id are captured
+ * from the current request via {@see RequestContext}, degrading to null off the HTTP
+ * lifecycle (console/queue).
  *
  * This is the anti-NC-fan-out core (§1.5): ONE row per event, never a per-affected-
  * user fan-out. Recipients are resolved at READ by scoping the feed.
@@ -48,158 +44,11 @@ final readonly class ActivityRecorder
         private ActivityStoreRepository $store,
     ) {}
 
-    /**
-     * Record the storage.created event: the disk root was provisioned. The target
-     * is the storage's root folder node; the storage scope is the storage itself.
-     */
-    public function recordStorageCreated(StorageCreated $event): Activity
-    {
-        return $this->write(
-            verb: ActivityVerb::StorageCreated,
-            storageId: Identity::key($event->storage->getKey()),
-            tenantId: $event->storage->tenant_id,
-            actorId: $event->actorId,
-            target: $event->root,
-            context: [
-                'storage_id' => Identity::stringify($event->storage->getKey()),
-                'owner_type' => $event->storage->owner_type,
-                'owner_id' => Identity::stringify($event->storage->owner_id),
-                'name' => $event->storage->name,
-            ],
-        );
-    }
-
-    public function recordNodeCreated(NodeCreated $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeCreated,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'kind' => $event->node->kind->value,
-                'name' => $event->node->name,
-                'parent_id' => Identity::stringify($event->node->parent_id),
-            ],
-        );
-    }
-
-    public function recordFileUploaded(FileUploaded $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::FileUploaded,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'name' => $event->node->name,
-                'size_bytes' => $event->version->size_bytes,
-                'mime_type' => $event->version->mime_type,
-                'version_id' => Identity::stringify($event->version->getKey()),
-            ],
-        );
-    }
-
-    public function recordVersionCommitted(NodeVersionCommitted $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::VersionCreated,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'version_no' => $event->versionNo,
-                'version_id' => Identity::stringify($event->version->getKey()),
-                'size_bytes' => $event->version->size_bytes,
-            ],
-        );
-    }
-
-    public function recordNodeMoved(NodeMoved $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeMoved,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'from_parent_id' => Identity::stringify($event->fromParentId),
-                'to_parent_id' => Identity::stringify($event->toParentId),
-            ],
-        );
-    }
-
-    public function recordNodeRenamed(NodeRenamed $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeRenamed,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'from' => $event->fromName,
-                'to' => $event->toName,
-            ],
-        );
-    }
-
-    public function recordNodeCopied(NodeCopied $event): Activity
-    {
-        // The target is the NEW copy; the source is recorded in context.
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeCopied,
-            node: $event->copy,
-            actorId: $event->actorId,
-            context: [
-                'source_id' => Identity::stringify($event->source->getKey()),
-                'name' => $event->copy->name,
-            ],
-        );
-    }
-
-    public function recordNodeTrashed(NodeTrashed $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeTrashed,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'name' => $event->node->name,
-            ],
-        );
-    }
-
-    public function recordNodeRestored(NodeRestored $event): Activity
-    {
-        return $this->writeForNode(
-            verb: ActivityVerb::NodeRestored,
-            node: $event->node,
-            actorId: $event->actorId,
-            context: [
-                'name' => $event->node->name,
-                'parent_id' => Identity::stringify($event->node->parent_id),
-            ],
-        );
-    }
-
-    /**
-     * Record the node.force_deleted event. The node objects are gone, so there is
-     * no target model: the storage scope plus the deleted ids + freed bytes travel
-     * in the context (the row is the only surviving trace).
-     */
-    public function recordNodeForceDeleted(NodeForceDeleted $event): Activity
-    {
-        return $this->write(
-            verb: ActivityVerb::NodeForceDeleted,
-            storageId: $event->storageId,
-            actorId: $event->actorId,
-            context: [
-                'node_ids' => array_map(Identity::stringify(...), $event->nodeIds),
-                'freed_bytes' => $event->freedBytes,
-            ],
-        );
-    }
-
     public function recordGrantCreated(NodeGrantCreated $event): Activity
     {
         $node = $event->grant->node;
 
-        return $this->write(
+        return $this->record(
             verb: ActivityVerb::GrantCreated,
             storageId: $node->storage_id,
             tenantId: $event->grant->tenant_id,
@@ -218,7 +67,7 @@ final readonly class ActivityRecorder
 
     public function recordGrantRevoked(NodeGrantRevoked $event): Activity
     {
-        return $this->writeForNode(
+        return $this->recordForNode(
             verb: ActivityVerb::GrantRevoked,
             node: $event->node,
             actorId: $event->actorId,
@@ -234,7 +83,7 @@ final readonly class ActivityRecorder
     {
         $node = $event->share->node;
 
-        return $this->write(
+        return $this->record(
             verb: ActivityVerb::ShareCreated,
             storageId: $node->storage_id,
             tenantId: $event->share->tenant_id,
@@ -254,7 +103,7 @@ final readonly class ActivityRecorder
     {
         $node = $event->share->node;
 
-        return $this->write(
+        return $this->record(
             verb: ActivityVerb::ShareRevoked,
             storageId: $node->storage_id,
             tenantId: $event->share->tenant_id,
@@ -269,17 +118,18 @@ final readonly class ActivityRecorder
 
     /**
      * Build + persist a row whose target is a node (the common Drive case): the
-     * storage scope and tenant are read from the node.
+     * storage scope and tenant are read from the node. This is the PUBLIC seam the
+     * vaulter-drive event subscriber maps its node events through.
      *
      * @param array<string, mixed>|null $context
      */
-    private function writeForNode(
+    public function recordForNode(
         ActivityVerb $verb,
         Node $node,
         int|string|null $actorId,
         ?array $context = null,
     ): Activity {
-        return $this->write(
+        return $this->record(
             verb: $verb,
             storageId: $node->storage_id,
             tenantId: $node->tenant_id,
@@ -290,11 +140,14 @@ final readonly class ActivityRecorder
     }
 
     /**
-     * Resolve the actor morph + request context, then persist EXACTLY ONE row.
+     * Resolve the actor morph + request context, then persist EXACTLY ONE row. The
+     * PUBLIC low-level seam: callers that have no node target (storage.created — the
+     * target is the root folder; node.force_deleted — the nodes are gone) pass the
+     * scope scalars + optional target model directly.
      *
      * @param array<string, mixed>|null $context
      */
-    private function write(
+    public function record(
         ActivityVerb $verb,
         int|string|null $storageId = null,
         int|string|null $tenantId = null,

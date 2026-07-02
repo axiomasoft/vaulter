@@ -6,7 +6,7 @@ namespace Vaulter\ValueObjects\Documents;
 
 /**
  * The immutable description of a file the {@see
- * \Vaulter\Documents\DocumentHandlerRegistry} resolves a handler for (master plan
+ * \Vaulter\Documents\Documents\DocumentHandlerRegistry} resolves a handler for (master plan
  * §4.5). It carries everything the registry needs to route — the claimed (client)
  * mime, the server-SNIFFED detected mime, the extension and size — WITHOUT touching
  * the bytes or the database.

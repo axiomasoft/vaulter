@@ -1,6 +1,6 @@
 ---
 title: Document Nodes
-description: Create, edit and version document nodes — TipTap content, autosave vs named versions, restore and prune — over the DocDrive REST surface.
+description: Create, edit and version document nodes — TipTap content, autosave vs named versions, restore and prune — over the Documents REST surface.
 outline: deep
 ---
 
@@ -20,7 +20,7 @@ HTML/Markdown, see [Export](./export.md).
 
 ::: warning Opt-in feature
 The document-node surface is gated on the **`document_versions`** feature flag, which is
-**off by default**. The `v_node_document_versions` table is only created and the DocDrive
+**off by default**. The `v_node_document_versions` table is only created and the Documents
 routes are only registered when it is on:
 
 ```php
@@ -30,7 +30,7 @@ routes are only registered when it is on:
 ],
 ```
 
-With the flag off, `Vaulter\Models\Documents\NodeDocumentVersion` has no table and the
+With the flag off, `Vaulter\Documents\Models\NodeDocumentVersion` has no table and the
 `storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions`
 routes do not exist.
 :::
@@ -78,7 +78,7 @@ version, atomically. Content is a TipTap document wrapped in
 ::: code-group
 
 ```php [PHP — the Action]
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
 use Vaulter\Data\CreateDocumentNodeData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -223,7 +223,7 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Actions\Documents\UpdateDocumentContentAction;
+use Vaulter\Documents\Actions\UpdateDocumentContentAction;
 use Vaulter\Data\UpdateDocumentContentData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -271,7 +271,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Actions\Documents\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\CreateNamedVersionAction;
 use Vaulter\Data\CreateNamedVersionData;
 
 app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
@@ -349,7 +349,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Actions\Documents\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
 
 app(RestoreDocumentVersionAction::class)->execute(
     node:      $node,
@@ -401,9 +401,9 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Event | Fired by | Payload |
 |---|---|---|
-| `Events\Documents\DocumentNodeCreated` | create | `node`, `version` (v1), `actorId` |
-| `Events\Documents\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
-| `Events\Documents\DocumentVersionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\DocumentNodeCreated` | create | `node`, `version` (v1), `actorId` |
+| `Vaulter\Documents\Events\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
+| `Vaulter\Documents\Events\DocumentVersionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Errors
 

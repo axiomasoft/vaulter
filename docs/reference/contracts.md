@@ -37,7 +37,7 @@ signatures and the binding point you swap it through.
 
 ### `Vaulter\Contracts\Access\PermissionResolver` {#access-permission-resolver}
 
-The host-implemented hook for the **legacy DocDrive document path**. Bind it via
+The host-implemented hook for the **legacy DocVault document path**. Bind it via
 `config('vaulter.permission_resolver')` (FQCN) or
 `Vaulter::resolvePermissionsWith()`. The Drive ACL uses `HostRoleDriver` instead —
 this resolver is the older document-centric lane.

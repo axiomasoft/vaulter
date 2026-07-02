@@ -16,12 +16,12 @@ Two delivery contracts are in play:
 - **`ShouldDispatchAfterCommit`** — the event only fires once the surrounding DB
   transaction commits (no listener acts on a row that gets rolled back). This is the
   vast majority of Vaulter events.
-- **`ShouldBroadcast`** — the event is also broadcast to a realtime channel. Only two
-  events broadcast (both in the Documents domain): `CommentAdded` and
-  `DocumentContentSynced`.
+- **`ShouldBroadcast`** — the event is also broadcast to a realtime channel. Only the
+  node-comment events broadcast (all in the Documents domain): `NodeCommentAdded`,
+  `NodeCommentResolved`, `NodeCommentDeleted`.
 
 ```php
-use Vaulter\Events\Drive\FileUploaded;
+use Vaulter\Drive\Events\FileUploaded;
 
 Event::listen(function (FileUploaded $event): void {
     // $event->node, $event->file, $event->version, $event->actorId
@@ -44,57 +44,50 @@ All `ShouldDispatchAfterCommit`.
 |---|---|
 | `NodeGrantCreated` | `NodeGrant $grant, int\|string\|null $actorId = null` |
 | `NodeGrantRevoked` | `Node $node, Subject $subject, int $revoked, int\|string\|null $actorId = null` |
-| `PermissionGranted` | `DocumentPermission $permission, int\|string\|null $actorId = null` |
-| `PermissionRevoked` | `Document $document, string $subjectType, int\|string $subjectId, int\|string\|null $actorId = null` |
 
 - `NodeGrantCreated` / `NodeGrantRevoked` — the **Drive ACL** grants (`v_node_grants`).
   `$revoked` is the count of grant rows removed.
-- `PermissionGranted` / `PermissionRevoked` — the **legacy** document permissions.
 
-## Documents — `Vaulter\Events\Documents`
+## Documents — `Vaulter\Documents\Events` (requires `axioma-studio/vaulter-documents`)
 
 | Event | Broadcasts? | Constructor payload |
 |---|---|---|
-| `CommentAdded` | **Yes** (`ShouldBroadcast`) | `DocumentComment $comment` |
-| `CommentResolved` | After commit | `DocumentComment $comment, int\|string\|null $actorId = null` |
-| `DocumentContentSynced` | **Yes** (`ShouldBroadcast`) | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | After commit | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentCreated` | After commit | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentDeleted` | After commit | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentMoved` | After commit | `Document $document, int\|string\|null $folderId = null, int\|string\|null $actorId = null` |
 | `DocumentNodeCreated` | After commit | `Node $node, NodeDocumentVersion $version, int\|string\|null $actorId = null` |
-| `DocumentPurged` | After commit | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentRestored` | After commit | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentUpdated` | After commit | `Document $document, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | After commit | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
 | `DocumentVersionCreated` | After commit | `Node $node, NodeDocumentVersion $version, bool $restored = false, int\|string\|null $actorId = null` |
-| `VersionCreated` | After commit | `DocumentVersion $version, int\|string\|null $actorId = null` |
-| `VersionRestored` | After commit | `Document $document, DocumentVersion $version, int\|string\|null $actorId = null` |
+| `NodeCommentAdded` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment` |
+| `NodeCommentResolved` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `NodeCommentDeleted` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 
-::: info Node path vs legacy path
-`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` operate on
-the **node** path (`Node` + `NodeDocumentVersion`). `DocumentCreated`,
-`DocumentUpdated`, `VersionCreated`, `VersionRestored`, etc. operate on the **legacy**
-`Document`/`DocumentVersion` path.
+::: info Node-attached path
+`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` operate on the
+**node-attached** document path (`Node` + `NodeDocumentVersion`, gated on the
+`document_versions` feature). The `NodeComment*` events cover the node-comment threads
+(ADR-0014). Vaulter has no other document-events domain — the earlier document-id-attached
+DocVault events were fully excised (ADR-0014).
 :::
 
 ### Broadcast details
 
-Both broadcasting events publish to a `PrivateChannel` named
-`{collaboration.channel_prefix}.{documentId}` (default prefix `vaulter.documents`).
+All three `NodeComment*` events publish to a `PrivateChannel` named
+`{collaboration.channel_prefix}.{nodeId}` (default prefix `vaulter.documents`) — the
+same room open editors join for collaboration.
 
 | Event | `broadcastAs()` | `broadcastWith()` keys |
 |---|---|---|
-| `CommentAdded` | `comment.added` | `id`, `document_id`, `parent_id`, `body`, `created_at` |
-| `DocumentContentSynced` | `content.synced` | `document_id`, `actor_id`, `updated_at` |
+| `NodeCommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
+| `NodeCommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
+| `NodeCommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
 
 ```php
 // Echo-side listener (front-end)
-Echo.private(`vaulter.documents.${documentId}`)
-    .listen('.comment.added', (e) => { /* … */ })
-    .listen('.content.synced', (e) => { /* … */ })
+Echo.private(`vaulter.documents.${nodeId}`)
+    .listen('.node-comment.added', (e) => { /* … */ })
+    .listen('.node-comment.resolved', (e) => { /* … */ })
+    .listen('.node-comment.deleted', (e) => { /* … */ })
 ```
 
-## Drive — `Vaulter\Events\Drive`
+## Drive — `Vaulter\Drive\Events` (requires `axioma-studio/vaulter-drive`)
 
 All `ShouldDispatchAfterCommit`.
 
@@ -125,13 +118,11 @@ All `ShouldDispatchAfterCommit`.
 |---|---|
 | `NodeShareCreated` | `NodeShare $share, int\|string\|null $actorId = null` |
 | `NodeShareRevoked` | `NodeShare $share, int\|string\|null $actorId = null` |
-| `ShareLinkCreated` | `DocumentShare $share, int\|string\|null $actorId = null` |
-| `ShareLinkRevoked` | `Document $document, int\|string\|null $actorId = null` |
 
-- `NodeShare*` — the **bearer node share-link** channel (`v_node_shares`).
-- `ShareLink*` — the **legacy** document-share channel (`v_document_shares`).
+- `NodeShare*` — the **bearer node share-link** channel (`v_node_shares`); this is the
+  only sharing channel Vaulter ships today (see [ADR-0013](/adr/0013-two-sharing-channels)).
 
-See [Usage → Sharing](/guide/sharing) for the two channels.
+See [Usage → Sharing](/guide/sharing).
 
 ---
 

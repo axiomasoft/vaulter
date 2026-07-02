@@ -33,16 +33,19 @@
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
+        "axioma-studio/vaulter-drive": "self.version",
+        "axioma-studio/vaulter-media": "self.version",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
         "spatie/laravel-permission": "^8.0"
     },
     "suggest": {
-        "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0).",
         "spatie/laravel-permission": "Required only when using the 'spatie' host-role driver (^8.0).",
         "axioma-studio/vaulter-filament": "Filament admin UI for documents, folders and permissions.",
-        "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning."
+        "axioma-studio/vaulter-media": "Content-addressed file/blob layer (CAS): the concrete ContentStore/StorageDriver/BlobStore engine behind the Contracts\\Cas seam. Required for Drive file upload/download/versioning.",
+        "axioma-studio/vaulter-drive": "File/folder tree behaviour + resumable uploads: StorageManager, the DriveHandle factory, PurgeTrash/SweepUploads. Required for Vaulter::for()/forStorage() and the Drive REST surface.",
+        "axioma-studio/vaulter-documents": "Document-node behaviour: the format-handler registry, TipTap/export engines and real-time collaboration (Hocuspocus JWT minting needs firebase/php-jwt ^6.0). Required for Vaulter::registerHandler()/registerExporter() and the document REST surface."
     },
     "autoload": {
         "psr-4": {
@@ -68,6 +71,22 @@
             "dev-main": "0.1.x-dev"
         }
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../drive",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../media",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {

@@ -151,17 +151,17 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
         return true;
     }
 
-    public function assignScopedRole(string|Role $role, Model $entity): static
+    public function assignScopedRole(string|Role $role, Model $entity, ?string $panelId = null): static
     {
         return $this;
     }
 
-    public function removeScopedRole(string|Role $role, Model $entity): static
+    public function removeScopedRole(string|Role $role, Model $entity, ?string $panelId = null): static
     {
         return $this;
     }
 
-    public function hasScopedRole(string|Role $role, Model $entity): bool
+    public function hasScopedRole(string|Role $role, Model $entity, ?string $panelId = null): bool
     {
         return false;
     }

@@ -19,8 +19,10 @@ use Illuminate\Foundation\Application;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
+use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Filament\Tests\Fixtures\TestPanelProvider;
 use Vaulter\Filament\VaulterFilamentServiceProvider;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
@@ -49,7 +51,15 @@ abstract class TestCase extends OrchestraTestCase
             FilamentServiceProvider::class,
 
             // Vaulter core + this package, then the test panel that mounts the plugin.
+            // Filament stays core-only in production (T-invariant, verified by 0 refs to
+            // Drive/Documents classes) — but the resource-test FIXTURES build nodes via
+            // Vaulter::for(), which needs the drive package's DriveHandleFactory bound
+            // (P2 #5 / ADR-0015, D1). Media is a transitive need: DriveContext eagerly
+            // constructs every Drive Action, including UploadFileAction, which needs
+            // Contracts\Cas\BlobStore even though these tests never actually upload.
             VaulterServiceProvider::class,
+            VaulterMediaServiceProvider::class,
+            VaulterDriveServiceProvider::class,
             VaulterFilamentServiceProvider::class,
             TestPanelProvider::class,
         ];

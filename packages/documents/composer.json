@@ -1,0 +1,96 @@
+{
+    "name": "axioma-studio/vaulter-documents",
+    "description": "Documents behaviour for Vaulter — TipTap document editing, version history and real-time collaboration over the vaulter-core kernel.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "documents", "tiptap", "collaboration", "yjs", "versioning", "editor", "vaulter"],
+    "homepage": "https://github.com/axioma-studio/vaulter",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/axioma-studio/vaulter/issues",
+        "source": "https://github.com/axioma-studio/vaulter"
+    },
+    "require": {
+        "php": "^8.4",
+        "axioma-studio/vaulter-core": "self.version",
+        "spatie/laravel-package-tools": "^1.92"
+    },
+    "suggest": {
+        "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^6.0)."
+    },
+    "require-dev": {
+        "axioma-studio/vaulter-drive": "self.version",
+        "axioma-studio/vaulter-media": "self.version",
+        "firebase/php-jwt": "^6.0",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vaulter\\Documents\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Vaulter\\Documents\\Tests\\": "tests/",
+            "Vaulter\\Tests\\": "../core/tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vaulter\\Documents\\VaulterDocumentsServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../core",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../drive",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../media",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test:types": "vendor/bin/pest --type-coverage --min=100",
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"
+    }
+}

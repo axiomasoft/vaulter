@@ -6,17 +6,17 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Models\NodeDocumentVersion;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Document\DocumentTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Провайдер e2e-стенда realtime-коллаборации (P1.1 мастер-плана).
@@ -113,10 +113,22 @@ final class E2eServiceProvider extends ServiceProvider
             $drive = Vaulter::for($host);
             $storage = $drive->storage();
 
+            $content = TipTapContent::fromArray([
+                'type' => 'doc',
+                'content' => [
+                    [
+                        'type' => 'paragraph',
+                        'content' => [
+                            ['type' => 'text', 'text' => 'Hello from setup'],
+                        ],
+                    ],
+                ],
+            ]);
+
             $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
                 storage: $storage,
                 name: 'E2E Spec',
-                content: DocumentTestHelpers::content('Hello from setup'),
+                content: $content,
                 parent: $drive->root(),
             ));
 

@@ -17,10 +17,11 @@ Vaulter диспетчеризует события Laravel по четырём 
   транзакция БД зафиксирована (ни один слушатель не отработает над строкой, которую потом
   откатят). Это подавляющее большинство событий Vaulter.
 - **`ShouldBroadcast`** — событие вдобавок транслируется в realtime-канал. Транслируются
-  только два события (оба в домене Documents): `CommentAdded` и `DocumentContentSynced`.
+  только события узловых комментариев (все в домене Documents): `NodeCommentAdded`,
+  `NodeCommentResolved`, `NodeCommentDeleted`.
 
 ```php
-use Vaulter\Events\Drive\FileUploaded;
+use Vaulter\Drive\Events\FileUploaded;
 
 Event::listen(function (FileUploaded $event): void {
     // $event->node, $event->file, $event->version, $event->actorId
@@ -43,57 +44,50 @@ Event::listen(function (FileUploaded $event): void {
 |---|---|
 | `NodeGrantCreated` | `NodeGrant $grant, int\|string\|null $actorId = null` |
 | `NodeGrantRevoked` | `Node $node, Subject $subject, int $revoked, int\|string\|null $actorId = null` |
-| `PermissionGranted` | `DocumentPermission $permission, int\|string\|null $actorId = null` |
-| `PermissionRevoked` | `Document $document, string $subjectType, int\|string $subjectId, int\|string\|null $actorId = null` |
 
 - `NodeGrantCreated` / `NodeGrantRevoked` — гранты **Drive ACL** (`v_node_grants`).
   `$revoked` — число удалённых строк грантов.
-- `PermissionGranted` / `PermissionRevoked` — **легаси**-разрешения документов.
 
-## Documents — `Vaulter\Events\Documents`
+## Documents — `Vaulter\Documents\Events` (требует `axioma-studio/vaulter-documents`)
 
 | Событие | Транслируется? | Payload конструктора |
 |---|---|---|
-| `CommentAdded` | **Да** (`ShouldBroadcast`) | `DocumentComment $comment` |
-| `CommentResolved` | После коммита | `DocumentComment $comment, int\|string\|null $actorId = null` |
-| `DocumentContentSynced` | **Да** (`ShouldBroadcast`) | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | После коммита | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentCreated` | После коммита | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentDeleted` | После коммита | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentMoved` | После коммита | `Document $document, int\|string\|null $folderId = null, int\|string\|null $actorId = null` |
 | `DocumentNodeCreated` | После коммита | `Node $node, NodeDocumentVersion $version, int\|string\|null $actorId = null` |
-| `DocumentPurged` | После коммита | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentRestored` | После коммита | `Document $document, int\|string\|null $actorId = null` |
-| `DocumentUpdated` | После коммита | `Document $document, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | После коммита | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
 | `DocumentVersionCreated` | После коммита | `Node $node, NodeDocumentVersion $version, bool $restored = false, int\|string\|null $actorId = null` |
-| `VersionCreated` | После коммита | `DocumentVersion $version, int\|string\|null $actorId = null` |
-| `VersionRestored` | После коммита | `Document $document, DocumentVersion $version, int\|string\|null $actorId = null` |
+| `NodeCommentAdded` | **Да** (`ShouldBroadcast`) | `NodeComment $comment` |
+| `NodeCommentResolved` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `NodeCommentDeleted` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 
-::: info Путь узла против легаси-пути
-`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` работают на пути
-**узла** (`Node` + `NodeDocumentVersion`). `DocumentCreated`, `DocumentUpdated`,
-`VersionCreated`, `VersionRestored` и прочие работают на **легаси**-пути
-`Document`/`DocumentVersion`.
+::: info Путь, привязанный к узлу
+`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` работают на
+**узловом** пути (`Node` + `NodeDocumentVersion`, за фичей `document_versions`). События
+`NodeComment*` покрывают треды узловых комментариев (ADR-0014). У Vaulter больше нет
+других доменов документных событий — прежние события DocVault, привязанные к
+`document_id`, были полностью исключены (ADR-0014).
 :::
 
 ### Детали трансляции
 
-Оба транслирующих события публикуют в `PrivateChannel` с именем
-`{collaboration.channel_prefix}.{documentId}` (префикс по умолчанию `vaulter.documents`).
+Все три события `NodeComment*` публикуют в `PrivateChannel` с именем
+`{collaboration.channel_prefix}.{nodeId}` (префикс по умолчанию `vaulter.documents`) —
+та же комната, в которую заходят открытые редакторы для совместного редактирования.
 
 | Событие | `broadcastAs()` | Ключи `broadcastWith()` |
 |---|---|---|
-| `CommentAdded` | `comment.added` | `id`, `document_id`, `parent_id`, `body`, `created_at` |
-| `DocumentContentSynced` | `content.synced` | `document_id`, `actor_id`, `updated_at` |
+| `NodeCommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
+| `NodeCommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
+| `NodeCommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
 
 ```php
 // Слушатель на стороне Echo (фронтенд)
-Echo.private(`vaulter.documents.${documentId}`)
-    .listen('.comment.added', (e) => { /* … */ })
-    .listen('.content.synced', (e) => { /* … */ })
+Echo.private(`vaulter.documents.${nodeId}`)
+    .listen('.node-comment.added', (e) => { /* … */ })
+    .listen('.node-comment.resolved', (e) => { /* … */ })
+    .listen('.node-comment.deleted', (e) => { /* … */ })
 ```
 
-## Drive — `Vaulter\Events\Drive`
+## Drive — `Vaulter\Drive\Events` (требует `axioma-studio/vaulter-drive`)
 
 Все `ShouldDispatchAfterCommit`.
 
@@ -125,13 +119,12 @@ Echo.private(`vaulter.documents.${documentId}`)
 |---|---|
 | `NodeShareCreated` | `NodeShare $share, int\|string\|null $actorId = null` |
 | `NodeShareRevoked` | `NodeShare $share, int\|string\|null $actorId = null` |
-| `ShareLinkCreated` | `DocumentShare $share, int\|string\|null $actorId = null` |
-| `ShareLinkRevoked` | `Document $document, int\|string\|null $actorId = null` |
 
-- `NodeShare*` — канал **публичных ссылок (share) на узлы по bearer-токену** (`v_node_shares`).
-- `ShareLink*` — **легаси**-канал публикации документов (`v_document_shares`).
+- `NodeShare*` — канал **публичных ссылок (share) на узлы по bearer-токену** (`v_node_shares`);
+  это единственный канал публикации, который Vaulter поставляет сегодня (см.
+  [ADR-0013](/adr/0013-two-sharing-channels)).
 
-Про два канала см. [Использование → Публичные ссылки](/ru/guide/sharing).
+См. [Использование → Публичные ссылки](/ru/guide/sharing).
 
 ---
 

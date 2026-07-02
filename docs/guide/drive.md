@@ -316,16 +316,16 @@ Drive writes dispatch domain events you can listen to:
 
 | Event | Dispatched by |
 |---|---|
-| `Vaulter\Events\Drive\StorageCreated` | first provisioning of a storage |
-| `Vaulter\Events\Drive\NodeCreated` | `createFolder()` |
-| `Vaulter\Events\Drive\FileUploaded` | `upload()` (new file) |
-| `Vaulter\Events\Drive\NodeVersionCommitted` | `uploadVersion()` / resumable commit |
-| `Vaulter\Events\Drive\NodeMoved` | `move()` |
-| `Vaulter\Events\Drive\NodeRenamed` | `rename()` |
-| `Vaulter\Events\Drive\NodeCopied` | `copy()` |
-| `Vaulter\Events\Drive\NodeTrashed` | `trash()` |
-| `Vaulter\Events\Drive\NodeRestored` | `restore()` |
-| `Vaulter\Events\Drive\NodeForceDeleted` | `forceDelete()` |
+| `Vaulter\Drive\Events\StorageCreated` | first provisioning of a storage |
+| `Vaulter\Drive\Events\NodeCreated` | `createFolder()` |
+| `Vaulter\Drive\Events\FileUploaded` | `upload()` (new file) |
+| `Vaulter\Drive\Events\NodeVersionCommitted` | `uploadVersion()` / resumable commit |
+| `Vaulter\Drive\Events\NodeMoved` | `move()` |
+| `Vaulter\Drive\Events\NodeRenamed` | `rename()` |
+| `Vaulter\Drive\Events\NodeCopied` | `copy()` |
+| `Vaulter\Drive\Events\NodeTrashed` | `trash()` |
+| `Vaulter\Drive\Events\NodeRestored` | `restore()` |
+| `Vaulter\Drive\Events\NodeForceDeleted` | `forceDelete()` |
 
 See the full payloads in the [events reference](/reference/events).
 

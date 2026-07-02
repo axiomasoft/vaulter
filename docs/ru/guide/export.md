@@ -67,7 +67,7 @@ link** — с экранированием HTML-вывода (`htmlspecialchars`
 
 `GET {prefix}/nodes/{node}/export` рендерит head-содержимое [документного узла](./documents.md).
 Требует право (ability) `View` на узле (и узел должен быть `kind=document`). Этот маршрут —
-часть поверхности DocDrive, за фичей **`document_versions`**.
+часть поверхности Documents, за фичей **`document_versions`**.
 
 ::: code-group
 
@@ -96,7 +96,7 @@ const result = await client.documentNodes.export(nodeId, 'html')
 
 :::
 
-Ответ на экспорт узла — это `NodeDocumentExport` (`Vaulter\ValueObjects\Documents\DocumentExport`),
+Ответ на экспорт узла — это `NodeDocumentExport` (`Vaulter\Documents\ValueObjects\DocumentExport`),
 который **включает `mime_type`**:
 
 ```ts

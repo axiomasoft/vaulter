@@ -234,7 +234,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   `View` — проверяйте гранты, а не сокет. Убедитесь, что Reverb запущен и ваше соединение
   `config('broadcasting')` совпадает с
   `config('vaulter.collaboration.drivers.reverb.connection')`.
-- **Фича `document_versions`.** Авторизация комнаты узла и маршруты DocDrive монтируются только
+- **Фича `document_versions`.** Авторизация комнаты узла и маршруты Documents монтируются только
   когда включена фича `document_versions`. Если редактор так и не появляется, подтвердите:
 
   ```php

@@ -55,7 +55,8 @@ Vaulter — это строго типизированный слоистый La
    ними напрямую.
 
 Эргономичная точка входа `Vaulter::for($entity)` возвращает
-[`DriveContext`](#the-drive-handle), который оборачивает ровно этот конвейер для программного
+[`DriveContext`](#the-drive-handle) (`Vaulter\Drive\DriveContext` из пакета
+`axioma-studio/vaulter-drive`), который оборачивает ровно этот конвейер для программного
 использования.
 
 ## Слои
@@ -71,12 +72,16 @@ Action-у и сериализуют результат через Resource, ко
 (`config('vaulter.models.storage|node')`) через `Route::bind`, зарегистрированный в сервис-провайдере,
 — поэтому хост может указать в конфиге на подкласс, и связывание продолжит работать.
 
-### Actions — `Vaulter\Actions\*`
+### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Actions\*`
 
 Один use case на каждый, `final readonly`. Action открывает транзакцию, применяет бизнес-правила,
-вызывает репозитории/CAS и диспатчит доменное событие **после коммита**. Набор Drive на запись:
+вызывает репозитории/CAS и диспатчит доменное событие **после коммита**. Набор Drive на запись
+(`Vaulter\Drive\Actions\*`, требует `axioma-studio/vaulter-drive`):
 `CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, `RenameNodeAction`,
-`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`.
+`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`. Actions
+документных узлов живут в `Vaulter\Documents\Actions\*` (требует
+`axioma-studio/vaulter-documents`); сам core оставляет только
+`Vaulter\Actions\{Access,Sharing,Webhooks}\*`.
 
 ::: info Размещение авторизации
 Actions **не** выполняют никаких проверок доступа. Авторизация применяется один раз, на HTTP-границе
@@ -107,34 +112,44 @@ Vaulter никогда не ссылается на конкретный кла�
 
 ## Доменная структура
 
-Core-пакет (`axioma-studio/vaulter-core`, namespace `Vaulter\`) организован по доменам под
-`packages/core/src`:
+После извлечения пакетов P2 #5 `axioma-studio/vaulter-core` (namespace `Vaulter\`) содержит
+только сквозные швы — авторизацию, value-объекты/контракты CAS, sharing, панели, webhooks,
+активность — под `packages/core/src`; Drive и Documents теперь поставляются отдельными
+пакетами:
 
-| Директория | Ответственность |
+| Директория (core) | Ответственность |
 |---|---|
-| `Drive/` | `DriveContext` (хэндл, обращённый к хосту), `StorageManager` (находит-или-создаёт хранилище + корневой узел). |
 | `Access/` | `AccessResolver` (движок эффективных прав), `HostRoleDriverManager`, `HostUserResolver`. |
 | `Drivers/Permission/` | Поставляемые полосы `HostRoleDriver`: `database`, `gate`, `spatie`, `azgard`. |
-| `Cas/` | Контент-адресуемое хранилище: `BlobStore`, `Sha256ContentStore`, `FlysystemStorageDriver`, `BlobGarbageCollector`, `BlobReconciler`, `BlobLock`. |
-| `Documents/` | `DocumentHandlerRegistry`, резолв обработчиков, экспорт узлов, сервис сессий совместного редактирования. |
+| `Cas/` | `BlobLock` — единственный CAS-класс, оставшийся в core; сам движок хранилища переехал в `vaulter-media`. |
 | `Panels/` | Билдер `Panel`, `StoragePanelProvider`, `PanelRegistry`, `PanelTablesBuilder`, `PanelMigrationGenerator`. |
 | `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки `PanelTablesBuilder`. |
 | `Sharing/` | Канал bearer-ссылок: `ShareResolver`, `ShareContext`, `ShareResult`. |
-| `Collaboration/` | Пары драйверов Reverb / Hocuspocus + `CollaborationCallResolver`. |
-| `Uploads/` | Резюмируемые загрузки: `UploadSessionManager`, `TusUploadHandler`, `S3MultipartHandler`. |
 | `Webhooks/` | Слой надёжности: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
-| `Actions/` · `Data/` · `Events/` · `Enums/` · `Models/` · `Repositories/` | Сквозные строительные блоки, описанные в разделе [Слои](#layers). |
-| `Contracts/` | Каждый шов, обращённый к хосту (см. ниже). |
+| `Actions/` · `Data/` · `Events/` | Только Access, Sharing и Webhooks — Actions/Events Drive и Documents теперь живут в своих пакетах (см. ниже). |
+| `ValueObjects/Documents/` · `Exceptions/Documents/` | Формат-агностичные value-объекты, от которых зависят и Drive, и Documents: `TipTapContent`, `DocumentCapabilities`, `FileDescriptor`, `HandlerUi`, `InvalidTipTapContentException`. |
+| `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Documents/*` (интерфейсы, которые реализуют вынесенные пакеты). |
+| `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — общие/read-часть; свои write-модели поставляют и Drive, и Documents. |
 | `Testing/` | Заглушки, поставляемые с пакетом: `NullRoleDriver`, `FakeAzgardGuard`. |
 
-Два соседних пакета строятся поверх core: `axioma-studio/vaulter-filament` (админ-плагин для
-Filament 5, namespace `Vaulter\Filament\`) и `@vaulter/vue` (Drive UI + composable-функции).
+| Пакет | Namespace | Добавляет |
+|---|---|---|
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) и их события. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, `DocumentHandlerRegistry`, экспорт узлов, сервис сессий совместного редактирования узлов. |
+| `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
+| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
+| `@vaulter/vue` | — | Drive UI + composable-функции (npm). |
+
+Все они — соседние пакеты, строящиеся поверх `vaulter-core`; для функций Drive и
+редактирования документов нужно установить соответствующий пакет (см.
+[Установку](/ru/guide/installation)).
 
 ## Drive-хэндл
 
 `Vaulter::for($entity, panel: '…')` — основная точка входа для интеграции. Это тонкий фасад над
-`VaulterManager`:
+`VaulterManager`, возвращающий `DriveContext` из `axioma-studio/vaulter-drive` (пакет должен
+быть установлен, чтобы этот хэндл был рабочим):
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -216,11 +231,10 @@ final class ProjectDriveStoragePanel extends StoragePanelProvider
 | `v_blobs` | CAS: по одной строке на `(scope, sha256)` с жизненным циклом `BlobStatus` ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | Пер-узловой ACL с наследованием + вето-запретом. |
 | `v_node_shares` | Bearer-ссылки (share) — хранение только хеша токена ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | DocDrive: история версий документа, привязанного к узлу (за фичей `document_versions`). |
+| `v_node_document_versions` | Documents: история версий документа, привязанного к узлу (за фичей `document_versions`). |
 | `v_upload_sessions` / `v_upload_parts` | Сессии резюмируемых загрузок. |
 | `v_activity` | Append-only лента активности. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | Слой надёжности транзакционного outbox + вебхуков. |
-| `v_documents*` | **Легаси** документный путь DocDrive, оставлен для обратной совместимости. |
 
 Дерево — это **список смежности** (adjacency list): перемещение/переименование — это единственный
 `UPDATE` `parent_id` / `name` (без переписывания путей). Спуск использует рекурсивные CTE,

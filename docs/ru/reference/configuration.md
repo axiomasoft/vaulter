@@ -22,32 +22,33 @@ php artisan vendor:publish --tag=vaulter-config
 
 Сменяемые Eloquent-модели. Направьте любую запись на собственный подкласс, чтобы добавить поведение (ULID-ключи, изоляция по тенанту, аудит). Vaulter всегда резолвит модели через эту карту.
 
-| Ключ | По умолчанию |
-|---|---|
-| `models.document` | `Vaulter\Models\Documents\Document` |
-| `models.version` | `Vaulter\Models\Documents\DocumentVersion` |
-| `models.folder` | `Vaulter\Models\Documents\DocumentFolder` |
-| `models.permission` | `Vaulter\Models\Documents\DocumentPermission` |
-| `models.comment` | `Vaulter\Models\Documents\DocumentComment` |
-| `models.share` | `Vaulter\Models\Documents\DocumentShare` |
-| `models.storage` | `Vaulter\Models\Drive\Storage` |
-| `models.node` | `Vaulter\Models\Drive\Node` |
-| `models.file` | `Vaulter\Models\Drive\File` |
-| `models.file_version` | `Vaulter\Models\Drive\FileVersion` |
-| `models.blob` | `Vaulter\Models\Cas\Blob` |
-| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` |
-| `models.grant` | `Vaulter\Models\Access\NodeGrant` |
-| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` |
-| `models.node_document_version` | `Vaulter\Models\Documents\NodeDocumentVersion` |
-| `models.upload_session` | `Vaulter\Models\Uploads\UploadSession` |
-| `models.upload_part` | `Vaulter\Models\Uploads\UploadPart` |
-| `models.activity` | `Vaulter\Models\Activity\Activity` |
-| `models.outbox` | `Vaulter\Models\Webhooks\Outbox` |
-| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` |
-| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` |
+| Ключ | По умолчанию | Владелец |
+|---|---|---|
+| `models.storage` | `Vaulter\Models\Drive\Storage` | core |
+| `models.node` | `Vaulter\Models\Drive\Node` | core |
+| `models.file` | `Vaulter\Models\Drive\File` | core |
+| `models.file_version` | `Vaulter\Models\Drive\FileVersion` | core |
+| `models.blob` | `Vaulter\Models\Cas\Blob` | core |
+| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` | core |
+| `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
+| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
+| `models.upload_session` | `Vaulter\Drive\Uploads\Models\UploadSession` | `axioma-studio/vaulter-drive` |
+| `models.upload_part` | `Vaulter\Drive\Uploads\Models\UploadPart` | `axioma-studio/vaulter-drive` |
+| `models.node_comment` | `Vaulter\Documents\Models\NodeComment` | `axioma-studio/vaulter-documents` |
+| `models.node_document_version` | `Vaulter\Documents\Models\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
+| `models.activity` | `Vaulter\Models\Activity\Activity` | core |
+| `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
+| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
+| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` | core |
 
-::: info node_document_version против version
-`models.node_document_version` — это версия документа, **привязанная к узлу** (текущий путь DocDrive). `models.version` — это **легаси**-версия, привязанная к `document_id`. Это разные сущности и разные таблицы.
+::: info Модели, принадлежащие пакетам, резолвятся только когда пакет установлен
+`upload_session` / `upload_part` мержатся в `vaulter.models` пакетом
+`axioma-studio/vaulter-drive`; `node_comment` / `node_document_version` мержатся
+пакетом `axioma-studio/vaulter-documents`. Core **не** поставляет значение по
+умолчанию для этих четырёх ключей — резолв без установленного пакета-владельца
+бросает исключение. Легаси-модели, привязанные к `document_id` (`document`,
+`version`, `folder`, `permission`, `comment`, `share`), были полностью исключены —
+см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
 :::
 
 ## Имена таблиц — `table_names.*`
@@ -56,12 +57,6 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | Базовое имя по умолчанию |
 |---|---|
-| `table_names.documents` | `documents` |
-| `table_names.document_folders` | `document_folders` |
-| `table_names.document_versions` | `document_versions` |
-| `table_names.document_permissions` | `document_permissions` |
-| `table_names.document_comments` | `document_comments` |
-| `table_names.document_shares` | `document_shares` |
 | `table_names.storages` | `storages` |
 | `table_names.nodes` | `nodes` |
 | `table_names.blobs` | `blobs` |
@@ -70,6 +65,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `table_names.file_version_blobs` | `file_version_blobs` |
 | `table_names.node_grants` | `node_grants` |
 | `table_names.node_shares` | `node_shares` |
+| `table_names.node_comments` | `node_comments` |
 | `table_names.node_document_versions` | `node_document_versions` |
 | `table_names.upload_sessions` | `upload_sessions` |
 | `table_names.upload_parts` | `upload_parts` |
@@ -77,6 +73,10 @@ php artisan vendor:publish --tag=vaulter-config
 | `table_names.outbox` | `outbox` |
 | `table_names.webhook_endpoints` | `webhook_endpoints` |
 | `table_names.webhook_deliveries` | `webhook_deliveries` |
+
+Легаси-таблицы, привязанные к `document_id` (`documents`, `document_folders`,
+`document_versions`, `document_permissions`, `document_comments`, `document_shares`),
+были удалены — см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
 
 ## Первичные ключи — `id_type`, `ids.*`
 
@@ -241,9 +241,9 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | По умолчанию | Контракт |
 |---|---|---|
-| `cas.content_store` | `Vaulter\Cas\Sha256ContentStore` | `ContentStore` |
-| `cas.storage_driver` | `Vaulter\Cas\FlysystemStorageDriver` | `StorageDriver` |
-| `cas.blob_store` | `Vaulter\Cas\BlobStore` | `BlobStore` |
+| `cas.content_store` | `Vaulter\Media\Cas\Sha256ContentStore` | `ContentStore` |
+| `cas.storage_driver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | `StorageDriver` |
+| `cas.blob_store` | `Vaulter\Media\Cas\BlobStore` | `BlobStore` |
 
 ## Дедупликация — `dedup.scope`
 

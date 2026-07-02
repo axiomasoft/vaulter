@@ -2,9 +2,24 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 6
+    level: max
 
     paths:
         - src
 
     reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # Filament's Action/schema form-data callbacks type $data as bare `array`
+        # (no `array<string, mixed>` generic in Filament's own signatures), so every
+        # $data['field'] read resolves to mixed even though callers immediately cast
+        # each value ((string)/(int)) before use — same false-positive class as the
+        # Eloquent-magic ignores in packages/documents/phpstan.neon, triggered here by
+        # Filament's dynamic form-data array instead of the Eloquent builder.
+        - '#Parameter \#1 \$id of static method Vaulter\\Filament\\Resources\\\w+::resolveNode\(\) expects int\|string\|null, mixed given\.#'
+        - '#Parameter \#2 \$parentId of static method Vaulter\\Filament\\Resources\\NodeResource::resolveFolder\(\) expects int\|string\|null, mixed given\.#'
+        - '#Cannot cast mixed to (string|int)\.#'
+        - '#Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.#'
+        - '#Possibly invalid array key type mixed\.#'
+        - '#Parameter \#1 \$data of static method Vaulter\\Filament\\Resources\\\w+::(grantFromData|createFromData)\(\) expects array<string, mixed>, array given\.#'
+        - '#Parameter \#1 \$callback of method Illuminate\\Support\\Collection<\(int\|string\),mixed>::map\(\) expects callable\(mixed, int\|string\): non-empty-string, Closure\(string\): non-empty-string given\.#'

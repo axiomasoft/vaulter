@@ -66,7 +66,7 @@ When no `format` query is given, both export endpoints default to `html`.
 
 `GET {prefix}/nodes/{node}/export` renders a [document node's](./documents.md) head content.
 It requires the `View` ability on the node (and the node must be `kind=document`). This route
-is part of the DocDrive surface, gated on the **`document_versions`** feature.
+is part of the Documents surface, gated on the **`document_versions`** feature.
 
 ::: code-group
 
@@ -95,7 +95,7 @@ const result = await client.documentNodes.export(nodeId, 'html')
 
 :::
 
-The node export response is a `NodeDocumentExport` (`Vaulter\ValueObjects\Documents\DocumentExport`),
+The node export response is a `NodeDocumentExport` (`Vaulter\Documents\ValueObjects\DocumentExport`),
 which **includes `mime_type`**:
 
 ```ts

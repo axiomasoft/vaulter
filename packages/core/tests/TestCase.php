@@ -6,6 +6,7 @@ namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
@@ -23,6 +24,12 @@ abstract class TestCase extends OrchestraTestCase
             // vaulter-media package (P2 #5); the core Drive upload/download/copy
             // suites resolve those bindings through its provider.
             VaulterMediaServiceProvider::class,
+            // Drive behaviour (StorageManager, DriveHandle factory, resumable
+            // uploads, PurgeTrash/SweepUploads, drive routes, Drive-event
+            // Activity/outbox subscribers) lives in vaulter-drive (P2 #5, D1). The
+            // cross-cutting core suites (Activity/Webhooks feeds fed by Drive events,
+            // the full-stack Feature specs) resolve it through this provider.
+            VaulterDriveServiceProvider::class,
         ];
     }
 

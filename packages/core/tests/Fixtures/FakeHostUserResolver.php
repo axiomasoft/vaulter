@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Fixtures;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Support\Identity;
 
 /**
