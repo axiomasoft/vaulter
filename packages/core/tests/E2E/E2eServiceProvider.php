@@ -6,12 +6,12 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Data\CreateDocumentNodeData;
+use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
+use Vaulter\DocDrive\Contracts\Collaboration\HostUserResolver;
+use Vaulter\DocDrive\Data\CreateDocumentNodeData;
+use Vaulter\DocDrive\Models\NodeDocumentVersion;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Document\DocumentTestHelpers;

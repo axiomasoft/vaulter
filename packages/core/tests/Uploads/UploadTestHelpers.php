@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Uploads;
 
 use Illuminate\Support\Str;
+use Vaulter\Drive\Uploads\Enums\UploadProtocol;
+use Vaulter\Drive\Uploads\Enums\UploadStatus;
+use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Uploads\UploadProtocol;
-use Vaulter\Enums\Uploads\UploadStatus;
 use Vaulter\Models\Drive\Storage;
-use Vaulter\Models\Uploads\UploadSession;
 
 /**
  * Shared builders for the resumable-upload slice tests (M3a): a real Storage with a

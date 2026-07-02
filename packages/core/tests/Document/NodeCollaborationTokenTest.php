@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Data\CreateDocumentNodeData;
+use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
+use Vaulter\DocDrive\Data\CreateDocumentNodeData;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;

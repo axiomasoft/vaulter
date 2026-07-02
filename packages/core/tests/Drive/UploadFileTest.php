@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Events\FileUploaded;
+use Vaulter\Drive\Events\NodeVersionCommitted;
+use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Events\Drive\FileUploaded;
-use Vaulter\Events\Drive\NodeVersionCommitted;
-use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;

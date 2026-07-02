@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\Documents\NodeExportService;
+use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
+use Vaulter\DocDrive\Data\CreateDocumentNodeData;
+use Vaulter\DocDrive\Documents\NodeExportService;
 use Vaulter\Tests\Document\DocumentTestHelpers;
 
 /**

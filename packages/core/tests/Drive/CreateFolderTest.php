@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
+use Vaulter\Drive\Events\NodeCreated;
+use Vaulter\Drive\Exceptions\NodeNameConflictException;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Events\Drive\NodeCreated;
-use Vaulter\Exceptions\Drive\NodeNameConflictException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('создаёт папку в корне хранилища (под root-узлом)', function (): void {

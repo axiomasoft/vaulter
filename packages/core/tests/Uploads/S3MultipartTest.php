@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Actions\Uploads\CommitUploadAction;
-use Vaulter\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
+use Vaulter\Drive\Uploads\Data\UploadInitData;
+use Vaulter\Drive\Uploads\Enums\UploadProtocol;
+use Vaulter\Drive\Uploads\Enums\UploadStatus;
+use Vaulter\Drive\Uploads\Models\UploadPart;
+use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Uploads\UploadProtocol;
-use Vaulter\Enums\Uploads\UploadStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Uploads\UploadPart;
-use Vaulter\Models\Uploads\UploadSession;
 use Vaulter\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Uploads\S3MultipartHandler;
-use Vaulter\Uploads\UploadSessionManager;
 
 /**
  * The S3-multipart path exercised against the FAKED 'local' disk (a real S3 is not

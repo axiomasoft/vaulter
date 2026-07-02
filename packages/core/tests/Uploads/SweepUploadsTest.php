@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Enums\Uploads\UploadProtocol;
-use Vaulter\Enums\Uploads\UploadStatus;
-use Vaulter\Models\Uploads\UploadSession;
+use Vaulter\Drive\Uploads\Enums\UploadProtocol;
+use Vaulter\Drive\Uploads\Enums\UploadStatus;
+use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Uploads\S3MultipartHandler;
-use Vaulter\Uploads\StagedUpload;
-use Vaulter\Uploads\TusUploadHandler;
 
 beforeEach(function (): void {
     Storage::fake('local');

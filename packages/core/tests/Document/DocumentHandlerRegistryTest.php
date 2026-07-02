@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\Documents\DocumentHandlerRegistry;
-use Vaulter\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Documents\Handlers\PreviewHandler;
-use Vaulter\Documents\Handlers\TipTapHandler;
-use Vaulter\Documents\Handlers\UniverHandler;
-use Vaulter\Enums\Documents\Capability;
+use Vaulter\DocDrive\Documents\DocumentHandlerRegistry;
+use Vaulter\DocDrive\Documents\Handlers\DownloadOnlyHandler;
+use Vaulter\DocDrive\Documents\Handlers\PreviewHandler;
+use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
+use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
+use Vaulter\DocDrive\Enums\Capability;
+use Vaulter\DocDrive\ValueObjects\DocumentCapabilities;
+use Vaulter\DocDrive\ValueObjects\FileDescriptor;
+use Vaulter\DocDrive\ValueObjects\HandlerUi;
 use Vaulter\Facades\Vaulter;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability

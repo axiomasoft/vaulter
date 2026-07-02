@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
+use Vaulter\DocDrive\Http\Controllers\DocumentNodeController;
+use Vaulter\DocDrive\Http\Controllers\NodeCollaborationController;
+use Vaulter\DocDrive\Http\Controllers\NodeCommentController;
+use Vaulter\DocDrive\Http\Middleware\ResolveCollaborationCall;
+use Vaulter\Drive\Http\Controllers\DownloadController;
+use Vaulter\Drive\Http\Controllers\NodeController;
+use Vaulter\Drive\Http\Controllers\StorageController;
+use Vaulter\Drive\Uploads\Http\Controllers\S3MultipartController;
+use Vaulter\Drive\Uploads\Http\Controllers\TusUploadController;
+use Vaulter\Http\Controllers\Access\GrantController;
 use Vaulter\Http\Controllers\Activity\ActivityController;
-use Vaulter\Http\Controllers\Drive\DocumentNodeController;
-use Vaulter\Http\Controllers\Drive\DownloadController;
-use Vaulter\Http\Controllers\Drive\GrantController;
-use Vaulter\Http\Controllers\Drive\NodeCollaborationController;
-use Vaulter\Http\Controllers\Drive\NodeCommentController;
-use Vaulter\Http\Controllers\Drive\NodeController;
-use Vaulter\Http\Controllers\Drive\StorageController;
 use Vaulter\Http\Controllers\Sharing\PublicShareController;
 use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
-use Vaulter\Http\Controllers\Uploads\S3MultipartController;
-use Vaulter\Http\Controllers\Uploads\TusUploadController;
 use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
-use Vaulter\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Support\Config;
 
@@ -91,7 +91,7 @@ Route::prefix(Config::routePrefix())
                 // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
                 // authorized via the AccessResolver (≥ View/Comment to connect,
                 // read-only unless Edit), returning the transport-agnostic
-                // CollaborationSession descriptor. The fixed /collab/token segment
+                // CollaborationSessionData descriptor. The fixed /collab/token segment
                 // sits before the catch-all /{node} routes so it never shadows them.
                 Route::post('nodes/{node}/collab/token', [NodeCollaborationController::class, 'token']);
             }

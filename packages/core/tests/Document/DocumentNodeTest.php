@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Actions\Documents\CreateNamedVersionAction;
-use Vaulter\Actions\Documents\RestoreDocumentVersionAction;
-use Vaulter\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\Data\CreateNamedVersionData;
-use Vaulter\Data\UpdateDocumentContentData;
-use Vaulter\Documents\Handlers\TipTapHandler;
+use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
+use Vaulter\DocDrive\Actions\CreateNamedVersionAction;
+use Vaulter\DocDrive\Actions\RestoreDocumentVersionAction;
+use Vaulter\DocDrive\Actions\UpdateDocumentContentAction;
+use Vaulter\DocDrive\Data\CreateDocumentNodeData;
+use Vaulter\DocDrive\Data\CreateNamedVersionData;
+use Vaulter\DocDrive\Data\UpdateDocumentContentData;
+use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
+use Vaulter\DocDrive\Events\DocumentNodeCreated;
+use Vaulter\DocDrive\Events\DocumentVersionCreated;
+use Vaulter\DocDrive\Models\NodeDocumentVersion;
+use Vaulter\DocDrive\Support\TipTapRenderer;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Events\Documents\DocumentNodeCreated;
-use Vaulter\Events\Documents\DocumentVersionCreated;
-use Vaulter\Models\Documents\NodeDocumentVersion;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\TipTapRenderer;
 use Vaulter\Tests\Document\DocumentTestHelpers;
 
 /**

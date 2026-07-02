@@ -26,7 +26,8 @@
         "larastan/larastan": "^3.0",
         "infection/infection": "^0.33",
         "firebase/php-jwt": "^6.0",
-        "spatie/laravel-permission": "^8.0"
+        "spatie/laravel-permission": "^8.0",
+        "laravel/pao": "^1.1"
     },
     "autoload-dev": {
         "psr-4": {

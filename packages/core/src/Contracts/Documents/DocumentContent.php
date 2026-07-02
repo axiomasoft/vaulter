@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Documents;
 
-use Vaulter\Documents\Handlers\UniverHandler;
-use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
+use Vaulter\DocDrive\ValueObjects\OpaqueDocumentContent;
+use Vaulter\DocDrive\ValueObjects\TipTapContent;
 
 /**
  * The content payload a document version stores (§2.5 / M4a). A document node's

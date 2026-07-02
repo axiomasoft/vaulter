@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
+use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Webhooks\WebhookEvent;
-use Vaulter\Events\Drive\NodeCreated;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;

@@ -54,7 +54,7 @@ arch('no debug helpers leak into the package')
  * interface; the built-in handlers are final; the registry is final.
  */
 arch('the document handler registry and its handlers are final')
-    ->expect('Vaulter\Documents')
+    ->expect('Vaulter\DocDrive\Documents')
     ->toBeFinal();
 
 arch('the DocumentHandler contract is an interface (H.5)')
@@ -183,7 +183,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
-        'ValueObjects' => [], // VOs split into Drive/ and Documents/.
+        // ValueObjects is no longer a core technical root: Phase K moved its VOs to
+        // Vaulter\Drive\ValueObjects / Vaulter\DocDrive\ValueObjects.
     ];
 
     $offenders = [];
@@ -222,19 +223,19 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Models\Cas\Blob',
         'Vaulter\Models\Access\NodeGrant',
         'Vaulter\Models\Sharing\NodeShare',
-        'Vaulter\Models\Uploads\UploadSession',
+        'Vaulter\Drive\Uploads\Models\UploadSession',
         'Vaulter\Models\Activity\Activity',
-        'Vaulter\Models\Documents\NodeDocumentVersion',
+        'Vaulter\DocDrive\Models\NodeDocumentVersion',
         'Vaulter\Enums\Drive\NodeKind',
         'Vaulter\Enums\Access\Ability',
         'Vaulter\Events\Sharing\NodeShareCreated',
-        'Vaulter\Exceptions\Drive\CycleException',
+        'Vaulter\Drive\Exceptions\CycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Panels\UnknownPanelException',
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Contracts\Cas\BlobStore',
         'Vaulter\Contracts\Access\HostRoleDriver',
-        'Vaulter\ValueObjects\Documents\TipTapContent',
+        'Vaulter\DocDrive\ValueObjects\TipTapContent',
         'Vaulter\Access\Abilities\NodeAbilities',
     ];
 
@@ -304,3 +305,34 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
     ->expect('Vaulter')
     ->not->toUse('Vaulter\Media')
     ->ignoring('Vaulter\Media');
+
+/**
+ * P2 #5 / ADR-0015, Phase K — Drive/DocDrive dependency-direction guards (SCAFFOLD).
+ *
+ * The namespace rename landed in Phase K: drive-bound code now lives under
+ * Vaulter\Drive\*, docdrive-bound code under Vaulter\DocDrive\* — but both are still
+ * PHYSICALLY inside vaulter-core (the composer split is Phase D1/D2). Unlike the media
+ * guard above there is no ->ignoring: once the packages are extracted, the target
+ * invariant is that no core/kernel code references Vaulter\Drive / Vaulter\DocDrive at
+ * all.
+ *
+ * These are ->todo() and NOT yet enforcing because this phase renames only; it does
+ * not cut the transitional seams that still make kernel code reference the two roots:
+ *   - Vaulter\Activity + Vaulter\Webhooks subscribers import Vaulter\Drive\Events\*;
+ *   - Vaulter\Contracts\Documents and Vaulter\Access\HostUserResolver reference
+ *     Vaulter\DocDrive\{Contracts\Collaboration,ValueObjects,Documents};
+ *   - VaulterServiceProvider / config wire both roots.
+ * Cutting those seams (event abstraction, Config inversion, provider/route split) is
+ * Phase D1/D2 work; when it lands, drop ->todo() and these turn green with real teeth.
+ */
+$driveSeamNote = 'Phase D1/D2: enforced once the transitional seams are cut (event abstraction, '
+    .'Config inversion, provider/route split); drive/docdrive code is still co-located in core. '
+    .'Convert back to a top-level arch()->not->toUse() guard when the composer split lands.';
+
+test('SCAFFOLD: core (non-Drive code) never depends on the future vaulter-drive package', function () {
+    expect('Vaulter')->not->toUse('Vaulter\Drive');
+})->skip($driveSeamNote);
+
+test('SCAFFOLD: core (non-DocDrive code) never depends on the future vaulter-docdrive package', function () {
+    expect('Vaulter')->not->toUse('Vaulter\DocDrive');
+})->skip($driveSeamNote);

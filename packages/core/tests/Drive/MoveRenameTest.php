@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Exceptions\Drive\CrossStorageMoveException;
-use Vaulter\Exceptions\Drive\CycleException;
-use Vaulter\Exceptions\Drive\NodeNameConflictException;
+use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Drive\Exceptions\NodeNameConflictException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('move = ОДИН UPDATE по parent_id, поддерево не трогается', function (): void {

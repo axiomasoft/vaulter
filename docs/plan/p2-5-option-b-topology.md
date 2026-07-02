@@ -7,6 +7,12 @@
 > **Как поднять из файла после /clear:** читать этот файл целиком + §Аллокация + §Enabling refactor +
 > §Фазы. Основания: ADR D2/D3 (Vaulter Media/Drive/DocDrive), D15 (один репо, path-repos + subtree-split),
 > RAG «schema-owner package» (см. §Провенанс). Доказательная база — 5 code-mapper'ов (§Провенанс).
+>
+> **Аддендум:** namespace-стратегия для `vaulter-drive`/`vaulter-docdrive` (D22–D26) решена в
+> отдельном файле `docs/plan/p2-5-namespace-strategy-drive-docdrive.md` — RENAME-TO-SINGLE-PREFIX
+> для ОБОИХ пакетов (`Vaulter\Drive\*`/`Vaulter\DocDrive\*`), с точными PSR-4-картами,
+> коллизионным инвентарём (10 директорий) и обновлённым arch-guard-планом. См. §Enabling refactor
+> п.6 ниже.
 
 ## TL;DR — решение
 
@@ -146,8 +152,18 @@ Node/Storage/ACL/NodeReadRepository — всё kernel; правка composer Н�
    (б) namespace-parity доменных папок; (в) миграции kernel лексикографически раньше feature-миграций (если
    feature когда-либо добавит свои — сейчас нет). Проверка порядка миграций — если T2 соблюдён (все миграции в
    core), это неактуально; арх-тест на dependency-direction — главный.
-6. **Namespace-стратегия**: три фазы alias→use-update→hard-rename (как в media). Ловушки-префиксы: `Node` ⊂
-   `NodeComment`/`NodeDocumentVersion`/`NodeGrant`/`NodeShare` — при массовых заменах не задеть.
+6. **Namespace-стратегия — РЕШЕНО (D22/D23, аддендум `p2-5-namespace-strategy-drive-docdrive.md`):
+   RENAME-TO-SINGLE-PREFIX для ОБОИХ пакетов** (`Vaulter\Drive\*`, `Vaulter\DocDrive\*`) — не
+   KEEP-SCATTERED. Пререквизит **до** git mv в D1/D2 — физическое расселение 10 коллизионных
+   директорий (аддендум §Инвентарь: `Enums\Drive`, `Http\Controllers\Drive`,
+   `Http\Requests\Drive`, `Http\Resources\Drive`, плоские `Data\`/`Support\`/`Support\Concerns\`/
+   `Http\Middleware\`/`Http\Requests\`/`Console\`), часть Фазы K. Три фазы
+   alias→use-update→hard-rename — как в media (дисциплина `php:namespace-refactor-safety`).
+   Ловушки-префиксы: `Node` ⊂ `NodeComment`/`NodeDocumentVersion`/`NodeGrant`/`NodeShare` — при
+   массовых find/replace не задеть (строковая ловушка на именах классов, отдельно от
+   namespace-путей аддендума). Точные PSR-4-карты обоих пакетов и обновлённый arch-guard-план
+   (`Vaulter\Drive`/`Vaulter\DocDrive` guard'ы + peer-guard'ы drive⊥docdrive, docdrive⊥media) — в
+   аддендуме.
 
 ## Фазы исполнения
 

@@ -41,4 +41,4 @@ parameters:
         # flags the (genuinely necessary) re-check as always-true. Scoped to this line.
         -
             identifier: if.alwaysTrue
-            path: packages/core/src/Actions/Uploads/CommitUploadAction.php
+            path: packages/core/src/Drive/Uploads/Actions/CommitUploadAction.php

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
+use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Events\Drive\StorageCreated;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\DocDrive\Enums\CollaborationDriverType;
+use Vaulter\DocDrive\Enums\DocumentType;
 use Vaulter\Enums\Access\PermissionLevel;
-use Vaulter\Enums\Collaboration\CollaborationDriverType;
-use Vaulter\Enums\Documents\DocumentType;
 
 it('exposes document type metadata from attributes', function (): void {
     expect(DocumentType::RichText->label())->toBe('Rich text')

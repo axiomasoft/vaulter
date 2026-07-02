@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Support\TipTapRenderer;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\DocDrive\Support\TipTapRenderer;
+use Vaulter\DocDrive\ValueObjects\TipTapContent;
 
 function sampleDocument(): TipTapContent
 {
