@@ -288,3 +288,19 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', function
 
     expect($offenders)->toBe([]);
 });
+
+/**
+ * P2 #5 / ADR-0015 — package dependency direction. The physical package split keeps
+ * ONE direction: satellites depend on core, core depends on NOTHING in the Vaulter
+ * ecosystem. This guards that the extracted vaulter-media package (its CAS engine
+ * under Vaulter\Media) is NEVER referenced back from core (or any other Vaulter code
+ * except media itself) — a leak would recreate the cycle the extraction avoided.
+ *
+ * Scaffold for the upcoming Drive/DocDrive extractions (Phase D1/D2): once those
+ * packages exist, extend this with their owned namespaces using the same
+ * `->ignoring(...)` shape.
+ */
+arch('core (and all Vaulter code) never depends on the extracted vaulter-media package')
+    ->expect('Vaulter')
+    ->not->toUse('Vaulter\Media')
+    ->ignoring('Vaulter\Media');
