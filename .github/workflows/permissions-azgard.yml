@@ -1,0 +1,50 @@
+name: Permissions AzGuard
+
+# The vaulter-permissions-azgard package (real AzgardGuard adapter delegating to
+# AzGuard's scoped roles / workspace-context checks) is tested in isolation on the
+# fast SQLite lane. It has no Postgres-specific critical-section tests, so a single
+# lane is enough. It requires vaulter-core (path-repo), so a change to either package
+# retriggers it.
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
+    paths:
+      - 'packages/permissions-azgard/**'
+      - 'packages/core/**'
+      - '.github/workflows/permissions-azgard.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  permissions-azgard:
+    name: vaulter-permissions-azgard (SQLite lane)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: packages/permissions-azgard
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Code style (Pint)
+        working-directory: packages/permissions-azgard
+        run: vendor/bin/pint --test
+
+      - name: Static analysis (Larastan)
+        working-directory: packages/permissions-azgard
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+      - name: Tests (Pest)
+        working-directory: packages/permissions-azgard
+        run: vendor/bin/pest --ci

@@ -29,6 +29,7 @@
         "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
         "phpstan/phpstan": "^2.0"
     },
     "autoload": {
@@ -83,6 +84,7 @@
     },
     "scripts": {
         "test": "vendor/bin/pest",
+        "test:types": "vendor/bin/pest --type-coverage --min=100",
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"

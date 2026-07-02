@@ -39,8 +39,17 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 
 ## Install
 
+`axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is the
+shared kernel. Require the packages your app actually needs (each pulls in `vaulter-core`,
+and `vaulter-drive` also pulls in `vaulter-media`, automatically):
+
 ```bash
-composer require axioma-studio/vaulter-core
+# Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
+composer require axioma-studio/vaulter-drive
+
+# Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
+composer require axioma-studio/vaulter-documents
+
 php artisan vaulter:install   # publishes config + migrations, runs them
 npm install @vaulter/vue
 ```
@@ -74,9 +83,13 @@ setup and embedding into multi-tenant apps.
 ```
 vaulter/
 ├── packages/
-│   ├── core/             # axioma-studio/vaulter-core — the Laravel package (Vaulter\)
-│   ├── vue/              # @vaulter/vue — TypeScript Vue 3 client, composables & components
-│   └── filament/         # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
+│   ├── core/                  # axioma-studio/vaulter-core — the shared kernel (Vaulter\)
+│   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, storage manager
+│   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs editing, versions, comments
+│   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer
+│   ├── permissions-azgard/    # axioma-studio/vaulter-permissions-azgard — AzGuard PermissionResolver adapter
+│   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
+│   └── filament/              # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
 ├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)
 ├── docs/                 # VitePress developer documentation
 └── (pint, phpstan, rector, pest, Makefile, CI…)

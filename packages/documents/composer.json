@@ -25,6 +25,7 @@
     },
     "require-dev": {
         "axioma-studio/vaulter-drive": "self.version",
+        "axioma-studio/vaulter-media": "self.version",
         "firebase/php-jwt": "^6.0",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",

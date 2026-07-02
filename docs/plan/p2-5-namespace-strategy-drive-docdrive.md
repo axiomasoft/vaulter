@@ -1,5 +1,11 @@
 # P2 #5 — Аддендум к ADR-0015: namespace-стратегия для `vaulter-drive`/`vaulter-docdrive`
 
+> **Примечание (пост-факт):** этот документ — decision-лог допереименования. Упоминаемый ниже
+> рабочий нейминг **DocDrive**/`vaulter-docdrive` (`Vaulter\DocDrive\*`) — то же самое, что
+> впоследствии вышло под именем пакета `axioma-studio/vaulter-documents` (namespace
+> **Vaulter Documents**). Актуальное имя и историю переименования см. в `CHANGELOG.md`; тело
+> документа ниже не переписано намеренно.
+
 > **Статус:** Proposed (design-фаза `/task:design`, кода нет). Аддендум к
 > `docs/plan/p2-5-option-b-topology.md` (§Enabling refactor, п.6 — там сейчас только заглушка
 > «три фазы alias→use-update→hard-rename (как в media)», без разбора «по какому пакету» и без

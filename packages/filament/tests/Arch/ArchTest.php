@@ -16,3 +16,10 @@ arch('the plugin implements the Filament plugin contract')
 arch('no debug helpers leak into the package')
     ->expect(['dd', 'dump', 'ray', 'var_dump'])
     ->not->toBeUsed();
+
+// T6 — filament requires ONLY core in production; it never depends on drive,
+// documents or media (require-dev pulls drive/media for TEST fixtures only,
+// see tests/TestCase.php).
+arch('filament never depends on drive, documents or media (T6 — filament requires only core)')
+    ->expect('Vaulter\Filament')
+    ->not->toUse(['Vaulter\Drive', 'Vaulter\Documents', 'Vaulter\Media']);

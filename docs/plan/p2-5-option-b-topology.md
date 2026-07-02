@@ -1,5 +1,10 @@
 # P2 #5 — Целевая топология пакетов (Option B) — ADR-0015 + durable plan
 
+> **Примечание (пост-факт):** этот документ — decision-лог допереименования. Упоминаемый ниже
+> рабочий нейминг **DocDrive**/`vaulter-docdrive` — то же самое, что впоследствии вышло под именем
+> пакета `axioma-studio/vaulter-documents` (namespace **Vaulter Documents**). Актуальное имя и
+> историю переименования см. в `CHANGELOG.md`; тело документа ниже не переписано намеренно.
+
 > **Статус:** Proposed (design-фаза `/task:design`, кода нет). Primary source для фаз Kernel-harden →
 > Drive → DocDrive. Продолжение линии `docs/plan/p2-5-vaulter-media-extraction.md` (media уже извлечён).
 > Ветка при исполнении: своя feature-ветка от `origin/main`. НЕ push/PR без явной просьбы.
