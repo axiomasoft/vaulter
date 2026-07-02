@@ -27,34 +27,32 @@ Every binding is an FQCN or a plain scalar — no closures. The config is safe t
 Swappable Eloquent models. Point any entry at your own subclass to add behaviour
 (ULID keys, tenant scoping, audit). Vaulter always resolves models through this map.
 
-| Key | Default |
-|---|---|
-| `models.document` | `Vaulter\Models\Documents\Document` |
-| `models.version` | `Vaulter\Models\Documents\DocumentVersion` |
-| `models.folder` | `Vaulter\Models\Documents\DocumentFolder` |
-| `models.permission` | `Vaulter\Models\Documents\DocumentPermission` |
-| `models.comment` | `Vaulter\Models\Documents\DocumentComment` |
-| `models.share` | `Vaulter\Models\Documents\DocumentShare` |
-| `models.storage` | `Vaulter\Models\Drive\Storage` |
-| `models.node` | `Vaulter\Models\Drive\Node` |
-| `models.file` | `Vaulter\Models\Drive\File` |
-| `models.file_version` | `Vaulter\Models\Drive\FileVersion` |
-| `models.blob` | `Vaulter\Models\Cas\Blob` |
-| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` |
-| `models.grant` | `Vaulter\Models\Access\NodeGrant` |
-| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` |
-| `models.node_document_version` | `Vaulter\Models\Documents\NodeDocumentVersion` |
-| `models.upload_session` | `Vaulter\Models\Uploads\UploadSession` |
-| `models.upload_part` | `Vaulter\Models\Uploads\UploadPart` |
-| `models.activity` | `Vaulter\Models\Activity\Activity` |
-| `models.outbox` | `Vaulter\Models\Webhooks\Outbox` |
-| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` |
-| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` |
+| Key | Default | Owned by |
+|---|---|---|
+| `models.storage` | `Vaulter\Models\Drive\Storage` | core |
+| `models.node` | `Vaulter\Models\Drive\Node` | core |
+| `models.file` | `Vaulter\Models\Drive\File` | core |
+| `models.file_version` | `Vaulter\Models\Drive\FileVersion` | core |
+| `models.blob` | `Vaulter\Models\Cas\Blob` | core |
+| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` | core |
+| `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
+| `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
+| `models.upload_session` | `Vaulter\Drive\Uploads\Models\UploadSession` | `axioma-studio/vaulter-drive` |
+| `models.upload_part` | `Vaulter\Drive\Uploads\Models\UploadPart` | `axioma-studio/vaulter-drive` |
+| `models.node_comment` | `Vaulter\Documents\Models\NodeComment` | `axioma-studio/vaulter-documents` |
+| `models.node_document_version` | `Vaulter\Documents\Models\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
+| `models.activity` | `Vaulter\Models\Activity\Activity` | core |
+| `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
+| `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
+| `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` | core |
 
-::: info node_document_version vs version
-`models.node_document_version` is the **node-attached** document version (the current
-DocDrive path). `models.version` is the **legacy** `document_id`-attached version.
-They are distinct entities and distinct tables.
+::: info Package-owned models resolve only when the package is installed
+`upload_session` / `upload_part` are merged into `vaulter.models` by
+`axioma-studio/vaulter-drive`; `node_comment` / `node_document_version` are merged by
+`axioma-studio/vaulter-documents`. Core ships **no default** for these four keys —
+resolving them without the owning package installed throws. The legacy
+document-id-attached models (`document`, `version`, `folder`, `permission`, `comment`,
+`share`) were fully excised — see [ADR-0014](/adr/0014-legacy-docvault-strangler).
 :::
 
 ## Table names — `table_names.*`
@@ -64,12 +62,6 @@ entity's table here without changing the global prefix.
 
 | Key | Default base |
 |---|---|
-| `table_names.documents` | `documents` |
-| `table_names.document_folders` | `document_folders` |
-| `table_names.document_versions` | `document_versions` |
-| `table_names.document_permissions` | `document_permissions` |
-| `table_names.document_comments` | `document_comments` |
-| `table_names.document_shares` | `document_shares` |
 | `table_names.storages` | `storages` |
 | `table_names.nodes` | `nodes` |
 | `table_names.blobs` | `blobs` |
@@ -78,6 +70,7 @@ entity's table here without changing the global prefix.
 | `table_names.file_version_blobs` | `file_version_blobs` |
 | `table_names.node_grants` | `node_grants` |
 | `table_names.node_shares` | `node_shares` |
+| `table_names.node_comments` | `node_comments` |
 | `table_names.node_document_versions` | `node_document_versions` |
 | `table_names.upload_sessions` | `upload_sessions` |
 | `table_names.upload_parts` | `upload_parts` |
@@ -85,6 +78,10 @@ entity's table here without changing the global prefix.
 | `table_names.outbox` | `outbox` |
 | `table_names.webhook_endpoints` | `webhook_endpoints` |
 | `table_names.webhook_deliveries` | `webhook_deliveries` |
+
+The legacy document-id-attached tables (`documents`, `document_folders`,
+`document_versions`, `document_permissions`, `document_comments`, `document_shares`)
+were dropped — see [ADR-0014](/adr/0014-legacy-docvault-strangler).
 
 ## Primary keys — `id_type`, `ids.*`
 
@@ -267,9 +264,9 @@ container.
 
 | Key | Default | Contract |
 |---|---|---|
-| `cas.content_store` | `Vaulter\Cas\Sha256ContentStore` | `ContentStore` |
-| `cas.storage_driver` | `Vaulter\Cas\FlysystemStorageDriver` | `StorageDriver` |
-| `cas.blob_store` | `Vaulter\Cas\BlobStore` | `BlobStore` |
+| `cas.content_store` | `Vaulter\Media\Cas\Sha256ContentStore` | `ContentStore` |
+| `cas.storage_driver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | `StorageDriver` |
+| `cas.blob_store` | `Vaulter\Media\Cas\BlobStore` | `BlobStore` |
 
 ## Deduplication — `dedup.scope`
 

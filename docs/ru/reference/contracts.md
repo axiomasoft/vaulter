@@ -38,7 +38,7 @@ outline: deep
 
 ### `Vaulter\Contracts\Access\PermissionResolver` {#access-permission-resolver}
 
-Хук, реализуемый хостом, для **легаси-пути документов DocDrive**. Привяжите его через
+Хук, реализуемый хостом, для **легаси-пути документов DocVault**. Привяжите его через
 `config('vaulter.permission_resolver')` (FQCN) или
 `Vaulter::resolvePermissionsWith()`. Drive ACL вместо этого использует `HostRoleDriver` —
 данный резолвер относится к более старой, документо-центричной полосе.

@@ -202,11 +202,10 @@ yjs_state bytea round-trip + jsonb gin) + matrix `+docdrive`. **Критерий
 Создать split-репо `axioma-studio/vaulter-{drive,docdrive}` (media/core/filament/permissions-azgard уже в matrix),
 секрет `GH_ACCESS_TOKEN`, Packagist, первый `v0.1.0` (subtree-split + Changesets для npm), ghcr hocuspocus-образ.
 
-## Ops-хвосты media (закрыть параллельно, вне зависимостей)
+## Ops-хвосты media (закрыть параллельно, вне зависимостей) — ЗАКРЫТО
 
-1. **`CHANGELOG.md` — запись о breaking-переносе media (НЕ changeset!).** Changesets в этом репо — только npm
-   (`.changeset/README.md`); PHP-пакеты релизятся tag-triggered subtree-split. Записи про media в `[Unreleased]`
-   сейчас **нет**. Готовый артефакт для вставки под `[Unreleased] → ### Removed` (или `### Changed`):
+1. **`CHANGELOG.md` — запись о breaking-переносе media (НЕ changeset!). ГОТОВО.** Коммит `1d37375`: точный текст
+   ниже присутствует в `[Unreleased] → ### Removed` дословно.
    ```md
    ### Removed
    - **BREAKING (pre-1.0): the CAS engine moved out of `vaulter-core` into the new standalone package
@@ -219,13 +218,23 @@ yjs_state bytea round-trip + jsonb gin) + matrix `+docdrive`. **Критерий
      `Enums\Cas\BlobStatus` and `Repositories\Cas\BlobStoreRepository` remain in core. Config paths
      (`vaulter.cas.*`, `vaulter.dedup.*`) are unchanged. Dependency direction is one-way (media → core; no cycle).
    ```
-   → мелкая правка, годится под отдельный `/task:fix` или ручной commit; не design-артефакт.
-2. **media CI** структурно исправен (`media.yml`: media-джоб pint+phpstan max+pest+type-cov 100%; media-pgsql-джоб
-   гоняет `tests/Cas` на postgres:16). Подтвердить зелёным на первом реальном прогоне.
-3. **Coverage `--min=80`**: enforced только в root `tests.yml` над `packages/core/src` — media корректно ВНЕ
-   знаменателя. **Мелкая асимметрия:** у media нет line-coverage-гейта (только type-cov). Если политика
-   line-coverage должна быть монорепо-широкой — учесть для drive.yml/docdrive.yml (добавить `--coverage --min=80`).
-   Иначе оставить как есть (осознанный gap).
+2. **media CI структурно исправен — ПОДТВЕРЖДЕНО ЗЕЛЁНЫМ.** `media.yml`: media-джоб pint+phpstan max+pest+
+   type-cov 100%; media-pgsql-джоб гоняет `tests/Cas` на postgres:16 (advisory-xact-lock/FOR UPDATE/SERIALIZABLE/
+   orphan-prune пути, которые SKIP на SQLite). Первый реальный прогон на `main` (push, `5e65ea8`, run
+   `28543971661`) — оба джоба `completed/success`; более ранний PR-прогон на `refactor/extract-vaulter-media`
+   тоже зелёный.
+3. **Coverage `--min=80` асимметрия — ОСОЗНАННЫЙ ПАТТЕРН, оставлено как есть.** Подтверждено: root `tests.yml`
+   (джоб `test`) гоняет `--coverage --min=80 --coverage-clover=coverage.xml` + Codecov-аплоад над
+   `packages/core/src`; `test-pgsql` — без coverage (schema/portability-линия, ожидаемо). `drive.yml` и
+   `documents.yml` (пакет `docdrive` был переименован в `documents`) зеркалят паттерн `media.yml` один-в-один:
+   Pint + PHPStan max + Pest + type-cov 100%, без line-coverage-гейта и без Codecov. Это уже 3-я точка данных
+   (media → drive → documents), подтверждающая намеренный house-style: type-coverage-only для тонких,
+   feature-scoped пакетов над ядром, с полным Pest-сьютом (включая выделенные Postgres-линии для
+   критических секций). Решение: **не добавлять** `--coverage --min=80` в drive.yml/documents.yml — 100%
+   type-coverage + Postgres-линии дают более сильную структурную гарантию для таких пакетов, чем %-line-coverage
+   порог, а добавление line-coverage потребовало бы Codecov-обвязки и подбора порога per-package за
+   маргинальную выгоду. Если монорепо-wide line-coverage parity станет жёстким требованием политики — можно
+   вернуться и добавить `--coverage --min=80` + Codecov-степ в оба джоба, по образцу `tests.yml`.
 
 ## Инварианты / критерии приёмки (каждая фаза)
 1. Оба гейта зелёные: pint + phpstan **max** + pest + type-cov 100% (core и новый пакет).

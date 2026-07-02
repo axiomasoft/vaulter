@@ -16,9 +16,10 @@ Vaulter никогда не копирует байты файлов в собс
 который безопасно запускать даже во время идущих загрузок.
 
 ::: info Где это живёт
-Реализация CAS — в `Vaulter\Cas\*`, модель строки — `Vaulter\Models\Cas\Blob`, enum
-жизненного цикла — `Vaulter\Enums\Cas\BlobStatus`, а конфигурация лежит под ключами `cas`,
-`dedup`, `gc` и `storage` файла `config/vaulter.php`.
+Реализация CAS — в `Vaulter\Media\Cas\*` (пакет `axioma-studio/vaulter-media`;
+обращённый к хосту `BlobLock` остаётся в core как `Vaulter\Cas\BlobLock`), модель строки —
+`Vaulter\Models\Cas\Blob`, enum жизненного цикла — `Vaulter\Enums\Cas\BlobStatus`, а
+конфигурация лежит под ключами `cas`, `dedup`, `gc` и `storage` файла `config/vaulter.php`.
 :::
 
 ## Ментальная модель
@@ -43,16 +44,16 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 
 | Контракт | По умолчанию | Ответственность |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `attach` / `detach` / `read`. Единственная точка входа в CAS. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | Высокоуровневый жизненный цикл: `commit` / `attach` / `detach` / `read`. Единственная точка входа в CAS. |
+| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Байтовая сторона: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Знает байты, хэши и ключи — но никогда строку `v_blobs`. |
+| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter.php
 'cas' => [
-    'content_store'  => \Vaulter\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Cas\BlobStore::class,
+    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
 ],
 ```
 
@@ -86,7 +87,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 четырём hex-символам дайджеста:
 
 ```php
-// Vaulter\Cas\Sha256ContentStore::keyFor()
+// Vaulter\Media\Cas\Sha256ContentStore::keyFor()
 "{$scope}/{$a}/{$b}/{$sha256}"   // напр. "t42/ab/cd/abcd…ef"  (scope = tenant 42)
 ```
 
@@ -115,7 +116,7 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 хэширование загрузки в несколько ГБ никогда не держит блокировку строки/advisory.
 :::
 
-Staged-объект (`Vaulter\Cas\StagedTempObject`, реализующий
+Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующий
 `Vaulter\Contracts\Cas\StagedObject`) отдаёт `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` и идемпотентный `discard()`, который удаляет temp-файл, как только байты
 запромоучены (или коммит откатился).
@@ -167,7 +168,7 @@ SQLite даже там, где advisory-блокировка ниже — no-op.
 живучести принимается по строкам, прочитанным *после* блокировки:
 
 ```php
-// Vaulter\Cas\BlobStore::commit() — упрощённо
+// Vaulter\Media\Cas\BlobStore::commit() — упрощённо
 $staged = $this->content->stage($stream);          // 1. stage + hash ВНЕ транзакции
 $key    = $this->content->keyFor($scope, $staged->sha256());
 
@@ -185,7 +186,7 @@ DB::transaction(function () use (…) {
 });
 ```
 
-Ключевые свойства (все из `Vaulter\Cas\BlobStore`):
+Ключевые свойства (все из `Vaulter\Media\Cas\BlobStore`):
 
 - **Стейджинг происходит вне транзакции.** Блокируется только решение о живучести.
 - **Попадание в дедуп пропускает физическую запись.** Байты промоутятся только когда строка
@@ -204,7 +205,7 @@ $blobStore->detach($fileVersion, $blob);   // байты здесь НЕ уда�
 $stream = $blobStore->read($blob);         // resource|null над каноническими байтами
 ```
 
-В Drive это связывается через `Vaulter\Actions\Drive\UploadFileAction`: он зондирует размер,
+В Drive это связывается через `Vaulter\Drive\Actions\UploadFileAction`: он зондирует размер,
 проверяет квоту хранилища *до* коммита байтов, вызывает `BlobStore::commit()` внутри
 транзакции, затем создаёт `File` / `FileVersion` и ребро. `tenant_id` и `storage_id`,
 переданные в `commit()`, читаются прямо из строки владеющего `Storage`.
@@ -234,7 +235,7 @@ Enum обеспечивает легальные переходы через `al
 
 Когда вы удаляете файл в корзину и очищаете её, рёбра версий отцепляются. Блоб без оставшихся
 рёбер — *мусор*, но безопасно удалить его байты, пока загрузки могут воскрешать именно этот
-`sha256`, — самое сложное. GC Vaulter (`Vaulter\Cas\BlobGarbageCollector`) решает это в две
+`sha256`, — самое сложное. GC Vaulter (`Vaulter\Media\Cas\BlobGarbageCollector`) решает это в две
 фазы, **слепой к ACL** и работающий от имени системы (узел, который пользователь не видит, всё
 равно удерживает свой блоб).
 
@@ -336,7 +337,7 @@ Schedule::command('vaulter:gc-blobs --pending')->dailyAt('03:00');
 ## Согласование: пересборка кэша `ref_count`
 
 `ref_count` — кэш, а не истина, поэтому он дрейфует. `vaulter:reconcile-blobs` (за которым стоит
-`Vaulter\Cas\BlobReconciler`) пересобирает его из счётчиков рёбер `v_file_version_blobs` —
+`Vaulter\Media\Cas\BlobReconciler`) пересобирает его из счётчиков рёбер `v_file_version_blobs` —
 реального источника живучести — и сообщает об угрозах целостности. Он **никогда ничего не
 удаляет**.
 

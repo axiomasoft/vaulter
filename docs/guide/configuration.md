@@ -28,26 +28,27 @@ subclass (to add ULID keys, tenant scoping, audit behaviour, …):
 
 ```php
 'models' => [
-    // Legacy DocDrive (document-id-attached path)
-    'document'   => \Vaulter\Models\Documents\Document::class,
-    'version'    => \Vaulter\Models\Documents\DocumentVersion::class,
-    'folder'     => \Vaulter\Models\Documents\DocumentFolder::class,
-    'permission' => \Vaulter\Models\Documents\DocumentPermission::class,
-    'comment'    => \Vaulter\Models\Documents\DocumentComment::class,
-    'share'      => \Vaulter\Models\Documents\DocumentShare::class,
-
-    // Vaulter Drive
+    // Vaulter Drive entities
     'storage'    => \Vaulter\Models\Drive\Storage::class,
     'node'       => \Vaulter\Models\Drive\Node::class,
     'file'       => \Vaulter\Models\Drive\File::class,
     'blob'       => \Vaulter\Models\Cas\Blob::class,
     'grant'      => \Vaulter\Models\Access\NodeGrant::class,
     'node_share' => \Vaulter\Models\Sharing\NodeShare::class,
-    // …and file_version, file_version_blob, node_document_version,
-    //    upload_session, upload_part, activity, outbox, webhook_endpoint,
+    // …and file_version, file_version_blob, activity, outbox, webhook_endpoint,
     //    webhook_delivery
 ],
 ```
+
+::: info Drive/Documents-owned models
+`upload_session` / `upload_part` are owned by `axioma-studio/vaulter-drive`; the
+node-attached `node_comment` / `node_document_version` models are owned by
+`axioma-studio/vaulter-documents`. Neither ships a default here — each package merges
+its own entry via its own `config/vaulter-drive.php` / `config/vaulter-documents.php`
+and throws if you resolve it without the package installed. The legacy
+document-id-attached models (`document`, `version`, `folder`, `permission`, `comment`,
+`share`) were fully excised — see [ADR-0014](/adr/0014-legacy-docvault-strangler).
+:::
 
 Vaulter route-binds `{storage}` and `{node}` against whatever you put here, so a host subclass
 keeps resolving. See [Multi-tenancy](/guide/multi-tenancy) for the tenant-aware-model pattern.
@@ -195,9 +196,9 @@ disk:
 
 ```php
 'cas' => [
-    'content_store'  => \Vaulter\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Cas\BlobStore::class,
+    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
 ],
 
 'dedup' => [

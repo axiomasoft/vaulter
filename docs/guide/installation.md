@@ -17,11 +17,21 @@ PHP `^8.4`, Laravel `^12.0 || ^13.0`, and (for the UI) Vue `^3.4` / Node `>=20`.
 
 ## 1. Backend — the Laravel package
 
-Require the core package:
+`axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is
+the shared kernel (authorization, CAS contracts, sharing, panels). Require the packages
+your app actually needs:
 
 ```bash
-composer require axioma-studio/vaulter-core
+# Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
+composer require axioma-studio/vaulter-drive
+
+# Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
+composer require axioma-studio/vaulter-documents
 ```
+
+Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
+plain `composer require axioma-studio/vaulter-core` alone is only useful if you plan to
+implement every domain contract yourself without Drive or Documents.
 
 Then run the bundled install command, which publishes the config, publishes the migrations
 and offers to run them:

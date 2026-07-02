@@ -25,6 +25,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `require axioma-studio/vaulter-media`. `Contracts\Cas\*`, the `v_blobs` schema, `Models\Cas\Blob`,
   `Enums\Cas\BlobStatus` and `Repositories\Cas\BlobStoreRepository` remain in core. Config paths
   (`vaulter.cas.*`, `vaulter.dedup.*`) are unchanged. Dependency direction is one-way (media → core; no cycle).
+- **BREAKING (pre-1.0): the file/folder tree, storage manager and resumable uploads moved out of
+  `vaulter-core` into the new standalone package `axioma-studio/vaulter-drive`** (P2 #5, D1). The
+  Drive Actions (`TrashNodeAction`, `UploadFileAction`), `DriveContext`, `DriveManager`,
+  `StorageManager`, the `vaulter:purge-trash` / `vaulter:sweep-uploads` commands, Drive events
+  (`FileUploaded`, `NodeCopied`, `NodeCreated`, `NodeMoved`, `NodeRenamed`, `NodeTrashed`,
+  `NodeVersionCommitted`, `StorageCreated`, …), the Drive/Storage/Upload HTTP controllers, requests
+  and resources, and the whole `Uploads\*` subtree (tus + S3-multipart handlers, upload session/part
+  models and repositories) moved from `Vaulter\*` to `Vaulter\Drive\*`. Hosts referencing those FQCNs
+  directly, or relying on `vaulter-core` alone for `Vaulter::for()`/`forStorage()`, node CRUD, uploads
+  or downloads, must now also `require axioma-studio/vaulter-drive`.
+  `Contracts\Drive\{DriveHandle,DriveHandleFactory}`, `Support\DriveNameRules`,
+  `Exceptions\Nodes\NodeNameConflictException`, `Http\Resources\Drive\NodeResource` and the
+  `v_nodes`/`v_upload_sessions`/`v_upload_parts` schemas remain in core.
+  `vaulter.models.{upload_session,upload_part}` are no longer defaulted by core and now
+  guard-throw when the drive package is absent; other config paths are unchanged. Dependency
+  direction is one-way (drive → core+media; no cycle).
+- **BREAKING (pre-1.0): document editing, version history, comments and realtime collaboration
+  moved out of `vaulter-core` into the new standalone package `axioma-studio/vaulter-documents`**
+  (P2 #5, D2). The document Actions (`CreateDocumentNodeAction`, `UpdateDocumentContentAction`,
+  `CreateNamedVersionAction`, `RestoreDocumentVersionAction`, `AddNodeCommentAction`,
+  `ResolveNodeCommentAction`, `DeleteNodeCommentAction`, `PersistYjsSnapshotAction`), the default
+  `Access\HostUserResolver`, the `Collaboration\*` drivers (`HocuspocusNodeCollaborationDriver`,
+  `ReverbNodeCollaborationDriver`, `NodeCollaborationDriverManager`, `CollaborationCall`,
+  `CollaborationCallResolver`), the document handlers (`TipTapHandler`, `PreviewHandler`,
+  `DownloadOnlyHandler`, `UniverHandler`), the `HtmlExporter` / `MarkdownExporter`, the
+  `NodeComment` / `NodeDocumentVersion` models and the document/collaboration/comment HTTP
+  controllers moved from `Vaulter\*` to `Vaulter\Documents\*`. Hosts referencing those FQCNs
+  directly, or relying on `vaulter-core` alone for document editing, versioning, comments or
+  collaboration, must now also `require axioma-studio/vaulter-documents`.
+  `Contracts\Documents\DocumentHandler`, `Contracts\Documents\DocumentContent`,
+  `Contracts\Documents\DocumentExporter`, `Contracts\Documents\HandlerRegistry` and
+  `Contracts\Documents\NodeHandlerResolver`, plus the value objects
+  `ValueObjects\Documents\FileDescriptor`, `DocumentCapabilities`, `HandlerUi`,
+  `HandlerDescriptor`, `TipTapContent` and `OpaqueDocumentContent`, and the `v_node_comments`/
+  `v_node_document_versions` schemas remain in core.
+  `vaulter.models.{node_comment,node_document_version}` are no longer defaulted by core and now
+  guard-throw when the documents package is absent; `vaulter.handlers` / `vaulter.exporters`
+  default to `[]` in core. Dependency direction is one-way (documents → core; no cycle) —
+  `vaulter-drive` is not a runtime dependency of `vaulter-documents`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

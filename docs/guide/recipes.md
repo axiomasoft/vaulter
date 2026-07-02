@@ -408,9 +408,9 @@ If you need behaviour the default driver doesn't cover, implement
 ```php
 // config/vaulter.php
 'cas' => [
-    'content_store'  => \Vaulter\Cas\Sha256ContentStore::class,
+    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
     'storage_driver' => \App\Vaulter\S3ChecksumDriver::class, // your driver
-    'blob_store'     => \Vaulter\Cas\BlobStore::class,
+    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
 ],
 ```
 

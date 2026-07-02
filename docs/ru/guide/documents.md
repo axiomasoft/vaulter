@@ -1,6 +1,6 @@
 ---
 title: Узлы-документы
-description: Создание, редактирование и версионирование узлов-документов — контент TipTap, автосохранение против именованных версий, восстановление и прунинг — поверх REST-поверхности DocDrive.
+description: Создание, редактирование и версионирование узлов-документов — контент TipTap, автосохранение против именованных версий, восстановление и прунинг — поверх REST-поверхности Documents.
 outline: deep
 ---
 
@@ -20,7 +20,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 ::: warning Фича по подписке (opt-in)
 Поверхность узлов-документов включается флагом фичи **`document_versions`**, который **по
-умолчанию выключен**. Таблица `v_node_document_versions` создаётся, а маршруты DocDrive
+умолчанию выключен**. Таблица `v_node_document_versions` создаётся, а маршруты Documents
 регистрируются, только когда он включён:
 
 ```php
@@ -30,7 +30,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 ],
 ```
 
-С выключенным флагом у `Vaulter\Models\Documents\NodeDocumentVersion` нет таблицы, а маршрутов
+С выключенным флагом у `Vaulter\Documents\Models\NodeDocumentVersion` нет таблицы, а маршрутов
 `storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions` не
 существует.
 :::
@@ -78,7 +78,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 ::: code-group
 
 ```php [PHP — Action]
-use Vaulter\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
 use Vaulter\Data\CreateDocumentNodeData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -226,7 +226,7 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 ```
 
 ```php [PHP — Action]
-use Vaulter\Actions\Documents\UpdateDocumentContentAction;
+use Vaulter\Documents\Actions\UpdateDocumentContentAction;
 use Vaulter\Data\UpdateDocumentContentData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -275,7 +275,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
 ```
 
 ```php [PHP — Action]
-use Vaulter\Actions\Documents\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\CreateNamedVersionAction;
 use Vaulter\Data\CreateNamedVersionData;
 
 app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
@@ -353,7 +353,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
 ```php [PHP — Action]
-use Vaulter\Actions\Documents\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
 
 app(RestoreDocumentVersionAction::class)->execute(
     node:      $node,
@@ -405,9 +405,9 @@ app(RestoreDocumentVersionAction::class)->execute(
 
 | Событие | Кем выбрасывается | Полезная нагрузка |
 |---|---|---|
-| `Events\Documents\DocumentNodeCreated` | создание | `node`, `version` (v1), `actorId` |
-| `Events\Documents\DocumentContentUpdated` | автосохранение | `node`, `version`, `created` (bool — дозаписано против перезаписано), `actorId` |
-| `Events\Documents\DocumentVersionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\DocumentNodeCreated` | создание | `node`, `version` (v1), `actorId` |
+| `Vaulter\Documents\Events\DocumentContentUpdated` | автосохранение | `node`, `version`, `created` (bool — дозаписано против перезаписано), `actorId` |
+| `Vaulter\Documents\Events\DocumentVersionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Ошибки
 

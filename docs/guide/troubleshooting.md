@@ -227,7 +227,7 @@ auth 403s.
   (the actor needs at least `View` on the node). A 403 here means the actor genuinely lacks
   `View` — check the grants, not the socket. Ensure Reverb is running and your
   `config('broadcasting')` connection matches `config('vaulter.collaboration.drivers.reverb.connection')`.
-- **`document_versions` feature.** The node-room authorization and the DocDrive routes only mount
+- **`document_versions` feature.** The node-room authorization and the Documents routes only mount
   when the `document_versions` feature is on. If the editor never appears, confirm:
 
   ```php

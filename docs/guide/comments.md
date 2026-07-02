@@ -43,8 +43,8 @@ Or drop in the slot-driven panel:
 
 | Event | Type | When |
 |---|---|---|
-| `Vaulter\Events\Documents\NodeCommentAdded` | broadcast | a comment is posted |
-| `Vaulter\Events\Documents\NodeCommentResolved` | domain (after commit) | a comment is resolved |
-| `Vaulter\Events\Documents\NodeCommentDeleted` | domain (after commit) | a comment is deleted |
+| `Vaulter\Documents\Events\NodeCommentAdded` | broadcast | a comment is posted |
+| `Vaulter\Documents\Events\NodeCommentResolved` | domain (after commit) | a comment is resolved |
+| `Vaulter\Documents\Events\NodeCommentDeleted` | domain (after commit) | a comment is deleted |
 
 Listen for these in your app to send notifications or mirror activity.

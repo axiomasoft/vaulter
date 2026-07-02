@@ -61,7 +61,7 @@ The model property is declared on every Drive model
 ::: tip
 The `tenant.enabled` flag is what *your* tenant-aware models and migrations should
 key on. Vaulter reads it only to decide whether to apply the optional column on the
-**legacy DocDrive** tables (`Vaulter\Support\VaulterSchema::tenant()` is conditional);
+**legacy DocVault** tables (`Vaulter\Support\VaulterSchema::tenant()` is conditional);
 the modern Drive tables emit the column unconditionally as explained above.
 :::
 
@@ -100,11 +100,11 @@ $storage = $this->store->create([
 ```
 
 If you want `tenant_id` populated, your swapped-in `Storage` model must set it. From
-there it propagates automatically: `Vaulter\Actions\Drive\UploadFileAction` reads it
+there it propagates automatically: `Vaulter\Drive\Actions\UploadFileAction` reads it
 straight off the storage row and hands it to the blob store:
 
 ```php
-// Vaulter\Actions\Drive\UploadFileAction
+// Vaulter\Drive\Actions\UploadFileAction
 $blob = $this->blobs->commit(
     stream:    $data->stream,
     tenantId:  $data->storage->tenant_id,   // ← from the storage row, host-populated

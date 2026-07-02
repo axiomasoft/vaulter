@@ -16,7 +16,8 @@ deduplication, a clear separation between *bytes on disk* and *rows in the
 database*, and a garbage collector that is safe to run while uploads are in flight.
 
 ::: info Where this lives
-The CAS implementation is in `Vaulter\Cas\*`, the row model is
+The CAS implementation is in `Vaulter\Media\Cas\*` (package `axioma-studio/vaulter-media`;
+the host-facing `BlobLock` stays at `Vaulter\Cas\BlobLock` in core), the row model is
 `Vaulter\Models\Cas\Blob`, the lifecycle enum is `Vaulter\Enums\Cas\BlobStatus`, and
 configuration sits under the `cas`, `dedup`, `gc` and `storage` keys of
 `config/vaulter.php`.
@@ -44,16 +45,16 @@ Three contracts split the work, and all three are swappable through `config('vau
 
 | Contract | Default | Responsibility |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Cas\BlobStore` | High-level lifecycle: `commit` / `attach` / `detach` / `read`. The single CAS entry point. |
-| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
-| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
+| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `attach` / `detach` / `read`. The single CAS entry point. |
+| `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
+| `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
 // config/vaulter.php
 'cas' => [
-    'content_store'  => \Vaulter\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Cas\BlobStore::class,
+    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
 ],
 ```
 
@@ -87,7 +88,7 @@ The bytes themselves never appear in any column. The model timestamps are disabl
 on the first four hex characters of the digest:
 
 ```php
-// Vaulter\Cas\Sha256ContentStore::keyFor()
+// Vaulter\Media\Cas\Sha256ContentStore::keyFor()
 "{$scope}/{$a}/{$b}/{$sha256}"   // e.g. "t42/ab/cd/abcd…ef"  (scope = tenant 42)
 ```
 
@@ -116,7 +117,7 @@ lying client `sha256`, a resumable-upload `expected_sha256`, or an S3 multipart
 transaction, so hashing a multi-GB upload never holds the row/advisory lock.
 :::
 
-The staged object (`Vaulter\Cas\StagedTempObject`, implementing
+The staged object (`Vaulter\Media\Cas\StagedTempObject`, implementing
 `Vaulter\Contracts\Cas\StagedObject`) exposes `path()`, `sha256()`, `sizeBytes()`,
 `readStream()` and an idempotent `discard()` that removes the temp file once the
 bytes are promoted (or the commit rolls back).
@@ -169,7 +170,7 @@ whose **first statement** is the per-`(scope, sha256)` lock, so every liveness
 decision is made from rows read *after* the lock:
 
 ```php
-// Vaulter\Cas\BlobStore::commit() — simplified
+// Vaulter\Media\Cas\BlobStore::commit() — simplified
 $staged = $this->content->stage($stream);          // 1. stage + hash OUTSIDE the tx
 $key    = $this->content->keyFor($scope, $staged->sha256());
 
@@ -187,7 +188,7 @@ DB::transaction(function () use (…) {
 });
 ```
 
-Key properties (all from `Vaulter\Cas\BlobStore`):
+Key properties (all from `Vaulter\Media\Cas\BlobStore`):
 
 - **Staging happens outside the transaction.** Only the liveness decision is locked.
 - **A dedup hit skips the physical write.** Bytes are promoted only when the row is
@@ -207,7 +208,7 @@ $blobStore->detach($fileVersion, $blob);   // bytes are NOT deleted here — GC 
 $stream = $blobStore->read($blob);         // resource|null over the canonical bytes
 ```
 
-In the Drive, this is wired by `Vaulter\Actions\Drive\UploadFileAction`: it probes
+In the Drive, this is wired by `Vaulter\Drive\Actions\UploadFileAction`: it probes
 the size, enforces the storage quota *before* committing bytes, calls
 `BlobStore::commit()` inside a transaction, then creates the `File` / `FileVersion`
 and the edge. The `tenant_id` and `storage_id` handed to `commit()` are read
@@ -239,7 +240,7 @@ and `isLive()` returns true for `Pending` and `Committed` (both pin their bytes)
 When you trash and purge a file, its version edges detach. A blob with no remaining
 edges is *garbage* — but deleting its bytes safely, while uploads may be
 resurrecting that exact `sha256`, is the hard part. Vaulter's GC
-(`Vaulter\Cas\BlobGarbageCollector`) solves it in two phases, **ACL-blind** and run
+(`Vaulter\Media\Cas\BlobGarbageCollector`) solves it in two phases, **ACL-blind** and run
 as the system (a node a user cannot see still pins its blob).
 
 ### Phase 1 — mark
@@ -343,7 +344,7 @@ recipe.
 ## Reconciliation: rebuilding the `ref_count` cache
 
 `ref_count` is a cache, not the truth, so it drifts. `vaulter:reconcile-blobs`
-(backed by `Vaulter\Cas\BlobReconciler`) rebuilds it from the
+(backed by `Vaulter\Media\Cas\BlobReconciler`) rebuilds it from the
 `v_file_version_blobs` edge counts — the real liveness source — and reports
 integrity hazards. It **never deletes anything**.
 

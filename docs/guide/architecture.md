@@ -55,7 +55,8 @@ A typical write — say `POST storages/{storage}/uploads` — flows top to botto
    feed and stage the transactional outbox — Vaulter never couples the Action to them.
 
 The ergonomic entry point `Vaulter::for($entity)` returns a
-[`DriveContext`](#the-drive-handle) that wraps exactly this pipeline for programmatic use.
+[`DriveContext`](#the-drive-handle) (`Vaulter\Drive\DriveContext`, shipped by
+`axioma-studio/vaulter-drive`) that wraps exactly this pipeline for programmatic use.
 
 ## Layers
 
@@ -70,12 +71,15 @@ object so the Vue client renders only allowed actions.
 (`config('vaulter.models.storage|node')`) via `Route::bind` registered in the service
 provider — so a host can point the config at a subclass and binding keeps working.
 
-### Actions — `Vaulter\Actions\*`
+### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Actions\*`
 
 One use case each, `final readonly`. An Action opens the transaction, enforces business rules,
-calls repositories/CAS, and dispatches a domain event **after commit**. The Drive write set:
+calls repositories/CAS, and dispatches a domain event **after commit**. The Drive write set
+(`Vaulter\Drive\Actions\*`, requires `axioma-studio/vaulter-drive`):
 `CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, `RenameNodeAction`,
-`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`.
+`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`. Document-node
+Actions live under `Vaulter\Documents\Actions\*` (requires `axioma-studio/vaulter-documents`);
+core itself only keeps `Vaulter\Actions\{Access,Sharing,Webhooks}\*`.
 
 ::: info Authorization placement
 Actions perform **no** access checks. Authorization is enforced once, at the HTTP boundary
@@ -106,34 +110,43 @@ domain values (`TipTapContent`, `FileDescriptor`, `DocumentCapabilities`, the AC
 
 ## Domain structure
 
-The core package (`axioma-studio/vaulter-core`, namespace `Vaulter\`) is organised by domain
-under `packages/core/src`:
+Since the P2 #5 package extraction split the monolith, `axioma-studio/vaulter-core`
+(namespace `Vaulter\`) holds only the cross-cutting seams — authorization, CAS
+value-objects/contracts, sharing, panels, webhooks, activity — under `packages/core/src`;
+Drive and Documents each ship as their own package:
 
-| Directory | Responsibility |
+| Directory (core) | Responsibility |
 |---|---|
-| `Drive/` | `DriveContext` (the host-facing handle), `StorageManager` (get-or-create a storage + root node). |
 | `Access/` | `AccessResolver` (the effective-permission engine), `HostRoleDriverManager`, `HostUserResolver`. |
 | `Drivers/Permission/` | The shipped `HostRoleDriver` lanes: `database`, `gate`, `spatie`, `azgard`. |
-| `Cas/` | The content-addressed store: `BlobStore`, `Sha256ContentStore`, `FlysystemStorageDriver`, `BlobGarbageCollector`, `BlobReconciler`, `BlobLock`. |
-| `Documents/` | `DocumentHandlerRegistry`, handler resolution, node export, collaboration session service. |
+| `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
 | `Panels/` | `Panel` builder, `StoragePanelProvider`, `PanelRegistry`, `PanelTablesBuilder`, `PanelMigrationGenerator`. |
 | `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, `PanelTablesBuilder` columns. |
 | `Sharing/` | The bearer-link channel: `ShareResolver`, `ShareContext`, `ShareResult`. |
-| `Collaboration/` | The Reverb / Hocuspocus driver pairs + `CollaborationCallResolver`. |
-| `Uploads/` | Resumable uploads: `UploadSessionManager`, `TusUploadHandler`, `S3MultipartHandler`. |
 | `Webhooks/` | The reliability layer: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |
-| `Actions/` · `Data/` · `Events/` · `Enums/` · `Models/` · `Repositories/` | The cross-cutting building blocks described under [Layers](#layers). |
-| `Contracts/` | Every host-facing seam (see below). |
+| `Actions/` · `Data/` · `Events/` | Access, Sharing and Webhooks only — Drive and Documents actions/events now live in their own packages (see below). |
+| `ValueObjects/Documents/` · `Exceptions/Documents/` | Format-agnostic value objects that both Drive and Documents depend on: `TipTapContent`, `DocumentCapabilities`, `FileDescriptor`, `HandlerUi`, `InvalidTipTapContentException`. |
+| `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Documents/*` (the interfaces the split packages implement). |
+| `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
 | `Testing/` | Ship-with-package doubles: `NullRoleDriver`, `FakeAzgardGuard`. |
 
-Two sibling packages build on core: `axioma-studio/vaulter-filament` (the Filament 5 admin
-plugin, namespace `Vaulter\Filament\`) and `@vaulter/vue` (the Drive UI + composables).
+| Package | Namespace | Adds |
+|---|---|---|
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, the Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) and their Events. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, `DocumentHandlerRegistry`, node export, the node-collaboration session service. |
+| `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
+| `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
+| `@vaulter/vue` | — | The Drive UI + composables (npm). |
+
+All are siblings that build on `vaulter-core`; Drive and document-editing features require
+installing the matching package (see [Installation](/guide/installation)).
 
 ## The Drive handle
 
 `Vaulter::for($entity, panel: '…')` is the primary integration entry point. It is a thin
-facade over `VaulterManager`:
+facade over `VaulterManager`, returning a `DriveContext` from `axioma-studio/vaulter-drive`
+(the package must be installed for this handle to be usable):
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -215,11 +228,10 @@ with one id strategy per install (`config('vaulter.ids.default')`, default `ulid
 | `v_blobs` | The CAS: one row per `(scope, sha256)` with a `BlobStatus` lifecycle ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | The per-node ACL with inheritance + deny-veto. |
 | `v_node_shares` | Bearer share links — hash-only token storage ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | DocDrive: node-attached document version history (gated by `document_versions`). |
+| `v_node_document_versions` | Documents: node-attached document version history (gated by `document_versions`). |
 | `v_upload_sessions` / `v_upload_parts` | Resumable upload sessions. |
 | `v_activity` | The append-only activity feed. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | The transactional-outbox + webhook reliability layer. |
-| `v_documents*` | The **legacy** DocDrive document path, kept for backward compatibility. |
 
 The tree is an **adjacency list**: move/rename is a single `UPDATE` of `parent_id` / `name`
 (no path rewriting). Descent uses recursive CTEs scoped by `storage_id`; recursive descendant
