@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Events;
+namespace Vaulter\Documents\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\NodeDocumentVersion;
 use Vaulter\Models\Drive\Node;
 
 /**

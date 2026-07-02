@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Enums;
+namespace Vaulter\Documents\Enums;
 
-use Vaulter\DocDrive\Documents\DocumentHandlerRegistry;
-use Vaulter\DocDrive\ValueObjects\DocumentCapabilities;
+use Vaulter\Documents\Documents\DocumentHandlerRegistry;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
 
 /**
  * The capability a {@see DocumentHandlerRegistry} resolution is

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Vaulter\DocDrive\Models\NodeComment;
+use Vaulter\Documents\Models\NodeComment;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;

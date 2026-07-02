@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Enums;
+namespace Vaulter\Documents\Enums;
 
 use Vaulter\Attributes\Icon;
 use Vaulter\Attributes\Label;
 use Vaulter\Attributes\TiptapExtensions;
-use Vaulter\DocDrive\Support\Concerns\HasTiptapExtensions;
+use Vaulter\Documents\Support\Concerns\HasTiptapExtensions;
 use Vaulter\Support\Concerns\HasIcon;
 use Vaulter\Support\Concerns\HasLabel;
 

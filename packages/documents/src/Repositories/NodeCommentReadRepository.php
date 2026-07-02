@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Repositories;
+namespace Vaulter\Documents\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\DocDrive\Models\NodeComment;
+use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Models\NodeComment;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Read-side access to the NODE-attached comments (ADR-0014 шаг 1). The per-node feed
@@ -21,7 +21,7 @@ final class NodeCommentReadRepository
      */
     public function forNode(Node $node): Builder
     {
-        $model = Config::nodeCommentModel();
+        $model = DocumentsModels::comment();
 
         return $model::query()
             ->where('node_id', $node->getKey())
@@ -30,7 +30,7 @@ final class NodeCommentReadRepository
 
     public function find(int|string $id): ?NodeComment
     {
-        $model = Config::nodeCommentModel();
+        $model = DocumentsModels::comment();
 
         return $model::query()->find($id);
     }

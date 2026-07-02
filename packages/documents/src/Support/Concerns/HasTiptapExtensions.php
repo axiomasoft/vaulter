@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Support\Concerns;
+namespace Vaulter\Documents\Support\Concerns;
 
 use Vaulter\Attributes\TiptapExtensions;
 use Vaulter\Support\EnumCaseAttributeResolver;

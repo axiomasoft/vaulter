@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Documents\NodeHandlerResolver;
-use Vaulter\Drive\Http\Resources\NodeResource;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Documents\NodeHandlerResolver;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Document\DocumentTestHelpers;
 
 /**
  * The handler descriptor embedded in the node payload (§4.5 / §5 / M4a): the client

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Middleware;
+namespace Vaulter\Documents\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Vaulter\DocDrive\Collaboration\CollaborationCall;
-use Vaulter\DocDrive\Collaboration\CollaborationCallResolver;
+use Vaulter\Documents\Collaboration\CollaborationCall;
+use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 
 /**
  * Guards the server-to-server collaboration webhook endpoints (collab/authenticate,

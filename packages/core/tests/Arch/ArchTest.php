@@ -54,7 +54,7 @@ arch('no debug helpers leak into the package')
  * interface; the built-in handlers are final; the registry is final.
  */
 arch('the document handler registry and its handlers are final')
-    ->expect('Vaulter\DocDrive\Documents')
+    ->expect('Vaulter\Documents\Documents')
     ->toBeFinal();
 
 arch('the DocumentHandler contract is an interface (H.5)')
@@ -183,8 +183,12 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
-        // ValueObjects is no longer a core technical root: Phase K moved its VOs to
-        // Vaulter\Drive\ValueObjects / Vaulter\DocDrive\ValueObjects.
+        // Revived in Phase D2 (P2 #5): the Documents extensibility-seam VOs
+        // (FileDescriptor/DocumentCapabilities/HandlerUi/HandlerDescriptor/
+        // TipTapContent/OpaqueDocumentContent) are kernel-shared — core's own
+        // Contracts\Documents\* interfaces type against them — so they live at
+        // Vaulter\ValueObjects\Documents\*, not in the extracted documents package.
+        'ValueObjects' => [],
     ];
 
     $offenders = [];
@@ -225,7 +229,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Models\Sharing\NodeShare',
         'Vaulter\Drive\Uploads\Models\UploadSession',
         'Vaulter\Models\Activity\Activity',
-        'Vaulter\DocDrive\Models\NodeDocumentVersion',
+        'Vaulter\Documents\Models\NodeDocumentVersion',
         'Vaulter\Enums\Drive\NodeKind',
         'Vaulter\Enums\Access\Ability',
         'Vaulter\Events\Sharing\NodeShareCreated',
@@ -235,7 +239,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Contracts\Cas\BlobStore',
         'Vaulter\Contracts\Access\HostRoleDriver',
-        'Vaulter\DocDrive\ValueObjects\TipTapContent',
+        'Vaulter\ValueObjects\Documents\TipTapContent',
         'Vaulter\Access\Abilities\NodeAbilities',
     ];
 
@@ -297,9 +301,8 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', function
  * under Vaulter\Media) is NEVER referenced back from core (or any other Vaulter code
  * except media itself) — a leak would recreate the cycle the extraction avoided.
  *
- * Scaffold for the upcoming Drive/DocDrive extractions (Phase D1/D2): once those
- * packages exist, extend this with their owned namespaces using the same
- * `->ignoring(...)` shape.
+ * The drive (D1) and documents (D2) extractions landed as file-scan guards below
+ * instead of this `->ignoring(...)` shape — see `coreReferencesTo()` for why.
  */
 arch('core (and all Vaulter code) never depends on the extracted vaulter-media package')
     ->expect('Vaulter')
@@ -307,32 +310,75 @@ arch('core (and all Vaulter code) never depends on the extracted vaulter-media p
     ->ignoring('Vaulter\Media');
 
 /**
- * P2 #5 / ADR-0015, Phase K — Drive/DocDrive dependency-direction guards (SCAFFOLD).
+ * Scans packages/core/src for a `Vaulter\<root>\` reference OUTSIDE comments/docblocks
+ * (the ActivityRecorder/OutboxRecorder/VaulterManager docblocks legitimately name
+ * extracted-package classes in prose explaining the seam split). This is a file scan
+ * (NOT `expect('Vaulter')->not->toUse(...)`) so it enforces core⊥<package> WITHOUT an
+ * ->ignoring exclusion: each satellite is a require-dev sibling autoloaded into the
+ * core test run, so the namespace-graph form would need ->ignoring('Vaulter\<root>')
+ * to skip the satellite's own internal self-references — this form instead asserts the
+ * precise invariant (zero references from CORE SOURCE) and self-updates as new core
+ * files are added. `Vaulter\<root>\` matches the package root only; the kernel
+ * DATA-domain namespaces (Vaulter\Models\Drive, Vaulter\Repositories\Drive, …) do not
+ * start with that prefix and are correctly ignored. Shared by the drive (D1) and
+ * documents (D2) dependency-direction guards below.
  *
- * The namespace rename landed in Phase K: drive-bound code now lives under
- * Vaulter\Drive\*, docdrive-bound code under Vaulter\DocDrive\* — but both are still
- * PHYSICALLY inside vaulter-core (the composer split is Phase D1/D2). Unlike the media
- * guard above there is no ->ignoring: once the packages are extracted, the target
- * invariant is that no core/kernel code references Vaulter\Drive / Vaulter\DocDrive at
- * all.
- *
- * These are ->todo() and NOT yet enforcing because this phase renames only; it does
- * not cut the transitional seams that still make kernel code reference the two roots:
- *   - Vaulter\Activity + Vaulter\Webhooks subscribers import Vaulter\Drive\Events\*;
- *   - Vaulter\Contracts\Documents and Vaulter\Access\HostUserResolver reference
- *     Vaulter\DocDrive\{Contracts\Collaboration,ValueObjects,Documents};
- *   - VaulterServiceProvider / config wire both roots.
- * Cutting those seams (event abstraction, Config inversion, provider/route split) is
- * Phase D1/D2 work; when it lands, drop ->todo() and these turn green with real teeth.
+ * @return list<string>
  */
-$driveSeamNote = 'Phase D1/D2: enforced once the transitional seams are cut (event abstraction, '
-    .'Config inversion, provider/route split); drive/docdrive code is still co-located in core. '
-    .'Convert back to a top-level arch()->not->toUse() guard when the composer split lands.';
+function coreReferencesTo(string $root): array
+{
+    $src = __DIR__.'/../../src';
+    $offenders = [];
 
-test('SCAFFOLD: core (non-Drive code) never depends on the future vaulter-drive package', function () {
-    expect('Vaulter')->not->toUse('Vaulter\Drive');
-})->skip($driveSeamNote);
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src)),
+        '/\.php$/',
+    );
 
-test('SCAFFOLD: core (non-DocDrive code) never depends on the future vaulter-docdrive package', function () {
-    expect('Vaulter')->not->toUse('Vaulter\DocDrive');
-})->skip($driveSeamNote);
+    $pattern = '/\\bVaulter\\\\'.preg_quote($root, '/').'\\\\/';
+
+    foreach ($files as $file) {
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        $code = '';
+
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            $code .= is_array($token) ? $token[1] : $token;
+        }
+
+        if (preg_match($pattern, $code) === 1) {
+            $offenders[] = $file->getPathname();
+        }
+    }
+
+    return $offenders;
+}
+
+test('core source never references the extracted vaulter-drive package (P2 #5 / D1)', function (): void {
+    expect(coreReferencesTo('Drive'))->toBe([]);
+});
+
+/**
+ * P2 #5 / ADR-0015, Phase D2 — vaulter-documents is now PHYSICALLY extracted (its code
+ * lives in packages/documents, namespace Vaulter\Documents\*). The transitional seams
+ * are cut: the 7 Contracts\Documents extensibility VOs + InvalidTipTapContentException/
+ * UnknownExportFormatException moved to core (kernel-shared, T6/D2 finding); the
+ * HandlerRegistry/NodeHandlerResolver contracts + `Vaulter::registerHandler()` resolve
+ * the documents package's bindings without naming its classes; HostUserResolver
+ * (default + binding) moved to that package entirely; the upload/comment/
+ * document-version Config defaults inverted; the document/comment/collab routes + the
+ * handler/broadcast provider wiring moved to its own provider. Same file-scan form as
+ * the drive guard above.
+ */
+test('core source never references the extracted vaulter-documents package (P2 #5 / D2)', function (): void {
+    expect(coreReferencesTo('Documents'))->toBe([]);
+});

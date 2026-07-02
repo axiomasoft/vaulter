@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Enums;
+namespace Vaulter\Documents\Enums;
 
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;

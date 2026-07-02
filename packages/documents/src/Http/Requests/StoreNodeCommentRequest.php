@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Requests;
+namespace Vaulter\Documents\Http\Requests;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\DocDrive\Data\CreateNodeCommentData;
+use Vaulter\Documents\Data\CreateNodeCommentData;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

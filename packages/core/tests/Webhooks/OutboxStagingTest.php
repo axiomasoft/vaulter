@@ -5,7 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Log;
 use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Webhooks\WebhookEvent;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -57,16 +58,29 @@ it('stages a node.created row carrying the actor and a slim payload', function (
 
 // ─────────────────────────── idempotency (event_id) ───────────────────────────
 
-it('is idempotent by event_id: re-firing the same event stages no duplicate', function (): void {
+it('is idempotent by event_id: re-staging the same key stages no duplicate', function (): void {
     $storage = AccessTestHelpers::storage();
     Outbox::query()->delete();
 
     $folder = AccessTestHelpers::folder($storage, null, 'dup');
 
-    // Two recordings of the SAME node event → the event_id is identical → one row.
+    // Two stagings under the SAME event_id key → the second is a no-op → one row. This
+    // exercises the core OutboxRecorder::stage() idempotency seam directly (the seam the
+    // vaulter-drive subscriber maps its node events through).
     $recorder = app(OutboxRecorder::class);
-    $first = $recorder->recordNodeCreated(new NodeCreated(node: $folder, actorId: 7));
-    $second = $recorder->recordNodeCreated(new NodeCreated(node: $folder, actorId: 7));
+    $key = 'node.created:'.$folder->getKey();
+
+    $stage = fn (): ?Outbox => $recorder->stage(
+        event: WebhookEvent::NodeCreated,
+        key: $key,
+        panel: $folder->panel,
+        topic: (string) $folder->getKey(),
+        payload: ['node_id' => $folder->getKey(), 'name' => 'dup'],
+        actorId: 7,
+    );
+
+    $first = $stage();
+    $second = $stage();
 
     expect($first)->toBeInstanceOf(Outbox::class)
         // The second staging is a no-op (returns null) — idempotent by event_id.
@@ -95,17 +109,16 @@ it('never serializes a share secret — only the non-secret token_prefix travels
 it('swallows + logs a staging failure so the originating action is unaffected', function (): void {
     Log::spy();
 
-    // A recorder whose recording blows up; the subscriber must swallow + log it.
+    // A recorder whose recording blows up; the subscriber must swallow + log it. The
+    // core RecordsOutbox handles the kernel (grant/share) events; the grant is never
+    // inspected because the mocked recorder throws before touching it.
     $recorder = Mockery::mock(OutboxRecorder::class);
-    $recorder->shouldReceive('recordNodeCreated')->andThrow(new RuntimeException('boom'));
+    $recorder->shouldReceive('recordGrantCreated')->andThrow(new RuntimeException('boom'));
 
     $subscriber = new RecordsOutbox($recorder);
 
-    $node = new Node;
-    $node->forceFill(['id' => 1, 'panel' => 'default', 'storage_id' => 1, 'name' => 'x']);
-
     // Must NOT throw — the failure is logged and swallowed.
-    $subscriber->handleNodeCreated(new NodeCreated(node: $node, actorId: 7));
+    $subscriber->handleGrantCreated(new NodeGrantCreated(grant: new NodeGrant, actorId: 7));
 
     Log::shouldHaveReceived('warning')->once();
 });

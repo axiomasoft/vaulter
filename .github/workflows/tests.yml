@@ -140,26 +140,23 @@ jobs:
       # One step per TestCase schema (each pest process migrate:fresh's its own schema on
       # the shared database). The DB_* coordinates come from the job-level env above.
 
-      # base TestCase — HTTP surface, ACL, schema, webhooks, uploads, the v_activity
-      # jsonb gin index, and the case-folded document search. The CAS Postgres lane
-      # (advisory-xact-lock / FOR UPDATE / SERIALIZABLE / orphan prune) moved to the
-      # vaulter-media package with the engine — see .github/workflows/media.yml.
+      # base TestCase — HTTP surface, ACL, schema, webhooks, and the v_activity jsonb
+      # gin index. The CAS Postgres lane (advisory-xact-lock / FOR UPDATE / SERIALIZABLE
+      # / orphan prune) moved to vaulter-media (.github/workflows/media.yml); the
+      # upload-commit critical path (tests/Drive + tests/Uploads) moved to vaulter-drive
+      # (.github/workflows/drive.yml, drive-pgsql job); the yjs_state bytea round-trip
+      # (tests/Document) moved to vaulter-documents (.github/workflows/documents.yml,
+      # documents-pgsql job) — P2 #5 / ADR-0015, D1/D2.
       - name: 'Postgres: base TestCase suite'
         run: >-
           vendor/bin/pest --ci
           packages/core/tests/Access
           packages/core/tests/Activity
-          packages/core/tests/Drive
           packages/core/tests/Feature
           packages/core/tests/Panels
           packages/core/tests/Schema
           packages/core/tests/Sharing
-          packages/core/tests/Uploads
           packages/core/tests/Webhooks
-
-      # DocumentTestCase — yjs_state bytea NUL-safe round-trip + the document-node path.
-      - name: 'Postgres: Document suite'
-        run: vendor/bin/pest --ci packages/core/tests/Document
 
       # The id-strategy schemas — each proves the self-referencing v_nodes.parent_id FK
       # migrates (the PK must be declared before the FK; see UlidIds/Uuid7Ids::key).

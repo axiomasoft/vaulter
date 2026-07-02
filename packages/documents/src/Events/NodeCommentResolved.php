@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Events;
+namespace Vaulter\Documents\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Vaulter\DocDrive\Models\NodeComment;
+use Vaulter\Documents\Models\NodeComment;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 

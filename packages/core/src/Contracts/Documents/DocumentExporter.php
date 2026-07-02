@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Documents;
 
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Renders a document's TipTap content into an export format. Built-in HTML and

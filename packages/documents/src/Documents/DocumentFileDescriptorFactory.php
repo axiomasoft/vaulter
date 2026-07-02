@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents;
+namespace Vaulter\Documents\Documents;
 
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
 
 /**
  * Builds a {@see FileDescriptor} from a {@see Node} for the registry (§4.5). A

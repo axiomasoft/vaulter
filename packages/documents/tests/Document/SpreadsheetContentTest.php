@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Documents\Handlers\UniverHandler;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Support;
+namespace Vaulter\Documents\Support;
 
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The content_hash a document version carries (§2.5) — a deterministic sha256 over

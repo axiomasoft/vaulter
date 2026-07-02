@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Exceptions;
+namespace Vaulter\Exceptions\Nodes;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

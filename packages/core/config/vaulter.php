@@ -2,16 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\DocDrive\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\DocDrive\Documents\Handlers\PreviewHandler;
-use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
-use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
-use Vaulter\DocDrive\Export\HtmlExporter;
-use Vaulter\DocDrive\Export\MarkdownExporter;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
@@ -61,16 +51,18 @@ return [
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
 
-        // ADR-0014 — the NODE-attached comment (v_node_comments), the canonical
-        // comment surface after the legacy document_id-bound path was excised.
-        'node_comment' => NodeComment::class,
+        // Resumable-upload models (upload_session / upload_part) are OWNED by
+        // axioma-studio/vaulter-drive (P2 #5 / ADR-0015, T9): core ships no default
+        // here — the drive provider merges them via config/vaulter-drive.php, and
+        // Support\Config::uploadSessionModel()/uploadPartModel() guard-throw when the
+        // package is absent. The v_upload_sessions/v_upload_parts SCHEMA stays in core.
 
-        // DocDrive (M4a) — the NODE-attached document version (§2.5), the canonical
-        // version history (v_node_document_versions) on kind=document nodes.
-        'node_document_version' => NodeDocumentVersion::class,
-
-        'upload_session' => UploadSession::class,
-        'upload_part' => UploadPart::class,
+        // The NODE-attached comment (v_node_comments, ADR-0014) and document-version
+        // (v_node_document_versions, §2.5) models are OWNED by axioma-studio/
+        // vaulter-documents (P2 #5 / ADR-0015, T9): no default here — the documents
+        // provider merges them via config/vaulter-documents.php, and Support\Config::
+        // nodeCommentModel()/nodeDocumentVersionModel() guard-throw when absent. Their
+        // SCHEMA (v_node_comments/v_node_document_versions) stays in core.
         'activity' => Activity::class,
 
         // Reliability layer (M3b / §2.11) — transactional outbox + webhooks.
@@ -99,7 +91,7 @@ return [
         'node_shares' => 'node_shares',
         'node_comments' => 'node_comments',
 
-        // DocDrive (M4a) — the NODE-attached document version history (§2.5).
+        // Documents (M4a) — the NODE-attached document version history (§2.5).
         'node_document_versions' => 'node_document_versions',
 
         'upload_sessions' => 'upload_sessions',
@@ -188,7 +180,7 @@ return [
         // Actions/HTTP (default off → opt-in, additive over the legacy DocVault).
         'comments' => false,
 
-        // DocDrive (M4a). 'document_versions' gates the v_node_document_versions
+        // Documents (M4a). 'document_versions' gates the v_node_document_versions
         // schema + the document-node Actions/HTTP (default off → opt-in).
         // 'spreadsheets' gates the feature-flagged UniverHandler (xlsx editing).
         'document_versions' => false,
@@ -209,14 +201,13 @@ return [
     | 'vaulter.handlers' binding, or Vaulter::registerHandler() at runtime) — NO
     | migration, NO core change, NOT gated by any sealed enum (H.5).
     |
-    | UniverHandler (xlsx) is appended by the service provider ONLY when the
-    | 'spreadsheets' feature is on, so a stock install never routes xlsx to it.
+    | The built-in handlers (TipTap/Preview/DownloadOnly, + UniverHandler when the
+    | 'spreadsheets' feature is on) are OWNED by axioma-studio/vaulter-documents
+    | (P2 #5 / ADR-0015, T9): core ships no default here — the documents provider
+    | merges them via config/vaulter-documents.php. Support\Config::documentHandlers()
+    | falls back to [] (no documents installed = no handlers to resolve).
     */
-    'handlers' => [
-        TipTapHandler::class,
-        PreviewHandler::class,
-        DownloadOnlyHandler::class,
-    ],
+    'handlers' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -360,7 +351,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Storage adapter for binary attachments (legacy DocDrive)
+    | Storage adapter for binary attachments (legacy Documents)
     |--------------------------------------------------------------------------
     */
     'storage_adapter' => DefaultStorageAdapter::class,
@@ -561,7 +552,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Versioning (legacy DocDrive)
+    | Versioning (legacy Documents)
     |--------------------------------------------------------------------------
     | Max stored versions per document (0 = unlimited); oldest are pruned.
     */
@@ -617,11 +608,13 @@ return [
     |--------------------------------------------------------------------------
     | Map of format => \Vaulter\Contracts\Documents\DocumentExporter. Add your own (PDF,
     | DOCX, …) here, or at runtime via Vaulter::registerExporter().
+    |
+    | The built-in html/markdown exporters are OWNED by axioma-studio/vaulter-documents
+    | (P2 #5 / ADR-0015, T9): core ships no default here — the documents provider
+    | merges them via config/vaulter-documents.php. Support\Config::exporters() falls
+    | back to [] (no documents installed = no exporters registered).
     */
-    'exporters' => [
-        'html' => HtmlExporter::class,
-        'markdown' => MarkdownExporter::class,
-    ],
+    'exporters' => [],
 
     /*
     |--------------------------------------------------------------------------

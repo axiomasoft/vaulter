@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\ValueObjects;
+namespace Vaulter\Documents\ValueObjects;
 
 /**
  * The rendered result of exporting a document node (§7 / M4a) — the payload the

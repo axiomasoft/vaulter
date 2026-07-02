@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Events\DocumentVersionCreated;
-use Vaulter\DocDrive\Exceptions\NodeDocumentVersionNotFoundException;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionReadRepository;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionStoreRepository;
+use Vaulter\Documents\Events\DocumentVersionCreated;
+use Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
+use Vaulter\Documents\Repositories\NodeDocumentVersionStoreRepository;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;

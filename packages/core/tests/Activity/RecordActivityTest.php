@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Log;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Activity\ActivityVerb;
@@ -249,7 +248,7 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     $recorder = app(ActivityRecorder::class);
 
     Activity::query()->delete();
-    $recorder->recordNodeCreated(new NodeCreated(node: $node, actorId: 7));
+    $recorder->recordForNode(verb: ActivityVerb::NodeCreated, node: $node, actorId: 7);
 
     $row = Activity::query()->firstOrFail();
 

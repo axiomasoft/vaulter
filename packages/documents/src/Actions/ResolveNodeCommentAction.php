@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Events\NodeCommentResolved;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Repositories\NodeCommentStoreRepository;
+use Vaulter\Documents\Events\NodeCommentResolved;
+use Vaulter\Documents\Models\NodeComment;
+use Vaulter\Documents\Repositories\NodeCommentStoreRepository;
 
 /**
  * Mark a node comment thread resolved (ADR-0014 шаг 1). Stamps (resolved_at,

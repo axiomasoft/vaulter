@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Data;
+namespace Vaulter\Documents\Data;
 
-use Vaulter\DocDrive\Actions\AddNodeCommentAction;
+use Vaulter\Documents\Actions\AddNodeCommentAction;
 
 /**
  * The input to {@see AddNodeCommentAction} (ADR-0014 шаг 1).

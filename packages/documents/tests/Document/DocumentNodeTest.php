@@ -3,21 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Actions\CreateNamedVersionAction;
-use Vaulter\DocDrive\Actions\RestoreDocumentVersionAction;
-use Vaulter\DocDrive\Actions\UpdateDocumentContentAction;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Data\CreateNamedVersionData;
-use Vaulter\DocDrive\Data\UpdateDocumentContentData;
-use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
-use Vaulter\DocDrive\Events\DocumentNodeCreated;
-use Vaulter\DocDrive\Events\DocumentVersionCreated;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\DocDrive\Support\TipTapRenderer;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\UpdateDocumentContentAction;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Data\CreateNamedVersionData;
+use Vaulter\Documents\Data\UpdateDocumentContentData;
+use Vaulter\Documents\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Events\DocumentNodeCreated;
+use Vaulter\Documents\Events\DocumentVersionCreated;
+use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Tests\Document\DocumentTestHelpers;
 
 /**
  * The M4a document-node lifecycle (§2.5): create a kind=document node with its v1

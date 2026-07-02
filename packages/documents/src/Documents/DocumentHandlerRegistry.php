@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents;
+namespace Vaulter\Documents\Documents;
 
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\DocDrive\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\DocDrive\Enums\Capability;
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
+use Vaulter\Contracts\Documents\HandlerRegistry;
+use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
+use Vaulter\Documents\Enums\Capability;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
 
 /**
  * THE format-extensibility engine (master plan §4.5 / §7 / H.5). Resolves the best
@@ -35,7 +36,7 @@ use Vaulter\Support\Config;
  * the routing inputs only — distinct descriptors that route identically share a key
  * deterministically, never collide across capabilities.
  */
-final class DocumentHandlerRegistry
+final class DocumentHandlerRegistry implements HandlerRegistry
 {
     /**
      * The merged handler set (built lazily, once). Each entry is a resolved

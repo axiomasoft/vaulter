@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Data;
+namespace Vaulter\Documents\Data;
 
-use Vaulter\DocDrive\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\DocDrive\Enums\CollaborationDriverType;
+use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
+use Vaulter\Documents\Enums\CollaborationDriverType;
 
 /**
  * The unified realtime-collaboration session descriptor (master plan §7 / ADR-0001 /

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Repositories;
+namespace Vaulter\Documents\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
+use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Models\NodeDocumentVersion;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for the append-only v_node_document_versions (§2.5 / M4a):
@@ -28,7 +28,7 @@ final class NodeDocumentVersionStoreRepository
      */
     public function create(array $attributes): NodeDocumentVersion
     {
-        $model = Config::nodeDocumentVersionModel();
+        $model = DocumentsModels::documentVersion();
         $version = new $model;
         $version->fill($attributes);
         $version->save();
@@ -57,7 +57,7 @@ final class NodeDocumentVersionStoreRepository
      */
     public function nextVersionNo(Node $node): int
     {
-        $model = Config::nodeDocumentVersionModel();
+        $model = DocumentsModels::documentVersion();
 
         $max = $model::query()
             ->where('node_id', $node->getKey())
@@ -77,7 +77,7 @@ final class NodeDocumentVersionStoreRepository
             return 0;
         }
 
-        $model = Config::nodeDocumentVersionModel();
+        $model = DocumentsModels::documentVersion();
 
         // The prunable rows: NOT keep_forever, NOT the current head, newest first.
         /** @var Collection<int, NodeDocumentVersion> $prunable */

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Documents;
 
-use Vaulter\DocDrive\ValueObjects\DocumentCapabilities;
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
-use Vaulter\DocDrive\ValueObjects\HandlerUi;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * A pluggable document-processing handler — THE format-extensibility headline
  * (master plan §4.5 / §7 / H.5). A handler claims a set of mime types (exact or
  * wildcards like "image/*") and/or extensions, declares its capabilities and its
  * front-end mount descriptor per file, and the {@see
- * \Vaulter\DocDrive\Documents\DocumentHandlerRegistry} resolves the best one for a
+ * \Vaulter\Documents\Documents\DocumentHandlerRegistry} resolves the best one for a
  * FileDescriptor.
  *
  * Adding a NEW format is a ONE-CLASS + register operation: implement this interface

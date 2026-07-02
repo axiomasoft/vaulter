@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\ValueObjects;
+namespace Vaulter\ValueObjects\Documents;
 
 use Vaulter\Contracts\Documents\DocumentContent;
-use Vaulter\DocDrive\Exceptions\InvalidTipTapContentException;
+use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 
 /**
  * Immutable wrapper around a validated TipTap JSON document

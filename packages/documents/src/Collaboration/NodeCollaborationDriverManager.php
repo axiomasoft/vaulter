@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Collaboration;
+namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\DocDrive\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\DocDrive\Enums\CollaborationDriverType;
+use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
+use Vaulter\Documents\Enums\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Config;
 

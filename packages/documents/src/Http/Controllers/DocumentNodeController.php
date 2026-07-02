@@ -2,39 +2,39 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Controllers;
+namespace Vaulter\Documents\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Actions\CreateNamedVersionAction;
-use Vaulter\DocDrive\Actions\RestoreDocumentVersionAction;
-use Vaulter\DocDrive\Actions\UpdateDocumentContentAction;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Data\CreateNamedVersionData;
-use Vaulter\DocDrive\Data\UpdateDocumentContentData;
-use Vaulter\DocDrive\Documents\NodeExportService;
-use Vaulter\DocDrive\Documents\NodeHandlerResolver;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
-use Vaulter\DocDrive\Http\Requests\CreateDocumentNodeRequest;
-use Vaulter\DocDrive\Http\Requests\CreateNamedVersionRequest;
-use Vaulter\DocDrive\Http\Requests\UpdateDocumentContentRequest;
-use Vaulter\DocDrive\Http\Resources\NodeDocumentVersionResource;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionReadRepository;
-use Vaulter\Drive\Http\Resources\NodeResource;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\UpdateDocumentContentAction;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Data\CreateNamedVersionData;
+use Vaulter\Documents\Data\UpdateDocumentContentData;
+use Vaulter\Documents\Documents\NodeExportService;
+use Vaulter\Documents\Documents\NodeHandlerResolver;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Http\Requests\CreateDocumentNodeRequest;
+use Vaulter\Documents\Http\Requests\CreateNamedVersionRequest;
+use Vaulter\Documents\Http\Requests\UpdateDocumentContentRequest;
+use Vaulter\Documents\Http\Resources\NodeDocumentVersionResource;
+use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
+use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
- * The DocDrive REST surface over the M4a document-node domain (§5 / §7): create a
+ * The Documents REST surface over the M4a document-node domain (§5 / §7): create a
  * document node, read its content + version history, autosave its content, snapshot
  * a named version, restore a prior version, resolve its handler descriptor and export
  * it. Thin — every write delegates to a final readonly Action, every read to a

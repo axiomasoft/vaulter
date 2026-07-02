@@ -8,7 +8,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * The DocDrive REST surface (§5 / §7 / M4a): create a document node, read/autosave
+ * The Documents REST surface (§5 / §7 / M4a): create a document node, read/autosave
  * its content, snapshot + restore versions, resolve the handler descriptor and
  * export — end to end through the API. Runs open (the null driver), so a bare
  * authenticated actor suffices.

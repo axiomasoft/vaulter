@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\ValueObjects;
+namespace Vaulter\ValueObjects\Documents;
 
 /**
  * The resolved-handler descriptor embedded in a node payload (§4.5 / §5 / M4a): the

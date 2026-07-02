@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Data;
+namespace Vaulter\Documents\Data;
 
 use Vaulter\Models\Drive\Node;
 

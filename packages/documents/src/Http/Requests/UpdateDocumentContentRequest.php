@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Requests;
+namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Contracts\Documents\DocumentContent;
-use Vaulter\DocDrive\Documents\DocumentFileDescriptorFactory;
-use Vaulter\DocDrive\Documents\DocumentHandlerRegistry;
-use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
-use Vaulter\DocDrive\Enums\Capability;
-use Vaulter\DocDrive\ValueObjects\OpaqueDocumentContent;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Documents\DocumentFileDescriptorFactory;
+use Vaulter\Documents\Documents\DocumentHandlerRegistry;
+use Vaulter\Documents\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Enums\Capability;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Validates a document-content autosave PATCH (§2.5 / M4a). The content SHAPE follows

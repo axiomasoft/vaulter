@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Tests\Comment;
+namespace Vaulter\Documents\Tests\Comment;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Tests\TestCase;
+use Vaulter\Documents\Tests\TestCase;
 
 /**
  * Boots the package with the 'comments' feature ENABLED (ADR-0014 шаг 1) so the

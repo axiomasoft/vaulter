@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Data;
+namespace Vaulter\Documents\Data;
 
 use Vaulter\Contracts\Documents\DocumentContent;
-use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 

@@ -4,6 +4,8 @@
 providers:
   - Vaulter\VaulterServiceProvider
   - Vaulter\Media\VaulterMediaServiceProvider
+  - Vaulter\Drive\VaulterDriveServiceProvider
+  - Vaulter\Documents\VaulterDocumentsServiceProvider
   - Vaulter\Tests\E2E\E2eServiceProvider
 
 env:

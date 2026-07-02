@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Contracts\Collaboration;
+namespace Vaulter\Documents\Contracts\Collaboration;
 
-use Vaulter\DocDrive\Data\CollaborationSessionData;
-use Vaulter\DocDrive\Enums\CollaborationDriverType;
+use Vaulter\Documents\Data\CollaborationSessionData;
+use Vaulter\Documents\Enums\CollaborationDriverType;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 

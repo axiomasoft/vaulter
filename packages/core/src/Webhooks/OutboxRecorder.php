@@ -4,16 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
-use Vaulter\Drive\Events\FileUploaded;
-use Vaulter\Drive\Events\NodeCopied;
-use Vaulter\Drive\Events\NodeCreated;
-use Vaulter\Drive\Events\NodeForceDeleted;
-use Vaulter\Drive\Events\NodeMoved;
-use Vaulter\Drive\Events\NodeRenamed;
-use Vaulter\Drive\Events\NodeRestored;
-use Vaulter\Drive\Events\NodeTrashed;
-use Vaulter\Drive\Events\NodeVersionCommitted;
-use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -30,6 +20,11 @@ use Vaulter\Support\Identity;
  * event_id, so a re-fired event never stages a duplicate. The actual HTTP delivery
  * (retries, backoff, DLQ, signed POST) is the relay's job.
  *
+ * Kernel domains (Access grants, Sharing links) map their own events here; the Drive
+ * behaviour package (P2 #5 / ADR-0015) maps its file/folder/upload events through the
+ * PUBLIC {@see stage()} seam, so core no longer references any Vaulter\Drive\Events\*
+ * class while the outbox payloads/keys stay byte-for-byte identical.
+ *
  * Slim payloads (HARDENING): only ids, names, sizes and enum values travel — never
  * blob bytes or secrets (a share's token_hash/secret is never serialized; only the
  * non-secret token_prefix). The event_id is STABLE and event-derived so the relay
@@ -41,184 +36,6 @@ use Vaulter\Support\Identity;
  */
 class OutboxRecorder
 {
-    public function recordStorageCreated(StorageCreated $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::StorageCreated,
-            key: "storage.created:{$this->id($event->storage->getKey())}",
-            panel: $event->storage->panel,
-            topic: $this->id($event->storage->getKey()),
-            payload: [
-                'storage_id' => $this->id($event->storage->getKey()),
-                'root_node_id' => $this->id($event->root->getKey()),
-                'name' => $event->storage->name,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeCreated(NodeCreated $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeCreated,
-            key: "node.created:{$this->id($event->node->getKey())}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'parent_id' => $this->id($event->node->parent_id),
-                'kind' => $event->node->kind->value,
-                'name' => $event->node->name,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordFileUploaded(FileUploaded $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::FileUploaded,
-            key: "file.uploaded:{$this->id($event->version->getKey())}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'version_id' => $this->id($event->version->getKey()),
-                'name' => $event->node->name,
-                'size_bytes' => $event->version->size_bytes,
-                'mime_type' => $event->version->mime_type,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordVersionCommitted(NodeVersionCommitted $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::VersionCreated,
-            key: "version.created:{$this->id($event->version->getKey())}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'version_id' => $this->id($event->version->getKey()),
-                'version_no' => $event->versionNo,
-                'size_bytes' => $event->version->size_bytes,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeMoved(NodeMoved $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeMoved,
-            // The move target+destination uniquely identify this move event.
-            key: "node.moved:{$this->id($event->node->getKey())}:{$this->id($event->toParentId)}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'from_parent_id' => $this->id($event->fromParentId),
-                'to_parent_id' => $this->id($event->toParentId),
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeRenamed(NodeRenamed $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeRenamed,
-            key: "node.renamed:{$this->id($event->node->getKey())}:{$event->toName}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'from' => $event->fromName,
-                'to' => $event->toName,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeCopied(NodeCopied $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeCopied,
-            key: "node.copied:{$this->id($event->copy->getKey())}",
-            panel: $event->copy->panel,
-            topic: $this->id($event->copy->getKey()),
-            payload: [
-                'node_id' => $this->id($event->copy->getKey()),
-                'storage_id' => $this->id($event->copy->storage_id),
-                'source_id' => $this->id($event->source->getKey()),
-                'name' => $event->copy->name,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeTrashed(NodeTrashed $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeTrashed,
-            key: "node.trashed:{$this->id($event->node->getKey())}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'name' => $event->node->name,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    public function recordNodeRestored(NodeRestored $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeRestored,
-            key: "node.restored:{$this->id($event->node->getKey())}",
-            panel: $event->node->panel,
-            topic: $this->id($event->node->getKey()),
-            payload: [
-                'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
-                'parent_id' => $this->id($event->node->parent_id),
-                'name' => $event->node->name,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
-    /**
-     * The node objects are gone after a force-delete, so the slim payload carries
-     * the deleted ids + freed bytes (the relay still fans this out so a host can
-     * reconcile its own mirror). The panel is the default panel — the storage is the
-     * only surviving scope and the event does not carry it.
-     */
-    public function recordNodeForceDeleted(NodeForceDeleted $event): ?Outbox
-    {
-        return $this->stage(
-            event: WebhookEvent::NodeForceDeleted,
-            key: "node.force_deleted:{$this->id($event->storageId)}:".md5(implode(',', array_map(Identity::stringify(...), $event->nodeIds))),
-            panel: 'default',
-            topic: $this->id($event->storageId),
-            payload: [
-                'storage_id' => $this->id($event->storageId),
-                'node_ids' => array_map(Identity::stringify(...), $event->nodeIds),
-                'freed_bytes' => $event->freedBytes,
-            ],
-            actorId: $event->actorId,
-        );
-    }
-
     public function recordGrantCreated(NodeGrantCreated $event): ?Outbox
     {
         $node = $event->grant->node;
@@ -304,13 +121,14 @@ class OutboxRecorder
     }
 
     /**
-     * Stage ONE outbox row for an event. Idempotent by event_id: when a row for this
-     * key already exists (a retried send, a re-fired event), this is a no-op and
-     * returns null, so the relay never fans the same event out twice.
+     * Stage ONE outbox row for an event — the PUBLIC seam the kernel handlers above
+     * and the vaulter-drive subscriber both map through. Idempotent by event_id: when
+     * a row for this key already exists (a retried send, a re-fired event), this is a
+     * no-op and returns null, so the relay never fans the same event out twice.
      *
      * @param array<string, mixed> $payload
      */
-    private function stage(
+    public function stage(
         WebhookEvent $event,
         string $key,
         string $panel,
@@ -342,7 +160,12 @@ class OutboxRecorder
         ]);
     }
 
-    private function id(mixed $value): ?string
+    /**
+     * Stringify an id for a slim payload/topic, mapping the empty string to null. The
+     * PUBLIC helper the vaulter-drive subscriber reuses so its keys/payloads match the
+     * kernel handlers' exactly.
+     */
+    public function id(mixed $value): ?string
     {
         $string = Identity::stringify($value);
 

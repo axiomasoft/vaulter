@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Collaboration\HocuspocusNodeCollaborationDriver;
-use Vaulter\DocDrive\Collaboration\NodeCollaborationDriverManager;
-use Vaulter\DocDrive\Collaboration\ReverbNodeCollaborationDriver;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Enums\CollaborationDriverType;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Collaboration\HocuspocusNodeCollaborationDriver;
+use Vaulter\Documents\Collaboration\NodeCollaborationDriverManager;
+use Vaulter\Documents\Collaboration\ReverbNodeCollaborationDriver;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Enums\CollaborationDriverType;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
-use Vaulter\Tests\Document\DocumentTestHelpers;
 
 /**
  * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует readOnly из

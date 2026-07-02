@@ -8,23 +8,14 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\DocDrive\Documents\DocumentHandlerRegistry;
-use Vaulter\DocDrive\Exceptions\UnknownExportFormatException;
-use Vaulter\Drive\Actions\CopyNodeAction;
-use Vaulter\Drive\Actions\CreateFolderAction;
-use Vaulter\Drive\Actions\ForceDeleteNodeAction;
-use Vaulter\Drive\Actions\MoveNodeAction;
-use Vaulter\Drive\Actions\RenameNodeAction;
-use Vaulter\Drive\Actions\RestoreNodeAction;
-use Vaulter\Drive\Actions\TrashNodeAction;
-use Vaulter\Drive\Actions\UploadFileAction;
-use Vaulter\Drive\DriveContext;
-use Vaulter\Drive\StorageManager;
+use Vaulter\Contracts\Documents\HandlerRegistry;
+use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
 
 /**
@@ -50,41 +41,38 @@ final class VaulterManager
     /**
      * Open a Drive handle bound to a host entity's storage within a panel (§2.1).
      * Get-or-creates the v_storages row (idempotent, root folder auto-provisioned)
-     * and returns an ergonomic DriveContext whose methods delegate to the Drive
+     * and returns an ergonomic {@see DriveHandle} whose methods delegate to the Drive
      * Actions/repositories. This is the package's primary integration entry point.
+     *
+     * The concrete handle ships in vaulter-drive (P2 #5): core resolves the
+     * DriveHandleFactory seam that package binds. Without vaulter-drive installed the
+     * binding is absent and this fails loudly — file behaviour needs the drive package.
      */
-    public function for(Model $entity, ?string $panel = null): DriveContext
+    public function for(Model $entity, ?string $panel = null): DriveHandle
     {
-        $panel ??= 'default';
-
-        $storage = $this->container->make(StorageManager::class)->forOwner(owner: $entity, panel: $panel);
-
-        return $this->forStorage(storage: $storage);
+        return $this->driveFactory()->forOwner($entity, $panel ?? 'default');
     }
 
     /**
      * Open a Drive handle bound to an already-resolved storage row. This is the
      * seam the HTTP layer uses: a route-model-bound Storage (resolved through the
-     * swappable config('vaulter.models.storage')) maps straight to a DriveContext
+     * swappable config('vaulter.models.storage')) maps straight to a DriveHandle
      * without re-deriving the owner. The handle's panel mirrors the storage's own
      * panel so its Actions run inside the right panel scope.
      */
-    public function forStorage(Storage $storage): DriveContext
+    public function forStorage(Storage $storage): DriveHandle
     {
-        return new DriveContext(
-            storage: $storage,
-            panel: $storage->panel,
-            storages: $this->container->make(StorageManager::class),
-            nodes: $this->container->make(NodeReadRepository::class),
-            createFolder: $this->container->make(CreateFolderAction::class),
-            uploadFile: $this->container->make(UploadFileAction::class),
-            moveNode: $this->container->make(MoveNodeAction::class),
-            renameNode: $this->container->make(RenameNodeAction::class),
-            copyNode: $this->container->make(CopyNodeAction::class),
-            trashNode: $this->container->make(TrashNodeAction::class),
-            restoreNode: $this->container->make(RestoreNodeAction::class),
-            forceDeleteNode: $this->container->make(ForceDeleteNodeAction::class),
-        );
+        return $this->driveFactory()->forStorage($storage);
+    }
+
+    /**
+     * Resolve the vaulter-drive handle factory (P2 #5 seam). Bound by the drive
+     * package's provider; absent it, the container throws a clear binding-resolution
+     * error pointing at the missing package.
+     */
+    private function driveFactory(): DriveHandleFactory
+    {
+        return $this->container->make(DriveHandleFactory::class);
     }
 
     /**
@@ -143,25 +131,28 @@ final class VaulterManager
 
     /**
      * Register a custom document handler at runtime — the format-extensibility seam
-     * (§4.5 / H.5). Thin delegation to the container-bound DocumentHandlerRegistry
-     * (the single source of truth); accepts an FQCN or an instance. A NEW format is
-     * a one-class + this call — no migration, no core change.
+     * (§4.5 / H.5). Thin delegation to the container-bound {@see HandlerRegistry}
+     * (the single source of truth, concretely vaulter-documents's DocumentHandlerRegistry
+     * — P2 #5); accepts an FQCN or an instance. A NEW format is a one-class + this
+     * call — no migration, no core change. Fails loudly without vaulter-documents
+     * installed — document handling needs the documents package.
      *
      * @param DocumentHandler|class-string<DocumentHandler> $handler
      */
     public function registerHandler(DocumentHandler|string $handler): void
     {
-        $this->container->make(DocumentHandlerRegistry::class)->register($handler);
+        $this->container->make(HandlerRegistry::class)->register($handler);
     }
 
     /**
      * The container-bound document handler registry (§4.5). The single source of
      * truth for format resolution — kept here as a thin accessor so callers reach it
-     * through the facade without inflating the manager.
+     * through the facade without inflating the manager. The concrete engine ships in
+     * vaulter-documents (P2 #5); this seam fails loudly without it installed.
      */
-    public function handlers(): DocumentHandlerRegistry
+    public function handlers(): HandlerRegistry
     {
-        return $this->container->make(DocumentHandlerRegistry::class);
+        return $this->container->make(HandlerRegistry::class);
     }
 
     /**

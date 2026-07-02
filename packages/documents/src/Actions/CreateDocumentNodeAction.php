@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Events\DocumentNodeCreated;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionStoreRepository;
-use Vaulter\Drive\Exceptions\NodeNameConflictException;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Events\DocumentNodeCreated;
+use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Repositories\NodeDocumentVersionStoreRepository;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;

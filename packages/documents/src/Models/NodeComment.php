@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Models;
+namespace Vaulter\Documents\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Documents\DocumentsModels;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Drive\Node;
@@ -65,7 +66,7 @@ class NodeComment extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeCommentModel(), 'parent_id');
+        return $this->belongsTo(DocumentsModels::comment(), 'parent_id');
     }
 
     /**
@@ -73,7 +74,7 @@ class NodeComment extends Model
      */
     public function replies(): HasMany
     {
-        return $this->hasMany(Config::nodeCommentModel(), 'parent_id');
+        return $this->hasMany(DocumentsModels::comment(), 'parent_id');
     }
 
     /**

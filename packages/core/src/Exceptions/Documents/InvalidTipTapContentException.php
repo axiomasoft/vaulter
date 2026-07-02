@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Exceptions;
+namespace Vaulter\Exceptions\Documents;
 
 use Vaulter\Exceptions\VaulterException;
 

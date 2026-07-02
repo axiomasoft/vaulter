@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Requests;
+namespace Vaulter\Documents\Http\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
 use Vaulter\Contracts\Documents\DocumentContent;
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\DocDrive\Documents\DocumentHandlerRegistry;
-use Vaulter\DocDrive\Documents\Handlers\TipTapHandler;
-use Vaulter\DocDrive\Documents\Handlers\UniverHandler;
-use Vaulter\DocDrive\Enums\Capability;
-use Vaulter\DocDrive\Enums\DocumentType;
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
-use Vaulter\DocDrive\ValueObjects\OpaqueDocumentContent;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
-use Vaulter\Drive\Http\Requests\DriveNameRules;
+use Vaulter\Documents\Documents\DocumentHandlerRegistry;
+use Vaulter\Documents\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\DocumentType;
 use Vaulter\Http\Requests\VaulterFormRequest;
+use Vaulter\Support\DriveNameRules;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Validates a create-document-node request (§2.5 / M4a). The destination parent +

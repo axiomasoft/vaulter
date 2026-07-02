@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Tests\Document;
+namespace Vaulter\Documents\Tests\Document;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Tests\TestCase;
+use Vaulter\Documents\Tests\TestCase;
 
 /**
- * Boots the package with the DocDrive 'document_versions' feature ENABLED so the
+ * Boots the package with the Documents 'document_versions' feature ENABLED so the
  * v_node_document_versions schema is migrated and the document-node Actions/HTTP are
  * exercised (§2.5 / M4a). Kept in its own top-level folder so the base binding never
  * also claims it (Pest forbids two test cases for one path).

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Events\NodeCommentDeleted;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Repositories\NodeCommentStoreRepository;
+use Vaulter\Documents\Events\NodeCommentDeleted;
+use Vaulter\Documents\Models\NodeComment;
+use Vaulter\Documents\Repositories\NodeCommentStoreRepository;
 
 /**
  * Permanently delete a node comment (ADR-0014 шаг 1 — no soft-delete). Deletes in a

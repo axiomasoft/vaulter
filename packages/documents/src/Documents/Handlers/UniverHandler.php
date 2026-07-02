@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents\Handlers;
+namespace Vaulter\Documents\Documents\Handlers;
 
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\DocDrive\ValueObjects\DocumentCapabilities;
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
-use Vaulter\DocDrive\ValueObjects\HandlerUi;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * The FEATURE-FLAGGED spreadsheet handler (master plan §7 level 2): the Univer

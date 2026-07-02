@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
-use Vaulter\DocDrive\Documents\NodeExportService;
-use Vaulter\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Documents\NodeExportService;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 
 /**
  * The node-attached export path (§7 / M4a): a document node routes through the

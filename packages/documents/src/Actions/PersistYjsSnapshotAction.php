@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Data\PersistYjsSnapshotData;
-use Vaulter\DocDrive\Events\DocumentContentUpdated;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionReadRepository;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionStoreRepository;
-use Vaulter\DocDrive\Support\DocumentContentHasher;
+use Vaulter\Documents\Data\PersistYjsSnapshotData;
+use Vaulter\Documents\Events\DocumentContentUpdated;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
+use Vaulter\Documents\Repositories\NodeDocumentVersionStoreRepository;
+use Vaulter\Documents\Support\DocumentContentHasher;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;

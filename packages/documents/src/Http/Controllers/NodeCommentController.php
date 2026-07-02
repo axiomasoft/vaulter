@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Controllers;
+namespace Vaulter\Documents\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
@@ -12,14 +12,14 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
-use Vaulter\DocDrive\Actions\AddNodeCommentAction;
-use Vaulter\DocDrive\Actions\DeleteNodeCommentAction;
-use Vaulter\DocDrive\Actions\ResolveNodeCommentAction;
-use Vaulter\DocDrive\Data\CreateNodeCommentData;
-use Vaulter\DocDrive\Http\Requests\StoreNodeCommentRequest;
-use Vaulter\DocDrive\Http\Resources\NodeCommentResource;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Repositories\NodeCommentReadRepository;
+use Vaulter\Documents\Actions\AddNodeCommentAction;
+use Vaulter\Documents\Actions\DeleteNodeCommentAction;
+use Vaulter\Documents\Actions\ResolveNodeCommentAction;
+use Vaulter\Documents\Data\CreateNodeCommentData;
+use Vaulter\Documents\Http\Requests\StoreNodeCommentRequest;
+use Vaulter\Documents\Http\Resources\NodeCommentResource;
+use Vaulter\Documents\Models\NodeComment;
+use Vaulter\Documents\Repositories\NodeCommentReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\CommentController;

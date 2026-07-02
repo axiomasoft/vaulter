@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Support;
+namespace Vaulter\Documents\Support;
 
-use Vaulter\DocDrive\Enums\ExportFormat;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Enums\ExportFormat;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Supports the common node

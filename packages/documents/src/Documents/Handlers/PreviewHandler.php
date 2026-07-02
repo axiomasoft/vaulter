@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents\Handlers;
+namespace Vaulter\Documents\Documents\Handlers;
 
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\DocDrive\ValueObjects\DocumentCapabilities;
-use Vaulter\DocDrive\ValueObjects\FileDescriptor;
-use Vaulter\DocDrive\ValueObjects\HandlerUi;
+use Vaulter\ValueObjects\Documents\DocumentCapabilities;
+use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Documents\HandlerUi;
 
 /**
  * The built-in preview handler (master plan §7 level 4): PDFs and images render a

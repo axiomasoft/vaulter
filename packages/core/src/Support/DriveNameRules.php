@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Http\Requests;
+namespace Vaulter\Support;
 
 /**
  * The shared node-name validation contract for the Drive write requests (§2.2):

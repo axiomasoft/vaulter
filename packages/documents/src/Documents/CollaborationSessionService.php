@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents;
+namespace Vaulter\Documents\Documents;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
-use Vaulter\DocDrive\Collaboration\NodeCollaborationDriverManager;
-use Vaulter\DocDrive\Data\CollaborationSessionData;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Collaboration\NodeCollaborationDriverManager;
+use Vaulter\Documents\Data\CollaborationSessionData;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Models\Drive\Node;

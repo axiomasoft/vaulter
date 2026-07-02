@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Resources;
+namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\NodeDocumentVersion;
 
 /**
  * The read shape of a node-attached document version (§2.5 / M4a). Read-only — it

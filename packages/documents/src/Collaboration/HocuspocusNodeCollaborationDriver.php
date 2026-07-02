@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Collaboration;
+namespace Vaulter\Documents\Collaboration;
 
 use Firebase\JWT\JWT;
-use Vaulter\DocDrive\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\DocDrive\Data\CollaborationSessionData;
-use Vaulter\DocDrive\Enums\CollaborationDriverType;
-use Vaulter\DocDrive\Exceptions\CollaborationConfigException;
+use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
+use Vaulter\Documents\Data\CollaborationSessionData;
+use Vaulter\Documents\Enums\CollaborationDriverType;
+use Vaulter\Documents\Exceptions\CollaborationConfigException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;

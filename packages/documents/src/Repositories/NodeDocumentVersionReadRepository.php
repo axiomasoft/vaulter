@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Repositories;
+namespace Vaulter\Documents\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
+use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Models\NodeDocumentVersion;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Read-side lookups over the append-only v_node_document_versions (§2.5 / M4a). The
@@ -80,7 +80,7 @@ final class NodeDocumentVersionReadRepository
      */
     private function query(): Builder
     {
-        $model = Config::nodeDocumentVersionModel();
+        $model = DocumentsModels::documentVersion();
 
         return $model::query();
     }

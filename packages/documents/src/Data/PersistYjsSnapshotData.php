@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Data;
+namespace Vaulter\Documents\Data;
 
-use Vaulter\DocDrive\Actions\PersistYjsSnapshotAction;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Actions\PersistYjsSnapshotAction;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Command for {@see PersistYjsSnapshotAction} (§7 / M4b) —

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Models;
+namespace Vaulter\Documents\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Vaulter\DocDrive\Casts\BinaryString;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * An append-only snapshot of a DOCUMENT NODE's content (master plan §2.5 / M4a) —

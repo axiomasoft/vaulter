@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Requests;
+namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Http\Requests\VaulterFormRequest;
 

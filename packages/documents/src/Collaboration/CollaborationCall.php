@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Collaboration;
+namespace Vaulter\Documents\Collaboration;
 
-use Vaulter\DocDrive\Http\Middleware\ResolveCollaborationCall;
+use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 
 /**
  * The authenticated identity of a server-to-server collaboration webhook call (M4b),

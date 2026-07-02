@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Actions;
+namespace Vaulter\Documents\Actions;
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\DocDrive\Data\CreateNodeCommentData;
-use Vaulter\DocDrive\Events\NodeCommentAdded;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Repositories\NodeCommentStoreRepository;
+use Vaulter\Documents\Data\CreateNodeCommentData;
+use Vaulter\Documents\Events\NodeCommentAdded;
+use Vaulter\Documents\Models\NodeComment;
+use Vaulter\Documents\Repositories\NodeCommentStoreRepository;
 use Vaulter\Models\Drive\Node;
 
 /**

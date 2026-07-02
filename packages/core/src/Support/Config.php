@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
+use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
@@ -13,10 +14,6 @@ use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\DocDrive\Models\NodeDocumentVersion;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -107,13 +104,13 @@ final class Config
 
     /**
      * The node-attached document-version model (§2.5 / M4a) — the canonical version
-     * history on kind=document nodes. Owned by the vaulter-docdrive package
+     * history on kind=document nodes. Owned by the vaulter-documents package
      * (P2 #5 / ADR-0015): core reads it config-only with NO hard class fallback, so
      * the model can move to that package without touching this class. Its default is
      * supplied by the owning package's provider (mergeConfig into
      * config('vaulter.models.node_document_version')).
      *
-     * @return class-string<NodeDocumentVersion>
+     * @return class-string<Model>
      */
     public static function nodeDocumentVersionModel(): string
     {
@@ -121,11 +118,11 @@ final class Config
 
         if (!is_string($class) || $class === '') {
             throw new \RuntimeException(
-                'Node-document-version model not configured — set vaulter.models.node_document_version (owned by axioma-studio/vaulter-docdrive).',
+                'Node-document-version model not configured — set vaulter.models.node_document_version (owned by axioma-studio/vaulter-documents).',
             );
         }
 
-        /** @var class-string<NodeDocumentVersion> $class */
+        /** @var class-string<Model> $class */
         return $class;
     }
 
@@ -181,10 +178,10 @@ final class Config
     /**
      * The NODE-attached comment model (ADR-0014) — the canonical comment surface
      * (v_node_comments) after the legacy document_id-bound path was excised. Owned by
-     * the vaulter-docdrive package (P2 #5 / ADR-0015): read config-only, no hard
+     * the vaulter-documents package (P2 #5 / ADR-0015): read config-only, no hard
      * class fallback (default supplied by that package's provider).
      *
-     * @return class-string<NodeComment>
+     * @return class-string<Model>
      */
     public static function nodeCommentModel(): string
     {
@@ -192,11 +189,11 @@ final class Config
 
         if (!is_string($class) || $class === '') {
             throw new \RuntimeException(
-                'Node-comment model not configured — set vaulter.models.node_comment (owned by axioma-studio/vaulter-docdrive).',
+                'Node-comment model not configured — set vaulter.models.node_comment (owned by axioma-studio/vaulter-documents).',
             );
         }
 
-        /** @var class-string<NodeComment> $class */
+        /** @var class-string<Model> $class */
         return $class;
     }
 
@@ -214,9 +211,10 @@ final class Config
     /**
      * The resumable-upload session model. Owned by the vaulter-drive package
      * (P2 #5 / ADR-0015): read config-only, no hard class fallback (default supplied
-     * by that package's provider via config('vaulter.models.upload_session')).
+     * by that package's provider via config('vaulter.models.upload_session')). Core no
+     * longer references the concrete class — the return is an opaque model class-string.
      *
-     * @return class-string<UploadSession>
+     * @return class-string<Model>
      */
     public static function uploadSessionModel(): string
     {
@@ -228,15 +226,16 @@ final class Config
             );
         }
 
-        /** @var class-string<UploadSession> $class */
+        /** @var class-string<Model> $class */
         return $class;
     }
 
     /**
      * The resumable-upload part model. Owned by the vaulter-drive package
-     * (P2 #5 / ADR-0015): read config-only, no hard class fallback.
+     * (P2 #5 / ADR-0015): read config-only, no hard class fallback. Core no longer
+     * references the concrete class — the return is an opaque model class-string.
      *
-     * @return class-string<UploadPart>
+     * @return class-string<Model>
      */
     public static function uploadPartModel(): string
     {
@@ -248,7 +247,7 @@ final class Config
             );
         }
 
-        /** @var class-string<UploadPart> $class */
+        /** @var class-string<Model> $class */
         return $class;
     }
 

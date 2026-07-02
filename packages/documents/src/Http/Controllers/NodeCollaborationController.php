@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Http\Controllers;
+namespace Vaulter\Documents\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Access\AccessResolver;
-use Vaulter\DocDrive\Actions\PersistYjsSnapshotAction;
-use Vaulter\DocDrive\Collaboration\CollaborationCall;
-use Vaulter\DocDrive\Contracts\Collaboration\HostUserResolver;
-use Vaulter\DocDrive\Data\PersistYjsSnapshotData;
-use Vaulter\DocDrive\Documents\CollaborationSessionService;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
-use Vaulter\DocDrive\Http\Middleware\ResolveCollaborationCall;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Actions\PersistYjsSnapshotAction;
+use Vaulter\Documents\Collaboration\CollaborationCall;
+use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Data\PersistYjsSnapshotData;
+use Vaulter\Documents\Documents\CollaborationSessionService;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The M4b realtime-collaboration HTTP surface for document nodes (master plan §7 /

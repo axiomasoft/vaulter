@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Repositories;
+namespace Vaulter\Documents\Repositories;
 
 use Illuminate\Support\Carbon;
-use Vaulter\DocDrive\Models\NodeComment;
-use Vaulter\Support\Config;
+use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Models\NodeComment;
 
 /**
  * Write-side persistence for the NODE-attached comments (ADR-0014 шаг 1). resolve()
@@ -20,7 +20,7 @@ final class NodeCommentStoreRepository
      */
     public function create(array $attributes): NodeComment
     {
-        $model = Config::nodeCommentModel();
+        $model = DocumentsModels::comment();
         $comment = new $model;
         $comment->fill($attributes);
         $comment->save();

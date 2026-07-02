@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Collaboration;
+namespace Vaulter\Documents\Collaboration;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

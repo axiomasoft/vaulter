@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Export;
+namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Documents\DocumentExporter;
-use Vaulter\DocDrive\Enums\ExportFormat;
-use Vaulter\DocDrive\Support\TipTapRenderer;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Enums\ExportFormat;
+use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class MarkdownExporter implements DocumentExporter
 {

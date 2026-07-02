@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\DocDrive\Documents;
+namespace Vaulter\Documents\Documents;
 
 use Vaulter\Contracts\Documents\DocumentExporter;
-use Vaulter\DocDrive\Enums\Capability;
-use Vaulter\DocDrive\Exceptions\NotADocumentNodeException;
-use Vaulter\DocDrive\Repositories\NodeDocumentVersionReadRepository;
-use Vaulter\DocDrive\ValueObjects\DocumentExport;
-use Vaulter\DocDrive\ValueObjects\TipTapContent;
+use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
+use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 use Vaulter\VaulterManager;
 
 /**

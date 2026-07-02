@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Vaulter\DocDrive\Actions\CreateDocumentNodeAction;
-use Vaulter\DocDrive\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
-use Vaulter\Tests\Document\DocumentTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
