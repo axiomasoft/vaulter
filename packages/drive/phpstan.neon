@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: max
+
+    paths:
+        - src
+
+    inferPrivatePropertyTypeFromConstructor: true
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # Eloquent dynamic builder/property magic that Larastan cannot fully model
+        # (mirrors the core analysis config — the Drive actions/repositories query
+        # the swappable Node/Storage/Upload models via the generic Eloquent builder).
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
