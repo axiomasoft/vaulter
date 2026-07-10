@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Data\Access\GrantNodeAccessData;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
@@ -55,9 +54,13 @@ final readonly class GrantNodeAccessAction
     /**
      * Make the silent no-op loud (F-P1.2-01): a grant addressed to a role/group/team
      * subject only ever matches when the active {@see HostRoleDriver} expands the actor
-     * into those Subjects — i.e. when it is an {@see EnumeratesRoleSubjects} driver.
-     * Under the standalone `database` base, `gate`, `azgard`, or the `null` lane the
-     * grant is inert; we always warn, and outside production we throw so a developer
+     * into those Subjects. Whether it does is decided by
+     * {@see HostRoleDriverManager::enumeratesRoleSubjects()} — the explicit
+     * {@see EnumeratesRoleSubjects} marker OR an overridden `subjectsFor()` (the
+     * documented subclass-and-append extension path counts, marker or not). We fail loud
+     * ONLY when the driver PROVABLY cannot enumerate role subjects — the standalone
+     * `database` base, `gate`, `azgard`, or the `null` lane with `subjectsFor()`
+     * inherited unchanged. We always warn, and outside production we throw so a developer
      * notices immediately. The direction is safe (an inert grant grants nothing), so
      * production degrades to a log line rather than a broken write path.
      */
@@ -69,7 +72,7 @@ final readonly class GrantNodeAccessAction
 
         $driver = $this->drivers->driver();
 
-        if ($driver instanceof EnumeratesRoleSubjects) {
+        if ($this->drivers->enumeratesRoleSubjects($driver)) {
             return;
         }
 

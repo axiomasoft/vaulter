@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Access;
 
 use Illuminate\Contracts\Container\Container;
+use ReflectionMethod;
+use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Exceptions\Access\MissingHostRoleDriverException;
 use Vaulter\Support\Config;
 use Vaulter\Testing\NullRoleDriver;
@@ -22,6 +26,20 @@ use Vaulter\Testing\NullRoleDriver;
  */
 final class HostRoleDriverManager
 {
+    /**
+     * The built-in lanes whose subjectsFor() provably contributes ONLY the actor's own
+     * identity — no role/team fan-out. A driver that inherits subjectsFor() UNCHANGED
+     * from one of these cannot match a v_node_grants row addressed to a role/team.
+     *
+     * @var list<class-string<HostRoleDriver>>
+     */
+    private const array NON_ENUMERATING_BASE_LANES = [
+        DatabasePermissionResolver::class,
+        GatePermissionResolver::class,
+        AzgardPermissionResolver::class,
+        NullRoleDriver::class,
+    ];
+
     /**
      * @var array<string, HostRoleDriver>
      */
@@ -55,6 +73,38 @@ final class HostRoleDriverManager
         $driver = $this->container->make($class);
 
         return $this->resolved[$key] = $driver;
+    }
+
+    /**
+     * Does the driver expand an actor into role/group/team {@see Subject}s — so a
+     * v_node_grants row addressed to a role/team actually enters the AccessResolver
+     * subject-set (F-P1.2-01)? Two signals, in order:
+     *
+     *   1. it implements the explicit {@see EnumeratesRoleSubjects} marker (the spatie
+     *      lane, or any host driver that opts in); OR
+     *   2. it has OVERRIDDEN subjectsFor() away from a built-in base lane whose
+     *      implementation provably contributes only the actor.
+     *
+     * The second signal keeps the DOCUMENTED extension path honest (H.2 / ADR-0007):
+     * {@see DatabasePermissionResolver}'s own docblock promotes "subclass and append
+     * Subject(type:'role', …) in subjectsFor()" as the way to add a role lane on the
+     * default base. A host that follows it — its role grants genuinely take effect — is
+     * recognised WITHOUT also having to add the marker. We therefore fail a role/team
+     * grant loud ONLY when the active driver PROVABLY cannot enumerate them (subjectsFor
+     * is inherited unchanged from a base lane that returns just [actor]), never for a
+     * working-but-unmarked override.
+     */
+    public function enumeratesRoleSubjects(HostRoleDriver $driver): bool
+    {
+        if ($driver instanceof EnumeratesRoleSubjects) {
+            return true;
+        }
+
+        $declaringClass = (new ReflectionMethod($driver, 'subjectsFor'))
+            ->getDeclaringClass()
+            ->getName();
+
+        return !in_array($declaringClass, self::NON_ENUMERATING_BASE_LANES, true);
     }
 
     /**

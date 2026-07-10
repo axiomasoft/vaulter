@@ -11,6 +11,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Fixtures\Access\SubclassedRoleDriver;
 
 /**
  * F-P1.2-01 — a grant addressed to a role/team subject under a host-role driver that
@@ -71,6 +72,29 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 
     $grant = $action->execute($folder, new GrantNodeAccessData(
         subject: new Subject(type: 'user', id: '1'),
+        level: GrantLevel::Reader,
+    ));
+
+    expect($grant)->toBeInstanceOf(NodeGrant::class);
+});
+
+// ── F-P1.2-01 (review): a host driver that follows the DOCUMENTED extension path —
+// subclass DatabasePermissionResolver and OVERRIDE subjectsFor() to append a role
+// Subject — makes its role grants genuinely take effect, so the guard must NOT trip
+// even though it carries no EnumeratesRoleSubjects marker. Capability is detected via
+// the overridden subjectsFor(), not the marker alone (red-before: today the marker
+// proxy throws for this working, documented path).
+it('does not throw for a role grant under an unmarked subclass that overrides subjectsFor, F-P1.2-01', function (): void {
+    config()->set('vaulter.permission_drivers.subclassed', SubclassedRoleDriver::class);
+    config()->set('vaulter.drivers.permission', 'subclassed');
+
+    $storage = AccessTestHelpers::storage();
+    $folder = AccessTestHelpers::folder($storage, null, 'role-grant-subclass');
+
+    $action = grantAction();
+
+    $grant = $action->execute($folder, new GrantNodeAccessData(
+        subject: new Subject(type: 'role', id: '7'),
         level: GrantLevel::Reader,
     ));
 

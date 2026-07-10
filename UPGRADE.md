@@ -16,13 +16,17 @@ grant write-path), none of which changes an existing `can()` verdict on the defa
    `GrantNodeAccessAction::execute()` now inspects the active `HostRoleDriver`: if the
    grant's subject is a role/team subject (`subject_type` = the configured
    `vaulter.spatie.role_subject_type` / `team_subject_type`, default `role`/`team`) and
-   the driver does **not** implement the new marker
-   `Vaulter\Contracts\Access\EnumeratesRoleSubjects`, the grant would never take effect
-   (those drivers — the standalone `database` base, `gate`, `azgard`, `null` — expand an
-   actor only into itself). Vaulter now **logs a warning always**, and **throws
-   `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` outside production**.
-   The `spatie` lane implements the marker and is unaffected. The failure direction is
-   safe (an inert grant grants nothing), so production only logs.
+   the driver **cannot enumerate role subjects**, the grant would never take effect and
+   Vaulter **logs a warning always**, and **throws
+   `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` outside production**. A
+   driver counts as enumerating when it either implements the marker
+   `Vaulter\Contracts\Access\EnumeratesRoleSubjects` **or** overrides `subjectsFor()` to
+   append role/team `Subject`s — so a host that follows the documented subclass-and-append
+   extension path is recognised without the marker. Only the built-in base lanes that
+   inherit `subjectsFor()` unchanged (the standalone `database` base, `gate`, `azgard`,
+   `null`) trip the guard — they expand an actor only into itself. The `spatie` lane
+   implements the marker and is unaffected. The failure direction is safe (an inert grant
+   grants nothing), so production only logs.
 2. **The `inherit_grants=false` "wall" is documented correctly (F-P1.1-01 / D17).** The
    `AccessResolver` docblocks used to claim a deny on a wall node was an "un-overridable
    wall … no nearer allow can ever pierce it". That was never the behaviour (nor what
@@ -42,9 +46,11 @@ grant write-path), none of which changes an existing `can()` verdict on the defa
 **Who is affected.**
 
 - Any host that writes `v_node_grants` rows addressed to a role/team subject under the
-  `database`, `gate`, `azgard`, or `null` driver — such a write now throws in non-prod
-  and logs a warning in prod. Switch to the `spatie` driver, or subclass your driver to
-  append the role/team `Subject`s and implement `EnumeratesRoleSubjects`.
+  `database`, `gate`, `azgard`, or `null` driver **with `subjectsFor()` inherited
+  unchanged** — such a write now throws in non-prod and logs a warning in prod. Switch to
+  the `spatie` driver, or subclass your driver and **override `subjectsFor()`** to append
+  the role/team `Subject`s (optionally marking it `EnumeratesRoleSubjects`). A subclass
+  that already overrides `subjectsFor()` to append those Subjects is unaffected.
 - Anyone who relied on the (incorrect) "un-overridable wall" docblock guarantee — see
   point 2.
 

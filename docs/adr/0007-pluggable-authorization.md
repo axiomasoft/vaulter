@@ -67,6 +67,11 @@ algorithm; they align the code's documented guarantees and add a fail-loud guard
   therefore inert under those lanes. This is safe (fail-closed: access is never
   raised) but was silent; Vaulter now makes it LOUD — `GrantNodeAccessAction` logs a
   warning always and throws `UnenumerableGrantSubjectException` outside production when
-  a role/team grant is written under a non-`EnumeratesRoleSubjects` driver. A host that
-  addresses grants to roles/teams should use `spatie`, or subclass its driver to append
-  the role/team `Subject`s and implement `EnumeratesRoleSubjects`.
+  a role/team grant is written under a driver that **cannot enumerate role subjects**.
+  A driver counts as enumerating when it implements `EnumeratesRoleSubjects` **or**
+  overrides `subjectsFor()` to append role/team `Subject`s (detected by
+  `HostRoleDriverManager::enumeratesRoleSubjects()`); only the base lanes that inherit
+  `subjectsFor()` unchanged trip the guard. A host that addresses grants to roles/teams
+  should use `spatie`, or subclass its driver and **override `subjectsFor()`** to append
+  the role/team `Subject`s — the documented extension path (see
+  `DatabasePermissionResolver`) — optionally marking it `EnumeratesRoleSubjects`.

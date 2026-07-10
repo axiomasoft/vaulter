@@ -30,10 +30,11 @@ final class UnenumerableGrantSubjectException extends VaulterException
                 $driverClass,
             )
             .'does not enumerate role/group/team subjects, so this grant would never take effect. '
-            .'Why: the driver\'s subjectsFor() returns only the actor, so a role/team grant never '
-            .'joins the AccessResolver subject-set. '
-            .'Fix: use a driver that enumerates role subjects (spatie), or subclass your driver to '
-            .'append the role/team Subjects and implement '.EnumeratesRoleSubjects::class.'. '
+            .'Why: the driver inherits subjectsFor() unchanged from a base lane that returns only '
+            .'the actor, so a role/team grant never joins the AccessResolver subject-set. '
+            .'Fix: use a driver that enumerates role subjects (spatie), or subclass your driver and '
+            .'OVERRIDE subjectsFor() to append the role/team Subjects (optionally marking it '
+            .EnumeratesRoleSubjects::class.' to advertise the capability explicitly). '
             .'Docs: '.self::docs('unenumerable-grant-subject'),
         );
     }
