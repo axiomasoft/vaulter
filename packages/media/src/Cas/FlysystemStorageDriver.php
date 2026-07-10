@@ -45,11 +45,65 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
             return false;
         }
 
-        // x-amz-checksum-sha256 lets S3 verify the staged bytes server-side; it is
-        // ignored by the local driver, so passing it is config-aware and safe.
-        $written = $filesystem->writeStream($key, $stream, $options);
+        // Temp-then-atomic-move promotion (F-P1.5-01): a crash mid-write must never
+        // leave a TRUNCATED object under the canonical CAS key (a partial object
+        // there would be trusted as committed — silent CAS corruption). We stream
+        // into a sibling temp key and only atomically move it onto the canonical
+        // key once the whole object landed; a failure deletes the temp and never
+        // touches the canonical key. The temp is a sibling (same directory ⇒ same
+        // filesystem) so the move is a rename on the local disk.
+        $tempKey = $this->tempKeyFor($key);
 
-        return $written !== false;
+        try {
+            // x-amz-checksum-sha256 lets S3 verify the staged bytes server-side; it
+            // is ignored by the local driver, so passing it is config-aware and safe.
+            $written = $filesystem->writeStream($tempKey, $stream, $options);
+
+            if ($written === false) {
+                $this->deleteQuietly($filesystem, $tempKey);
+
+                return false;
+            }
+        } catch (\Throwable $exception) {
+            // Reclaim the partial temp; the canonical key was never written.
+            $this->deleteQuietly($filesystem, $tempKey);
+
+            throw $exception;
+        }
+
+        // Conditional-create only (CAS promote, $ifNoneMatch): a concurrent uploader
+        // of the SAME content-address may have promoted its (byte-identical) object
+        // first, so drop our temp and treat it as a dedup hit rather than clobber it.
+        // The plain overwrite path (e.g. an S3 part re-upload REPLACING its bytes)
+        // must fall through and move over the existing key.
+        if ($ifNoneMatch && $filesystem->exists($key)) {
+            $this->deleteQuietly($filesystem, $tempKey);
+
+            return true;
+        }
+
+        // Atomic promotion: a rename on the local disk (same directory ⇒ same
+        // filesystem), overwriting any existing object for the overwrite path.
+        $filesystem->move($tempKey, $key);
+
+        return true;
+    }
+
+    /**
+     * A sibling temp key for the atomic-move promotion (F-P1.5-01): same directory
+     * as the canonical key (so the move is a same-filesystem rename on local) with
+     * a random suffix so two concurrent promotions never collide on the temp.
+     */
+    private function tempKeyFor(string $key): string
+    {
+        return $key.'.tmp-'.bin2hex(random_bytes(8));
+    }
+
+    private function deleteQuietly(Filesystem $filesystem, string $key): void
+    {
+        if ($filesystem->exists($key)) {
+            $filesystem->delete($key);
+        }
     }
 
     /**

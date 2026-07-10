@@ -145,6 +145,21 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
             $assembled .= $this->readPart($session, $part);
         }
 
+        // Integrity gate (F-P1.4-03): with a known declared total, the assembled
+        // object MUST match it exactly. Stitching a subset of the parts (a client
+        // that completes after uploading fewer bytes than declared) would otherwise
+        // commit a TRUNCATED file as whole — the server, not the client, decides the
+        // object is complete (U6.7/U5.4). Rejected BEFORE the staged temp is written,
+        // so nothing downstream ever sees the short object.
+        $total = $session->total_size_bytes;
+        $assembledSize = strlen($assembled);
+
+        if ($total !== null && $assembledSize !== $total) {
+            throw ValidationException::withMessages([
+                'parts' => "Cannot complete upload session {$session->upload_id}: assembled {$assembledSize} bytes but {$total} were declared.",
+            ]);
+        }
+
         $size = $this->staged->write(session: $session, bytes: $assembled);
 
         $this->sessions->advanceReceived(session: $session, receivedBytes: $size);

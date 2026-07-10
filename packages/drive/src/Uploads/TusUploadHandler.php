@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
 use Vaulter\Drive\Uploads\Enums\UploadProtocol;
@@ -79,32 +80,46 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
      */
     public function patch(UploadSession $session, mixed $chunk, int $offset): array
     {
-        if (!$session->status->isOpen()) {
-            throw ValidationException::withMessages([
-                'status' => "Upload session {$session->upload_id} is not accepting chunks (status {$session->status->value}).",
-            ]);
-        }
+        // The whole read-modify-write of received_bytes runs inside ONE transaction
+        // that takes a row lock on the session as its FIRST statement (F-P1.4-01 /
+        // N3). Without it two concurrent PATCH read the same server offset, both pass
+        // the offset check and both append — silently corrupting the assembled file.
+        // The lock is held until advanceReceived() so the window is indivisible; the
+        // acquire is NOWAIT so a concurrent PATCH is rejected as a conflict, never
+        // left to pile up waiting.
+        return DB::transaction(function () use ($session, $chunk, $offset): array {
+            $locked = $this->sessions->acquireForPatch($session);
 
-        $serverOffset = $this->offset($session);
+            if (!$locked->status->isOpen()) {
+                throw ValidationException::withMessages([
+                    'status' => "Upload session {$locked->upload_id} is not accepting chunks (status {$locked->status->value}).",
+                ]);
+            }
 
-        if ($offset !== $serverOffset) {
-            // tus 409 Conflict: the client's Upload-Offset does not match ours. The
-            // controller maps this to a 409 so the client re-reads HEAD and resumes.
-            throw ValidationException::withMessages([
-                'offset' => "Upload-Offset {$offset} does not match the server offset {$serverOffset}.",
-            ]);
-        }
+            // The authoritative offset read from the LOCKED, fresh row — never the
+            // possibly-stale argument model (that would take the lock but act on old
+            // data, defeating it).
+            $serverOffset = $this->offset($locked);
 
-        $newSize = $this->staged->append(session: $session, chunk: $chunk, offset: $offset);
+            if ($offset !== $serverOffset) {
+                // tus 409 Conflict: the client's Upload-Offset does not match ours. The
+                // controller maps this to a 409 so the client re-reads HEAD and resumes.
+                throw ValidationException::withMessages([
+                    'offset' => "Upload-Offset {$offset} does not match the server offset {$serverOffset}.",
+                ]);
+            }
 
-        $this->assertWithinMaxBytes(session: $session, size: $newSize);
+            $newSize = $this->staged->append(session: $locked, chunk: $chunk, offset: $offset);
 
-        $this->sessions->advanceReceived(session: $session, receivedBytes: $newSize);
+            $this->assertWithinMaxBytes(session: $locked, size: $newSize);
 
-        return [
-            'offset' => $newSize,
-            'complete' => $this->reachedTotal($session, $newSize),
-        ];
+            $this->sessions->advanceReceived(session: $locked, receivedBytes: $newSize);
+
+            return [
+                'offset' => $newSize,
+                'complete' => $this->reachedTotal($locked, $newSize),
+            ];
+        });
     }
 
     /**

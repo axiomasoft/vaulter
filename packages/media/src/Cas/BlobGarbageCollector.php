@@ -167,7 +167,11 @@ final readonly class BlobGarbageCollector
             ->where('first_seen_at', '<', $cutoff));
 
         foreach ($candidates as $candidate) {
-            $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($cutoff): bool {
+            // Symmetry with sweep() (F-P1.5-02): the pending-sweep runs its unit
+            // SERIALIZABLE on PostgreSQL with retry-on-40001, so a transient
+            // serialization failure under concurrent GC is retried rather than
+            // propagated as a QueryException that aborts the whole pass.
+            $acted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob) use ($cutoff): bool {
                 if ($blob->status !== BlobStatus::Pending) {
                     return false;
                 }
@@ -187,7 +191,7 @@ final readonly class BlobGarbageCollector
                 $this->blobs->markDeleted($blob);
 
                 return true;
-            });
+            }, serializable: true));
 
             $acted ? $swept++ : $skipped++;
         }

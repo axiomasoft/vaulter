@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Models\Drive\Storage;
+use Vaulter\Support\Config;
 
 /**
  * The staged temp for a resumable upload (§2.8 / H.3). The bytes accumulate on the
@@ -27,6 +30,13 @@ use Vaulter\Models\Drive\Storage;
  */
 final readonly class StagedUpload
 {
+    /**
+     * The in-memory ceiling for the assembly buffer before it spills to a temp file
+     * on disk (§2.8 / F-P1.4-04): peak memory stays bounded by this, never the full
+     * staged file, no matter how large the resumable upload grows.
+     */
+    private const int SPILL_BYTES = 2_097_152; // 2 MiB
+
     public function __construct(
         private StorageDriver $driver,
     ) {}
@@ -83,35 +93,82 @@ final readonly class StagedUpload
 
     /**
      * Append a chunk's bytes to the staged temp at $offset (§2.8 tus PATCH). The
-     * write is offset-aware: it reads the existing staged bytes, concatenates the new
-     * chunk and rewrites the temp, so a resumed PATCH from the authoritative offset
-     * stitches the file back together deterministically. Returns the new staged
-     * length.
+     * write is offset-aware and STREAMING (F-P1.4-04): the already-staged bytes up
+     * to the authoritative offset are streamed into a spill-to-disk assembly buffer
+     * followed by the new chunk, and the result is written back — the full staged
+     * file is NEVER read into a PHP string, so peak memory stays bounded by the
+     * spill ceiling regardless of upload size. A per-chunk ceiling is enforced
+     * BEFORE any bytes are staged. Returns the new staged length.
      *
      * @param resource $chunk
      */
     public function append(UploadSession $session, mixed $chunk, int $offset): int
     {
+        $this->assertChunkWithinLimit($chunk);
+
         $disk = $this->diskFor($session);
         $key = $this->keyFor($session);
 
-        $existing = '';
+        // A spill-to-disk buffer: it holds up to SPILL_BYTES in RAM then transparently
+        // spills to a temp file, so assembling a multi-GB staged file peaks at the
+        // ceiling, not the file size (F-P1.4-04).
+        $buffer = fopen('php://temp/maxmemory:'.self::SPILL_BYTES, 'r+b');
 
-        if ($disk->exists($key)) {
-            $existing = (string) $disk->get($key);
+        if ($buffer === false) {
+            throw new RuntimeException('Unable to open an assembly buffer for the upload chunk.');
         }
 
-        // Honour the authoritative offset: anything the client claims past the bytes
-        // we already hold is truncated to our offset (the server, not the client,
-        // owns the resume point — H.3 / §2.8).
-        $head = mb_substr($existing, 0, $offset, '8bit');
+        try {
+            // Honour the authoritative offset: stream only the bytes we already hold
+            // up to it (anything past it is dropped — the server, not the client, owns
+            // the resume point, H.3 / §2.8). Streamed, never materialised as a string.
+            if ($offset > 0 && $disk->exists($key)) {
+                $existing = $disk->readStream($key);
 
-        $appended = stream_get_contents($chunk);
-        $bytes = $head.($appended === false ? '' : $appended);
+                if (is_resource($existing)) {
+                    try {
+                        stream_copy_to_stream($existing, $buffer, $offset);
+                    } finally {
+                        fclose($existing);
+                    }
+                }
+            }
 
-        $disk->put($key, $bytes);
+            stream_copy_to_stream($chunk, $buffer);
 
-        return strlen($bytes);
+            $size = ftell($buffer);
+            rewind($buffer);
+            $disk->writeStream($key, $buffer);
+        } finally {
+            fclose($buffer);
+        }
+
+        return is_int($size) ? $size : 0;
+    }
+
+    /**
+     * Reject a PATCH chunk larger than the configured per-chunk ceiling BEFORE any
+     * bytes are staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a
+     * memory/IO DoS vector. 0 disables the cap.
+     *
+     * @param resource $chunk
+     */
+    private function assertChunkWithinLimit(mixed $chunk): void
+    {
+        $max = Config::uploadChunkSize();
+
+        if ($max <= 0) {
+            return;
+        }
+
+        $stat = is_resource($chunk) ? fstat($chunk) : false;
+        $size = is_array($stat) ? (int) $stat['size'] : 0;
+
+        if ($size > $max) {
+            throw ValidationException::withMessages([
+                'chunk' => "The upload chunk of {$size} bytes exceeds the maximum chunk size of {$max} bytes.",
+            ]);
+        }
     }
 
     /**

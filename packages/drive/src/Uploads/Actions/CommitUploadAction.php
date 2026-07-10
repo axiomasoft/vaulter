@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Vaulter\Drive\Actions\UploadFileAction;
 use Vaulter\Drive\Data\UploadFileData;
+use Vaulter\Drive\Exceptions\UploadContentMismatchException;
+use Vaulter\Drive\Uploads\MagicByteSniffer;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -42,6 +44,7 @@ final readonly class CommitUploadAction
         private StorageReadRepository $storages,
         private UploadSessionStoreRepository $sessions,
         private StagedUpload $staged,
+        private MagicByteSniffer $sniffer,
     ) {}
 
     /**
@@ -57,6 +60,8 @@ final readonly class CommitUploadAction
                 "Cannot commit upload session [{$session->upload_id}]: no staged bytes are present.",
             );
         }
+
+        $this->assertContentMatchesDeclaredMime($session);
 
         try {
             $node = DB::transaction(function () use ($session, $stream): Node {
@@ -85,6 +90,34 @@ final readonly class CommitUploadAction
         $this->staged->discard($session);
 
         return $node;
+    }
+
+    /**
+     * Reject a commit whose assembled bytes contradict the declared mime (§2.8 /
+     * F-P1.4-11). Sniffed on a SEPARATE staged stream so the commit stream stays at
+     * its start. A concrete contradiction (declared image/png, magic bytes ZIP)
+     * fails the commit before any blob is written.
+     */
+    private function assertContentMatchesDeclaredMime(UploadSession $session): void
+    {
+        $sniff = $this->staged->readStream($session);
+
+        if (!is_resource($sniff)) {
+            return;
+        }
+
+        try {
+            $matches = $this->sniffer->matches($sniff, $session->mime_type);
+        } finally {
+            fclose($sniff);
+        }
+
+        if (!$matches) {
+            throw UploadContentMismatchException::forSession(
+                $session->upload_id,
+                (string) $session->mime_type,
+            );
+        }
     }
 
     /**

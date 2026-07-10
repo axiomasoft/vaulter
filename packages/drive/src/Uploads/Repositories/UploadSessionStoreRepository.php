@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Repositories;
 
+use Illuminate\Support\Facades\DB;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\UploadModels;
@@ -30,6 +32,65 @@ final class UploadSessionStoreRepository
         // Refresh so DB-default columns (received_bytes, status) are hydrated for the
         // caller (the manager returns the row straight back to the controller).
         return $session->refresh();
+    }
+
+    /**
+     * Take the per-session lock as the FIRST statement of the tus PATCH transaction
+     * and return the fresh, locked row (§2.8 / N3 / F-P1.4-01). The lock is held for
+     * the whole "read offset → append → advance received_bytes" window so two
+     * concurrent PATCH can never both read the same offset and clobber each other's
+     * bytes. Its received_bytes/status are the authoritative values the handler must
+     * act on — never the possibly-stale argument model (that would take the lock but
+     * act on old data, defeating it).
+     *
+     *  - pgsql : a NON-BLOCKING advisory lock keyed by upload_id (the same
+     *            pg_advisory_xact_lock seam BlobStore uses, in its try_ form). A
+     *            PATCH that cannot take it because another is in-flight is REJECTED
+     *            immediately with a conflict rather than made to wait — a retry storm
+     *            must not pile up blocked requests (§N3). The lock releases at
+     *            COMMIT/ROLLBACK.
+     *  - mysql : SELECT … FOR UPDATE on the row (the portable pessimistic path).
+     *  - sqlite: no row lock, but the single-writer transaction serialises the
+     *            critical section, so the fresh read alone is correct.
+     */
+    public function acquireForPatch(UploadSession $session): UploadSession
+    {
+        $connection = DB::connection();
+        $driver = $connection->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // Non-blocking: pg_try_advisory_xact_lock returns false when another
+            // PATCH already holds the upload_id lock → immediate conflict, no wait.
+            $granted = $connection->selectOne(
+                'SELECT pg_try_advisory_xact_lock(hashtext(?)) AS granted',
+                ['upload:'.$session->upload_id],
+            );
+
+            if (!(is_object($granted) && ($granted->granted ?? false) === true)) {
+                throw UploadConflictException::forSession($session->upload_id);
+            }
+
+            return $this->freshSession($session, lock: false);
+        }
+
+        // MySQL: a real FOR UPDATE row lock. SQLite: single-writer serialises, so the
+        // fresh read is enough (lockForUpdate is a harmless no-op there anyway).
+        return $this->freshSession($session, lock: $driver !== 'sqlite');
+    }
+
+    /**
+     * Re-read the session row inside the current transaction, optionally FOR UPDATE.
+     */
+    private function freshSession(UploadSession $session, bool $lock): UploadSession
+    {
+        $model = UploadModels::session();
+        $query = $model::query()->whereKey($session->getKey());
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->firstOrFail();
     }
 
     /**
