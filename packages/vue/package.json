@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@hocuspocus/provider": "^2.13",
+    "@tiptap/extension-link": "^2.10.4",
     "@tiptap/pm": "^2.10",
     "@tiptap/starter-kit": "^2.10",
     "@tiptap/vue-3": "^2.10",

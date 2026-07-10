@@ -9,6 +9,9 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Broadcast;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Documents\HandlerRegistry;
 use Vaulter\Contracts\Documents\NodeHandlerResolver as NodeHandlerResolverContract;
@@ -95,6 +98,20 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         // default DefaultHostUserResolver; a host (or a test) may swap it. Purely
         // documents machinery — core neither defines nor binds it (D2 finding).
         $this->app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
+
+        // Second echelon of the F-P1.11-01 stored-XSS fix (D4): TipTapRenderer takes
+        // the sanitizer through its constructor (never resolved inline from the
+        // container) so every HTML render — including content persisted before the
+        // store-time validator existed — is sanitized on the way out. Singleton: the
+        // sanitizer is stateless and config-immutable per request.
+        $this->app->singleton(HtmlSanitizerInterface::class, static function (): HtmlSanitizer {
+            $config = (new HtmlSanitizerConfig)
+                ->allowSafeElements()
+                ->allowLinkSchemes(['https', 'http', 'mailto'])
+                ->allowMediaSchemes(['https', 'http']);
+
+            return new HtmlSanitizer($config);
+        });
     }
 
     public function packageBooted(): void

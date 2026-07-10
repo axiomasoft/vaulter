@@ -29,4 +29,44 @@ final class InvalidTipTapContentException extends VaulterException
             .'Docs: '.self::docs('content-too-large'),
         );
     }
+
+    public static function unknownNodeType(string $type): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: unknown node type "%s". ', $type)
+            .'Why: the store-time validator only accepts a closed set of node types. '
+            .'Fix: use one of the supported TipTap nodes, or extend the allow-list deliberately. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
+    public static function unknownMarkType(string $type): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: unknown mark type "%s". ', $type)
+            .'Why: the store-time validator only accepts a closed set of marks. '
+            .'Fix: use one of the supported TipTap marks, or extend the allow-list deliberately. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
+    public static function disallowedAttribute(string $nodeType, string $attribute): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: attribute "%s" is not allowed on node/mark "%s". ', $attribute, $nodeType)
+            .'Why: the store-time validator rejects attributes outside the closed allow-list per type. '
+            .'Fix: remove the attribute, or extend the allow-list deliberately. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
+    public static function disallowedUrlScheme(string $href): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: link href "%s" uses a disallowed URL scheme. ', $href)
+            .'Why: only http, https and mailto schemes are allowed (F-P1.11-01, stored XSS). '
+            .'Fix: use an http(s)/mailto link. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
 }

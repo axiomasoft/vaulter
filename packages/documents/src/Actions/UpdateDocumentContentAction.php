@@ -15,6 +15,7 @@ use Vaulter\Documents\Repositories\NodeDocumentVersionStoreRepository;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Write a document node's content — the AUTOSAVE path (§2.5 / M4a). Within the
@@ -40,6 +41,14 @@ final readonly class UpdateDocumentContentAction
 
         if (!$node->kind->isDocument()) {
             throw NotADocumentNodeException::forNode($node->getKey());
+        }
+
+        // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
+        // time — check it before the transaction, not just at the UI layer. Content
+        // is handler-agnostic (DocumentContent); the limit only applies to the
+        // TipTap shape, not an opaque non-rich-text snapshot (e.g. a spreadsheet).
+        if ($data->content instanceof TipTapContent) {
+            $data->content->ensureWithin(Config::maxDocumentSizeKb());
         }
 
         return DB::transaction(function () use ($node, $data): NodeDocumentVersion {

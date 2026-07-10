@@ -5,10 +5,12 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Vaulter\Documents\Actions\CreateDocumentNodeAction;
 use Vaulter\Documents\Actions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\PersistYjsSnapshotAction;
 use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
 use Vaulter\Documents\Actions\UpdateDocumentContentAction;
 use Vaulter\Documents\Data\CreateDocumentNodeData;
 use Vaulter\Documents\Data\CreateNamedVersionData;
+use Vaulter\Documents\Data\PersistYjsSnapshotData;
 use Vaulter\Documents\Data\UpdateDocumentContentData;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Events\DocumentNodeCreated;
@@ -17,7 +19,9 @@ use Vaulter\Documents\Models\NodeDocumentVersion;
 use Vaulter\Documents\Support\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The M4a document-node lifecycle (§2.5): create a kind=document node with its v1
@@ -203,3 +207,48 @@ function createDocument($drive, string $name): Node
         parent: $drive->root(),
     ));
 }
+
+function oversizedContent(): TipTapContent
+{
+    return DocumentTestHelpers::content(str_repeat('x', 4096));
+}
+
+// ─── F-P1.11-05 — max_document_size_kb enforced at save time ───────────────
+
+it('CreateDocumentNodeAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
+    config()->set('vaulter.max_document_size_kb', 1);
+
+    $drive = DocumentTestHelpers::drive();
+
+    app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+        storage: $drive->storage(),
+        name: 'Too big',
+        content: oversizedContent(),
+        parent: $drive->root(),
+    ));
+})->throws(InvalidTipTapContentException::class);
+
+it('UpdateDocumentContentAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    $node = createDocument($drive, 'Grows too big');
+
+    config()->set('vaulter.max_document_size_kb', 1);
+
+    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
+        node: $node->refresh(),
+        content: oversizedContent(),
+    ));
+})->throws(InvalidTipTapContentException::class);
+
+it('PersistYjsSnapshotAction rejects a projection over max_document_size_kb, F-P1.11-05', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    $node = createDocument($drive, 'Yjs too big');
+
+    config()->set('vaulter.max_document_size_kb', 1);
+
+    app(PersistYjsSnapshotAction::class)->execute(new PersistYjsSnapshotData(
+        node: $node->refresh(),
+        yjsState: 'small-yjs-state',
+        content: oversizedContent(),
+    ));
+})->throws(InvalidTipTapContentException::class);

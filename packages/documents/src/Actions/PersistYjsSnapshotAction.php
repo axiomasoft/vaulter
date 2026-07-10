@@ -48,6 +48,11 @@ final readonly class PersistYjsSnapshotAction
             throw NotADocumentNodeException::forNode($node->getKey());
         }
 
+        // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
+        // time. The Yjs binary state is the source of truth and is unbounded here by
+        // design (§7); only the optional TipTap JSON projection is size-checked.
+        $data->content?->ensureWithin(Config::maxDocumentSizeKb());
+
         return DB::transaction(function () use ($node, $data): NodeDocumentVersion {
             $head = $this->read->head($node);
 

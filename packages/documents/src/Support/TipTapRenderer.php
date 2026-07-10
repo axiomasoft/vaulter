@@ -4,16 +4,30 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support;
 
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Documents\Enums\ExportFormat;
+use Vaulter\ValueObjects\Documents\LinkSchemeValidator;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Supports the common node
  * and mark set (headings, lists, blockquote, code blocks, and bold/italic/strike/
  * code/link marks); unknown nodes fall back to rendering their children.
+ *
+ * Second echelon of the F-P1.11-01 stored-XSS fix (D4): {@see TipTapContent}
+ * already rejects disallowed node/mark/attribute shapes and non-http(s)/mailto
+ * `href` schemes at STORE time, but content persisted before that validator
+ * existed is read back verbatim — the HTML path is sanitized again here via
+ * `symfony/html-sanitizer` (injected, never resolved from the container inline),
+ * and the Markdown path re-applies the same link-scheme allow-list plus text
+ * escaping, since Markdown has no sanitizer of its own.
  */
 final class TipTapRenderer
 {
+    public function __construct(
+        private readonly HtmlSanitizerInterface $sanitizer,
+    ) {}
+
     public function render(TipTapContent $content, ExportFormat $format): string
     {
         return match ($format) {
@@ -24,7 +38,9 @@ final class TipTapRenderer
 
     public function toHtml(TipTapContent $content): string
     {
-        return $this->htmlNodes($this->children($content->toArray()));
+        $html = $this->htmlNodes($this->children($content->toArray()));
+
+        return $this->sanitizer->sanitize($html);
     }
 
     public function toMarkdown(TipTapContent $content): string
@@ -164,7 +180,10 @@ final class TipTapRenderer
      */
     private function markdownText(array $node): string
     {
-        $text = $this->stringValue($node, 'text');
+        // Markdown has no sanitizer of its own (F-P1.11-04): escape the raw text so a
+        // literal <script> in the document reaches the consumer as inert entities,
+        // not live markup an HTML-passthrough Markdown renderer would execute.
+        $text = $this->escape($this->stringValue($node, 'text'));
 
         foreach ($this->marks($node) as $mark) {
             $text = match ($this->type($mark)) {
@@ -172,12 +191,29 @@ final class TipTapRenderer
                 'italic' => sprintf('*%s*', $text),
                 'strike' => sprintf('~~%s~~', $text),
                 'code' => sprintf('`%s`', $text),
-                'link' => '['.$text.']('.$this->stringValue($this->attrs($mark), 'href').')',
+                'link' => $this->markdownLink($text, $this->stringValue($this->attrs($mark), 'href')),
                 default => $text,
             };
         }
 
         return $text;
+    }
+
+    /**
+     * Re-applies the same http(s)/mailto scheme allow-list {@see TipTapContent} uses
+     * at store time — content persisted before that validator existed is read back
+     * verbatim, so the export path cannot rely solely on store-time validation.
+     * A disallowed scheme drops the link wrapper and keeps only the escaped label.
+     */
+    private function markdownLink(string $label, string $href): string
+    {
+        $sanitized = LinkSchemeValidator::sanitize($href);
+
+        if ($sanitized === null) {
+            return $label;
+        }
+
+        return '['.$label.']('.$this->escape($sanitized).')';
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
