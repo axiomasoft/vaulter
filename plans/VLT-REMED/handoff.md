@@ -1,59 +1,61 @@
-# HANDOFF — 2026-07-10 — after P0.2
+# HANDOFF — 2026-07-10 — after P0.3
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — гонка tus без наблюдаемого симптома, конкурентность на PG |
+| Thinking | high — развёртывание скелет-фазы P1 (батчи W1) в детальные items, проектные решения по scope |
 | Context | fresh session — handoff свежий, рекомендован /clear |
-| Суть | Закрыть последний Blocker P0.3 (F-P1.4-01: гонка offset в конкурентном tus-PATCH → тихая порча файла) + 5 находок целостности загрузок/CAS: сверка total-bytes в S3-complete, потоковый append + пер-чанк-лимит, magic-bytes при commit, temp+rename промоушен блоба, SERIALIZABLE+retry в sweepPending |
+| Суть | Развернуть скелет фазы **P1 (W1 — быстрые высоко-эксплуатируемые)** в детальные items по «Обязательным осям» её Phase Context, закрыть DoR. Это `/task:plan-design`, НЕ `plan-exec`: P1 — скелет (Items 🟢/всего = 0/4, поля items не заполнены), прямой exec упадёт на предусловии. |
 
 ```
-/task:plan-exec VLT-REMED P0.3
+/task:plan-design VLT-REMED P1
 ```
 
 **Done:**
-- P0.1 (B1 — stored XSS в TipTap) 🟢 — двухэшелонная санитизация (F-P1.11-01/02/04/05), коммит `86a60a6`.
-- P0.2 (B3 — SSRF/webhook) 🟢 — коммит `296fb6d`. SSRF-guard `OutboundUrlGuard` (контракт + `DefaultOutboundUrlGuard`,
-  host-swappable) на пути ДОСТАВКИ: резолв A+AAAA через инъектируемый `HostResolver`, отказ на любом адресе в
-  закрытом наборе диапазонов (loopback/RFC-1918/link-local вкл. 169.254.169.254/IPv4-mapped), пиннинг IP через
-  `CURLOPT_RESOLVE`, редиректы off, транспорт http(s); тот же guard — ранний 422 при регистрации. `signing_secret`
-  → каст `encrypted` + колонка `text` + идемпотентная миграция (`SigningSecretEncryptor`). Outbox: с 4 kernel-событий
-  снят `ShouldDispatchAfterCommit`, `event()` внутри `DB::transaction` доменных действий → строка outbox в одном
-  коммите с мутацией (подписчики глотают сбои — mutation не откатывается). Единый `WebhookRetryDispatcher`
-  (lockForUpdate + сдвиг next_retry_at, visibility-timeout) вместо двух независимых re-dispatch. Лимит тела ответа
-  (`ResponseSizeLimit` + connect_timeout + maxmemory-sink). Закрыты F-P1.7-01 (Blocker), F-P1.7-02/03/05/06.
-  19 регрессионных тестов, red-before подтверждён на каждый F-id. Детали — `phases/P0.md` P0.2 Completion Notes.
+- **Фаза P0 (W0 — Blocker'ы) ТЕРМИНАЛЬНА (3/3 🟢).** По D2 допустим промежуточный мерж/релиз ветки `remediation/audit-vlt`, не дожидаясь W1–W4.
+- P0.1 (B1 — stored XSS в TipTap) 🟢 — коммит `86a60a6` (F-P1.11-01/02/04/05).
+- P0.2 (B3 — SSRF/целостность webhook) 🟢 — коммиты `296fb6d`/`a31462d`/`e49c890` (F-P1.7-01/02/03/05/06).
+- P0.3 (B5 — целостность resumable-загрузок/CAS) 🟢 — коммит `69f589a`. Лок сессии на весь read-modify-write tus-PATCH
+  (`pg_try_advisory_xact_lock` на PG — конфликт, не ожидание; FOR UPDATE на MySQL; single-writer на SQLite), offset со
+  свежей залоченной строки. Потоковый `StagedUpload::append` (php://temp-spill, память не масштабируется с файлом) +
+  пер-чанк-лимит. Сверка total-bytes в `S3MultipartHandler::complete`. magic-bytes-валидация собранного объекта
+  (`MagicByteSniffer` → `UploadContentMismatchException` 415). temp+rename промоушен в `FlysystemStorageDriver::put`
+  (skip-if-exists только для conditional-create — overwrite-путь S3-части сохранён). `sweepPending` под
+  `serializable()`+retry-40001. 6 регресс-тестов с F-id, red-before подтверждён; концкррент-тест F-P1.4-01 — реальные
+  два форкнутых процесса на PostgreSQL с барьером (до фикса okCount=2). Детали — `phases/P0.md` P0.3 Completion Notes.
 
-**Remaining:** P0.3 (B5 — resumable-uploads/CAS race, последний Blocker P0) → фаза P0 терминальна → развернуть и
-исполнить P1 (4), P2 (3), P3 (6), P4 (10), P5 (3). Развёртывание каждой фазы P1–P5 — `/task:plan-design VLT-REMED Pn`
-перед первым её item'ом (это скелеты).
+**Remaining:** P1 (4 items), P2 (3), P3 (6), P4 (10), P5 (3) — все скелеты. Развёртывание КАЖДОЙ фазы P1–P5 —
+`/task:plan-design VLT-REMED Pn` перед первым её item'ом (Execution Rules: скелет-фаза не исполняется напрямую).
+После развёртывания P1 — `/task:plan-exec VLT-REMED P1.1` и далее по её items.
 
-**Sources of truth:** `plans/VLT-REMED/plan.md` · `plans/VLT-REMED/phases/P0.md` ·
-`plans/VLT-REMED/findings/P0-remediation-norms.md` (N3 — tus-гонка) · `plans/AUDIT-VLT/findings/REGISTER.md` (SSOT
-103 находок, append-only, VLT-REMED в него не пишет) · `plans/AUDIT-VLT/findings/P1.4-uploads.md` ·
-`plans/AUDIT-VLT/findings/P1.5-cas-blobs.md` · `plans/AUDIT-VLT/findings/P0-upload-hardening.md` (U1–U7).
+**Sources of truth:** `plans/VLT-REMED/plan.md` (Context/Execution Rules/Routing/Status Board/Decision Log) ·
+`plans/VLT-REMED/phases/P0.md` (закрыта) · `plans/VLT-REMED/phases/P1.md` (скелет, «Обязательные оси» в Phase Context —
+вход развёртывания) · `plans/VLT-REMED/findings/P0-remediation-norms.md` (нормы W0, неизменны) ·
+`plans/AUDIT-VLT/findings/REGISTER.md` (SSOT 103 находок, append-only, VLT-REMED в него НЕ пишет) ·
+`plans/AUDIT-VLT/findings/P5.2-remediation-backlog.md` (партиция батчей/волн — раскладка W1).
 
 **Open risks:**
-- Один Blocker ещё открыт: F-P1.4-01 (гонка offset → порча файла, P0.3). До закрытия всей фазы P0 релиз пакета
-  невозможен (D7 плана AUDIT-VLT).
-- P0.3 — «зелёное, но не починенное»: гонка НЕ проверяется последовательными вызовами. Тест конкурентного PATCH
-  обязан гонять реальную параллельность на PostgreSQL (pre-mortem R4); SQLite сериализует запись и покажет зелёное
-  на дефектном коде. ВНИМАНИЕ (перенято из P0.2): PHP CLI этого окружения БЕЗ `pdo_pgsql` (`php -m` → только
-  pdo_mysql/pdo_sqlite) и без роли PG — для P0.3 PG-прогон конкурентного теста ОБЯЗАТЕЛЕН (D12), окружение нужно
-  дооснастить (pdo_pgsql + тест-БД `vaulter_test`), иначе Blocker'а не доказать. Это блокирует закрытие P0.3.
-- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. P0.3 трогает `packages/drive` и
-  `packages/media` — гони их собственные `cd packages/<pkg> && composer analyse && composer test && composer test:types`
-  дополнительно к root-гейту (workaround с P0.1, root-гейт их не покрывает).
-- Root `composer lint:check` красный из-за пред-существующего форматирования в `plans/AUDIT-VLT/artifacts/repro/**`
-  (чужой read-only план, вне scope VLT-REMED) — известно с P0.1, не блокирует closure (свой новый код обязан быть
-  pint-чистым).
+- Все три Blocker'а закрыты — релиз-блокеров W0 больше нет. Но P1–P5 ещё не тронуты: пакет не «чист», это лишь конец W0.
+- **PG-окружение для конкурентных/БД-зависимых тестов (D12):** root CLI PHP 8.5 БЕЗ `pdo_pgsql`. Прогон таких тестов
+  делался через `php8.4` (8.4.23, входит в constraint `^8.4`) против БД `vaulter_test` в контейнере `agelto_postgres`
+  (127.0.0.1:5455, роль agelto/пароль agelto_dev_local — изолированная БД, данные agelto не тронуты). Любой будущий item
+  с PG-требованием (P2.3 dedup-UNIQUE NULL-tenant и т.п.) должен использовать тот же путь. Постоянную vaulter-роль/БД
+  можно дооснастить, но не обязательно.
+- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. Items, трогающие drive/media/documents/filament,
+  ОБЯЗАНЫ гнать их собственные `cd packages/<pkg> && composer analyse && composer test && composer test:types`
+  дополнительно (workaround с P0.1).
+- Root `composer lint:check` красный на пред-существующем `plans/AUDIT-VLT/artifacts/repro/**` (чужой read-only план, вне
+  scope VLT-REMED) — известно с P0.1, closure НЕ блокирует; свой новый код обязан быть pint-чистым.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: (P0.3) root phpstan/phpunit — только core; для drive/media гони их own `composer analyse`/`test`/
-  `test:types`. PG-прогон конкурентных сценариев требует pdo_pgsql в CLI (в текущем окружении отсутствует — см. Open risks).
-- deferred: `docs/`-миграция и архивация AUDIT-VLT — отдельный запуск `/task:plan-close archive AUDIT-VLT`. Ротация уже
-  выданных `signing_secret` (Q3) — отдельный item по решению владельца (P0.2 Pending Work), не блокирует.
-- open_questions: Q3 (`open-questions.md`) — нужна ли ротация уже выданных `signing_secret`; решение владельца.
-  Q1/Q2 — `Resolved → D1/D10`.
+- workarounds: (D12) PG-прогоны — `php8.4` + БД `vaulter_test` в контейнере `agelto_postgres`; drive/media/documents/filament —
+  их own `composer analyse`/`test`/`test:types` (root покрывает только core). Форк-тесты конкуренции требуют закоммиченных
+  строк — их директория (`tests/Concurrency`) под `DatabaseMigrations`, не `RefreshDatabase`.
+- deferred: `docs/`-миграция и архивация AUDIT-VLT — отдельный `/task:plan-close archive AUDIT-VLT`. Ротация уже выданных
+  `signing_secret` (Q3, P0.2 Pending Work) — отдельный item по решению владельца. Пред-существующие незакоммиченные диффы
+  (`plans/ACTIVE.md`, `plans/AUDIT-VLT/**`, `.claude/.maind-feature-log.last`, `.claude/workflows/vlt-remed-drive.js`)
+  оставлены как есть (артефакты драйвера/чужого плана, вне scope P0.3).
+- open_questions: Q3 (`open-questions.md`) — нужна ли ротация уже выданных `signing_secret`; решение владельца. Q1/Q2 —
+  `Resolved → D1/D10`.
