@@ -45,8 +45,8 @@ it('S3 complete при сумме частей меньше total_size_bytes →
     expect(Blob::query()->count())->toBe(0);
 });
 
-it('чанк больше chunk_size → отказ до записи staged-байт, F-P1.4-04', function (): void {
-    config()->set('vaulter.uploads.chunk_size', 8); // 8-byte per-chunk ceiling
+it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {
+    config()->set('vaulter.uploads.max_chunk_bytes', 8); // 8-byte per-chunk hard ceiling
 
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
@@ -59,6 +59,27 @@ it('чанк больше chunk_size → отказ до записи staged-б�
 
     // Nothing landed on the staged temp — the cap is enforced before any write.
     expect(app(StagedUpload::class)->size($session->refresh()))->toBe(0);
+});
+
+it('PATCH крупнее chunk_size (это лишь HINT) НЕ отклоняется, пока max_chunk_bytes не задан, F-P1.4-04', function (): void {
+    // chunk_size is the advertised HINT, not a cap; the hard cap (max_chunk_bytes) is
+    // disabled by default. A conformant tus client sending a body far larger than the
+    // 8-byte hint in one PATCH must be ACCEPTED (the shipped contract: "the server
+    // accepts any PATCH/part size up to the remaining bytes"). The pre-fix code read
+    // the cap from chunk_size and rejected this — this asserts the divergence is gone.
+    config()->set('vaulter.uploads.chunk_size', 8);   // tiny HINT
+    config()->set('vaulter.uploads.max_chunk_bytes', 0); // hard cap disabled (default)
+
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
+
+    $handler = app(TusUploadHandler::class);
+
+    $result = $handler->patch($session->refresh(), UploadTestHelpers::streamFor('123456789'), 0);
+
+    // The 9-byte body landed in full — not rejected against the 8-byte hint.
+    expect($result['offset'])->toBe(9)
+        ->and(app(StagedUpload::class)->size($session->refresh()))->toBe(9);
 });
 
 it('append не поднимает пиковую память до размера staged-файла (потоковая дозапись), F-P1.4-04', function (): void {

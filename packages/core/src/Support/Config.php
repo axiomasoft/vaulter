@@ -599,6 +599,23 @@ final class Config
     }
 
     /**
+     * The OPTIONAL hard ceiling (in bytes) on a SINGLE tus PATCH / part body (§2.8 /
+     * F-P1.4-04): a memory/IO DoS lever kept DISTINCT from the chunk_size HINT so
+     * capping a request never inflates the chunk size advertised to clients. 0 = the
+     * cap is disabled, honouring the documented contract that the server accepts any
+     * PATCH/part size up to the remaining bytes; a host sets it to bound a request.
+     * Floored at 0 (never 1) so 0 is a real disable, not a 1-byte cap.
+     */
+    public static function uploadMaxChunkBytes(): int
+    {
+        $value = config('vaulter.uploads.max_chunk_bytes', 0);
+
+        $bytes = is_numeric($value) ? (int) $value : 0;
+
+        return max($bytes, 0);
+    }
+
+    /**
      * The session TTL in hours (§2.8): a session not committed within this window is
      * swept (its staged temp + S3 multipart reclaimed, status → expired). The
      * initiate path sets expires_at = now + this. Floored at 1.

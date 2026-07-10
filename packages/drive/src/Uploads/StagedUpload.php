@@ -147,15 +147,19 @@ final readonly class StagedUpload
     }
 
     /**
-     * Reject a PATCH chunk larger than the configured per-chunk ceiling BEFORE any
+     * Reject a PATCH chunk larger than the OPTIONAL per-chunk hard ceiling BEFORE any
      * bytes are staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a
-     * memory/IO DoS vector. 0 disables the cap.
+     * memory/IO DoS vector a host may cap. This is `uploads.max_chunk_bytes` — the
+     * hard cap — NOT `chunk_size`, which is only the advertised HINT (the server still
+     * accepts any PATCH size up to the remaining bytes, per the shipped contract). 0
+     * disables the cap; that is the live default, so the hint contract holds unless a
+     * host opts in.
      *
      * @param resource $chunk
      */
     private function assertChunkWithinLimit(mixed $chunk): void
     {
-        $max = Config::uploadChunkSize();
+        $max = Config::uploadMaxChunkBytes();
 
         if ($max <= 0) {
             return;

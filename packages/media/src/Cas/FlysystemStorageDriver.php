@@ -45,18 +45,42 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
             return false;
         }
 
-        // Temp-then-atomic-move promotion (F-P1.5-01): a crash mid-write must never
-        // leave a TRUNCATED object under the canonical CAS key (a partial object
-        // there would be trusted as committed — silent CAS corruption). We stream
-        // into a sibling temp key and only atomically move it onto the canonical
-        // key once the whole object landed; a failure deletes the temp and never
-        // touches the canonical key. The temp is a sibling (same directory ⇒ same
-        // filesystem) so the move is a rename on the local disk.
+        // Object stores land a write ATOMICALLY server-side: a failed/partial PUT
+        // never appears under the key, so there is no truncated-object window to
+        // guard — and a sibling temp + move there would only double the transfer
+        // and, past the S3 5 GiB single-request CopyObject limit, make the move FAIL
+        // where a direct PUT succeeds. Write straight to the canonical key on those
+        // disks; reserve temp-then-move for non-atomic disks (local/ftp) where a
+        // crash mid-write WOULD leave a truncated object under the canonical CAS key
+        // (F-P1.5-01; review def.2).
+        if ($this->writesAtomically($filesystem)) {
+            // x-amz-checksum-sha256 (in $options) lets S3 verify the bytes server-side.
+            $written = $filesystem->writeStream($key, $stream, $options);
+
+            return $written !== false;
+        }
+
+        return $this->promoteViaTemp($filesystem, $key, $stream, $ifNoneMatch, $options);
+    }
+
+    /**
+     * Temp-then-atomic-move promotion for a NON-atomic disk (F-P1.5-01): a crash
+     * mid-write must never leave a TRUNCATED object under the canonical CAS key (a
+     * partial object there would be trusted as committed — silent CAS corruption). We
+     * stream into a sibling temp key and only atomically move it onto the canonical
+     * key once the whole object landed; ANY failure — writeStream false/throw OR move
+     * false/throw — reclaims the temp and never leaves a partial under the canonical
+     * key (review def.1 + def.2). The temp is a sibling (same directory ⇒ same
+     * filesystem) so the move is a rename on the local disk.
+     *
+     * @param resource             $stream
+     * @param array<string, mixed> $options
+     */
+    private function promoteViaTemp(Filesystem $filesystem, string $key, mixed $stream, bool $ifNoneMatch, array $options): bool
+    {
         $tempKey = $this->tempKeyFor($key);
 
         try {
-            // x-amz-checksum-sha256 lets S3 verify the staged bytes server-side; it
-            // is ignored by the local driver, so passing it is config-aware and safe.
             $written = $filesystem->writeStream($tempKey, $stream, $options);
 
             if ($written === false) {
@@ -83,10 +107,39 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
         }
 
         // Atomic promotion: a rename on the local disk (same directory ⇒ same
-        // filesystem), overwriting any existing object for the overwrite path.
-        $filesystem->move($tempKey, $key);
+        // filesystem), overwriting any existing object for the overwrite path. move()
+        // returns FALSE on a non-throwing disk and THROWS UnableToMoveFile on a
+        // throwing one; a leaked temp on either path would linger under a sibling key,
+        // so reclaim it and report failure both ways rather than falsely returning
+        // success while the canonical key was never written (review def.1 + def.2).
+        try {
+            $moved = $filesystem->move($tempKey, $key);
+        } catch (\Throwable $exception) {
+            $this->deleteQuietly($filesystem, $tempKey);
+
+            throw $exception;
+        }
+
+        if ($moved === false) {
+            $this->deleteQuietly($filesystem, $tempKey);
+
+            return false;
+        }
 
         return true;
+    }
+
+    /**
+     * Whether the disk lands a write atomically (F-P1.5-01 / review def.2). An object
+     * store commits a PUT server-side — a failed upload never appears under the key —
+     * so it needs no temp-then-move staging. A local/ftp disk, and any disk we cannot
+     * positively identify as an object store, is treated as non-atomic so the
+     * truncated-object guard still applies. We reuse the same object-store signal this
+     * driver already trusts for signed URLs (temporaryUrl()): providesTemporaryUrls().
+     */
+    private function writesAtomically(Filesystem $filesystem): bool
+    {
+        return $filesystem instanceof FilesystemAdapter && $filesystem->providesTemporaryUrls();
     }
 
     /**

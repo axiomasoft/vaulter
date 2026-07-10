@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 
@@ -64,4 +65,111 @@ it('промоушен пишет во временный ключ и атома
         ->and(str_starts_with($writes[0], $finalKey.'.tmp-'))->toBeTrue()
         // …then atomically moved onto the canonical key.
         ->and($moves)->toBe([[$writes[0], $finalKey]]);
+});
+
+/**
+ * A failed move must NOT be reported as a committed blob (review def.1): with the
+ * default disk config ('throw' => false) FilesystemAdapter::move returns FALSE on
+ * failure (disk full / permissions / S3 copy error) rather than throwing. The pre-fix
+ * put() ignored the return value and unconditionally returned true — reporting SUCCESS
+ * while the canonical CAS key was never written and the temp leaked (silent CAS
+ * corruption / phantom success). put() must return false AND reclaim the temp.
+ */
+it('promote: move вернул false → put возвращает false и temp удаляется, не фантомный success, review def.1', function (): void {
+    $present = [];
+    $deleted = [];
+
+    $spy = Mockery::mock(Filesystem::class);
+
+    // NB: capture $present BY REFERENCE (a regular closure, not an arrow fn — the
+    // latter would snapshot the empty array at definition and never see the staged
+    // temp, so deleteQuietly's exists() guard would silently no-op).
+    $spy->shouldReceive('exists')->andReturnUsing(
+        function (string $key) use (&$present): bool {
+            return in_array($key, $present, strict: true);
+        },
+    );
+
+    $spy->shouldReceive('writeStream')->andReturnUsing(function (string $key) use (&$present): bool {
+        $present[] = $key;
+
+        return true;
+    });
+
+    // move FAILS the non-throwing way: returns false, leaving the temp in place.
+    $spy->shouldReceive('move')->andReturn(false);
+
+    $spy->shouldReceive('delete')->andReturnUsing(function (string $key) use (&$deleted, &$present): bool {
+        $deleted[] = $key;
+        $present = array_values(array_filter($present, static fn (string $k): bool => $k !== $key));
+
+        return true;
+    });
+
+    Storage::set('local', $spy);
+
+    $driver = new FlysystemStorageDriver;
+    $finalKey = 'tenant/de/ad/deadbeefcafe';
+
+    $stream = fopen('php://temp', 'r+b');
+    fwrite($stream, 'the canonical bytes');
+    rewind($stream);
+
+    $ok = $driver->put($finalKey, $stream, 'local');
+    fclose($stream);
+
+    // Pre-fix returned true unconditionally → RED. A failed promotion is a failure.
+    expect($ok)->toBeFalse()
+        // …and the staged temp was reclaimed, never left leaking under a sibling key.
+        ->and($deleted)->toHaveCount(1)
+        ->and(str_starts_with($deleted[0], $finalKey.'.tmp-'))->toBeTrue();
+});
+
+/**
+ * Object stores land a write ATOMICALLY, so the temp-then-move staging is skipped
+ * there (review def.2): a canonical S3 PUT was already atomic, and staging would only
+ * double the transfer and — past the S3 5 GiB single-request CopyObject limit — make
+ * the move FAIL (outside the try/catch, leaking the temp) where a direct PUT succeeds.
+ * The pre-fix code staged + moved on EVERY disk with no driver-type guard. Object-store
+ * detection reuses the signed-URL signal the driver already trusts: providesTemporaryUrls().
+ */
+it('object store (атомарная запись) → put пишет прямо в финальный ключ, без temp и без move, review def.2', function (): void {
+    $writes = [];
+    $moved = false;
+
+    $spy = Mockery::mock(FilesystemAdapter::class);
+
+    // The object-store signal: a disk that mints signed URLs is treated as atomic.
+    $spy->shouldReceive('providesTemporaryUrls')->andReturn(true);
+    $spy->shouldReceive('exists')->andReturn(false);
+
+    $spy->shouldReceive('writeStream')->andReturnUsing(function (string $key) use (&$writes): bool {
+        $writes[] = $key;
+
+        return true;
+    });
+
+    $spy->shouldReceive('move')->andReturnUsing(function () use (&$moved): bool {
+        $moved = true;
+
+        return true;
+    });
+
+    Storage::set('s3', $spy);
+
+    $driver = new FlysystemStorageDriver;
+    $finalKey = 'tenant/de/ad/deadbeefcafe';
+
+    $stream = fopen('php://temp', 'r+b');
+    fwrite($stream, 'the canonical bytes');
+    rewind($stream);
+
+    $ok = $driver->put($finalKey, $stream, 's3');
+    fclose($stream);
+
+    // Written STRAIGHT to the canonical key — no temp sibling, no CopyObject move. The
+    // pre-fix code staged to a temp + moved on the object store too → RED.
+    expect($ok)->toBeTrue()
+        ->and($writes)->toBe([$finalKey])
+        ->and($moved)->toBeFalse();
 });

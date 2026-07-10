@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -129,6 +130,56 @@ it('два конкурентных PATCH с одинаковым offset — р�
     // The staged bytes are exactly ONE untorn chunk, and received_bytes matches it.
     expect($final->received_bytes)->toBe($chunkLen)
         ->and($stagedSha)->toBeIn($reference);
+});
+
+/**
+ * The DETERMINISTIC, sqlite-runnable sibling of the forked race above (review def.4):
+ * the fix's core sub-invariant is that patch() reads the offset from the LOCKED FRESH
+ * row (acquireForPatch → freshSession), NEVER the possibly-stale argument model. That
+ * is testable without real concurrency — pass a session whose in-memory received_bytes
+ * is stale versus the committed DB row and assert the handler acts on the DB value —
+ * so it runs in the default suite and guards against a regression that reintroduces
+ * use of the argument offset (which the PG-only fork test, always skipped on the
+ * in-memory sqlite CI DB, would not catch).
+ */
+it('offset берётся со СВЕЖЕЙ залоченной строки, а не из устаревшей модели-аргумента, F-P1.4-01', function (): void {
+    Storage::fake('local');
+
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
+
+    // A STALE in-memory snapshot captured while received_bytes is still 0 — the value
+    // a caller might hold from before the first PATCH.
+    $stale = UploadSession::query()->findOrFail($session->getKey());
+    expect($stale->received_bytes)->toBe(0);
+
+    $handler = app(TusUploadHandler::class);
+
+    // Advance the authoritative server offset to 10 through a FRESH model; the DB row
+    // now says 10 while the $stale snapshot in memory still says 0.
+    $handler->patch($session->fresh(), UploadTestHelpers::streamFor('0123456789'), 0);
+    expect(UploadSession::query()->findOrFail($session->getKey())->received_bytes)->toBe(10);
+
+    // PATCH with the STALE model at offset 0. Had the handler trusted the argument
+    // model's received_bytes (0) it would ACCEPT this and clobber the staged bytes;
+    // because it reads the offset from the LOCKED FRESH row (10) it REJECTS offset 0 as
+    // a conflict. Reverting patch() to offset($session) instead of offset($locked)
+    // makes this ACCEPT → the assertion goes RED: exactly the guarded regression.
+    expect(fn () => $handler->patch($stale, UploadTestHelpers::streamFor('X'), 0))
+        ->toThrow(ValidationException::class);
+
+    // The staged bytes are untouched by the rejected stale PATCH.
+    $afterReject = UploadSession::query()->findOrFail($session->getKey());
+    expect(app(StagedUpload::class)->size($afterReject))->toBe(10);
+
+    // The fresh, correct offset (10) is accepted and advances to 11 — the handler acts
+    // on the DB value, not the stale argument.
+    $result = $handler->patch(
+        UploadSession::query()->findOrFail($session->getKey()),
+        UploadTestHelpers::streamFor('Y'),
+        10,
+    );
+    expect($result['offset'])->toBe(11);
 });
 
 /**
