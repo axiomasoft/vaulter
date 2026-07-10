@@ -12,10 +12,12 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Override;
 use UnitEnum;
 use Vaulter\Filament\Resources\StorageResource\Pages\ListStorages;
 use Vaulter\Filament\Resources\StorageResource\Pages\ViewStorage;
+use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 
@@ -43,6 +45,33 @@ final class StorageResource extends Resource
     public static function getModel(): string
     {
         return Config::storageModel();
+    }
+
+    /**
+     * Access-aware listing (F-P1.10-01): narrow to storages whose root node is in
+     * the acting admin's grant-reachable candidate set — mirrors
+     * {@see NodeResource::getEloquentQuery()}. A storage
+     * has no other grant anchor of its own (a grant addresses a NODE), so "may see
+     * this storage" reduces to "may reach its root". Empty candidate set (no actor,
+     * or an actor with zero grants) ⇒ empty table, never an open listing.
+     */
+    #[Override]
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $nodeIds = PanelAccessScope::candidateNodeIds();
+
+        if ($nodeIds === null) {
+            // The active driver doesn't narrow by grant (host roles govern).
+            return $query;
+        }
+
+        if ($nodeIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('root_node_id', $nodeIds);
     }
 
     #[Override]

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament\Support;
 
+use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Support\Facades\Auth;
 use Vaulter\Access\AccessResolver;
 
 /**
@@ -14,6 +14,14 @@ use Vaulter\Access\AccessResolver;
  * through the {@see AccessResolver}, which needs an Authorizable
  * actor. This helper narrows the authenticated panel user to one (or null when no
  * one is signed in, which yields an all-false ability map — a read-only shell).
+ *
+ * The actor is resolved through the ACTIVE PANEL's own auth guard
+ * (F-P1.10-02, `Filament::auth()` → `getCurrentOrDefaultPanel()->auth()`), not the
+ * application's global default guard: a host whose panel runs on a non-default
+ * guard would otherwise have the AccessResolver evaluate a DIFFERENT identity than
+ * the one actually signed into the panel. Outside a resolvable panel context
+ * (falls back to the default panel; genuinely panel-less callers get whatever that
+ * default guard reports) this still degrades to null cleanly.
  *
  * Technical axis — no Vaulter domain knowledge beyond "who is acting".
  */
@@ -25,7 +33,7 @@ final class PanelActor
      */
     public static function current(): ?Authorizable
     {
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return $user instanceof Authorizable ? $user : null;
     }
@@ -37,7 +45,7 @@ final class PanelActor
      */
     public static function id(): int|string|null
     {
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user instanceof Authorizable) {
             return null;

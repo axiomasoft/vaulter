@@ -31,8 +31,14 @@ final readonly class BlobStoreRepository
      * flag telling BlobStore whether bytes must be promoted (true ⇒ newly created,
      * promote; false ⇒ dedup hit, skip the physical write).
      *
-     * The UNIQUE (scope, sha256) constraint is the portable race backbone: a
-     * concurrent INSERT loser catches the unique violation and re-SELECTs.
+     * The UNIQUE (scope, sha256) constraint is the portable race backbone for a
+     * NON-NULL scope value: a concurrent INSERT loser catches the unique violation
+     * and re-SELECTs. CAVEAT (F-P1.5-03 / D18): for scope=tenant with a NULL
+     * tenant_id (single-tenant / tenancy disabled — the common case) this UNIQUE
+     * does NOT fire — SQL never treats two NULLs as equal — so the true backbone
+     * for that case is `storage_key_uniq` (single-column, NULL-free by
+     * construction) on `v_blobs.storage_key`; see PanelTablesBuilder::defineBlobs()
+     * and ADR-0012 Amendment.
      *
      * @return array{blob: Blob, created: bool}
      */

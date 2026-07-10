@@ -91,7 +91,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 |:--|:--|:--|:--|
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
-| P2 | W2 — Авторизация и изоляция | 1/3 | 🟡 In progress |
+| P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
@@ -139,3 +139,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-design/opus | Фаза P2 (W2) развёрнута из скелета: 3 items (11 находок), DoR закрыт — детали см. phases/P2.md. Несущие решения D17/D18/D19; заведён Q4 (`open-questions.md`, Decision pending, фазу не блокирует). |
 | 2026-07-11 | plan-exec/sonnet | P2.1 закрыт (🟠): выравнивание докблоков wall-deny к ADR-0007, `explain()`+VO, fail-loud role/team-грантов (F-P1.1-01/02, F-P1.2-01), коммит `18274f1`; deviations — sonnet вместо opus/high, CHANGELOG отложен — детали см. phases/P2.md P2.1 Completion Notes.
 | 2026-07-11 | plan-exec/sonnet | P2.2 закрыт (🟢): item-safety trash-check на download/content/export (F-P1.12-01), физический purge с FK-каскадом версий (F-P1.12-02, PG-верифицирован), снятие `keep_forever` (F-P1.12-03), ADR-0016 — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-11 | plan-exec/sonnet | P2.3 закрыт (🟢): скоуп Filament-листингов + tenant-footgun-guard + dedup-докблоки (F-P1.10-01/02, F-P1.9-01/02, F-P1.5-03) — детали см. phases/P2.md P2.3 Completion Notes. Фаза P2 ТЕРМИНАЛЬНА (🟠, P2.1 несёт routing-отклонение). |

@@ -33,6 +33,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
+use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
@@ -65,6 +66,29 @@ final class NodeShareResource extends Resource
     public static function getModel(): string
     {
         return Config::nodeShareModel();
+    }
+
+    /**
+     * Access-aware listing (F-P1.10-01): narrow to share rows whose node_id is in
+     * the acting admin's grant-reachable candidate set. Empty candidate set (no
+     * actor, or an actor with zero grants) ⇒ empty table.
+     */
+    #[Override]
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $nodeIds = PanelAccessScope::candidateNodeIds();
+
+        if ($nodeIds === null) {
+            return $query;
+        }
+
+        if ($nodeIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('node_id', $nodeIds);
     }
 
     #[Override]

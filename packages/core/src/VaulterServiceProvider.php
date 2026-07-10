@@ -35,6 +35,7 @@ use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
+use Vaulter\Support\TenantFootgunGuard;
 use Vaulter\Webhooks\RecordsOutbox;
 use Vaulter\Webhooks\SystemHostResolver;
 
@@ -141,6 +142,10 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->registerActivitySubscriber();
         $this->registerOutboxSubscriber();
         $this->registerRateLimiters();
+
+        // Fail-loud tenancy-footgun guard (F-P1.9-01) — see TenantFootgunGuard for
+        // the full rationale; extracted so it is directly unit-testable.
+        (new TenantFootgunGuard)->check(isProduction: $this->app->environment('production'));
     }
 
     /**

@@ -34,3 +34,19 @@ cannot serve both.
 > into the config-first **Storage Panels** envelope (ADR-0009), and the binary
 > `id_type` toggle is replaced by the `bigint | ulid | uuid7` **id-strategy** seam
 > (ADR-0011). The host-owned tenancy stance carries forward unchanged.
+
+## Amendment (VLT-REMED P2.3 / F-P1.9-01, 2026-07-11)
+
+The host-owned tenancy stance is a deliberate, correct design — but it was a silent
+footgun: `vaulter.tenant.enabled=true` populates the `tenant_id` column with ZERO
+runtime signal that the host still needs to supply a tenant-scoping model subclass.
+A host that flips the flag and stops there gets a fully populated, fully
+UNENFORCED column and no warning.
+
+**Decision:** a boot-time guard (`Vaulter\Support\TenantFootgunGuard`, wired from
+`VaulterServiceProvider::packageBooted()`) checks `tenant.enabled=true` AND
+`config('vaulter.models.node')` still the package default; if both hold, it logs a
+warning always and throws outside production (mirrors F-P1.2-01's fail-loud
+shape). It does **not** add a global scope — that remains the host's job, per the
+original decision above (a package-level scope would break
+GC/reconcile/sweeper, which must see every tenant regardless of who owns what).

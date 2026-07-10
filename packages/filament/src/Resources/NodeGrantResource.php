@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Override;
 use UnitEnum;
@@ -30,6 +31,7 @@ use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
+use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
@@ -60,6 +62,30 @@ final class NodeGrantResource extends Resource
     public static function getModel(): string
     {
         return Config::grantModel();
+    }
+
+    /**
+     * Access-aware listing (F-P1.10-01): narrow to grant rows whose node_id is in
+     * the acting admin's grant-reachable candidate set (the same set
+     * {@see NodeResource::getEloquentQuery()} narrows the node table to). Empty
+     * candidate set (no actor, or an actor with zero grants) ⇒ empty table.
+     */
+    #[Override]
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $nodeIds = PanelAccessScope::candidateNodeIds();
+
+        if ($nodeIds === null) {
+            return $query;
+        }
+
+        if ($nodeIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('node_id', $nodeIds);
     }
 
     #[Override]

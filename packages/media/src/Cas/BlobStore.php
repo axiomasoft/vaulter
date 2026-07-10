@@ -26,7 +26,12 @@ use Vaulter\Support\Config;
  *   3. find-or-create the blob by its per-scope dedup key — a tombstoned match is
  *      RESURRECTED in the same locked transaction (this is what makes online GC
  *      safe), the UNIQUE (scope, sha256) constraint is the portable race backbone
- *      (loser re-SELECTs + reuses);
+ *      (loser re-SELECTs + reuses) FOR A NON-NULL SCOPE VALUE. For scope=tenant
+ *      with a NULL tenant_id (single-tenant / tenancy disabled) that UNIQUE never
+ *      fires (NULL ≠ NULL in SQL); `v_blobs.storage_key`'s own single-column
+ *      UNIQUE is the actual backbone there (F-P1.5-03 / D18 — see
+ *      {@see BlobStoreRepository::findOrCreate()} and
+ *      ADR-0012 Amendment);
  *   4. promote bytes to the canonical key ONLY when the row is newly created — a
  *      dedup hit skips the physical write;
  *   5. NO synchronous ref_count++ (hot-row) — liveness truth is the edge in

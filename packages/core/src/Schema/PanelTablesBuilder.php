@@ -269,6 +269,17 @@ final class PanelTablesBuilder
         // tenant_id/storage_id columns always exist (the model carries them); only
         // the UNIQUE index spans the scope-relevant subset. Index names are derived
         // from the table so a per-panel prefixed table never collides.
+        //
+        // CAVEAT (F-P1.5-03 / D18, VLT-REMED): for scope=tenant with tenant_id=NULL
+        // (a single-tenant host, or tenancy simply not enabled — the common case),
+        // this UNIQUE does NOT converge concurrent identical uploads: SQL treats
+        // every NULL as distinct, so UNIQUE(NULL, sha256) never raises a violation
+        // and two committers of the same bytes can both "win" the INSERT. The row
+        // still converges to ONE physical object because storage_key_uniq below is
+        // a SEPARATE, scope-qualified, single-column UNIQUE that has no NULL in its
+        // column — the actual race backbone for NULL-tenant dedup. Keep
+        // storage_key_uniq single-column (never compose it with disk/anything else)
+        // — see ADR-0012 Amendment.
         $name = $table->getTable();
         $table->unique($this->dedupUniqueColumns(), "{$name}_dedup_uniq");
         $table->unique('storage_key', "{$name}_storage_key_uniq");

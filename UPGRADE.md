@@ -6,6 +6,34 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Four Filament resources now scope their listing; PanelActor resolves through the panel's own guard; a boot-time guard throws on a tenancy footgun (P2.3 / F-P1.10-01, F-P1.10-02, F-P1.9-01)
+
+**What changed.**
+
+1. **`StorageResource`/`NodeGrantResource`/`NodeShareResource`/`ActivityResource` now scope
+   `getEloquentQuery()` to the acting panel admin's grant-reachable candidate set
+   (F-P1.10-01)**, the same candidate-set semantic `NodeResource` already used. Previously
+   these four resources had no policy and no query scope, so ANY authenticated panel user
+   saw every storage/grant/share/activity row of every owner — this closes a broken-access-
+   control gap, so it is a security fix, not a regression. A host relying on every panel user
+   seeing every row (e.g. a single trusted super-admin panel with the `null`/non-grant-
+   authoritative driver) is unaffected — the narrowing only applies when the active
+   `HostRoleDriver` is grant-authoritative (the standalone `database` driver) with the
+   `grants` feature on; every other driver keeps the listing OPEN as before.
+2. **`PanelActor::current()`/`id()` now resolve through the active panel's OWN auth guard**
+   (`Filament::auth()`), not the application's global default guard (F-P1.10-02). A host whose
+   panel runs on a non-default guard (`->authGuard('admin')` etc.) previously had every
+   Vaulter Filament resource evaluate the WRONG identity's grants against
+   `AccessResolver`. Hosts on the default guard (the common case) see no behaviour change.
+3. **Booting with `vaulter.tenant.enabled=true` and the default (non-scoping) `Node` model now
+   throws outside production** (F-P1.9-01, ADR-0003 Amendment). This was always a silent,
+   fully-open-listing misconfiguration (the `tenant_id` column is populated but nothing
+   filters by it); it is now loud everywhere except `app()->environment('production')`, which
+   still only logs a warning (no crash in production). **Action required** if you enabled
+   `vaulter.tenant.enabled` without swapping `config('vaulter.models.node')` for your own
+   tenant-scoping subclass: either supply that subclass, or disable `vaulter.tenant.enabled`
+   — both silence the guard.
+
 ### Trash now blocks download/export; purge-trash physically deletes; keep_forever is releasable (P2.2 / F-P1.12-01, F-P1.12-02, F-P1.12-03)
 
 **What changed.** Three corrections to the trash/remanence lifecycle (see ADR-0016):

@@ -24,6 +24,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Panels',
     $core.'/Schema',
     $core.'/Sharing',
+    $core.'/Support',
     $core.'/Webhooks',
 );
 

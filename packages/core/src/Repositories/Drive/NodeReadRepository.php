@@ -406,9 +406,16 @@ final class NodeReadRepository
      * descendants of every SUBTREE-scoped anchor. Item-scoped anchors contribute
      * only their own node. A SUPERSET — see {@see queryForUser()}.
      *
+     * PUBLIC (F-P1.10-01): {@see constrainToAccessible()} narrows a query by the
+     * NODE model's own primary key, which only fits a Node-shaped listing. The
+     * Filament panel's non-Node resources (grant/share/activity/storage) key off a
+     * DIFFERENT column (node_id / target_id / root_node_id), so they call this
+     * directly to build their own `whereIn` — same candidate set, same
+     * grantFilteringApplies() gate, no duplicated grant-resolution logic.
+     *
      * @return list<int|string>
      */
-    private function candidateNodeIds(Authorizable $actor): array
+    public function candidateNodeIds(Authorizable $actor): array
     {
         $subjects = $this->drivers->driver()->subjectsFor($actor);
         $anchors = $this->grants->allowAnchorsFor(subjects: $subjects, now: Carbon::now());

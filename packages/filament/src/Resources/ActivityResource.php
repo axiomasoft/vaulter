@@ -14,12 +14,14 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 use UnitEnum;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
+use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Support\Config;
 
@@ -44,6 +46,37 @@ final class ActivityResource extends Resource
     public static function getModel(): string
     {
         return Config::activityModel();
+    }
+
+    /**
+     * Access-aware listing (F-P1.10-01): narrow to activity rows whose target is a
+     * node in the acting admin's grant-reachable candidate set. Every recorded verb
+     * targets a node (storage.created targets its root folder — see
+     * ActivityRecorder), so `target_type = <node model>` + `target_id IN
+     * (candidates)` covers the feed; there is no target-less row a candidate-based
+     * narrowing would need to special-case. Empty candidate set (no actor, or an
+     * actor with zero grants) ⇒ empty table.
+     */
+    #[Override]
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $nodeIds = PanelAccessScope::candidateNodeIds();
+
+        if ($nodeIds === null) {
+            return $query;
+        }
+
+        if ($nodeIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $nodeMorphClass = (new (Config::nodeModel()))->getMorphClass();
+
+        return $query
+            ->where('target_type', $nodeMorphClass)
+            ->whereIn('target_id', $nodeIds);
     }
 
     #[Override]
