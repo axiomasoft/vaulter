@@ -6,6 +6,58 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Public share-link surface hardened: no more presign-redirect, issuer re-check, default TTL, opaque public id (P1.2 / F-P1.3-01/02/03/05)
+
+**What changed.** Four independent fixes to the bearer share-link surface
+(`DownloadController`, `PublicShareController`, `ShareResolver`, `SharedNodeResource`):
+
+1. **No more presign-redirect (F-P1.3-01).** Both `DownloadController::current()`/`version()`
+   and `PublicShareController::download()` used to 302-redirect to a short-lived signed URL when
+   the configured disk could mint one (any S3-compatible disk). They now ALWAYS stream the bytes
+   through PHP, exactly like a disk without `providesTemporaryUrls()` always did. Their return
+   type narrowed from `StreamedResponse|RedirectResponse` to `StreamedResponse`. A presigned URL
+   is a bearer token that is never re-authorized per request and cannot be revoked instantly —
+   D15 never sanctioned this mode; it was a defect, not a supported optimization.
+2. **Issuer re-check on every share consumption (F-P1.3-02).** A bearer link now dies the moment
+   its issuer (the actor who minted it, `granted_by`) loses `Ability::Share` on the node — not
+   just when the link itself is explicitly revoked. Previously a link outlived its issuer's own
+   access indefinitely (confused-deputy). A share with no recorded issuer (a pre-existing row
+   minted before this fix, or one created by a system/console actor) is unaffected.
+3. **Bearer links are never immortal by omission (F-P1.3-03).** A link created without an
+   explicit `expires_at` now gets `config('vaulter.share.default_ttl_hours')` (default 72h)
+   instead of never expiring. An explicit `expires_at` above
+   `config('vaulter.share.max_ttl_hours')` (default 720h / 30 days) is now rejected by validation
+   (422) instead of silently accepted.
+4. **The public share JSON no longer exposes the raw node id (F-P1.3-05).** `SharedNodeResource`
+   (`GET share/{token}`, `GET share/{token}/nodes`) now returns `id`/`parent_id` as an opaque,
+   deterministic `hash_hmac`-derived string, not `Node::getKey()`. Under `id_type=bigint` the raw
+   key is a sequential integer that leaked creation order/count to an anonymous link holder; under
+   the default `ulid` it was already unguessable but is now opaque too, for consistency across id
+   strategies. No public endpoint accepts a node id from the client, so this does not break
+   addressing.
+
+**Who is affected.**
+
+- Anyone relying on `DownloadController`/`PublicShareController` returning a redirect on an
+  S3-compatible disk (e.g. a CDN/proxy expecting a 302 to pass through) — the response is now
+  always a streamed download through the application.
+- Anyone parsing the `id`/`parent_id` fields of the public share JSON as the internal node key
+  (e.g. correlating it against an owner-side API response) — it is now an opaque string with no
+  relationship to `Node::getKey()` outside the share response itself.
+- Anyone who created share links expecting them to never expire without an explicit
+  `expires_at` — pre-existing links with a `null` `expires_at` are UNAFFECTED (the default only
+  applies at mint time); newly minted links without an explicit expiry now expire after
+  `default_ttl_hours`.
+- Anyone whose share-minting form posts an `expires_at` further out than `max_ttl_hours` — that
+  request now 422s; either request a shorter expiry or raise `vaulter.share.max_ttl_hours`.
+
+**What you must check.** If you depend on any of the four behaviours above, override the
+relevant config key (`vaulter.share.default_ttl_hours`, `vaulter.share.max_ttl_hours`) or adjust
+client code that parsed the public `id`/`parent_id` as a real key or relied on a 302 from the
+download endpoints.
+
+No database migration is required for this upgrade note.
+
 ### Access/sharing events no longer dispatch after commit (P0.2 / F-P1.7-03)
 
 **What changed.** Four kernel events dropped `Illuminate\Contracts\Events\ShouldDispatchAfterCommit`

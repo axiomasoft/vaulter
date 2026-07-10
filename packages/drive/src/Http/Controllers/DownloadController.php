@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Vaulter\Access\AccessResolver;
@@ -23,9 +22,11 @@ use Vaulter\Repositories\Drive\FileVersionReadRepository;
 /**
  * Stream a file node's bytes (master plan §2.7 download). The version to serve is
  * the node's current head, or a specific historical version when one is named in
- * the route. The bytes never pass through PHP memory: on a disk that can mint a
- * signed URL (S3-style) the client is redirected to a short-lived temporaryUrl;
- * otherwise the object is streamed straight off the StorageDriver in chunks.
+ * the route. The bytes ALWAYS pass through PHP (P1.2 / F-P1.3-01, D15): even on a
+ * disk that can mint a signed URL (S3-style) the object is streamed straight off
+ * the StorageDriver in chunks, never redirected to a presigned URL — a presigned
+ * URL is a bearer token that is never re-authorized per request and cannot be
+ * revoked instantly, which D15 rules out as a supported mode.
  *
  * Thin — the node/storage arrive route-model resolved; the version + blob are
  * resolved through FileVersionReadRepository (bounded to the node's own file), so
@@ -33,12 +34,6 @@ use Vaulter\Repositories\Drive\FileVersionReadRepository;
  */
 final class DownloadController extends Controller
 {
-    /**
-     * How long a redirected signed URL stays valid — a few minutes is enough for
-     * the browser to follow the 302 and start the transfer.
-     */
-    private const int SIGNED_URL_TTL_MINUTES = 5;
-
     public function __construct(
         private readonly FileVersionReadRepository $versions,
         private readonly StorageDriver $driver,
@@ -48,7 +43,7 @@ final class DownloadController extends Controller
     /**
      * Stream the node's current head version.
      */
-    public function current(Request $request, Storage $storage, Node $node): StreamedResponse|RedirectResponse
+    public function current(Request $request, Storage $storage, Node $node): StreamedResponse
     {
         $this->guardDownload($request, $node);
 
@@ -65,7 +60,7 @@ final class DownloadController extends Controller
         Storage $storage,
         Node $node,
         int|string $version,
-    ): StreamedResponse|RedirectResponse {
+    ): StreamedResponse {
         $this->guardDownload($request, $node);
 
         $resolved = $this->versions->forNode($node, $version);
@@ -87,7 +82,7 @@ final class DownloadController extends Controller
         }
     }
 
-    private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse|RedirectResponse
+    private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse
     {
         if (!$version instanceof FileVersion) {
             abort(404);
@@ -101,16 +96,6 @@ final class DownloadController extends Controller
 
         $filename = $version->original_name !== '' ? $version->original_name : $node->name;
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';
-
-        $signedUrl = $this->driver->temporaryUrl(
-            key: $blob->storage_key,
-            expiresAt: now()->addMinutes(self::SIGNED_URL_TTL_MINUTES),
-            disk: $blob->disk,
-        );
-
-        if (is_string($signedUrl)) {
-            return new RedirectResponse($signedUrl);
-        }
 
         return $this->streamFromDisk(blob: $blob, filename: $filename, contentType: $contentType);
     }

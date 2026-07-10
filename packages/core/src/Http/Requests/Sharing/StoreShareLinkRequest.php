@@ -6,11 +6,13 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Data\Sharing\CreateShareLinkData;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Http\Requests\VaulterFormRequest;
+use Vaulter\Support\Config;
 
 /**
  * Validates a create-share-link request (§2.7 / M2c) and assembles its
@@ -19,7 +21,10 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * host-supplied; the controller authorizes Ability::Share on the node first.
  *
  * permissions defaults to READ (the safe minimum for a public link); the bitmask
- * is bounded to the CRUDS range (0..31).
+ * is bounded to the CRUDS range (0..31). An EXPLICIT `expires_at` is bounded above
+ * by `Config::shareMaxTtlHours()` (P1.2 / F-P1.3-03) — an omitted `expires_at`
+ * defaults to `Config::shareDefaultTtlHours()` in {@see CreateShareLinkAction},
+ * which this request never sees.
  */
 final class StoreShareLinkRequest extends VaulterFormRequest
 {
@@ -35,7 +40,12 @@ final class StoreShareLinkRequest extends VaulterFormRequest
             'password' => ['nullable', 'string', 'min:1', 'max:255'],
             'require_login' => ['nullable', 'boolean'],
             'allow_discovery' => ['nullable', 'boolean'],
-            'expires_at' => ['nullable', 'date', 'after:now'],
+            'expires_at' => [
+                'nullable',
+                'date',
+                'after:now',
+                'before_or_equal:'.Carbon::now()->addHours(Config::shareMaxTtlHours())->toDateTimeString(),
+            ],
             'max_uses' => ['nullable', 'integer', 'min:1'],
         ];
     }

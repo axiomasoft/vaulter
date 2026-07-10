@@ -29,6 +29,16 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
+/**
+ * The opaque node id SharedNodeResource projects (P1.2 / F-P1.3-05) — the SAME
+ * deterministic hash_hmac the resource itself computes, so a test can assert the
+ * exact response value without reaching into the resource's internals.
+ */
+function expectedOpaqueNodeId(int|string $id): string
+{
+    return substr(hash_hmac('sha256', (string) $id, (string) config('app.key')), 0, 32);
+}
+
 // ─────────────────────────────────────── owner surface ────────────────────────
 
 it('lets an owner with the Share ability mint a link and returns the raw token once', function (): void {
@@ -48,6 +58,38 @@ it('lets an owner with the Share ability mint a link and returns the raw token o
     // Only the hash is stored.
     $row = NodeShare::query()->firstOrFail();
     expect($row->token_hash)->toBe(hash('sha256', $token));
+});
+
+it('stamps a default expiry when none is supplied, never minting an immortal link (F-P1.3-03)', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'ttl-default');
+    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+        'permissions' => Permission::Read->value,
+    ])->assertCreated();
+
+    $row = NodeShare::query()->firstOrFail();
+    expect($row->expires_at)->not->toBeNull();
+    // Config default is 72h — allow slack for test wall-clock drift, not for a
+    // materially different TTL.
+    expect($row->expires_at->diffInMinutes(now()->addHours(72), absolute: true))->toBeLessThan(5);
+});
+
+it('rejects an explicit expiry above the configured ceiling (F-P1.3-03)', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'ttl-ceiling');
+    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+
+    // Config max is 720h (30 days) — 400 days is well past it.
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+        'permissions' => Permission::Read->value,
+        'expires_at' => now()->addDays(400)->toIso8601String(),
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('expires_at');
+
+    expect(NodeShare::query()->count())->toBe(0);
 });
 
 it('403s an owner WITHOUT the Share ability', function (): void {
@@ -110,8 +152,20 @@ it('resolves a public share token to node metadata within scope', function (): v
 
     $this->getJson('api/vaulter/share/public-token')
         ->assertOk()
-        ->assertJsonPath('data.id', $node->getKey())
+        ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()))
         ->assertJsonPath('data.name', 'public-doc');
+});
+
+it('never exposes the raw sequential node id publicly, only an opaque projection (F-P1.3-05)', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'opaque-doc');
+    ShareTestHelpers::share($node, token: 'opaque-token', permissions: Permission::Read->value);
+
+    $response = $this->getJson('api/vaulter/share/opaque-token')->assertOk();
+
+    expect($response->json('data.id'))
+        ->not->toBe($node->getKey())
+        ->toBe(expectedOpaqueNodeId($node->getKey()));
 });
 
 it('404s a public resolve for a wrong/expired token', function (): void {
@@ -133,10 +187,10 @@ it('401s a password-gated public resolve until the password is supplied', functi
 
     $this->getJson('api/vaulter/share/pw-token', ['X-Share-Password' => 'open-sesame'])
         ->assertOk()
-        ->assertJsonPath('data.id', $node->getKey());
+        ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()));
 });
 
-it('serves a public download within the READ bits and bounds it by max_uses', function (): void {
+it('serves a public download within the READ bits, bounds it by max_uses, and never redirects even on a disk that provides a temporary url (F-P1.3-01)', function (): void {
     $drive = Vaulter::for(DriveTestHelpers::host());
 
     $fileNode = $drive->upload(DriveTestHelpers::streamFor('public bytes'), originalName: 'pub.txt', mimeType: 'text/plain');
@@ -148,10 +202,12 @@ it('serves a public download within the READ bits and bounds it by max_uses', fu
         maxUses: 1,
     );
 
-    // A faked disk may mint a signed URL (302 redirect) or stream inline (200) —
-    // both are valid READ-bit downloads; the point is the request is served.
+    // The faked local disk DOES provide a temporary url — F-P1.3-01 removed the
+    // presign-redirect branch, so the response is always a streamed 200, never a
+    // 302, regardless of what the disk can mint.
     $response = $this->get('api/vaulter/share/dl-token/download');
-    expect($response->status())->toBeIn([200, 302]);
+    $response->assertOk();
+    expect($response->streamedContent())->toBe('public bytes');
 
     // The single use was consumed atomically.
     expect($share->refresh()->use_count)->toBe(1);

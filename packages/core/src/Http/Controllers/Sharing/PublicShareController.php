@@ -6,7 +6,6 @@ namespace Vaulter\Http\Controllers\Sharing;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -48,8 +47,6 @@ use Vaulter\Sharing\ShareContext;
  */
 final class PublicShareController extends Controller
 {
-    private const int SIGNED_URL_TTL_MINUTES = 5;
-
     public function __construct(
         private readonly NodeReadRepository $nodes,
         private readonly FileVersionReadRepository $versions,
@@ -102,7 +99,7 @@ final class PublicShareController extends Controller
      * atomically (bounded by max_uses) BEFORE streaming, so an over-budget hit is
      * rejected.
      */
-    public function download(Request $request): StreamedResponse|RedirectResponse
+    public function download(Request $request): StreamedResponse
     {
         $context = ResolveShareToken::context($request);
 
@@ -171,7 +168,7 @@ final class PublicShareController extends Controller
         )->values();
     }
 
-    private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse|RedirectResponse
+    private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse
     {
         if (!$version instanceof FileVersion) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
@@ -187,16 +184,6 @@ final class PublicShareController extends Controller
 
         $filename = $version->original_name !== '' ? $version->original_name : $node->name;
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';
-
-        $signedUrl = $this->driver->temporaryUrl(
-            key: $blob->storage_key,
-            expiresAt: now()->addMinutes(self::SIGNED_URL_TTL_MINUTES),
-            disk: $blob->disk,
-        );
-
-        if (is_string($signedUrl)) {
-            return new RedirectResponse($signedUrl);
-        }
 
         return $this->streamFromDisk(blob: $blob, filename: $filename, contentType: $contentType);
     }

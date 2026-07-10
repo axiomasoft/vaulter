@@ -180,16 +180,21 @@ it('streams the current version with the right bytes and headers (no temp-url di
         ->and($response->streamedContent())->toBe('hello bytes');
 });
 
-it('redirects to a signed temporary url when the disk provides one', function (): void {
-    // The faked local disk provides temporary URLs, so the download 302-redirects.
+it('streams the bytes through PHP even on a disk that provides a temporary url, never redirecting (P1.2 / F-P1.3-01)', function (): void {
+    // The faked local disk DOES provide temporary URLs; the presign-redirect
+    // branch was removed (D15 — a presigned URL is a bearer token that bypasses
+    // per-request re-authorization and cannot be revoked instantly), so the
+    // response is always a streamed 200, never a 302.
     $storage = driveStorage();
 
     $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
-        'file' => UploadedFile::fake()->createWithContent('signed.txt', 'redirect bytes'),
+        'file' => UploadedFile::fake()->createWithContent('signed.txt', 'never redirected bytes'),
     ])->json('data.id');
 
-    $this->get('api/vaulter/nodes/'.$node.'/download')
-        ->assertRedirect();
+    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+
+    $response->assertOk();
+    expect($response->streamedContent())->toBe('never redirected bytes');
 });
 
 it('streams a specific historical version', function (): void {

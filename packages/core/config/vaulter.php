@@ -445,11 +445,19 @@ return [
     |    exactly once; the resource never re-exposes it.
     |  - prefix_length: how many leading characters of the raw token are stored as
     |    the (non-secret) token_prefix.
+    |  - default_ttl_hours (P1.2 / F-P1.3-03, S4.1): the expiry a link gets when the
+    |    creator supplies none. A share is never minted with a null expires_at
+    |    (bearer links must not be immortal by omission); default 72h.
+    |  - max_ttl_hours (P1.2 / F-P1.3-03): the ceiling `expires_at` may not exceed,
+    |    enforced by StoreShareLinkRequest validation on an EXPLICIT expiry too —
+    |    the default only covers the omitted case. Default 720h (30 days).
     */
     'share' => [
         'token_generator' => RandomShareTokenGenerator::class,
         'url_base' => env('VAULTER_SHARE_URL_BASE', '/share'),
         'prefix_length' => 8,
+        'default_ttl_hours' => env('VAULTER_SHARE_DEFAULT_TTL_HOURS', 72),
+        'max_ttl_hours' => env('VAULTER_SHARE_MAX_TTL_HOURS', 720),
     ],
 
     /*

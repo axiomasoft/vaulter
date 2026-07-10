@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -156,4 +160,89 @@ it('fails item-safety for a soft-deleted target (NotFound)', function (): void {
     $node->delete(); // soft-delete (deleted_at)
 
     expect(shareResolver()->resolve('deleted-token')->resolution)->toBe(ShareResolution::NotFound);
+});
+
+// ─────────────────────────── issuer re-check (P1.2 / F-P1.3-02, D14) ───────────
+
+/**
+ * A real, persisted TestUser row — issuer re-check inverts granted_by (a bare id)
+ * back into an Authorizable via the host's configured auth user provider
+ * (Auth::createUserProvider()->retrieveById()), which needs a real backing table;
+ * unlike AccessTestHelpers::user() (a fabricated, unpersisted stand-in used
+ * elsewhere in the ACL suite), this row actually exists.
+ */
+function persistedIssuer(): TestUser
+{
+    $table = (new TestUser)->getTable();
+
+    if (!Schema::hasTable($table)) {
+        Schema::create($table, function (Blueprint $table): void {
+            $table->id();
+        });
+    }
+
+    config()->set('auth.providers.users.model', TestUser::class);
+
+    /** @var TestUser $user */
+    $user = TestUser::query()->create([]);
+
+    return $user;
+}
+
+it('resolves while its issuer still holds Ability::Share on the node (F-P1.3-02)', function (): void {
+    config()->set('vaulter.drivers.permission', 'database');
+
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'issuer-ok');
+    $issuer = persistedIssuer();
+    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+
+    $share = ShareTestHelpers::share($node, token: 'issuer-ok-token');
+    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+
+    expect(shareResolver()->resolve('issuer-ok-token')->isOk())->toBeTrue();
+});
+
+it('404s once its issuer no longer holds Ability::Share on the node (confused deputy, F-P1.3-02)', function (): void {
+    config()->set('vaulter.drivers.permission', 'database');
+
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'issuer-revoked');
+    $issuer = persistedIssuer();
+    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+
+    $share = ShareTestHelpers::share($node, token: 'issuer-revoked-token');
+    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+
+    // The issuer's own grant is pulled — the link they minted must die with it.
+    NodeGrant::query()->where('subject_id', $issuer->getKey())->delete();
+
+    expect(shareResolver()->resolve('issuer-revoked-token')->resolution)->toBe(ShareResolution::NotFound);
+});
+
+it('404s once its issuer is no longer resolvable (deleted account, F-P1.3-02)', function (): void {
+    config()->set('vaulter.drivers.permission', 'database');
+
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'issuer-gone');
+    $issuer = persistedIssuer();
+    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+
+    $share = ShareTestHelpers::share($node, token: 'issuer-gone-token');
+    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+
+    $issuer->delete();
+
+    expect(shareResolver()->resolve('issuer-gone-token')->resolution)->toBe(ShareResolution::NotFound);
+});
+
+it('leaves a share with no recorded issuer unaffected (nothing to re-verify, F-P1.3-02)', function (): void {
+    config()->set('vaulter.drivers.permission', 'database');
+
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'no-issuer');
+    // granted_by is null by default — ShareTestHelpers::share() never sets it.
+    ShareTestHelpers::share($node, token: 'no-issuer-token');
+
+    expect(shareResolver()->resolve('no-issuer-token')->isOk())->toBeTrue();
 });

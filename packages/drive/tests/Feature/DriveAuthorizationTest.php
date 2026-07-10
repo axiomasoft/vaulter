@@ -180,8 +180,9 @@ it('denies a download without a grant and allows it with one', function (): void
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
     $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertStatus(403);
 
-    // The uploader (Writer ⇒ READ bit) can — the faked local disk mints a signed
-    // URL, so the authorised download 302-redirects (not a 403).
+    // The uploader (Writer ⇒ READ bit) can — streamed through PHP (P1.2 /
+    // F-P1.3-01 removed the presign-redirect branch: even a disk that can mint a
+    // signed URL now always streams a 200, never a 302).
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertRedirect();
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertOk();
 });

@@ -1155,6 +1155,34 @@ final class Config
     }
 
     /**
+     * The expiry (in hours) a bearer share-link gets when its creator supplies no
+     * `expires_at` (P1.2 / F-P1.3-03, S4.1) — a link is never minted immortal by
+     * omission. Default 72, floored at 1.
+     */
+    public static function shareDefaultTtlHours(): int
+    {
+        $value = config('vaulter.share.default_ttl_hours', 72);
+
+        $hours = is_numeric($value) ? (int) $value : 72;
+
+        return max($hours, 1);
+    }
+
+    /**
+     * The ceiling (in hours) a bearer share-link's `expires_at` may not exceed,
+     * whether explicit or defaulted (P1.2 / F-P1.3-03). Default 720 (30 days),
+     * floored at 1.
+     */
+    public static function shareMaxTtlHours(): int
+    {
+        $value = config('vaulter.share.max_ttl_hours', 720);
+
+        $hours = is_numeric($value) ? (int) $value : 720;
+
+        return max($hours, 1);
+    }
+
+    /**
      * The closed allow-list of MIME types a download may serve inline as-is
      * (P1.1 / F-P1.3-04, F-P1.11-03) — every entry lower-cased. A declared
      * `mime_type` outside this set is served as `application/octet-stream`

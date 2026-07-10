@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Sharing;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Vaulter\Access\AccessResolver;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Http\Controllers\Sharing\ShareController;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Models\Sharing\NodeShare;
@@ -28,6 +34,10 @@ use Vaulter\Support\ShareToken;
  *      not be trashed or soft-deleted and must belong to a real storage (tenant
  *      boundary). A share on an unsafe node resolves to NotFound, indistinguishable
  *      from a wrong token.
+ *   6. (P1.2 / F-P1.3-02, D14, S2.2) re-checks that the share's issuer (granted_by)
+ *      STILL holds Ability::Share on the node through the identity ACL — a share
+ *      does not outlive the access that authorized minting it (confused-deputy
+ *      hardening). A share with no recorded issuer has nothing to re-verify.
  *
  * The produced ShareContext grants EXACTLY the share's bitmask on its node-set and
  * NOTHING inherited from any identity. This evaluator is read-only — it persists
@@ -39,6 +49,7 @@ final class ShareResolver
     public function __construct(
         private readonly NodeShareReadRepository $shares,
         private readonly StorageReadRepository $storages,
+        private readonly AccessResolver $access,
     ) {}
 
     /**
@@ -84,6 +95,12 @@ final class ShareResolver
             return ShareResult::notFound();
         }
 
+        if (!$this->issuerStillAuthorized($share, $node)) {
+            // Confused-deputy re-check failed (F-P1.3-02) — opaque 404, same as any
+            // other resolve failure.
+            return ShareResult::notFound();
+        }
+
         return ShareResult::ok(new ShareContext(
             share: $share,
             node: $node,
@@ -119,6 +136,65 @@ final class ShareResolver
         }
 
         return $node;
+    }
+
+    /**
+     * The confused-deputy re-check (P1.2 / F-P1.3-02, D14, S2.2): a bearer link is
+     * only as trustworthy as the identity that minted it, so its issuer must STILL
+     * hold Ability::Share on the node — the SAME ability the owner surface
+     * ({@see ShareController::guardShare()})
+     * requires to mint a link in the first place — through the real identity ACL
+     * (host-role driver + deny-veto), never a hand-rolled grant lookup, so this
+     * honours exactly the algorithm every other authorization decision does.
+     *
+     * D14 binds the re-check to Ability::Share (the ability that authorized the
+     * mint), NOT to the share's own bitmask: an issuer who has lost write but kept
+     * Share still keeps a read-only link alive; only losing Share itself revokes
+     * every link they minted.
+     *
+     * A share that records no issuer (granted_by is null — a legacy row, or one
+     * minted by a system/console actor with no identity to re-check) has nothing
+     * to re-verify and is left alone. A share WITH a recorded issuer whose account
+     * no longer resolves (deleted user, no configured auth user provider) is
+     * treated the same as a revoked grant — opaque NotFound, never a 500.
+     */
+    private function issuerStillAuthorized(NodeShare $share, Node $node): bool
+    {
+        $grantedBy = $share->granted_by;
+
+        if ($grantedBy === null) {
+            return true;
+        }
+
+        $issuer = $this->userProvider()?->retrieveById($grantedBy);
+
+        if (!$issuer instanceof Authorizable) {
+            return false;
+        }
+
+        return $this->access->can($issuer, Ability::Share, $node);
+    }
+
+    /**
+     * The auth user provider for the app's default guard — Laravel's own
+     * `Auth::createUserProvider()` only resolves a provider given its NAME (it
+     * falls back to `config('auth.defaults.provider')`, a key most Laravel apps
+     * never set, NOT `auth.guards.<default guard>.provider`), so this looks the
+     * name up through the default guard explicitly, mirroring exactly how
+     * `$request->user()` — the source of `granted_by` — resolved the issuer in the
+     * first place.
+     */
+    private function userProvider(): ?UserProvider
+    {
+        $guard = config('auth.defaults.guard');
+
+        if (!is_string($guard) || $guard === '') {
+            return null;
+        }
+
+        $provider = config('auth.guards.'.$guard.'.provider');
+
+        return is_string($provider) && $provider !== '' ? Auth::createUserProvider($provider) : null;
     }
 
     private function passwordMatches(NodeShare $share, ?string $password): bool

@@ -31,3 +31,22 @@ Evaluate the two channels as **separate passes**, never unioned (master plan §2
   are link-local.
 - Hosts can disable the link channel entirely (`features.share_links`) without
   touching identity ACL.
+
+## Amendment (P1.2 / F-P1.3-02, D14) — issuer re-check on consumption
+
+The original decision evaluated a link purely against its own row (liveness,
+password, item-safety) and never asked whether the identity that minted it was
+still authorized. That is a gap, not a deliberate exception: a link outliving the
+issuer's own revoked access is a textbook confused-deputy bug (S2.2).
+
+`ShareResolver::resolve()` now re-checks, on every consumption, that the share's
+recorded issuer (`granted_by`) STILL holds `Ability::Share` on the node through
+the identity ACL (`AccessResolver` — the same host-role + deny-veto algorithm
+every other authorization decision uses, never a hand-rolled grant lookup). The
+check is bound to `Ability::Share` specifically — the ability that authorized
+minting the link in the first place — not to the link's own bitmask: an issuer who
+lost `Edit` but kept `Share` does not kill a read-only link they minted; only
+losing `Share` itself does. A share with no recorded issuer (a legacy row, or one
+minted by a system/console actor with no identity to re-check) has nothing to
+re-verify and resolves as before. Failure is opaque — the same `NotFound` as a
+wrong token, never a distinguishable error.
