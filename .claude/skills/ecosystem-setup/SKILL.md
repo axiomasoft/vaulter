@@ -48,5 +48,5 @@ description: Как настраивать/перенастраивать ЭТО
 
 ## Связи проекта
 
-- namespaces: `axioma` · scope: `project:vaulter` · связан с: —.
+- namespaces: `axioma` · scope: `project:vaulter` · связан с: azguard.
 - актуальные связи: `maind graph --project vaulter`.

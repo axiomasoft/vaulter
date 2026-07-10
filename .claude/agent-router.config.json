@@ -93,6 +93,24 @@
   ],
   "agents": [
     {
+      "name": "@vaulter-api-surface",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "read-only",
+        "reconnaissance",
+        "vaulter",
+        "package",
+        "public",
+        "surface",
+        "diff",
+        "methods",
+        "contracts",
+        "facades",
+        "config"
+      ]
+    },
+    {
       "name": "@vaulter-contribution-reviewer",
       "weight": 1,
       "keywords": [
@@ -129,6 +147,24 @@
       ]
     },
     {
+      "name": "@vaulter-orchestrator",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "задача",
+        "vaulter",
+        "крупная",
+        "многодоменная",
+        "слоя",
+        "домена",
+        "нужно",
+        "разбить",
+        "делегировать",
+        "ролям",
+        "пака"
+      ]
+    },
+    {
       "name": "@vaulter-release-conductor",
       "weight": 1,
       "keywords": [
@@ -144,6 +180,114 @@
         "changelog",
         "мерженных",
         "заранее"
+      ]
+    },
+    {
+      "name": "@vaulter-reviewer",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "код",
+        "laravel-пакета",
+        "vaulter",
+        "только",
+        "написан",
+        "изменён",
+        "нужен",
+        "read-only",
+        "ревью",
+        "свежим",
+        "контекстом"
+      ]
+    },
+    {
+      "name": "@vaulter-security-review",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "read-only",
+        "security",
+        "pass",
+        "over",
+        "vaulter",
+        "package",
+        "change",
+        "isolated",
+        "context",
+        "secrets",
+        "code"
+      ]
+    },
+    {
+      "name": "@vaulter-slice-builder",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "нужно",
+        "реализовать",
+        "одну",
+        "фичу",
+        "laravel-пакета",
+        "vaulter",
+        "контракт",
+        "contracts",
+        "реализация",
+        "регистрация",
+        "serviceprovider"
+      ]
+    },
+    {
+      "name": "@vaulter-spec-writer",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "перед",
+        "крупной",
+        "неоднозначной",
+        "фичей",
+        "пакета",
+        "vaulter",
+        "новая",
+        "подсистема",
+        "контрактов",
+        "компонентов",
+        "нужен"
+      ]
+    },
+    {
+      "name": "@vaulter-test-verifier",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "run",
+        "vaulter",
+        "package",
+        "test",
+        "suite",
+        "filter",
+        "isolated",
+        "context",
+        "return",
+        "only",
+        "compact"
+      ]
+    },
+    {
+      "name": "@vaulter-test-writer",
+      "weight": 1,
+      "keywords": [
+        "agent",
+        "код",
+        "фичи",
+        "laravel-пакета",
+        "vaulter",
+        "уже",
+        "готов",
+        "нужно",
+        "написать",
+        "тесты",
+        "pest",
+        "orchestra"
       ]
     }
   ],

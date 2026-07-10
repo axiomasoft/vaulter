@@ -29,6 +29,12 @@
         "@playwright/mcp@latest",
         "--headless"
       ]
+    },
+    "perplexity-web": {
+      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
+      "args": [
+        "--pool=default"
+      ]
     }
   }
 }
