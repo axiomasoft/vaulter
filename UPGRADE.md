@@ -6,6 +6,48 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Mass-assignment hardening: every model now carries an explicit `$fillable`/`$guarded` list (P1.4 / F-P1.8-02, F-P1.5-04, F-P1.7-04)
+
+**What changed.** All 16 package models used to declare `protected $guarded = [];` — Eloquent
+mass-assignment fully open on every column, including service/security ones (`tenant_id`,
+`token_hash`, `signing_secret`, `sha256`, `storage_key`, `use_count`, `status`, `owner_*`, …). Each
+model now carries an explicit, closed list:
+
+- **A closed `$fillable`** (only genuinely user-facing columns) on `Node`, `Storage`, `File`,
+  `FileVersion`, `NodeShare`, `WebhookEndpoint`, `UploadSession`, `NodeComment`,
+  `NodeDocumentVersion` — a key outside the list is silently discarded by `fill()`/`create()`.
+- **A fully `$guarded = ['*']`** (Eloquent's "totally guarded" state) on `Blob`, `FileVersionBlob`,
+  `NodeGrant`, `Activity`, `Outbox`, `WebhookDelivery` — these rows are exclusively server-written
+  today (CAS identity, ACL, audit trail, outbox/delivery bookkeeping), so `fill()`/`create()` with
+  ANY attribute now throws `Illuminate\Database\Eloquent\MassAssignmentException` instead of
+  silently doing nothing.
+- `File` carries a partial `$guarded` list (mostly-service columns, `mime_type` remains fillable).
+
+**Why.** F-P1.8-02 (Minor): a latent footgun — any future `Model::create($request->validated())`/
+`->fill($input)` on an unguarded model could let a caller set a service/security column. No
+exploitable sink existed in the shipped code (every write path already used explicit server-built
+arrays), but the package is a library other hosts extend — closing the class of bug matters more
+than any single instance of it. F-P1.5-04/F-P1.7-04 single out `Blob`
+(content-addressed CAS identity) and the three webhook models (`signing_secret`) as the
+highest-value columns to protect.
+
+**Who is affected.**
+
+- A host subclassing a Vaulter model (`config('vaulter.models.*')`) that relies on mass-assigning a
+  column outside the new list — e.g. `MyNode::create(['tenant_id' => …, 'name' => …])` — will now
+  find `tenant_id` silently dropped (closed-`$fillable` models) or the whole call throwing
+  `MassAssignmentException` (fully-`$guarded` models). Use `forceFill()`/`->fill()` on only the
+  documented public columns, or extend the model to widen its own `$fillable` if your subclass
+  genuinely needs to mass-assign more.
+- No database migration or config change is required; this is a pure in-memory guard.
+
+**What you must check.** Grep your integration for direct `::create([...])`/`->fill([...])` calls
+against `Vaulter\Models\**`/`Vaulter\Drive\Uploads\Models\**`/`Vaulter\Documents\Models\**` (or
+their configured subclasses) that pass a service column (`tenant_id`, `*_id`, `status`,
+`signing_secret`, `token_hash`, `sha256`, `storage_key`, `use_count`, `granted_by`, `owner_*`, any
+timestamp) — route that write through the corresponding action/repository (or `forceFill()` if you
+are confident the value is trusted) instead.
+
 ### Public share-link surface hardened: no more presign-redirect, issuer re-check, default TTL, opaque public id (P1.2 / F-P1.3-01/02/03/05)
 
 **What changed.** Four independent fixes to the bearer share-link surface

@@ -22,22 +22,34 @@ final class GrantStoreRepository
     {
         $model = Config::grantModel();
 
-        /** @var NodeGrant $grant */
-        $grant = $model::query()->updateOrCreate(
-            attributes: [
-                'node_id' => $node->getKey(),
-                'subject_type' => $data->subject->type,
-                'subject_id' => $data->subject->id,
-                'scope' => $data->scope->value,
-                'effect' => $data->effect->value,
-            ],
-            values: [
-                'level' => $data->level->value,
-                'permissions' => $data->permissions,
-                'expires_at' => $data->expiresAt,
-                'granted_by' => $data->grantedBy,
-            ],
-        );
+        $match = [
+            'node_id' => $node->getKey(),
+            'subject_type' => $data->subject->type,
+            'subject_id' => $data->subject->id,
+            'scope' => $data->scope->value,
+            'effect' => $data->effect->value,
+        ];
+
+        // Manual find-then-forceFill (P1.4/F-P1.8-02) instead of updateOrCreate:
+        // Eloquent's updateOrCreate() routes both the match attributes and the
+        // values through fill()/$fillable, and NodeGrant is intentionally fully
+        // guarded (ACL row) — every key here is server-computed, never raw
+        // request input.
+        /** @var NodeGrant|null $grant */
+        $grant = $model::query()->where($match)->first();
+
+        if (!$grant instanceof NodeGrant) {
+            $grant = new $model;
+        }
+
+        $grant->forceFill([
+            ...$match,
+            'level' => $data->level->value,
+            'permissions' => $data->permissions,
+            'expires_at' => $data->expiresAt,
+            'granted_by' => $data->grantedBy,
+        ]);
+        $grant->save();
 
         return $grant;
     }

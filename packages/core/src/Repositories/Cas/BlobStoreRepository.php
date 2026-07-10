@@ -222,8 +222,11 @@ final readonly class BlobStoreRepository
         ?int $tenantId,
         ?int $storageId,
     ): Blob {
-        /** @var Blob $blob */
-        $blob = $this->query()->create([
+        // forceFill (P1.4/F-P1.5-04): Blob is intentionally fully guarded (CAS
+        // integrity: sha256/storage_key are content-addressed) — this is the
+        // sole trusted commit seam, never raw request input.
+        $blob = new (Config::blobModel());
+        $blob->forceFill([
             'tenant_id' => $dedupScope === 'storage' ? null : $tenantId,
             'storage_id' => $dedupScope === 'storage' ? $storageId : null,
             'hash_algo' => 'sha256',
@@ -236,6 +239,7 @@ final readonly class BlobStoreRepository
             'dedup_scope' => $dedupScope,
             'committed_at' => now(),
         ]);
+        $blob->save();
 
         return $blob;
     }

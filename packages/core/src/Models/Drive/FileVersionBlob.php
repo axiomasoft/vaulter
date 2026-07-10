@@ -26,7 +26,15 @@ class FileVersionBlob extends Pivot
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.8-02): the GC-liveness edge table. Every write goes
+     * through FileVersionBlobStoreRepository via the query builder
+     * (updateOrInsert), never Eloquent mass-assignment, so this is pure
+     * defense-in-depth against a future Eloquent-based write.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

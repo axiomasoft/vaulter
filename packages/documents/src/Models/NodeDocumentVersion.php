@@ -51,7 +51,21 @@ class NodeDocumentVersion extends Model
 
     public const UPDATED_AT = null;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): the version's own document content/label.
+     * id/tenant_id/node_id/version_no/yjs_state/yjs_state_size/content_hash/
+     * status/created_by are structural/server-computed — every write path that
+     * sets them already uses forceFill() (NodeDocumentVersionStoreRepository).
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'content',
+        'format',
+        'snapshot_label',
+        'is_autosave',
+        'keep_forever',
+    ];
 
     #[\Override]
     public function getTable(): string

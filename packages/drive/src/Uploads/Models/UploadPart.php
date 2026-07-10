@@ -32,7 +32,15 @@ class UploadPart extends Pivot
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.8-02): the S3-multipart part record. Every write goes
+     * through UploadPartStoreRepository via the query builder (DB::table
+     * insert/update), never Eloquent mass-assignment, so this is pure
+     * defense-in-depth against a future Eloquent-based write.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

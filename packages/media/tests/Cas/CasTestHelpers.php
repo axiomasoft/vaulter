@@ -33,25 +33,35 @@ final class CasTestHelpers
         static $owner = 0;
         $owner++;
 
-        $storage = Storage::query()->create([
+        // forceFill (P1.4/F-P1.8-02, F-P1.5-04): Storage/Node/File/FileVersion all
+        // now carry a closed $fillable/$guarded list — this trusted fixture
+        // builder bypasses it exactly like the production store repositories do.
+        $storage = new Storage;
+        $storage->forceFill([
             'owner_type' => 'team',
             'owner_id' => $owner,
             'name' => 'Disk',
         ]);
+        $storage->save();
 
-        $node = Node::query()->create([
+        $node = new Node;
+        $node->forceFill([
             'storage_id' => $storage->getKey(),
             'kind' => NodeKind::File,
             'name' => $name,
         ]);
+        $node->save();
 
-        $file = File::query()->create([
+        $file = new File;
+        $file->forceFill([
             'node_id' => $node->getKey(),
             'mime_type' => 'application/octet-stream',
             'size_bytes' => 0,
         ]);
+        $file->save();
 
-        return FileVersion::query()->create([
+        $version = new FileVersion;
+        $version->forceFill([
             'file_id' => $file->getKey(),
             'version_no' => $versionNo,
             'content_sha256' => str_repeat('0', 64),
@@ -59,6 +69,9 @@ final class CasTestHelpers
             'original_name' => $name,
             'status' => 'committed',
         ]);
+        $version->save();
+
+        return $version;
     }
 
     /**
@@ -132,8 +145,10 @@ final class CasTestHelpers
 
         StorageFacade::disk($bytesDisk ?? $disk)->put($storageKey, $bytes);
 
-        /** @var Blob $blob */
-        $blob = Blob::query()->create([
+        // forceFill (P1.4/F-P1.5-04): Blob is fully guarded — bypassed here
+        // exactly like BlobStoreRepository::insertCommitted() does.
+        $blob = new Blob;
+        $blob->forceFill([
             'tenant_id' => null,
             'storage_id' => null,
             'hash_algo' => 'sha256',
@@ -146,6 +161,7 @@ final class CasTestHelpers
             'dedup_scope' => 'tenant',
             'committed_at' => $status === BlobStatus::Committed ? now() : null,
         ]);
+        $blob->save();
 
         return $blob;
     }

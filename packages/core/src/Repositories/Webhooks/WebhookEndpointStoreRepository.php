@@ -25,13 +25,20 @@ final readonly class WebhookEndpointStoreRepository
         /** @var class-string<WebhookEndpoint> $model */
         $model = Config::webhookEndpointModel();
 
-        return $model::query()->create([
+        // forceFill (P1.4/F-P1.7-04): signing_secret is deliberately NOT
+        // fillable on WebhookEndpoint — Model::create() would silently drop it.
+        /** @var WebhookEndpoint $endpoint */
+        $endpoint = new $model;
+        $endpoint->forceFill([
             'url' => $url,
             'events' => $events,
             'signing_secret' => $signingSecret,
             'is_active' => $isActive,
             'failure_count' => 0,
         ]);
+        $endpoint->save();
+
+        return $endpoint;
     }
 
     /**

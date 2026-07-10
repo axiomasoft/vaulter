@@ -45,7 +45,19 @@ class NodeComment extends Model
     use HasExtraData;
     use HasVaulterKeys;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): the comment's own user-authored content.
+     * author_type/author_id (morph), node_id/tenant_id, and resolved_at/
+     * resolved_by are structural/server-only — the sole writer,
+     * NodeCommentStoreRepository, uses forceFill() exclusively and is
+     * unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'body',
+        'anchor',
+    ];
 
     #[\Override]
     public function getTable(): string

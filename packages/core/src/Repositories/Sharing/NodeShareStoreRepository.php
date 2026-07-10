@@ -38,9 +38,12 @@ final class NodeShareStoreRepository
     ): NodeShare {
         $model = Config::nodeShareModel();
 
+        // forceFill (P1.4/F-P1.8-02): every key here — including token_hash and
+        // use_count, which NodeShare deliberately excludes from $fillable — is a
+        // server-computed literal, never raw request input.
         /** @var NodeShare $share */
         $share = new $model;
-        $share->fill([
+        $share->forceFill([
             'tenant_id' => $node->tenant_id,
             'node_id' => $node->getKey(),
             'token_hash' => $tokenHash,

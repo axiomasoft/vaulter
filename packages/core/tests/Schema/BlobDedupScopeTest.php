@@ -14,12 +14,19 @@ use Vaulter\Models\Cas\Blob;
  */
 function makeBlob(array $overrides = []): Blob
 {
-    return Blob::query()->create([
+    // Blob is fully guarded (P1.4/F-P1.5-04) — forceFill bypasses it for this
+    // trusted test fixture builder, exactly like the production writer
+    // (BlobStoreRepository) does.
+    $blob = new Blob;
+    $blob->forceFill([
         'sha256' => str_repeat('a', 64),
         'size_bytes' => 10,
         'storage_key' => 'global/aa/aa/'.str_repeat('a', 64),
         ...$overrides,
     ]);
+    $blob->save();
+
+    return $blob;
 }
 
 it('отвергает одинаковый sha256 в одном scope', function (): void {

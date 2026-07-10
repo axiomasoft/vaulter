@@ -57,7 +57,25 @@ class NodeShare extends Model
     use HasVaulterKeys;
     use SoftDeletes;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): the share's own permission/lifecycle
+     * shape — never token_hash/token_prefix (the bearer secret's hash) nor
+     * use_count/granted_by/node_id/tenant_id (server-computed/security). The
+     * sole writer, NodeShareStoreRepository, uses forceFill() exclusively and
+     * is unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'permissions',
+        'level',
+        'scope',
+        'password_hash',
+        'require_login',
+        'allow_discovery',
+        'expires_at',
+        'max_uses',
+    ];
 
     #[\Override]
     public function getTable(): string

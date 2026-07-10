@@ -25,9 +25,13 @@ final class NodeStoreRepository
      */
     public function create(array $attributes): Node
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes here is ALWAYS a server-built
+        // literal array from a Drive Action (never raw request input reaching this
+        // repository) — mass-assignment guarding belongs at the HTTP boundary
+        // (Node::$guarded), not on this trusted internal seam.
         $model = Config::nodeModel();
         $node = new $model;
-        $node->fill($attributes);
+        $node->forceFill($attributes);
         $node->save();
 
         // Refresh so DB-default columns (size_bytes, is_pinned, inherit_grants,

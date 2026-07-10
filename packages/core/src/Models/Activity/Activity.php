@@ -53,7 +53,14 @@ class Activity extends Model
      */
     public $timestamps = false;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.8-02): an append-only audit row — every column is
+     * system-recorded metadata about a domain event, never user input. The sole
+     * writer, ActivityStoreRepository, already uses forceFill() exclusively.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

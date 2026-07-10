@@ -38,7 +38,15 @@ class Outbox extends Model
 {
     use HasVaulterKeys;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.8-02): the transactional-outbox staging row — every
+     * column is system-computed (event_id, payload, status, retry bookkeeping).
+     * The sole writer, OutboxRecorder::stage(), already uses forceFill()
+     * exclusively.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

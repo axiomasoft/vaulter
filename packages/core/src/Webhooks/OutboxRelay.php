@@ -114,7 +114,11 @@ final class OutboxRelay
         /** @var class-string<WebhookDelivery> $deliveryClass */
         $deliveryClass = Config::webhookDeliveryModel();
 
-        return $deliveryClass::query()->create([
+        // forceFill (P1.4/F-P1.8-02): WebhookDelivery is intentionally fully
+        // guarded — this is the relay's own trusted seam, never raw request input.
+        /** @var WebhookDelivery $delivery */
+        $delivery = new $deliveryClass;
+        $delivery->forceFill([
             'endpoint_id' => $endpoint->getKey(),
             'event' => $message->event,
             'payload' => $message->payload,
@@ -122,5 +126,8 @@ final class OutboxRelay
             'attempts' => 0,
             'next_retry_at' => now(),
         ]);
+        $delivery->save();
+
+        return $delivery;
     }
 }

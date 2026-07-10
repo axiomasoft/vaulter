@@ -51,7 +51,16 @@ class Blob extends Model
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.5-04): every column is content-addressed or CAS
+     * integrity state (sha256/storage_key are the content address itself;
+     * ref_count/status drive GC). Mass-assigning ANY of them could point a CAS
+     * reference at the wrong bytes. The sole writer, BlobStoreRepository, uses
+     * forceFill() exclusively and is unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

@@ -148,7 +148,11 @@ class OutboxRecorder
         $payload['event_id'] = $key;
         $payload['actor_id'] = Identity::key($actorId);
 
-        return $outboxClass::query()->create([
+        // forceFill (P1.4/F-P1.8-02): Outbox is intentionally fully guarded — this
+        // is the outbox's own trusted staging seam, never raw request input.
+        /** @var Outbox $outbox */
+        $outbox = new $outboxClass;
+        $outbox->forceFill([
             'event_id' => $key,
             'panel' => $panel,
             'topic' => $topic,
@@ -158,6 +162,9 @@ class OutboxRecorder
             'status' => 'pending',
             'attempts' => 0,
         ]);
+        $outbox->save();
+
+        return $outbox;
     }
 
     /**

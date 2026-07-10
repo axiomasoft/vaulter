@@ -9,6 +9,7 @@ use Vaulter\Drive\Uploads\Enums\UploadProtocol;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 
 /**
@@ -26,7 +27,12 @@ final class UploadTestHelpers
         static $owner = 0;
         $owner++;
 
-        $storage = Storage::query()->create([
+        // forceFill (P1.4/F-P1.8-02): owner_id/disk/used_bytes are excluded from
+        // Storage's $fillable, and Node has its own closed list — this trusted
+        // fixture builder bypasses both exactly like StorageStoreRepository/
+        // NodeStoreRepository do.
+        $storage = new Storage;
+        $storage->forceFill([
             'owner_type' => 'team',
             'owner_id' => $owner,
             'name' => 'Disk',
@@ -34,14 +40,17 @@ final class UploadTestHelpers
             'quota_bytes' => $quotaBytes,
             'used_bytes' => 0,
         ]);
+        $storage->save();
 
-        $root = $storage->nodes()->create([
+        $root = new Node;
+        $root->forceFill([
             'storage_id' => $storage->getKey(),
             'parent_id' => null,
             'kind' => NodeKind::Folder,
             'name' => '',
             'size_bytes' => 0,
         ]);
+        $root->save();
 
         $storage->forceFill(['root_node_id' => $root->getKey()])->save();
 
@@ -59,7 +68,11 @@ final class UploadTestHelpers
         int|string|null $parentId = null,
         int|string|null $nodeId = null,
     ): UploadSession {
-        return UploadSession::query()->create([
+        // forceFill (P1.4/F-P1.8-02): storage_id/status/received_bytes/… are
+        // excluded from UploadSession's $fillable — bypassed here exactly like
+        // UploadSessionManager::initiate() does.
+        $session = new UploadSession;
+        $session->forceFill([
             'storage_id' => $storage->getKey(),
             'upload_id' => (string) Str::uuid(),
             'node_id' => $nodeId,
@@ -71,6 +84,9 @@ final class UploadTestHelpers
             'received_bytes' => 0,
             'mime_type' => 'application/octet-stream',
         ]);
+        $session->save();
+
+        return $session;
     }
 
     /**

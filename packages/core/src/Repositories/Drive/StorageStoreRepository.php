@@ -21,9 +21,11 @@ final class StorageStoreRepository
      */
     public function create(array $attributes): Storage
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from StorageManager, never raw request input.
         $model = Config::storageModel();
         $storage = new $model;
-        $storage->fill($attributes);
+        $storage->forceFill($attributes);
         $storage->save();
 
         return $storage;

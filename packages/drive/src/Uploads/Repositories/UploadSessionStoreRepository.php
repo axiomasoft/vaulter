@@ -24,9 +24,11 @@ final class UploadSessionStoreRepository
      */
     public function create(array $attributes): UploadSession
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from UploadSessionManager::initiate, never raw request input.
         $model = UploadModels::session();
         $session = new $model;
-        $session->fill($attributes);
+        $session->forceFill($attributes);
         $session->save();
 
         // Refresh so DB-default columns (received_bytes, status) are hydrated for the

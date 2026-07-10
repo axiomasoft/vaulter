@@ -14,22 +14,33 @@ use Vaulter\Models\Drive\Storage;
  */
 function makeStorage(): Storage
 {
-    return Storage::query()->create([
+    // forceFill (P1.4/F-P1.8-02): owner_type/owner_id are excluded from
+    // Storage's $fillable — this trusted fixture builder bypasses the guard
+    // the same way StorageStoreRepository does.
+    $storage = new Storage;
+    $storage->forceFill([
         'owner_type' => 'team',
         'owner_id' => 1,
         'name' => 'Disk',
     ]);
+    $storage->save();
+
+    return $storage;
 }
 
 function makeNode(Storage $storage, string $name, array $overrides = []): Node
 {
-    return Node::query()->create([
+    $node = new Node;
+    $node->forceFill([
         'storage_id' => $storage->getKey(),
         'parent_id' => $overrides['parent_id'] ?? null,
         'kind' => NodeKind::Folder,
         'name' => $name,
         ...$overrides,
     ]);
+    $node->save();
+
+    return $node;
 }
 
 it('отвергает дубль имени живого сиблинга в том же родителе', function (): void {

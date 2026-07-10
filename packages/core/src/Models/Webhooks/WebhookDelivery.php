@@ -37,7 +37,14 @@ class WebhookDelivery extends Model
 {
     use HasVaulterKeys;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.7-04): a delivery-attempt row — every column is
+     * system-computed retry bookkeeping. The sole writer, OutboxRelay::
+     * createDelivery(), already uses forceFill() exclusively.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

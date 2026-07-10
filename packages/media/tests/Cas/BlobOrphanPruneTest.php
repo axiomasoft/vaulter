@@ -69,7 +69,10 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'commit won', scope: 't1', ageHours: 48);
 
     // The "commit won" outcome: a committed row now owns this exact storage_key.
-    Blob::query()->create([
+    // forceFill (P1.4/F-P1.5-04): Blob is fully guarded — bypassed here exactly
+    // like BlobStoreRepository::insertCommitted() does.
+    $winningBlob = new Blob;
+    $winningBlob->forceFill([
         'tenant_id' => 1,
         'storage_id' => null,
         'hash_algo' => 'sha256',
@@ -82,6 +85,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
         'dedup_scope' => 'tenant',
         'committed_at' => now(),
     ]);
+    $winningBlob->save();
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: true);
 

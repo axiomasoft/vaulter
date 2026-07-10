@@ -56,7 +56,21 @@ class UploadSession extends Model
     use HasExtraData;
     use HasVaulterKeys;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): upload metadata a caller may legitimately
+     * declare. received_bytes (the AUTHORITATIVE tus offset, F-P1.4-01),
+     * status/protocol/assembled_blob_id/storage_id/tenant_id/upload_id are
+     * lifecycle/security state — every write path that sets them already uses
+     * forceFill() (UploadSessionStoreRepository/UploadSessionManager).
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'target_name',
+        'mime_type',
+        'metadata',
+        'expected_sha256',
+    ];
 
     #[\Override]
     public function getTable(): string

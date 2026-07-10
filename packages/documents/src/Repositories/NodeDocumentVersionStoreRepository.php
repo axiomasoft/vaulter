@@ -28,9 +28,11 @@ final class NodeDocumentVersionStoreRepository
      */
     public function create(array $attributes): NodeDocumentVersion
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from the document-node Actions, never raw request input.
         $model = DocumentsModels::documentVersion();
         $version = new $model;
-        $version->fill($attributes);
+        $version->forceFill($attributes);
         $version->save();
 
         return $version->refresh();

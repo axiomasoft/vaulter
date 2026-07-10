@@ -20,9 +20,11 @@ final class NodeCommentStoreRepository
      */
     public function create(array $attributes): NodeComment
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from AddNodeCommentAction, never raw request input.
         $model = DocumentsModels::comment();
         $comment = new $model;
-        $comment->fill($attributes);
+        $comment->forceFill($attributes);
         $comment->save();
 
         return $comment;

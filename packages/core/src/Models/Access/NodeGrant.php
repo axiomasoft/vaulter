@@ -54,7 +54,15 @@ class NodeGrant extends Model
     use HasVaulterKeys;
     use SoftDeletes;
 
-    protected $guarded = [];
+    /**
+     * Fully guarded (F-P1.8-02): an ACL row — every column (subject, level,
+     * permissions bitmask, effect, scope, expiry, granted_by) is security-
+     * critical. The sole writer, GrantStoreRepository, uses forceFill()
+     * exclusively and is unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $guarded = ['*'];
 
     #[\Override]
     public function getTable(): string

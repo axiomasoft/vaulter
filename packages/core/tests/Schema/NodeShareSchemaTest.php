@@ -9,6 +9,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Schema\ForceCreates;
 
 /**
  * The v_node_shares schema (§2.7 / M2c): every column exists, the token_hash is
@@ -41,11 +42,11 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
         'scope' => 'item',
     ];
 
-    $model::query()->create($base);
+    ForceCreates::make($model, $base);
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(static fn () => DB::transaction(fn () => $model::query()->create($base)))
+    expect(static fn () => DB::transaction(fn () => ForceCreates::make($model, $base)))
         ->toThrow(QueryException::class);
 });
 
@@ -56,7 +57,7 @@ it('stores the token hash, never the raw token', function (): void {
     $share = ShareToken::hash('raw-secret');
 
     /** @var NodeShare $row */
-    $row = Config::nodeShareModel()::query()->create([
+    $row = ForceCreates::make(Config::nodeShareModel(), [
         'node_id' => $node->getKey(),
         'token_hash' => $share,
         'token_prefix' => 'raw-secr',

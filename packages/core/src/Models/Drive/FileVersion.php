@@ -42,7 +42,20 @@ class FileVersion extends Model
 
     public const UPDATED_AT = null;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): id/tenant_id/file_id/version_no/blob_id/
+     * manifest_blob_id/content_sha256/size_bytes/status/created_by/committed_at
+     * are content-addressed or lifecycle columns — every write path that sets
+     * them already uses forceFill()/create() with a server-built literal array
+     * (FileVersionStoreRepository).
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'mime_type',
+        'original_name',
+        'keep_forever',
+    ];
 
     #[\Override]
     public function getTable(): string

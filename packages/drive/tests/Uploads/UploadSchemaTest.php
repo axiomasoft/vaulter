@@ -47,11 +47,20 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
         'status' => UploadStatus::Initiated,
     ];
 
-    $model::query()->create($base);
+    // forceFill (P1.4/F-P1.8-02): storage_id/protocol/status are excluded from
+    // UploadSession's closed $fillable list — bypassed here exactly like
+    // UploadSessionManager::initiate() does.
+    $create = static function () use ($model, $base): void {
+        $session = new $model;
+        $session->forceFill($base);
+        $session->save();
+    };
+
+    $create();
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(static fn () => DB::transaction(fn () => $model::query()->create($base)))
+    expect(static fn () => DB::transaction($create))
         ->toThrow(QueryException::class);
 });
 

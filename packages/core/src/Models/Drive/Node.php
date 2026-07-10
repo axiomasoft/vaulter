@@ -61,7 +61,24 @@ class Node extends Model
     use HasVaulterKeys;
     use SoftDeletes;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02): only the handful of columns a caller
+     * legitimately mass-assigns through fill()/create() with untrusted-shaped
+     * arrays. Everything structural/security (id, tenant_id, storage_id,
+     * parent_id, current_version_id, file_id, owner_id, shortcut_target_id, the
+     * trashed_* triplet, timestamps) is excluded — every write path that sets
+     * those columns already uses forceFill() (NodeStoreRepository) and is
+     * unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'mime_type',
+        'extension',
+        'is_pinned',
+        'inherit_grants',
+    ];
 
     #[\Override]
     public function getTable(): string

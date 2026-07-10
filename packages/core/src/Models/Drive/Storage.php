@@ -44,7 +44,19 @@ class Storage extends Model
     use HasVaulterKeys;
     use SoftDeletes;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.8-02). owner_type/owner_id/panel/disk/storage_type/
+     * used_bytes/status/root_node_id are structural or accounting columns — every
+     * write path that sets them already uses forceFill() (StorageStoreRepository).
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'slug',
+        'quota_bytes',
+        'default_node_permissions',
+    ];
 
     #[\Override]
     public function getTable(): string

@@ -19,9 +19,11 @@ final class FileStoreRepository
      */
     public function create(array $attributes): File
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from UploadFileAction/CopyNodeAction, never raw request input.
         $model = Config::fileModel();
         $file = new $model;
-        $file->fill($attributes);
+        $file->forceFill($attributes);
         $file->save();
 
         return $file;

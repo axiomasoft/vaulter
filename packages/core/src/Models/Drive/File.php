@@ -36,7 +36,26 @@ class File extends Model
     use HasVaulterKeys;
     use SoftDeletes;
 
-    protected $guarded = [];
+    /**
+     * Closed guard-list (F-P1.8-02): id/tenant_id/node_id/current_version_id/
+     * size_bytes/version_count/created_by/timestamps are structural or
+     * server-computed bookkeeping — every write path that sets them already uses
+     * forceFill() (FileStoreRepository). Only mime_type is a plain scalar left
+     * mass-assignable.
+     *
+     * @var list<string>
+     */
+    protected $guarded = [
+        'id',
+        'tenant_id',
+        'node_id',
+        'current_version_id',
+        'size_bytes',
+        'version_count',
+        'created_by',
+        'created_at',
+        'updated_at',
+    ];
 
     #[\Override]
     public function getTable(): string

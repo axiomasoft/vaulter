@@ -22,9 +22,11 @@ final class FileVersionStoreRepository
      */
     public function create(array $attributes): FileVersion
     {
+        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // from UploadFileAction/CopyNodeAction, never raw request input.
         $model = Config::fileVersionModel();
         $version = new $model;
-        $version->fill($attributes);
+        $version->forceFill($attributes);
         $version->save();
 
         return $version;

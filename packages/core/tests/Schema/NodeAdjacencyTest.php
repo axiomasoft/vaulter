@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
+use Vaulter\Tests\Schema\ForceCreates;
 
 /**
  * staudenmeir adjacency relationships resolve over the strategy-driven keys:
@@ -16,13 +17,13 @@ use Vaulter\Models\Drive\Storage;
  *           └── report (leaf)
  */
 beforeEach(function (): void {
-    $this->storage = Storage::query()->create([
+    $this->storage = ForceCreates::make(Storage::class, [
         'owner_type' => 'team',
         'owner_id' => 1,
         'name' => 'Disk',
     ]);
 
-    $make = fn (string $name, ?Node $parent): Node => Node::query()->create([
+    $make = fn (string $name, ?Node $parent): Node => ForceCreates::make(Node::class, [
         'storage_id' => $this->storage->getKey(),
         'parent_id' => $parent?->getKey(),
         'kind' => NodeKind::Folder,
@@ -56,10 +57,10 @@ it('children даёт прямых потомков', function (): void {
 });
 
 it('scope treeOf ограничивает выборку одним хранилищем', function (): void {
-    $other = Storage::query()->create([
+    $other = ForceCreates::make(Storage::class, [
         'owner_type' => 'team', 'owner_id' => 2, 'name' => 'Other',
     ]);
-    Node::query()->create([
+    ForceCreates::make(Node::class, [
         'storage_id' => $other->getKey(), 'kind' => NodeKind::Folder, 'name' => 'alien',
     ]);
 

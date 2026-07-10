@@ -36,7 +36,19 @@ class WebhookEndpoint extends Model
 {
     use HasVaulterKeys;
 
-    protected $guarded = [];
+    /**
+     * Closed allow-list (F-P1.7-04): NEVER signing_secret (the HMAC key, F-P1.7-02)
+     * nor failure_count (the circuit-breaker counter) — both are server-only. The
+     * sole writer, WebhookEndpointStoreRepository, uses forceFill() exclusively
+     * and is unaffected by this list.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'url',
+        'events',
+        'is_active',
+    ];
 
     #[\Override]
     public function getTable(): string
