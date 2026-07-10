@@ -89,7 +89,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | W0 — Blocker'ы | 1/3 | 🟡 In progress |
+| P0 | W0 — Blocker'ы | 2/3 | 🟡 In progress |
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 0/4 | ⬜ Not started |
 | P2 | W2 — Авторизация и изоляция | 0/3 | ⬜ Not started |
 | P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
@@ -123,3 +123,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-10 | issue-planner/opus | Ответы владельца: «go» на план + диспозиция 3 Blocker'ов (D1); канон структуры A и место рефактора (D10). `open-questions.md`: Q1/Q2 `Resolved`, Q3 (ротация `signing_secret`) — `Decision pending`, не блокирует P0. |
 | 2026-07-10 | issue-planner/opus | `plans/ACTIVE.md` перезаписан: Active = VLT-REMED (перехват у AUDIT-VLT, которому проставлен `Paused By`). |
 | 2026-07-10 | plan-exec/opus | P0.1 закрыт: двухэшелонная защита от stored XSS в TipTap (F-P1.11-01/02/04/05) — детали см. phases/P0.md P0.1 Completion Notes. |
+| 2026-07-10 | plan-exec/sonnet | P0.2 закрыт: SSRF-guard на пути доставки webhook + encrypted-секрет + outbox-в-транзакции + единый re-dispatch + лимит тела (F-P1.7-01/02/03/05/06) — детали см. phases/P0.md P0.2 Completion Notes. |
