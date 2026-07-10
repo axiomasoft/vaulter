@@ -91,7 +91,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_pgsql, pgsql
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pcntl, posix
           coverage: none
           tools: composer:v2
 
@@ -102,7 +102,11 @@ jobs:
       # The resumable-upload suite on real Postgres: the DB_* coordinates come from the
       # job-level env above, so the upload-commit path that assembles staged bytes and
       # commits them through BlobStore.commit (advisory-xact-lock / FOR UPDATE critical
-      # sections that SKIP on SQLite) now EXECUTES.
+      # sections that SKIP on SQLite) now EXECUTES. tests/Concurrency carries the
+      # forked-process regression guard for F-P1.4-01 (two concurrent tus PATCH at the
+      # same offset — exactly one must win); it self-skips without pdo_pgsql (see
+      # tests/Uploads) or without pcntl/posix (hence those two extensions above), so it
+      # only ever runs here.
       - name: 'Postgres: resumable-upload suite'
         working-directory: packages/drive
-        run: vendor/bin/pest --ci tests/Uploads
+        run: vendor/bin/pest --ci tests/Uploads tests/Concurrency
