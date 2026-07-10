@@ -204,6 +204,25 @@ it('wraps the shared view in a LengthAwarePaginator (bounded page envelope)', fu
         ->assertJsonCount(1, 'data');
 });
 
+// ── the GET shared endpoint is a DOCUMENTED offset-natured contract (D16 / F-P4.2-04):
+// `filterSharedWith()` re-resolves each candidate EXACTLY, in-memory, and cannot honestly
+// back a keyset cursor, so the fix here is NOT a fake cursor over that in-memory pass — it
+// is (a) the page envelope, asserted above, and (b) an explicit contract test + rest-api.md
+// note (docs/reference/rest-api.md § "Shared with me") so a client never mis-assumes cursor
+// semantics on this one endpoint.
+it('GET shared never advertises a cursor envelope — the offset contract is explicit (F-P4.2-04)', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $folder = AccessTestHelpers::folder($storage, null, 'offset-contract');
+    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+
+    $response = $this->getJson('api/vaulter/shared')->assertOk();
+
+    expect($response->json('meta'))
+        ->not->toHaveKey('next_cursor')
+        ->not->toHaveKey('prev_cursor')
+        ->toHaveKeys(['current_page', 'last_page', 'total']);
+});
+
 // ── 6. The public repository seam: queryForUser + constrainToAccessible.
 it('constrains an item anchor to only its own node via the repository seam', function (): void {
     $storage = AccessTestHelpers::storage();

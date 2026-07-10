@@ -49,6 +49,13 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
 
+        // The package's `vaulter-public`/`vaulter-uploads` named rate limiters
+        // (P1.3 / F-P1.8-01) are backed by the Laravel cache. Testbench's own
+        // default cache store is 'database', which needs a `cache` table this
+        // suite's migrations never create — pin the in-memory 'array' store so a
+        // throttled route (the collab webhooks) never 500s on a missing table.
+        $app['config']->set('cache.default', 'array');
+
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
         $app['config']->set('vaulter.middleware', []);

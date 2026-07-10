@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -27,8 +31,10 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Policies\NodePolicy;
 use Vaulter\Policies\WebhookEndpointPolicy;
+use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
 use Vaulter\Webhooks\RecordsOutbox;
 use Vaulter\Webhooks\SystemHostResolver;
 
@@ -59,6 +65,14 @@ final class VaulterServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app->singleton(IdStrategyResolver::class);
+
+        // Scoped (P1.3 / F-P4.2-03): StorageReadRepository memoizes find() by id in
+        // an in-request identity map, so `AccessResolver::storageOf()` resolved
+        // fresh per NodeResource (no explicit AccessResolver binding — see below)
+        // still hits the SAME repository instance across a listing page, collapsing
+        // the storage lookup from O(N) to O(1) per page. scoped() (not singleton())
+        // resets the cache between requests/jobs on Octane/queue workers.
+        $this->app->scoped(StorageReadRepository::class);
 
         $this->app->singleton(
             PanelRegistry::class,
@@ -126,6 +140,37 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->registerPolicies();
         $this->registerActivitySubscriber();
         $this->registerOutboxSubscriber();
+        $this->registerRateLimiters();
+    }
+
+    /**
+     * Register the package's own NAMED rate limiters (P1.3 / F-P1.8-01):
+     * `vaulter-public` (the token-resolved public share surface + the collaboration
+     * webhooks, keyed by requester IP) and `vaulter-uploads` (the resumable-upload
+     * surface, keyed by actor id — falling back to IP when unauthenticated). Each
+     * registration is IDEMPOTENT/OVERRIDABLE: `RateLimiter::limiter()` returns null
+     * only when nothing has claimed the name yet, so a host that defines its own
+     * limiter under the same name (in either direction of boot order) always wins —
+     * the package never clobbers a host limiter.
+     */
+    private function registerRateLimiters(): void
+    {
+        if (RateLimiter::limiter('vaulter-public') === null) {
+            RateLimiter::for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
+                Config::publicRateLimitPerMinute(),
+            )->by($request->ip() ?? 'unknown'));
+        }
+
+        if (RateLimiter::limiter('vaulter-uploads') === null) {
+            RateLimiter::for('vaulter-uploads', static function (Request $request): Limit {
+                $user = $request->user();
+                $key = $user instanceof Authorizable
+                    ? 'actor:'.Identity::stringify($user->getAuthIdentifier())
+                    : 'ip:'.($request->ip() ?? 'unknown');
+
+                return Limit::perMinute(Config::uploadsRateLimitPerMinute())->by($key);
+            });
+        }
     }
 
     /**

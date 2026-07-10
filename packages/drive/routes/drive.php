@@ -55,20 +55,27 @@ Route::prefix(Config::routePrefix())
             | (POST), HEAD (Upload-Offset), PATCH (chunk), DELETE (abort), status
             | (GET). S3 group: parts (POST), complete (POST). Authorized via
             | AccessResolver — Create in the target folder / Edit for a new version.
+            |
+            | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-uploads`
+            | named limiter (config('vaulter.rate_limits.uploads'), keyed by actor id —
+            | falling back to IP when unauthenticated) — a DoS lever distinct from the
+            | max-active-sessions cap (F-P1.4-09, enforced in UploadSessionManager).
             */
             if (Config::featureEnabled('uploads')) {
-                // tus.io CORE — create lives under the storage; the resumable ops
-                // address the session by its upload_id handle.
-                Route::post('storages/{storage}/resumable-uploads', [TusUploadController::class, 'create']);
+                Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
+                    // tus.io CORE — create lives under the storage; the resumable ops
+                    // address the session by its upload_id handle.
+                    Route::post('storages/{storage}/resumable-uploads', [TusUploadController::class, 'create']);
 
-                Route::get('resumable-uploads/{upload_id}', [TusUploadController::class, 'status']);
-                Route::match(['head'], 'resumable-uploads/{upload_id}', [TusUploadController::class, 'head']);
-                Route::patch('resumable-uploads/{upload_id}', [TusUploadController::class, 'patch']);
-                Route::delete('resumable-uploads/{upload_id}', [TusUploadController::class, 'abort']);
+                    Route::get('resumable-uploads/{upload_id}', [TusUploadController::class, 'status']);
+                    Route::match(['head'], 'resumable-uploads/{upload_id}', [TusUploadController::class, 'head']);
+                    Route::patch('resumable-uploads/{upload_id}', [TusUploadController::class, 'patch']);
+                    Route::delete('resumable-uploads/{upload_id}', [TusUploadController::class, 'abort']);
 
-                // S3-style multipart — parts + complete on the same session handle.
-                Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartController::class, 'parts']);
-                Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartController::class, 'complete']);
+                    // S3-style multipart — parts + complete on the same session handle.
+                    Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartController::class, 'parts']);
+                    Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartController::class, 'complete']);
+                });
             }
 
             // The unified node tree (§2.2). The catch-all /{node} routes sit AFTER the

@@ -518,6 +518,10 @@ return [
     |    lifecycle rule is the backstop for any it does not.
     |  - tus.enabled: gate the tus resumable endpoints (independent of the 'uploads'
     |    schema feature flag).
+    |  - max_active_sessions (P1.3 / F-P1.4-09): the cap on how many OPEN
+    |    (initiated|uploading) sessions a single actor may hold at once — `initiate()`
+    |    refuses a new session past this cap BEFORE staging a byte. 0 disables the
+    |    cap (unbounded).
     |
     | The 'uploads' feature flag (features below) gates BOTH the v_upload_sessions /
     | v_upload_parts schema AND the resumable route group.
@@ -527,6 +531,7 @@ return [
         'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608), // 8 MiB
         'max_chunk_bytes' => env('VAULTER_UPLOAD_MAX_CHUNK_BYTES', 0), // 0 = no per-chunk cap
         'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
+        'max_active_sessions' => env('VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS', 20),
         'tus' => [
             'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
         ],
@@ -623,6 +628,29 @@ return [
     */
     'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
     'middleware' => ['api'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate limits (P1.3 / F-P1.8-01)
+    |--------------------------------------------------------------------------
+    | Two package-owned NAMED limiters, registered idempotently in
+    | VaulterServiceProvider (a host that already defined a limiter under the same
+    | name wins — the package never clobbers it):
+    |
+    |  - vaulter-public: the token-resolved public share surface (`share/{token}*`)
+    |    and the server-to-server collaboration webhooks (`collab/authenticate`,
+    |    `collab/store`); keyed by requester IP.
+    |  - vaulter-uploads: the resumable-upload surface (tus + S3-multipart); keyed
+    |    by actor id, falling back to IP when unauthenticated.
+    */
+    'rate_limits' => [
+        'public' => [
+            'per_minute' => env('VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE', 60),
+        ],
+        'uploads' => [
+            'per_minute' => env('VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE', 120),
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------

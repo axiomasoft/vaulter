@@ -168,3 +168,78 @@ it('refuses the tus surface when tus is disabled', function (): void {
         'total_size_bytes' => 10,
     ])->assertForbidden();
 });
+
+it('429s a resumable-upload session create past the vaulter-uploads rate limit (F-P1.8-01)', function (): void {
+    config()->set('vaulter.rate_limits.uploads.per_minute', 1);
+    $storage = uploadStorage();
+
+    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+        'name' => 'first.bin',
+        'total_size_bytes' => 5,
+    ])->assertCreated();
+
+    // Same actor, same minute — the second create is over budget.
+    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+        'name' => 'second.bin',
+        'total_size_bytes' => 5,
+    ])->assertStatus(429);
+});
+
+it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function (): void {
+    // The limiter bucket is keyed by actor, shared across EVERY vaulter-uploads
+    // request (create + every PATCH) — the cap must cover the create call too, so
+    // it is set BEFORE create: budget 2 (create + one PATCH), the second PATCH
+    // is the 3rd hit and goes over.
+    config()->set('vaulter.rate_limits.uploads.per_minute', 2);
+    $storage = uploadStorage();
+
+    $create = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+        'protocol' => 'tus',
+        'name' => 'patch-throttle.bin',
+        'total_size_bytes' => 4,
+    ])->assertCreated();
+    $uploadId = $create->json('data.upload_id');
+
+    $this->call(
+        'PATCH',
+        'api/vaulter/resumable-uploads/'.$uploadId,
+        [],
+        [],
+        [],
+        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        'ab',
+    )->assertNoContent();
+
+    $this->call(
+        'PATCH',
+        'api/vaulter/resumable-uploads/'.$uploadId,
+        [],
+        [],
+        [],
+        ['HTTP_UPLOAD_OFFSET' => '2', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        'cd',
+    )->assertStatus(429);
+});
+
+it('refuses a new upload session past the active-session cap for the actor (F-P1.4-09)', function (): void {
+    config()->set('vaulter.uploads.max_active_sessions', 2);
+    $storage = uploadStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+
+    $this->postJson($base.'/resumable-uploads', ['name' => 'one.bin', 'total_size_bytes' => 5])->assertCreated();
+    $this->postJson($base.'/resumable-uploads', ['name' => 'two.bin', 'total_size_bytes' => 5])->assertCreated();
+
+    // A third OPEN session for the SAME actor is over the cap.
+    $this->postJson($base.'/resumable-uploads', ['name' => 'three.bin', 'total_size_bytes' => 5])
+        ->assertStatus(429);
+});
+
+it('does not cap a new session when max_active_sessions is 0 (unbounded, the default off-switch)', function (): void {
+    config()->set('vaulter.uploads.max_active_sessions', 0);
+    $storage = uploadStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+
+    $this->postJson($base.'/resumable-uploads', ['name' => 'one.bin', 'total_size_bytes' => 5])->assertCreated();
+    $this->postJson($base.'/resumable-uploads', ['name' => 'two.bin', 'total_size_bytes' => 5])->assertCreated();
+    $this->postJson($base.'/resumable-uploads', ['name' => 'three.bin', 'total_size_bytes' => 5])->assertCreated();
+});

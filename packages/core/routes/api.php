@@ -99,8 +99,13 @@ Route::prefix(Config::routePrefix())
         | intersects with item-safety and stashes a ShareContext. A share grants
         | EXACTLY its bitmask on its node-set — the identity ACL is never consulted
         | here. An optional already-authenticated host user satisfies require_login.
+        |
+        | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-public` named
+        | limiter (config('vaulter.rate_limits.public'), keyed by requester IP) —
+        | throttle runs BEFORE ResolveShareToken so an over-budget requester never
+        | pays the token-hash + password-compare cost.
         */
-        Route::middleware(ResolveShareToken::class)->group(static function (): void {
+        Route::middleware(['throttle:vaulter-public', ResolveShareToken::class])->group(static function (): void {
             Route::get('share/{token}', [PublicShareController::class, 'show']);
             Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
             Route::get('share/{token}/download', [PublicShareController::class, 'download']);

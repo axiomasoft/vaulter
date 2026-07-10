@@ -82,10 +82,12 @@ Route::prefix(Config::routePrefix())
         | room JWT (never open) and stashes the resolved call. The node is resolved
         | from the BODY (room/node_id), not route-model bound, and a JWT call may
         | only address its own room (a token for node A cannot store to node B).
-        | Gated on the 'document_versions' feature.
+        | Gated on the 'document_versions' feature. Rate-limited (P1.3 / F-P1.8-01) by
+        | the package's own `vaulter-public` named limiter (keyed by requester IP) —
+        | throttle runs BEFORE ResolveCollaborationCall.
         */
         if (Config::featureEnabled('document_versions')) {
-            Route::middleware(ResolveCollaborationCall::class)->group(static function (): void {
+            Route::middleware(['throttle:vaulter-public', ResolveCollaborationCall::class])->group(static function (): void {
                 Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
                 Route::post('collab/store', [NodeCollaborationController::class, 'store']);
             });

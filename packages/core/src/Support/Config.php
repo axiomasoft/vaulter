@@ -656,6 +656,21 @@ final class Config
     }
 
     /**
+     * The hard cap on how many OPEN (initiated|uploading) sessions a single actor
+     * may hold at once (P1.3 / F-P1.4-09) — `initiate()` refuses a new session past
+     * this before staging a single byte. 0 disables the cap (unbounded, the
+     * pre-P1.3 behaviour). Default 20, floored at 0.
+     */
+    public static function maxActiveUploadSessions(): int
+    {
+        $value = config('vaulter.uploads.max_active_sessions', 20);
+
+        $max = is_numeric($value) ? (int) $value : 20;
+
+        return max($max, 0);
+    }
+
+    /**
      * The selected host-role driver key (H.2), default 'database' (the standalone
      * zero-host-dependency lane).
      */
@@ -809,6 +824,35 @@ final class Config
     public static function middleware(): array
     {
         return self::stringList(config('vaulter.middleware', ['api']), ['api']);
+    }
+
+    /**
+     * The `vaulter-public` named rate limit (P1.3 / F-P1.8-01) — per-minute request
+     * cap keyed by requester IP, applied to the token-resolved public share surface
+     * (`share/{token}*`) and the server-to-server collaboration webhooks
+     * (`collab/authenticate`, `collab/store`). Floored at 1, default 60.
+     */
+    public static function publicRateLimitPerMinute(): int
+    {
+        $value = config('vaulter.rate_limits.public.per_minute', 60);
+
+        $limit = is_numeric($value) ? (int) $value : 60;
+
+        return max($limit, 1);
+    }
+
+    /**
+     * The `vaulter-uploads` named rate limit (P1.3 / F-P1.8-01) — per-minute request
+     * cap keyed by actor (falling back to IP when unauthenticated), applied to the
+     * resumable-upload endpoints (tus + S3-multipart). Floored at 1, default 120.
+     */
+    public static function uploadsRateLimitPerMinute(): int
+    {
+        $value = config('vaulter.rate_limits.uploads.per_minute', 120);
+
+        $limit = is_numeric($value) ? (int) $value : 120;
+
+        return max($limit, 1);
     }
 
     public static function maxVersions(): int

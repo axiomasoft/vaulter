@@ -241,3 +241,17 @@ it('lists a subtree share but 404s a listing on an item share', function (): voi
 
     $this->getJson('api/vaulter/share/item-token/nodes')->assertNotFound();
 });
+
+it('429s a public share resolve past the vaulter-public rate limit (F-P1.8-01)', function (): void {
+    config()->set('vaulter.rate_limits.public.per_minute', 1);
+
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'throttled-doc');
+    ShareTestHelpers::share($node, token: 'throttle-token');
+
+    // First request within budget.
+    $this->getJson('api/vaulter/share/throttle-token')->assertOk();
+
+    // Second request — same IP, same minute — is over budget.
+    $this->getJson('api/vaulter/share/throttle-token')->assertStatus(429);
+});

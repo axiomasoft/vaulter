@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
+use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -300,6 +302,40 @@ it('cursor-paginates the folder listing', function (): void {
     $this->getJson($base.'/nodes?per_page=2&cursor='.$nextCursor)
         ->assertOk()
         ->assertJsonCount(2, 'data');
+});
+
+it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N) (F-P4.2-03)', function (): void {
+    $storage = driveStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $siblingCount = 5;
+
+    for ($i = 0; $i < $siblingCount; $i++) {
+        $this->postJson($base.'/folders', ['name' => 'Sib'.$i])->assertCreated();
+    }
+
+    $storageTable = Config::table('storages');
+    $storageQueries = 0;
+
+    DB::listen(function (object $query) use (&$storageQueries, $storageTable): void {
+        if (str_contains($query->sql, $storageTable)) {
+            $storageQueries++;
+        }
+    });
+
+    $this->getJson($base.'/nodes?per_page='.$siblingCount)
+        ->assertOk()
+        ->assertJsonCount($siblingCount, 'data');
+
+    // Every one of the N sibling nodes on the page belongs to the SAME storage —
+    // `AccessResolver::storageOf()` is called once per node (via
+    // `NodeResource::abilities()`), but the scoped-singleton `StorageReadRepository`
+    // memoizes by id, so the whole page issues AT MOST 2 storage-table hits (the
+    // Route::bind model resolution for {storage} in the URL, which queries the
+    // model directly and is NOT the repository under test, plus one repository
+    // cache-miss) — never one per node. Before the P1.3 fix this counted
+    // (1 + $siblingCount).
+    expect($storageQueries)->toBeLessThanOrEqual(2)
+        ->and($storageQueries)->toBeLessThan($siblingCount);
 });
 
 /**

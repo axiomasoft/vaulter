@@ -140,6 +140,34 @@ unauthenticated request gets an all-false read-only shell). `handler` is the
 resolved [format handler](/guide/document-handlers) descriptor for a leaf node
 (null for a folder).
 
+### Shared with me
+
+#### `GET shared`
+
+The cross-storage "shared with me" feed — nodes the actor holds a live
+allow-grant on, re-resolved EXACTLY through the `AccessResolver` (a nearer deny
+still excludes a row). → `NodeController::shared`
+
+> **This endpoint is OFFSET-paginated (`page`/`total`), NOT cursor-paginated**
+> (P1.3 / F-P4.2-04) — the one exception to the "Listings are cursor-paginated"
+> convention above. The feed is cross-storage and its visibility is decided by an
+> exact, in-memory re-resolution per candidate (`AccessResolver::filterSharedWith`)
+> that cannot honestly back a DB cursor — a fake cursor over that in-memory
+> filtering would not carry the stability guarantees a real keyset cursor implies
+> (D16 of `plans/VLT-REMED/plan.md`). Concurrent grant inserts/revocations between
+> page requests can therefore drift the offset window (skip/duplicate a row) —
+> the same trade-off offset pagination always carries. A host that needs
+> drift-free enumeration of this feed should not rely on paging past the first
+> page under concurrent writes.
+
+| Param | In | Notes |
+|---|---|---|
+| `page`, `per_page` | query | offset pagination (NOT `cursor`) |
+
+**Gate:** none (feature-gated on `grants`); an unauthenticated request returns an
+empty bounded page. **Response:** a `LengthAwarePaginator` envelope
+(`meta.current_page`, `meta.last_page`, `meta.total`, …) of `NodeResource`.
+
 ### Write operations
 
 #### `POST storages/{storage}/folders`

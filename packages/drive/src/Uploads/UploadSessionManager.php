@@ -8,11 +8,13 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
 use Vaulter\Drive\Uploads\Data\UploadInitData;
 use Vaulter\Drive\Uploads\Enums\UploadProtocol;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
 use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Uploads\Repositories\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
@@ -36,18 +38,21 @@ final readonly class UploadSessionManager
     public function __construct(
         private Container $container,
         private UploadSessionStoreRepository $sessions,
+        private UploadSessionReadRepository $sessionsRead,
         private StagedUpload $staged,
     ) {}
 
     /**
      * Open a resumable session (§2.8). Validates the declared total against the
      * configured ceiling BEFORE any bytes are accepted (oversize rejected up front,
-     * never staged), mints a UNIQUE upload_id, stamps the TTL, and lets the protocol
-     * handler initialise its side (S3 CreateMultipartUpload; a no-op for tus).
+     * never staged), checks the actor's active-session cap (P1.3 / F-P1.4-09), mints
+     * a UNIQUE upload_id, stamps the TTL, and lets the protocol handler initialise
+     * its side (S3 CreateMultipartUpload; a no-op for tus).
      */
     public function initiate(UploadInitData $data): UploadSession
     {
         $this->assertWithinMaxBytes($data->totalSizeBytes);
+        $this->assertWithinActiveSessionCap($data->actorId);
 
         $session = $this->sessions->create([
             'tenant_id' => $this->tenantId($data),
@@ -157,6 +162,28 @@ final readonly class UploadSessionManager
             throw ValidationException::withMessages([
                 'total_size_bytes' => "The upload size {$totalSizeBytes} exceeds the maximum allowed {$max} bytes.",
             ]);
+        }
+    }
+
+    /**
+     * Refuse a new session past the configured cap on OPEN sessions per actor
+     * (§2.8 / P1.3 / F-P1.4-09) — an actor may not open an unbounded number of
+     * concurrent staging areas. 0 disables the cap; a null actor id (unattributed/
+     * system-minted session) is never capped (there is no per-actor bucket).
+     */
+    private function assertWithinActiveSessionCap(int|string|null $actorId): void
+    {
+        $max = Config::maxActiveUploadSessions();
+
+        if ($max === 0 || $actorId === null) {
+            return;
+        }
+
+        if ($this->sessionsRead->countActiveForActor($actorId) >= $max) {
+            throw new TooManyRequestsHttpException(
+                retryAfter: null,
+                message: "Too many active upload sessions ({$max} max) for this actor.",
+            );
         }
     }
 
