@@ -1,55 +1,51 @@
-# HANDOFF — 2026-07-10 — after P0.3
+# HANDOFF — 2026-07-10 — after P1.12
 
-**Next:** /task:plan-exec AUDIT-VLT P1.1 (или параллельный workflow-режим `/audit-vlt AUDIT-VLT P1`, D19).
+**Next:** развернуть скелет фазы P2 (Встраиваемость и DX) командой `/task:plan-design AUDIT-VLT P2` (D17).
 
 | Model | Thinking | Context | Суть |
 |:--|:--|:--|:--|
-| sonnet (exec) · opus для P1.1/P1.6 | medium (opus/high на инвариантных items) | fresh session | Аудит безопасности vaulter по чеклистам P1.1–P1.12; вход — артефакты P0 |
+| opus | high | fresh session | Развёртка скелета фазы P2: refine + DoR-гейт, детализация 5 items из «Обязательных осей» Phase Context |
 
 ````
-/audit-vlt AUDIT-VLT P1 — cold-start читать: plans/AUDIT-VLT/plan.md, plans/AUDIT-VLT/phases/P1.md, plans/AUDIT-VLT/findings/P0.1-baseline-inventory.md, plans/AUDIT-VLT/findings/P0.2-rag-supplement.md, plans/AUDIT-VLT/findings/P0.3-attack-surface-map.md, plans/AUDIT-VLT/findings/P0-{dms-security,upload-hardening,collab-seam,embeddable-laravel}.md. Аудит read-only (D2): менять файлы вне plans/AUDIT-VLT/ запрещено; repro — только в plans/AUDIT-VLT/artifacts/repro/. Blocker/Major проходят адверсариальную верификацию (D19г). PHP-бинарь — /usr/bin/php8.4.
+/task:plan-design AUDIT-VLT P2
 ````
 
 **Done:**
-- Фаза P0 (Research & Baseline) закрыта 🟢 Done (3/3 items), 0 находок.
-- P0.1 → `findings/P0.1-baseline-inventory.md`: опись поставляемой поверхности (6 PHP-пакетов +
-  vue, 543 PHP-файла, 34 config-ключа, 17 core-миграций, 54 маршрута, 9 команд, тулинг). 11/11 ✅.
-- P0.2 → `findings/P0.2-rag-supplement.md`: 6 версионно-привязанных норм T1–T6, все `RAG:✅ 2026-07-10`
-  (php-jwt v6, Flysystem move не атомарен, Hocuspocus readOnly встроен, adjacency-list DoS-векторы,
-  ASVS v5.0 V12, Laravel 12/13 матрица). 6/6 ✅.
-- P0.3 → `findings/P0.3-attack-surface-map.md`: полная карта 54 маршрутов, ни одного `отсутствует`,
-  рантайм-сверка `testbench route:list`. 9/9 ✅.
-- REGISTER: placeholder-заглушка снята, внесены 3 строки-маркера (P0 находок не даёт по природе фазы).
+- Фаза P0 (Research & Baseline) — 🟢 Done (3/3), 0 находок.
+- Фаза P1 (Безопасность) — закрыта: P1.1 🟢 Done, P1.2–P1.12 🟠 Done with deviations.
+  53 находки в `findings/REGISTER.md` (3 Blocker, 18 Major, 30 Minor, 2 Nit); каждый item —
+  собственный `findings/P1.*-*.md` с закрытым чеклистом и repro в `artifacts/repro/P1.*/`.
+- Адверсариальная верификация (D19г): F-P1.1-03 опровергнута 2/3 скептиками, в REGISTER
+  не внесена, помечена в `findings/P1.1-access-resolver.md`.
+- Read-only соблюдён (D2): `git status` по `packages/ docs/ e2e/ hocuspocus-server/` чист.
 
 **Remaining:**
-- P1 (12 items) — детализирована, готова к исполнению.
 - P2 (5), P3 (6), P4 (5), P5 (3) — скелеты; каждую фазу перед исполнением разворачивать
-  `/task:plan-design AUDIT-VLT Pn` (refine + DoR-гейт). Блок «Обязательные оси» в Phase Context —
-  обязательный вход развёртывания.
+  `/task:plan-design AUDIT-VLT Pn`. Блок «Обязательные оси» в Phase Context — вход развёртывания.
+- План AUDIT-VLT остаётся 🟡 In progress: есть подтверждённые Blocker'ы (D7), закрытие
+  в 🟢/🟠 — только после решения владельца в P5.2.
 
-**Sources of truth:** `plans/AUDIT-VLT/plan.md` · `plans/AUDIT-VLT/phases/P0.md` (Phase Handoff) ·
-`plans/AUDIT-VLT/phases/P1.md` · `plans/AUDIT-VLT/findings/P0.1-baseline-inventory.md` ·
-`plans/AUDIT-VLT/findings/P0.2-rag-supplement.md` · `plans/AUDIT-VLT/findings/P0.3-attack-surface-map.md` ·
-`plans/AUDIT-VLT/findings/P0-{dms-security,upload-hardening,collab-seam,embeddable-laravel}.md` ·
-`plans/AUDIT-VLT/findings/REGISTER.md` · `plans/AUDIT-VLT/artifacts/finding-template.md`
+**Sources of truth:** `plans/AUDIT-VLT/plan.md` · `plans/AUDIT-VLT/phases/P1.md` (Phase Handoff) ·
+`plans/AUDIT-VLT/findings/REGISTER.md` · `plans/AUDIT-VLT/findings/P1.*-*.md` ·
+`plans/AUDIT-VLT/findings/P0-*.md` (нормативные RAG-выжимки, D16) ·
+`plans/AUDIT-VLT/artifacts/finding-template.md`
 
 **Open risks:**
-- Blocker'ов в P0 нет — но аудит безопасности (P1) ещё не начат; риски пакета по-прежнему неизвестны.
-- P0-наблюдения-входы для P1 (без вердикта): дефолт `middleware: ['api']` без `auth` (→ P1.8);
-  `WebhookEndpointPolicy` при `manage_ability === null` пропускает любого аутентифицированного (→ P1.2/P1.8);
-  3 subject-scoped-filter маршрута без per-object guard — `shared`/`search`/`trash` (→ P1.3/P1.8).
-- Flysystem `move` НЕ атомарен на S3 и `flysystem-aws-s3-v3` не объявлен прямой зависимостью
-  под заявленный S3-функционал (P0.2 T2 → P1.5 CAS-commit, P4.4 матрица зависимостей).
-- Currency зависимостей: Hocuspocus `^2.15` (latest v3.2.3, есть v4), laravel-adjacency-list `^1.0`
-  (нижняя граница ниже L12/13-совместимой), php-jwt `^6.0` (→ P4.4).
-- laravel-adjacency-list без `withMaxDepth`/`enableCycleDetection` — DoS через глубину/цикл
-  `parent_id` (P0.2 T4 → P1.1 свёртка ACL по предкам, P1.9, P4).
-- Априорная концентрация риска (по проектированию чеклистов): P1.4 `C4`, P1.5 `C4`, P1.6 `C6`/`C13`,
-  P1.7 `C1`, P1.8 `C11`; CVE-2025-14284 (TipTap `^2.10` — P1.11 `C8`).
-- Дешёвая модель может выродить аудит в пересказ кода — митигация D3 (чеклисты) + D19г
-  (адверсариальная верификация) проверяется по факту первого закрытого item'а P1.
+- **Blocker F-P1.4-01** — гонка `Upload-Offset` в tus без row-lock: два конкурентных PATCH
+  тихо портят собранный файл (`TusUploadHandler.php:80-108`, U2.1/U2.2).
+- **Blocker F-P1.7-01** — исходящие webhook без SSRF-защиты: пользовательский endpoint-URL
+  бьёт в приватную сеть/`169.254.169.254` (`RegisterWebhookEndpointRequest.php:27`, U6.1).
+- **Blocker F-P1.11-01** — серверный TipTap-рендер не фильтрует схему URL в `href`:
+  stored XSS через `javascript:`-ссылку (`TipTapRenderer.php:93`, G2.2/G2.4).
+- 18 Major — presigned-download в обход D15, confused-deputy и бессрочный TTL share,
+  усечённый S3-commit, прямая запись в CAS-ключ, collab без фиче-флага и без подписи webhook,
+  открытый signing_secret, outbox после коммита, отсутствие rate-limit, утечка листингов панели,
+  доступ к trashed-узлу, неудаляемый контент версий, отсутствие nosniff. Детали — REGISTER.
+- Все входные P0-риски (Flysystem `move` не атомарен, currency зависимостей,
+  adjacency-list DoS) остаются актуальны и питают P4.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: детализация фаз P2–P5 (отложена до закрытия P1 — их чеклисты опираются на артефакты P0).
+- deferred: детализация фаз P2–P5 (скелеты; разворачиваются перед исполнением); ремедиация
+  Blocker/Major вынесена в P5.2 (D2, D7).
 - open_questions: — (Q1–Q4 закрыты владельцем → D11, D12, D13, D15).

@@ -88,7 +88,7 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Research & Baseline | 3/3 | 🟢 Done |
-| P1 | Безопасность | 0/12 | ⬜ Not started |
+| P1 | Безопасность | 1/12 | 🟠 Done with deviations |
 | P2 | Встраиваемость и DX | 0/5 | ⬜ Not started |
 | P3 | Гибкость и расширяемость | 0/6 | ⬜ Not started |
 | P4 | Качество и производительность | 0/5 | ⬜ Not started |
@@ -131,3 +131,4 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 | 2026-07-10 | issue-planner/opus | P1 расширена items P1.9–P1.12 (tenant-изоляция, Filament, контентная безопасность, remanence); P1.8 — `C15`/`C16`. Обязательные оси добавлены в скелеты P2/P4/P5. Items плана: 34. |
 | 2026-07-10 | issue-planner/opus | D19: workflow-режим исполнения фаз P0/P1 — `.claude/workflows/audit-vlt.js` (параллельные items + адверсариальная верификация Blocker/Major + стадия закрытия фазы). |
 | 2026-07-10 | phase-close/sonnet | Фаза P0 закрыта 🟢 (3/3): P0.1 baseline-опись, P0.2 нормы T1–T6 (RAG:✅), P0.3 карта 54 маршрутов. Находок 0; в REGISTER — 3 строки-маркера. |
+| 2026-07-10 | phase-close/sonnet | Фаза P1 закрыта (P1.1 🟢, P1.2–P1.12 🟠): 53 находки в REGISTER (3 Blocker, 18 Major, 30 Minor, 2 Nit); F-P1.1-03 опровергнута верификацией. План остаётся 🟡 In progress (D7 — открытые Blocker'ы). |

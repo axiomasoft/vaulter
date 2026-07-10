@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Access\AccessResolver;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Tests\Access\AccessTestHelpers;
+
+beforeEach(function (): void {
+    config()->set('vaulter.drivers.permission', 'database');
+});
+
+function verifyResolver(): AccessResolver
+{
+    return app(AccessResolver::class);
+}
+
+/**
+ * F-P1.1-01 repro C6: top -> wall[deny READ subtree, inherit_grants=false]
+ *                          -> mid[allow READ subtree] -> target.
+ * Docblock (AccessResolver:41,273; authorization.md:159-162) claims the wall's deny
+ * is an "un-overridable wall" that "no nearer allow can ever pierce". If View=TRUE
+ * the wall was pierced and the docblock is contradicted.
+ */
+it('C6: a nearer allow BELOW the wall pierces the wall deny', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $top = AccessTestHelpers::folder($storage, null, 'top');
+    $wall = AccessTestHelpers::folder($storage, $top, 'wall', inheritGrants: false);
+    $mid = AccessTestHelpers::folder($storage, $wall, 'mid');
+    $target = AccessTestHelpers::folder($storage, $mid, 'target');
+
+    // Deny on the sealed wall (subtree).
+    AccessTestHelpers::grant($wall, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Subtree);
+    // Nearer allow BELOW the wall (subtree) — mid re-opens READ for its subtree.
+    AccessTestHelpers::grant($mid, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Subtree);
+
+    $view = verifyResolver()->can(AccessTestHelpers::user(), Ability::View, $target);
+
+    fwrite(STDERR, "\n[C6] View(target) = " . var_export($view, true) . "  (TRUE => wall pierced, docblock wrong)\n");
+
+    // Assert the behaviour the docblock claims (wall unbreakable). If this FAILS with
+    // "TRUE is not FALSE", the finding is confirmed: the wall was pierced.
+    expect($view)->toBeFalse();
+});
