@@ -87,7 +87,7 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Research & Baseline | 0/3 | ⬜ Not started |
+| P0 | Research & Baseline | 3/3 | 🟢 Done |
 | P1 | Безопасность | 0/12 | ⬜ Not started |
 | P2 | Встраиваемость и DX | 0/5 | ⬜ Not started |
 | P3 | Гибкость и расширяемость | 0/6 | ⬜ Not started |
@@ -130,3 +130,4 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 | 2026-07-10 | issue-planner/opus | Разбор внешнего аудита плана → `findings/P0-audit-gaps.md` (принято 10, отклонено 3, частично 2). Решения D16–D18. |
 | 2026-07-10 | issue-planner/opus | P1 расширена items P1.9–P1.12 (tenant-изоляция, Filament, контентная безопасность, remanence); P1.8 — `C15`/`C16`. Обязательные оси добавлены в скелеты P2/P4/P5. Items плана: 34. |
 | 2026-07-10 | issue-planner/opus | D19: workflow-режим исполнения фаз P0/P1 — `.claude/workflows/audit-vlt.js` (параллельные items + адверсариальная верификация Blocker/Major + стадия закрытия фазы). |
+| 2026-07-10 | phase-close/sonnet | Фаза P0 закрыта 🟢 (3/3): P0.1 baseline-опись, P0.2 нормы T1–T6 (RAG:✅), P0.3 карта 54 маршрутов. Находок 0; в REGISTER — 3 строки-маркера. |
