@@ -11,6 +11,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Actions\CreateDocumentNodeAction;
 use Vaulter\Documents\Actions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\ReleaseKeptVersionAction;
 use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
 use Vaulter\Documents\Actions\UpdateDocumentContentAction;
 use Vaulter\Documents\Data\CreateDocumentNodeData;
@@ -29,6 +30,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -54,6 +56,7 @@ final class DocumentNodeController extends Controller
         private readonly UpdateDocumentContentAction $updateContent,
         private readonly CreateNamedVersionAction $createNamedVersion,
         private readonly RestoreDocumentVersionAction $restoreVersion,
+        private readonly ReleaseKeptVersionAction $releaseKeptVersion,
         private readonly NodeHandlerResolver $handlers,
         private readonly NodeExportService $exports,
     ) {}
@@ -165,6 +168,20 @@ final class DocumentNodeController extends Controller
     }
 
     /**
+     * Release a version's keep_forever pin (§2.5 / M4a, F-P1.12-03) so it re-enters
+     * the prune window on the node's next snapshot/restore. Same guard as setting
+     * the pin (storeVersion) — Edit on the node.
+     */
+    public function releaseVersion(Request $request, Node $node, int|string $version): JsonResponse
+    {
+        $this->guardDocument($request, Ability::Edit, $node);
+
+        $released = $this->releaseKeptVersion->execute($node, $version);
+
+        return NodeDocumentVersionResource::make($released)->response();
+    }
+
+    /**
      * The resolved handler descriptor (id + capabilities + ui) for a node so the
      * client knows which editor/preview/download surface to mount (§4.5).
      */
@@ -217,12 +234,17 @@ final class DocumentNodeController extends Controller
     /**
      * Guard an ability on a node that MUST be a document node — a non-document node
      * 404s before the ability check (a folder/file has no document payload here).
+     * Item-safety (P2.2 / F-P1.12-01): a trashed node ALSO 404s before the ability
+     * check — trash is orthogonal to the ACL, not encoded into it (mirrors
+     * DownloadController::guardDownload on the file-content surface).
      */
     private function guardDocument(Request $request, Ability $ability, Node $node): void
     {
         if ($node->kind !== NodeKind::Document) {
             throw NotADocumentNodeException::forNode($node->getKey());
         }
+
+        TrashGuard::assertNotTrashed($node);
 
         $this->guard($request, $ability, $node);
     }

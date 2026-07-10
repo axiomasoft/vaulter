@@ -141,6 +141,31 @@ final class NodeStoreRepository
     }
 
     /**
+     * Physically purge a subtree's rows (§2.10 stage 3, F-P1.12-02) — a genuine
+     * DELETE, not the {@see softDeleteSubtree} tombstone. `withTrashed()` matches
+     * rows already carrying a `deleted_at` tombstone (the caller is expected to
+     * have run the stage-2 soft-delete on the same ids first, so the version↔blob
+     * edges are detached and GC-eligible before the rows disappear); the query
+     * builder's `forceDelete()` then bypasses the SoftDeletes scope for the
+     * statement itself, issuing a real `DELETE`, so FK `cascadeOnDelete` on every
+     * dependent table (files → file_versions → file_version_blobs, node_document_
+     * versions, node_grants, node_shares, …) physically removes their rows too —
+     * this is what makes "purge" actually purge, instead of leaving inline
+     * document content live in the database forever.
+     *
+     * @param Collection<int, int|string> $ids
+     */
+    public function purgeSubtree(Collection $ids): void
+    {
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $model = Config::nodeModel();
+        $model::query()->withTrashed()->whereKey($ids->all())->forceDelete();
+    }
+
+    /**
      * Repoint a file node's head after a new version is committed (§2.4): update
      * the head pointer plus the cached mime/size/extension in one write.
      */

@@ -6,6 +6,46 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Trash now blocks download/export; purge-trash physically deletes; keep_forever is releasable (P2.2 / F-P1.12-01, F-P1.12-02, F-P1.12-03)
+
+**What changed.** Three corrections to the trash/remanence lifecycle (see ADR-0016):
+
+1. **A trashed node 404s on identity download/export, not just listings (F-P1.12-01).**
+   `GET nodes/{node}/download`, `.../versions/{v}/download`, `nodes/{node}/export`, and the
+   whole `DocumentNodeController` document surface (`content`/`versions`/autosave/named-
+   version/restore/export) now 404 when the node's `trashed_at` is set, even for an actor
+   whose ACL grant on it is still live. Previously only listings and the public share
+   channel excluded trashed nodes — the identity download/export path did not, so a
+   "deleted" file stayed fully downloadable for the whole retention window.
+2. **`vaulter:purge-trash` now PHYSICALLY deletes rows past retention (F-P1.12-02).**
+   Previously "purge" called the same stage-2 action as the HTTP force-delete endpoint — a
+   `SoftDeletes` tombstone (`deleted_at`), never a real `DELETE` — so inline document
+   content (`v_node_document_versions.content`/`yjs_state`) and version metadata stayed in
+   the database forever, defeating the retention/erasure expectation. Purge now issues a
+   genuine `DELETE` on the subtree after the retention window elapses, so FK
+   `cascadeOnDelete` removes every dependent row (file/document versions, blob edges,
+   grants, shares) too. **This is irreversible** — a host that relied on
+   `Node::withTrashed()` to forensically inspect a purged node after retention will no
+   longer find it.
+3. **`keep_forever` can now be released (F-P1.12-03).** `PATCH
+   nodes/{node}/document-versions/{version}/keep-forever` (guarded by the same `Edit`
+   ability as setting the pin) clears the pin, so the version re-enters the prune window on
+   the node's next snapshot/restore. Previously the pin, once set, could never be unset.
+
+**Who is affected.**
+
+- Any integration that polled/relied on `nodes/{node}/download` or `.../export` continuing
+  to serve content for a node the user believed "deleted" (it is now `404` immediately)
+  — this closes an information-disclosure gap, so this is a security fix, not a regression.
+- Any operator/runbook that used `Node::withTrashed()` after `vaulter:purge-trash` to
+  inspect or recover a "purged" node's data — that data is now genuinely gone.
+- Anyone who pinned a document version `keep_forever` expecting it to stay pinned forever
+  with no release path — a release path now exists; nothing is auto-released.
+
+**What you must check.** If your host UI polls a download/export URL for a node the user
+just trashed, expect a `404`, not a stale `200`. If a runbook depends on purge-trash being
+recoverable, update it — purge is now genuinely irreversible.
+
 ### ACL core: role/team grants fail loud under non-enumerating drivers; wall-deny semantics clarified; new `explain()` diagnostic (P2.1 / F-P1.1-01, F-P1.1-02, F-P1.2-01)
 
 **What changed.** Three corrections to the authorization core (`AccessResolver` and the

@@ -13,6 +13,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Support\DownloadHeaders;
+use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;
@@ -69,11 +70,15 @@ final class DownloadController extends Controller
     }
 
     /**
-     * Authorize the Download ability (READ bit) on the node through the
-     * AccessResolver (H.2), 403ing on denial. An unauthenticated request is denied.
+     * Item-safety (P2.2 / F-P1.12-01): a trashed node 404s before authorization
+     * even runs — trash is orthogonal to the ACL, not encoded into it. Then
+     * authorize the Download ability (READ bit) through the AccessResolver
+     * (H.2), 403ing on denial. An unauthenticated request is denied.
      */
     private function guardDownload(Request $request, Node $node): void
     {
+        TrashGuard::assertNotTrashed($node);
+
         $user = $request->user();
         $actor = $user instanceof Authorizable ? $user : null;
 

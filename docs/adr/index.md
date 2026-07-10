@@ -16,3 +16,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0012 — Dedup scope](/adr/0012-dedup-scope)
 - [ADR-0013 — Two sharing channels kept separate](/adr/0013-two-sharing-channels)
 - [ADR-0014 — Legacy DocVault: build parity, then excise from core](/adr/0014-legacy-docvault-strangler)
+- [ADR-0016 — Trash retention & purge erasure](/adr/0016-trash-retention-erasure)

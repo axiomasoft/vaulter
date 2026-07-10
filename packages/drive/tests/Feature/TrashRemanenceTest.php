@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage as StorageModel;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\TestUser;
+
+/**
+ * Item-safety (P2.2 / F-P1.12-01): a node sitting in the drive trash (`trashed_at`)
+ * must be unreadable through the identity download surface too, symmetric with the
+ * already-correct share channel (`ShareResolver::safeTargetNode`) — even when the
+ * actor's ACL grant on it is still live.
+ */
+beforeEach(function (): void {
+    Storage::fake('local');
+    $this->actingAs((new TestUser)->forceFill(['id' => 1]));
+});
+
+function trashStorage(): StorageModel
+{
+    return Vaulter::for(DriveTestHelpers::host())->storage();
+}
+
+it('404s on downloading the current head of a trashed node, F-P1.12-01', function (): void {
+    $storage = trashStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+
+    $nodeId = $this->postJson($base.'/uploads', [
+        'file' => UploadedFile::fake()->createWithContent('secret.txt', 'still readable?'),
+    ])->assertCreated()->json('data.id');
+
+    // Control: live node downloads fine.
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertOk();
+
+    Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save();
+
+    // Same actor, same still-live grant — the trash gate 404s before ACL runs.
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertNotFound();
+});
+
+it('404s on downloading a specific version of a trashed node, F-P1.12-01', function (): void {
+    $storage = trashStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+
+    $nodeId = $this->postJson($base.'/uploads', [
+        'file' => UploadedFile::fake()->createWithContent('v.txt', 'v1'),
+    ])->assertCreated()->json('data.id');
+
+    $versionId = Node::query()->find($nodeId)->current_version_id;
+
+    $this->get('api/vaulter/nodes/'.$nodeId.'/versions/'.$versionId.'/download')->assertOk();
+
+    Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save();
+
+    $this->get('api/vaulter/nodes/'.$nodeId.'/versions/'.$versionId.'/download')->assertNotFound();
+});
+
+it('restore makes a trashed node downloadable again, no regression to the un-trash path, F-P1.12-01', function (): void {
+    $storage = trashStorage();
+    $base = 'api/vaulter/storages/'.$storage->getKey();
+
+    $nodeId = $this->postJson($base.'/uploads', [
+        'file' => UploadedFile::fake()->createWithContent('r.txt', 'restore me'),
+    ])->assertCreated()->json('data.id');
+
+    $this->deleteJson('api/vaulter/nodes/'.$nodeId)->assertOk();
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertNotFound();
+
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/restore')->assertOk();
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertOk();
+});

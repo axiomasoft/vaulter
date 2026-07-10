@@ -6,16 +6,23 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Actions\ForceDeleteNodeAction;
 use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
 
 /**
- * Permanently purge trashed nodes past their retention window (D17 / §2.10). It
- * finds the trash ROOTS whose trashed_at is older than now() - retention_days and
- * force-deletes each subtree through {@see ForceDeleteNodeAction}, so the
- * version↔blob edges detach (the bytes become GC-eligible — the GC command reclaims
- * them later) and the quota is released. Schedulable.
+ * Permanently purge trashed nodes past their retention window (D17 / §2.10 /
+ * F-P1.12-02). It finds the trash ROOTS whose trashed_at is older than
+ * now() - retention_days and, per subtree, (1) runs
+ * {@see ForceDeleteNodeAction} — the stage-2 soft-delete that detaches every
+ * version↔blob edge (the bytes become GC-eligible — the GC command reclaims them
+ * later) and releases the quota, then (2) PHYSICALLY purges the same subtree's
+ * rows ({@see NodeStoreRepository::purgeSubtree()}) so FK cascadeOnDelete removes
+ * the dependent version rows too — "purge" now actually purges, instead of
+ * leaving inline document content live in the database forever. Both steps run
+ * in one transaction per subtree (the purge is irreversible). Schedulable.
  *
  * Only trash roots are processed: a trashed node whose parent is also trashed is
  * skipped, because purging the ancestor's subtree already covers it (no
@@ -28,8 +35,11 @@ final class PurgeTrashCommand extends Command
 
     protected $description = 'Permanently delete trashed nodes whose retention window has elapsed.';
 
-    public function handle(NodeReadRepository $nodes, ForceDeleteNodeAction $forceDelete): int
-    {
+    public function handle(
+        NodeReadRepository $nodes,
+        NodeStoreRepository $store,
+        ForceDeleteNodeAction $forceDelete,
+    ): int {
         $retentionDays = $this->retentionDays();
         $threshold = Carbon::now()->subDays($retentionDays);
 
@@ -42,12 +52,21 @@ final class PurgeTrashCommand extends Command
 
         $purgedRoots = 0;
 
-        // Materialise the candidates first: ForceDeleteNodeAction soft-deletes
-        // rows, which would shift a live cursor mid-iteration.
+        // Materialise the candidates first: the transaction below mutates rows,
+        // which would shift a live cursor mid-iteration.
         $candidates = $nodes->trashedBefore($threshold)->get();
 
         foreach ($candidates as $node) {
-            $forceDelete->execute(node: $node);
+            // The subtree ids MUST be resolved before ForceDeleteNodeAction runs —
+            // it soft-deletes the rows, and NodeReadRepository::subtree() applies
+            // the SoftDeletes scope, so a post-force-delete read would see nothing.
+            $subtreeIds = $nodes->subtree($node)->modelKeys();
+
+            DB::transaction(function () use ($node, $subtreeIds, $forceDelete, $store): void {
+                $forceDelete->execute(node: $node);
+                $store->purgeSubtree(collect($subtreeIds));
+            });
+
             $purgedRoots++;
         }
 

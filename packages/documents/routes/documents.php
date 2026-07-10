@@ -47,6 +47,10 @@ Route::prefix(Config::routePrefix())
                 Route::get('nodes/{node}/document-versions', [DocumentNodeController::class, 'versions']);
                 Route::post('nodes/{node}/document-versions', [DocumentNodeController::class, 'storeVersion']);
                 Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
+                // Release a keep_forever pin (F-P1.12-03) — the missing inverse of
+                // the pin `storeVersion` can set; the version re-enters the prune
+                // window on the node's next snapshot/restore.
+                Route::patch('nodes/{node}/document-versions/{version}/keep-forever', [DocumentNodeController::class, 'releaseVersion']);
                 Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
                 Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
 
