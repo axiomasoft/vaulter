@@ -14,6 +14,7 @@ use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -29,6 +30,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
@@ -36,6 +38,27 @@ use Vaulter\Panels\StoragePanelProvider;
  */
 final class Config
 {
+    /**
+     * The default closed set of ranges an outbound webhook must not resolve into
+     * (§2.11 / N2): loopback, RFC-1918 private, link-local (incl. cloud metadata at
+     * 169.254.169.254), CGNAT, this-network, and their IPv6 equivalents. IPv4-mapped
+     * IPv6 is folded to IPv4 before the check, so the IPv4 entries cover it.
+     *
+     * @var list<string>
+     */
+    private const array DEFAULT_BLOCKED_IP_RANGES = [
+        '0.0.0.0/8',
+        '10.0.0.0/8',
+        '100.64.0.0/10',
+        '127.0.0.0/8',
+        '169.254.0.0/16',
+        '172.16.0.0/12',
+        '192.168.0.0/16',
+        '::1/128',
+        'fc00::/7',
+        'fe80::/10',
+    ];
+
     /**
      * @return class-string<Storage>
      */
@@ -397,6 +420,147 @@ final class Config
         $value = config('vaulter.webhooks.manage_ability');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The SWAPPABLE outbound SSRF guard (§2.11 / D5 / F-P1.7-01). A host may point
+     * config('vaulter.webhooks.delivery.url_guard') at its own implementation (e.g. one
+     * that defers to an egress proxy). Only a valid OutboundUrlGuard FQCN is returned.
+     *
+     * @return class-string<OutboundUrlGuard>
+     */
+    public static function webhookUrlGuardClass(): string
+    {
+        $class = config('vaulter.webhooks.delivery.url_guard', DefaultOutboundUrlGuard::class);
+
+        if (is_string($class) && is_a($class, OutboundUrlGuard::class, allow_string: true)) {
+            /** @var class-string<OutboundUrlGuard> $class */
+            return $class;
+        }
+
+        return DefaultOutboundUrlGuard::class;
+    }
+
+    /**
+     * The URL schemes an outbound webhook may dial (§2.11 / N2). Lower-cased; defaults
+     * to http + https. Anything else (file/gopher/ftp/…) is refused by the guard.
+     *
+     * @return list<string>
+     */
+    public static function webhookAllowedSchemes(): array
+    {
+        $value = config('vaulter.webhooks.delivery.allowed_schemes', ['http', 'https']);
+
+        if (!is_array($value)) {
+            return ['http', 'https'];
+        }
+
+        $schemes = [];
+
+        foreach ($value as $scheme) {
+            if (is_string($scheme) && $scheme !== '') {
+                $schemes[] = strtolower($scheme);
+            }
+        }
+
+        return $schemes === [] ? ['http', 'https'] : array_values(array_unique($schemes));
+    }
+
+    /**
+     * The private/loopback/link-local/reserved CIDR ranges an outbound webhook must
+     * NOT resolve into (§2.11 / N2). Closed by default; a host tightens or replaces it.
+     *
+     * @return list<string>
+     */
+    public static function webhookBlockedIpRanges(): array
+    {
+        return self::ipRanges('vaulter.webhooks.delivery.blocked_ip_ranges', self::DEFAULT_BLOCKED_IP_RANGES);
+    }
+
+    /**
+     * The CIDR ranges a host EXPLICITLY re-opens for a trusted internal receiver
+     * (§2.11 / N2). Empty by default — the guard's default is closed.
+     *
+     * @return list<string>
+     */
+    public static function webhookAllowedIpRanges(): array
+    {
+        return self::ipRanges('vaulter.webhooks.delivery.allowed_ip_ranges', []);
+    }
+
+    /**
+     * Whether an outbound webhook delivery follows HTTP redirects (§2.11 / N2). Default
+     * FALSE: a public receiver must not 302 the request onto an internal address.
+     */
+    public static function webhookFollowRedirects(): bool
+    {
+        return config('vaulter.webhooks.delivery.follow_redirects', false) === true;
+    }
+
+    /**
+     * The TCP connect timeout (seconds) for a delivery POST (§2.11 / N2). Floored at 1,
+     * default 2 — a fast fail on an unreachable internal host.
+     */
+    public static function webhookConnectTimeout(): int
+    {
+        $value = config('vaulter.webhooks.delivery.connect_timeout', 2);
+
+        $seconds = is_numeric($value) ? (int) $value : 2;
+
+        return max($seconds, 1);
+    }
+
+    /**
+     * The hard ceiling (bytes) on a receiver's response body (§2.11 / N2 / F-P1.7-06).
+     * Delivery needs only the status, so a larger body is refused. Floored at 0
+     * (0 disables the check); default 64 KiB.
+     */
+    public static function webhookMaxResponseBytes(): int
+    {
+        $value = config('vaulter.webhooks.delivery.max_response_bytes', 65536);
+
+        $bytes = is_numeric($value) ? (int) $value : 65536;
+
+        return max($bytes, 0);
+    }
+
+    /**
+     * The claim window (seconds) a due retry's next_retry_at is bumped forward before
+     * dispatch (§2.11 / F-P1.7-05) — the visibility timeout that keeps re-dispatch a
+     * single owner. Floored at 1, default 60.
+     */
+    public static function webhookRetryClaimSeconds(): int
+    {
+        $value = config('vaulter.webhooks.retry_claim_seconds', 60);
+
+        $seconds = is_numeric($value) ? (int) $value : 60;
+
+        return max($seconds, 1);
+    }
+
+    /**
+     * Read a config key of CIDR strings, falling back to $default when unset/!array.
+     *
+     * @param  list<string> $default
+     * @return list<string>
+     */
+    private static function ipRanges(string $key, array $default): array
+    {
+        $value = config($key, $default);
+
+        if (!is_array($value)) {
+            return $default;
+        }
+
+        $ranges = [];
+
+        foreach ($value as $range) {
+            if (is_string($range) && $range !== '') {
+                $ranges[] = $range;
+            }
+        }
+
+        return $ranges;
     }
 
     /**

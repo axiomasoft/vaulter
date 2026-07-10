@@ -20,6 +20,8 @@ use Vaulter\Console\RelayOutboxCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Contracts\Webhooks\HostResolver;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\PanelRegistry;
@@ -28,6 +30,7 @@ use Vaulter\Policies\WebhookEndpointPolicy;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
 use Vaulter\Webhooks\RecordsOutbox;
+use Vaulter\Webhooks\SystemHostResolver;
 
 final class VaulterServiceProvider extends PackageServiceProvider
 {
@@ -78,6 +81,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // top-level key, so the one binding serves both the Drive bearer links and
         // the legacy Documents shares (both default to RandomShareTokenGenerator).
         $this->app->bind(ShareTokenGenerator::class, Config::nodeShareTokenGeneratorClass());
+
+        // Outbound webhook SSRF guard (§2.11 / D5 / F-P1.7-01): the host resolver is
+        // the injectable DNS seam (A + AAAA), and the guard is host-swappable via
+        // config('vaulter.webhooks.delivery.url_guard'). The barrier runs on the
+        // delivery path (DeliverWebhook) and — as an early reject — at registration.
+        $this->app->bind(HostResolver::class, SystemHostResolver::class);
+        $this->app->bind(OutboundUrlGuard::class, Config::webhookUrlGuardClass());
 
         // CAS services (H.3) — the concrete ContentStore/StorageDriver/BlobStore
         // engine now lives in axioma-studio/vaulter-media (P2 #5, D2/D3); its

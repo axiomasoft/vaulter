@@ -799,7 +799,9 @@ final class PanelTablesBuilder
 
         $table->string('url');
         $table->json('events');
-        $table->string('signing_secret');
+        // text, not string: the signing_secret is encrypted at rest (F-P1.7-02) and
+        // the ciphertext is longer than the 64-char plaintext.
+        $table->text('signing_secret');
         $table->boolean('is_active')->default(true)->index();
         $table->timestamp('last_triggered_at')->nullable();
         $table->unsignedInteger('failure_count')->default(0);

@@ -25,9 +25,9 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
  * unchanged, just split by owning package.
  *
  * RESILIENCE (the originating action must never break for an audit failure): every
- * handler is wrapped so a recorder exception is logged and swallowed. The events are
- * ShouldDispatchAfterCommit, so the handler runs on the after-commit boundary — a
- * failed recording can never roll back the action that already succeeded.
+ * handler is wrapped so a recorder exception is logged and swallowed. The kernel events
+ * now fire INSIDE the mutation transaction (F-P1.7-03), but because the failure is
+ * swallowed a failed recording still can never roll back the action.
  */
 final readonly class RecordsActivity
 {

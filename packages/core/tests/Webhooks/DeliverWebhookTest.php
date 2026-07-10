@@ -6,6 +6,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
@@ -24,7 +25,7 @@ use Vaulter\Webhooks\WebhookSigner;
 function runDeliver(WebhookDelivery $delivery): void
 {
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(app(WebhookSigner::class));
+        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
 }
 
 // ─────────────── 2xx — delivered, signed, endpoint touched ───────────────
@@ -218,7 +219,7 @@ it('is a no-op when the delivery row no longer exists', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
     (new DeliverWebhook(deliveryId: '999999999'))
-        ->handle(app(WebhookSigner::class));
+        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
 
     Http::assertNothingSent();
 });

@@ -28,10 +28,16 @@ final readonly class GrantNodeAccessAction
 
     public function execute(Node $node, GrantNodeAccessData $data): NodeGrant
     {
-        $grant = DB::transaction(fn (): NodeGrant => $this->grants->grant(node: $node, data: $data));
+        // The event fires INSIDE the transaction (F-P1.7-03): the outbox/activity rows
+        // stage in the SAME commit as the grant — no crash window between commit and
+        // staging. The subscribers swallow their own failures, so staging still never
+        // rolls the grant back.
+        return DB::transaction(function () use ($node, $data): NodeGrant {
+            $grant = $this->grants->grant(node: $node, data: $data);
 
-        event(new NodeGrantCreated(grant: $grant, actorId: $data->grantedBy));
+            event(new NodeGrantCreated(grant: $grant, actorId: $data->grantedBy));
 
-        return $grant;
+            return $grant;
+        });
     }
 }

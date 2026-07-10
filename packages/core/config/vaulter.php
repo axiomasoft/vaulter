@@ -25,6 +25,7 @@ use Vaulter\Schema\Uuid7Ids;
 use Vaulter\Support\DefaultStorageAdapter;
 use Vaulter\Support\RandomShareTokenGenerator;
 use Vaulter\Testing\NullRoleDriver;
+use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 
 /**
  * Vaulter configuration.
@@ -534,12 +535,51 @@ return [
         'event_header' => 'X-Vaulter-Event',
         'retention_days' => 30,
 
+        // The visibility-timeout (seconds) a due retry's next_retry_at is bumped
+        // forward when a sweep claims it (F-P1.7-05): a concurrent/next sweep won't
+        // re-dispatch the same delivery, and a lost job becomes due again after it.
+        'retry_claim_seconds' => 60,
+
         // The Gate ability that gates the webhook-endpoint management surface
         // (register/update/deactivate/delete). The host defines this ability; until
         // it does, an authenticated user is allowed (the route still requires auth) —
         // a host MUST tighten this in production. Set to null to allow any
         // authenticated user explicitly.
         'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
+
+        // Outbound delivery SSRF hardening (D5 / N2 / F-P1.7-01). The endpoint URL is
+        // a user-controlled primitive, so the relay resolves it (A + AAAA), refuses any
+        // address in a private/loopback/link-local/reserved range, PINS the vetted IP
+        // onto the connection (no DNS-rebind window), disables redirects and locks the
+        // transport to http(s). A host may swap the guard or re-open a trusted internal
+        // range — the default is closed.
+        'delivery' => [
+            // Swap for a host implementation of Vaulter\Contracts\Webhooks\OutboundUrlGuard.
+            'url_guard' => DefaultOutboundUrlGuard::class,
+
+            // Schemes an outbound delivery may dial. Anything else is refused.
+            'allowed_schemes' => ['http', 'https'],
+
+            // Ranges a delivery must NOT resolve into. null → the closed default set
+            // (loopback, RFC-1918, link-local incl. 169.254.169.254, CGNAT, IPv6
+            // ULA/link-local). Set an explicit list to override wholesale.
+            'blocked_ip_ranges' => null,
+
+            // Ranges a host EXPLICITLY re-opens for a trusted internal receiver. Empty
+            // by default — the guard stays closed until a host opts in.
+            'allowed_ip_ranges' => [],
+
+            // Follow HTTP redirects? Off by default: a public receiver must not 302 the
+            // request onto an internal address.
+            'follow_redirects' => false,
+
+            // TCP connect timeout (seconds) — a fast fail on an unreachable host.
+            'connect_timeout' => 2,
+
+            // Hard ceiling (bytes) on the receiver's response body; delivery needs only
+            // the status. 0 disables the check.
+            'max_response_bytes' => 65536,
+        ],
     ],
 
     /*

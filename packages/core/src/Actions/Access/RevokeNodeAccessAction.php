@@ -23,17 +23,21 @@ final readonly class RevokeNodeAccessAction
 
     public function execute(Node $node, Subject $subject, int|string|null $actorId = null): int
     {
-        $revoked = DB::transaction(fn (): int => $this->grants->revoke(node: $node, subject: $subject));
+        // The event fires INSIDE the transaction (F-P1.7-03) so the outbox/activity
+        // rows stage atomically with the revoke — no crash window after commit.
+        return DB::transaction(function () use ($node, $subject, $actorId): int {
+            $revoked = $this->grants->revoke(node: $node, subject: $subject);
 
-        if ($revoked > 0) {
-            event(new NodeGrantRevoked(
-                node: $node,
-                subject: $subject,
-                revoked: $revoked,
-                actorId: $actorId,
-            ));
-        }
+            if ($revoked > 0) {
+                event(new NodeGrantRevoked(
+                    node: $node,
+                    subject: $subject,
+                    revoked: $revoked,
+                    actorId: $actorId,
+                ));
+            }
 
-        return $revoked;
+            return $revoked;
+        });
     }
 }

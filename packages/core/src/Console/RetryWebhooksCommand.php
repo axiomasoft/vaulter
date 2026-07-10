@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Bus;
-use Vaulter\Jobs\Webhooks\DeliverWebhook;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Support\Config;
-use Vaulter\Support\Identity;
+use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
  * Re-queues due failed webhook deliveries (master plan §2.11 / D14 / M3b). A focused
@@ -20,8 +16,9 @@ use Vaulter\Support\Identity;
  * retry heartbeat.
  *
  * Terminal deliveries (delivered|dead) are never re-queued — a dead row stays in the
- * DLQ for inspection. The job is idempotent on re-entry, so an overlap with the relay
- * never double-delivers.
+ * DLQ for inspection. Both this command and the relay claim through the SAME
+ * WebhookRetryDispatcher (F-P1.7-05), which locks + re-arms each due row atomically, so
+ * running both never fans a delivery out twice.
  */
 final class RetryWebhooksCommand extends Command
 {
@@ -29,18 +26,9 @@ final class RetryWebhooksCommand extends Command
 
     protected $description = 'Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).';
 
-    public function handle(): int
+    public function handle(WebhookRetryDispatcher $retries): int
     {
-        /** @var class-string<WebhookDelivery> $deliveryClass */
-        $deliveryClass = Config::webhookDeliveryModel();
-
-        $due = $deliveryClass::query()->dueForRetry()->get();
-
-        $due->each(static function (WebhookDelivery $delivery): void {
-            Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
-        });
-
-        $count = $due->count();
+        $count = $retries->redispatchDue();
 
         $this->components->info("Re-dispatched {$count} due webhook delivery(ies).");
 

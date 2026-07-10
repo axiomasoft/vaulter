@@ -76,6 +76,11 @@ class WebhookEndpoint extends Model
     {
         return [
             'events' => 'array',
+            // Encrypted at rest (F-P1.7-02): a DB dump/replica leak must not hand an
+            // attacker the HMAC keys to forge signed deliveries. Laravel encrypts with
+            // APP_KEY on write and decrypts transparently on read (WebhookSigner sees
+            // the plaintext); the column is text-typed to hold the longer ciphertext.
+            'signing_secret' => 'encrypted',
             'is_active' => 'boolean',
             'last_triggered_at' => 'datetime',
             'failure_count' => 'integer',

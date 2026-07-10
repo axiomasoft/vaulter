@@ -23,18 +23,16 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
  * vaulter-drive (P2 #5 / ADR-0015) through the same OutboxRecorder public seam — core
  * no longer references Vaulter\Drive\Events\*, and the outbox contract is unchanged.
  *
- * TRANSACTIONAL-OUTBOX SEMANTICS + CAVEAT: the domain events are
- * ShouldDispatchAfterCommit, so this subscriber runs on the AFTER-COMMIT boundary —
- * the outbox row is written in the SAME REQUEST as the mutation but a hair AFTER its
- * commit, NOT inside its transaction. The trade-off is a small crash window: if the
- * process dies between the mutation's commit and this subscriber writing the row, the
- * event is lost to the outbox (the mutation still stands). Delivery is at-least-once
- * and consumers DEDUPE on event_id, so the only failure mode is at-most-once for that
- * one crashed request, never a double-delivery.
+ * TRANSACTIONAL-OUTBOX SEMANTICS: the kernel domain events are dispatched INSIDE the
+ * mutation transaction (F-P1.7-03), so this subscriber writes the outbox row in the
+ * SAME transaction as the mutation — the two commit (or roll back) together. There is
+ * no crash window between the mutation's commit and staging, giving true at-least-once;
+ * consumers still DEDUPE on event_id.
  *
  * RESILIENCE: every handler is wrapped so a recorder exception is logged and
- * swallowed — staging an event must never break the originating action, which already
- * committed.
+ * swallowed — staging an event must never break the originating action. Because the
+ * failure is swallowed, a staging error never rolls the mutation back even though it
+ * now runs inside the transaction.
  */
 final readonly class RecordsOutbox
 {

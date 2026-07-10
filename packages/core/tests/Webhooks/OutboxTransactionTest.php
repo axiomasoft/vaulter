@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\DB;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Access\AccessTestHelpers;
+
+/**
+ * The transactional outbox stages INSIDE the mutation transaction (§2.11 / F-P1.7-03),
+ * not on the after-commit boundary — so there is no crash window between the mutation's
+ * commit and the outbox write, and a rolled-back mutation drops the staged row too.
+ *
+ * The kernel domain events used to be ShouldDispatchAfterCommit, which deferred staging
+ * past the transaction; the first test is RED on that old code (the row is not visible
+ * inside the transaction) and GREEN once the events fire synchronously in-transaction.
+ */
+beforeEach(function (): void {
+    $storage = AccessTestHelpers::storage();
+    $this->node = AccessTestHelpers::folder($storage, null, 'reports');
+    $this->grant = AccessTestHelpers::grant(node: $this->node, level: GrantLevel::Reader);
+
+    // Drop the provisioning outbox rows so we assert only the grant.created row.
+    Outbox::query()->delete();
+});
+
+it('stages the outbox row INSIDE the active transaction, not after commit, F-P1.7-03', function (): void {
+    $stagedInside = null;
+
+    DB::transaction(function () use (&$stagedInside): void {
+        event(new NodeGrantCreated(grant: $this->grant, actorId: 7));
+
+        // Inside the SAME transaction the staged row must already be visible.
+        $stagedInside = Outbox::query()
+            ->where('event', WebhookEvent::GrantCreated->value)
+            ->exists();
+    });
+
+    expect($stagedInside)->toBeTrue()
+        ->and(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->count())->toBe(1);
+});
+
+it('rolls the staged outbox row back when the mutation transaction rolls back, F-P1.7-03', function (): void {
+    rescue(function (): void {
+        DB::transaction(function (): void {
+            event(new NodeGrantCreated(grant: $this->grant, actorId: 7));
+
+            throw new RuntimeException('force rollback');
+        });
+    });
+
+    expect(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->exists())->toBeFalse();
+});

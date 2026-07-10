@@ -10,10 +10,14 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\ResponseInterface;
 use Throwable;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
+use Vaulter\Webhooks\ResponseSizeLimit;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
@@ -48,7 +52,7 @@ final class DeliverWebhook implements ShouldQueue
         private readonly string $deliveryId,
     ) {}
 
-    public function handle(WebhookSigner $signer): void
+    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard): void
     {
         $delivery = $this->resolveDelivery();
 
@@ -63,7 +67,7 @@ final class DeliverWebhook implements ShouldQueue
         }
 
         try {
-            $response = $this->post(signer: $signer, delivery: $delivery, endpoint: $endpoint);
+            $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
         } catch (Throwable $exception) {
             $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $exception->getMessage());
 
@@ -87,13 +91,25 @@ final class DeliverWebhook implements ShouldQueue
      * POST the signed payload to the endpoint. The signature is HMAC-SHA256 over
      * "{timestamp}.{body}" with the endpoint's signing_secret, so the receiver can
      * verify it byte-for-byte AND reject a replayed request whose timestamp is stale.
+     *
+     * SSRF-hardened (§2.11 / N2 / F-P1.7-01): the guard resolves + range-checks the
+     * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
+     * connection (CURLOPT_RESOLVE) so DNS cannot rebind to an internal address between
+     * the check and the dial. Redirects are off by default (a public receiver must not
+     * 302 onto the metadata service), the transport is locked to HTTP(S), and the
+     * response body is capped (F-P1.7-06). A blocked URL throws and is recorded as a
+     * failed attempt — nothing leaves the process.
      */
-    private function post(WebhookSigner $signer, WebhookDelivery $delivery, WebhookEndpoint $endpoint): Response
+    private function post(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhookDelivery $delivery, WebhookEndpoint $endpoint): Response
     {
+        $pinned = $urlGuard->pin($endpoint->url);
+
         $body = (string) json_encode($delivery->payload);
         $timestamp = now()->getTimestamp();
 
-        return Http::timeout(Config::webhookTimeout())
+        $request = Http::timeout(Config::webhookTimeout())
+            ->connectTimeout(Config::webhookConnectTimeout())
+            ->withOptions($this->transportOptions(pinned: $pinned))
             ->withHeaders([
                 'Content-Type' => 'application/json',
                 Config::webhookEventHeader() => $delivery->event,
@@ -104,8 +120,54 @@ final class DeliverWebhook implements ShouldQueue
                     timestamp: $timestamp,
                 ),
             ])
-            ->withBody($body, 'application/json')
-            ->post($endpoint->url);
+            ->withBody($body, 'application/json');
+
+        if (!Config::webhookFollowRedirects()) {
+            $request = $request->withoutRedirecting();
+        }
+
+        return $request->post($endpoint->url);
+    }
+
+    /**
+     * The Guzzle transport options that harden a delivery (§2.11 / N2): pin the vetted
+     * IP onto the connection, lock the protocol to HTTP(S) (so a redirect can't smuggle
+     * file://), and bound the response body — an oversized declared Content-Length is
+     * refused from the on_headers hook, and the buffering sink spills to a temp file so
+     * an UNDECLARED oversize body never lands whole in RAM.
+     *
+     * @return array<string, mixed>
+     */
+    private function transportOptions(PinnedOutboundEndpoint $pinned): array
+    {
+        $options = [
+            'curl' => [
+                CURLOPT_RESOLVE => [$pinned->curlResolveEntry()],
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            ],
+        ];
+
+        $maxResponseBytes = Config::webhookMaxResponseBytes();
+
+        if ($maxResponseBytes > 0) {
+            $sink = fopen('php://temp/maxmemory:'.$maxResponseBytes, 'w+b');
+
+            if ($sink !== false) {
+                $options['sink'] = $sink;
+            }
+
+            $options['on_headers'] = static function (ResponseInterface $response) use ($maxResponseBytes): void {
+                $header = $response->getHeaderLine('Content-Length');
+
+                ResponseSizeLimit::assertContentLengthWithinLimit(
+                    contentLength: $header === '' ? null : $header,
+                    maxBytes: $maxResponseBytes,
+                );
+            };
+        }
+
+        return $options;
     }
 
     private function recordSuccess(WebhookDelivery $delivery, WebhookEndpoint $endpoint): void

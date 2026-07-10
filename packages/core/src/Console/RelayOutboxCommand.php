@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Bus;
-use Vaulter\Jobs\Webhooks\DeliverWebhook;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Support\Config;
-use Vaulter\Support\Identity;
 use Vaulter\Webhooks\OutboxRelay;
+use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
  * Drains the transactional outbox into webhook deliveries and re-arms due retries
@@ -20,9 +16,9 @@ use Vaulter\Webhooks\OutboxRelay;
  *
  * Each tick: re-arm due retries FIRST (so the sweep only sees deliveries already due
  * at tick start), then OutboxRelay::process() fans pending outbox rows out into
- * per-endpoint deliveries + jobs. The due-retry sweep is the SINGLE owner of retries —
- * DeliverWebhook never self-releases. Schedule it withoutOverlapping() so two ticks
- * can't re-arm the same due row at once.
+ * per-endpoint deliveries + jobs. The due-retry sweep is the SINGLE owner of retries
+ * (WebhookRetryDispatcher claims each row atomically, F-P1.7-05) — DeliverWebhook never
+ * self-releases. Still schedule it withoutOverlapping() for tidiness.
  */
 final class RelayOutboxCommand extends Command
 {
@@ -30,33 +26,14 @@ final class RelayOutboxCommand extends Command
 
     protected $description = 'Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).';
 
-    public function handle(OutboxRelay $relay): int
+    public function handle(OutboxRelay $relay, WebhookRetryDispatcher $retries): int
     {
-        $retried = $this->redispatchDueRetries();
+        $retried = $retries->redispatchDue();
         $relayed = $relay->process(limit: $this->limit());
 
         $this->components->info("Relayed {$relayed} outbox event(s), re-dispatched {$retried} due retry(ies).");
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Re-dispatch deliveries that are pending or have failed and whose backoff window
-     * has elapsed (next_retry_at <= now). Terminal deliveries (delivered|dead) are
-     * skipped; the job itself is idempotent on re-entry.
-     */
-    private function redispatchDueRetries(): int
-    {
-        /** @var class-string<WebhookDelivery> $deliveryClass */
-        $deliveryClass = Config::webhookDeliveryModel();
-
-        $due = $deliveryClass::query()->dueForRetry()->get();
-
-        $due->each(static function (WebhookDelivery $delivery): void {
-            Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
-        });
-
-        return $due->count();
     }
 
     private function limit(): int

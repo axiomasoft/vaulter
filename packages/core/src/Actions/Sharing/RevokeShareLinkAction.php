@@ -26,14 +26,16 @@ final readonly class RevokeShareLinkAction
 
     public function execute(NodeShare $share, int|string|null $actorId = null): bool
     {
-        $revoked = DB::transaction(
-            fn (): bool => $this->shares->revoke(share: $share, now: Carbon::now()),
-        );
+        // The event fires INSIDE the transaction (F-P1.7-03) so the outbox/activity
+        // rows stage atomically with the revoke — no crash window after commit.
+        return DB::transaction(function () use ($share, $actorId): bool {
+            $revoked = $this->shares->revoke(share: $share, now: Carbon::now());
 
-        if ($revoked) {
-            event(new NodeShareRevoked(share: $share, actorId: $actorId));
-        }
+            if ($revoked) {
+                event(new NodeShareRevoked(share: $share, actorId: $actorId));
+            }
 
-        return $revoked;
+            return $revoked;
+        });
     }
 }

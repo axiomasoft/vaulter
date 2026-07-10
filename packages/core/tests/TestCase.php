@@ -6,12 +6,27 @@ namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Tests\Webhooks\FakeHostResolver;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // No test hits real DNS or a socket (§2.11 / F-P1.7-01): the outbound SSRF
+        // guard resolves through a fake resolver that maps hosts to a public address
+        // by default, so a delivery/registration to a test host (hooks.test) passes
+        // the range check. An SSRF test overrides the map via
+        // app(HostResolver::class)->set('evil.test', ['127.0.0.1']).
+        $this->app->singleton(HostResolver::class, static fn (): FakeHostResolver => new FakeHostResolver);
+    }
+
     /**
      * @param  Application              $app
      * @return array<int, class-string>
