@@ -91,7 +91,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 |:--|:--|:--|:--|
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
-| P2 | W2 — Авторизация и изоляция | 0/3 | ⬜ Not started |
+| P2 | W2 — Авторизация и изоляция | 0/3 | 🟡 In progress |
 | P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
@@ -137,3 +137,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-10 | plan-exec/sonnet | P1.3 закрыт: именованные throttle-лимитеры пакета (`vaulter-public`/`vaulter-uploads`), кап активных upload-сессий, O(1) памоизация storage в листингах, документированный offset-контракт ленты `shared` (F-P1.8-01, F-P1.4-09, F-P4.2-03, F-P4.2-04) — детали см. phases/P1.md P1.3 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | P1.4 закрыт: mass-assignment-харденинг всех 16 моделей (закрытый `$fillable` или полный `$guarded=['*']`), все внутренние write-пути переведены на `forceFill()` (F-P1.8-02, F-P1.5-04, F-P1.7-04) — детали см. phases/P1.md P1.4 Completion Notes. **Фаза P1 (W1) ТЕРМИНАЛЬНА (4/4 🟢).** |
 | 2026-07-11 | plan-design/opus | Фаза P2 (W2) развёрнута из скелета: 3 items (11 находок), DoR закрыт — детали см. phases/P2.md. Несущие решения D17/D18/D19; заведён Q4 (`open-questions.md`, Decision pending, фазу не блокирует). |
+| 2026-07-11 | plan-exec/sonnet | P2.1 закрыт (🟠): выравнивание докблоков wall-deny к ADR-0007, `explain()`+VO, fail-loud role/team-грантов (F-P1.1-01/02, F-P1.2-01), коммит `18274f1`; deviations — sonnet вместо opus/high, CHANGELOG отложен — детали см. phases/P2.md P2.1 Completion Notes. |
