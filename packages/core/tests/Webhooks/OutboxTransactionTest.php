@@ -8,6 +8,7 @@ use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Webhooks\OutboxRecorder;
 
 /**
  * The transactional outbox stages INSIDE the mutation transaction (§2.11 / F-P1.7-03),
@@ -53,4 +54,31 @@ it('rolls the staged outbox row back when the mutation transaction rolls back, F
     });
 
     expect(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->exists())->toBeFalse();
+});
+
+it('confines a staging failure to a savepoint so the mutation still commits, F-P1.7-03', function (): void {
+    // The recorder throws while the event fires INSIDE the transaction. Without a
+    // savepoint around the staging call this poisons the transaction on PostgreSQL and
+    // the following COMMIT fails — silently rolling the grant back (review P0.2).
+    // RED-BEFORE requires PostgreSQL: SQLite does not poison an aborted statement, so
+    // this asserts the invariant that MUST hold on PG (env here lacks pdo_pgsql).
+    app()->bind(OutboxRecorder::class, fn (): OutboxRecorder => new class extends OutboxRecorder
+    {
+        #[Override]
+        public function recordGrantCreated(NodeGrantCreated $event): ?Outbox
+        {
+            throw new RuntimeException('outbox insert failed');
+        }
+    });
+
+    $committed = DB::transaction(function (): bool {
+        event(new NodeGrantCreated(grant: $this->grant, actorId: 7));
+
+        // Reached (and the COMMIT succeeds) only when the swallowed staging failure did
+        // NOT abort the surrounding transaction.
+        return true;
+    });
+
+    expect($committed)->toBeTrue()
+        ->and(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->exists())->toBeFalse();
 });

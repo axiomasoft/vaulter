@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -31,8 +32,11 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
  *
  * RESILIENCE: every handler is wrapped so a recorder exception is logged and
  * swallowed — staging an event must never break the originating action. Because the
- * failure is swallowed, a staging error never rolls the mutation back even though it
- * now runs inside the transaction.
+ * handler now runs INSIDE the mutation transaction, the recorder call is wrapped in a
+ * SAVEPOINT: on PostgreSQL a failed statement aborts the whole transaction, so merely
+ * catching the exception would leave it poisoned and the mutation's COMMIT would fail
+ * (silently rolling the grant/share back). The savepoint confines a staging failure to
+ * itself, so it truly never rolls the mutation back (review P0.2 / F-P1.7-03).
  */
 final readonly class RecordsOutbox
 {
@@ -74,15 +78,18 @@ final readonly class RecordsOutbox
 
     /**
      * Run a recorder call, swallowing + logging any failure. Staging must never break
-     * the originating action; the event already committed (after-commit boundary), so
-     * a missed outbox row is a logged degradation, not a transaction failure.
+     * the originating action. The handler fires INSIDE the mutation transaction
+     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested DB::transaction): a
+     * failed staging statement rolls back to the savepoint — un-poisoning the outer
+     * transaction on PostgreSQL — instead of aborting the mutation's COMMIT. A missed
+     * outbox row is then a logged degradation, not a mutation rollback.
      *
      * @param callable(): mixed $record
      */
     private function safely(callable $record, string $event): void
     {
         try {
-            $record();
+            DB::transaction(fn (): mixed => $record());
         } catch (Throwable $exception) {
             Log::warning('Vaulter outbox staging failed; the originating action is unaffected.', [
                 'event' => $event,

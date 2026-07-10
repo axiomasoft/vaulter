@@ -9,8 +9,14 @@ use Vaulter\Models\Sharing\NodeShare;
 /**
  * A bearer share-link was minted on a node (§2.7 / M2c). Carries the persisted
  * NodeShare (token_hash only — never the raw token) and the actor who created it.
- * Dispatched INSIDE the mint transaction (F-P1.7-03) so the outbox/activity rows stage
- * atomically with the share — the listener sees the row the same transaction wrote.
+ *
+ * BREAKING CONTRACT (intentional, MAJOR — review P0.2 / F-P1.7-03): no longer
+ * ShouldDispatchAfterCommit; dispatched SYNCHRONOUSLY INSIDE the mint transaction so
+ * the outbox/activity rows stage atomically with the share — the listener sees the row
+ * the same transaction wrote. Listeners MUST be synchronous and idempotent — never a
+ * queued/after-commit side-effect off this event directly (drive that off the durable
+ * outbox relay). See NodeGrantCreated for the full rationale and the Pending-Work note
+ * on an additive after-commit signal.
  */
 final readonly class NodeShareCreated
 {

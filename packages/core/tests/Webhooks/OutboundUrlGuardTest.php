@@ -121,6 +121,39 @@ it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7
     Http::assertSentCount(1);
 });
 
+// ─────────────── reserved / multicast / unspecified ranges (review P0.2) ───────────────
+
+it('refuses the IPv6 unspecified address :: which routes to loopback on Linux, F-P1.7-01', function (): void {
+    // 0.0.0.0/8 blocked IPv4 "this-network" but its IPv6 twin `::` was a hole: [::]
+    // connects to loopback on Linux. The blocklist now carries ::/128.
+    fakeResolver()->set('unspec.test', ['::']);
+
+    expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://unspec.test/hook'))
+        ->toThrow(BlockedOutboundUrlException::class);
+});
+
+it('refuses the IPv4 limited-broadcast / reserved-future range, F-P1.7-01', function (): void {
+    // 255.255.255.255 and the whole 240.0.0.0/4 reserved block were unlisted.
+    fakeResolver()->set('bcast.test', ['255.255.255.255']);
+
+    expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://bcast.test/hook'))
+        ->toThrow(BlockedOutboundUrlException::class);
+});
+
+it('refuses IPv4 multicast addresses, F-P1.7-01', function (): void {
+    fakeResolver()->set('mcast4.test', ['224.0.0.1']);
+
+    expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://mcast4.test/hook'))
+        ->toThrow(BlockedOutboundUrlException::class);
+});
+
+it('refuses IPv6 multicast addresses, F-P1.7-01', function (): void {
+    fakeResolver()->set('mcast6.test', ['ff02::1']);
+
+    expect(fn () => app(OutboundUrlGuard::class)->isAllowed('https://mcast6.test/hook'))
+        ->toThrow(BlockedOutboundUrlException::class);
+});
+
 // ─────────────── guard unit ───────────────
 
 it('refuses a non-http(s) scheme, F-P1.7-01', function (): void {

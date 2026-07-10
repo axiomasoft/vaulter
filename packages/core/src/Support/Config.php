@@ -41,8 +41,11 @@ final class Config
     /**
      * The default closed set of ranges an outbound webhook must not resolve into
      * (§2.11 / N2): loopback, RFC-1918 private, link-local (incl. cloud metadata at
-     * 169.254.169.254), CGNAT, this-network, and their IPv6 equivalents. IPv4-mapped
-     * IPv6 is folded to IPv4 before the check, so the IPv4 entries cover it.
+     * 169.254.169.254), CGNAT, this-network, multicast, reserved/future-use (incl. the
+     * 255.255.255.255 limited-broadcast address, which lives inside 240.0.0.0/4), and
+     * their IPv6 equivalents — including the unspecified address `::`, which the kernel
+     * routes to loopback on Linux. IPv4-mapped IPv6 is folded to IPv4 before the check,
+     * so the IPv4 entries cover it.
      *
      * @var list<string>
      */
@@ -54,9 +57,13 @@ final class Config
         '169.254.0.0/16',
         '172.16.0.0/12',
         '192.168.0.0/16',
+        '224.0.0.0/4',
+        '240.0.0.0/4',
+        '::/128',
         '::1/128',
         'fc00::/7',
         'fe80::/10',
+        'ff00::/8',
     ];
 
     /**

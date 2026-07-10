@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Activity;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -26,8 +27,10 @@ use Vaulter\Events\Sharing\NodeShareRevoked;
  *
  * RESILIENCE (the originating action must never break for an audit failure): every
  * handler is wrapped so a recorder exception is logged and swallowed. The kernel events
- * now fire INSIDE the mutation transaction (F-P1.7-03), but because the failure is
- * swallowed a failed recording still can never roll back the action.
+ * now fire INSIDE the mutation transaction (F-P1.7-03), so the recorder call is wrapped
+ * in a SAVEPOINT: on PostgreSQL a failed statement poisons the whole transaction, and
+ * merely swallowing the exception would fail the mutation's COMMIT. The savepoint
+ * confines a recording failure so it still can never roll back the action.
  */
 final readonly class RecordsActivity
 {
@@ -69,15 +72,18 @@ final readonly class RecordsActivity
 
     /**
      * Run a recorder call, swallowing + logging any failure. Audit must never break
-     * the originating action; the event already committed (after-commit boundary),
-     * so a missed row is a logged degradation, not a transaction failure.
+     * the originating action. The handler fires INSIDE the mutation transaction
+     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested DB::transaction): a
+     * failed recording rolls back to the savepoint — un-poisoning the outer transaction
+     * on PostgreSQL — instead of aborting the mutation's COMMIT. A missed row is then a
+     * logged degradation, not a mutation rollback.
      *
      * @param callable(): mixed $record
      */
     private function safely(callable $record, string $event): void
     {
         try {
-            $record();
+            DB::transaction(fn (): mixed => $record());
         } catch (Throwable $exception) {
             Log::warning('Vaulter activity recording failed; the originating action is unaffected.', [
                 'event' => $event,
