@@ -166,6 +166,44 @@ final class NodeStoreRepository
     }
 
     /**
+     * Re-verify + row-lock the purge root at delete time (P2.2 review fix,
+     * TOCTOU). `PurgeTrashCommand` materialises purge candidates before opening
+     * a transaction; between that read and the transaction actually running, a
+     * concurrent `POST nodes/{id}/restore` can clear `trashed_at` on the same
+     * node (queue delay, a slow prior candidate in the same batch, or plain bad
+     * timing). Because purge is now irreversible (ADR-0016 / F-P1.12-02), acting
+     * on the stale pre-transaction node would physically delete live data the
+     * user just restored — including anything they added after restoring, since
+     * the purge transaction runs strictly after the restore commits.
+     *
+     * `lockForUpdate()` takes a row lock inside the caller's transaction, so a
+     * concurrent restore's UPDATE on the same row blocks until this transaction
+     * resolves (commit deletes the row so the restore affects zero rows;
+     * rollback lets the restore proceed normally). The `trashed_at` predicate is
+     * re-evaluated against the CURRENT row, not the pre-fetched one — a cleared
+     * `trashed_at` (restored) or a threshold no longer satisfied means this
+     * returns null and the caller must skip the purge for that subtree.
+     */
+    public function lockTrashedRoot(int|string|null $id, Carbon $threshold): ?Node
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        $model = Config::nodeModel();
+
+        /** @var Node|null $node */
+        $node = $model::query()
+            ->whereKey($id)
+            ->whereNotNull('trashed_at')
+            ->where('trashed_at', '<=', $threshold)
+            ->lockForUpdate()
+            ->first();
+
+        return $node;
+    }
+
+    /**
      * Repoint a file node's head after a new version is committed (§2.4): update
      * the head pointer plus the cached mime/size/extension in one write.
      */

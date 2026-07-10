@@ -88,6 +88,41 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
         ->and(DB::table('v_file_versions')->where('file_id', $fileId)->exists())->toBeFalse();
 });
 
+it('does not physically purge a node restored between candidate materialisation and the purge transaction, TOCTOU guard (P2.2 review fix)', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $node = $drive->createFolder('raced');
+
+    $drive->trash($node);
+    // Backdate past the retention window so it becomes a purge candidate.
+    $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+
+    $targetId = $node->getKey();
+    $restoredOnce = false;
+
+    // Fires when the candidate row is hydrated by PurgeTrashCommand's initial
+    // `trashedBefore()->get()` — i.e. strictly BEFORE the per-node purge
+    // transaction opens. Simulates the owning user calling `restore` in the
+    // TOCTOU window between candidate materialisation and the transaction that
+    // physically (and irreversibly, ADR-0016) deletes the subtree.
+    Node::retrieved(function (Node $model) use ($drive, $targetId, &$restoredOnce): void {
+        if ($restoredOnce || $model->getKey() !== $targetId) {
+            return;
+        }
+
+        $restoredOnce = true;
+        $drive->restore(Node::query()->whereKey($targetId)->firstOrFail());
+    });
+
+    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+
+    // The re-check + row-lock inside the purge transaction sees the CURRENT
+    // (restored) state and aborts the purge for this subtree — the node
+    // survives, live and un-trashed, instead of being physically deleted out
+    // from under the user who just restored it.
+    expect(Node::query()->whereKey($targetId)->exists())->toBeTrue()
+        ->and($node->refresh()->trashed_at)->toBeNull();
+});
+
 it('honours the --days override', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'tenday');
