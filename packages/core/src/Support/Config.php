@@ -67,6 +67,22 @@ final class Config
     ];
 
     /**
+     * The default closed allow-list of inline-safe download MIME types (P1.1 /
+     * F-P1.3-04, F-P1.11-03). No active-content type — no `text/html`,
+     * `image/svg+xml`, or `application/*+xml` — belongs here.
+     *
+     * @var list<string>
+     */
+    private const array DEFAULT_DOWNLOAD_INLINE_MIME_WHITELIST = [
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/webp',
+        'application/pdf',
+        'text/plain',
+    ];
+
+    /**
      * @return class-string<Storage>
      */
     public static function storageModel(): string
@@ -1136,6 +1152,34 @@ final class Config
         $length = is_numeric($value) ? (int) $value : 8;
 
         return max($length, 1);
+    }
+
+    /**
+     * The closed allow-list of MIME types a download may serve inline as-is
+     * (P1.1 / F-P1.3-04, F-P1.11-03) — every entry lower-cased. A declared
+     * `mime_type` outside this set is served as `application/octet-stream`
+     * regardless of what the uploader claimed. Deliberately narrow and WITHOUT
+     * any active-content type (`text/html`, `image/svg+xml`, `application/*+xml`):
+     * those stay off the default so a stored file can never render as HTML/JS on
+     * the app's own origin. Host-overridable via
+     * config('vaulter.downloads.inline_mime_whitelist').
+     *
+     * @return list<string>
+     */
+    public static function downloadInlineMimeWhitelist(): array
+    {
+        $default = self::DEFAULT_DOWNLOAD_INLINE_MIME_WHITELIST;
+        $configured = self::stringList(config('vaulter.downloads.inline_mime_whitelist', $default), $default);
+
+        $mimes = [];
+
+        foreach ($configured as $mime) {
+            if ($mime !== '') {
+                $mimes[] = strtolower($mime);
+            }
+        }
+
+        return $mimes === [] ? $default : array_values(array_unique($mimes));
     }
 
     /**

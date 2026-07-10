@@ -13,6 +13,7 @@ use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
+use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;
@@ -142,7 +143,7 @@ final class DownloadController extends Controller
             },
             name: $filename,
             headers: [
-                'Content-Type' => $contentType,
+                ...DownloadHeaders::forDeclaredMime($contentType),
                 'Content-Length' => (string) $blob->size_bytes,
             ],
         );

@@ -454,6 +454,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Download headers (P1.1 / F-P1.3-04, F-P1.11-03)
+    |--------------------------------------------------------------------------
+    | X-Content-Type-Options: nosniff is always set on a download response.
+    | `Content-Type` mirrors the file's declared mime_type ONLY when it is on this
+    | closed allow-list; anything else — including active-content types such as
+    | text/html or image/svg+xml — is served as application/octet-stream instead,
+    | so a stored file can never render inline as HTML/JS on the app's own origin.
+    */
+    'downloads' => [
+        'inline_mime_whitelist' => [
+            'image/png',
+            'image/jpeg',
+            'image/gif',
+            'image/webp',
+            'application/pdf',
+            'text/plain',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Trash purge (D17 / §2.10)
     |--------------------------------------------------------------------------
     | The retention window before a trashed node's subtree is permanently

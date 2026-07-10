@@ -212,6 +212,40 @@ it('streams a specific historical version', function (): void {
     expect($response->streamedContent())->toBe('first');
 });
 
+it('serves a text/html declared mime as octet-stream with nosniff, never the raw declared type (F-P1.3-04, F-P1.11-03)', function (): void {
+    // Force the streaming branch — the header hardening sits on the PHP-stream
+    // path (the presign-redirect branch is P1.2's scope, not this item's).
+    app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
+
+    $storage = driveStorage();
+
+    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+        'file' => UploadedFile::fake()->create('evil.txt', 1, 'text/html'),
+    ])->json('data.id');
+
+    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toBe('application/octet-stream')
+        ->and($response->headers->get('x-content-type-options'))->toBe('nosniff');
+});
+
+it('serves a whitelisted image/png declared mime as-is, with nosniff still set (F-P1.3-04)', function (): void {
+    app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
+
+    $storage = driveStorage();
+
+    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+        'file' => UploadedFile::fake()->create('photo.png', 1, 'image/png'),
+    ])->json('data.id');
+
+    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toBe('image/png')
+        ->and($response->headers->get('x-content-type-options'))->toBe('nosniff');
+});
+
 it('shows storage meta with root node id and quota accounting', function (): void {
     $storage = driveStorage();
 

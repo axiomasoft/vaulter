@@ -90,7 +90,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
-| P1 | W1 — Быстрые высоко-эксплуатируемые | 0/4 | ⬜ Not started |
+| P1 | W1 — Быстрые высоко-эксплуатируемые | 1/4 | 🟡 In progress |
 | P2 | W2 — Авторизация и изоляция | 0/3 | ⬜ Not started |
 | P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
@@ -129,3 +129,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-10 | plan-exec/sonnet | P0.2 закрыт: SSRF-guard на пути доставки webhook + encrypted-секрет + outbox-в-транзакции + единый re-dispatch + лимит тела (F-P1.7-01/02/03/05/06) — детали см. phases/P0.md P0.2 Completion Notes. |
 | 2026-07-10 | plan-exec/sonnet | P0.3 закрыт: лок сессии tus-PATCH + потоковый append + magic-bytes + temp+rename промоушен + SERIALIZABLE-sweepPending (F-P1.4-01/03/04/11, F-P1.5-01/02), коммит `69f589a`. Фаза P0 терминальна (3/3 🟢). Детали см. phases/P0.md P0.3 Completion Notes. |
 | 2026-07-10 | plan-design/opus | Фаза P1 (W1) развёрнута из скелета: 4 items детализированы, скелет-маркер снят, DoR закрыт. Несущие решения — D14/D15/D16. Свежей внешней RAG не требовалось (нормы W1 унаследованы из AUDIT-VLT). |
+| 2026-07-10 | plan-exec/sonnet | P1.1 закрыт: общий helper `DownloadHeaders` (nosniff безусловно + whitelist Content-Type) на обоих PHP-stream-швах раздачи (F-P1.3-04, F-P1.11-03) — детали см. phases/P1.md P1.1 Completion Notes. |

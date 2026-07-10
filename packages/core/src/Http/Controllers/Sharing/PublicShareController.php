@@ -18,6 +18,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
+use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;
@@ -224,7 +225,7 @@ final class PublicShareController extends Controller
             },
             name: $filename,
             headers: [
-                'Content-Type' => $contentType,
+                ...DownloadHeaders::forDeclaredMime($contentType),
                 'Content-Length' => (string) $blob->size_bytes,
             ],
         );
