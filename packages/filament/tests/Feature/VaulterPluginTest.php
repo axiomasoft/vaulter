@@ -46,3 +46,33 @@ it('respects a disabled resource toggle', function (): void {
     expect($panel->getResources())->not->toContain(ActivityResource::class)
         ->and($panel->getResources())->toContain(NodeResource::class);
 });
+
+/*
+ * VLT-REMED P3.1 (F-P1.10-03, D13) — ActivityResource is now ALSO gated on the
+ * core 'activity' feature flag, on top of its own default-on config toggle.
+ * Red-before-fix (D7): before this item, resourceEnabled() consulted ONLY
+ * config('vaulter-filament.resources.activity') (default true) — a host that
+ * disabled the CORE 'activity' feature (config('vaulter.features.activity',
+ * false)) but never touched the Filament toggle still got ActivityResource
+ * registered against a subsystem it turned off. This assertion FAILS on the
+ * pre-fix code (ActivityResource stays registered).
+ */
+it('drops ActivityResource when the core activity feature is off, even with its own toggle left on, F-P1.10-03', function (): void {
+    config()->set('vaulter.features.activity', false);
+
+    $panel = Panel::make()->id('probe-activity-off');
+    VaulterPlugin::make()->register($panel);
+
+    expect($panel->getResources())->not->toContain(ActivityResource::class)
+        ->and($panel->getResources())->toContain(NodeResource::class)
+        ->and($panel->getResources())->toContain(StorageResource::class);
+});
+
+it('control: ActivityResource registers when the core activity feature is on (default), F-P1.10-03', function (): void {
+    expect(config('vaulter.features.activity'))->toBeTrue();
+
+    $panel = Panel::make()->id('probe-activity-on');
+    VaulterPlugin::make()->register($panel);
+
+    expect($panel->getResources())->toContain(ActivityResource::class);
+});

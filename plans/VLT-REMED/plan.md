@@ -92,7 +92,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
-| P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
+| P3 | W3 — Надстройки и интеграция | 1/6 | 🟡 In progress |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
 
@@ -143,3 +143,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P2.2 закрыт (🟢): item-safety trash-check на download/content/export (F-P1.12-01), физический purge с FK-каскадом версий (F-P1.12-02, PG-верифицирован), снятие `keep_forever` (F-P1.12-03), ADR-0016 — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | P2.3 закрыт (🟢): скоуп Filament-листингов + tenant-footgun-guard + dedup-докблоки (F-P1.10-01/02, F-P1.9-01/02, F-P1.5-03) — детали см. phases/P2.md P2.3 Completion Notes. Фаза P2 ТЕРМИНАЛЬНА (🟠, P2.1 несёт routing-отклонение). |
 | 2026-07-11 | plan-design/opus | Фаза P3 (W3) развёрнута из скелета: 6 items (18 находок), DoR закрыт, ребро B11→B4 закодировано как gate P3.1→P3.2. Несущие решения D20/D21; Routing — дефолт sonnet/medium — детали см. phases/P3.md. |
+| 2026-07-11 | plan-exec/sonnet | P3.1 закрыт (🟢): собственный флаг `features.collaboration` (дефолт false) гейтит все collab-пути (И-условие с `document_versions`); дефолт-транспорт выровнен (гайд+ADR-0001 Amendment+мёртвый fallback); README помечает пять opt-in; `ActivityResource` гейтится на core-флаг `activity` (F-P1.6-01, F-P3.6-01, F-P2.5-06, F-P1.10-03) — детали см. phases/P3.md P3.1 Completion Notes. Гейт волны P3.1→P3.2 (B11→B4) снят — P3.2 может исполняться.

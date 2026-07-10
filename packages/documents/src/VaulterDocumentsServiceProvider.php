@@ -123,15 +123,18 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
      * Authorize the private collaboration room channel (channel_prefix.{id}). The
      * room id is a NODE id (M4b): a kind=document node authorizes through the
      * Vaulter-owned AccessResolver (Ability::View to connect at all; read-only vs
-     * writable is encoded in the issued session, not the channel). Gated on the
-     * 'document_versions' feature. The Reverb transport authenticates the socket
-     * here; there is no separate room token.
+     * writable is encoded in the issued session, not the channel). Gated on BOTH the
+     * 'document_versions' feature AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
+     * D13/D20) — the realtime channel is a separate opt-in over base document
+     * editing. The Reverb transport authenticates the socket here; there is no
+     * separate room token.
      */
     private function registerBroadcastChannel(): void
     {
         Broadcast::channel(
             Config::channelPrefix().'.{roomId}',
             static fn (Authenticatable $user, int|string $roomId): bool => Config::featureEnabled('document_versions')
+                && Config::collaborationEnabled()
                 && self::authorizeNodeRoom($user, $roomId),
         );
     }

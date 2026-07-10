@@ -12,6 +12,7 @@ use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Resources\StorageResource;
+use Vaulter\Support\Config;
 
 /**
  * Vaulter Filament plugin (Filament 5).
@@ -70,25 +71,37 @@ final class VaulterPlugin implements Plugin
     }
 
     /**
-     * The resource classes to register, each gated by its config toggle (default
-     * on) — the Drive/permissions domain over the unified v_nodes tree.
+     * The resource classes to register, each gated by its OWN config toggle
+     * (default on — the Drive/permissions domain over the unified v_nodes tree) AND,
+     * where the resource's schema is behind a core SUBSYSTEM feature flag (one that a
+     * host may disable independently of its own resource toggle), that flag too
+     * (VLT-REMED P3.1 / F-P1.10-03, D13). Only `activity` qualifies today: `storage`/
+     * `node` have no corresponding feature (storages/nodes are the unconditional
+     * schema roots), and `grant`/`share` map to `grants`/`share_links` — both
+     * consulted by `PanelTablesBuilder::entityEnabled()` for DYNAMICALLY-built
+     * per-panel schemas, but the package's OWN static migrations always create
+     * `v_node_grants`/`v_node_shares` unconditionally (only the ROUTES/UI are
+     * feature-gated for them) — gating those two resources here would hide them by
+     * default (`share_links` defaults `false`) with no missing-table risk to guard
+     * against, which is not this finding's failure mode.
      *
      * @return array<int, class-string>
      */
     private function enabledResources(): array
     {
         $candidates = [
-            'storage' => StorageResource::class,
-            'node' => NodeResource::class,
-            'grant' => NodeGrantResource::class,
-            'share' => NodeShareResource::class,
-            'activity' => ActivityResource::class,
+            // key => [resource class, core feature flag the schema needs (null = none)]
+            'storage' => [StorageResource::class, null],
+            'node' => [NodeResource::class, null],
+            'grant' => [NodeGrantResource::class, null],
+            'share' => [NodeShareResource::class, null],
+            'activity' => [ActivityResource::class, 'activity'],
         ];
 
         $resources = [];
 
-        foreach ($candidates as $key => $class) {
-            if ($this->resourceEnabled($key)) {
+        foreach ($candidates as $key => [$class, $feature]) {
+            if ($this->resourceEnabled($key, $feature)) {
                 $resources[] = $class;
             }
         }
@@ -97,14 +110,25 @@ final class VaulterPlugin implements Plugin
     }
 
     /**
-     * Whether a resource is enabled (config('vaulter-filament.resources.{key}'),
-     * default true) — mirrors the existing config-driven pattern so a host may turn
-     * off a surface it does not use.
+     * Whether a resource is enabled: its OWN config toggle
+     * (config('vaulter-filament.resources.{key}'), default true) AND — when the
+     * resource's schema is behind a core feature flag — that flag
+     * (`Config::featureEnabled()`). Without the AND-condition, a host that disabled
+     * the `activity` subsystem but left `ActivityResource`'s own default-on toggle
+     * untouched would keep the resource registered against a subsystem it turned
+     * off, turning a legitimate "subsystem off" configuration into a broken
+     * navigation entry instead of the resource simply not appearing (F-P1.10-03,
+     * D13: optional subsystems must degrade, not crash).
      */
-    private function resourceEnabled(string $key): bool
+    private function resourceEnabled(string $key, ?string $feature): bool
     {
         $value = config("vaulter-filament.resources.{$key}", true);
+        $toggledOn = is_bool($value) ? $value : true;
 
-        return is_bool($value) ? $value : true;
+        if (!$toggledOn) {
+            return false;
+        }
+
+        return $feature === null || Config::featureEnabled($feature);
     }
 }

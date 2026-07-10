@@ -27,19 +27,21 @@ Yjs is the source of truth either way; only the transport differs.
 
 | Driver | Transport | Extra service? | Auth model |
 |---|---|---|---|
-| **`reverb`** (default) | Yjs over Laravel Reverb (private broadcast channel) | None — pure Laravel | Laravel channel-auth gates the subscription |
-| **`hocuspocus`** | External Node Hocuspocus hub (`hocuspocus-server/`) | A Node service | A signed room JWT + server-to-server webhooks |
+| **`hocuspocus`** (default) | External Node Hocuspocus hub (`hocuspocus-server/`) | A Node service | A signed room JWT + server-to-server webhooks |
+| **`reverb`** (deprecated for Yjs) | Yjs over Laravel Reverb (private broadcast channel) | None — pure Laravel | Laravel channel-auth gates the subscription |
 
 Select one with `config('vaulter.collaboration.driver')` (or the `VAULTER_COLLAB_DRIVER`
 env var). The driver class map is keyed by the `CollaborationDriverType` enum
 (`reverb` / `hocuspocus`), so the manager refuses an unknown value with a clear error
 rather than a silent fallback.
 
-::: tip Start with Reverb
-The default `reverb` driver needs **no extra service**. The Hocuspocus hub is only worth
-deploying when you want a dedicated Node collaboration server (heavier rooms, presence at
-scale, or a transport you already run). You can switch later by config alone — the wire
-shape the Vue client consumes is identical.
+::: tip Start with Hocuspocus
+The default `hocuspocus` driver is the recommended collaborative-editing transport (see
+[Hocuspocus Server](./hocuspocus-server) to deploy the hub) — it is the only path with
+server-side content-gating and a real read-only guarantee on the socket. `reverb` relays
+peer client-events without server-side content gating, so it cannot enforce read-only on
+the socket nor debounce persistence the way a Yjs backend does; it is kept only for
+backward compatibility.
 :::
 
 ## Config
@@ -49,7 +51,7 @@ All keys live under `config('vaulter.collaboration')`:
 ```php
 // config/vaulter.php
 'collaboration' => [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'),   // reverb | hocuspocus
+    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus | reverb
     'channel_prefix' => 'vaulter.documents',              // room namespace
     'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
 
@@ -68,7 +70,7 @@ All keys live under `config('vaulter.collaboration')`:
 
 | Key | Env | Default | Purpose |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `reverb` | Active transport (`reverb` \| `hocuspocus`). |
+| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus` \| `reverb`). |
 | `collaboration.channel_prefix` | — | `vaulter.documents` | Room namespace. A room is **always** `channel_prefix.nodeId`. |
 | `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret the Hocuspocus hub presents on the webhooks. When unset, the webhook surface accepts a valid signed room JWT only — it is **never open**. |
 | `collaboration.drivers.reverb.connection` | `VAULTER_COLLAB_CONNECTION` | `reverb` | The Laravel broadcast connection the Vue Echo client opens. |
@@ -76,11 +78,16 @@ All keys live under `config('vaulter.collaboration')`:
 | `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints the room JWT with **and** verifies an incoming JWT against. Required for the Hocuspocus path. |
 | `collaboration.drivers.hocuspocus.token_ttl` | — | `3600` | Lifetime (seconds) of a minted room JWT. |
 
-::: warning Feature gate
-The node-collaboration endpoints — both `nodes/{node}/collab/token` and the
-`collab/authenticate` / `collab/store` webhooks — only mount when the
-**`document_versions`** feature is enabled (the `v_node_document_versions` schema). If a
-collab call 404s, check `config('vaulter.features.document_versions')`.
+::: warning Feature gate — TWO flags, both required
+The node-collaboration endpoints — `nodes/{node}/collab/token`, the
+`collab/authenticate` / `collab/store` webhooks, and the private broadcast channel — only
+mount when **both** `document_versions` (the `v_node_document_versions` schema base
+editing needs) **and** `collaboration` (VLT-REMED P3.1 — the SEPARATE opt-in for the
+realtime surface) are enabled. `document_versions` alone gives you non-realtime document
+editing (content GET/PATCH, named versions) with **no** collab attack surface at all — a
+host that wants "TipTap without realtime" enables only `document_versions`. If a collab
+call 404s, check `config('vaulter.features.document_versions')` **and**
+`config('vaulter.features.collaboration')` (both default `false`).
 :::
 
 ## The connect flow

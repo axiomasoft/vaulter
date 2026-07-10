@@ -187,6 +187,18 @@ return [
         'document_versions' => false,
         'spreadsheets' => false,
 
+        // Realtime collaboration (VLT-REMED P3.1 / F-P1.6-01, D13/D20). A SEPARATE
+        // opt-in from 'document_versions': 'document_versions' alone gates the
+        // NON-realtime editing surface (content GET/PATCH, named versions/restore) —
+        // "TipTap without realtime" is meant to be reachable on its own. 'collaboration'
+        // additionally gates the Node/Yjs realtime surface (collab/token,
+        // collab/authenticate, collab/store, the broadcast channel, the collab
+        // driver registration): both flags must be on for the realtime routes to
+        // mount (document_versions && collaboration). Default false — a host that
+        // already relies on realtime collab MUST flip this to true after upgrading
+        // (breaking change, see UPGRADE.md).
+        'collaboration' => false,
+
         'public_listing' => false,
         'reliability' => true,
     ],

@@ -53,11 +53,16 @@ Route::prefix(Config::routePrefix())
                 Route::patch('nodes/{node}/document-versions/{version}/keep-forever', [DocumentNodeController::class, 'releaseVersion']);
                 Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
                 Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
+            }
 
-                // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
-                // authorized via the AccessResolver (≥ View/Comment to connect,
-                // read-only unless Edit), returning the transport-agnostic
-                // CollaborationSessionData descriptor.
+            // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
+            // authorized via the AccessResolver (≥ View/Comment to connect, read-only
+            // unless Edit), returning the transport-agnostic CollaborationSessionData
+            // descriptor. Gated on BOTH 'document_versions' (the schema the session
+            // reads/writes against) AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
+            // D13/D20) — the realtime surface is a SEPARATE opt-in over base
+            // (non-realtime) document editing, not implied by it.
+            if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
                 Route::post('nodes/{node}/collab/token', [NodeCollaborationController::class, 'token']);
             }
 
@@ -89,8 +94,10 @@ Route::prefix(Config::routePrefix())
         | Gated on the 'document_versions' feature. Rate-limited (P1.3 / F-P1.8-01) by
         | the package's own `vaulter-public` named limiter (keyed by requester IP) —
         | throttle runs BEFORE ResolveCollaborationCall.
+        | Gated on BOTH 'document_versions' AND 'collaboration' (VLT-REMED P3.1 /
+        | F-P1.6-01, D13/D20) — see the collab/token gate above for why.
         */
-        if (Config::featureEnabled('document_versions')) {
+        if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
             Route::middleware(['throttle:vaulter-public', ResolveCollaborationCall::class])->group(static function (): void {
                 Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
                 Route::post('collab/store', [NodeCollaborationController::class, 'store']);

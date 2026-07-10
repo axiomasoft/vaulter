@@ -6,6 +6,52 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Realtime collaboration now needs its OWN feature flag; ActivityResource degrades instead of registering against a disabled subsystem (P3.1 / F-P1.6-01, F-P1.10-03)
+
+**What changed.**
+
+1. **A new flag, `config('vaulter.features.collaboration')` (default `false`), now gates the
+   entire realtime-collaboration surface** — `POST nodes/{node}/collab/token`, the
+   `collab/authenticate`/`collab/store` server-to-server webhooks, the private broadcast
+   channel authorization, and the `ResolveCollaborationCall` middleware group. Previously all
+   of this was gated ONLY by `features.document_versions`, so any host with document editing
+   on automatically shipped the entire realtime/Node/webhook attack surface, whether or not it
+   used collaboration. The two flags are now independent and BOTH must be `true` for the
+   realtime routes to mount (`document_versions && collaboration`); `document_versions` alone
+   continues to gate the non-realtime editing surface (`content` GET/PATCH, named
+   versions/restore) exactly as before.
+
+   **Who is affected.** Any host with `features.document_versions => true` that relies on
+   realtime collaboration (Yjs sessions, the collab-token handshake, the Hocuspocus/Reverb
+   webhooks).
+
+   **What you must do.** Set `config('vaulter.features.collaboration', true)` (or
+   `VAULTER_COLLAB_ENABLED`-style env wiring in your own config, if you introduce one) after
+   upgrading — otherwise every collab endpoint starts 404ing. A host that only edits documents
+   without realtime sync needs no change (it never relied on the collab endpoints, and now
+   also no longer ships their surface).
+
+2. **`ActivityResource` (Filament) is now ALSO gated on the core `activity` feature flag**, on
+   top of its own existing `config('vaulter-filament.resources.activity')` toggle (default
+   `true`). Previously the plugin consulted only its own toggle, so a host that disabled the
+   core `activity` subsystem (`config('vaulter.features.activity', false)`) but left the
+   Filament toggle untouched kept `ActivityResource` registered against a subsystem it had
+   turned off (F-P1.10-03). This is a footgun/degradation fix, not a security fix: a host
+   running with `features.activity` at its default (`true`) sees no change.
+
+   **Who is affected.** Hosts that disabled `features.activity` while keeping the Filament
+   plugin's `activity` resource toggle at its default `true` — `ActivityResource` now simply
+   does not register (matching every other core-flag-gated Filament surface), instead of
+   appearing in navigation.
+
+**Docs corrected alongside this change (no code/behaviour impact):** the collaboration guide
+and `ADR-0001` now correctly state `hocuspocus` (not `reverb`) as the default transport —
+this ONLY affects documentation and a dead code-level fallback
+(`Config::collaborationDriverName()`); the actual config default (`config/vaulter.php:755`)
+was already `hocuspocus` and is unchanged (F-P3.6-01).
+
+No database migration is required for either change in this section.
+
 ### Four Filament resources now scope their listing; PanelActor resolves through the panel's own guard; a boot-time guard throws on a tenancy footgun (P2.3 / F-P1.10-01, F-P1.10-02, F-P1.9-01)
 
 **What changed.**

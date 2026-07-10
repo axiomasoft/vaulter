@@ -23,7 +23,8 @@ use Vaulter\ValueObjects\Documents\TipTapContent;
  *
  * Поднимается ТОЛЬКО под `testbench serve` (см. testbench.yaml) — боевой пакет его не
  * грузит. Делает три вещи:
- *   1. Включает фичу document_versions и database-драйвер прав, фиксирует bigint-id —
+ *   1. Включает фичи document_versions И collaboration (P3.1 — realtime теперь отдельный
+ *      опт-ин поверх document_versions) и database-драйвер прав, фиксирует bigint-id —
  *      чтобы маршруты collab/token + вебхуки collab/{authenticate,store} были смонтированы,
  *      а гранты реально резолвились (register() — раньше boot, где гейтятся маршруты).
  *   2. Подмешивает тестовую аутентификацию (E2eActingAs) в группу vaulter-маршрутов.
@@ -38,6 +39,10 @@ final class E2eServiceProvider extends ServiceProvider
         // Должно встать ДО boot VaulterServiceProvider, где маршруты гейтятся по фиче.
         config([
             'vaulter.features.document_versions' => true,
+            // P3.1 (F-P1.6-01, D20): the realtime surface now needs its OWN opt-in
+            // ON TOP of document_versions — the e2e stand exercises collab/token +
+            // the webhooks, so it must flip this too (default false).
+            'vaulter.features.collaboration' => true,
             'vaulter.drivers.permission' => 'database',
             'vaulter.ids.default' => 'bigint',
             'vaulter.middleware' => ['api', E2eActingAs::class],

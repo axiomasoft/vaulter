@@ -960,9 +960,22 @@ final class Config
 
     public static function collaborationDriverName(): string
     {
-        $value = config('vaulter.collaboration.driver', 'reverb');
+        $value = config('vaulter.collaboration.driver', 'hocuspocus');
 
-        return is_string($value) ? $value : 'reverb';
+        return is_string($value) ? $value : 'hocuspocus';
+    }
+
+    /**
+     * Whether the realtime-collaboration surface is enabled (VLT-REMED P3.1 /
+     * F-P1.6-01, D20) — the SEPARATE opt-in flag gating collab/token,
+     * collab/authenticate, collab/store, the broadcast channel and the collab
+     * driver registration, on top of (never instead of) 'document_versions'. A
+     * thin alias over {@see featureEnabled()} so callers do not spell the feature
+     * name out.
+     */
+    public static function collaborationEnabled(): bool
+    {
+        return self::featureEnabled('collaboration');
     }
 
     public static function channelPrefix(): string
