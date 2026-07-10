@@ -90,7 +90,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
-| P1 | W1 — Быстрые высоко-эксплуатируемые | 2/4 | 🟡 In progress |
+| P1 | W1 — Быстрые высоко-эксплуатируемые | 3/4 | 🟡 In progress |
 | P2 | W2 — Авторизация и изоляция | 0/3 | ⬜ Not started |
 | P3 | W3 — Надстройки и интеграция | 0/6 | ⬜ Not started |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
@@ -131,3 +131,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-10 | plan-design/opus | Фаза P1 (W1) развёрнута из скелета: 4 items детализированы, скелет-маркер снят, DoR закрыт. Несущие решения — D14/D15/D16. Свежей внешней RAG не требовалось (нормы W1 унаследованы из AUDIT-VLT). |
 | 2026-07-10 | plan-exec/sonnet | P1.1 закрыт: общий helper `DownloadHeaders` (nosniff безусловно + whitelist Content-Type) на обоих PHP-stream-швах раздачи (F-P1.3-04, F-P1.11-03) — детали см. phases/P1.md P1.1 Completion Notes.
 | 2026-07-10 | plan-exec/sonnet | P1.2 закрыт: убран presign-обход раздачи, issuer-re-check в ShareResolver, дефолтный/max TTL ссылок, опаковка публичного node-id (F-P1.3-01/02/03/05) — детали см. phases/P1.md P1.2 Completion Notes. |
+| 2026-07-10 | plan-exec/sonnet | P1.3 закрыт: именованные throttle-лимитеры пакета (`vaulter-public`/`vaulter-uploads`), кап активных upload-сессий, O(1) памоизация storage в листингах, документированный offset-контракт ленты `shared` (F-P1.8-01, F-P1.4-09, F-P4.2-03, F-P4.2-04) — детали см. phases/P1.md P1.3 Completion Notes. |
