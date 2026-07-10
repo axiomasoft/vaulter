@@ -62,3 +62,23 @@ Append-only. Каждый audit-item дописывает свои находк�
 | F-P1.12-01 | P1.12 | Major | high | Узел в корзине остаётся скачиваемым и экспортируемым (trash не влияет на авторизацию) | `VaulterServiceProvider.php:195-199` | G4.1; S3.1; C1 |
 | F-P1.12-02 | P1.12 | Major | high | Force-delete/purge никогда не удаляет строки физически: контент версий остаётся в БД навсегда | `ForceDeleteNodeAction.php:41-72` | G4.2; ADR-0006 |
 | F-P1.12-03 | P1.12 | Minor | high | `keep_forever` невозможно снять: закреплённая версия никогда не попадёт в prune | `DocumentNodeController.php:137-149` | G4.2; C6 |
+| F-P2.1-01 | P2.1 | Minor | high | Докблок фасада не покрывает 5 из 12 публичных методов манагера | `Facades/Vaulter.php:11-17` | P2.1 C3 |
+| F-P2.1-02 | P2.1 | Major | high | Reference-доки описывают публичный API, удалённый ADR-0014 | `docs/reference/facade.md:36,109-126`; `docs/reference/contracts.md:38-53,285-304` | P2.1 C13 |
+| F-P2.1-03 | P2.1 | Minor | high | `docs/reference/contracts.md` не перечисляет 7 существующих публичных контрактов | `docs/reference/contracts.md:15-32` | P2.1 C13 |
+| F-P2.1-04 | P2.1 | Nit | high | Namespace `UploadProtocolHandler` в доке не совпадает с кодом | `docs/reference/contracts.md:419-442` vs `UploadProtocolHandler.php:5` | P2.1 C13 |
+| F-P2.1-05 | P2.1 | Minor | high | Статический реестр-кеш вне фасада | `EnumCaseAttributeResolver.php:18,26-43` | P2.1 C7 / E3.3 |
+| F-P2.1-06 | P2.1 | Major | high | Split PHP-пакеты (Packagist-артефакт) не получают ни один CHANGELOG | `.github/workflows/monorepo-split.yml:36-41`; `.changeset/config.json:6,9` | P2.1 C10; E4.4 |
+| F-P2.1-07 | P2.1 | Minor | high | Политика депрекации не объявлена | `ReverbNodeCollaborationDriver.php:16`; `config/vaulter.php:118,559` | P2.1 C12 / E4.4 |
+| F-P2.2-01 | P2.2 | Major | high | `VaulterDocumentsServiceProvider` обходит `mergeConfigFrom`, читает файл с диска на каждый запрос | `VaulterDocumentsServiceProvider.php:59-73` | PT4.2; service-provider.md |
+| F-P2.2-02 | P2.2 | Major | high | `runsMigrations()`+`discoversMigrations()`: публикация после автозапуска ведёт к повторному прогону под новым именем | `VaulterServiceProvider.php:39-40`; `docs/guide/installation.md:75-80` | PT2.2 |
+| F-P2.3-02 | P2.3 | Major | high | Соединение БД (`connection`) не параметризовано: таблицы Vaulter нельзя вынести в отдельную БД | `Schema/PanelTablesBuilder.php`; `Models/Drive/Node.php` | E2.3 |
+| F-P2.3-04 | P2.3 | Minor | high | Политика изменения схемы для будущих версий не объявлена | `docs/guide/database-compatibility.md` | P2.3 C12 |
+| F-P2.4-01 | P2.4 | Major | high | Документация advertises мёртвый config-ключ `permission_resolver`; реальный хост (FlexCRM) написал нерабочую интеграцию против него | `docs/guide/configuration.md:189`; `config/vaulter.php` (ключ отсутствует) | P2.4 C9/C10 |
+| F-P2.5-01 | P2.5 | Major | high | `vaulter:prune-webhooks` полностью отсутствует в `docs/reference/commands.md` | `docs/reference/commands.md:9-24`; `PruneWebhooksCommand.php:1-58` | P0-audit-gaps §1#13 |
+| F-P2.5-02 | P2.5 | Major | high | `docs/reference/rest-api.md` пропускает 5 реальных маршрутов Drive-поверхности (`shared`, `nodes/{node}/comments` ×4) | `docs/reference/rest-api.md` | P0-audit-gaps §1#13; P2.5 C8 |
+| F-P2.5-03 | P2.5 | Major | high | 9 из 15 ссылок «Docs:» в исключениях ведут на несуществующие якоря `docs/guide/errors.md`; один документированный якорь — для удалённого класса | `VaulterException.php:14-17`; `docs/guide/errors.md:1-49` | P2.5 C9 |
+| F-P2.5-04 | P2.5 | Minor | high | README формулирует `vaulter:install` как «publishes config + migrations, runs them», хотя миграции только предлагается запустить | `README.md:53` | — |
+| F-P2.5-05 | P2.5 | Minor | high | `gc.orphan_grace_hours` не задокументирован в `docs/reference/configuration.md` | `config/vaulter.php:405-408`; `docs/reference/configuration.md:283-287` | P2.5 C7 |
+| F-P2.5-06 | P2.5 | Major | high | README рекламирует пять фиче-флагованных возможностей как готовые к использованию, не упоминая, что все пять выключены по умолчанию | `README.md:17-38`; `config/vaulter.php:171-198` | P2.5 C10; E7.1 |
+| F-P2.5-07 | P2.5 | Major | high | `@vaulter/vue`: `yjs` и `@tiptap/pm` в `dependencies` вместо `peerDependencies` (dual-instance риск); `version: "0.0.0"` не готова к публикации | `packages/vue/package.json:3,51-57` | P2.5 C12 |
+| F-P2.5-08 | P2.5 | Minor | high | `CONTRIBUTING.md` заявляет «PHPStan (level 8)», а `phpstan.neon` задаёт `level: max` | `CONTRIBUTING.md:29`; `phpstan.neon:5` | P2.5 C13 |

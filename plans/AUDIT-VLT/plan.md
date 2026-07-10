@@ -89,7 +89,7 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 |:--|:--|:--|:--|
 | P0 | Research & Baseline | 3/3 | 🟢 Done |
 | P1 | Безопасность | 1/12 | 🟠 Done with deviations |
-| P2 | Встраиваемость и DX | 0/5 | ⬜ Not started |
+| P2 | Встраиваемость и DX | 0/5 | 🟠 Done with deviations |
 | P3 | Гибкость и расширяемость | 0/6 | ⬜ Not started |
 | P4 | Качество и производительность | 0/5 | ⬜ Not started |
 | P5 | Синтез и ремедиация | 0/3 | ⬜ Not started |
@@ -136,3 +136,4 @@ multipart), realtime-collab (Yjs/Hocuspocus), исходящие webhook чер�
 | 2026-07-10 | phase-close/sonnet | Фаза P1 закрыта (P1.1 🟢, P1.2–P1.12 🟠): 53 находки в REGISTER (3 Blocker, 18 Major, 30 Minor, 2 Nit); F-P1.1-03 опровергнута верификацией. План остаётся 🟡 In progress (D7 — открытые Blocker'ы). |
 | 2026-07-10 | issue-planner/opus | Фаза P2 развёрнута из скелета: 5 items с закрытыми чеклистами (C1–C13), DoR закрыт. Design-time RAG → `findings/P2-package-tools.md` (PT1–PT6). Решения D20, D21. |
 | 2026-07-10 | issue-planner/opus | Workflow расширен до сквозного прогона P0–P5 (probe → design+DoR → items волнами → ревью честности → код-ревью доказательств → adversarial verify → close) и перенесён в `plans/AUDIT-VLT/audit-vlt.js` (артефакт плана, а не хоста; запуск по `scriptPath`). |
+| 2026-07-10 | phase-close/sonnet | Фаза P2 закрыта (P2.1–P2.5 🟠): 20 находок в REGISTER (12 Major, 7 Minor, 1 Nit); F-P2.3-01/03 опровергнуты верификацией. |
