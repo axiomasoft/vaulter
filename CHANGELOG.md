@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   standardised on **Hocuspocus** (Reverb is now for notifications, not collaboration). The
   release artifacts are the split Composer packages `vaulter-core`, `vaulter-filament`,
   `vaulter-permissions-azgard` and the npm package `@vaulter/vue`.
+- **BREAKING (pre-1.0, MAJOR): `NodeGrantCreated`, `NodeGrantRevoked`, `NodeShareCreated` and
+  `NodeShareRevoked` are no longer deferred to commit** (security remediation P0.2 / F-P1.7-03).
+  All four events dropped `ShouldDispatchAfterCommit` and are now dispatched **synchronously
+  inside the grant/share mutation's database transaction**, so the outbox and activity rows stage
+  atomically with the mutation — closing a crash window where a committed grant/share could lose
+  its outbox/activity row. Consequence for listeners: a listener on any of these four events now
+  runs **inside the still-open transaction**. It **must be synchronous and idempotent**; a
+  `ShouldQueue` listener, or one that assumes an after-commit guarantee, can now run against a
+  mutation that is later rolled back, or race the transaction outright. Drive queued or
+  after-commit side-effects off the durable outbox/webhook relay instead of off these events
+  directly. See `UPGRADE.md` for migration guidance.
 
 ### Removed
 - **BREAKING (pre-1.0): the CAS engine moved out of `vaulter-core` into the new standalone package
