@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -278,3 +279,77 @@ it('maps each ability to the right required bits', function (
     'owner can share' => [GrantLevel::Owner, Ability::Share, true],
     'owner can manage' => [GrantLevel::Owner, Ability::Manage, true],
 ]);
+
+// ── F-P1.1-01: the inherit_grants=false wall is NOT an absolute deny barrier — a
+// nearer allow BELOW it pierces a deny sitting ON it (ADR-0007, no wall exception).
+// This pins the ACTUAL ADR-0007 behaviour so the corrected docblocks can never drift
+// back to the old "un-overridable wall" claim without turning this red. Behaviour is
+// unchanged (D17/D19: characterization/green, red-before structurally inapplicable).
+it('lets a nearer allow pierce a deny sitting ON the inherit_grants=false wall (ADR-0007), F-P1.1-01', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $top = AccessTestHelpers::folder($storage, null, 'top');
+    // The wall carries a subtree DENY and severs inheritance from above.
+    $wall = AccessTestHelpers::folder($storage, $top, 'wall', inheritGrants: false);
+    $mid = AccessTestHelpers::folder($storage, $wall, 'mid');
+    $target = AccessTestHelpers::folder($storage, $mid, 'target');
+
+    // Deny READ (subtree) ON the wall itself…
+    AccessTestHelpers::grant($wall, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Subtree);
+    // …pierced by a NEARER allow READ (subtree) on mid, between target and wall.
+    AccessTestHelpers::grant($mid, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Subtree);
+
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $target))->toBeTrue();
+});
+
+// ── F-P1.1-01: the corrected docblocks must not re-assert the false "un-overridable
+// wall / can ever pierce" guarantee (guard against doc drift back to the finding).
+it('AccessResolver docblocks no longer claim an un-overridable wall, F-P1.1-01', function (): void {
+    $file = (new ReflectionClass(AccessResolver::class))->getFileName();
+    $source = file_get_contents($file);
+
+    expect($source)->not->toContain('un-overridable wall')
+        ->and($source)->not->toContain('can ever pierce');
+});
+
+// ── F-P1.1-02: explain() surfaces the deciding ACE chain + depth + reason for a
+// deny-vetoed ability (red-before: the method does not exist prior to the fix).
+it('explain() returns the deciding ACE chain and reason for a deny-vetoed ability, F-P1.1-02', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $parent = AccessTestHelpers::folder($storage, null, 'parent');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child');
+
+    // Farther allow on the parent, nearer deny on the child → Edit is denied by veto.
+    AccessTestHelpers::grant($parent, GrantLevel::Writer, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($child, GrantLevel::Writer, effect: Effect::Deny, scope: GrantScope::Item);
+
+    $explanation = resolver()->explain(AccessTestHelpers::user(), Ability::Edit, $child);
+
+    expect($explanation->allowed)->toBeFalse()
+        ->and($explanation->reason)->toBe(AccessExplanation::REASON_DENY_VETO)
+        ->and($explanation->ability)->toBe(Ability::Edit)
+        ->and($explanation->aces)->toHaveCount(2);
+
+    // The deciding deny ACE sits at depth 0 (the child itself); the allow at depth 1.
+    $denyAce = collect($explanation->aces)->firstWhere('effect', Effect::Deny);
+    $allowAce = collect($explanation->aces)->firstWhere('effect', Effect::Allow);
+
+    expect($denyAce)->not->toBeNull()
+        ->and($denyAce->depth)->toBe(0)
+        ->and($denyAce->counted)->toBeTrue()
+        ->and($allowAce)->not->toBeNull()
+        ->and($allowAce->depth)->toBe(1);
+});
+
+// ── F-P1.1-02: explain() reports a plain allow with the folded masks (control).
+it('explain() reports a granted ability with reason=allow, F-P1.1-02', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $folder = AccessTestHelpers::folder($storage, null, 'granted');
+    AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item);
+
+    $explanation = resolver()->explain(AccessTestHelpers::user(), Ability::Edit, $folder);
+
+    expect($explanation->allowed)->toBeTrue()
+        ->and($explanation->reason)->toBe(AccessExplanation::REASON_ALLOW)
+        ->and($explanation->level)->toBe(GrantLevel::Writer)
+        ->and($explanation->aces)->toHaveCount(1);
+});

@@ -40,3 +40,33 @@ level). Expiry is filtered **on read**, not by cron.
   `AccessResolver` is arch-tested to stay a concrete non-contract class.
 - **No driver = fail-loud in production** (supersedes ADR-0002's open default);
   the open `NullRoleDriver` is env-gated to non-production only.
+
+## Amendment (VLT-REMED P2.1, 2026-07-11)
+
+Two clarifications to the accepted decision — neither changes the resolution
+algorithm; they align the code's documented guarantees and add a fail-loud guard.
+
+- **The `inherit_grants=false` wall cuts off ABOVE, it is not an absolute deny
+  barrier (F-P1.1-01 / D17).** The rule "a nearer explicit `allow` beats a farther
+  inherited `deny`" applies WITHOUT exception at the wall: a deny sitting ON an
+  `inherit_grants=false` node is pierced by a nearer explicit allow BELOW it, exactly
+  as any other inherited deny. The wall's only effect is that grants ABOVE it never
+  contribute. Earlier `AccessResolver` docblocks wrongly described this deny as an
+  "un-overridable wall … no nearer allow can ever pierce it"; those claims were
+  corrected to match this ADR (the code was already correct). An absolute,
+  un-pierceable wall-deny would be a NEW product decision (tracked as VLT-REMED Q4),
+  not the current behaviour.
+
+- **The `gate` and `azgard` lanes narrow `subjectsFor()` to `[actor]` (F-P1.2-01).**
+  The `subjectsFor(actor) → users + roles + teams` contract is fully honoured only by
+  the `spatie` lane (and any host driver marked
+  `Vaulter\Contracts\Access\EnumeratesRoleSubjects`). The `gate` lane (abilities are
+  evaluated per-user, not enumerable) and the `azgard` lane (per-resource checks, no
+  role enumeration) — like the standalone `database` base and the `null` lane —
+  contribute only the actor itself. A `v_node_grants` row addressed to a role/team is
+  therefore inert under those lanes. This is safe (fail-closed: access is never
+  raised) but was silent; Vaulter now makes it LOUD — `GrantNodeAccessAction` logs a
+  warning always and throws `UnenumerableGrantSubjectException` outside production when
+  a role/team grant is written under a non-`EnumeratesRoleSubjects` driver. A host that
+  addresses grants to roles/teams should use `spatie`, or subclass its driver to append
+  the role/team `Subject`s and implement `EnumeratesRoleSubjects`.

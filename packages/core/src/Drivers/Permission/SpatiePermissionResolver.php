@@ -10,6 +10,7 @@ use Spatie\Permission\PermissionRegistrar;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -42,7 +43,7 @@ use Vaulter\Support\SpatieConfig;
  * incoming team id is captured, set to the scope's workspace, and restored in a
  * finally — so concurrent panels/workspaces never bleed into each other.
  */
-final class SpatiePermissionResolver implements HostRoleDriver
+final class SpatiePermissionResolver implements EnumeratesRoleSubjects, HostRoleDriver
 {
     public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
     {

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -95,7 +96,12 @@ final class GatePermissionResolver implements HostRoleDriver
     /**
      * The Gate exposes no enumerable role/team subjects — abilities are evaluated
      * against the user, not listed — so the subject-set is the actor itself. A host
-     * whose grants target Gate-derived roles should use the Spatie/Azgard lane.
+     * whose grants target Gate-derived roles should use the Spatie lane.
+     *
+     * Because this lane does NOT implement
+     * {@see EnumeratesRoleSubjects}, a v_node_grants row
+     * addressed to a role/team is inert under it; writing one fails loud
+     * (GrantNodeAccessAction warns, and throws outside production — F-P1.2-01).
      *
      * @return list<Subject>
      */

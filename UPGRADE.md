@@ -6,6 +6,54 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### ACL core: role/team grants fail loud under non-enumerating drivers; wall-deny semantics clarified; new `explain()` diagnostic (P2.1 / F-P1.1-01, F-P1.1-02, F-P1.2-01)
+
+**What changed.** Three corrections to the authorization core (`AccessResolver` and the
+grant write-path), none of which changes an existing `can()` verdict on the default
+`database` lane:
+
+1. **A role/team grant under a non-enumerating driver now fails loud (F-P1.2-01).**
+   `GrantNodeAccessAction::execute()` now inspects the active `HostRoleDriver`: if the
+   grant's subject is a role/team subject (`subject_type` = the configured
+   `vaulter.spatie.role_subject_type` / `team_subject_type`, default `role`/`team`) and
+   the driver does **not** implement the new marker
+   `Vaulter\Contracts\Access\EnumeratesRoleSubjects`, the grant would never take effect
+   (those drivers — the standalone `database` base, `gate`, `azgard`, `null` — expand an
+   actor only into itself). Vaulter now **logs a warning always**, and **throws
+   `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` outside production**.
+   The `spatie` lane implements the marker and is unaffected. The failure direction is
+   safe (an inert grant grants nothing), so production only logs.
+2. **The `inherit_grants=false` "wall" is documented correctly (F-P1.1-01 / D17).** The
+   `AccessResolver` docblocks used to claim a deny on a wall node was an "un-overridable
+   wall … no nearer allow can ever pierce it". That was never the behaviour (nor what
+   ADR-0007 specifies): a nearer explicit allow **below** the wall pierces such a deny,
+   exactly as it pierces any other inherited deny. The code is unchanged; only the false
+   guarantee was removed. If you locked down a subtree with `inherit_grants=false` + a
+   subtree deny expecting an absolute barrier, re-audit — a nearer allow below it still
+   grants access (an absolute wall-deny is a possible future feature, not current
+   behaviour).
+3. **New diagnostic `AccessResolver::explain()` (F-P1.1-02).** A public
+   `explain(Authorizable $actor, Ability $ability, Node $node): AccessExplanation`
+   returns the verdict, a machine-readable reason, the folded allow/deny masks + level,
+   and the provenance chain of every grant the bounded walk visited (each tagged with
+   depth and whether it counted). It runs a separate pass and never touches the hot
+   `can()`/`effectiveGrants()` path.
+
+**Who is affected.**
+
+- Any host that writes `v_node_grants` rows addressed to a role/team subject under the
+  `database`, `gate`, `azgard`, or `null` driver — such a write now throws in non-prod
+  and logs a warning in prod. Switch to the `spatie` driver, or subclass your driver to
+  append the role/team `Subject`s and implement `EnumeratesRoleSubjects`.
+- Anyone who relied on the (incorrect) "un-overridable wall" docblock guarantee — see
+  point 2.
+
+**What you must check.** Grep your integration for grant writes targeting `role`/`team`
+subject types and confirm the active driver enumerates them; audit any
+`inherit_grants=false` lockdown that assumed an absolute deny barrier.
+
+No database migration or config change is required for this upgrade note.
+
 ### Mass-assignment hardening: every model now carries an explicit `$fillable`/`$guarded` list (P1.4 / F-P1.8-02, F-P1.5-04, F-P1.7-04)
 
 **What changed.** All 16 package models used to declare `protected $guarded = [];` — Eloquent

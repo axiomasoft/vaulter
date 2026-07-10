@@ -11,6 +11,7 @@ use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
@@ -119,6 +120,11 @@ final class AzgardPermissionResolver implements HostRoleDriver
      * limitation, master plan §6). A host that addresses v_node_grants rows to AzGuard
      * roles should subclass and append those Subjects; the guard still answers the
      * scoped checks for the actor lane.
+     *
+     * Because this lane does NOT implement
+     * {@see EnumeratesRoleSubjects}, a v_node_grants row
+     * addressed to a role/team is inert under it; writing one fails loud
+     * (GrantNodeAccessAction warns, and throws outside production — F-P1.2-01).
      *
      * @return list<Subject>
      */

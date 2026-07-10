@@ -7,6 +7,8 @@ namespace Vaulter\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Vaulter\Access\ValueObjects\AccessAce;
+use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
@@ -37,8 +39,12 @@ use Vaulter\Support\Identity;
  *      with inherit_grants=false.
  *   3. aclAllow = max(allow levels/bits); deniedBits = OR of deny bits (a deny
  *      denies that level and everything it implies); a NEARER explicit allow
- *      pierces a FARTHER inherited deny; a deny on an inherit_grants=false node is
- *      an un-overridable wall.
+ *      pierces a FARTHER inherited deny (ADR-0007). An inherit_grants=false node is
+ *      a wall for grants ABOVE it (they are cut off), NOT an absolute barrier for a
+ *      deny sitting ON it: a nearer explicit allow BELOW the wall still pierces that
+ *      deny, exactly as it would any other inherited deny — ADR-0007 gives the wall
+ *      no exception. (An absolute, un-pierceable wall-deny would be a separate
+ *      product decision, not the current behaviour.)
  *   4. granted = max(aclAllow, roleAllow) where roleAllow comes from
  *      HostRoleDriver::resolve.
  *   5. FINAL VETO pass: if deniedBits covers the requested ability → DENY
@@ -135,6 +141,80 @@ final class AccessResolver
     }
 
     /**
+     * DIAGNOSTIC "explain access" (F-P1.1-02 / S1.7): why does (actor, ability, node)
+     * resolve the way it does? Returns the verdict, a machine-readable reason, the
+     * folded allow/deny masks + level, and the provenance chain of every grant the
+     * bounded walk visited (nearest-first, each tagged with its depth and whether it
+     * counted). This runs a SEPARATE provenance-collecting pass and is NEVER called
+     * from can()/effectiveGrants(), so the hot authorization path stays allocation-free
+     * of this bookkeeping.
+     */
+    public function explain(Authorizable $actor, Ability $ability, Node $node): AccessExplanation
+    {
+        $driver = $this->drivers->driver();
+        $storage = $this->storageOf($node);
+        $scope = $this->scopeFor($storage, $node);
+
+        $override = $driver->override($actor, $scope);
+
+        if ($override === Effect::Allow) {
+            return new AccessExplanation(
+                allowed: true,
+                ability: $ability,
+                reason: AccessExplanation::REASON_SUPER_ALLOW,
+                allowedBits: 0,
+                deniedBits: 0,
+                level: GrantLevel::Owner,
+                aces: [],
+            );
+        }
+
+        if ($override === Effect::Deny) {
+            return new AccessExplanation(
+                allowed: false,
+                ability: $ability,
+                reason: AccessExplanation::REASON_SUPER_DENY,
+                allowedBits: 0,
+                deniedBits: 0,
+                level: null,
+                aces: [],
+            );
+        }
+
+        $subjects = $driver->subjectsFor($actor);
+
+        [$aclAllowBits, $deniedBits, $aclLevel, $aces] = $this->resolveAclWithProvenance(
+            node: $node,
+            subjects: $subjects,
+        );
+
+        [$roleAllowBits, $roleLevel] = $this->resolveRole(
+            driver: $driver,
+            actor: $actor,
+            scope: $scope,
+            subjects: $subjects,
+        );
+
+        $allowedBits = $aclAllowBits | $roleAllowBits;
+        $level = $this->maxLevel($aclLevel, $roleLevel);
+
+        // Fold through the SAME GrantSet the hot path uses so the explained verdict
+        // can never diverge from can()'s.
+        $verdict = new GrantSet(allowedBits: $allowedBits, deniedBits: $deniedBits, level: $level);
+        $allowed = $verdict->allows($ability);
+
+        return new AccessExplanation(
+            allowed: $allowed,
+            ability: $ability,
+            reason: $this->explainReason($allowed, $ability, $deniedBits),
+            allowedBits: $allowedBits,
+            deniedBits: $deniedBits,
+            level: $level,
+            aces: $aces,
+        );
+    }
+
+    /**
      * May the actor create nodes in the storage's workspace? Delegates to the
      * host-role driver's workspace gate (the folder/upload create path has no
      * existing node to resolve against). canCreate for folders/uploads (§6).
@@ -206,8 +286,10 @@ final class AccessResolver
      * before a same-depth deny must NOT swallow it. We instead bucket allow/deny
      * bits PER DEPTH, then fold from nearest to farthest, masking a deny only with
      * bits allowed at a strictly smaller depth. A deny on the cut-off (inherit_grants
-     * =false) node is doubly safe: it is the farthest depth in the bounded walk, so
-     * no farther allow exists to pierce it anyway.
+     * =false) node sits at the FARTHEST depth of the bounded walk, so no grant ABOVE
+     * it contributes — but a nearer explicit allow BELOW it still pierces that deny
+     * (ADR-0007: a nearer allow beats a farther inherited deny; the wall gets no
+     * exception).
      *
      * @param  list<Subject>                             $subjects
      * @return array{0: int, 1: int, 2: GrantLevel|null}
@@ -269,8 +351,9 @@ final class AccessResolver
 
             // Cut-off: once we have consumed a node whose inheritance is severed,
             // nothing above it may contribute. The node's OWN grants (bucketed above)
-            // already counted; a deny on this wall is permanent because the walk
-            // stops here (no farther/nearer allow can ever pierce it).
+            // already counted; a deny on this wall is only shielded from FARTHER
+            // (above-wall) allows — the walk stops here so none exist — while a
+            // nearer allow BELOW the wall still pierces it (ADR-0007, no wall exception).
             if (!$current->inherit_grants) {
                 break;
             }
@@ -301,6 +384,124 @@ final class AccessResolver
         }
 
         return [$allowedBits, $deniedBits, $level];
+    }
+
+    /**
+     * A provenance-collecting twin of resolveAcl() serving explain() (F-P1.1-02). It
+     * folds the SAME allow/deny masks by the SAME rules (per-depth bucket, then a deny
+     * pierced only by a strictly-nearer allow), but additionally records every visited
+     * grant as an {@see AccessAce} — tagged with its walk depth and whether it counted
+     * (an item-scoped ancestor grant is recorded with counted=false). It is kept apart
+     * from resolveAcl() ON PURPOSE so the hot path carries no diagnostic bookkeeping.
+     *
+     * @param  list<Subject>                                                 $subjects
+     * @return array{0: int, 1: int, 2: GrantLevel|null, 3: list<AccessAce>}
+     */
+    private function resolveAclWithProvenance(Node $node, array $subjects): array
+    {
+        if ($subjects === []) {
+            return [0, 0, null, []];
+        }
+
+        $chain = $this->ancestorChain($node);
+
+        $nodeIds = array_map(static fn (Node $n): int|string => $n->id, $chain);
+
+        $now = Carbon::now();
+        $grants = $this->grants->forSubjectsOnNodes(nodeIds: $nodeIds, subjects: $subjects, now: $now);
+
+        /** @var array<string, list<NodeGrant>> $byNode */
+        $byNode = [];
+
+        foreach ($grants as $grant) {
+            $byNode[Identity::stringify($grant->node_id)][] = $grant;
+        }
+
+        /** @var array<int, int> $allowByDepth */
+        $allowByDepth = [];
+        /** @var array<int, int> $denyByDepth */
+        $denyByDepth = [];
+        /** @var list<AccessAce> $aces */
+        $aces = [];
+        $level = null;
+
+        foreach ($chain as $depth => $current) {
+            $isSelf = $depth === 0;
+            $rows = $byNode[Identity::stringify($current->id)] ?? [];
+
+            foreach ($rows as $grant) {
+                // A grant on an ancestor only inherits down when scope=subtree; the
+                // node's own grants always apply. A non-counting row is still recorded
+                // (counted=false) so the operator sees it was present but inert.
+                $counted = $isSelf || $grant->scope->inheritsDownward();
+                $bits = $this->bitsFor($grant);
+
+                $aces[] = new AccessAce(
+                    nodeId: $grant->node_id,
+                    depth: $depth,
+                    effect: $grant->effect,
+                    scope: $grant->scope,
+                    bits: $bits,
+                    counted: $counted,
+                );
+
+                if (!$counted) {
+                    continue;
+                }
+
+                if ($grant->effect === Effect::Allow) {
+                    $allowByDepth[$depth] = ($allowByDepth[$depth] ?? 0) | $bits;
+                    $level = $this->maxLevel($level, $grant->level);
+
+                    continue;
+                }
+
+                $denyByDepth[$depth] = ($denyByDepth[$depth] ?? 0) | $bits;
+            }
+
+            if (!$current->inherit_grants) {
+                break;
+            }
+        }
+
+        $allowedBits = 0;
+
+        foreach ($allowByDepth as $bits) {
+            $allowedBits |= $bits;
+        }
+
+        $deniedBits = 0;
+
+        foreach ($denyByDepth as $depth => $bits) {
+            $nearerAllow = 0;
+
+            foreach ($allowByDepth as $allowDepth => $allowBits) {
+                if ($allowDepth < $depth) {
+                    $nearerAllow |= $allowBits;
+                }
+            }
+
+            $deniedBits |= ($bits & ~$nearerAllow);
+        }
+
+        return [$allowedBits, $deniedBits, $level, $aces];
+    }
+
+    /**
+     * The machine-readable reason for an explain() verdict: an allow, a deny-veto
+     * (a required bit landed in the deny-mask), or simply no covering grant.
+     */
+    private function explainReason(bool $allowed, Ability $ability, int $deniedBits): string
+    {
+        if ($allowed) {
+            return AccessExplanation::REASON_ALLOW;
+        }
+
+        if (($deniedBits & $ability->requiredBits()) !== 0) {
+            return AccessExplanation::REASON_DENY_VETO;
+        }
+
+        return AccessExplanation::REASON_NO_GRANT;
     }
 
     /**
