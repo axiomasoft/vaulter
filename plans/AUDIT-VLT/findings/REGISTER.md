@@ -92,3 +92,23 @@ Append-only. Каждый audit-item дописывает свои находк�
 | F-P3.3-02 | P3.3 | Minor | high | Докблоки `HandlerRegistry`/`NodeHandlerResolver` заявляют «fails loudly с install hint», которого не существует в коде | `packages/core/src/Contracts/Documents/HandlerRegistry.php:13`; `NodeHandlerResolver.php:21-23`; `VaulterManager.php:142-145`; `Http/Resources/Drive/NodeResource.php:122-129` | E5.3 |
 | F-P3.5-01 | P3.5 | Minor | high | Кросс-пакетные швы (CAS, HandlerRegistry, DriveHandleFactory) падают громко, но без install-hint | `packages/core/src/VaulterManager.php:75,142,153` | E5.3; E5.4 |
 | F-P3.6-01 | P3.6 | Major | high | Install-гайд надстройки (collab) противоречит коду и сам себе о дефолтном транспорте; ADR-0001 устарел | `packages/core/config/vaulter.php:627-642,653`; `Support/Config.php:713-718`; `docs/guide/collaboration.md:30,38-43,52`; `docs/guide/hocuspocus-server.md:6-8`; `docs/adr/0001-collaboration-transport.md:15-16` | D13/D14; E7.1 |
+| F-P4.1-01 | P4.1 | Minor | high | Purge корзины сканирует `v_nodes` без индекса на `trashed_at` | `NodeReadRepository.php:203-219`; `PanelTablesBuilder.php:177-223` | P4.1 C5 |
+| F-P4.1-02 | P4.1 | Nit | high | Избыточные индексы с общим префиксом (`v_nodes`, `v_blobs`, `v_activity`) | `PanelTablesBuilder.php:210-211,248,277,740,873,883-888` | P4.1 C7 |
+| F-P4.2-01 | P4.2 | Major | high | Обход предков на пути авторизации не ограничен `withMaxDepth` | `AccessResolver.php:356-375`; `NodeReadRepository.php:143-146,154-163` | P4.2 C1; ADR-0005 |
+| F-P4.2-02 | P4.2 | Minor | high | Детект циклов выключен на чтении, митигирован только на записи через Action | `Models/Drive/Node.php:57-161`; `MoveNodeAction.php:85-100` | P4.2 C2 |
+| F-P4.2-03 | P4.2 | Major | high | N+1 на каждой странице листинга узлов через `AccessResolver::abilitiesFor` | `NodeController.php:81-94`; `NodeResource.php:138-148`; `AccessResolver.php:73-115,404-425` | P4.2 C4 |
+| F-P4.2-04 | P4.2 | Minor | high | `NodeController::shared()` — offset-пагинация на растущей кросс-storage ленте | `NodeController.php:109-137` | P4.2 C6 |
+| F-P4.2-05 | P4.2 | Minor | high | Нестабильные (неуникальные) ключи курсорной пагинации в трёх фидах | `NodeReadRepository.php:171-177,186-191`; `GrantReadRepository.php:59-65` | P4.2 C7 |
+| F-P4.3-01 | P4.3 | Minor | high | Ни один пакет не запрещает импорт `App\*`/хоста | `packages/*/tests/Arch/ArchTest.php` | P4.3 C1; E5.1 |
+| F-P4.3-02 | P4.3 | Minor | high | Нет arch-гейта на границу публичного API пакета (E3.1) | `packages/*/tests/Arch/ArchTest.php` | P4.3 C3; E3.1 |
+| F-P4.3-03 | P4.3 | Major | high | Мутационный гейт `infection.json5` отключён (`minMsi`/`minCoveredMsi` = 0) | `infection.json5:9-10` | P4.3 C4 |
+| F-P4.3-04 | P4.3 | Minor | high | Мутационный гейт покрывает только `packages/core/src`, остальные 4 PHP-пакета вне охвата | `infection.json5:3-5` | P4.3 C5 |
+| F-P4.3-05 | P4.3 | Minor | high | `composer test:types` (100% type-coverage) объявлен, но не подключён ни к одному CI-гейту core | `composer.json:60`; `.github/workflows/tests.yml` | P4.3 C6 |
+| F-P4.4-01 | P4.4 | Minor | high | Rector не запускается ни в одном CI-workflow | `.github/workflows/code-style.yml`; `Makefile:16-20,25,32`; `rector.php:10-14` | P4.4 C2 |
+| F-P4.4-02 | P4.4 | Major | high | CI-матрица Laravel 12/13 покрывает только `vaulter-core`; Filament не тестируется ни против одной ячейки честно | `.github/workflows/tests.yml:15-24`; `filament.yml:33-35`; `packages/filament/composer.json:29` | P4.4 C3/C4; `P4-matrix-supply-chain.md` §M3 |
+| F-P4.4-03 | P4.4 | Minor | high | Политика поддерживаемых версий Testbench/Filament не объявлена | `README.md:10-15` | P4.4 C5; D12 |
+| F-P4.4-04 | P4.4 | Minor | medium | `composer audit`: CVE-2025-45769 в `firebase/php-jwt` (используется в собственном collab-JWT минтинге) | `composer.json:30`; `packages/documents/composer.json:29`; `HocuspocusNodeCollaborationDriver.php` | P4.4 C7 |
+| F-P4.4-05 | P4.4 | Major | high | `npm audit --audit-level=high` в `packages/vue`: critical RCE в devDependency `happy-dom` | `packages/vue/package.json:58-68` | P4.4 C8 |
+| F-P4.5-01 | P4.5 | Minor | high | `@tiptap/*` в `packages/vue` на устаревшем мажоре (2.x, текущий стабильный — 3.x) | `packages/vue/package.json:53-55`; `e2e/package.json:19-21` | P4.5 C3 |
+| F-P4.5-02 | P4.5 | Minor | medium | hocuspocus-стек (`@hocuspocus/server`+extensions, `@hocuspocus/provider`) на устаревшем мажоре (2.x, актуальны v3/v4) | `hocuspocus-server/package.json:16-19`; `packages/vue/package.json:52` | P4.5 C5/C3 |
+| F-P4.5-03 | P4.5 | Minor | high | e2e-стенд: `laravel`/`hub`/`vite` без healthcheck, `depends_on` без `condition: service_healthy` | `e2e/docker-compose.yml:22-64` | P4.5 C7 |
