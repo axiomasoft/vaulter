@@ -1,49 +1,50 @@
-# HANDOFF — 2026-07-11 — after P1.4
+# HANDOFF — 2026-07-11 — after P2.0
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — развёртывание скелет-фазы: несущие архитектурные решения (ядро `AccessResolver`, изоляция) требуют design-time RAG и Alternatives, не механическое ТЗ |
+| Thinking | high — P2.1 явно поимённо opus/high в `plan.md` §Routing: ядро `AccessResolver` (инвариант H.2, deny-вето, ADR-0007) — свёртка не выводится чтением по чеклисту |
 | Context | fresh session — handoff свежий, рекомендован /clear |
-| Суть | Развернуть скелет-фазу **P2 (W2 — Авторизация и изоляция)**: 3 items из `plan.md` §Routing (P2.1 → opus/high явно поимённо — ядро `AccessResolver`), Phase Context/DoR/16 полей на item. Скелет-фаза НЕ исполняется напрямую (Execution Rules). |
+| Суть | Исполнить **P2.1 (B12 — корректность ядра ACL, инвариант H.2)**: закрыть F-P1.1-01 (докблок «un-overridable wall» → выравнивание к ADR-0007, D17, БЕЗ смены поведения `resolveAcl`), F-P1.1-02 (диагностический `explain()` вне горячего `can()`), F-P1.2-01 (fail-loud role/group-грантов под gate/azgard). Фаза P2 РАЗВЁРНУТА (DoR закрыт) — items исполнимы. |
 
 ```
-/task:plan-design VLT-REMED P2
+/task:plan-exec VLT-REMED P2.1
 ```
 
 **Done:**
 - **Фаза P0 (W0 — Blocker'ы) ТЕРМИНАЛЬНА (3/3 🟢).** По D2 допустим промежуточный мерж/релиз ветки `remediation/audit-vlt`.
-- P0.1 (B1 — stored XSS в TipTap) 🟢 — коммит `86a60a6`. P0.2 (B3 — SSRF/webhook) 🟢 — `296fb6d`/`a31462d`/`e49c890`. P0.3 (B5 — целостность загрузок/CAS) 🟢 — `69f589a`.
-- **Фаза P1 (W1 — Быстрые высоко-эксплуатируемые) ТЕРМИНАЛЬНА (4/4 🟢).** Закрыты 17 находок волны W1.
-  - **P1.1 (B2 — заголовки скачивания: nosniff + whitelist Content-Type) 🟢.** Закрыты F-P1.3-04, F-P1.11-03. Новый `final class DownloadHeaders` (`packages/core/src/Http/Support/DownloadHeaders.php`) — единственный шов сборки заголовков раздачи.
-  - **P1.2 (B8 — публичная share-поверхность) 🟢.** Коммит `d855df7`. Закрыты F-P1.3-01/02/03/05: presign-редирект убран (D15), issuer-re-check в `ShareResolver` через `Ability::Share` (D14), дефолтный/max TTL ссылок, опаковка публичного node-id `hash_hmac`-проекцией (D15).
-  - **P1.3 (B14 — rate-limit и DoS-поверхность листингов) 🟢.** Коммиты `0a1644d`/`fbeac3b`. Закрыты F-P1.8-01, F-P1.4-09, F-P4.2-03, F-P4.2-04: именованные throttle-лимитеры пакета (`vaulter-public`/`vaulter-uploads`), кап активных upload-сессий, O(1) памоизация storage в листингах (identity-map + `scoped()`-биндинг), документированный offset-контракт ленты `shared` (D16-fallback).
-  - **P1.4 (B13 — mass-assignment-харденинг всех 16 моделей) 🟢.** Коммит `00bf26e`. Закрыты F-P1.8-02, F-P1.5-04, F-P1.7-04:
-    - Снят `$guarded=[]` со всех 16 моделей: закрытый `$fillable` (только легитимно пользовательские колонки) на 9 моделях (`Node`, `Storage`, `FileVersion`, `NodeShare`, `WebhookEndpoint`, `UploadSession`, `NodeComment`, `NodeDocumentVersion` + частичный `$guarded`-список на `File`); полный `$guarded=['*']` (Eloquent «totally guarded» — `fill()` с любым атрибутом бросает `MassAssignmentException`) на 6 моделях (`Blob`, `FileVersionBlob`, `NodeGrant`, `Activity`, `Outbox`, `WebhookDelivery`).
-    - Все внутренние write-пути (`*StoreRepository::create()`, `OutboxRecorder::stage()`, `OutboxRelay::createDelivery()`, `GrantStoreRepository::grant()` — последний переписан с `updateOrCreate` на ручной find-then-forceFill) переведены с `fill()`/`updateOrCreate()`/статического `::create([...])` на `forceFill()` — доверенный шов, принимающий только серверно-построенные литеральные массивы.
-    - **Урок для следующих items:** `$guarded=['*']` в Laravel — Eloquent's «totally guarded» состояние: `fill()` с ЛЮБЫМ непустым массивом бросает `MassAssignmentException` (НЕ молчаливый discard, как у частичного `$guarded`/`$fillable`-списка) — тесты на такие модели нужно писать как `expect(fn () => ...)->toThrow(MassAssignmentException::class)`, не как проверку отсутствия ключа в атрибутах. Пивоты с кастомным `->using()` (`FileVersionBlob`) у Laravel 13 маршрутизируют атрибуты `attach()` через mass-assignment — Eloquent-relation `attach()` на fully-guarded pivot-модели бросит то же исключение; продакшен-путь (query-builder `updateOrInsert` в выделенном `*StoreRepository`) вне guard'а в принципе, тесты должны бить именно через него, не через голую `->attach()`.
-    - Существующие Schema/Uploads-тесты и хелперы, писавшие в модели НАПРЯМУЮ мимо репозиториев (`Model::query()->create([...])`), пришлось чинить тем же паттерном (`forceFill`) — это НЕ регресс нового кода, это преэкзистентная зависимость тестов от `$guarded=[]`, вскрытая гейтом валидации.
+- **Фаза P1 (W1 — быстрые высоко-эксплуатируемые) ТЕРМИНАЛЬНА (4/4 🟢).** Закрыты 17 находок волны W1 (детали — `phases/P1.md` Completion Notes).
+- **Фаза P2 (W2 — авторизация и изоляция) РАЗВЁРНУТА из скелета (design, DoR закрыт).** 3 items детализированы (16 полей каждый), скелет-маркер снят. Кода приложения не писалось (фаза проектирования).
+  - **P2.1 (B12)** — F-P1.1-01, F-P1.1-02, F-P1.2-01. opus/high (Routing). Ядро `AccessResolver`.
+  - **P2.2 (B9)** — F-P1.12-01, F-P1.12-02, F-P1.12-03. sonnet/medium. Remanence корзины; F-P1.12-02 (физический purge) — **тест на PostgreSQL** (FK-каскад).
+  - **P2.3 (B10)** — F-P1.10-01, F-P1.10-02, F-P1.9-01, F-P1.9-02, F-P1.5-03. sonnet/medium. Filament-скоуп + tenant-footgun + dedup NULL-tenant.
+  - Несущие решения фазы: **D17** (F-P1.1-01 → ADR-0007-alignment докблока; абсолютный барьер wall-deny → Q4, не в P2.1), **D18** (F-P1.5-03 → документировать `storage_key_uniq` + guard-тест, НЕ NULL-sentinel), **D19** (форма red-before: doc-alignment/coverage-gap/invariant-guard находки — F-P1.1-01/F-P1.9-02/F-P1.5-03 — закрываются зелёным характеризационным/guard-тестом, red-before структурно неприменим).
+  - Заведён **Q4** (`open-questions.md`, Decision pending): абсолютный барьер wall-deny — продуктовая фича, НЕ блокирует P2.
 
-**Remaining:** P2 (3 items, скелет), P3 (6, скелет), P4 (10, скелет), P5 (3, скелет). Развёртывание КАЖДОЙ фазы — `/task:plan-design VLT-REMED Pn` перед её первым item'ом (Execution Rules: скелет-фаза не исполняется напрямую). P2.1 именован в `plan.md` §Routing как opus/high (ядро `AccessResolver`, инвариант H.2/deny-вето).
+**Remaining:** P2 (3 items, развёрнута — исполнять P2.1→P2.2→P2.3), P3 (6, СКЕЛЕТ), P4 (10, СКЕЛЕТ), P5 (3, СКЕЛЕТ). Развёртывание КАЖДОЙ последующей фазы — `/task:plan-design VLT-REMED Pn` перед её первым item'ом (Execution Rules: скелет-фаза не исполняется напрямую). Мягкое ребро D2: B12 (P2.1) раньше B9/B10 — ядро ACL фундамент для remanence/scope-фиксов.
 
-**Sources of truth:** `plans/VLT-REMED/plan.md` (Context/Execution Rules/Routing/Status Board/Decision Log D1–D16) ·
-`plans/VLT-REMED/phases/P0.md` (закрыта) · `plans/VLT-REMED/phases/P1.md` (ЗАКРЫТА, терминальна 4/4, Phase Handoff заполнен) ·
-`plans/VLT-REMED/findings/P0-remediation-norms.md` (нормы W0, неизменны) ·
+**Sources of truth:** `plans/VLT-REMED/plan.md` (Context/Execution Rules/Routing/Status Board/Decision Log D1–D19) ·
+`plans/VLT-REMED/phases/P2.md` (РАЗВЁРНУТА, 3 items, DoR) · `plans/VLT-REMED/phases/{P0,P1}.md` (закрыты, терминальны) ·
+`plans/VLT-REMED/open-questions.md` (Q3 pending, **Q4 pending** — не блокируют) ·
+`plans/VLT-REMED/findings/P0-remediation-norms.md` (нормы W0, неизменны) · `plans/VLT-REMED/findings/P0-premortem.md` ·
 `plans/AUDIT-VLT/findings/REGISTER.md` (SSOT 103 находок, append-only, VLT-REMED в него НЕ пишет) ·
-`plans/AUDIT-VLT/findings/{P1.3-sharing-download,P1.8-secrets-config-http,P4.2-nplus1-recursion-pagination,P1.4-uploads,P1.5-cas-blobs,P1.7-outbound-webhooks}.md`
-(доказательства находок W1 с `file:line`).
+`plans/AUDIT-VLT/findings/{P1.1-access-resolver,P1.2-role-drivers,P1.12-remanence,P1.10-filament-surface,P1.9-tenant-isolation,P1.5-cas-blobs}.md`
+(доказательства 11 находок W2 с `file:line`) ·
+`docs/adr/{0003-embeddability-data-model,0007-pluggable-authorization,0012-dedup-scope}.md` (несущие ADR фазы).
 
 **Open risks:**
-- P1 закрывает быстрые высоко-эксплуатируемые, но авторизация/изоляция (W2), надстройки (W3), качество/CI (W4) ещё не тронуты — пакет не «чист».
-- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. `packages/core` при этом не несёт СОБСТВЕННЫХ composer-скриптов — root-прогон и есть его гейт. Items, трогающие `drive`/`documents`/`media`/`filament`/`permissions-azgard` — гнать их own-прогон дополнительно, пока item их трогает.
+- W2 (авторизация/изоляция) ещё не исполнена — пакет не «чист»: trashed-узлы скачиваемы (F-P1.12-01), 4 Filament-листинга кросс-тенантны (F-P1.10-01), контент «удалённых» документов живёт в БД вечно (F-P1.12-02).
+- **F-P1.12-02 (физический purge) требует PostgreSQL** для теста FK-каскада: `php8.4` + БД `vaulter_test` в контейнере (см. P0.3 handoff). SQLite по умолчанию НЕ enforce'ит FK-каскад — зелёный тест там замаскирует несработавший каскад (D12).
+- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. P2.1 целиком в core (root-гейт достаточен). P2.2 трогает `drive`+`documents`, P2.3 трогает `filament` — гнать их own `composer analyse`/`test`/`test:types` дополнительно. `packages/filament` имеет отдельный vendor + свой `TestCase` с Filament-панелью.
 - Root `composer lint:check` красный на пред-существующем `plans/AUDIT-VLT/artifacts/repro/**` (чужой read-only план, вне scope) — closure НЕ блокирует; свой новый код обязан быть pint-чистым.
-- **`CHANGELOG.md` заблокирован для Read/Bash-инспекции** этой сессией (`.claude/settings.local.json` → `deny: ["Read(**/CHANGELOG.md)"]`) с P1.2 — долг накопился за P1.2 И P1.4 (оба обновили только `UPGRADE.md`). Следующая сессия с доступом к чтению `CHANGELOG.md` должна догнать обе пропущенные записи разом.
-- `packages/permissions-azgard/composer.json` не определяет `test:types`-скрипт (пред-существующая характеристика пакета, не долг P1.4) — если будущий item коснётся этого пакета, гнать только `analyse`/`test`/`lint:check` там.
-- В рабочем дереве присутствует НЕ моя правка — `plans/VLT-HSEAM/` (новый, не относящийся к VLT-REMED план), `.claude/workflows/vlt-remed-drive.js`/`.claude/workflows/vlt-remed-auto.js` и модификация `.gitignore`/`.claude/.maind-feature-log.last` — появились независимо от исполнения items этой фазы (конкурентная сессия/процесс/хук), НЕ созданы и НЕ закоммичены этими items, оставлены как есть.
+- **Абсолютный барьер wall-deny (Q4) — НЕ реализовывать в P2.1.** Если при чтении `resolveAcl` покажется, что стену «надо» сделать непробиваемой — это Q4/продуктовое решение, эскалация (`rule conflict`), НЕ импровизация. P2.1 фиксит только докблок (D17).
+- `CHANGELOG.md` заблокирован для Read/Bash-инспекции прошлыми сессиями (`.claude/settings.local.json` → `deny: ["Read(**/CHANGELOG.md)"]`) — долг записей за P1.2 и P1.4. Сессия с доступом к чтению `CHANGELOG.md` должна догнать пропущенные записи.
+- `packages/permissions-azgard/composer.json` не определяет `test:types`-скрипт — если item коснётся пакета, гнать только `analyse`/`test`/`lint:check`. (Драйвер `AzgardPermissionResolver` для F-P1.2-01 лежит в `packages/core/src/Drivers/Permission`, НЕ в permissions-azgard — P2.1 этот пакет не трогает.)
+- В рабочем дереве присутствуют НЕ относящиеся к VLT-REMED правки (`plans/VLT-HSEAM/`, `.claude/workflows/vlt-remed-*.js`, модификации `.gitignore`/`.claude/.maind-feature-log.last`) — появились из конкурентной сессии/хука, НЕ трогать, `git status` по `plans/` вне VLT-REMED держать чистым.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: drive/media/documents/filament — их own `composer analyse`/`test`/`test:types` (root покрывает только core, core сам без скриптов); `permissions-azgard` без `test:types`-скрипта. PG-прогоны (если понадобятся downstream) — `php8.4` + БД `vaulter_test` в контейнере `agelto_postgres` (см. P0.3 handoff); для W1 PG не требовался. Testbench-дефолтный `cache.default=database` не имеет миграции таблицы `cache` — throttle-middleware требует `cache.default => 'array'` в тестовом `defineEnvironment()` (уже применено в core/drive/documents `TestCase.php`, P1.3). Резолюция актора из голого id (`granted_by`) — через `Auth::createUserProvider($providerName)` с провайдером ИЗ дефолтного guard'а (P1.2 Completion Notes). `$guarded=['*']` throws `MassAssignmentException` на fill() (не silent-discard) — тесты на такие модели пишутся через `->toThrow()`, не через отсутствие ключа (P1.4 урок). Пивот-модели с `->using()` — тестировать mass-assignment через их выделенный `*StoreRepository`, не через голую Eloquent-relation `attach()`.
-- deferred: `docs/`-миграция и архивация AUDIT-VLT — отдельный `/task:plan-close archive AUDIT-VLT`. Ротация уже выданных `signing_secret` (Q3, P0.2 Pending Work) — отдельный item по решению владельца. `CHANGELOG.md` записи за P1.2 и P1.4 — следующая сессия с доступом к файлу. Пред-существующие незакоммиченные диффы драйвера/чужого плана — как есть.
-- open_questions: Q3 (`open-questions.md`) — ротация уже выданных `signing_secret`; к W1 отношения не имеет. Q1/Q2 — `Resolved → D1/D10`.
+- workarounds: drive/documents/filament — их own `composer analyse`/`test`/`test:types` (root покрывает только core). PG-прогон для F-P1.12-02 — `php8.4` + `vaulter_test` в контейнере `agelto_postgres` (P0.3 handoff). Testbench-дефолт `cache.default=database` без миграции `cache`-таблицы → `cache.default => 'array'` в тестовом `defineEnvironment()` (throttle-middleware, P1.3). Резолюция актора из голого id — через `Auth::createUserProvider($providerName)` с провайдером дефолтного guard'а (P1.2). SQLite не enforce'ит FK-каскад по умолчанию (нужен `PRAGMA foreign_keys=ON` либо PG) — критично для F-P1.12-02.
+- deferred: `docs/`-миграция и архивация AUDIT-VLT — отдельный `/task:plan-close archive AUDIT-VLT`. Ротация `signing_secret` (Q3) — отдельный item по решению владельца. Абсолютный барьер wall-deny (Q4) — отдельный item при «go» владельца. `CHANGELOG.md` записи за P1.2/P1.4 — сессия с доступом.
+- open_questions: Q3 (ротация `signing_secret`) и **Q4 (абсолютный барьер wall-deny)** — оба `Decision pending`, ни один W2 не блокирует. Q1/Q2 — `Resolved → D1/D10`.
