@@ -35,13 +35,20 @@ final class OffsetMismatchException extends VaulterException
     /**
      * Surface the offset mismatch as tus 409 — the client must re-read HEAD and
      * resume from the authoritative offset carried in this same response.
+     *
+     * Tus-Resumable MUST be present on every response, error paths included
+     * (C1/U1.1) — a strict tus client verifies the server's protocol version on
+     * each reply, not only on success.
      */
     public function render(Request $request): JsonResponse
     {
         return new JsonResponse(
             ['message' => $this->getMessage()],
             409,
-            ['Upload-Offset' => (string) $this->serverOffset],
+            [
+                'Upload-Offset' => (string) $this->serverOffset,
+                'Tus-Resumable' => '1.0.0',
+            ],
         );
     }
 }

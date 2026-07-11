@@ -53,7 +53,8 @@ it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-
         'xxxxx',
     )
         ->assertStatus(409)
-        ->assertHeader('Upload-Offset', '5');
+        ->assertHeader('Upload-Offset', '5')
+        ->assertHeader('Tus-Resumable', '1.0.0');
 });
 
 it('идемпотентный повтор совпадающего диапазона → 204, не 409 (F-P1.4-02)', function (): void {
