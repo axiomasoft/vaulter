@@ -49,7 +49,7 @@ it('tus: POST create → Location + upload_id, HEAD offset, PATCH chunks → com
         ->and($create->headers->get('Location'))->toContain($uploadId);
 
     // HEAD: offset is 0.
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId)
+    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNoContent()
         ->assertHeader('Upload-Offset', '0');
 
@@ -60,12 +60,12 @@ it('tus: POST create → Location + upload_id, HEAD offset, PATCH chunks → com
         [],
         [],
         [],
-        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         substr($bytes, 0, 10),
     )->assertNoContent()->assertHeader('Upload-Offset', '10');
 
     // HEAD now reflects the advanced offset (the resume point).
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId)
+    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertHeader('Upload-Offset', '10');
 
     // Final PATCH completes → assemble → commit → 201 with the node.
@@ -75,7 +75,7 @@ it('tus: POST create → Location + upload_id, HEAD offset, PATCH chunks → com
         [],
         [],
         [],
-        ['HTTP_UPLOAD_OFFSET' => '10', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        ['HTTP_UPLOAD_OFFSET' => '10', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         substr($bytes, 10),
     )
         ->assertCreated()
@@ -113,7 +113,7 @@ it('DELETE aborts the session', function (): void {
         'total_size_bytes' => 100,
     ])->json('data.upload_id');
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId)->assertNoContent();
+    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
     $this->getJson('api/vaulter/resumable-uploads/'.$uploadId)
         ->assertJsonPath('data.status', 'aborted');
@@ -206,7 +206,7 @@ it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function 
         [],
         [],
         [],
-        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'ab',
     )->assertNoContent();
 
@@ -216,7 +216,7 @@ it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function 
         [],
         [],
         [],
-        ['HTTP_UPLOAD_OFFSET' => '2', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        ['HTTP_UPLOAD_OFFSET' => '2', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'cd',
     )->assertStatus(429);
 });

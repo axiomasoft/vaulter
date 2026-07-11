@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Exceptions\OffsetMismatchException;
 use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
 use Vaulter\Drive\Uploads\Enums\UploadProtocol;
 use Vaulter\Drive\Uploads\Models\UploadSession;
@@ -102,11 +103,23 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
             $serverOffset = $this->offset($locked);
 
             if ($offset !== $serverOffset) {
+                // tus C6 (N3): offset < server is ONLY an idempotent retransmit when the
+                // resent bytes match what is already staged in that range — the client
+                // repeated a chunk it already sent (a retry after a lost response), not
+                // a genuine desync. Anything else (a byte mismatch, or offset > server —
+                // a "jump ahead") is a real 409 Conflict (F-P1.4-02): no bytes are
+                // appended, no other state moves.
+                if ($offset < $serverOffset && $this->staged->rangeMatches($locked, $chunk, $offset)) {
+                    return [
+                        'offset' => $serverOffset,
+                        'complete' => $this->reachedTotal($locked, $serverOffset),
+                    ];
+                }
+
                 // tus 409 Conflict: the client's Upload-Offset does not match ours. The
-                // controller maps this to a 409 so the client re-reads HEAD and resumes.
-                throw ValidationException::withMessages([
-                    'offset' => "Upload-Offset {$offset} does not match the server offset {$serverOffset}.",
-                ]);
+                // exception self-renders 409 + the authoritative Upload-Offset (F-P1.4-02)
+                // so the client re-reads HEAD and resumes — never a bare 302/422.
+                throw new OffsetMismatchException($serverOffset);
             }
 
             $newSize = $this->staged->append(session: $locked, chunk: $chunk, offset: $offset);

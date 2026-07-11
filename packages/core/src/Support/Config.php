@@ -671,6 +671,42 @@ final class Config
     }
 
     /**
+     * The closed allow-list of resumable-upload metadata keys the server accepts
+     * (§2.8 / F-P1.4-08): any key outside this list is dropped by the controller
+     * before it is stored. Default: filename, filetype, name, mime_type.
+     *
+     * @return list<string>
+     */
+    public static function uploadMetadataAllowedKeys(): array
+    {
+        $value = config('vaulter.uploads.metadata.allowed_keys', ['filename', 'filetype', 'name', 'mime_type']);
+
+        $keys = [];
+
+        foreach (is_array($value) ? $value : [] as $key) {
+            if (is_string($key) && $key !== '') {
+                $keys[] = $key;
+            }
+        }
+
+        return $keys;
+    }
+
+    /**
+     * The hard cap (characters) on a single resumable-upload metadata value (§2.8 /
+     * F-P1.4-08): an accepted value past this length is TRUNCATED, not rejected.
+     * Floored at 1. Default 512.
+     */
+    public static function uploadMetadataMaxValueLength(): int
+    {
+        $value = config('vaulter.uploads.metadata.max_value_length', 512);
+
+        $length = is_numeric($value) ? (int) $value : 512;
+
+        return max($length, 1);
+    }
+
+    /**
      * The selected host-role driver key (H.2), default 'database' (the standalone
      * zero-host-dependency lane).
      */

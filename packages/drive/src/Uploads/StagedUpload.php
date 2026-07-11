@@ -147,6 +147,80 @@ final readonly class StagedUpload
     }
 
     /**
+     * Whether $chunk's bytes are IDENTICAL to what already sits on the staged temp
+     * at [$offset, $offset+len($chunk)) (§2.8 / F-P1.4-02, N3 C6): the ONLY case tus
+     * permits treating an `offset < server` PATCH as an idempotent retransmit rather
+     * than a 409 Conflict. A chunk longer than what is already staged, or whose
+     * bytes disagree anywhere in the overlap, is NOT a match — the caller rejects it.
+     * The chunk is read into memory (bounded by the same per-request body size the
+     * controller already materialises for every PATCH — no new ceiling introduced);
+     * the ALREADY-staged range is read back in bounded blocks, never the whole file.
+     *
+     * @param resource $chunk
+     */
+    public function rangeMatches(UploadSession $session, mixed $chunk, int $offset): bool
+    {
+        $chunkBytes = stream_get_contents($chunk);
+
+        if ($chunkBytes === false) {
+            return false;
+        }
+
+        $length = strlen($chunkBytes);
+
+        if ($length === 0) {
+            // A zero-length retransmit trivially matches whatever already sits there.
+            return true;
+        }
+
+        $disk = $this->diskFor($session);
+        $key = $this->keyFor($session);
+
+        if (!$disk->exists($key) || $disk->size($key) < $offset + $length) {
+            return false;
+        }
+
+        $existing = $disk->readStream($key);
+
+        if (!is_resource($existing)) {
+            return false;
+        }
+
+        try {
+            if ($offset > 0) {
+                $this->discardBytes($existing, $offset);
+            }
+
+            return fread($existing, $length) === $chunkBytes;
+        } finally {
+            fclose($existing);
+        }
+    }
+
+    /**
+     * Advance a (possibly non-seekable) stream past $bytes without materialising
+     * them as one block — read-and-drop in bounded chunks so the discard itself
+     * never grows memory past the spill ceiling, however far into the staged file
+     * $bytes reaches.
+     *
+     * @param resource $stream
+     */
+    private function discardBytes(mixed $stream, int $bytes): void
+    {
+        $remaining = $bytes;
+
+        while ($remaining > 0 && !feof($stream)) {
+            $read = fread($stream, min($remaining, self::SPILL_BYTES));
+
+            if ($read === false || $read === '') {
+                break;
+            }
+
+            $remaining -= strlen($read);
+        }
+    }
+
+    /**
      * Reject a PATCH chunk larger than the OPTIONAL per-chunk hard ceiling BEFORE any
      * bytes are staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a
      * memory/IO DoS vector a host may cap. This is `uploads.max_chunk_bytes` — the

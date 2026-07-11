@@ -46,7 +46,7 @@ it('abort пишет activity-строку upload_session.aborted (F-P1.4-13, re
     ])->json('data.upload_id');
     Activity::query()->delete();
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId)->assertNoContent();
+    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
     $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionAborted->value);
 

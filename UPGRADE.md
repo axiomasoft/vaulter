@@ -6,6 +6,55 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### The tus resumable-upload endpoints now enforce the tus 1.0.0 protocol: offset-mismatch is 409 (not a bare redirect/422), a wrong PATCH Content-Type is 415, a missing/wrong `Tus-Resumable` is 412, an OPTIONS discovery endpoint exists, and metadata keys are whitelisted (P3.4 / F-P1.4-02, F-P1.4-05, F-P1.4-06, F-P1.4-07, F-P1.4-08)
+
+**What changed.**
+
+1. **A tus PATCH whose `Upload-Offset` does not match the server's authoritative offset now
+   returns `409 Conflict`** (with the CURRENT server offset in the `Upload-Offset` response
+   header), instead of a bare 302 redirect (non-JSON request) or 422 (JSON request) a plain
+   Laravel validation error rendered before. A retransmit of a chunk whose bytes are IDENTICAL to
+   what is already staged at that exact byte range is still accepted (204) — only a genuine
+   mismatch (different bytes, or a "jump ahead" past the server's offset) is now a 409.
+
+   **Breaking consequence:** any client-side code that specifically branched on 302/422 for a
+   tus offset conflict must branch on 409 instead — this is what real tus clients already expect
+   per the protocol.
+
+2. **A PATCH whose `Content-Type` is not `application/offset+octet-stream` now returns `415`**
+   before any byte is appended (previously accepted and staged regardless of Content-Type).
+
+3. **HEAD/PATCH/DELETE on a resumable-upload session now require the `Tus-Resumable: 1.0.0`
+   request header** — a request missing it, or naming an unsupported version, is refused with
+   `412 Precondition Failed` (carrying `Tus-Version: 1.0.0`). Previously the header was set on
+   RESPONSES but never checked on requests.
+
+   **Breaking consequence:** any client issuing HEAD/PATCH/DELETE against these endpoints WITHOUT
+   the `Tus-Resumable` header now gets 412 instead of succeeding. A real tus client already sends
+   this header on every request; only a bespoke/incomplete client integration is affected.
+
+4. **`OPTIONS` on a resumable-upload handle is now a real discovery endpoint**, answering (without
+   authorization) with `Tus-Resumable`, `Tus-Version: 1.0.0`, `Tus-Extension: creation,termination`
+   and `Tus-Max-Size` (from `uploads.max_bytes`, omitted when unbounded). The checksum extension is
+   NOT implemented and therefore deliberately not advertised.
+
+5. **Resumable-upload metadata (`Upload-Metadata` header or JSON `metadata`) is now filtered
+   through a closed key allow-list** (`vaulter.uploads.metadata.allowed_keys`, default `filename`,
+   `filetype`, `name`, `mime_type`) and every accepted value is truncated to
+   `vaulter.uploads.metadata.max_value_length` (default 512 characters). A key outside the
+   allow-list is silently dropped, not rejected.
+
+   **Breaking consequence:** any host relying on an arbitrary/custom metadata key surviving to
+   `v_upload_sessions.metadata` must add that key to `vaulter.uploads.metadata.allowed_keys`.
+
+**Who is affected.** Any consumer of the tus resumable-upload endpoints (`resumable-uploads/
+{upload_id}`) — a compliant tus client already sends `Tus-Resumable` and the correct
+`Content-Type`, and already expects 409 on offset conflict, so most integrations need no change.
+A host relying on a non-standard metadata key, or on the pre-fix 302/422/204-on-anything
+behaviour, must adjust as described above.
+
+No database migration is required for this upgrade note.
+
 ### Upload-session lifecycle: a stuck Assembled upload now gets swept, only the session's OWNER may drive it, and initiate/abort/expire now write activity rows (P3.3 / F-P1.4-10, F-P1.4-12, F-P1.4-13)
 
 **What changed.**

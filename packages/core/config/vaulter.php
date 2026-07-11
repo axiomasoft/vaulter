@@ -547,6 +547,16 @@ return [
         'tus' => [
             'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
         ],
+
+        // F-P1.4-08: the closed allow-list of tus Upload-Metadata / JSON `metadata`
+        // keys the server stores; anything outside it is silently dropped (not
+        // rejected — one unknown vendor key must not fail the whole upload), and any
+        // accepted value is truncated to max_value_length. Unbounded keys/lengths
+        // otherwise grow v_upload_sessions.metadata without limit (U4.3/U4.4).
+        'metadata' => [
+            'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+            'max_value_length' => 512,
+        ],
     ],
 
     /*

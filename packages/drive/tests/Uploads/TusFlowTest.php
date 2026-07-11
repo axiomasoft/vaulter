@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Exceptions\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
@@ -112,15 +113,31 @@ it('resume после разрыва: второй клиент читает HEA
         ->and($version->content_sha256)->toBe(hash('sha256', $bytes));
 });
 
-it('отвергает PATCH с offset, не совпадающим с серверным (tus 409)', function (): void {
+it('отвергает PATCH с offset, не совпадающим с серверным — байты расходятся (tus 409, F-P1.4-02)', function (): void {
     $session = initiateTus(totalBytes: 20);
 
     $handler = app(TusUploadHandler::class);
     $handler->patch($session->refresh(), UploadTestHelpers::streamFor('12345'), 0);
 
-    // The server is at offset 5; a PATCH claiming offset 0 again is a conflict.
+    // The server is at offset 5; a PATCH claiming offset 0 again with DIFFERENT
+    // bytes than what is already staged there is a genuine conflict — not an
+    // idempotent retransmit (F-P1.4-02, N3 C6).
     expect(fn () => $handler->patch($session->refresh(), UploadTestHelpers::streamFor('xxxxx'), 0))
-        ->toThrow(ValidationException::class);
+        ->toThrow(OffsetMismatchException::class);
+});
+
+it('идемпотентный повтор: PATCH с offset<server, но с СОВПАДАЮЩИМИ уже застейдженными байтами → успех, offset не двигается назад (F-P1.4-02)', function (): void {
+    $session = initiateTus(totalBytes: 20);
+
+    $handler = app(TusUploadHandler::class);
+    $handler->patch($session->refresh(), UploadTestHelpers::streamFor('12345'), 0);
+
+    // A retransmit of the SAME first chunk (client never saw the 204, retried) —
+    // the bytes match what is already staged at [0,5), so this is NOT a conflict.
+    $result = $handler->patch($session->refresh(), UploadTestHelpers::streamFor('12345'), 0);
+
+    expect($result['offset'])->toBe(5)
+        ->and($result['complete'])->toBeFalse();
 });
 
 it('дедуп: идентичная резюмируемая загрузка → один блоб против прежней', function (): void {

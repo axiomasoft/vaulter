@@ -45,7 +45,7 @@ it('владелец сессии продвигает её PATCH-чанком (
         'PATCH',
         'api/vaulter/resumable-uploads/'.$uploadId,
         [], [], [],
-        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
+        ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'abcd',
     )->assertCreated();
 });

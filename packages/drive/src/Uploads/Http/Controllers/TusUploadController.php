@@ -109,6 +109,7 @@ final class TusUploadController extends Controller
 
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
+        $this->assertTusResumableHeader($request);
 
         $offset = $this->tusHandler()->offset($session);
 
@@ -136,6 +137,8 @@ final class TusUploadController extends Controller
 
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
+        $this->assertTusResumableHeader($request);
+        $this->assertOffsetOctetStreamContentType($request);
 
         $offset = (int) $request->header('Upload-Offset', '0');
 
@@ -174,10 +177,38 @@ final class TusUploadController extends Controller
 
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
+        $this->assertTusResumableHeader($request);
 
         $this->manager->abort($session, $this->actorId($request));
 
         return response()->noContent(headers: ['Tus-Resumable' => self::TUS_VERSION]);
+    }
+
+    /**
+     * The tus OPTIONS discovery (§3.1 / F-P1.4-07): the CORE protocol requires this
+     * to be answerable WITHOUT authorization or a resolved session — it advertises
+     * the resumable-upload version, the extensions this deployment actually
+     * implements (creation, termination — checksum is NOT implemented and therefore
+     * deliberately NOT listed, U1.6) and the max upload size (omitted when
+     * unbounded, per the spec's "MAY").
+     */
+    public function options(): Response
+    {
+        $this->assertTusEnabled();
+
+        $headers = [
+            'Tus-Resumable' => self::TUS_VERSION,
+            'Tus-Version' => self::TUS_VERSION,
+            'Tus-Extension' => 'creation,termination',
+        ];
+
+        $maxBytes = Config::uploadMaxBytes();
+
+        if ($maxBytes > 0) {
+            $headers['Tus-Max-Size'] = (string) $maxBytes;
+        }
+
+        return response()->noContent(headers: $headers);
     }
 
     /**
@@ -335,13 +366,45 @@ final class TusUploadController extends Controller
 
     /**
      * Merge the tus Upload-Metadata header (base64-encoded key value pairs) over the
-     * JSON body metadata, so both true tus clients and the JSON API are supported.
+     * JSON body metadata, so both true tus clients and the JSON API are supported,
+     * then whitelist keys + cap value length (F-P1.4-08) — the merged map is what
+     * lands in v_upload_sessions.metadata verbatim otherwise.
      *
      * @return array<string, string>
      */
     private function mergedMetadata(CreateUploadSessionRequest $request): array
     {
-        return [...$request->metadata(), ...$this->decodeUploadMetadata($request)];
+        $merged = [...$request->metadata(), ...$this->decodeUploadMetadata($request)];
+
+        return $this->sanitizeMetadata($merged);
+    }
+
+    /**
+     * F-P1.4-08: drop any key outside the configured whitelist and truncate an
+     * over-long value — an unbounded key set / value size otherwise grows
+     * v_upload_sessions.metadata without limit (U4.3/U4.4). Unknown keys are
+     * SILENTLY dropped, not rejected: a tus client sending one extra vendor key
+     * must not fail the whole upload over it.
+     *
+     * @param  array<string, string> $metadata
+     * @return array<string, string>
+     */
+    private function sanitizeMetadata(array $metadata): array
+    {
+        $allowedKeys = Config::uploadMetadataAllowedKeys();
+        $maxLength = Config::uploadMetadataMaxValueLength();
+
+        $sanitized = [];
+
+        foreach ($metadata as $key => $value) {
+            if (!in_array($key, $allowedKeys, true)) {
+                continue;
+            }
+
+            $sanitized[$key] = mb_substr((string) $value, 0, $maxLength);
+        }
+
+        return $sanitized;
     }
 
     /**
@@ -384,6 +447,42 @@ final class TusUploadController extends Controller
         if (!Config::tusEnabled()) {
             abort(403, 'The tus resumable-upload protocol is disabled.');
         }
+    }
+
+    /**
+     * F-P1.4-06: the CORE protocol requires the client to declare the resumable
+     * version it speaks; a request that omits it (or names one this deployment does
+     * not support) is refused with 412 + the version we DO support, never silently
+     * accepted.
+     */
+    private function assertTusResumableHeader(Request $request): void
+    {
+        if ($request->header('Tus-Resumable') === self::TUS_VERSION) {
+            return;
+        }
+
+        abort(Response::HTTP_PRECONDITION_FAILED, 'Unsupported or missing Tus-Resumable version.', [
+            'Tus-Resumable' => self::TUS_VERSION,
+            'Tus-Version' => self::TUS_VERSION,
+        ]);
+    }
+
+    /**
+     * F-P1.4-05: a tus PATCH body MUST be application/offset+octet-stream; anything
+     * else (a stray text/plain, a misconfigured client) is refused with 415 BEFORE
+     * a single byte is appended — never silently accepted as a valid chunk.
+     */
+    private function assertOffsetOctetStreamContentType(Request $request): void
+    {
+        $contentType = (string) $request->header('Content-Type', '');
+
+        if (str_starts_with($contentType, 'application/offset+octet-stream')) {
+            return;
+        }
+
+        abort(Response::HTTP_UNSUPPORTED_MEDIA_TYPE, 'PATCH requires Content-Type: application/offset+octet-stream.', [
+            'Tus-Resumable' => self::TUS_VERSION,
+        ]);
     }
 
     /**

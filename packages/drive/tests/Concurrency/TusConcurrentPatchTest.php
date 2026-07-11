@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Exceptions\OffsetMismatchException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -166,7 +166,7 @@ it('offset берётся со СВЕЖЕЙ залоченной строки, �
     // a conflict. Reverting patch() to offset($session) instead of offset($locked)
     // makes this ACCEPT → the assertion goes RED: exactly the guarded regression.
     expect(fn () => $handler->patch($stale, UploadTestHelpers::streamFor('X'), 0))
-        ->toThrow(ValidationException::class);
+        ->toThrow(OffsetMismatchException::class);
 
     // The staged bytes are untouched by the rejected stale PATCH.
     $afterReject = UploadSession::query()->findOrFail($session->getKey());

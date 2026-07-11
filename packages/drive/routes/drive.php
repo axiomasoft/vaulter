@@ -53,8 +53,10 @@ Route::prefix(Config::routePrefix())
             | scalar, NOT route-model bound — the controller resolves the session
             | and asserts it belongs to an authorized target). tus group: create
             | (POST), HEAD (Upload-Offset), PATCH (chunk), DELETE (abort), status
-            | (GET). S3 group: parts (POST), complete (POST). Authorized via
-            | AccessResolver — Create in the target folder / Edit for a new version.
+            | (GET), OPTIONS (discovery, F-P1.4-07 — unauthorized/unauthenticated
+            | per the CORE protocol). S3 group: parts (POST), complete (POST).
+            | Authorized via AccessResolver — Create in the target folder / Edit
+            | for a new version.
             |
             | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-uploads`
             | named limiter (config('vaulter.rate_limits.uploads'), keyed by actor id —
@@ -71,6 +73,10 @@ Route::prefix(Config::routePrefix())
                     Route::match(['head'], 'resumable-uploads/{upload_id}', [TusUploadController::class, 'head']);
                     Route::patch('resumable-uploads/{upload_id}', [TusUploadController::class, 'patch']);
                     Route::delete('resumable-uploads/{upload_id}', [TusUploadController::class, 'abort']);
+                    // tus OPTIONS discovery (F-P1.4-07) — answerable for ANY {upload_id}
+                    // literal, resolved or not: the CORE protocol requires this endpoint
+                    // to advertise capabilities WITHOUT resolving a session.
+                    Route::options('resumable-uploads/{upload_id}', [TusUploadController::class, 'options']);
 
                     // S3-style multipart — parts + complete on the same session handle.
                     Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartController::class, 'parts']);
