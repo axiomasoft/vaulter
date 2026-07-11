@@ -147,7 +147,7 @@ final readonly class StagedUpload
                 }
             }
 
-            stream_copy_to_stream($chunk, $buffer);
+            $this->copyChunkWithinLimit($chunk, $buffer);
 
             $size = ftell($buffer);
             rewind($buffer);
@@ -234,13 +234,16 @@ final readonly class StagedUpload
     }
 
     /**
-     * Reject a PATCH chunk larger than the OPTIONAL per-chunk hard ceiling BEFORE any
-     * bytes are staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a
-     * memory/IO DoS vector a host may cap. This is `uploads.max_chunk_bytes` — the
-     * hard cap — NOT `chunk_size`, which is only the advertised HINT (the server still
-     * accepts any PATCH size up to the remaining bytes, per the shipped contract). 0
-     * disables the cap; that is the live default, so the hint contract holds unless a
-     * host opts in.
+     * Reject a PATCH chunk larger than the per-chunk hard ceiling BEFORE any bytes are
+     * staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a memory/IO DoS
+     * vector. This is `uploads.max_chunk_bytes` — the hard cap — NOT `chunk_size`, which
+     * is only the advertised HINT. 0 disables the cap; the shipped default does NOT (it
+     * is 64 MiB — VLT-REMED P5.2 review).
+     *
+     * This is the CHEAP pre-check and it only sees a stat-able stream (a seekable temp).
+     * The real request body is `php://input`, whose fstat size is 0 — for that one the
+     * barrier is {@see copyChunkWithinLimit()}, on the copy itself. Both are needed: the
+     * caller may hand us either.
      *
      * @param resource $chunk
      */
@@ -256,10 +259,48 @@ final readonly class StagedUpload
         $size = is_array($stat) ? (int) $stat['size'] : 0;
 
         if ($size > $max) {
-            throw ValidationException::withMessages([
-                'chunk' => "The upload chunk of {$size} bytes exceeds the maximum chunk size of {$max} bytes.",
-            ]);
+            $this->rejectOversizeChunk($size, $max);
         }
+    }
+
+    /**
+     * Copy the chunk into the assembly buffer, refusing to read past the per-chunk ceiling
+     * (VLT-REMED P5.2 review). A body whose length we cannot know up front (`php://input`
+     * under chunked transfer-encoding, or any non-stat-able stream) would otherwise slip
+     * past {@see assertChunkWithinLimit()} entirely — the check that the docblock there
+     * promises happens "BEFORE any bytes are staged" — and stream in unbounded. We read at
+     * most $max+1 bytes: one byte past the ceiling is already proof it was crossed, and the
+     * refusal still happens before `writeStream()`, so nothing is staged.
+     *
+     * @param resource $chunk
+     * @param resource $buffer
+     */
+    private function copyChunkWithinLimit(mixed $chunk, mixed $buffer): void
+    {
+        $max = Config::uploadMaxChunkBytes();
+
+        if ($max <= 0) {
+            stream_copy_to_stream($chunk, $buffer);
+
+            return;
+        }
+
+        $copied = stream_copy_to_stream($chunk, $buffer, $max + 1);
+
+        if ($copied !== false && $copied > $max) {
+            // We stopped reading at the ceiling, so the true body length is unknown — say
+            // only what we KNOW, never a size we did not measure.
+            $this->rejectOversizeChunk(null, $max);
+        }
+    }
+
+    private function rejectOversizeChunk(?int $size, int $max): never
+    {
+        $measured = $size === null ? 'The upload chunk' : "The upload chunk of {$size} bytes";
+
+        throw ValidationException::withMessages([
+            'chunk' => "{$measured} exceeds the maximum chunk size of {$max} bytes.",
+        ]);
     }
 
     /**

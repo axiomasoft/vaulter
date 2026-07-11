@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
@@ -13,6 +14,7 @@ use Vaulter\Drive\Uploads\Models\UploadPart;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\Repositories\UploadPartStoreRepository;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
+use Vaulter\Support\Config;
 
 /**
  * The S3-style multipart handler (§2.8 / D16 / M3a). When the session's disk is an
@@ -69,58 +71,75 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      * the part row is upserted (re-upload replaces). Advancing received_bytes is the
      * sum of the recorded part sizes, so a HEAD/status reflects real progress.
      *
+     * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 review, the R-02
+     * class): writing a part STAGES bytes, which is exactly what the sweeper/abort path
+     * destroys. It used to run in the open and check `isOpen()` on the model the controller
+     * had read BEFORE authorization — so a session reclaimed in that window passed the check
+     * on a STALE snapshot and its part object landed on the disk of an already-terminal
+     * session. Nothing ever collects it: {@see UploadSession::scopeSweepable()} does not
+     * select terminal rows, so those bytes are orphaned for good. (Corruption was already
+     * impossible — commitAssembled() refuses a terminal session — but the leak was real, and
+     * the claim in UploadSessionStoreRepository::acquireForPatch() that EVERY actor touching
+     * the staged bytes takes this seam was false while this one did not.)
+     *
+     * The status is therefore RE-READ under the lock, and the whole record→advance window is
+     * one transaction, exactly like TusUploadHandler::patch().
+     *
      * @param  resource                                     $chunk
      * @return array{part_no: int, size: int, etag: string}
      */
     public function putPart(UploadSession $session, int $partNo, int $byteOffset, mixed $chunk): array
     {
-        if (!$session->status->isOpen()) {
-            throw ValidationException::withMessages([
-                'status' => "Upload session {$session->upload_id} is not accepting parts (status {$session->status->value}).",
-            ]);
-        }
+        $bytes = $this->readPartWithinLimit($chunk);
 
-        $bytes = stream_get_contents($chunk);
-        $bytes = $bytes === false ? '' : $bytes;
+        return DB::transaction(function () use ($session, $partNo, $byteOffset, $bytes): array {
+            $locked = $this->sessions->acquireForPatch($session);
 
-        // The per-part key under the session's tmp/ prefix. Reclaimed with the session
-        // on commit/abort/sweep.
-        $partKey = $this->partKey($session, $partNo);
-        $partStream = $this->streamFor($bytes);
-
-        try {
-            $this->driver->put($partKey, $partStream, $this->staged->diskName($session));
-        } finally {
-            if (is_resource($partStream)) {
-                fclose($partStream);
+            if (!$locked->status->isOpen()) {
+                throw ValidationException::withMessages([
+                    'status' => "Upload session {$locked->upload_id} is not accepting parts (status {$locked->status->value}).",
+                ]);
             }
-        }
 
-        // The per-part sha256 is recomputed from the bytes WE received — never a
-        // client claim. The object-store etag is the md5-ish handle multipart-complete
-        // needs; it is NOT a content address (H.3).
-        $partSha256 = hash('sha256', $bytes);
-        $etag = '"'.md5($bytes).'"';
+            // The per-part key under the session's tmp/ prefix. Reclaimed with the session
+            // on commit/abort/sweep.
+            $partKey = $this->partKey($locked, $partNo);
+            $partStream = $this->streamFor($bytes);
 
-        $this->parts->record(
-            session: $session,
-            partNo: $partNo,
-            byteOffset: $byteOffset,
-            sizeBytes: strlen($bytes),
-            etag: $etag,
-            partSha256: $partSha256,
-        );
+            try {
+                $this->driver->put($partKey, $partStream, $this->staged->diskName($locked));
+            } finally {
+                if (is_resource($partStream)) {
+                    fclose($partStream);
+                }
+            }
 
-        $this->sessions->advanceReceived(
-            session: $session,
-            receivedBytes: $this->recordedSize($session),
-        );
+            // The per-part sha256 is recomputed from the bytes WE received — never a
+            // client claim. The object-store etag is the md5-ish handle multipart-complete
+            // needs; it is NOT a content address (H.3).
+            $partSha256 = hash('sha256', $bytes);
+            $etag = '"'.md5($bytes).'"';
 
-        return [
-            'part_no' => $partNo,
-            'size' => strlen($bytes),
-            'etag' => $etag,
-        ];
+            $this->parts->record(
+                session: $locked,
+                partNo: $partNo,
+                byteOffset: $byteOffset,
+                sizeBytes: strlen($bytes),
+                etag: $etag,
+                partSha256: $partSha256,
+            );
+
+            $this->sessions->advanceReceived(
+                session: $locked,
+                receivedBytes: $this->recordedSize($locked),
+            );
+
+            return [
+                'part_no' => $partNo,
+                'size' => strlen($bytes),
+                'etag' => $etag,
+            ];
+        });
     }
 
     /**
@@ -195,6 +214,35 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         foreach ($this->parts->forSession($session) as $part) {
             $this->driver->delete($this->partKey($session, $part->part_no), $this->staged->diskName($session));
         }
+    }
+
+    /**
+     * The part's bytes, bounded by the per-chunk ceiling (`uploads.max_chunk_bytes`, 64 MiB
+     * by default — VLT-REMED P5.2 review / F-P1.4-04). The proxied multipart design has to
+     * hold a part in memory (it re-hashes it), so the ceiling is what keeps that bounded: we
+     * read at most one byte past it, and one byte past is already proof it was crossed. The
+     * controller has usually refused the request on its Content-Length long before this; this
+     * is the barrier for a body that never declared one.
+     *
+     * @param resource $chunk
+     */
+    private function readPartWithinLimit(mixed $chunk): string
+    {
+        $max = Config::uploadMaxChunkBytes();
+
+        $bytes = $max > 0
+            ? stream_get_contents($chunk, $max + 1)
+            : stream_get_contents($chunk);
+
+        $bytes = $bytes === false ? '' : $bytes;
+
+        if ($max > 0 && strlen($bytes) > $max) {
+            throw ValidationException::withMessages([
+                'chunk' => "The upload part exceeds the maximum chunk size of {$max} bytes.",
+            ]);
+        }
+
+        return $bytes;
     }
 
     private function readPart(UploadSession $session, UploadPart $part): string

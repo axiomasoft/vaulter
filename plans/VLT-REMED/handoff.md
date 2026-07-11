@@ -31,10 +31,21 @@
   (PATCH отчитался клиенту об успехе и продвинутом offset, сессия — в терминальном статусе).
   R-05 краснел точной сигнатурой `Unexpected request was recorded` (запрос к `169.254.169.254`
   реально уходил). **Эшелон 2 D4 признан ДОСТИЖИМЫМ** (R-07) — одноэшелонность признавать не пришлось.
-- **Гейт (D12):** корень — `analyse` 0 errors · `test` **480/480** · `test:types` 100 % ·
-  `lint:check` красный **ровно** на 29 файлах `plans/AUDIT-VLT/artifacts/repro/**` (проверено машинно).
-  `documents` — 166 passed. **PG-лейн `drive`** (`php8.4`, `agelto_postgres`) — **51 passed**, оба новых
-  форк-теста ИСПОЛНЕНЫ, не skipped.
+- **Контрольное ревью P5.2 нашло 4 дефекта — все ЗАКРЫТЫ ФИКСОМ** (коммит `fix(documents,drive,core)`,
+  тесты RV-01…RV-03, red-before доказан прогоном; см. «ПОПРАВКА к Validation» в `phases/P5.md`):
+  **RV-01** — XSS-класс F-P1.11-01/-04 был жив на соседнем пути (markdown-ветка `codeBlock` печатала
+  тело и `language` сырыми → живой raw-HTML в `.md`); **RV-02** — `S3MultipartHandler::putPart()` вне
+  критической секции (осиротевшие part-байты); **RV-03** — per-chunk кап стоял ЗА местом вреда и был
+  выключен по умолчанию (тело PATCH материализовалось целиком в память); **RV-04** — недостоверный
+  гейт-эвиденс (ниже).
+- **Гейт (D12) — ПЕРЕПРОГНАН ЦЕЛИКОМ на `/usr/bin/php8.4`** (версия, которую пинит CI; прежняя запись
+  «`documents` — 166 passed» была счётом ПОДМНОЖЕСТВА, а полный сьют пакета на 8.4 ФАТАЛИЛ —
+  `HasRoles not found`; починено `spatie/laravel-permission` в `require-dev` пакета `documents`):
+  корень — `analyse` 0 errors · `pest --ci` **486 passed** · `test:types` 100 % · `lint:check` красный
+  **ровно** на `plans/AUDIT-VLT/artifacts/repro/**`. Сателлиты (`analyse` 0 · `test:types` 100 % все):
+  `documents` **178/1 skipped**, `drive` **165/5**, `media` **72/5**, `filament` **64/1**.
+  **PG-лейн `drive`** (`agelto_postgres` 127.0.0.1:5455, `vaulter_test`) — весь сьют **170 passed,
+  0 skipped**, форк-тесты гонки PATCH↔sweep ИСПОЛНЕНЫ.
 
 **Remaining:**
 1. **P5.3** (sonnet/medium) — closure-матрица 103 находок + вердикт release-readiness. После него

@@ -70,7 +70,13 @@ its nodes.
   instead of being concatenated into `](...)`;
 - drops the link wrapper (keeping the label) / the image entirely when the scheme is not
   `http`/`https`/`mailto`;
-- renders `image` as `![alt](src)` and `table` as a GFM pipe table.
+- renders `image` as `![alt](src)` and `table` as a GFM pipe table;
+- fences a `codeBlock` with a backtick run **longer than any run inside its body** (CommonMark), and
+  emits `attrs.language` as the info string only when it is a bare language token
+  (`[A-Za-z0-9_+-]*`) — anything else is dropped (P5.2 review / RV-01). A code block whose text
+  contained its own ` ``` ` fence — legitimate text, accepted at store time — used to close the
+  fence early and emit whatever followed it as **live raw HTML** in the exported `.md`; a `language`
+  carrying a newline did the same from the opening line.
 
 **Why.** HTML escaping left the Markdown metacharacters live, so a link label of
 `click](javascript:alert(1))` closed the link early and opened a **new, live** `javascript:` link
@@ -104,6 +110,31 @@ delivery with a redirect (e.g. `http` → `https`, or a URL that has moved).
 `WebhookEndpoint::$url` at the **final** URL — the receiver must answer the POST itself, not bounce
 it.
 
+### Resumable uploads: the per-chunk ceiling now SHIPS ENABLED (64 MiB), and an over-cap body is a 413 (P5.2 review / F-P1.4-04, RV-03)
+
+**What changed.**
+
+- `config('vaulter.uploads.max_chunk_bytes')` now defaults to **67 108 864 (64 MiB)** — it was `0`,
+  i.e. "no per-chunk cap". A single tus `PATCH` / S3 part body larger than the ceiling is refused
+  with **413 Payload Too Large** on its declared `Content-Length`, before the body is read; a body
+  with no declared length is cut off at the ceiling before a byte is staged.
+- The request body is now streamed (`php://input` handed straight to the handler) instead of being
+  materialised into a PHP string by the controller.
+- `env('VAULTER_UPLOAD_MAX_CHUNK_BYTES')` still overrides it; `0` still disables the cap entirely.
+
+**Why.** The ceiling existed but was disabled by default next to a 5 GiB `max_bytes`, and it was
+enforced *behind* the place the harm was delivered: the controller had already materialised the
+whole body in memory before anything checked its size. One authorized `PATCH` could take a worker
+out on memory. A ceiling that only holds when the host remembers to switch it on is not a ceiling.
+
+**Who is affected.** Anyone whose client sends single chunks/parts larger than 64 MiB — those
+requests now get a 413 (they used to be accepted).
+
+**What you must check.** The advertised `chunk_size` hint is 8 MiB, so a conformant client is far
+below the ceiling. If you deliberately push huge single chunks, raise
+`uploads.max_chunk_bytes` (or set it to `0` to restore the old unbounded behaviour — understand
+that you are re-opening the DoS lever).
+
 ### Upload sessions: abort/expire now take the PATCH lock; a missing staged object is a hard error (P5.2 / R-02, R-03, R-08)
 
 **What changed.**
@@ -115,6 +146,11 @@ it.
 - `vaulter:sweep-uploads` **skips** a session whose lock it cannot take (a `PATCH` is in flight)
   and reports it as skipped; it no longer fails, and no longer deletes the staged bytes of a live
   upload.
+- `S3MultipartHandler::putPart()` runs in that same critical section too (P5.2 review / RV-02): it
+  takes the lock, re-reads the status under it and may now throw `UploadConflictException` (lock
+  held by another actor) or `ValidationException` (the session was reclaimed while the part was in
+  flight). It used to check `isOpen()` on the caller's stale snapshot and stage a part object onto
+  an already-terminal session — bytes nothing would ever collect.
 - `StagedUpload::append()` throws the new `Vaulter\Drive\Exceptions\StagedUploadMissingException`
   (409) when the session claims `offset > 0` but the staged object is gone, instead of silently
   writing the new chunk alone.

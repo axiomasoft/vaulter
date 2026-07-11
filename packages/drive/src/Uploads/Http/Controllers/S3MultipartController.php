@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Uploads\Http\Controllers;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
 use Vaulter\Drive\Uploads\Models\UploadSession;
@@ -21,6 +22,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -55,6 +57,7 @@ final class S3MultipartController extends Controller
     {
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
+        $this->assertContentLengthWithinLimit($request);
 
         $partNo = $request->has('part_no')
             ? $request->integer('part_no')
@@ -189,20 +192,40 @@ final class S3MultipartController extends Controller
     }
 
     /**
+     * The raw part body as a STREAM, never a PHP string — see
+     * TusUploadController::chunkStream() for the full rationale (VLT-REMED P5.2 review /
+     * F-P1.4-04): the per-chunk ceiling used to sit BEHIND a `getContent()` that had
+     * already materialised the whole body in memory.
+     *
      * @return resource
      */
     private function chunkStream(Request $request): mixed
     {
-        $stream = fopen('php://temp', 'r+b');
+        $stream = $request->getContent(asResource: true);
 
-        if ($stream === false) {
+        if (!is_resource($stream)) {
             abort(500, 'Unable to open a stream for the upload part.');
         }
 
-        fwrite($stream, $request->getContent());
-        rewind($stream);
-
         return $stream;
+    }
+
+    /**
+     * Refuse an over-cap part on its DECLARED length, before the body is touched — the
+     * S3-multipart twin of TusUploadController::assertContentLengthWithinLimit(). The cap
+     * (`uploads.max_chunk_bytes`) covers BOTH protocols: a part body is exactly as
+     * unbounded as a PATCH body.
+     */
+    private function assertContentLengthWithinLimit(Request $request): void
+    {
+        $max = Config::uploadMaxChunkBytes();
+        $declared = $request->server('CONTENT_LENGTH');
+
+        if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {
+            return;
+        }
+
+        abort(Response::HTTP_REQUEST_ENTITY_TOO_LARGE, "The upload part exceeds the maximum chunk size of {$max} bytes.");
     }
 
     private function guard(Request $request, Ability $ability, Node $node): void

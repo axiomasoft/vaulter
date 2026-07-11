@@ -553,12 +553,14 @@ return [
     | file; the client sha256 / S3 ETag is NEVER trusted as the content address).
     |
     |  - max_bytes: the hard ceiling on a session's declared total size (0 = ∞).
-    |  - chunk_size: the advertised default chunk size (a HINT; the server still
-    |    accepts any PATCH/part size up to the remaining bytes — see max_chunk_bytes
-    |    for the separate hard cap).
-    |  - max_chunk_bytes: an OPTIONAL hard ceiling on a SINGLE PATCH/part body — a
-    |    memory/IO DoS lever kept distinct from the chunk_size hint (0 = disabled,
-    |    which keeps the "accepts any size" contract above; set it to bound a request).
+    |  - chunk_size: the advertised default chunk size (a HINT; the server accepts any
+    |    PATCH/part size up to max_chunk_bytes — the separate hard cap below).
+    |  - max_chunk_bytes: the hard ceiling on a SINGLE PATCH/part body — a memory/IO
+    |    DoS lever kept distinct from the chunk_size hint. It SHIPS ENABLED (64 MiB =
+    |    8x the advertised hint): a request whose Content-Length exceeds it is refused
+    |    413 before its body is read, and a body with no declared length is cut off at
+    |    the ceiling before a byte is staged. 0 disables the cap — an unbounded single
+    |    PATCH is then a memory/IO DoS vector, so only lift it deliberately.
     |  - session_ttl_hours: a session not committed in this window is swept by
     |    `php artisan vaulter:sweep-uploads` (staged temp + S3 multipart reclaimed,
     |    status → expired). PAIR this with an S3 bucket lifecycle rule
@@ -578,7 +580,7 @@ return [
     'uploads' => [
         'max_bytes' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 GiB
         'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608), // 8 MiB
-        'max_chunk_bytes' => env('VAULTER_UPLOAD_MAX_CHUNK_BYTES', 0), // 0 = no per-chunk cap
+        'max_chunk_bytes' => env('VAULTER_UPLOAD_MAX_CHUNK_BYTES', 67_108_864), // 64 MiB (0 = no per-chunk cap)
         'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
         'max_active_sessions' => env('VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS', 20),
         'tus' => [

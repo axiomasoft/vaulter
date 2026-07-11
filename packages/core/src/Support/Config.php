@@ -605,18 +605,21 @@ final class Config
     }
 
     /**
-     * The OPTIONAL hard ceiling (in bytes) on a SINGLE tus PATCH / part body (§2.8 /
-     * F-P1.4-04): a memory/IO DoS lever kept DISTINCT from the chunk_size HINT so
-     * capping a request never inflates the chunk size advertised to clients. 0 = the
-     * cap is disabled, honouring the documented contract that the server accepts any
-     * PATCH/part size up to the remaining bytes; a host sets it to bound a request.
-     * Floored at 0 (never 1) so 0 is a real disable, not a 1-byte cap.
+     * The hard ceiling (in bytes) on a SINGLE tus PATCH / part body (§2.8 / F-P1.4-04):
+     * a memory/IO DoS lever kept DISTINCT from the chunk_size HINT so capping a request
+     * never inflates the chunk size advertised to clients.
+     *
+     * It SHIPS ENABLED at 64 MiB (VLT-REMED P5.2 review): the default used to be 0 —
+     * "cap disabled" — next to a 5 GiB max_bytes, so out of the box ONE authorized PATCH
+     * could hand the worker a 5 GiB body. A ceiling that is only a ceiling when the host
+     * remembers to switch it on is not a ceiling. Floored at 0 (never 1) so an explicit
+     * 0 is still a real disable, not a 1-byte cap.
      */
     public static function uploadMaxChunkBytes(): int
     {
-        $value = config('vaulter.uploads.max_chunk_bytes', 0);
+        $value = config('vaulter.uploads.max_chunk_bytes', 67_108_864); // 64 MiB
 
-        $bytes = is_numeric($value) ? (int) $value : 0;
+        $bytes = is_numeric($value) ? (int) $value : 67_108_864;
 
         return max($bytes, 0);
     }

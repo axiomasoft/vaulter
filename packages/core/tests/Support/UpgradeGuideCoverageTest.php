@@ -65,7 +65,19 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Uploads/Repositories/UploadSessionStoreRepository.php')],
         // P5.2 — обеззараживание TipTap-контента на JSON-чтении.
         'P5.2 read sanitization' => ['(P5.2 / R-12)', (string) file_get_contents($root.'/packages/documents/src/Http/Resources/NodeDocumentVersionResource.php')],
+        // Ревью P5.2 — per-chunk кап включён из коробки (BC: тело >64 MiB теперь 413).
+        'P5.2-review chunk cap' => ['(P5.2 review / F-P1.4-04, RV-03)', (string) file_get_contents($root.'/packages/drive/src/Uploads/Http/Controllers/TusUploadController.php')],
     ];
+});
+
+/*
+ * Ревью P5.2 / RV-03 — config-honesty: секция UPGRADE.md обещает, что кап на один чанк ШИПАЕТСЯ
+ * ВКЛЮЧЁННЫМ. Guard держит оба конца — дефолт в шипуемом конфиге и запись про него.
+ */
+it('UPGRADE.md обещает включённый per-chunk кап — и дефолт в конфиге действительно непустой, RV-03', function (): void {
+    expect(Config::uploadMaxChunkBytes())->toBe(67_108_864);
+
+    expect(upgradeGuide())->toContain('now SHIPS ENABLED (64 MiB)');
 });
 
 /*

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Exceptions\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
+use Vaulter\Drive\Uploads\Enums\UploadProtocol;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
+use Vaulter\Drive\Uploads\Models\UploadPart;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
+use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
@@ -204,6 +208,36 @@ it('commitAssembled() перечитывает статус под локом и
     ))->toThrow(UploadConflictException::class);
 
     expect(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Expired);
+});
+
+/*
+ * RV-02 — ревью P5.2: putPart() (S3-multipart) остался ВНЕ критической секции: он не брал лок и проверял
+ * isOpen() на снимке, прочитанном контроллером ДО авторизации. Сессия, реклеймленная между
+ * этим чтением и записью части, проходила проверку по УСТАРЕВШЕЙ модели, и part-объект
+ * ложился на диск уже терминальной сессии: scopeSweepable её больше не выберет → байты
+ * осиротели навсегда. Тот же класс R-02, что закрыт для PATCH/expire/abort/commit.
+ */
+it('putPart() перечитывает статус под локом: часть терминальной сессии не пишется, RV-02', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 100);
+
+    // Снимок, с которым контроллер пришёл писать часть.
+    $stale = UploadSession::query()->findOrFail($session->getKey());
+
+    // Пока часть летела по сети, sweep реклеймил сессию: staged-байты снесены, статус терминальный.
+    app(UploadSessionManager::class)->expire($session->refresh());
+
+    expect(fn () => app(S3MultipartHandler::class)->putPart(
+        $stale,
+        partNo: 1,
+        byteOffset: 0,
+        chunk: UploadTestHelpers::streamFor('0123456789'),
+    ))->toThrow(ValidationException::class);
+
+    // До фикса: part-строка и part-объект на диске у Expired-сессии — осиротевшие байты.
+    expect(UploadPart::query()->count())->toBe(0)
+        ->and(Storage::disk('local')->exists("tmp/uploads/{$stale->upload_id}.parts/1"))->toBeFalse()
+        ->and(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Expired);
 });
 
 /*

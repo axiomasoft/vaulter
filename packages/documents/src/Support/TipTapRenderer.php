@@ -182,12 +182,69 @@ final class TipTapRenderer
             'bulletList' => $this->markdownList($children, '- '),
             'orderedList' => $this->markdownOrderedList($children),
             'blockquote' => '> '.str_replace("\n", "\n> ", $this->markdownInline($children)),
-            'codeBlock' => '```'.$this->stringValue($this->attrs($node), 'language')."\n".$this->plainText($children)."\n```",
+            'codeBlock' => $this->markdownCodeBlock($node, $children),
             'horizontalRule' => '---',
             'image' => $this->markdownImage($node),
             'table' => $this->markdownTable($children),
             default => $this->markdownInline($children),
         };
+    }
+
+    /**
+     * A fenced code block — the BLOCK sibling of {@see markdownCodeSpan()}, and the same
+     * class of hole (VLT-REMED P5.2 review / F-P1.11-01, F-P1.11-04). Both halves used to be
+     * emitted RAW, and both halves close the fence:
+     *
+     *  - the BODY. A code block is inert only while its fence holds, and a fence is closed by
+     *    a line of backticks at least as long as the opening one. `"a\n```\n<script>…"` — which
+     *    store-time validation accepts, it is legitimate TEXT — therefore closed its own fence
+     *    and dropped the rest of the block into the document as top-level markup: a LIVE
+     *    raw-HTML block in the exported `.md`. CommonMark's rule is the fix: the fence is one
+     *    backtick longer than the longest backtick run in the body, so nothing inside it can
+     *    reach the fence's length. The body is then carried VERBATIM (a code block must be) —
+     *    no escaping, and none needed.
+     *  - the INFO STRING (`attrs.language`). It is on the store-time attribute allow-list, but
+     *    its VALUE is not validated there, so `"php\n```\n<img src=x onerror=alert(1)>"` closed
+     *    the fence with a newline and emitted a live `<img onerror>`. An info string is a bare
+     *    language token: anything outside `[A-Za-z0-9_+-]` is not one, and is dropped whole
+     *    rather than sanitised into something that merely looks like one.
+     *
+     * @param array<string, mixed>       $node
+     * @param list<array<string, mixed>> $children
+     */
+    private function markdownCodeBlock(array $node, array $children): string
+    {
+        $body = $this->plainText($children);
+        $fence = str_repeat('`', max(3, $this->longestBacktickRun($body) + 1));
+
+        return $fence.$this->markdownInfoString($this->stringValue($this->attrs($node), 'language'))
+            ."\n".$body."\n".$fence;
+    }
+
+    /**
+     * The longest run of consecutive backticks anywhere in $body — the fence must exceed it.
+     */
+    private function longestBacktickRun(string $body): int
+    {
+        preg_match_all('/`+/', $body, $matches);
+
+        $longest = 0;
+
+        foreach ($matches[0] as $run) {
+            $longest = max($longest, strlen($run));
+        }
+
+        return $longest;
+    }
+
+    /**
+     * The code-fence info string, or '' when the declared language is not a bare language
+     * token (see {@see markdownCodeBlock()} — a newline or a backtick in there closes the
+     * fence from the OPENING line).
+     */
+    private function markdownInfoString(string $language): string
+    {
+        return preg_match('/^[A-Za-z0-9_+-]*$/', $language) === 1 ? $language : '';
     }
 
     /**

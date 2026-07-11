@@ -139,6 +139,7 @@ final class TusUploadController extends Controller
         $this->authorizeSession($request, $session);
         $this->assertTusResumableHeader($request);
         $this->assertOffsetOctetStreamContentType($request);
+        $this->assertContentLengthWithinLimit($request);
 
         $offset = (int) $request->header('Upload-Offset', '0');
 
@@ -351,22 +352,48 @@ final class TusUploadController extends Controller
     }
 
     /**
-     * The raw PATCH body as a stream the handler appends.
+     * The raw PATCH body as a STREAM the handler appends — `php://input` itself, never a
+     * PHP string (VLT-REMED P5.2 review / F-P1.4-04).
+     *
+     * `fwrite($stream, $request->getContent())` materialised the ENTIRE body in memory
+     * before the per-chunk ceiling downstream ever got to look at it: the barrier stood
+     * behind the place the harm was delivered, so one authorized PATCH the size of
+     * `uploads.max_bytes` (5 GiB by default) could take the worker out on memory. Handing
+     * the resource straight through keeps peak memory at the copy buffer, whatever the
+     * client sends — and {@see assertContentLengthWithinLimit()} refuses the obvious case
+     * before a byte is read at all.
      *
      * @return resource
      */
     private function chunkStream(Request $request): mixed
     {
-        $stream = fopen('php://temp', 'r+b');
+        $stream = $request->getContent(asResource: true);
 
-        if ($stream === false) {
+        if (!is_resource($stream)) {
             abort(500, 'Unable to open a stream for the upload chunk.');
         }
 
-        fwrite($stream, $request->getContent());
-        rewind($stream);
-
         return $stream;
+    }
+
+    /**
+     * Refuse an over-cap PATCH on its DECLARED length, before the body is touched
+     * (VLT-REMED P5.2 review): a client that announces more than `uploads.max_chunk_bytes`
+     * gets a 413 and we read nothing. A body with no declared length is not trusted to be
+     * small — StagedUpload cuts THAT one off at the ceiling mid-copy, before staging.
+     */
+    private function assertContentLengthWithinLimit(Request $request): void
+    {
+        $max = Config::uploadMaxChunkBytes();
+        $declared = $request->server('CONTENT_LENGTH');
+
+        if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {
+            return;
+        }
+
+        abort(Response::HTTP_REQUEST_ENTITY_TOO_LARGE, "The upload chunk exceeds the maximum chunk size of {$max} bytes.", [
+            'Tus-Resumable' => self::TUS_VERSION,
+        ]);
     }
 
     /**

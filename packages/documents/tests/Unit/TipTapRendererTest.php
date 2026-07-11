@@ -382,6 +382,71 @@ it('markdown-экспорт: `|` в ячейке не добавляет кол�
     }
 });
 
+/*
+ * RV-01 — ревью P5.2 (тот же класс F-P1.11-01/-04, соседний путь) — markdown-ветка codeBlock печатала
+ * `'```'.attrs.language."\n".plainText($children)."\n```"`, СЫРЫМИ обе половины. Тело
+ * кодоблока, содержащее собственный fence, закрывает его раньше времени, и всё, что дальше,
+ * падает в .md как markup верхнего уровня — ЖИВОЙ сырой HTML. Store-time такой контент
+ * принимает: это легитимный ТЕКСТ. Ровно то, что P5.2 закрыл для inline-марки code
+ * (markdownCodeSpan), но узел-брат codeBlock остался сырым.
+ *
+ * Свойство, а не подстрока: открывающий и закрывающий fence одинаковы и длиннее любой
+ * последовательности бэктиков в теле (CommonMark) — тогда тело инертно ЦЕЛИКОМ, чем бы оно
+ * ни было.
+ */
+it('markdown-экспорт: тело codeBlock не закрывает свой fence и не выпускает сырой HTML, RV-01', function (): void {
+    $body = "innocent\n```\n<script>alert(1)</script>\n```";
+
+    $doc = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'codeBlock',
+            'content' => [['type' => 'text', 'text' => $body]],
+        ]],
+    ]);
+
+    $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
+    $lines = explode("\n", trim($markdown));
+
+    // Fence — длиннее самого длинного прогона бэктиков в теле (3) → минимум 4.
+    expect($lines[0])->toBe('````')
+        ->and($lines[array_key_last($lines)])->toBe('````')
+        // Тело доехало дословно и целиком лежит МЕЖДУ ограждениями → инертно.
+        ->and(implode("\n", array_slice($lines, 1, -1)))->toBe($body);
+});
+
+/*
+ * RV-01, вторая половина: attrs.language — в CANONICAL_ATTRIBUTES, store-time его ЗНАЧЕНИЕ не
+ * валидирует. Info-string печаталась сырой, поэтому `"php\n```\n<img src=x onerror=alert(1)>"`
+ * закрывал fence переводом строки и выпускал живой <img onerror> в .md.
+ */
+it('markdown-экспорт: language кодоблока валидируется, а не печатается сырым, RV-01', function (string $language, string $expectedFence): void {
+    $doc = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'codeBlock',
+            'attrs' => ['language' => $language],
+            'content' => [['type' => 'text', 'text' => 'echo 1;']],
+        ]],
+    ]);
+
+    $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
+    $lines = explode("\n", trim($markdown));
+
+    expect($lines[0])->toBe($expectedFence)
+        ->and($lines)->toHaveCount(3)
+        ->and($lines[1])->toBe('echo 1;')
+        ->and($markdown)->not->toContain('onerror');
+})->with([
+    // Легальный язык доезжает как info-string.
+    'обычный язык' => ['php', '```php'],
+    'дефис и плюс' => ['objective-c++', '```objective-c++'],
+    // Всё, что несёт что-то вне [A-Za-z0-9_+-], инфо-строкой не становится вовсе.
+    'перевод строки + payload' => ["php\n```\n<img src=x onerror=alert(1)>", '```'],
+    'пробел и разметка' => ['php <img src=x onerror=alert(1)>', '```'],
+    'бэктик' => ['php`', '```'],
+]);
+
 it('keeps a valid link and drops disallowed link schemes in markdown export, F-P1.11-04', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',
