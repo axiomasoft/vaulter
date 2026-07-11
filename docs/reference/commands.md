@@ -6,10 +6,10 @@ outline: deep
 
 # Artisan commands
 
-Vaulter registers nine Artisan commands: an install command (from
-spatie/laravel-package-tools) plus eight package commands wired in
+Vaulter registers ten Artisan commands: an install command (from
+spatie/laravel-package-tools) plus nine package commands wired in
 `VaulterServiceProvider`. The maintenance commands (GC, trash purge, upload sweep,
-outbox relay, webhook retry) are designed to be scheduled.
+outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 
 | Command | Purpose |
 |---|---|
@@ -22,6 +22,7 @@ outbox relay, webhook retry) are designed to be scheduled.
 | `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
 | `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose backoff elapsed |
+| `vaulter:prune-webhooks` | Delete settled outbox rows and terminal webhook deliveries past retention |
 
 ---
 
@@ -199,9 +200,34 @@ php artisan vaulter:retry-webhooks
 
 ---
 
+## `vaulter:prune-webhooks`
+
+Delete SETTLED outbox rows (`dispatched`, older than the retention window) and
+TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention window).
+An in-flight row (`pending`/`failed`) is never touched — the relay/retry sweep still
+owns it. Gated by `features.reliability` (no-ops with a notice when off). The window
+comes from `config('vaulter.webhooks.retention_days')` (default 30) unless `--days`
+overrides it.
+
+```
+vaulter:prune-webhooks
+    {--days=}    Override the retention window in days
+    {--dry-run}  Report what would be pruned without deleting
+```
+
+```bash
+php artisan vaulter:prune-webhooks
+php artisan vaulter:prune-webhooks --dry-run
+php artisan vaulter:prune-webhooks --days=7
+```
+
+See [Recipes → Reliability & webhooks](/guide/recipes).
+
+---
+
 ## Scheduling
 
-The five maintenance commands are schedule-friendly. A representative schedule:
+The six maintenance commands are schedule-friendly. A representative schedule:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
@@ -212,6 +238,7 @@ Schedule::command('vaulter:sweep-uploads')->hourly();
 Schedule::command('vaulter:gc-blobs')->daily();
 Schedule::command('vaulter:purge-trash')->daily();
 Schedule::command('vaulter:reconcile-blobs')->weekly();
+Schedule::command('vaulter:prune-webhooks')->weekly();
 ```
 
 ## See also

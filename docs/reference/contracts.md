@@ -14,19 +14,24 @@ signatures and the binding point you swap it through.
 
 | Domain | Contract | Swap via |
 |---|---|---|
-| Access | `PermissionResolver` | `config('vaulter.permission_resolver')` / `Vaulter::resolvePermissionsWith()` |
 | Access | `HostRoleDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
 | Access | `AzgardGuard` | container binding (host adapter) |
+| Access | `AzgardBackedUser` (permissions-azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
+| Access | `GrantAuthoritativeDriver` | opt-in capability a `HostRoleDriver` implements |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
+| Cas | `ListableContentStore` | opt-in capability a `ContentStore` implements |
+| Cas | `ListableStorageDriver` | opt-in capability a `StorageDriver` implements |
 | Cas | `StorageDriver` | `config('vaulter.cas.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (legacy) |
-| Collaboration | `CollaborationDriver` | `config('vaulter.collaboration.drivers.*.class')` (legacy doc path) |
 | Collaboration | `NodeCollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
+| Documents | `DocumentContent` | returned by a `DocumentHandler`'s content parser |
 | Documents | `DocumentHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
 | Documents | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
+| Documents | `HandlerRegistry` | `Vaulter::handlers()` / `Vaulter::registerHandler()` |
+| Documents | `NodeHandlerResolver` | container binding (vaulter-documents) |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -34,26 +39,6 @@ signatures and the binding point you swap it through.
 ---
 
 ## Access
-
-### `Vaulter\Contracts\Access\PermissionResolver` {#access-permission-resolver}
-
-The host-implemented hook for the **legacy DocVault document path**. Bind it via
-`config('vaulter.permission_resolver')` (FQCN) or
-`Vaulter::resolvePermissionsWith()`. The Drive ACL uses `HostRoleDriver` instead —
-this resolver is the older document-centric lane.
-
-```php
-interface PermissionResolver
-{
-    /** @param string $action view|edit|comment|manage|delete */
-    public function can(Authenticatable $user, string $action, Document $document): bool;
-
-    public function canCreate(Authenticatable $user, string $workspaceType, int|string $workspaceId): bool;
-}
-```
-
-**Implement when** you want the legacy `v_documents` surface to defer to your app's
-role system. See [Recipes → Custom resolver](/guide/recipes).
 
 ### `Vaulter\Contracts\Access\HostRoleDriver`
 
@@ -126,6 +111,39 @@ ships by default — tests bind `Vaulter\Testing\FakeAzgardGuard`.
 adapter and align ULID morphs (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid`
 + `AZ_GUARD_MORPH_TYPE=ulid`). See [Auth → Host role driver](/guide/permission-drivers).
 
+### `Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser` (permissions-azgard)
+
+The host `User` model contract the `AzgardGuardAdapter` bridges into Vaulter,
+composed straight from AzGuard's own public contracts (`HasPermissions` +
+`HasScopedRoles`) — no re-declared signature to drift out of sync.
+
+```php
+interface AzgardBackedUser extends HasPermissions, HasScopedRoles {}
+```
+
+**Implement when** `config('vaulter.drivers.permission') = 'azgard'` — the host
+`User` model satisfies it with no extra method bodies by composing
+`AzGuard\Concerns\HasAzGuard` + `AzGuard\Concerns\HasScopedRoles`.
+
+### `Vaulter\Contracts\Access\GrantAuthoritativeDriver`
+
+An opt-in capability a `HostRoleDriver` implements to declare that `v_node_grants` is
+the sole read-visibility authority for that driver instance, so a listing may safely
+narrow to the actor's grant-reachable candidate set. Absence is the conservative,
+BC-safe default (the listing stays open, never wrongly hiding a row) — only the
+bundled `database` driver declares it.
+
+```php
+interface GrantAuthoritativeDriver
+{
+    public function isGrantAuthoritative(): bool;
+}
+```
+
+**Implement when** your `HostRoleDriver` confers access ONLY through
+`v_node_grants` (no host roles/teams, no workspace-create gate, no super-admin
+override) — returning `false` (or not implementing the interface) is always safe.
+
 ---
 
 ## Cas (content-addressed storage)
@@ -180,6 +198,25 @@ interface ContentStore
     public function keyFor(string $scope, string $sha256): string;
 }
 ```
+
+### `Vaulter\Contracts\Cas\ListableContentStore`
+
+An opt-in capability a `ContentStore` implements to declare it can enumerate stored
+objects and report their age — the seam the orphan disk-walk (CAS reconciler) uses
+to find bytes with no `v_blobs` row. Absence is the conservative default: the orphan
+walk refuses cleanly (skipped, never a fatal error) instead of erroring.
+
+```php
+interface ListableContentStore
+{
+    public function lastModified(string $key, ?string $disk = null): ?int;
+
+    /** @return iterable<string> */
+    public function listKeys(?string $disk = null): iterable;
+}
+```
+
+**Implement when** your `ContentStore` should participate in orphan reconciliation.
 
 ### `Vaulter\Contracts\Cas\StagedObject`
 
@@ -236,6 +273,26 @@ we were overtaken and must re-SELECT + reuse — surfaced as `put()` returning `
 not an exception. On a local disk the condition degrades to a best-effort `exists()`
 guard.
 
+### `Vaulter\Contracts\Cas\ListableStorageDriver`
+
+An opt-in capability a `StorageDriver` implements to declare it can enumerate the
+disk and report object age — the seam the orphan disk-walk (CAS reconciler) uses to
+find bytes with no `v_blobs` row. Absence is the conservative default: the driver is
+reported as non-listable and skipped, never a fatal error.
+
+```php
+interface ListableStorageDriver
+{
+    public function lastModified(string $key, ?string $disk = null): ?int;
+
+    /** @return iterable<string> */
+    public function listContents(?string $disk = null): iterable;
+}
+```
+
+**Implement when** your `StorageDriver` should participate in orphan reconciliation.
+The bundled Flysystem storage driver implements it out of the box.
+
 ### `Vaulter\Contracts\Cas\StorageAdapter` (legacy)
 
 Pluggable storage for **legacy** binary attachments. Vaulter itself stores JSON
@@ -279,27 +336,6 @@ interface NodeCollaborationDriver
 
     /** @param int|string $actorId the connecting host user's id (the JWT `sub`) */
     public function issueSession(Node $node, Ability $ability, int|string $actorId): CollaborationSession;
-}
-```
-
-### `Vaulter\Contracts\Collaboration\CollaborationDriver` (legacy)
-
-The **legacy document** collaboration transport, bound to the `document_id`-attached
-`Document` model. Coexists with `NodeCollaborationDriver`; a host selects the same
-transport for both via `config('vaulter.collaboration.driver')`. The driver class
-comes from `config('vaulter.collaboration.drivers.{name}.class')`.
-
-```php
-interface CollaborationDriver
-{
-    public function type(): CollaborationDriverType;
-
-    public function authorizeChannel(Authenticatable $user, Document $document): bool;
-
-    /** @return array<string, mixed> */
-    public function connectionConfig(Document $document, Authenticatable $user): array;
-
-    public function issueToken(Document $document, Authenticatable $user): string;
 }
 ```
 
@@ -390,6 +426,61 @@ interface DocumentExporter
 ```
 
 See [Recipes → Custom export](/guide/recipes).
+
+### `Vaulter\Contracts\Documents\DocumentContent`
+
+The content payload a document version stores. A handler decides the shape: a
+rich-text handler produces a validated TipTap doc (`TipTapContent`); a non-rich-text
+handler produces an opaque JSON snapshot the core stores verbatim
+(`OpaqueDocumentContent`).
+
+```php
+interface DocumentContent
+{
+    /** @return array<string, mixed> */
+    public function toArray(): array;
+
+    public function contentHash(): string;
+
+    public function sizeInBytes(): int;
+}
+```
+
+**Implement when** your `DocumentHandler` needs a content shape other than TipTap or
+the bundled opaque snapshot.
+
+### `Vaulter\Contracts\Documents\HandlerRegistry`
+
+The format-extensibility registry seam behind `Vaulter::registerHandler()` /
+`Vaulter::handlers()`. The contract lives in core; the concrete engine
+(`DocumentHandlerRegistry`, the SSOT resolver) ships in vaulter-documents. A host
+that has not installed vaulter-documents still type-hints against this interface.
+
+```php
+interface HandlerRegistry
+{
+    /** @param DocumentHandler|class-string<DocumentHandler> $handler */
+    public function register(DocumentHandler|string $handler): void;
+
+    /** @return list<DocumentHandler> */
+    public function all(): array;
+}
+```
+
+### `Vaulter\Contracts\Documents\NodeHandlerResolver`
+
+Resolves the format-handler descriptor for a node — the `(id + capabilities + ui)`
+bundle the `GET .../handler` endpoint returns, so the Vue client routes the node to
+the right editor/preview/download surface. The contract lives in core; the concrete
+resolver ships in vaulter-documents. A direct `app(NodeHandlerResolver::class)`
+resolution without vaulter-documents installed fails loudly with an install hint.
+
+```php
+interface NodeHandlerResolver
+{
+    public function describe(Node $node, ?string $detectedMime = null): HandlerDescriptor;
+}
+```
 
 ---
 

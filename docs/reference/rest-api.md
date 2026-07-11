@@ -50,6 +50,8 @@ Some route groups only mount when a feature flag is enabled in
 | `document_versions` | document-node routes + collaboration handshake + collab webhooks |
 | `uploads` | resumable-upload routes (tus + S3-multipart) |
 | `reliability` | webhook-endpoint management routes |
+| `comments` | Drive-native node-comment routes (`nodes/{node}/comments*`) |
+| `grants` | `GET shared` ("shared with me" cross-storage feed) — the per-node ACL grant routes (`nodes/{node}/grants`) are NOT feature-gated |
 
 ---
 
@@ -291,6 +293,24 @@ Stream a specific historical file version. → `DownloadController::version`
 (S3-style) a `302` redirect to a short-lived (`5 min`) temporary URL; otherwise the
 bytes are streamed straight off the storage driver (never buffered in memory) with
 `Content-Type` and `Content-Length` headers.
+
+### Comments
+
+Node-attached comments (`NodeCommentController`, vaulter-documents), the additive
+Drive-native twin of the [legacy document-path comments](#comments-1). Feature-gated
+on `comments`. `{comment}` is a plain scalar (the model is swappable, not
+route-model bound) — the controller resolves it and asserts it belongs to the bound
+node.
+
+| Route | Action | Notes |
+|---|---|---|
+| `GET nodes/{node}/comments` | `index` | |
+| `POST nodes/{node}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
+| `POST nodes/{node}/comments/{comment}/resolve` | `resolve` | |
+| `DELETE nodes/{node}/comments/{comment}` | `destroy` | |
+
+**Gate:** read ≥ `Ability::View`, create = `Ability::Comment`, resolve/delete = the
+comment's author or `Ability::Manage`.
 
 ---
 
@@ -802,6 +822,25 @@ See [Comments](/guide/comments).
 | `POST folders` | `store` | `workspace_type`, `workspace_id`, `name`, `parent_id?`, `order?` |
 | `PATCH folders/{id}` | `update` | rename / move |
 | `DELETE folders/{id}` | `destroy` | |
+
+---
+
+## CORS
+
+All routes on this page mount under `config('vaulter.route_prefix')` (default
+`api/vaulter`), which falls under Laravel's default `config/cors.php` matcher
+`paths => ['api/*']` — even though that file isn't published by default, the
+default `allowed_origins => ['*']` still applies to every route documented here,
+not just the collaboration hub (which has its own, separate
+`VAULTER_COLLAB_ALLOWED_ORIGINS` CSWSH guard — see
+[Collaboration](/guide/collaboration)).
+
+With `allowed_origins: ['*']` any origin can read responses from this REST surface
+in a browser. The practical exposure depends on how the host authenticates: a
+bearer-token client is not directly at risk (a browser will not attach another
+site's token), but a client relying on cookies/session credentials should publish
+`config/cors.php` and narrow `allowed_origins` to its own known origins (and the
+origins `@vaulter/vue` is served from) before shipping to production.
 
 ## See also
 

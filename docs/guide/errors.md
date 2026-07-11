@@ -4,16 +4,11 @@ Every Vaulter exception extends `Vaulter\Exceptions\VaulterException` and carrie
 message in the form `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
 points at the matching anchor below.
 
-## document-not-found
-
-`DocumentNotFoundException` — the requested document id does not exist, was soft-deleted,
-or is outside the current workspace. Verify the id and the workspace filter. The API maps
-this to `404`.
-
 ## permission-denied
 
-`PermissionDeniedException` — your `PermissionResolver` returned `false` for the attempted
-action. Grant the required level or adjust the resolver. The API maps this to `403`.
+`PermissionDeniedException` — either the legacy document path's authorization hook, or
+the Drive ACL (`AccessResolver` + `HostRoleDriver`), denied the attempted action. Grant
+the required level/scope on the node or an ancestor. The API maps this to `403`.
 
 ## unknown-document-type
 
@@ -33,9 +28,9 @@ action. Grant the required level or adjust the resolver. The API maps this to `4
 
 ## unknown-collaboration-driver
 
-`VaulterException` from `Vaulter::driver()` — the named driver is not registered under
-`config('vaulter.collaboration.drivers')`. Add an entry whose `class` implements
-`CollaborationDriver`.
+`VaulterException` from `NodeCollaborationDriverManager` — `config('vaulter.collaboration.driver')`
+is not one of the registered `CollaborationDriverType` cases (`reverb`, `hocuspocus`). Set it
+to a valid transport name.
 
 ## missing-jwt
 
@@ -46,3 +41,91 @@ The Hocuspocus driver needs `firebase/php-jwt` to mint room tokens. Run
 
 The Hocuspocus driver needs `VAULTER_COLLAB_SECRET`. Set the shared secret in your
 environment.
+
+## collab-webhook-unconfigured
+
+`CollaborationConfigException` — neither `VAULTER_COLLAB_WEBHOOK_SECRET` (shared secret) nor
+`VAULTER_COLLAB_SECRET` (JWT key) is configured, so the `collab/authenticate` +
+`collab/store` server-to-server webhooks cannot authenticate the Node hub. Set at least one.
+
+## cross-storage-move
+
+`CrossStorageMoveException` — a move stays within one storage tree. Copy across storages,
+or re-home the node into the destination storage explicitly instead of moving it.
+
+## document-version-not-found
+
+`NodeDocumentVersionNotFoundException` — the version does not exist or belongs to a
+different node. List the node's history (`GET .../document-versions`) and restore an id
+from it.
+
+## missing-host-role-driver
+
+`MissingHostRoleDriverException` — either the open `null` host-role driver was selected in
+production (forbidden — it grants every actor full access), or `config('vaulter.drivers.permission')`
+names a driver key not in the `permission_drivers` map. Set a real driver
+(`database`/`gate`/`spatie`/`azgard`) or bind your own `HostRoleDriver`.
+
+## missing-package
+
+`MissingPackageException` — a contract's concrete implementation ships in a package that
+is not installed (e.g. `NodeHandlerResolver`/`HandlerRegistry` need vaulter-documents).
+Run the printed `composer require`.
+
+## move-cycle
+
+`CycleException` — the move destination is the node itself or one of its own
+descendants, which would create a cycle. Choose a destination outside the moved node's
+subtree.
+
+## node-name-conflict
+
+`NodeNameConflictException` — a node with that name already exists under the same parent
+(or storage root). Pick a different name, or move/trash the existing sibling first.
+
+## not-a-document-node
+
+`NotADocumentNodeException` — document content/version operations require a
+`kind=document` node (its payload lives in `v_node_document_versions`). Create the
+document via the document-node create endpoint first, or target a document node.
+
+## quota-exceeded
+
+`QuotaExceededException` — the upload would exceed the storage's `quota_bytes`. Raise
+`v_storages.quota_bytes`, free space, or set `quota_bytes` to `null` for unlimited.
+
+## unenumerable-grant-subject
+
+`UnenumerableGrantSubjectException` — the configured `HostRoleDriver` does not enumerate
+role/group/team subjects, so a role/team grant would never take effect. Use a driver that
+enumerates role subjects (`spatie`), or override `subjectsFor()` on your own driver to
+append the role/team `Subject`s.
+
+## unknown-export-format
+
+`UnknownExportFormatException` — no exporter is registered for the requested format.
+Register one via `config('vaulter.exporters')` or `Vaulter::registerExporter()`.
+
+## upload-conflict
+
+`UploadConflictException` / `OffsetMismatchException` — the resumable-upload session is
+being modified by a concurrent request, or the `Upload-Offset` header doesn't match the
+server's authoritative offset. Re-read the session `HEAD` to learn the current offset and
+resume from there.
+
+## upload-content-mismatch
+
+`UploadContentMismatchException` — the assembled upload's bytes don't match the declared
+`Content-Type`. Upload a file whose contents match the declared mime type.
+
+## webhook-response-too-large
+
+`WebhookResponseTooLargeException` — the webhook receiver's response body exceeds
+`vaulter.webhooks.delivery.max_response_bytes`. Have the receiver return a small (or
+empty) body, or raise the limit.
+
+## webhook-ssrf
+
+`BlockedOutboundUrlException` — the outbound webhook URL was refused: a disallowed
+scheme, a malformed URL, or a host resolving to a blocked network (SSRF protection).
+Register the endpoint with a public http(s) URL.

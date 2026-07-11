@@ -180,14 +180,11 @@ host permission name (`gate.*`, `spatie.*`, `azgard.*`). The full per-driver con
 
 ::: danger Null driver
 `null` is an open driver selectable **only** outside production. Config validation rejects a
-panel bound to it in production — bind a real driver before deploying.
+panel bound to it in production — bind a real driver before deploying. If you just need a
+working smoke-test default, the standalone `database` driver above is the intended path —
+note it is fail-closed (an empty `v_node_grants` means no access, not open access), so seed
+grants or pick a driver whose host roles broaden access before assuming "it's not working".
 :::
-
-There is also a separate **legacy** document-path resolver:
-
-```php
-'permission_resolver' => null, // FQCN of a Contracts\Access\PermissionResolver, or null
-```
 
 ## Content-addressed storage (CAS)
 

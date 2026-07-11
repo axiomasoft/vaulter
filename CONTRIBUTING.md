@@ -26,7 +26,7 @@ All quality tooling is wired through the `Makefile`:
 |---|---|
 | `make lint` | Fix code style with Pint |
 | `make lint-check` | Check code style (no fix) |
-| `make stan` | PHPStan (level 8) + Larastan |
+| `make stan` | PHPStan (level max) + Larastan |
 | `make rector` | Rector dry-run |
 | `make rector-fix` | Apply Rector |
 | `make test` | Pest with `--coverage --min=80` |

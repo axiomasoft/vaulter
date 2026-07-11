@@ -33,25 +33,22 @@ over the facade.
 | `panel(string $name = 'default')` | `Panel` | Resolve a storage panel by id |
 | `panels()` | `PanelRegistry` | The singleton panel registry |
 | `registerPanel(StoragePanelProvider\|Panel $panel)` | `void` | Register a storage panel at runtime |
-| `resolvePermissionsWith(PermissionResolver $resolver)` | `void` | Bind the legacy document-path permission resolver |
-| `permissionResolver()` | `?PermissionResolver` | The resolved legacy permission resolver, or `null` |
 | `registerDocumentType(string $type, array $definition)` | `void` | Register a custom document type |
 | `documentTypes()` | `array` | The registered custom document types |
 | `registerHandler(DocumentHandler\|string $handler)` | `void` | Register a document handler (format extensibility) |
-| `handlers()` | `DocumentHandlerRegistry` | The document-handler registry |
+| `handlers()` | `HandlerRegistry` | The document-handler registry |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Register a custom export format |
 | `exporter(string $format)` | `DocumentExporter` | Resolve an exporter by format key |
 | `exporterFormats()` | `list<string>` | All registered export format keys |
-| `driver(?string $name = null)` | `CollaborationDriver` | Resolve a collaboration driver |
 
 ::: warning Facade docblock vs. manager
 The `@method` docblock on the `Vaulter` facade only annotates a subset of these
-(`for`, `forStorage`, `panel`, `panels`, `registerPanel`, `resolvePermissionsWith`,
-`permissionResolver`, `registerDocumentType`, `documentTypes`, `driver`). The
-remaining methods — `registerHandler`, `handlers`, `registerExporter`, `exporter`,
-`exporterFormats` — are real `VaulterManager` methods callable through the facade;
-they are simply not (yet) in the `@method` block, so your IDE may not autocomplete
-them. Call `app(VaulterManager::class)` if you want full static typing.
+(`for`, `forStorage`, `panel`, `panels`, `registerPanel`, `registerDocumentType`,
+`documentTypes`). The remaining methods — `registerHandler`, `handlers`,
+`registerExporter`, `exporter`, `exporterFormats` — are real `VaulterManager`
+methods callable through the facade; they are simply not (yet) in the `@method`
+block, so your IDE may not autocomplete them. Call `app(VaulterManager::class)` if
+you want full static typing.
 :::
 
 ## Drive entry points
@@ -104,26 +101,11 @@ Vaulter::registerPanel(new ProjectStoragePanel());          // a provider
 Vaulter::registerPanel(Panel::make('reports', /* … */));    // a built Panel
 ```
 
-## Authorization (legacy document path)
+## Authorization
 
-### `resolvePermissionsWith(PermissionResolver $resolver): void`
-
-Tell Vaulter how to delegate authorization to the host application for the **legacy
-document path** (`Vaulter\Contracts\Access\PermissionResolver`). The alternative is
-to set `config('vaulter.permission_resolver')` to an FQCN.
-
-### `permissionResolver(): ?PermissionResolver`
-
-Returns the resolver bound at runtime, or — failing that — instantiates the one
-named by `config('vaulter.permission_resolver')`. Returns `null` when neither is
-set.
-
-::: tip This is the legacy lane
-For the Drive ACL, authorization runs through the swappable `HostRoleDriver` lane
+Authorization runs through the swappable `HostRoleDriver` lane
 (`config('vaulter.drivers.permission')`) combined with the Vaulter-owned
-`AccessResolver` — not through this resolver. See
-[Contracts → Access](/reference/contracts#access).
-:::
+`AccessResolver`. See [Contracts → Access](/reference/contracts#access).
 
 ## Document types &amp; handlers
 
@@ -133,7 +115,7 @@ Register and read back custom document-type definitions (kept in-memory on the
 manager). The built-in document types are configured separately via
 `config('vaulter.enabled_document_types')`.
 
-### `registerHandler(DocumentHandler|string $handler): void` / `handlers(): DocumentHandlerRegistry`
+### `registerHandler(DocumentHandler|string $handler): void` / `handlers(): HandlerRegistry`
 
 The format-extensibility seam. Adding a new format is one class + one call —
 `registerHandler()` accepts an FQCN or an instance and delegates to the
@@ -172,21 +154,6 @@ Vaulter::exporterFormats(); // ['html', 'markdown', 'pdf']
 ```
 
 See [Recipes → Custom export](/guide/recipes).
-
-## Collaboration
-
-### `driver(?string $name = null): CollaborationDriver`
-
-Resolve a collaboration driver. The name defaults to
-`config('vaulter.collaboration.driver')` (`reverb` or `hocuspocus`); the driver
-class is read from `config('vaulter.collaboration.drivers.{name}.class')` and
-resolved through the container. An unknown or non-conforming driver throws a
-`Vaulter\Exceptions\VaulterException`.
-
-```php
-$driver = Vaulter::driver();            // the configured default
-$driver = Vaulter::driver('hocuspocus'); // an explicit driver
-```
 
 ## See also
 

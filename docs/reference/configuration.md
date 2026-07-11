@@ -285,6 +285,7 @@ dedup-UNIQUE index and the scope-qualified storage key
 | Key | Env | Default | Notes |
 |---|---|---|---|
 | `gc.grace_hours` | `VAULTER_GC_GRACE_HOURS` | `24` | Two-phase GC grace window; floored at 1h |
+| `gc.orphan_grace_hours` | `VAULTER_ORPHAN_GRACE_HOURS` | falls back to `VAULTER_GC_GRACE_HOURS` (`24`) | Grace window for the orphan disk-walk (CAS reconciler) — a separate window from `gc.grace_hours`, so a just-promoted object isn't mistaken for orphaned bytes |
 
 A blob whose ref-count cache reaches zero is tombstoned with
 `delete_after_at = now + grace`; only after the grace passes are its bytes swept. See
