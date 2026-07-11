@@ -62,11 +62,11 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // P5.2 — markdown-экранирование.
         'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTapRenderer.php')],
         // P5.2 — commit внутри критической секции + CAS на markCommitted.
-        'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Uploads/Repositories/UploadSessionStoreRepository.php')],
+        'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php')],
         // P5.2 — обеззараживание TipTap-контента на JSON-чтении.
         'P5.2 read sanitization' => ['(P5.2 / R-12)', (string) file_get_contents($root.'/packages/documents/src/Http/Resources/NodeDocumentVersionResource.php')],
         // Ревью P5.2 — per-chunk кап включён из коробки (BC: тело >64 MiB теперь 413).
-        'P5.2-review chunk cap' => ['(P5.2 review / F-P1.4-04, RV-03)', (string) file_get_contents($root.'/packages/drive/src/Uploads/Http/Controllers/TusUploadController.php')],
+        'P5.2-review chunk cap' => ['(P5.2 review / F-P1.4-04, RV-03)', (string) file_get_contents($root.'/packages/drive/src/Http/Controllers/Uploads/TusUploadController.php')],
     ];
 });
 

@@ -303,13 +303,15 @@ test('split technical roots keep classes in domain subfolders', function (): voi
  * A recognized technical-layer directory (Actions/Models/Repositories/Enums/
  * Events/Data/Contracts/Http) must live as the FIRST namespace segment under the
  * package root — NEVER nested inside a domain module folder. `core` is the canon
- * reference and passes GREEN. The divergent `drive` layout (`Uploads/Actions`,
- * `Uploads/Models`, …) is the same rule marked `->todo()` in drive's ArchTest,
- * to be discharged by P4.10.
+ * reference and passes GREEN. The formerly-divergent `drive` layout (`Uploads/Actions`,
+ * `Uploads/Models`, …) was the same rule; P4.10 discharged it (the layer subtrees
+ * were dissolved into `Actions/Uploads`, `Models/Uploads`, …) and removed the
+ * `->todo()` in drive's ArchTest.
  *
  * (Law 2 — "layers group by a domain sub-namespace, not flat" — is enforced by
  * the `split technical roots keep classes in domain subfolders` test above; the
- * divergent flat `documents` layout is that rule marked `->todo()` in documents.)
+ * formerly-flat `documents` layout was that rule, discharged by P4.10 with the
+ * `->todo()` removed in documents.)
  *
  * `Http` sub-layers (Controllers/Requests/Resources/Middleware/Support) are
  * structural, not domains, so only `Http` itself is a layer segment here.
