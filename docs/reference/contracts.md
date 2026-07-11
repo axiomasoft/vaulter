@@ -416,7 +416,7 @@ The default is `Vaulter\Support\RandomShareTokenGenerator`. See
 
 ## Uploads
 
-### `Vaulter\Contracts\Uploads\UploadProtocolHandler`
+### `Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler`
 
 The per-protocol strategy behind a resumable-upload session. Two implementations
 ship — `TusUploadHandler` (tus.io CORE: Creation + HEAD + PATCH, any Flysystem disk)

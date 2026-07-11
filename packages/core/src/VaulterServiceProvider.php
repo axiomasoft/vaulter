@@ -34,6 +34,7 @@ use Vaulter\Policies\WebhookEndpointPolicy;
 use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\Config;
+use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TenantFootgunGuard;
 use Vaulter\Webhooks\RecordsOutbox;
@@ -67,6 +68,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app->singleton(IdStrategyResolver::class);
+
+        // Container-owned singleton (F-P2.1-05): the enum-attribute reflection cache
+        // used to be a process-wide `static $cache`, a literal E3.3 violation (global
+        // state outside the facade). Binding it here means the cache's lifecycle
+        // follows the container — reset between requests/jobs on Octane/queue
+        // workers, never accumulating across the whole PHP process.
+        $this->app->singleton(EnumCaseAttributeResolver::class);
 
         // Scoped (P1.3 / F-P4.2-03): StorageReadRepository memoizes find() by id in
         // an in-request identity map, so `AccessResolver::storageOf()` resolved

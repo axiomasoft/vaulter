@@ -14,7 +14,7 @@ trait HasIcon
 {
     public function icon(): ?string
     {
-        $icon = EnumCaseAttributeResolver::forCase($this, Icon::class);
+        $icon = app(EnumCaseAttributeResolver::class)->forCase($this, Icon::class);
 
         return $icon instanceof Icon ? $icon->value : null;
     }

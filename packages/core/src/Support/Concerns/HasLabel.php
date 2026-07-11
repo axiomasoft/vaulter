@@ -15,7 +15,7 @@ trait HasLabel
 {
     public function label(): string
     {
-        $label = EnumCaseAttributeResolver::forCase($this, Label::class);
+        $label = app(EnumCaseAttributeResolver::class)->forCase($this, Label::class);
 
         return $label instanceof Label ? $label->value : Str::headline($this->name);
     }

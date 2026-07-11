@@ -17,7 +17,7 @@ trait HasTiptapExtensions
      */
     public function tiptapExtensions(): array
     {
-        $extensions = EnumCaseAttributeResolver::forCase($this, TiptapExtensions::class);
+        $extensions = app(EnumCaseAttributeResolver::class)->forCase($this, TiptapExtensions::class);
 
         return $extensions instanceof TiptapExtensions ? $extensions->names : [];
     }
