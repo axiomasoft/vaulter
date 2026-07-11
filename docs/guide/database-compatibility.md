@@ -71,6 +71,37 @@ typed `subject_id` column and work on **every database and every id strategy**, 
 user and permission grants. Address a role grant by the role's key (`$role->getKey()`), not its
 name.
 
+## Dedicated database connection
+
+By default every Vaulter table and model reads/writes through the host application's default
+Laravel database connection. Set `config('vaulter.connection')` (or `VAULTER_DB_CONNECTION`) to a
+named connection from `config('database.connections')` to route the entire `v_*` schema — every
+migration `PanelTablesBuilder` creates and every shipped model's `getConnectionName()` — onto that
+connection instead, e.g. to shard Vaulter onto its own database or isolate a heavy CAS/activity
+workload. Leaving the key `null` (the default) keeps the current behaviour exactly as it is today.
+
+## Schema change policy
+
+Vaulter is pre-`v0.1.0` today, so every table is create-only or empty for every consumer — a
+breaking `ALTER` costs nothing right now. That stops being true the moment the package tags its
+first release, so future schema changes to the shipped `v_*` tables follow these rules:
+
+- **New columns are always nullable or carry a `default`.** A migration that adds a column to an
+  existing table must not require a backfill before existing rows become valid again.
+- **Destructive operations (`drop column`, `drop table`, a `NOT NULL` added to a column that isn't
+  brand new) only ship behind an explicitly named migration and a `CHANGELOG.md` entry** calling
+  out the removal/tightening — never silently folded into an unrelated feature migration.
+- **`NOT NULL` on a column of a non-empty table is a two-step change**: ship a migration that
+  backfills the column, release it, THEN ship the constraining migration in a later release — never
+  both in the same migration.
+- **No blocking `ALTER TABLE` against a populated production table without a documented
+  maintenance window.** If a change cannot avoid taking a table-level lock (adding a column with a
+  volatile default, rewriting a column type), the release notes must say so explicitly.
+
+This policy governs the six entity migrations Vaulter ships (`packages/core/database/
+migrations`); it does not (yet) have runtime enforcement — it is a contributor/reviewer checklist,
+not a lint rule.
+
 ## Running your own tests on Postgres
 
 The package's test suite defaults to in-memory SQLite. To exercise it against Postgres (the

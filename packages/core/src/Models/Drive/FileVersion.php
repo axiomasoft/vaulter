@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -39,6 +40,7 @@ class FileVersion extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     public const UPDATED_AT = null;
 

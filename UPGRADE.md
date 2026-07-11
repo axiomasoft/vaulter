@@ -6,6 +6,28 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### New optional config('vaulter.connection') routes the whole schema onto a named connection (P3.6 / F-P2.3-02, F-P2.3-04)
+
+**What changed.** A new, nullable config key — `config('vaulter.connection')` (env
+`VAULTER_DB_CONNECTION`) — lets a host route every Vaulter-owned table/model onto a named
+Laravel database connection instead of the application's default one (sharding, data placement,
+isolating a heavy CAS/activity workload), without forking the package. `PanelTablesBuilder` now
+creates/drops tables and runs every driver-aware index statement through
+`Schema::connection(config('vaulter.connection'))`/`DB::connection(...)`, and every shipped model
+(`Node`, `Storage`, `NodeGrant`, `Activity`, `File`, `FileVersion`, `FileVersionBlob`, `NodeShare`,
+`Outbox`, `WebhookEndpoint`, `WebhookDelivery`, `Blob`) now resolves `getConnectionName()` from the
+same key via the new `Vaulter\Models\Concerns\ResolvesVaulterConnection` trait.
+
+**This is purely additive — no action required.** The key defaults to `null`, which resolves
+exactly as before (the host's default connection); nothing changes unless you explicitly set it.
+
+**Docs:** `docs/guide/database-compatibility.md` gained a "Dedicated database connection" section
+covering this key, and a "Schema change policy" section formalising how the shipped `v_*` schema
+is allowed to evolve after the package's first tag (F-P2.3-04, doc-only — no code/behaviour
+change).
+
+No database migration is required for this change.
+
 ### The tus resumable-upload endpoints now enforce the tus 1.0.0 protocol: offset-mismatch is 409 (not a bare redirect/422), a wrong PATCH Content-Type is 415, a missing/wrong `Tus-Resumable` is 412, an OPTIONS discovery endpoint exists, and metadata keys are whitelisted (P3.4 / F-P1.4-02, F-P1.4-05, F-P1.4-06, F-P1.4-07, F-P1.4-08)
 
 **What changed.**

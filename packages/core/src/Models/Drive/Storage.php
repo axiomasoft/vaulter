@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -42,6 +43,7 @@ class Storage extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
     use SoftDeletes;
 
     /**

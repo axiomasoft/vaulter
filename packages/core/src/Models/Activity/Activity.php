@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -46,6 +47,7 @@ class Activity extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Append-only: there is no updated_at column, so Eloquent must not maintain

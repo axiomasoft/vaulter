@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-11 (P3 развёрнута) |
+| Last Updated | 2026-07-11 (P3 терминальна, 6/6 🟢) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-media, vaulter-documents, vaulter-filament, vaulter-permissions-azgard, @vaulter/vue, hocuspocus-server |
 | Execution Mode | phase-first |
@@ -92,7 +92,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P0 | W0 — Blocker'ы | 3/3 | 🟢 Done |
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
-| P3 | W3 — Надстройки и интеграция | 5/6 | 🟡 In progress |
+| P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
 | P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
 
@@ -148,3 +148,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P3.3 закрыт (🟢): sweep подбирает застрявшие Assembled-сессии, `authorizeSession` сверяет `created_by` (IDOR-guard), activity на initiate/abort/expire (F-P1.4-10/12/13), коммит `bebd81e` — детали см. phases/P3.md P3.3 Completion Notes.
 | 2026-07-11 | plan-exec/sonnet | P3.4 закрыт (🟢): tus offset-mismatch → 409 (+идемпотентный повтор совпадающего диапазона), Content-Type → 415, `Tus-Resumable` → 412, OPTIONS-discovery, whitelist+лимиты метаданных (F-P1.4-02/05/06/07/08) — детали см. phases/P3.md P3.4 Completion Notes.
 | 2026-07-11 | plan-exec/sonnet | P3.5 закрыт (🟢): cache-safe `configurationIsCached()`-гвард в `VaulterDocumentsServiceProvider`, doc-предупреждение о каноническом режиме миграций в `installation.md` (F-P2.2-01/02) — детали см. phases/P3.md P3.5 Completion Notes.
+| 2026-07-11 | plan-exec/sonnet | P3.6 закрыт (🟢): `config('vaulter.connection')` прокинут в `PanelTablesBuilder` (schema/index) и во все 12 core-моделей через новый трейт `ResolvesVaulterConnection`; раздел политики изменения схемы + документирование ключа в `database-compatibility.md` (F-P2.3-02/04) — детали см. phases/P3.md P3.6 Completion Notes. **Фаза P3 (W3) ТЕРМИНАЛЬНА (6/6 🟢).**

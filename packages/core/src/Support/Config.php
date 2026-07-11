@@ -847,6 +847,20 @@ final class Config
         return self::tablePrefix().$base;
     }
 
+    /**
+     * The named Laravel database connection every Vaulter-owned table/model reads
+     * and writes through (F-P2.3-02), or null to defer to the host's default
+     * connection — `Schema::connection(null)`/`Model::getConnectionName()`
+     * fallback both already treat null as "use the default", so a host that never
+     * sets this key sees no change in behaviour.
+     */
+    public static function connection(): ?string
+    {
+        $value = config('vaulter.connection');
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
     public static function routePrefix(): string
     {
         $value = config('vaulter.route_prefix', 'api/vaulter');

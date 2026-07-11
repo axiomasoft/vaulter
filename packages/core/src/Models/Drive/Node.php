@@ -14,6 +14,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -59,6 +60,7 @@ class Node extends Model
     use HasExtraData;
     use HasRecursiveRelationships;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
     use SoftDeletes;
 
     /**

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -37,6 +38,7 @@ use Vaulter\Support\Config;
 class Outbox extends Model
 {
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Fully guarded (F-P1.8-02): the transactional-outbox staging row — every

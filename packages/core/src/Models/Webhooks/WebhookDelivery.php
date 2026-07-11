@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -36,6 +37,7 @@ use Vaulter\Support\Config;
 class WebhookDelivery extends Model
 {
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Fully guarded (F-P1.7-04): a delivery-attempt row — every column is

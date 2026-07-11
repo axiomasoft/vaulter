@@ -245,6 +245,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database connection (F-P2.3-02)
+    |--------------------------------------------------------------------------
+    | The named Laravel database connection every Vaulter-owned table and model
+    | reads/writes through. null (default) means "the host's default connection"
+    | (Support\Config::connection() resolves it via Schema::connection(null) /
+    | Model::getConnectionName() falling back to the connection resolver's own
+    | default) — a host that does nothing here sees no change. Set this to embed
+    | the Vaulter schema on its own database/instance (sharding, data placement,
+    | isolating a heavy CAS/activity workload) without forking the package.
+    */
+    'connection' => env('VAULTER_DB_CONNECTION', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Host role drivers (D6 / H.2) — the Drive ACL
     |--------------------------------------------------------------------------
     | The pluggable, per-panel \Vaulter\Contracts\Access\HostRoleDriver lane the

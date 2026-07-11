@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -22,6 +23,8 @@ use Vaulter\Support\Config;
  */
 class FileVersionBlob extends Pivot
 {
+    use ResolvesVaulterConnection;
+
     public $incrementing = false;
 
     public $timestamps = false;

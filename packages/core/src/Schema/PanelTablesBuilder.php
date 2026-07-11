@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
@@ -33,6 +35,26 @@ use Vaulter\Support\Config;
  */
 final class PanelTablesBuilder
 {
+    /**
+     * The Schema builder for the connection Vaulter's tables live on
+     * (`Config::connection()`, F-P2.3-02) — null defers to the host's default
+     * connection exactly as every call site did before this key existed.
+     */
+    private function schemaConnection(): Builder
+    {
+        return Schema::connection(Config::connection());
+    }
+
+    /**
+     * The raw-statement connection counterpart of {@see schemaConnection()}, for
+     * the driver-aware `DB::statement(...)` calls (partial/gin indexes, MySQL
+     * generated-column fallbacks) that Facade\Schema has no builder method for.
+     */
+    private function dbConnection(): ConnectionInterface
+    {
+        return DB::connection(Config::connection());
+    }
+
     /**
      * The base entity keys this builder owns, in dependency order. The generator
      * and createAll()/dropAll() iterate this list; gating is applied per entity.
@@ -95,7 +117,7 @@ final class PanelTablesBuilder
     {
         $ids = $this->ids(panel: $panel);
 
-        Schema::create($panel->table($entity), function (Blueprint $table) use ($panel, $ids, $entity): void {
+        $this->schemaConnection()->create($panel->table($entity), function (Blueprint $table) use ($panel, $ids, $entity): void {
             match ($entity) {
                 'storages' => $this->defineStorages(table: $table, panel: $panel, ids: $ids),
                 'nodes' => $this->defineNodes(table: $table, panel: $panel, ids: $ids),
@@ -126,7 +148,7 @@ final class PanelTablesBuilder
      */
     public function dropTable(Panel $panel, string $entity): void
     {
-        Schema::dropIfExists($panel->table($entity));
+        $this->schemaConnection()->dropIfExists($panel->table($entity));
     }
 
     /**
@@ -895,7 +917,7 @@ final class PanelTablesBuilder
      */
     private function addActivityCreatedAtIndex(string $table): void
     {
-        Schema::table($table, static function (Blueprint $blueprint) use ($table): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
             $blueprint->index('created_at', "{$table}_created_idx");
         });
     }
@@ -908,11 +930,11 @@ final class PanelTablesBuilder
      */
     private function addActivityContextGinIndex(string $table): void
     {
-        if (Schema::getConnection()->getDriverName() !== 'pgsql') {
+        if ($this->schemaConnection()->getConnection()->getDriverName() !== 'pgsql') {
             return;
         }
 
-        DB::statement("CREATE INDEX {$table}_context_gin ON {$table} USING gin (context jsonb_path_ops)");
+        $this->dbConnection()->statement("CREATE INDEX {$table}_context_gin ON {$table} USING gin (context jsonb_path_ops)");
     }
 
     /**
@@ -923,11 +945,11 @@ final class PanelTablesBuilder
      */
     private function addDocumentContentGinIndex(string $table): void
     {
-        if (Schema::getConnection()->getDriverName() !== 'pgsql') {
+        if ($this->schemaConnection()->getConnection()->getDriverName() !== 'pgsql') {
             return;
         }
 
-        DB::statement("CREATE INDEX {$table}_content_gin ON {$table} USING gin (content jsonb_path_ops)");
+        $this->dbConnection()->statement("CREATE INDEX {$table}_content_gin ON {$table} USING gin (content jsonb_path_ops)");
     }
 
     /**
@@ -938,18 +960,18 @@ final class PanelTablesBuilder
      */
     private function addShareExpiryIndex(string $table): void
     {
-        $driver = Schema::getConnection()->getDriverName();
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
         $name = "{$table}_expiry_live_idx";
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "CREATE INDEX {$name} ON {$table} (expires_at) WHERE revoked_at IS NULL",
             );
 
             return;
         }
 
-        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->index('expires_at', $name);
         });
     }
@@ -962,7 +984,7 @@ final class PanelTablesBuilder
      */
     private function addUploadSweeperIndex(string $table): void
     {
-        Schema::table($table, static function (Blueprint $blueprint) use ($table): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
             $blueprint->index(['status', 'expires_at'], "{$table}_sweeper_idx");
         });
     }
@@ -974,11 +996,11 @@ final class PanelTablesBuilder
      */
     private function addGrantUniqueIndex(string $table): void
     {
-        $driver = Schema::getConnection()->getDriverName();
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
         $name = "{$table}_grant_uniq";
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "CREATE UNIQUE INDEX {$name} ON {$table} ".
                 '(node_id, subject_type, subject_id, scope, effect) '.
                 'WHERE deleted_at IS NULL',
@@ -988,19 +1010,19 @@ final class PanelTablesBuilder
         }
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "ALTER TABLE `{$table}` ADD COLUMN `grant_active` VARCHAR(700) ".
                 'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
                 "THEN CONCAT(`node_id`, ':', `subject_type`, ':', `subject_id`, ':', `scope`, ':', `effect`) ".
                 'ELSE NULL END) STORED',
             );
 
-            DB::statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`grant_active`)");
+            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`grant_active`)");
 
             return;
         }
 
-        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $name);
         });
     }
@@ -1013,11 +1035,11 @@ final class PanelTablesBuilder
      */
     private function addOwnerUniqueIndex(string $table): void
     {
-        $driver = Schema::getConnection()->getDriverName();
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
         $name = "{$table}_owner_panel_uniq";
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "CREATE UNIQUE INDEX {$name} ON {$table} (owner_type, owner_id, panel) ".
                 'WHERE deleted_at IS NULL',
             );
@@ -1026,18 +1048,18 @@ final class PanelTablesBuilder
         }
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "ALTER TABLE `{$table}` ADD COLUMN `owner_active` VARCHAR(600) ".
                 'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
                 "THEN CONCAT(`owner_type`, ':', COALESCE(`owner_id`, ''), ':', `panel`) ELSE NULL END) STORED",
             );
 
-            DB::statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`owner_active`)");
+            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`owner_active`)");
 
             return;
         }
 
-        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->unique(['owner_type', 'owner_id', 'panel'], $name);
         });
     }
@@ -1054,13 +1076,13 @@ final class PanelTablesBuilder
      */
     private function addSiblingUniqueIndex(string $table): void
     {
-        $driver = Schema::getConnection()->getDriverName();
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
         // Derive the index name from the table so a per-panel prefixed table gets
         // its own index name (index names are global on SQLite/PG, not per-table).
         $name = "{$table}_sibling_uniq";
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "CREATE UNIQUE INDEX {$name} ON {$table} (parent_id, lower(name)) ".
                 'WHERE deleted_at IS NULL AND trashed_at IS NULL',
             );
@@ -1069,20 +1091,20 @@ final class PanelTablesBuilder
         }
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
-            DB::statement(
+            $this->dbConnection()->statement(
                 "ALTER TABLE `{$table}` ADD COLUMN `sibling_active` VARCHAR(512) ".
                 'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL '.
                 "THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED",
             );
 
-            DB::statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`sibling_active`)");
+            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`sibling_active`)");
 
             return;
         }
 
         // Unknown driver: fall back to a plain (non-soft-delete-aware) unique so
         // the schema is still defended. Supported drivers above are the canon.
-        Schema::table($table, static function (Blueprint $blueprint) use ($name): void {
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->unique(['parent_id', 'name'], $name);
         });
     }
@@ -1114,7 +1136,7 @@ final class PanelTablesBuilder
      */
     private function ipColumn(Blueprint $table): void
     {
-        if (Schema::getConnection()->getDriverName() === 'pgsql') {
+        if ($this->schemaConnection()->getConnection()->getDriverName() === 'pgsql') {
             $table->ipAddress('ip')->nullable();
 
             return;
@@ -1130,7 +1152,7 @@ final class PanelTablesBuilder
      */
     private function binaryColumn(Blueprint $table, string $column): void
     {
-        $driver = Schema::getConnection()->getDriverName();
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
             $table->longText($column)->nullable()->charset('binary');

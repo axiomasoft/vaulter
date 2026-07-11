@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -35,6 +36,7 @@ use Vaulter\Support\Config;
 class WebhookEndpoint extends Model
 {
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Closed allow-list (F-P1.7-04): NEVER signing_secret (the HMAC key, F-P1.7-02)

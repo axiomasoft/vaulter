@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\FileVersionBlob;
 use Vaulter\Support\Config;
@@ -48,6 +49,7 @@ class Blob extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     public $timestamps = false;
 
