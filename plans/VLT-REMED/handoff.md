@@ -1,99 +1,95 @@
-# HANDOFF — 2026-07-11 — after P5.2
+# HANDOFF — 2026-07-11 — after P5.3
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
-| Model | **sonnet** |
-| Thinking | **medium** — механическая сверка грепом против REGISTER.md + вердикт по явным критериям; thinking провоцирует «интерпретацию» вместо счёта (§Routing прямо это фиксирует) |
+| Model | **opus** |
+| Thinking | **high** — межпакетный namespace-refactor — closed-enum escalation-триггер плана (D10/§Routing), необратимый blast-radius, дешёвой модели не отдаётся |
 | Context | fresh session — handoff свежий, рекомендован `/clear` |
-| Суть | Исполнить **P5.3**: closure-матрица на **ровно 103 строки** (`F-id → батч → item → коммит → тест → статус`) машинной сверкой против `AUDIT-VLT/findings/REGISTER.md` + вердикт release-readiness по шести критериям. **Ожидаемый и КОРРЕКТНЫЙ исход — «НЕ ГОТОВ К РЕЛИЗУ»** (D26): P4.1 🔴, P4.9/P4.10 ⬜, провизорный MSI, `CHANGELOG.md` не наполнен. Вердикт «готов» при трёх открытых items P4 — дефект исполнения. ТЗ — `phases/P5.md` item P5.3 (16 полей, DoR закрыт). |
+| Суть | Развернуть и исполнить **P4.9** (канон внутренней структуры пакетов: инвентарь шести пакетов + ADR `docs/adr/0017-*.md` + arch-тесты, кодирующие канон A — green на `core`, red/`todo` на `documents`/`drive`, **БЕЗ переноса кода**). ТЗ уже детализировано в `phases/P4.md` item P4.9 (16 полей заполнены, DoR закрыт при развёртке фазы P4). После P4.9 — **P4.10** (сам перенос, тоже opus/high, `php:namespace-refactor-safety`). Оба — под явным надзором владельца (необратимый blast-radius, D10). |
 
 ```
-/task:plan-exec VLT-REMED P5.3
+/task:plan-exec VLT-REMED P4.9
 ```
+
+**Альтернативный следующий шаг (если владелец решит НЕ трогать канон структуры сейчас):** решение по
+`F-P4.5-02` (hocuspocus 2.x→4.x, эскалация P4.1) — `MORNING-QUEUE.md` — принять постоянный скип
+(`⛔ Skipped by decision` остаётся окончательным, стек фиксируется на `^2.x`) ИЛИ заказать отдельный
+`/task:plan-design` на мажорный апгрейд hocuspocus-стека. Это НЕ блокирует P4.9/P4.10 — независимые items
+одной фазы P4.
 
 **Done:**
-- **Фазы P0 (3/3 🟢) · P1 (4/4 🟢) · P2 (3/3 🟠) · P3 (6/6 🟢) — ТЕРМИНАЛЬНЫ.**
-- **Фаза P4 (W4) — 7/10 🟢, НЕ терминальна:** P4.1 🔴 Blocked (F-P4.5-02, hocuspocus-мажор);
-  **P4.9 / P4.10 — ⬜ Not started** (канон структуры + namespace-refactor). P5 идёт поверх незакрытой
-  P4 по директиве владельца (**D26**) — НЕ подменяет и НЕ закрывает их.
-- **P5.1 — 🔴 Blocked** (работа сдана полностью; 🔴 — формальный инвариант plan-lint
-  `Escalation Needed=yes ⇒ 🔴`). Реестр: `findings/P5.1-review-findings.md` — 10 находок, все CONFIRMED.
-  Эскалация по R-01 **разрешена решением владельца D27** (+ следствия D28/D29/D30).
-- **P5.2 — 🟠 Done with deviations.** **Все 10 находок ревью ЗАКРЫТЫ ФИКСОМ (0 «принято»),** severity
-  ни одной не переоценена (D13). Диспозиционная таблица на 10 строк — в Completion Notes P5.2
-  (**вход для P5.3**). Пять коммитов: `f7159e6` (G2 — критическая секция upload-сессии, R-02/R-03/R-08/R-09) ·
-  `8f96577` (G1 — контракт TipTap по D27–D29, R-01/R-07/R-04/R-10) · `4c609cb` (G3 — SSRF-редиректы, R-05) ·
-  `3f4687f` (G4 — 5 секций `UPGRADE.md` + guard дока↔код, R-06) · `8c77c40` (усиление форк-теста R-02).
-- **Red-before (D7) доказан по каждой группе.** Главный пруф: на дефектном коде форк-тест гонки
-  PATCH↔sweep дал **запрещённый третий исход** на реальном PG — `patch:ok` при `status: expired`
-  (PATCH отчитался клиенту об успехе и продвинутом offset, сессия — в терминальном статусе).
-  R-05 краснел точной сигнатурой `Unexpected request was recorded` (запрос к `169.254.169.254`
-  реально уходил). **Эшелон 2 D4 признан ДОСТИЖИМЫМ** (R-07) — одноэшелонность признавать не пришлось.
-- **Контрольное ревью P5.2 нашло 4 дефекта — все ЗАКРЫТЫ ФИКСОМ** (коммит `fix(documents,drive,core)`,
-  тесты RV-01…RV-03, red-before доказан прогоном; см. «ПОПРАВКА к Validation» в `phases/P5.md`):
-  **RV-01** — XSS-класс F-P1.11-01/-04 был жив на соседнем пути (markdown-ветка `codeBlock` печатала
-  тело и `language` сырыми → живой raw-HTML в `.md`); **RV-02** — `S3MultipartHandler::putPart()` вне
-  критической секции (осиротевшие part-байты); **RV-03** — per-chunk кап стоял ЗА местом вреда и был
-  выключен по умолчанию (тело PATCH материализовалось целиком в память); **RV-04** — недостоверный
-  гейт-эвиденс (ниже).
-- **Гейт (D12) — ПЕРЕПРОГНАН ЦЕЛИКОМ на `/usr/bin/php8.4`** (версия, которую пинит CI; прежняя запись
-  «`documents` — 166 passed» была счётом ПОДМНОЖЕСТВА, а полный сьют пакета на 8.4 ФАТАЛИЛ —
-  `HasRoles not found`; починено `spatie/laravel-permission` в `require-dev` пакета `documents`):
-  корень — `analyse` 0 errors · `pest --ci` **486 passed** · `test:types` 100 % · `lint:check` красный
-  **ровно** на `plans/AUDIT-VLT/artifacts/repro/**`. Сателлиты (`analyse` 0 · `test:types` 100 % все):
-  `documents` **178/1 skipped**, `drive` **165/5**, `media` **72/5**, `filament` **64/1**.
-  **PG-лейн `drive`** (`agelto_postgres` 127.0.0.1:5455, `vaulter_test`) — весь сьют **170 passed,
-  0 skipped**, форк-тесты гонки PATCH↔sweep ИСПОЛНЕНЫ.
+- **Фазы P0 (3/3 🟢) · P1 (4/4 🟢) · P2 (3/3 🟠) · P3 (6/6 🟢) — ТЕРМИНАЛЬНЫ** (без изменений с прошлого handoff).
+- **Фаза P4 (W4) — 7/10 🟢, НЕ терминальна:** P4.1 🔴 Blocked (F-P4.5-02, hocuspocus-мажор, эскалирован);
+  **P4.9 / P4.10 — ⬜ Not started.** P5 прошла поверх незакрытой P4 по директиве владельца (D26) — НЕ
+  подменяет и НЕ закрывает их.
+- **Фаза P5 (сквозной adversarial code review) — ТЕРМИНАЛЬНА (Status Board: `1/3`, `🔴 Blocked` —
+  формальный статус фазы наследует 🔴 P5.1, plan-lint требует ровно это правило: «есть 🔴-item → статус
+  фазы = 🔴 Blocked»; фаза при этом функционально завершена, все три item'а сданы):**
+  - **P5.1 — 🔴 Blocked.** Работа сдана полностью: реестр `findings/P5.1-review-findings.md` — 10 находок
+    (1 Blocker · 6 Major · 3 Minor), все `CONFIRMED`. Эскалация по R-01 разрешена решением владельца **D27**
+    (+ следствия D28/D29/D30). Статус `🔴`/`Escalation Needed: yes` задним числом не переписывается (D11/D13).
+  - **P5.2 — 🟠 Done with deviations.** Все 10 находок ревью закрыты ФИКСОМ (0 «принято») — коммиты
+    `f7159e6` (G2), `8f96577` (G1), `4c609cb` (G3), `3f4687f` (G4), `8c77c40` (усиление форк-теста).
+    Контрольное ревью P5.2 нашло ещё 4 дефекта (RV-01…RV-04) — все закрыты фиксом (коммиты `ff93042`,
+    `7d22274`, `e412964`).
+  - **P5.3 — 🟢 Done.** Построена `plans/VLT-REMED/findings/P5.3-closure-matrix.md`: **103/103 находок
+    AUDIT-VLT**, машинно сверено (`grep -c` = 103, `diff` множеств F-id пуст, `uniq -d` пуст, 45 sha
+    проверены `git cat-file -e`, severity-счёт 3/37/58/5 совпадает с шапкой `REGISTER.md`). **Итог статусов:
+    102 «закрыт» + 1 «отложен» (F-P4.5-02) = 103, 0 «принято».** Отдельная секция — диспозиция 10 находок
+    ревью P5.1 (R-01…R-10, все ФИКС). Отдельная секция — честный перечень отложенного (F-P4.5-02, P4.9/P4.10,
+    провизорный MSI, `CHANGELOG.md`-наполнение, residual `npm audit high`, два пред-существующих БД-флейка,
+    Q3/Q4). **Вердикт release-readiness: «НЕ ГОТОВ К РЕЛИЗУ»** — механический вывод из шести критериев
+    (критерии 5 «измеренный MSI» и 6 «все items терминальны» — фактическое `❌`; критерий 3 «`UPGRADE.md`
+    покрывает все breaking» — `⚠️` частично). Это ожидаемый и корректный результат (D26), не провал:
+    три Blocker'а, ради которых план был начат, закрыты и дважды перепроверены сквозным ревью.
+- **Гейт (D12) — последний зафиксированный полный прогон (P5.2-ПОПРАВКА, на `/usr/bin/php8.4`, CI-версия):**
+  корень `analyse` 0 errors · `pest --ci` 486 passed · `test:types` 100% · `lint:check` красный **ровно** на
+  `plans/AUDIT-VLT/artifacts/repro/**`. Сателлиты (`analyse` 0 · `test:types` 100% все): `documents`
+  178/1 skipped, `drive` 165/5, `media` 72/5, `filament` 64/1. PG-лейн `drive` — 170 passed, 0 skipped,
+  форк-тесты гонки PATCH↔sweep исполнены. P5.3 кода не меняла — этот прогон цитируется как доказательство
+  критерия (4) вердикта, свежий прогон этой сессией не требовался (документирующий item).
 
 **Remaining:**
-1. **P5.3** (sonnet/medium) — closure-матрица 103 находок + вердикт release-readiness. После него
-   **фаза P5 терминальна; план — НЕТ** (P4 остаётся открытой).
-2. **Вне P5** (открытые items P4): **P4.9**, **P4.10** (под надзором, opus/high — необратимый
-   blast-radius); решение владельца по **F-P4.5-02** (hocuspocus v4).
+1. **P4.9** (opus/high) — канон структуры + ADR + arch-тесты, БЕЗ переноса. ТЗ готово в `phases/P4.md`.
+2. **P4.10** (opus/high, после P4.9) — сам namespace-refactor. ТЗ готово в `phases/P4.md`.
+3. **Решение владельца по F-P4.5-02** (hocuspocus-мажор) — `MORNING-QUEUE.md`.
+4. После P4.9/P4.10 — `/task:plan-close` фазы P4, при желании владельца — переоценка release-readiness
+   (новый item P5.4 или отдельный аудит).
+5. Вне этого плана: архивация AUDIT-VLT (`/task:plan-close archive AUDIT-VLT`).
 
 **Sources of truth:**
-- `plans/VLT-REMED/phases/P5.md` — **Completion Notes P5.2 (диспозиционная таблица 10 находок:
-  находка → severity → фикс → коммит → тест) — прямой ВХОД для P5.3**; там же ТЗ P5.3 (16 полей).
-- `plans/AUDIT-VLT/findings/REGISTER.md` — 103 находки, ОСЬ матрицы P5.3, append-only (D13).
-- `plans/AUDIT-VLT/findings/P5.2-remediation-backlog.md` — партиция на 24 батча (колонка «батч»).
-- `plans/VLT-REMED/plan.md` — §Routing · Decision Log **D1–D30** · Status Board · Update Log.
-- `plans/VLT-REMED/findings/P5.1-review-findings.md` — реестр ревью (НЕ правился, `git diff` пуст).
-  Его §«Наблюдение для P5.3» уже даёт адреса доказательств для F-P4.3-05 и F-P4.4-03 (закрыты
-  фактически, но без F-id-маркера) и объясняет 11 находок, закрытых не-PHP-артефактами.
-- `plans/VLT-REMED/MORNING-QUEUE.md` — принятый долг (не переоткрывать).
+- `plans/VLT-REMED/findings/P5.3-closure-matrix.md` — **финальная closure-матрица 103 находок +
+  диспозиция 10 находок ревью + вердикт release-readiness.** Единственный артефакт, переживающий план.
+- `plans/AUDIT-VLT/findings/REGISTER.md` — 103 находки, ось матрицы, append-only (D13), НЕ править.
+- `plans/VLT-REMED/phases/P4.md` items P4.9/P4.10 — готовое ТЗ следующего шага (16 полей заполнены).
+- `plans/VLT-REMED/plan.md` — §Routing · Decision Log **D1–D30** · Status Board (P5 = `1/3`, `🔴 Blocked`
+  формально, функционально терминальна) · Update Log.
+- `plans/VLT-REMED/MORNING-QUEUE.md` — принятый долг (не переоткрывать), включая F-P4.5-02.
+- `plans/VLT-REMED/findings/P5.1-review-findings.md` + Completion Notes P5.2 (`phases/P5.md`) — 10 находок
+  ревью, диспозиция, red-before-доказательства.
 
 **Open risks:**
-- **Вердикт P5.3 обязан быть «НЕ ГОТОВ К РЕЛИЗУ»** — это ожидаемый и корректный исход (D26), не провал.
-  Анти-подгонка (Code Guidance P5.3): ЗАПРЕЩЕНО объявлять P4.9/P4.10 «необязательными», закрывать
-  P4.1/P4.9/P4.10 задним числом или прятать провизорность MSI за формулировкой «гейт настроен».
-- **Строка «закрыт» без sha И имени теста — это `НЕ ПОДТВЕРЖДЁН`,** а не «закрыт». «Покрыто сьютом»
-  в колонке теста запрещено — только конкретный файл + кейс.
-- **`packages/drive` `composer test` (весь пакет, SQLite) несёт ПРЕД-СУЩЕСТВУЮЩИЙ красный:**
-  `tests/Drive/StorageManagerTest.php` → «разводит storage по разным панелям одного владельца» падает
-  с `UnknownPanelException: Unknown Vaulter storage panel [team]`. Проверено откатом правок P5.2 —
-  падает и без них. К scope P5.2 отношения не имеет; кандидат в отдельный item.
-- **Форк-тест гонки timing-зависим по природе.** Инварианты сформулированы так, что любой из двух
-  легальных исходов зелёный, а третий (воскрешение/усечение) — красный. Если он вдруг «позеленел»
-  на дефекте — чинить ТЕСТ (окна не пересеклись), а не объявлять находку закрытой.
-- В рабочем дереве живут НЕ относящиеся к VLT-REMED правки (`.claude/`, `plans/ACTIVE.md`,
-  `plans/AUDIT-VLT/*`, `plans/VLT-HSEAM/`) из конкурентной сессии/хука — НЕ трогать, коммитить только
-  scoped-пути item'а.
+- **Строка «закрыт» без sha И без имени теста — это `НЕ ПОДТВЕРЖДЁН`.** Ни одна строка
+  `P5.3-closure-matrix.md` такого дефекта не несёт (машинная сверка sha прошла 45/45).
+- **P4.9/P4.10 — необратимый blast-radius.** Требуют opus/high и надзора владельца, не автономного прогона
+  (D10/§Routing) — как и весь цикл ремедиации до этого места.
+- **`packages/drive` `composer test` (весь пакет, SQLite) несёт ПРЕД-СУЩЕСТВУЮЩИЙ красный**
+  (`StorageManagerTest.php`, панель `team`) — вне scope VLT-REMED, кандидат в отдельный item.
+- В рабочем дереве могут жить НЕ относящиеся к VLT-REMED правки (`.claude/`, `plans/ACTIVE.md`,
+  `plans/AUDIT-VLT/*`, `plans/VLT-HSEAM/`) из конкурентной сессии/хука — НЕ трогать.
 
 **Workarounds/Deferred/Open questions:**
 - **workarounds:** core-тесты — из корня (`vendor/bin/pest --filter=X`), сателлиты — `cd packages/<pkg>` ·
-  red-before — откатом ТОЛЬКО не-тестовых файлов на РОДИТЕЛЯ коммита фикса (`git checkout <sha>^ -- <src>`),
-  НЕ `git stash` (в дереве чужие правки) и НЕ на `6b5a52e` (та база предшествует P0.3 — API не сойдётся,
-  красное будет фатальным, а не содержательным) · **PG:** `php8.4` (root-CLI PHP 8.5 без `pdo_pgsql`),
-  контейнер `agelto_postgres` (127.0.0.1:5455), БД `vaulter_test`, роль `vaulter` — **пароль роли выставлен
-  в `secret`** (как в CI-лейне `drive.yml`) через `ALTER ROLE` суперюзером контейнера ·
-  `lint:check` красный на `plans/AUDIT-VLT/artifacts/repro/**` — известный долг, гейт не блокирует.
-- **deferred:** `CHANGELOG.md`-наполнение (deny-правило, D23 — BC ведём в `UPGRADE.md`) · **P4.9 / P4.10** ·
-  **F-P4.5-02** (hocuspocus v4) · реальный измеренный MSI (нет coverage-драйвера локально) ·
-  `npm audit high` в `packages/vue` · пред-существующий красный `StorageManagerTest` (панель `team`) ·
-  runtime-guard на разрыв connection для 4 моделей `drive`/`documents` (MORNING-QUEUE §5) ·
-  архивация AUDIT-VLT (`/task:plan-close archive AUDIT-VLT`).
-- **open_questions:** Q5 — `Resolved → D27` (контракт TipTap исполнен в P5.2). Q3 (ротация
-  `signing_secret`) и Q4 (абсолютный wall-deny) — `Decision pending`, P5.3 не блокируют.
-  Q1/Q2 — `Resolved → D1/D10`.
+  PG: `php8.4` (root-CLI PHP 8.5 без `pdo_pgsql`), контейнер `agelto_postgres` (127.0.0.1:5455), БД
+  `vaulter_test`, роль `vaulter` (пароль `secret`, как в CI-лейне `drive.yml`) · `lint:check` красный на
+  `plans/AUDIT-VLT/artifacts/repro/**` — известный долг, гейт не блокирует.
+- **deferred:** `CHANGELOG.md`-наполнение (deny-правило, D23) · **P4.9/P4.10** · **F-P4.5-02**
+  (hocuspocus v4) · реальный измеренный MSI (нет coverage-драйвера локально — провизорный порог 50/70) ·
+  `npm audit high` в `packages/vue` (residual, `vite`/esbuild dev-server-only) · пред-существующий красный
+  `StorageManagerTest` (панель `team`) · пред-существующий PG-флейк `NodeCommentSchemaTest` · count-зависимая
+  хрупкость PG-харнесса (`MassAssignmentHardeningTest`) · построчная пере-сверка `UPGRADE.md` против Known
+  Deviations всех 27 items (не грепом по F-id) · архивация AUDIT-VLT.
+- **open_questions:** Q5 — `Resolved → D27`. Q1/Q2 — `Resolved → D1/D10`. Q3 (ротация `signing_secret`)
+  и Q4 (абсолютный wall-deny) — `Decision pending`, не блокируют P4.9/P4.10.

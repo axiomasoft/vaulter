@@ -96,7 +96,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
 | P4 | W4 — Качество, DX, CI + канон структуры | 7/10 | 🔴 Blocked |
-| P5 | Сквозной adversarial code review | 0/3 | 🔴 Blocked |
+| P5 | Сквозной adversarial code review | 1/3 | 🔴 Blocked |
 
 ## 5. Decision Log
 
@@ -173,3 +173,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P5.1 🔴 Blocked: сквозное ревью диффа `6b5a52e..HEAD` дало 10 находок (1 Blocker · 6 Major · 3 Minor), все CONFIRMED; эскалация по R-01 (public contract/SemVer) — детали см. phases/P5.md P5.1 Completion Notes + ESCALATION-блок. |
 | 2026-07-11 | plan-design/opus | P5.2 детализирован (DoR закрыт): scope расширен решением владельца по контракту TipTap (D27–D29) + структурный фикс SSRF-редиректов (D30); 10 находок ревью разложены на 4 шва G1–G4, на каждую — регресс-тест в реально гоняемом CI-лейне. Q5 → Resolved → D27. |
 | 2026-07-11 | plan-exec/sonnet | P5.2 закрыт (🟠): все 10 находок ревью закрыты фиксом (0 «принято»), red-before доказан по каждой группе; коммиты `f7159e6`, `8f96577`, `4c609cb`, `3f4687f`, `8c77c40` — детали см. phases/P5.md P5.2 Completion Notes. |
+| 2026-07-11 | plan-exec/sonnet | P5.3 закрыт (🟢): closure-матрица 103/103 (0 дублей/пропусков, 45 sha живые) + вердикт «НЕ ГОТОВ К РЕЛИЗУ» (P4.1🔴/P4.9⏹️/P4.10⏹️/провизорный MSI) — фаза P5 терминальна, план НЕ терминален — детали см. phases/P5.md P5.3 Completion Notes и `findings/P5.3-closure-matrix.md`. |
