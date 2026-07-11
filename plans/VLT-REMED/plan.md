@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-11 (пересборка №3 `P5.3-closure-matrix.md` после закрытия P4.1/P4.9/P4.10: критерий 6 ✅, вердикт release-readiness остаётся «НЕ ГОТОВ К РЕЛИЗУ» — критерии 3/5 не-✅) |
+| Last Updated | 2026-07-11 (пересборка №4 `P5.3-closure-matrix.md` после независимой построчной сверки `UPGRADE.md`: критерий 3 ✅, вердикт release-readiness остаётся «НЕ ГОТОВ К РЕЛИЗУ» — открыт ровно 1 критерий: 5, MSI) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-media, vaulter-documents, vaulter-filament, vaulter-permissions-azgard, @vaulter/vue, hocuspocus-server |
 | Execution Mode | phase-first |
@@ -180,3 +180,5 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/opus | P4.9 закрыт (🟢): канон структуры A объявлен (ADR-0017 + инвентарь + arch-тесты, кода не перенесено); P4 → 9/10 🟡. Коммит `9fc9121` — детали см. phases/P4.md P4.9 Completion Notes. |
 | 2026-07-11 | plan-exec/opus | P4.10 закрыт (🟢): перенос drive (Закон 1) и documents (Закон 2) к канону A без изменения поведения; коммиты `de14a48`/`ff7b3f7`/`6a17378` — детали см. phases/P4.md P4.10 Completion Notes. **Фаза P4 (W4) ТЕРМИНАЛЬНА (10/10 🟢).** |
 | 2026-07-11 | plan-exec/sonnet | `P5.3-closure-matrix.md` пересобрана (№3) после закрытия P4.1/P4.9/P4.10: §4 п.2/3 → закрыт, §5 критерий 6 ❌→✅; вердикт БЕЗ ИЗМЕНЕНИЙ «НЕ ГОТОВ» (критерии 3/5 не-✅) — см. `findings/P5.3-closure-matrix.md`, `phases/P5.md` P5.3 (ДОПОЛНЕНИЕ). |
+| 2026-07-11 | plan-exec/opus | Независимая сверка нашла и закрыла пропуск `UPGRADE.md` (`TipTapRenderer` ctor, коммит `0cecc06`) — детали см. `UPGRADE.md`. |
+| 2026-07-11 | plan-exec/sonnet | `P5.3-closure-matrix.md` пересобрана (№4): построчная сверка `UPGRADE.md` против 29 items — 0 пропусков, §5 критерий 3 ✅; вердикт «НЕ ГОТОВ», открыт 1 критерий (5, MSI) — см. `findings/P5.3-closure-matrix.md`, `phases/P5.md` P5.3 (ДОПОЛНЕНИЕ №4). |
