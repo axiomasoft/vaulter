@@ -6,6 +6,64 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `EnumCaseAttributeResolver::forCase()`/`flush()` are no longer static — resolve the class through the container (P4.6 / F-P2.1-05)
+
+**What changed.** `Vaulter\Support\EnumCaseAttributeResolver` (the enum-case PHP-attribute
+reflection resolver backing the `HasIcon`/`HasLabel`/`HasTiptapExtensions` traits) moved its
+reflection cache from a process-wide `private static array $cache` to an instance property
+(`private array $cache`), and its two public methods moved from `public static function` to
+`public function` accordingly:
+
+```php
+// Before
+public static function forCase(UnitEnum $case, string $attribute): ?object
+public static function flush(): void
+
+// After
+public function forCase(UnitEnum $case, string $attribute): ?object
+public function flush(): void
+```
+
+The class is bound as a container `scoped()` singleton in
+`VaulterServiceProvider::packageRegistered()` and resolved via
+`app(EnumCaseAttributeResolver::class)` — the same pattern already used by `PanelRegistry`/
+`IdStrategyResolver` elsewhere in the package. The three in-package call sites (`HasIcon`,
+`HasLabel`, `HasTiptapExtensions`) were switched to this container-resolved form in the same
+commit.
+
+**Why.** The previous `static $cache` was process-wide, mutable state living outside the
+facade (E3.3 — no global state outside the facade): under Octane/queue workers it silently
+carried reflection results across unrelated requests/jobs sharing the same worker process, and
+any two independent container scopes (e.g. two Testbench test cases in the same process)
+unintentionally shared one cache. Binding the resolver as a container-scoped singleton ties the
+cache's lifetime to the container/request scope instead of the whole PHP process.
+
+**Breaking consequence.** Calling `EnumCaseAttributeResolver::forCase(...)` or
+`EnumCaseAttributeResolver::flush()` **statically** now fatals immediately with `Error:
+Non-static method Vaulter\Support\EnumCaseAttributeResolver::forCase() cannot be called
+statically` (`::flush()` likewise) — this is a pre-1.0 breaking change shipped without a
+deprecation cycle (D3), not a deprecation-then-removal.
+
+**Who is affected.** Only host code that calls `EnumCaseAttributeResolver::forCase(...)` or
+`::flush()` directly and statically, bypassing the package's own `HasIcon`/`HasLabel`/
+`HasTiptapExtensions` traits (the traits themselves already resolve the instance through the
+container and need no changes on your side).
+
+**What you must do.** Resolve an instance through the container instead of calling the class
+statically:
+
+```php
+// Before
+$label = EnumCaseAttributeResolver::forCase($case, Label::class);
+EnumCaseAttributeResolver::flush();
+
+// After
+$label = app(EnumCaseAttributeResolver::class)->forCase($case, Label::class);
+app(EnumCaseAttributeResolver::class)->flush();
+```
+
+No config change or database migration is required for this upgrade note.
+
 ### `@vaulter/vue`: `yjs` and `@tiptap/pm` moved to `peerDependencies` — install them yourself (P4.7 / F-P2.5-07)
 
 **What changed.** `packages/vue/package.json`'s `yjs` (`^13.6`) and `@tiptap/pm` (`^3.0.0`) moved
