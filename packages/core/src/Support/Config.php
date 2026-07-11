@@ -1410,14 +1410,45 @@ final class Config
     /**
      * Extra per-type TipTap attributes (config('vaulter.tiptap.extra_attributes')), keyed
      * by node/mark type. Additive — merged with the canon for that type, never replacing
-     * it. URL-bearing attributes (`link.href`, `image.src`) stay scheme-checked regardless:
-     * that is a security invariant, not a host preference (D28).
+     * it. Whatever a host adds here, the URL-bearing attributes among them stay
+     * scheme-checked — see {@see tiptapUrlAttributes()}: extending the allow-list is host
+     * taste, sanitising a URL is not (D28).
      *
      * @return array<string, list<string>>
      */
     public static function tiptapExtraAttributes(): array
     {
-        $value = config('vaulter.tiptap.extra_attributes', []);
+        return self::tiptapAttributeMap('extra_attributes');
+    }
+
+    /**
+     * The per-type attributes a host declares as URL-BEARING
+     * (config('vaulter.tiptap.url_attributes'), VLT-REMED P5.2 / R-11). Every attribute
+     * named here goes through LinkSchemeValidator at store time AND on the JSON read path,
+     * exactly like the package's own `link.href` / `image.src`.
+     *
+     * It exists because the extension seam (`extra_nodes` + `extra_attributes`) lets a host
+     * declare attributes the package has never heard of, and the package cannot guess which
+     * of them a browser will treat as a URL. It only has to be reached for attributes whose
+     * NAME does not give them away — TipTapContent already infers the obvious ones (`src`,
+     * `href`, …) so that a host which forgets this key still fails CLOSED.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function tiptapUrlAttributes(): array
+    {
+        return self::tiptapAttributeMap('url_attributes');
+    }
+
+    /**
+     * A `type => [attribute, …]` map from the tiptap config, with the non-string junk
+     * dropped rather than trusted.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function tiptapAttributeMap(string $key): array
+    {
+        $value = config('vaulter.tiptap.'.$key, []);
 
         if (!is_array($value)) {
             return [];

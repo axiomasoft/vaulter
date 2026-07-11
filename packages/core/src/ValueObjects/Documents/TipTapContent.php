@@ -30,9 +30,16 @@ use Vaulter\Support\Config;
  * floor and config can never remove from it — a host that accidentally dropped `doc`/`text`
  * would silently break every save.
  *
- * The URL-scheme guard is NOT part of that seam: `link.href` and `image.src` always go
- * through {@see LinkSchemeValidator} (http/https/mailto), whatever the config says. That is
- * a security invariant, not a matter of host taste.
+ * The URL-scheme guard RIDES that seam instead of ignoring it (VLT-REMED P5.2 / R-11).
+ * Every URL-bearing attribute goes through {@see LinkSchemeValidator} (http/https/mailto) at
+ * store time AND on the JSON read path — and "every" includes the ones the HOST added, not
+ * just `link.href` and `image.src`. It used to include only those two, which made the seam a
+ * way to switch the XSS barrier OFF: `extra_attributes = ['iframe' => ['src']]` bought a node
+ * whose `src` was checked nowhere, so `javascript:` was accepted at write and handed back to
+ * the editor at read, while the canonical `image.src` next to it was rejected. Widening the
+ * allow-list is a matter of host taste; sanitising a URL is not. See
+ * {@see urlAttributes()} for how a host attribute is recognised — by name, or by declaring it
+ * in `vaulter.tiptap.url_attributes`.
  */
 final readonly class TipTapContent implements DocumentContent
 {
@@ -92,12 +99,36 @@ final readonly class TipTapContent implements DocumentContent
     ];
 
     /**
-     * The node/mark attributes that carry a URL. They are ALWAYS scheme-checked, and the
-     * config seam can never widen this (D28).
+     * The package's own URL-bearing attributes. They are always scheme-checked AND always
+     * REQUIRED: a link with no href, an image with no src is not a degraded node, it is a
+     * malformed one, and the store rejects it.
      *
-     * @var array<string, string>
+     * @var array<string, list<string>>
      */
-    private const array URL_ATTRIBUTES = ['link' => 'href', 'image' => 'src'];
+    private const array CANONICAL_URL_ATTRIBUTES = ['link' => ['href'], 'image' => ['src']];
+
+    /**
+     * Attribute names that are URL-bearing by NAME, whoever declared them (VLT-REMED P5.2 /
+     * R-11). This is what makes the config seam fail CLOSED.
+     *
+     * The seam (`extra_nodes` + `extra_attributes`) lets a host declare nodes this package
+     * has never heard of — and until now the URL guard was a hardcoded map of the two
+     * canonical attributes, so `extra_attributes = ['iframe' => ['src']]` bought the host a
+     * node whose `src` was scheme-checked NOWHERE: not at store time, not by
+     * {@see withSanitizedUrls()} on the JSON read path that feeds the editor. A
+     * `javascript:` src went in and came back out. Extending the allow-list is the host's
+     * business; switching off the XSS barrier is not — so an attribute a browser will
+     * resolve as a URL is treated as one no matter who put it on the list, and a host that
+     * never heard of `vaulter.tiptap.url_attributes` is still covered.
+     *
+     * The list is names, not guesses: anything a host invents outside it (`location`,
+     * `endpoint`, …) it declares itself through the config seam below.
+     *
+     * @var list<string>
+     */
+    private const array INFERRED_URL_ATTRIBUTE_NAMES = [
+        'href', 'src', 'url', 'poster', 'action', 'formaction', 'cite', 'background', 'longdesc', 'xlink:href',
+    ];
 
     /**
      * @param array<string, mixed> $doc
@@ -213,6 +244,31 @@ final readonly class TipTapContent implements DocumentContent
     }
 
     /**
+     * Every attribute of this type that carries a URL, and therefore goes through
+     * {@see LinkSchemeValidator} both at store time and on the JSON read path (R-11):
+     *
+     *  - the package's own (`link.href`, `image.src`);
+     *  - anything on the type's allow-list whose NAME is URL-bearing — including attributes
+     *    the HOST added through the seam (see {@see INFERRED_URL_ATTRIBUTE_NAMES});
+     *  - anything the host explicitly declares URL-bearing under a name the package cannot
+     *    recognise (`vaulter.tiptap.url_attributes`).
+     *
+     * @return list<string>
+     */
+    public static function urlAttributes(string $type): array
+    {
+        $declared = Config::tiptapUrlAttributes()[$type] ?? [];
+
+        $inferred = array_intersect(self::allowedAttributes($type), self::INFERRED_URL_ATTRIBUTE_NAMES);
+
+        return array_values(array_unique([
+            ...(self::CANONICAL_URL_ATTRIBUTES[$type] ?? []),
+            ...$inferred,
+            ...$declared,
+        ]));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -323,8 +379,13 @@ final readonly class TipTapContent implements DocumentContent
 
     /**
      * Reject any attribute outside the allow-list for the given node/mark type, then
-     * validate the values this package actually interprets (`heading.level`) or that are
-     * a security primitive (`link.href`, `image.src`).
+     * validate the values this package actually interprets (`heading.level`) or that are a
+     * security primitive — every URL-bearing attribute of the type, the host's own included
+     * (R-11: the seam widens the allow-list, it does not switch off the scheme check).
+     *
+     * Presence is required only for the CANONICAL URL attributes: the package knows a link
+     * without an href is malformed. For a host's attribute it knows no such thing, so an
+     * absent one passes and a present one is checked — a value guard, not a schema opinion.
      */
     private static function validateAttributes(string $type, mixed $attrs): void
     {
@@ -337,8 +398,12 @@ final readonly class TipTapContent implements DocumentContent
             }
         }
 
-        if (array_key_exists($type, self::URL_ATTRIBUTES)) {
-            self::validateUrl($attributes[self::URL_ATTRIBUTES[$type]] ?? null);
+        $required = self::CANONICAL_URL_ATTRIBUTES[$type] ?? [];
+
+        foreach (self::urlAttributes($type) as $urlAttribute) {
+            if (in_array($urlAttribute, $required, true) || array_key_exists($urlAttribute, $attributes)) {
+                self::validateUrl($attributes[$urlAttribute] ?? null);
+            }
         }
 
         if ($type === 'heading' && array_key_exists('level', $attributes) && !is_numeric($attributes['level'])) {
@@ -499,27 +564,32 @@ final readonly class TipTapContent implements DocumentContent
     }
 
     /**
+     * Scheme-guard EVERY URL-bearing attribute of the type — the host's own included, on
+     * the same map the store-time gate uses ({@see urlAttributes()}, R-11). A hardcoded map
+     * here meant a host node's `src` reached the editor through
+     * NodeDocumentVersionResource::readableContent() with its `javascript:` intact.
+     *
      * @param  array<string, mixed> $attrs
      * @return array<string, mixed>
      */
     private static function scrubUrlAttribute(string $type, array $attrs): array
     {
-        $urlAttribute = self::URL_ATTRIBUTES[$type] ?? null;
+        foreach (self::urlAttributes($type) as $urlAttribute) {
+            if (!array_key_exists($urlAttribute, $attrs)) {
+                continue;
+            }
 
-        if ($urlAttribute === null || !array_key_exists($urlAttribute, $attrs)) {
-            return $attrs;
+            $url = $attrs[$urlAttribute];
+            $safe = is_string($url) ? LinkSchemeValidator::sanitize($url) : null;
+
+            if ($safe === null) {
+                unset($attrs[$urlAttribute]);
+
+                continue;
+            }
+
+            $attrs[$urlAttribute] = $safe;
         }
-
-        $url = $attrs[$urlAttribute];
-        $safe = is_string($url) ? LinkSchemeValidator::sanitize($url) : null;
-
-        if ($safe === null) {
-            unset($attrs[$urlAttribute]);
-
-            return $attrs;
-        }
-
-        $attrs[$urlAttribute] = $safe;
 
         return $attrs;
     }

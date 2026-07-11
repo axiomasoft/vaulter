@@ -238,18 +238,26 @@ return [
     | The seam is ADDITIVE (D28): these keys only ADD to the canon, they never replace
     | it — dropping 'doc'/'text' from the list would silently break every save, and
     | "overriding" the attribute allow-list is a classic way to hand yourself an XSS.
-    | For the same reason URL-bearing attributes ('link.href', 'image.src') are ALWAYS
-    | scheme-checked (http/https/mailto) no matter what you put here.
+    |
+    | Widening the allow-list does NOT switch the XSS barrier off (R-11): EVERY URL-bearing
+    | attribute is scheme-checked (http/https/mailto) at save AND when the content is read
+    | back into the editor — the ones you add here included, not just 'link.href' and
+    | 'image.src'. An attribute is URL-bearing when its name says so ('src', 'href', 'url',
+    | 'poster', 'action', 'cite', …). If your extension carries a URL under a name we cannot
+    | recognise, declare it in 'url_attributes' — an unrecognised URL attribute is the one
+    | way to get an unchecked 'javascript:' into your editor.
     |
     | Example:
     |   'extra_nodes' => ['mention', 'taskList', 'taskItem'],
     |   'extra_marks' => ['highlight'],
     |   'extra_attributes' => ['mention' => ['id', 'label'], 'taskItem' => ['checked']],
+    |   'url_attributes' => ['embed' => ['location']],
     */
     'tiptap' => [
         'extra_nodes' => [],
         'extra_marks' => [],
         'extra_attributes' => [],
+        'url_attributes' => [],
     ],
 
     /*

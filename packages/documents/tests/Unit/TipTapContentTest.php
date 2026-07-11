@@ -200,6 +200,70 @@ it('конфиг-шов АДДИТИВЕН: канон не вычёркивае
     expect(TipTapContent::allowedNodeTypes())->toContain('doc', 'text', 'paragraph', 'image', 'table', 'mention');
 });
 
+// ─── R-11 — конфиг-шов не отменяет санитизацию URL ──────────────────────────
+//
+// Расширение allow-list — вкус хоста; проверка схемы URL — инвариант безопасности.
+// Раньше карта URL-несущих атрибутов была хардкодом (link.href + image.src), поэтому
+// для узла, добавленного хостом через шов, не работал НИ store-time-контроль схемы,
+// НИ read-path-скраб — и javascript: доезжал до редактора через readableContent().
+
+it('конфиг-шов: URL-несущий атрибут ХОСТА проверяется схемой на записи, R-11', function (string $url): void {
+    // Хост объявил свой узел с атрибутом src и НЕ регистрировал его как URL-несущий.
+    // Барьер обязан сработать сам: имя атрибута URL-несущее — значит, схема проверяется.
+    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src']]);
+
+    expect(fn () => TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'iframe', 'attrs' => ['src' => $url]]],
+    ]))->toThrow(InvalidTipTapContentException::class);
+})->with([
+    'javascript' => ['javascript:alert(1)'],
+    'data URI' => ['data:text/html,<script>alert(1)</script>'],
+    'control-char split' => ["java\tscript:alert(1)"],
+]);
+
+it('конфиг-шов: URL-атрибут под неочевидным именем проверяется, если хост его объявил, R-11', function (): void {
+    // Имя `location` само по себе ни о чём не говорит — для таких случаев есть шов
+    // vaulter.tiptap.url_attributes: объявленный URL-атрибут проходит ту же проверку.
+    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['location']]);
+    config()->set('vaulter.tiptap.url_attributes', ['embed' => ['location']]);
+
+    expect(fn () => TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'embed', 'attrs' => ['location' => 'javascript:alert(1)']]],
+    ]))->toThrow(InvalidTipTapContentException::class);
+});
+
+it('конфиг-шов: URL-атрибут хоста с разрешённой схемой принимается, R-11', function (): void {
+    // Барьер не должен превращаться в отказ в обслуживании: https проходит.
+    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src', 'title']]);
+
+    $content = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'iframe', 'attrs' => ['src' => 'https://a.example/v', 'title' => 'ok']]],
+    ]);
+
+    expect($content->toArray()['content'][0]['attrs']['src'])->toBe('https://a.example/v');
+});
+
+it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут хоста на чтении, R-11', function (): void {
+    // Легаси-снимок (записан до барьера / при другом конфиге) декеится на чтении с
+    // сохранением значений — и уходит в редактор через NodeDocumentVersionResource.
+    // Скраб JSON-пути обязан покрывать и хостовые URL-атрибуты, а не только канон.
+    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src']]);
+
+    $scrubbed = TipTapContent::decayFrom([
+        'type' => 'doc',
+        'content' => [['type' => 'iframe', 'attrs' => ['src' => 'javascript:alert(1)']]],
+    ])->withSanitizedUrls();
+
+    expect($scrubbed->toArray()['content'][0]['attrs'])->not->toHaveKey('src');
+});
+
 it('конфиг-шов НЕ расширяет схемы URL-несущих атрибутов, R-01', function (): void {
     // Инвариант безопасности, а не вкус хоста: даже объявив href «своим» атрибутом,
     // хост не может протащить javascript: (D28).
