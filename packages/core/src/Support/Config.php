@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
-use Vaulter\Contracts\Cas\StorageAdapter;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
@@ -1155,17 +1154,6 @@ final class Config
         $value = config('vaulter.collaboration.drivers.hocuspocus.url');
 
         return is_string($value) && $value !== '' ? $value : null;
-    }
-
-    /**
-     * @return class-string<StorageAdapter>
-     */
-    public static function storageAdapterClass(): string
-    {
-        /** @var class-string<StorageAdapter> $class */
-        $class = config('vaulter.storage_adapter', DefaultStorageAdapter::class);
-
-        return $class;
     }
 
     /**

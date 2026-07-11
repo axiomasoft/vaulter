@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Facades\Vaulter;
+use Vaulter\Panels\PanelRegistry;
 use Vaulter\VaulterManager;
 
 it('merges the vaulter config', function (): void {
@@ -29,4 +30,19 @@ it('exposes the Vaulter facade', function (): void {
     Vaulter::registerDocumentType('spreadsheet', ['label' => 'Spreadsheet']);
 
     expect(Vaulter::documentTypes())->toHaveKey('spreadsheet');
+});
+
+/*
+ * F-P3.2-01 — PanelRegistry::class was a LAZY singleton (packageRegistered() only
+ * binds the closure); nothing forced it during packageBooted(), so a broken panel
+ * (ADR-0009's "validated on boot" claim) surfaced only on the first real request
+ * that touched a panel. Red-before-fix (D7): before this item,
+ * `$this->app->resolved(PanelRegistry::class)` was FALSE right after boot — this
+ * test asserts it is TRUE, without the test itself ever calling
+ * app(PanelRegistry::class) (Container::resolved() reports whether the container
+ * has already built the instance, so it cannot be satisfied by the assertion's
+ * own act of checking).
+ */
+it('eagerly resolves (and boot-validates) the panel registry on packageBooted, F-P3.2-01', function (): void {
+    expect(app()->resolved(PanelRegistry::class))->toBeTrue();
 });

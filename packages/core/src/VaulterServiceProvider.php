@@ -146,6 +146,18 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // Fail-loud tenancy-footgun guard (F-P1.9-01) — see TenantFootgunGuard for
         // the full rationale; extracted so it is directly unit-testable.
         (new TenantFootgunGuard)->check(isProduction: $this->app->environment('production'));
+
+        // Panel boot-validation (ADR-0009, H.1 / F-P3.2-01): PanelRegistry::class is a
+        // LAZY singleton (packageRegistered() only binds the closure); nothing forces
+        // it before this line, so a broken panel (bad model/pipe/resource FQCN, or a
+        // per-panel id strategy without own tables) previously surfaced only on the
+        // FIRST live request that touched a panel. Resolving it here — after config is
+        // loaded and route bindings/policies are registered — makes PanelRegistry::
+        // validate() run on every boot (incl. `config:cache`/`route:cache`/artisan
+        // commands), matching the "fails loud at boot, not at runtime" contract the
+        // ADR and InvalidPanelException's own docblock already claimed. class_exists/
+        // is_a() checks only — no I/O, safe under config:cache (service-provider.md).
+        $this->app->make(PanelRegistry::class);
     }
 
     /**

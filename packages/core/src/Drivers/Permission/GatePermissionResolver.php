@@ -125,9 +125,10 @@ final class GatePermissionResolver implements HostRoleDriver
     }
 
     /**
-     * Run a Gate ability for the actor, node-blind, swallowing a missing-ability
-     * exception as "not allowed" so an unconfigured host gate never throws into the
-     * resolver.
+     * Run a Gate ability for the actor, node-blind (F-P1.2-02: this is a plain
+     * delegation, there is no try/catch here — `Gate::allows()` itself already
+     * returns false, never throws, for an ability the host has not defined, which
+     * is what keeps an unconfigured host gate fail-closed).
      *
      * @param list<mixed> $arguments
      */

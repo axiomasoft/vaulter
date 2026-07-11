@@ -22,7 +22,6 @@ use Vaulter\Panels\DefaultStoragePanel;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
-use Vaulter\Support\DefaultStorageAdapter;
 use Vaulter\Support\RandomShareTokenGenerator;
 use Vaulter\Testing\NullRoleDriver;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
@@ -375,13 +374,6 @@ return [
         ],
         'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Storage adapter for binary attachments (legacy Documents)
-    |--------------------------------------------------------------------------
-    */
-    'storage_adapter' => DefaultStorageAdapter::class,
 
     /*
     |--------------------------------------------------------------------------

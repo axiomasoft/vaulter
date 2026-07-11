@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Contracts\Documents\HandlerRegistry;
+use Vaulter\Contracts\Documents\NodeHandlerResolver;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Exceptions\Documents\UnknownExportFormatException;
+use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Panels\Panel;
 use Vaulter\Panels\PanelRegistry;
@@ -67,12 +70,37 @@ final class VaulterManager
 
     /**
      * Resolve the vaulter-drive handle factory (P2 #5 seam). Bound by the drive
-     * package's provider; absent it, the container throws a clear binding-resolution
-     * error pointing at the missing package.
+     * package's provider; absent it, {@see resolveSeam()} raises a domain exception
+     * naming the missing composer package (F-P3.5-01).
      */
     private function driveFactory(): DriveHandleFactory
     {
-        return $this->container->make(DriveHandleFactory::class);
+        /** @var DriveHandleFactory $factory */
+        $factory = $this->resolveSeam(DriveHandleFactory::class, 'axioma-studio/vaulter-drive');
+
+        return $factory;
+    }
+
+    /**
+     * Resolve a cross-package seam contract, translating the container's generic
+     * {@see BindingResolutionException} ("Target [...] is not instantiable.") into
+     * a Vaulter-branded exception naming the composer package to install
+     * (F-P3.3-02 / F-P3.5-01) — the docblocks of {@see HandlerRegistry} and
+     * {@see NodeHandlerResolver} already claimed a
+     * "fails loudly with an install hint", which this method now actually is.
+     *
+     * @param class-string $contract
+     */
+    private function resolveSeam(string $contract, string $package): object
+    {
+        try {
+            /** @var object $instance */
+            $instance = $this->container->make($contract);
+
+            return $instance;
+        } catch (BindingResolutionException) {
+            throw MissingPackageException::forContract($contract, $package);
+        }
     }
 
     /**
@@ -141,26 +169,39 @@ final class VaulterManager
      */
     public function registerHandler(DocumentHandler|string $handler): void
     {
-        $this->container->make(HandlerRegistry::class)->register($handler);
+        $this->handlers()->register($handler);
     }
 
     /**
      * The container-bound document handler registry (§4.5). The single source of
      * truth for format resolution — kept here as a thin accessor so callers reach it
      * through the facade without inflating the manager. The concrete engine ships in
-     * vaulter-documents (P2 #5); this seam fails loudly without it installed.
+     * vaulter-documents (P2 #5); this seam fails loudly (with an install hint,
+     * F-P3.3-02) without it installed.
      */
     public function handlers(): HandlerRegistry
     {
-        return $this->container->make(HandlerRegistry::class);
+        /** @var HandlerRegistry $registry */
+        $registry = $this->resolveSeam(HandlerRegistry::class, 'axioma-studio/vaulter-documents');
+
+        return $registry;
     }
 
     /**
-     * Register a custom export format.
+     * Register a custom export format at runtime — symmetric to
+     * {@see registerHandler()} (F-P3.3-01): an FQCN is resolved through the
+     * container, exactly like the handler seam does.
+     *
+     * @param DocumentExporter|class-string<DocumentExporter> $exporter
      */
-    public function registerExporter(DocumentExporter $exporter): void
+    public function registerExporter(DocumentExporter|string $exporter): void
     {
-        $this->exporters[$exporter->format()] = $exporter;
+        /** @var DocumentExporter $instance */
+        $instance = $exporter instanceof DocumentExporter
+            ? $exporter
+            : $this->container->make($exporter);
+
+        $this->exporters[$instance->format()] = $instance;
     }
 
     public function exporter(string $format): DocumentExporter

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
+use Vaulter\Tests\BrokenPanelBootTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
@@ -40,6 +41,15 @@ uses(SpatieTestCase::class, RefreshDatabase::class)->in(
 // binding above does not also claim them (Pest forbids two test cases for one path).
 uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in(
     $core.'/ActivityGate',
+);
+
+// A dedicated top-level folder (F-P3.2-01, P4.4): BrokenPanelBootTestCase configures
+// a KNOWN-BROKEN panel BEFORE the app boots, so PanelRegistry's boot-time
+// validation fires during framework bootstrap and can be asserted on. Kept out of
+// `Panels/` (bound to the plain TestCase above) — Pest forbids a file re-binding a
+// different test case than the one its directory already claims.
+uses(BrokenPanelBootTestCase::class)->in(
+    $core.'/PanelBoot',
 );
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit

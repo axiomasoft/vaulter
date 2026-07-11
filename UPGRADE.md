@@ -6,6 +6,45 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `VaulterManager::for()`/`registerHandler()`/`handlers()` now throw a `MissingPackageException` (not a raw `BindingResolutionException`) when `vaulter-drive`/`vaulter-documents` are absent (P4.4 / F-P3.3-02, F-P3.5-01)
+
+**What changed.** These seams previously let the container's generic
+`Illuminate\Contracts\Container\BindingResolutionException` ("Target [...] is not
+instantiable.") propagate — a message with no mention of "vaulter" or which composer package to
+install. They now catch it and throw `Vaulter\Exceptions\Support\MissingPackageException`
+instead, naming the missing contract and the exact `composer require` to run.
+
+**Why.** The docblocks of `HandlerRegistry`/`NodeHandlerResolver` already claimed a "fails
+loudly with an install hint" — this makes that true.
+
+**Who is affected.** Only a host that specifically caught `BindingResolutionException` around
+these calls to detect a missing satellite package — that catch no longer matches
+(`MissingPackageException` still extends the base `RuntimeException`-rooted `VaulterException`,
+so a broad `catch (\Throwable)`/`catch (\Exception)` is unaffected).
+
+### Dead `StorageAdapter` seam removed: `Contracts\Cas\StorageAdapter`, `Support\DefaultStorageAdapter`, `config('vaulter.storage_adapter')` (P4.4 / F-P3.1-03)
+
+**What changed.** `Vaulter\Contracts\Cas\StorageAdapter`, its no-op default implementation
+`Vaulter\Support\DefaultStorageAdapter`, the `config('vaulter.storage_adapter')` key and
+`Config::storageAdapterClass()` are removed entirely.
+
+**Why.** This was a fully-declared seam (contract + default implementation + config-bound FQCN
+resolver) left over from an earlier, pre-CAS milestone — nothing in the package ever resolved
+`Config::storageAdapterClass()` or bound `StorageAdapter` in any provider. Real binary-attachment
+persistence goes through the independent, actually-wired `StorageDriver`/`ContentStore` CAS seam
+(`packages/media`). Keeping the dead seam around was a DX trap: a host reading the contract and
+binding an implementation against it got a class that was never called.
+
+**Who is affected.** Only a host that bound its own `StorageAdapter` implementation via
+`config('vaulter.storage_adapter')` or referenced `Vaulter\Contracts\Cas\StorageAdapter` /
+`Vaulter\Support\DefaultStorageAdapter` directly — given the seam was never invoked, this is
+expected to be nobody in practice.
+
+**What you must check.** If you implemented a `StorageAdapter` expecting it to handle binary
+attachment storage, remove the config key/binding and use the `StorageDriver`/`ContentStore`
+CAS contracts (`config('vaulter.cas.storage_driver')` / `config('vaulter.cas.content_store')`)
+instead — that is the seam real persistence has always gone through.
+
 ### Node name search now escapes `%`/`_`/`\`; cycle detection now on for tree reads (P4.2 / F-P1.8-03, F-P4.2-02)
 
 **What changed.** Two `packages/core` behaviour changes, both narrowing a previously-loose
