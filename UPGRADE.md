@@ -6,6 +6,162 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### TipTap content: a closed store-time schema (now with images/tables), a config seam to extend it, and read-time decay (P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)
+
+**What changed.** Rich-text content is validated against a **closed allow-list** before it is
+stored (`Vaulter\ValueObjects\Documents\TipTapContent::fromArray()`): unknown node types, unknown
+marks, attributes outside the per-type list, and `link.href`/`image.src` URLs whose scheme is not
+`http`/`https`/`mailto` all reject the whole document with `InvalidTipTapContentException`.
+
+The shipped allow-list covers exactly what the package offers the editor through
+`#[TiptapExtensions]` on `DocumentType`:
+
+- nodes: `doc`, `paragraph`, `heading`, `text`, `hardBreak`, `horizontalRule`, `bulletList`,
+  `orderedList`, `listItem`, `blockquote`, `codeBlock`, `image`, `table`, `tableRow`, `tableCell`,
+  `tableHeader`;
+- marks: `bold`, `italic`, `strike`, `code`, `link`, `underline`;
+- attributes: `heading.level`, `link.href|target|rel`, `image.src|alt|title`, `codeBlock.language`,
+  `tableCell|tableHeader.colspan|rowspan|colwidth`.
+
+**Reading never throws.** `NodeDocumentVersion::tipTapContent()` **decays**: a snapshot written
+before this validator existed (or by an extension you have since removed) comes back with the
+unknown nodes/marks/attribute keys stripped out, as the method always promised. Nothing in the
+database is migrated or rewritten.
+
+**Extending it.** New config keys — `vaulter.tiptap.extra_nodes`, `vaulter.tiptap.extra_marks`,
+`vaulter.tiptap.extra_attributes`:
+
+```php
+// config/vaulter.php
+'tiptap' => [
+    'extra_nodes' => ['mention', 'taskList', 'taskItem'],
+    'extra_marks' => ['highlight'],
+    'extra_attributes' => ['mention' => ['id', 'label'], 'taskItem' => ['checked']],
+],
+```
+
+The seam is **additive**: it adds to the shipped list and can never remove from it. URL-bearing
+attributes (`link.href`, `image.src`) stay scheme-checked whatever you configure — that is a
+security invariant, not a preference.
+
+**Why.** Stored XSS: `href="javascript:…"` and script-shaped nodes were persisted verbatim and
+re-rendered to every viewer. The store-time allow-list is the first echelon;
+`symfony/html-sanitizer` on the HTML render path is the second (and Markdown export re-applies the
+scheme allow-list plus markdown escaping — see the next section).
+
+**Who is affected.** Any host whose editor mounts Tiptap extensions beyond the list above: their
+content is now **rejected on save** until the extension's nodes/marks/attributes are declared in
+`vaulter.tiptap.*`.
+
+**What you must check.** List the extensions your editor mounts and make sure every node/mark type
+they emit is either in the shipped list or in `vaulter.tiptap.extra_*`. Content already in the
+database needs no migration — it will decay on read and can be re-saved once the config declares
+its nodes.
+
+### Markdown export escapes Markdown (not HTML), and drops unsafe link/image targets (P5.2 / R-04, R-10)
+
+**What changed.** `TipTapRenderer::toMarkdown()` no longer runs text and URLs through
+`htmlspecialchars()`. It now:
+
+- backslash-escapes Markdown metacharacters (`\`, `` ` ``, `*`, `_`, `{`, `}`, `[`, `]`, `(`, `)`,
+  `#`, `+`, `!`, `|`, `~`, `<`, `>`) in text;
+- emits link/image destinations through a safe emitter — a URL containing `(`, `)`, spaces or
+  angle brackets is written in CommonMark's `<...>` form (with `<`/`>`/space percent-encoded)
+  instead of being concatenated into `](...)`;
+- drops the link wrapper (keeping the label) / the image entirely when the scheme is not
+  `http`/`https`/`mailto`;
+- renders `image` as `![alt](src)` and `table` as a GFM pipe table.
+
+**Why.** HTML escaping left the Markdown metacharacters live, so a link label of
+`click](javascript:alert(1))` closed the link early and opened a **new, live** `javascript:` link
+in the exported file — the scheme allow-list had checked the `href`, not the string actually
+emitted. As a side effect, exports also stopped printing HTML entities into `.md` (`&amp;` broke
+query strings, `&lt;` showed up as literal text).
+
+**Who is affected.** Anything that diffs or byte-compares exported Markdown, or feeds it to a
+renderer that relied on the old HTML entities.
+
+**What you must check.** Re-generate any stored Markdown export fixtures.
+
+### `webhooks.delivery.follow_redirects` is removed — deliveries never follow redirects (P5.2 / R-05)
+
+**What changed.** The config key `vaulter.webhooks.delivery.follow_redirects` is **gone**. Outbound
+webhook deliveries never follow HTTP redirects: `DeliverWebhook` calls `withoutRedirecting()`
+unconditionally and sets `CURLOPT_FOLLOWLOCATION => false` on the transport. A `3xx` from a
+receiver is now the final (non-2xx) response and the delivery is recorded as a failed attempt.
+
+**Why.** The key switched the SSRF barrier off. The guard resolves and range-checks the endpoint
+URL and pins the vetted IP onto the connection (`CURLOPT_RESOLVE`) — but the pin covers the
+**original** host:port only. A redirect hop is resolved again, without the guard and without a pin,
+so a receiver answering `302 Location: http://169.254.169.254/latest/meta-data/` walked the
+delivery straight onto the cloud metadata service. A boolean that turns a security barrier off is
+not flexibility.
+
+**Who is affected.** Hosts that set `follow_redirects => true`, and any receiver that answers a
+delivery with a redirect (e.g. `http` → `https`, or a URL that has moved).
+
+**What you must check.** Remove the key from your published config (it is ignored now). Point
+`WebhookEndpoint::$url` at the **final** URL — the receiver must answer the POST itself, not bounce
+it.
+
+### Upload sessions: abort/expire now take the PATCH lock; a missing staged object is a hard error (P5.2 / R-02, R-03, R-08)
+
+**What changed.**
+
+- `UploadSessionManager::abort()` / `expire()` now run inside the same critical section as a tus
+  `PATCH` (one transaction, the per-session lock as its first statement, status re-read under the
+  lock). If a `PATCH` holds the lock, they throw `UploadConflictException` instead of reclaiming
+  the session.
+- `vaulter:sweep-uploads` **skips** a session whose lock it cannot take (a `PATCH` is in flight)
+  and reports it as skipped; it no longer fails, and no longer deletes the staged bytes of a live
+  upload.
+- `StagedUpload::append()` throws the new `Vaulter\Drive\Exceptions\StagedUploadMissingException`
+  (409) when the session claims `offset > 0` but the staged object is gone, instead of silently
+  writing the new chunk alone.
+- `UploadSessionStoreRepository::advanceReceived()` is a compare-and-set on the open statuses: it
+  throws `UploadConflictException` rather than forcing a terminal session back to `uploading`.
+- The Postgres advisory-lock key is now 64-bit (`hashtextextended`), so two different `upload_id`s
+  no longer collide into a bogus 409.
+
+**Why.** The sweeper reclaimed sessions with no lock at all: it could delete the staged object
+between a live `PATCH`'s "read offset" and its "append", after which the `PATCH` wrote its chunk on
+its own (losing the accepted prefix), forced the row back to `uploading`, and answered the client
+with a **regressed** offset. The client then uploaded the tail into a file with a hole — a
+corrupted upload, with no error anywhere.
+
+**Who is affected.** Hosts calling `UploadSessionManager::abort()`/`expire()` directly: both may
+now throw `UploadConflictException`.
+
+**What you must check.** Wrap direct `abort()`/`expire()` calls in a `UploadConflictException`
+handler (surface a 409 / retry later). Clients must treat a 409 as "re-read `HEAD` and resume".
+
+### Raw-text/nosniff and rate-limit hardening on downloads and uploads (P1.1, P1.3 / F-P1.3-04, F-P1.11-03, F-P1.8-01, F-P1.4-09)
+
+**What changed.**
+
+- **Downloads (P1.1).** Every PHP-streamed download/preview response (Drive downloads and public
+  share downloads) now carries `X-Content-Type-Options: nosniff` unconditionally, and any
+  `Content-Type` outside the safe whitelist is forced to `application/octet-stream` with an
+  attachment disposition.
+- **Rate limits (P1.3).** The package registers two named rate limiters — `vaulter-public` (public
+  share endpoints) and `vaulter-uploads` (upload endpoints) — and applies them to its routes.
+  Clients past the limit get `429`.
+- **Upload-session cap (P1.3).** An actor may hold at most `vaulter.uploads.max_active_sessions`
+  open sessions; `initiate()` past the cap throws `429 TooManyRequestsHttpException`.
+
+**Why.** A stored `text/html` (or SVG) attachment served inline executed in the origin of the host
+application — a stored-XSS channel through the file-download path. And an unauthenticated public
+share endpoint with no rate limit is a free brute-force/enumeration oracle; an unbounded number of
+open upload sessions is a free staging-space DoS.
+
+**Who is affected.** Hosts that relied on inline rendering of HTML/SVG attachments; clients that
+hammer public share or upload endpoints; anything that opens many concurrent upload sessions per
+user.
+
+**What you must check.** Serve HTML/SVG attachments through your own controller if you truly need
+them inline. Tune `vaulter.rate_limits.*` and `vaulter.uploads.max_active_sessions` to your
+traffic, and handle `429` in clients.
+
 ### `EnumCaseAttributeResolver::forCase()`/`flush()` are no longer static — resolve the class through the container (P4.6 / F-P2.1-05)
 
 **What changed.** `Vaulter\Support\EnumCaseAttributeResolver` (the enum-case PHP-attribute
