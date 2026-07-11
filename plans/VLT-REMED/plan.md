@@ -95,7 +95,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
-| P4 | W4 — Качество, DX, CI + канон структуры | 7/10 | 🔴 Blocked |
+| P4 | W4 — Качество, DX, CI + канон структуры | 8/10 | 🟡 In progress |
 | P5 | Сквозной adversarial code review | 1/3 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -176,3 +176,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P5.3 закрыт (🟢): closure-матрица 103/103 (0 дублей/пропусков, 45 sha живые) + вердикт «НЕ ГОТОВ К РЕЛИЗУ» (P4.1🔴/P4.9⏹️/P4.10⏹️/провизорный MSI) — фаза P5 терминальна, план НЕ терминален — детали см. phases/P5.md P5.3 Completion Notes и `findings/P5.3-closure-matrix.md`. |
 | 2026-07-11 | plan-exec/sonnet | Второй круг ревью P5.2 нашёл R-11 (конфиг-шов TipTap) и довёл R-04 до конца; коммиты `c73116b`/`ff4d07d`, попутно закрыта R-12 — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | `P5.3-closure-matrix.md` актуализирована под R-04/R-11 (11/11 фикс, 43 sha, гейт зелёный) — вердикт release-readiness БЕЗ ИЗМЕНЕНИЙ, см. `findings/P5.3-closure-matrix.md`. |
+| 2026-07-11 | plan-exec/opus | P4.1 закрыт (🟢): F-P4.5-02 доведён на актуальном мажоре hocuspocus `^4.3` (не скип/реверт), эскалация снята; P4 → 8/10 🟡. Коммит `02ee0df` — детали см. phases/P4.md P4.1 Completion Notes (ДОПОЛНЕНИЕ 2026-07-11) + `findings/P5.3-closure-matrix.md`. |
