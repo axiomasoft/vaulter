@@ -759,14 +759,32 @@ return [
     | token is bound to exactly one node (no cross-node access).
     |
     | webhook_secret is the shared secret the Node hub presents on the server-to-
-    | server webhook endpoints. When null/empty the webhook surface accepts ONLY a
-    | valid signed JWT (it is NEVER open). The driver-level hocuspocus.secret is
-    | both the room-JWT signing key AND the key the webhooks verify a JWT against.
+    | server webhook endpoints. The driver-level hocuspocus.secret is both the
+    | room-JWT signing key AND the key the webhooks verify a JWT against — a
+    | SEPARATE key from webhook_secret by design (C1.2: never reuse a JWT-signing
+    | key as a body-integrity key).
+    |
+    | HARDENING (VLT-REMED P3.2 / F-P1.6-02, N2): every collab/authenticate + collab/
+    | store call — whether it identified itself with the secret header OR a JWT —
+    | must ALSO carry a valid HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed
+    | by webhook_secret (X-Vaulter-Collab-Timestamp + X-Vaulter-Collab-Signature),
+    | the same canonical string {@see \Vaulter\Webhooks\WebhookSigner} already uses
+    | for OUTBOUND deliveries. This is an ADDITIONAL barrier on top of the identity
+    | check, never a replacement for it — an unsigned call, a stale timestamp
+    | (outside webhook_timestamp_tolerance) or a replayed signature is refused even
+    | with a perfectly valid secret/JWT. BREAKING: webhook_secret is now REQUIRED for
+    | ANY collab webhook call to succeed (JWT-only, no webhook_secret configured, no
+    | longer works) — see UPGRADE.md.
     */
     'collaboration' => [
         'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),
         'channel_prefix' => 'vaulter.documents',
         'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
+
+        // The ± tolerance (seconds) an incoming webhook's X-Vaulter-Collab-Timestamp
+        // may drift from now before the call is refused as stale/replayed; also the
+        // TTL a seen signature (nonce) is remembered for replay detection.
+        'webhook_timestamp_tolerance' => 300,
 
         'drivers' => [
             'reverb' => [

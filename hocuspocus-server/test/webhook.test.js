@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
 import { authenticate, storeDocument } from '../src/webhook.js'
 
 // Unit coverage for the server-to-server webhook seam (onAuthenticate /
@@ -150,5 +151,65 @@ test('storeDocument throws on a non-2xx so the server can retry', async () => {
   await assert.rejects(
     storeDocument({ room: 'r', yjsState: 'AAA=', token: 't' }, { config: cfg, fetchImpl }),
     /collab\/store failed \(403\)/,
+  )
+})
+
+// ── HMAC body signature (VLT-REMED P3.2 / F-P1.6-02) ────────────────────────────────
+//
+// Every outbound webhook call now carries X-Vaulter-Collab-Timestamp +
+// X-Vaulter-Collab-Signature, an HMAC-SHA256 of "{timestamp}.{rawBody}" keyed by
+// webhookSecret — the SAME canonical string CollaborationCallResolver (PHP) re-derives.
+
+function expectedSignature(timestamp, rawBody, secret) {
+  return crypto.createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex')
+}
+
+test('authenticate signs the exact bytes it sends, matching the PHP canonical string', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ allowed: true, readOnly: false }))
+
+  const before = Math.floor(Date.now() / 1000)
+  await authenticate({ token: 'jwt-abc', room: 'vaulter.documents.42' }, { config: cfg, fetchImpl })
+  const after = Math.floor(Date.now() / 1000)
+
+  const { headers, body: rawBody } = calls[0].init
+  const timestamp = Number(headers['X-Vaulter-Collab-Timestamp'])
+
+  assert.ok(Number.isInteger(timestamp) && timestamp >= before && timestamp <= after)
+  assert.equal(headers['X-Vaulter-Collab-Signature'], expectedSignature(timestamp, rawBody, cfg.webhookSecret))
+})
+
+test('storeDocument signs the exact bytes it sends, matching the PHP canonical string', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ data: {} }))
+
+  await storeDocument({ room: 'r', yjsState: 'AAA=', token: 't' }, { config: cfg, fetchImpl })
+
+  const { headers, body: rawBody } = calls[0].init
+  const timestamp = Number(headers['X-Vaulter-Collab-Timestamp'])
+
+  assert.equal(headers['X-Vaulter-Collab-Signature'], expectedSignature(timestamp, rawBody, cfg.webhookSecret))
+})
+
+test('no signature is sent when no webhookSecret is configured (nothing to sign with)', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ allowed: true, readOnly: false }))
+
+  await authenticate(
+    { token: 'jwt-only', room: 'r' },
+    { config: { ...cfg, webhookSecret: undefined }, fetchImpl },
+  )
+
+  assert.equal(calls[0].init.headers['X-Vaulter-Collab-Timestamp'], undefined)
+  assert.equal(calls[0].init.headers['X-Vaulter-Collab-Signature'], undefined)
+})
+
+test('a different body under the same timestamp produces a DIFFERENT signature (tamper-evidence)', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ data: {} }))
+
+  await storeDocument({ room: 'r', yjsState: 'AAA=', token: 't' }, { config: cfg, fetchImpl })
+  await storeDocument({ room: 'r', yjsState: 'BBB=', token: 't' }, { config: cfg, fetchImpl })
+
+  assert.notEqual(calls[0].init.body, calls[1].init.body)
+  assert.notEqual(
+    calls[0].init.headers['X-Vaulter-Collab-Signature'],
+    calls[1].init.headers['X-Vaulter-Collab-Signature'],
   )
 })

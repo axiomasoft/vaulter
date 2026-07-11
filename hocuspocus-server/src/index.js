@@ -94,6 +94,11 @@ function readOrigin(requestHeaders) {
  * (allowed:false / non-2xx) throws → refused connection. readOnly downgrades the
  * connection so the server drops a viewer's updates; the token is stashed on the context
  * so onStoreDocument authenticates the snapshot write with the SAME room-bound JWT.
+ *
+ * F-P1.6-03 (periodic exp re-check): onStoreDocument only re-validates the token on a
+ * WRITE — a long-lived read-only viewer session would otherwise never be disconnected
+ * once its token expires (the connection just keeps syncing over the open socket). Arm
+ * a timer here that force-closes the socket once the token's `exp` passes.
  */
 async function onAuthenticate({ token, documentName, connection }) {
   if (!token) {
@@ -106,8 +111,12 @@ async function onAuthenticate({ token, documentName, connection }) {
     throw new Error('Collaboration connection rejected by the Vaulter backend')
   }
 
-  if (connection && result.readOnly) {
-    connection.readOnly = true
+  if (connection) {
+    if (result.readOnly) {
+      connection.readOnly = true
+    }
+
+    armExpiryTimer(connection, decodeTokenExpiry(token))
   }
 
   return {
@@ -115,6 +124,63 @@ async function onAuthenticate({ token, documentName, connection }) {
     room: documentName,
     readOnly: result.readOnly,
     userId: result.userId,
+  }
+}
+
+/**
+ * The `exp` (unix seconds) claim of a JWT, read WITHOUT verifying its signature — the
+ * hub never holds the signing secret (C9), and the token was ALREADY verified
+ * server-side by the collab/authenticate webhook call above. This is purely local
+ * bookkeeping so the hub knows when to proactively close a socket; it grants nothing on
+ * its own. Malformed/missing/unparsable token or `exp` claim → null (no timer armed,
+ * i.e. the pre-P3.2 behaviour: only exp'd JWTs on a future store call get caught).
+ */
+function decodeTokenExpiry(token) {
+  if (typeof token !== 'string') {
+    return null
+  }
+
+  const segments = token.split('.')
+
+  if (segments.length < 2) {
+    return null
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(segments[1], 'base64url').toString('utf8'))
+
+    return typeof payload.exp === 'number' ? payload.exp : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Arm (or immediately act on) the connection's expiry timer for the given `exp` (unix
+ * seconds). Already-expired → close now. Otherwise a single setTimeout fires the close
+ * at the exact expiry instant; unref() so a pending timer never keeps the Node process
+ * alive on shutdown. No-op when `exp` is null (unparsable token) — same as before this
+ * fix, degrading to store-time-only re-validation.
+ */
+function armExpiryTimer(connection, exp) {
+  if (exp === null) {
+    return
+  }
+
+  const delayMs = exp * 1000 - Date.now()
+
+  if (delayMs <= 0) {
+    connection.close({ code: 4001, reason: 'Collaboration token expired' })
+
+    return
+  }
+
+  const timer = setTimeout(() => {
+    connection.close({ code: 4001, reason: 'Collaboration token expired' })
+  }, delayMs)
+
+  if (typeof timer.unref === 'function') {
+    timer.unref()
   }
 }
 
@@ -264,5 +330,5 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   })
 }
 
-export { buildServer, buildExtensions, onConnect }
+export { buildServer, buildExtensions, onConnect, onAuthenticate, decodeTokenExpiry, armExpiryTimer }
 // websocketOptions is exported above (function declaration) for boot() + the hardening test.

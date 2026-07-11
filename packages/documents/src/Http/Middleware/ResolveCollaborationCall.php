@@ -14,14 +14,19 @@ use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 /**
  * Guards the server-to-server collaboration webhook endpoints (collab/authenticate,
  * collab/store — M4b) presented by the Node Hocuspocus hub. It authenticates the call
- * via the shared webhook secret OR a valid signed room JWT through the
+ * via the shared webhook secret OR a valid signed room JWT, AND (VLT-REMED P3.2 /
+ * F-P1.6-02) verifies an HMAC signature of the raw body, through the
  * {@see CollaborationCallResolver}, stashes the resolved {@see CollaborationCall} on
- * the request, and 401s an unauthenticated caller. The endpoints are NEVER open — a
- * call with no valid secret and no valid JWT is rejected.
+ * the request, and 401s an unauthenticated/unsigned/replayed caller. The endpoints are
+ * NEVER open — a call with no valid secret and no valid JWT, or one missing/failing the
+ * body signature, is rejected.
  *
  * The shared secret is read from the X-Vaulter-Collab-Secret header (kept out of the
  * body/logs); the JWT from the Authorization: Bearer header, falling back to a `token`
- * body field for hubs that cannot set headers.
+ * body field for hubs that cannot set headers. The signature is read from
+ * X-Vaulter-Collab-Timestamp + X-Vaulter-Collab-Signature; the raw body is read via
+ * getContent() — the EXACT bytes the resolver's HMAC check re-derives, never the
+ * parsed/re-encoded `$request->all()`.
  */
 final class ResolveCollaborationCall
 {
@@ -44,6 +49,9 @@ final class ResolveCollaborationCall
         $call = $this->resolver->resolve(
             presentedSecret: $this->secret($request),
             bearerToken: $this->bearer($request),
+            presentedTimestamp: $request->header(CollaborationCallResolver::TIMESTAMP_HEADER),
+            presentedSignature: $request->header(CollaborationCallResolver::SIGNATURE_HEADER),
+            rawBody: $request->getContent(),
         );
 
         if (!$call instanceof CollaborationCall) {

@@ -6,6 +6,54 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Every collab webhook call must now carry a valid HMAC body signature; `webhook_secret` is REQUIRED for collaboration to work at all (P3.2 / F-P1.6-02, F-P1.6-03)
+
+**What changed.**
+
+1. **`collab/authenticate` and `collab/store` now require an HMAC-SHA256 signature of the
+   raw request body**, on top of the existing identity check (the shared `webhook_secret`
+   header OR a valid room JWT bearer token). The signature is computed over
+   `"{timestamp}.{rawBody}"` — the SAME canonical string `Vaulter\Webhooks\WebhookSigner`
+   already uses for outbound webhook deliveries — keyed by
+   `config('vaulter.collaboration.webhook_secret')`, and presented in two new headers:
+   `X-Vaulter-Collab-Timestamp` + `X-Vaulter-Collab-Signature`. A call with a missing
+   signature, a timestamp outside `config('vaulter.collaboration.webhook_timestamp_tolerance')`
+   (default ±300s), or a replayed signature (the same signature seen again within that
+   window) is now refused with a 401 — even when its identity (secret/JWT) is perfectly
+   valid. Previously the request body was never signed at all, on either identity path, so a
+   captured secret/JWT let an attacker replay or tamper with the `yjs_state`/`node_id` payload
+   indefinitely.
+
+   **Breaking consequence:** because the signing key is ALWAYS `webhook_secret` — regardless
+   of whether the caller identifies via the secret header or a JWT — `webhook_secret` is now
+   REQUIRED for ANY collab webhook call to succeed. A deployment running the JWT-only identity
+   path with no `webhook_secret` configured will find every `collab/authenticate`/`collab/store`
+   call 401 after upgrading.
+
+   **Who is affected.** Any host running the Hocuspocus collaboration hub
+   (`config('vaulter.features.collaboration', true)`, VLT-REMED P3.1).
+
+   **What you must do.** Set `VAULTER_COLLAB_WEBHOOK_SECRET` (both on the Laravel app and on
+   the `hocuspocus-server` Node hub, via its own `VAULTER_COLLAB_WEBHOOK_SECRET` env var) if you
+   have not already. Ensure the Laravel app server and the Node hub have closely synchronised
+   clocks (NTP) — a clock skew beyond the ±300s tolerance window causes signed calls to be
+   refused as stale; the tolerance is configurable via
+   `config('vaulter.collaboration.webhook_timestamp_tolerance')`.
+
+2. **`hocuspocus-server` now arms a server-side timer that force-closes a live collaboration
+   WebSocket once its JWT's `exp` passes**, instead of relying solely on the debounced
+   `onStoreDocument` write to re-validate the token. Previously a long-lived READ-ONLY viewer
+   connection (which never triggers a store) could keep syncing over the open socket
+   indefinitely past its token's expiry, since only a write re-checked `exp`.
+
+   **Who is affected.** Any host running the Hocuspocus hub with viewer (read-only) sessions
+   left open past the collab token TTL (`config('vaulter.collaboration.drivers.hocuspocus.
+   token_ttl')`, default 3600s). No action required — this tightens enforcement automatically;
+   a client that needs a longer session should request a fresh token before its current one
+   expires (reconnect), same as before.
+
+No database migration is required for either change in this section.
+
 ### Realtime collaboration now needs its OWN feature flag; ActivityResource degrades instead of registering against a disabled subsystem (P3.1 / F-P1.6-01, F-P1.10-03)
 
 **What changed.**

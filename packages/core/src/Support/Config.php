@@ -1042,15 +1042,34 @@ final class Config
 
     /**
      * The shared secret the Node Hocuspocus hub presents on the server-to-server
-     * webhook endpoints (collab/authenticate, collab/store). Null/empty ⇒ the
-     * webhook surface accepts ONLY a valid signed JWT (never open). Set via
-     * VAULTER_COLLAB_WEBHOOK_SECRET.
+     * webhook endpoints (collab/authenticate, collab/store). Set via
+     * VAULTER_COLLAB_WEBHOOK_SECRET. As of VLT-REMED P3.2 (F-P1.6-02) this key is ALSO
+     * the HMAC key every webhook call's body-signature is verified against — null/empty
+     * therefore means the webhook surface accepts NOTHING AT ALL (never open): neither
+     * the secret-header path nor a JWT-bearer call can produce a valid signature
+     * without it. See UPGRADE.md (breaking).
      */
     public static function collaborationWebhookSecret(): ?string
     {
         $value = config('vaulter.collaboration.webhook_secret');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The ± tolerance (seconds) an incoming collaboration webhook's
+     * X-Vaulter-Collab-Timestamp may drift from now before the call is refused as
+     * stale (config('vaulter.collaboration.webhook_timestamp_tolerance'), default
+     * 300 — VLT-REMED P3.2 / F-P1.6-02, N2). Also doubles as the nonce TTL: a
+     * signature seen again within this window is refused as a replay. Floored at 1.
+     */
+    public static function collaborationWebhookTimestampTolerance(): int
+    {
+        $value = config('vaulter.collaboration.webhook_timestamp_tolerance', 300);
+
+        $seconds = is_numeric($value) ? (int) $value : 300;
+
+        return max($seconds, 1);
     }
 
     /**
