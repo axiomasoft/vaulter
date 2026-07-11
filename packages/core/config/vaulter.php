@@ -243,9 +243,13 @@ return [
     | attribute is scheme-checked (http/https/mailto) at save AND when the content is read
     | back into the editor — the ones you add here included, not just 'link.href' and
     | 'image.src'. An attribute is URL-bearing when its name says so ('src', 'href', 'url',
-    | 'poster', 'action', 'cite', …). If your extension carries a URL under a name we cannot
-    | recognise, declare it in 'url_attributes' — an unrecognised URL attribute is the one
-    | way to get an unchecked 'javascript:' into your editor.
+    | 'poster', 'action', 'cite', …) or when you declare it in 'url_attributes' (for a URL
+    | living under a name we cannot recognise, e.g. 'location').
+    |
+    | And whatever the name: an attribute VALUE carrying an executable scheme ('javascript:',
+    | 'data:', 'vbscript:') is REJECTED at save and stripped on read (P5.2). Declaring an
+    | attribute in 'url_attributes' buys you the full allow-list check (a relative or
+    | 'file:' URL is rejected too) — it is not what stands between your editor and an XSS.
     |
     | Example:
     |   'extra_nodes' => ['mention', 'taskList', 'taskItem'],

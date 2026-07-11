@@ -201,13 +201,19 @@ final readonly class TipTapContent implements DocumentContent
      * scheme check is {@see LinkSchemeValidator} (the same one the store-time gate uses), so
      * a control-character split like `java\tscript:` is caught with it.
      *
-     * Dropping the attribute (rather than the node/mark) keeps the document readable: a link
-     * without an href is inert text, an image without a src is an empty box — the content
-     * degrades, it does not vanish.
+     * What cannot survive is dropped WITH its node/mark when the attribute is a required one
+     * (`link.href`, `image.src`): the result of this method is what the API resource hands the
+     * editor, and the editor hands it straight back on the next save — so it must pass
+     * {@see fromArray()} unchanged (VLT-REMED P5.2). Leaving a link mark with no href behind
+     * looked like a graceful degradation and was in fact a one-way door: GET returned
+     * `{"type":"link","attrs":{"target":"_blank"}}` and the PATCH of that same payload was
+     * rejected by the store gate, which REQUIRES the href — every legacy document with a
+     * relative href became permanently unsavable. A dropped link mark leaves its text, a
+     * dropped image leaves the rest of the document, and both round-trip.
      */
     public function withSanitizedUrls(): self
     {
-        return new self(self::scrubNode($this->doc));
+        return new self(self::scrubNode($this->doc) ?? ['type' => 'doc', 'content' => []]);
     }
 
     /**
@@ -386,6 +392,14 @@ final readonly class TipTapContent implements DocumentContent
      * Presence is required only for the CANONICAL URL attributes: the package knows a link
      * without an href is malformed. For a host's attribute it knows no such thing, so an
      * absent one passes and a present one is checked — a value guard, not a schema opinion.
+     *
+     * On top of that, EVERY attribute value is checked for an executable scheme, whatever
+     * the attribute is called (VLT-REMED P5.2). Recognising URL attributes by NAME
+     * ({@see INFERRED_URL_ATTRIBUTE_NAMES}) leaves the config seam fail-OPEN for every name
+     * the package never heard of: `extra_attributes = ['embed' => ['source']]` bought a node
+     * whose `source` was scheme-checked nowhere, so `javascript:` went in and came back out
+     * to the editor — the very hole R-11 was supposed to close, one attribute name to the
+     * left. The name is host taste; `javascript:`/`data:`/`vbscript:` in a VALUE never is.
      */
     private static function validateAttributes(string $type, mixed $attrs): void
     {
@@ -406,6 +420,12 @@ final readonly class TipTapContent implements DocumentContent
             }
         }
 
+        foreach ($attributes as $value) {
+            if (self::carriesDangerousScheme($value)) {
+                throw InvalidTipTapContentException::disallowedUrlScheme(is_string($value) ? $value : '(nested value)');
+            }
+        }
+
         if ($type === 'heading' && array_key_exists('level', $attributes) && !is_numeric($attributes['level'])) {
             throw InvalidTipTapContentException::disallowedAttribute('heading', 'level');
         }
@@ -416,6 +436,31 @@ final readonly class TipTapContent implements DocumentContent
         if (!is_string($url) || !LinkSchemeValidator::isAllowed($url)) {
             throw InvalidTipTapContentException::disallowedUrlScheme(is_string($url) ? $url : '(non-string)');
         }
+    }
+
+    /**
+     * Does this attribute value (a string, or any string nested in a list-valued attribute
+     * like `tableCell.colwidth`) carry an executable scheme? See
+     * {@see LinkSchemeValidator::isDangerous()} — the guard that does not depend on the
+     * attribute's NAME.
+     */
+    private static function carriesDangerousScheme(mixed $value): bool
+    {
+        if (is_string($value)) {
+            return LinkSchemeValidator::isDangerous($value);
+        }
+
+        if (!is_array($value)) {
+            return false;
+        }
+
+        foreach ($value as $item) {
+            if (self::carriesDangerousScheme($item)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ─── Read time: decay ────────────────────────────────────────────────────
@@ -526,21 +571,30 @@ final readonly class TipTapContent implements DocumentContent
     // ─── Read time: URL scrub (the JSON path's own echelon) ──────────────────
 
     /**
-     * Recursively drop every URL attribute whose scheme is not allowed, normalising the
-     * ones that are (see {@see withSanitizedUrls()}). Structure and every other attribute
-     * are left exactly as they were — this is a value guard, not a second decay.
+     * Recursively make a node/mark SAFE to hand to a client AND acceptable back at the store
+     * gate. Structure is otherwise left alone — this is a value guard, not a second decay.
      *
-     * @param  array<string, mixed> $node a node OR a mark (both carry type/attrs)
-     * @return array<string, mixed>
+     * @param  array<string, mixed>      $node a node OR a mark (both carry type/attrs)
+     * @return array<string, mixed>|null null → the node/mark itself must be dropped
      */
-    private static function scrubNode(array $node): array
+    private static function scrubNode(array $node): ?array
     {
         $type = $node['type'] ?? null;
 
-        if (is_string($type) && isset($node['attrs']) && is_array($node['attrs'])) {
+        if (is_string($type)) {
             /** @var array<string, mixed> $attrs */
-            $attrs = $node['attrs'];
-            $node['attrs'] = self::scrubUrlAttribute($type, $attrs);
+            $attrs = isset($node['attrs']) && is_array($node['attrs']) ? $node['attrs'] : [];
+            $scrubbed = self::scrubAttributes($type, $attrs);
+
+            if ($scrubbed === null) {
+                return null;
+            }
+
+            if ($scrubbed === []) {
+                unset($node['attrs']);
+            } else {
+                $node['attrs'] = $scrubbed;
+            }
         }
 
         foreach (['marks', 'content'] as $key) {
@@ -551,10 +605,22 @@ final readonly class TipTapContent implements DocumentContent
             $scrubbed = [];
 
             foreach ($node[$key] as $child) {
-                if (is_array($child)) {
-                    /** @var array<string, mixed> $child */
-                    $scrubbed[] = self::scrubNode($child);
+                if (!is_array($child)) {
+                    continue;
                 }
+
+                /** @var array<string, mixed> $child */
+                $kept = self::scrubNode($child);
+
+                if ($kept !== null) {
+                    $scrubbed[] = $kept;
+                }
+            }
+
+            if ($scrubbed === [] && $key === 'marks') {
+                unset($node[$key]);
+
+                continue;
             }
 
             $node[$key] = $scrubbed;
@@ -564,31 +630,58 @@ final readonly class TipTapContent implements DocumentContent
     }
 
     /**
-     * Scheme-guard EVERY URL-bearing attribute of the type — the host's own included, on
-     * the same map the store-time gate uses ({@see urlAttributes()}, R-11). A hardcoded map
-     * here meant a host node's `src` reached the editor through
-     * NodeDocumentVersionResource::readableContent() with its `javascript:` intact.
+     * Scheme-guard the attributes of one node/mark, so that what the editor is handed can be
+     * handed BACK (VLT-REMED P5.2 — the read→save circle):
      *
-     * @param  array<string, mixed> $attrs
-     * @return array<string, mixed>
+     *  - every URL-bearing attribute of the type — the host's own included, on the same map
+     *    the store-time gate uses ({@see urlAttributes()}, R-11) — must carry an allowed
+     *    scheme, or it goes;
+     *  - every OTHER attribute whose VALUE carries an executable scheme goes too, whatever
+     *    it is called (the name heuristic's fail-open half — see {@see validateAttributes()});
+     *  - a `heading.level` the store gate would reject goes as well (it has a default).
+     *
+     * When the attribute that cannot survive is a REQUIRED one (`link.href`, `image.src`),
+     * the node/mark is dropped WHOLE rather than emitted without it. Emitting the naked node
+     * was the actual R-12 defect: `fromArray()` requires those attributes, so the editor got
+     * `{"type":"link","attrs":{"target":"_blank"}}` back from GET and the very next PATCH of
+     * that same payload blew up — every legacy document with a relative href (`/pricing`, an
+     * anchor, and yes a `javascript:` one) became PERMANENTLY unsavable. Dropping the mark
+     * leaves the text; dropping the image leaves the rest of the document; both survive a
+     * round-trip.
+     *
+     * @param  array<string, mixed>      $attrs
+     * @return array<string, mixed>|null null → the node/mark must be dropped
      */
-    private static function scrubUrlAttribute(string $type, array $attrs): array
+    private static function scrubAttributes(string $type, array $attrs): ?array
     {
-        foreach (self::urlAttributes($type) as $urlAttribute) {
-            if (!array_key_exists($urlAttribute, $attrs)) {
-                continue;
-            }
+        $required = self::CANONICAL_URL_ATTRIBUTES[$type] ?? [];
 
-            $url = $attrs[$urlAttribute];
+        foreach (self::urlAttributes($type) as $urlAttribute) {
+            $isRequired = in_array($urlAttribute, $required, true);
+            $url = $attrs[$urlAttribute] ?? null;
             $safe = is_string($url) ? LinkSchemeValidator::sanitize($url) : null;
 
             if ($safe === null) {
+                if ($isRequired) {
+                    return null;
+                }
+
                 unset($attrs[$urlAttribute]);
 
                 continue;
             }
 
             $attrs[$urlAttribute] = $safe;
+        }
+
+        foreach ($attrs as $key => $value) {
+            if (self::carriesDangerousScheme($value)) {
+                unset($attrs[$key]);
+            }
+        }
+
+        if ($type === 'heading' && array_key_exists('level', $attrs) && !is_numeric($attrs['level'])) {
+            unset($attrs['level']);
         }
 
         return $attrs;

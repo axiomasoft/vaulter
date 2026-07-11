@@ -431,6 +431,14 @@ final class TipTapRenderer
      * its `)` and injects a second, live link. CommonMark's angle-bracket form takes `(`/`)`
      * and spaces verbatim and only forbids `<`, `>` and newlines — which we percent-encode.
      * So: plain form when the URL is boring, angle form otherwise.
+     *
+     * The `|` is percent-encoded in BOTH forms (VLT-REMED P5.2). A destination never passes
+     * through {@see escapeMarkdown()} — this is the one place it is built — and neither form
+     * protects it: a perfectly legal `https://a.example/?a=1|2|3` inside a table cell rendered
+     * as `| [x](https://a.example/?a=1|2|3) | y |`, which GFM reads as FOUR columns, shifting
+     * every column after it. The backslash escape is no help inside a destination (CommonMark
+     * would carry the backslash into the URL), so `%7C` it is — the browser resolves it
+     * identically.
      */
     private function markdownDestination(string $url): ?string
     {
@@ -439,6 +447,8 @@ final class TipTapRenderer
         if ($sanitized === null) {
             return null;
         }
+
+        $sanitized = str_replace('|', '%7C', $sanitized);
 
         if (preg_match('/[\s()<>]/', $sanitized) !== 1) {
             return $sanitized;

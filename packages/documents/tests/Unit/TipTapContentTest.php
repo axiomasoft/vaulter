@@ -261,7 +261,8 @@ it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут
         'content' => [['type' => 'iframe', 'attrs' => ['src' => 'javascript:alert(1)']]],
     ])->withSanitizedUrls();
 
-    expect($scrubbed->toArray()['content'][0]['attrs'])->not->toHaveKey('src');
+    // Атрибута нет — а раз он был у узла единственным, нет и самого ключа attrs.
+    expect($scrubbed->toArray()['content'][0]['attrs'] ?? [])->not->toHaveKey('src');
 });
 
 it('конфиг-шов НЕ расширяет схемы URL-несущих атрибутов, R-01', function (): void {
@@ -368,3 +369,108 @@ it('decayFrom() на мусорном корне отдаёт пустой doc, 
     'no type' => [['content' => []]],
     'content is a scalar' => [['type' => 'doc', 'content' => 'oops']],
 ]);
+
+// ─── P5.2 — круг чтение→сохранение и fail-closed по ЗНАЧЕНИЮ ────────────────
+//
+// Два инварианта, которые R-12/R-11 оставили открытыми:
+//
+//  1. То, что пакет САМ отдал редактору (NodeDocumentVersionResource::readableContent() =
+//     decayFrom() + withSanitizedUrls()), обязано сохраняться обратно. Скраб, который
+//     выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты — оставлял узел без них, и fromArray()
+//     ронял PATCH: любой легаси-документ с относительной ссылкой становился НЕСОХРАНЯЕМЫМ.
+//  2. XSS-барьер обязан покрывать и то, что хост добавил через шов. Эвристика по ИМЕНИ
+//     атрибута fail-OPEN для всего, чего в списке имён нет ('source', 'dataSrc', …).
+
+it('read→save: контент, отданный редактору, принимается обратно на записи, P5.2', function (array $legacy): void {
+    $readable = TipTapContent::decayFrom($legacy)->withSanitizedUrls()->toArray();
+
+    expect(TipTapContent::fromArray($readable))->toBeInstanceOf(TipTapContent::class);
+})->with([
+    'относительная ссылка' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => '/pricing', 'target' => '_blank']]]]],
+    ]]]],
+    'анкор' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => '#top']]]]],
+    ]]]],
+    'javascript: в href' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
+    ]]]],
+    'ссылка вовсе без href' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['target' => '_blank']]]]],
+    ]]]],
+    'относительный src картинки' => [['type' => 'doc', 'content' => [
+        ['type' => 'image', 'attrs' => ['src' => '/img/logo.png', 'alt' => 'logo']],
+    ]]],
+    'картинка без атрибутов' => [['type' => 'doc', 'content' => [['type' => 'image']]]],
+    'битый level заголовка' => [['type' => 'doc', 'content' => [
+        ['type' => 'heading', 'attrs' => ['level' => 'два'], 'content' => [['type' => 'text', 'text' => 'x']]],
+    ]]],
+]);
+
+it('read→save: скраб роняет МАРКУ ссылки, а не оставляет её без href, P5.2', function (): void {
+    // Марка уходит целиком — текст остаётся читаемым, документ сохраняем.
+    $readable = TipTapContent::decayFrom(['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
+    ]]])->withSanitizedUrls()->toArray();
+
+    expect($readable['content'][0]['content'][0])
+        ->toHaveKey('text', 'x')
+        ->not->toHaveKey('marks');
+});
+
+it('read→save: скраб роняет УЗЕЛ картинки без пригодного src, P5.2', function (): void {
+    $readable = TipTapContent::decayFrom(['type' => 'doc', 'content' => [
+        ['type' => 'image', 'attrs' => ['src' => 'javascript:alert(1)', 'alt' => 'x']],
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'ok']]],
+    ]])->withSanitizedUrls()->toArray();
+
+    expect($readable['content'])->toHaveCount(1)
+        ->and($readable['content'][0]['type'])->toBe('paragraph');
+});
+
+it('fail-closed по значению: опасная схема в ЛЮБОМ атрибуте хоста отвергается на записи, P5.2', function (string $attribute, string $value): void {
+    // Имя атрибута ни о чём не говорит — решает ЗНАЧЕНИЕ: браузер резолвит javascript:
+    // независимо от того, как хост назвал атрибут в своём расширении.
+    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter.tiptap.extra_attributes', ['embed' => [$attribute]]);
+
+    expect(fn () => TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'embed', 'attrs' => [$attribute => $value]]],
+    ]))->toThrow(InvalidTipTapContentException::class);
+})->with([
+    'source' => ['source', 'javascript:alert(1)'],
+    'dataSrc' => ['dataSrc', 'vbscript:msgbox(1)'],
+    'data URI под чужим именем' => ['payload', 'data:text/html,<script>alert(1)</script>'],
+    'обфускация табом' => ['source', "java\tscript:alert(1)"],
+]);
+
+it('fail-closed по значению: опасная схема в атрибуте хоста вычищается на чтении, P5.2', function (): void {
+    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['source']]);
+
+    $readable = TipTapContent::decayFrom([
+        'type' => 'doc',
+        'content' => [['type' => 'embed', 'attrs' => ['source' => 'javascript:alert(1)']]],
+    ])->withSanitizedUrls()->toArray();
+
+    expect($readable['content'][0])->not->toHaveKey('attrs');
+});
+
+it('fail-closed по значению: безобидные атрибуты хоста не трогаются, P5.2', function (): void {
+    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['source', 'caption']]);
+
+    $content = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'embed', 'attrs' => ['source' => 'https://a.example/v', 'caption' => 'подпись']]],
+    ]);
+
+    expect($content->withSanitizedUrls()->toArray()['content'][0]['attrs'])
+        ->toBe(['source' => 'https://a.example/v', 'caption' => 'подпись']);
+});

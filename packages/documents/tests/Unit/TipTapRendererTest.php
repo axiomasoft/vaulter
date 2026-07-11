@@ -464,3 +464,74 @@ it('keeps a valid link and drops disallowed link schemes in markdown export, F-P
 
     expect($markdown)->toContain('[click me](https://x.test)');
 });
+
+/**
+ * Ширина каждой строки GFM-таблицы в КОЛОНКАХ — по неэкранированным '|', ровно как их
+ * читает GFM. Свойство, а не подстрока: тест доказывает, что ни одна ячейка не может
+ * добавить таблице колонку, каким бы путём в неё ни попал '|'.
+ *
+ * @return list<int>
+ */
+function markdownTableWidths(string $markdown): array
+{
+    $widths = [];
+
+    foreach (explode("\n", $markdown) as $line) {
+        $line = trim($line);
+
+        if (!str_starts_with($line, '|') || !str_ends_with($line, '|')) {
+            continue;
+        }
+
+        $inner = substr($line, 1, -1);
+        $cells = preg_split('/(?<!\\\\)\|/', $inner);
+
+        $widths[] = is_array($cells) ? count($cells) : 0;
+    }
+
+    return $widths;
+}
+
+/**
+ * Таблица 2×2 с произвольным содержимым первой ячейки тела.
+ *
+ * @param array<string, mixed> $cellContent
+ */
+function tableWithCell(array $cellContent): TipTapContent
+{
+    $cell = fn (string $type, array $inline): array => [
+        'type' => $type,
+        'content' => [['type' => 'paragraph', 'content' => $inline]],
+    ];
+
+    return TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'table',
+            'content' => [
+                ['type' => 'tableRow', 'content' => [
+                    $cell('tableHeader', [['type' => 'text', 'text' => 'a']]),
+                    $cell('tableHeader', [['type' => 'text', 'text' => 'b']]),
+                ]],
+                ['type' => 'tableRow', 'content' => [
+                    $cell('tableCell', [$cellContent]),
+                    $cell('tableCell', [['type' => 'text', 'text' => 'y']]),
+                ]],
+            ],
+        ]],
+    ]);
+}
+
+it('markdown-экспорт: "|" в ЦЕЛИ ссылки/картинки не добавляет таблице колонок, P5.2', function (array $cellContent): void {
+    // Схема легальна (http) — store-time такой URL принимает; но цель ссылки идёт мимо
+    // escapeMarkdown(), а markdownDestination() кодировал только <, > и пробел. GFM читал
+    // '| [x](https://a.example/?a=1|2|3) | y |' как ЧЕТЫРЕ колонки и сдвигал всё дальше.
+    $markdown = app(TipTapRenderer::class)->toMarkdown(tableWithCell($cellContent));
+
+    // header + разделитель + строка тела — все ровно по 2 колонки.
+    expect(markdownTableWidths($markdown))->toBe([2, 2, 2]);
+})->with([
+    'ссылка' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/?a=1|2|3']]]]],
+    'картинка' => [['type' => 'image', 'attrs' => ['src' => 'https://a.example/i.png?a=1|2', 'alt' => 'x']]],
+    'ссылка со скобкой и пайпом' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://a.example/(x)?a=1|2']]]]],
+]);

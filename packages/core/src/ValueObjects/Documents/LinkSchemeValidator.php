@@ -26,9 +26,52 @@ final readonly class LinkSchemeValidator
      */
     private const array ALLOWED_SCHEMES = ['http', 'https', 'mailto'];
 
+    /**
+     * The schemes that are an XSS primitive wherever a browser resolves them — whatever the
+     * attribute they sit in is called (VLT-REMED P5.2).
+     *
+     * @var list<string>
+     */
+    private const array DANGEROUS_SCHEMES = ['javascript', 'data', 'vbscript'];
+
     public static function isAllowed(string $href): bool
     {
         return self::sanitize($href) !== null;
+    }
+
+    /**
+     * Does this VALUE read as a URL with an executable scheme?
+     *
+     * The allow-list above answers "may this URL be emitted"; this answers a different,
+     * weaker question — "would a browser execute this string if it ever resolved it as a
+     * URL" — and it is the one an attribute the package knows NOTHING about can be asked
+     * (VLT-REMED P5.2). The store-time allow-list only knows which attributes are
+     * URL-BEARING by name ({@see TipTapContent::urlAttributes()}), so a host extension whose
+     * URL lives in `source` / `dataSrc` / any name outside that list slipped a
+     * `javascript:` past the barrier at write AND at read. Guarding by VALUE closes the seam
+     * for good: an attribute name is host taste, an executable scheme never is.
+     *
+     * Deliberately NOT the negation of {@see isAllowed()}: a relative `/pricing`, an anchor
+     * `#top` or a bare `foo` are not allowed as a link href, but they are perfectly ordinary
+     * values for a title/alt/class attribute and must not blow a document up.
+     */
+    public static function isDangerous(string $value): bool
+    {
+        $stripped = preg_replace('/[\x00-\x1F\x7F]/', '', $value);
+
+        if (!is_string($stripped)) {
+            return true;
+        }
+
+        $normalized = mb_strtolower(trim($stripped));
+
+        foreach (self::DANGEROUS_SCHEMES as $scheme) {
+            if (str_starts_with($normalized, $scheme.':')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -67,7 +67,8 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
                     ],
                 ],
             ],
-            ['type' => 'image', 'attrs' => ['src' => "java\tscript:alert(2)", 'alt' => 'x']],
+            ['type' => 'image', 'attrs' => ['src' => "java\tscript:alert(2)", 'alt' => 'evil']],
+            ['type' => 'image', 'attrs' => ['src' => 'https://cdn.test/ok.png', 'alt' => 'x']],
             ['type' => 'script', 'content' => [['type' => 'text', 'text' => 'alert(3)']]],
         ],
     ]);
@@ -85,10 +86,44 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
         ->and($encoded)->not->toContain('onclick')
         ->and($encoded)->not->toContain('"script"');
 
+    // Картинка с опасным src уходит ЦЕЛИКОМ (узел без обязательного src не сохраняем —
+    // см. round-trip ниже), а соседняя честная — остаётся.
+    expect($encoded)->not->toContain('"alt":"evil"');
+
     // Декей — не выжженная земля: текст и разрешённые атрибуты на месте.
     expect($encoded)->toContain('click')
         ->and($encoded)->toContain('"alt":"x"');
 });
+
+it('круг чтение→сохранение: что ресурс отдал редактору, то он принимает обратно, P5.2', function (array $legacy): void {
+    // Скраб URL (R-12) выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
+    // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PATCH ровно этого же
+    // payload'а падал 500 (store-time требует href): любой легаси-документ с относительной
+    // ссылкой становился НЕСОХРАНЯЕМЫМ навсегда. Тест гоняет ровно этот круг по живым роутам.
+    $base = 'api/vaulter/storages/'.readPathStorage()->getKey();
+
+    $nodeId = $this->postJson($base.'/documents', ['name' => 'Legacy'])->assertCreated()->json('data.id');
+
+    seedLegacyHeadContent($nodeId, $legacy);
+
+    $content = $this->getJson('api/vaulter/nodes/'.$nodeId.'/content')->assertOk()->json('data.content');
+
+    $this->patchJson('api/vaulter/nodes/'.$nodeId.'/content', ['content' => $content])
+        ->assertOk()
+        ->assertJsonPath('data.is_autosave', true);
+})->with([
+    'относительная ссылка' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'pricing', 'marks' => [['type' => 'link', 'attrs' => ['href' => '/pricing', 'target' => '_blank']]]]],
+    ]]]],
+    'javascript: в ссылке' => [['type' => 'doc', 'content' => [[
+        'type' => 'paragraph',
+        'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
+    ]]]],
+    'относительный src картинки' => [['type' => 'doc', 'content' => [
+        ['type' => 'image', 'attrs' => ['src' => '/img/logo.png', 'alt' => 'logo']],
+    ]]],
+]);
 
 it('сохраняет безопасные ссылки при чтении — обеззараживание не ломает нормальный контент, R-12', function (): void {
     $base = 'api/vaulter/storages/'.readPathStorage()->getKey();
