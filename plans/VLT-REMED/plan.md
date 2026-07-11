@@ -96,7 +96,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
 | P4 | W4 — Качество, DX, CI + канон структуры | 7/10 | 🔴 Blocked |
-| P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
+| P5 | Сквозной adversarial code review | 0/3 | 🔴 Blocked |
 
 ## 5. Decision Log
 
@@ -166,3 +166,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P4.7 закрыт (🟢): split-конфиг эмитит CHANGELOG.md в split-репо, deprecation-policy в CONTRIBUTING.md, `@vaulter/vue` `yjs`/`@tiptap/pm` → `peerDependencies`, README-формулировка `vaulter:install` выровнена, UPGRADE.md пополнен (F-P2.1-06/07, F-P2.5-07/04), коммит `e00f82c` — детали см. phases/P4.md P4.7 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | P4.8 закрыт (🟢): docs-drift — мёртвый `permission_resolver`/легаси-контракты убраны, 7 контрактов добавлены в contracts.md, `vaulter:prune-webhooks`/4 Drive-маршрута комментариев/`gc.orphan_grace_hours`/CORS-раздел добавлены, errors.md выверен по греpу self::docs() (15 недостающих секций), PHPStan-level исправлен (F-P2.1-02/03, F-P2.4-01, F-P2.5-01/02/03/05/08, F-P1.8-04), коммит `b5d7751` — детали см. phases/P4.md P4.8 Completion Notes. |
 | 2026-07-11 | plan-design/opus | Фаза P5 развёрнута из скелета: 3 items, DoR закрыт. Оси ревью скелета перенесены в Code Guidance P5.1 (ось «д» — n/a). Несущие решения D24/D25/D26 — детали см. phases/P5.md. |
+| 2026-07-11 | plan-exec/sonnet | P5.1 🔴 Blocked: сквозное ревью диффа `6b5a52e..HEAD` дало 10 находок (1 Blocker · 6 Major · 3 Minor), все CONFIRMED; эскалация по R-01 (public contract/SemVer) — детали см. phases/P5.md P5.1 Completion Notes + ESCALATION-блок. |
