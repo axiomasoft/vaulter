@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;

@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Drive\Exceptions\StagedUploadMissingException;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 

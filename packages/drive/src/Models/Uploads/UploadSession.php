@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Models;
+namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Uploads\UploadModels;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;

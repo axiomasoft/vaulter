@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
-use Vaulter\Drive\Uploads\Repositories\UploadPartStoreRepository;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
+use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
 /**

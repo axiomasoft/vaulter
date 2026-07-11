@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Actions;
+namespace Vaulter\Drive\Actions\Uploads;
 
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Vaulter\Drive\Actions\UploadFileAction;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Exceptions\UploadContentMismatchException;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\MagicByteSniffer;
-use Vaulter\Drive\Uploads\Models\UploadSession;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionReadRepository;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 
 /**

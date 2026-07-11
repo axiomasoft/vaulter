@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\MassAssignmentException;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
  * Mass-assignment hardening (P1.4 / B13): UploadSession/UploadPart used to carry

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Repositories;
+namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Support\Config;
 
 /**

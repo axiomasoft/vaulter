@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;

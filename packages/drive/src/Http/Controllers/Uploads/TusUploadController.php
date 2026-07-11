@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Http\Controllers;
+namespace Vaulter\Drive\Http\Controllers\Uploads;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
-use Vaulter\Drive\Uploads\Data\UploadInitData;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Http\Requests\CreateUploadSessionRequest;
-use Vaulter\Drive\Uploads\Http\Resources\UploadSessionResource;
-use Vaulter\Drive\Uploads\Models\UploadSession;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionReadRepository;
+use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
+use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
+use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\Ability;

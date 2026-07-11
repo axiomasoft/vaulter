@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
  * A resumable-upload session was opened (§2.8 / F-P1.4-13): the create/initiate

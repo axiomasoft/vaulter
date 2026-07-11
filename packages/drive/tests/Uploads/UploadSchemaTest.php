@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Repositories\UploadPartStoreRepository;
 use Vaulter\Support\Config;
 
 /**

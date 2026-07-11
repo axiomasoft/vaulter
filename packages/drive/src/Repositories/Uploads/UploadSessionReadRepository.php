@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Repositories;
+namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadModels;
 
 /**

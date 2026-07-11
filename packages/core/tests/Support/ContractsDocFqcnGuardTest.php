@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
+use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 
 /*
  * P4.6 / F-P2.1-04 (Nit, D19 green guard — docblock-alignment fix, no behaviour
  * delta): `docs/reference/contracts.md` named the FQCN
  * `Vaulter\Contracts\Uploads\UploadProtocolHandler` (core-shaped namespace), but
- * the actual interface lives at `Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler`
+ * the actual interface lives at `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler`
  * (drive package) — a `use` statement copied from the doc would not compile. This
  * guard reads the doc file directly and pins that it names the REAL FQCN
  * (sourced from the interface itself via reflection, not hand-copied) and no

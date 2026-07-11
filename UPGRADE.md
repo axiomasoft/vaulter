@@ -6,6 +6,37 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Package internal structure canon — namespace moves (P4.10 / ADR-0017, Canon A)
+
+**Why.** The six packages drifted into three incompatible internal layouts. ADR-0017 declares one
+canon (layer-first placement + a domain sub-namespace inside each layer, `vaulter-core` is the
+reference), and P4.10 moves the divergent packages onto it. This is a **breaking change to public
+FQCNs only** — no behaviour, schema, config-key, or route changes. Nothing in the database is
+touched: none of the moved classes is ever persisted as a polymorphic morph-type string (activity
+targets are always `Node`; `owner_type`/`author_type`/`actor_type` store the *host* model's morph
+class), so no data migration is required.
+
+**`vaulter-drive` — the `Uploads/` layer subtree was dissolved into the package-root layers** (the
+inverse-nested `Uploads/Actions`, `Uploads/Models`, … violated Canon A Law 1). The flat upload
+service classes (`UploadSessionManager`, `TusUploadHandler`, `S3MultipartHandler`, `MagicByteSniffer`,
+`StagedUpload`, `UploadModels`) stayed put as the `Uploads/` domain-service folder (mirrors
+`core/src/Sharing`). Update any `use` statements:
+
+| Old FQCN | New FQCN |
+|:--|:--|
+| `Vaulter\Drive\Uploads\Actions\CommitUploadAction` | `Vaulter\Drive\Actions\Uploads\CommitUploadAction` |
+| `Vaulter\Drive\Uploads\Models\UploadSession` | `Vaulter\Drive\Models\Uploads\UploadSession` |
+| `Vaulter\Drive\Uploads\Models\UploadPart` | `Vaulter\Drive\Models\Uploads\UploadPart` |
+| `Vaulter\Drive\Uploads\Repositories\*` | `Vaulter\Drive\Repositories\Uploads\*` |
+| `Vaulter\Drive\Uploads\Enums\{UploadProtocol,UploadStatus}` | `Vaulter\Drive\Enums\Uploads\*` |
+| `Vaulter\Drive\Uploads\Data\UploadInitData` | `Vaulter\Drive\Data\Uploads\UploadInitData` |
+| `Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler` | `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler` |
+| `Vaulter\Drive\Uploads\Http\Controllers\*` | `Vaulter\Drive\Http\Controllers\Uploads\*` |
+| `Vaulter\Drive\Uploads\Http\Requests\*` | `Vaulter\Drive\Http\Requests\Uploads\*` |
+| `Vaulter\Drive\Uploads\Http\Resources\*` | `Vaulter\Drive\Http\Resources\Uploads\*` |
+
+The upload service classes under `Vaulter\Drive\Uploads\*` (no layer segment) are unchanged.
+
 ### TipTap content: a closed store-time schema (now with images/tables), a config seam to extend it, and read-time decay (P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)
 
 **What changed.** Rich-text content is validated against a **closed allow-list** before it is

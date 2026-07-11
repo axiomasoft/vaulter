@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Uploads;
 
 use RuntimeException;
-use Vaulter\Drive\Uploads\Models\UploadPart;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Support\Config;
 
 /**

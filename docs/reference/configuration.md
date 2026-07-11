@@ -37,8 +37,8 @@ Swappable Eloquent models. Point any entry at your own subclass to add behaviour
 | `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` | core |
 | `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
-| `models.upload_session` | `Vaulter\Drive\Uploads\Models\UploadSession` | `axioma-studio/vaulter-drive` |
-| `models.upload_part` | `Vaulter\Drive\Uploads\Models\UploadPart` | `axioma-studio/vaulter-drive` |
+| `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
+| `models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `models.node_comment` | `Vaulter\Documents\Models\NodeComment` | `axioma-studio/vaulter-documents` |
 | `models.node_document_version` | `Vaulter\Documents\Models\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Http\Requests;
+namespace Vaulter\Drive\Http\Requests\Uploads;
 
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

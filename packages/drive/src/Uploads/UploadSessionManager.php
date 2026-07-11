@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Events\UploadSessionAborted;
 use Vaulter\Drive\Events\UploadSessionExpired;
 use Vaulter\Drive\Events\UploadSessionInitiated;
 use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
-use Vaulter\Drive\Uploads\Data\UploadInitData;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadSession;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionReadRepository;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
 /**

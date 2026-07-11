@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Models;
+namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;

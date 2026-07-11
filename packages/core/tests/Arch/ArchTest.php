@@ -374,7 +374,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Models\Cas\Blob',
         'Vaulter\Models\Access\NodeGrant',
         'Vaulter\Models\Sharing\NodeShare',
-        'Vaulter\Drive\Uploads\Models\UploadSession',
+        'Vaulter\Drive\Models\Uploads\UploadSession',
         'Vaulter\Models\Activity\Activity',
         'Vaulter\Documents\Models\NodeDocumentVersion',
         'Vaulter\Enums\Drive\NodeKind',

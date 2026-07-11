@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\UploadContentMismatchException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Uploads;
 
 use Illuminate\Support\Str;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;

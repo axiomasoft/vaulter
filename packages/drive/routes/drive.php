@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Drive\Http\Controllers\DownloadController;
 use Vaulter\Drive\Http\Controllers\NodeController;
 use Vaulter\Drive\Http\Controllers\StorageController;
-use Vaulter\Drive\Uploads\Http\Controllers\S3MultipartController;
-use Vaulter\Drive\Uploads\Http\Controllers\TusUploadController;
+use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartController;
+use Vaulter\Drive\Http\Controllers\Uploads\TusUploadController;
 use Vaulter\Support\Config;
 
 /*

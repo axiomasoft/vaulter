@@ -6,11 +6,11 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\OffsetMismatchException;
-use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Models\UploadSession;
-use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\Config;
 
 /**

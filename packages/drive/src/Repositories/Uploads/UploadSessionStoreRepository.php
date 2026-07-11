@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Repositories;
+namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Uploads\Enums\UploadStatus;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadModels;
 
 /**

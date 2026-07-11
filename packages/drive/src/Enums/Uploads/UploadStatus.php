@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Enums;
+namespace Vaulter\Drive\Enums\Uploads;
 
 use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;

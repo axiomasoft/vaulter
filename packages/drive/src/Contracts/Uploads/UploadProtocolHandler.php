@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Contracts;
+namespace Vaulter\Drive\Contracts\Uploads;
 
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
  * The small per-protocol strategy behind the resumable-upload session (§2.8 / D16 /

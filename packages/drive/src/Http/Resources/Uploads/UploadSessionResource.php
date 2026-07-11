@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Http\Resources;
+namespace Vaulter\Drive\Http\Resources\Uploads;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Drive\Uploads\Models\UploadSession;
+use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
  * The read shape of a resumable-upload session (§2.8 / D16 / M3a): the status the

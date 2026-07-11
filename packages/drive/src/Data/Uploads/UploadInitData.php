@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads\Data;
+namespace Vaulter\Drive\Data\Uploads;
 
-use Vaulter\Drive\Uploads\Enums\UploadProtocol;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 
