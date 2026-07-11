@@ -45,6 +45,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # F-P2.1-06 (VLT-REMED P4.7): the subtree split below copies ONLY
+      # packages/<name>, so a split repo (what Packagist is registered against, D15/
+      # ADR-0010) never carried the root CHANGELOG.md — a consumer running
+      # `composer require axioma-studio/vaulter-<name>` got a package with zero
+      # changelog history. Copy the root CHANGELOG.md into the package directory
+      # BEFORE the split step so it becomes part of the split commit/subtree.
+      - name: Copy root CHANGELOG.md into packages/${{ matrix.package }} (F-P2.1-06)
+        run: cp CHANGELOG.md packages/${{ matrix.package }}/CHANGELOG.md
+
       - name: Split packages/${{ matrix.package }} → axioma-studio/vaulter-${{ matrix.package }}
         # Pinned by commit for supply-chain safety; the trailing comment is the version tag.
         uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5

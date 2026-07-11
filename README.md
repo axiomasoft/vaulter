@@ -64,7 +64,7 @@ composer require axioma-studio/vaulter-drive
 # Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
 composer require axioma-studio/vaulter-documents
 
-php artisan vaulter:install   # publishes config + migrations, runs them
+php artisan vaulter:install   # publishes config + migrations, asks to run them
 npm install @vaulter/vue
 ```
 

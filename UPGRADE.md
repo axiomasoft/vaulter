@@ -6,6 +6,34 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `@vaulter/vue`: `yjs` and `@tiptap/pm` moved to `peerDependencies` — install them yourself (P4.7 / F-P2.5-07)
+
+**What changed.** `packages/vue/package.json`'s `yjs` (`^13.6`) and `@tiptap/pm` (`^3.0.0`) moved
+from `dependencies` to `peerDependencies` (matching the ranges already shipped and tested). They
+stay listed in `devDependencies` too so the package's own build/test/dev loop is unaffected.
+`vue` was already a peer; these two join it for the same reason.
+
+**Why.** Both libraries hold module-level singleton state — `yjs` a `Y.Doc` registry, `@tiptap/pm`
+a ProseMirror instance/schema. A host that itself uses TipTap/ProseMirror or Yjs (very likely for
+an app embedding Vaulter specifically for collaborative editing) previously risked a SECOND copy
+of these libraries in `node_modules` whenever bundler/npm dedup missed a matching minor version —
+two `Y.Doc` instances for the same document silently diverge instead of syncing; two ProseMirror
+instances give `instanceof` mismatches between the host's schema and `@vaulter/vue`'s. Moving them
+to `peerDependencies` makes the host own a single shared instance the same way it already owns
+`vue`.
+
+**Who is affected.** Every consumer of `@vaulter/vue` — npm (`>=7`) auto-installs missing peers by
+default, so `npm install` alone may already satisfy this; older npm, `--legacy-peer-deps`, `pnpm`
+in strict mode, or a lockfile that never resolved these two packages at the top level will instead
+warn/fail on missing peers.
+
+**What you must do.** Ensure `yjs@^13.6` and `@tiptap/pm@^3.0.0` (or a version your package
+manager considers compatible with those ranges) are present in your own `dependencies` —
+add them explicitly if your install reports them missing or your bundler complains about a
+duplicate/unresolved peer.
+
+No PHP-side change; this only affects `@vaulter/vue` npm consumers.
+
 ### Node-name policy is now a config seam; the reject message is now a lang key; `NodeExportService` takes a new constructor dependency (P4.5 / F-P3.1-01, F-P3.1-02, F-P3.1-04)
 
 **What changed.**

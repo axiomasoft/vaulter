@@ -93,7 +93,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
-| P4 | W4 — Качество, DX, CI + канон структуры | 5/10 | 🔴 Blocked |
+| P4 | W4 — Качество, DX, CI + канон структуры | 6/10 | 🔴 Blocked |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -158,3 +158,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P4.4 закрыт (🟢): семь молчащих швов докблок≠код закрыты по D22 (F-P3.2-01/02, F-P3.3-01/02, F-P3.5-01, F-P3.1-03, F-P1.2-02) — детали см. phases/P4.md P4.4 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | P4.5 закрыт (🟢): `DriveNameRules` — config-шов + lang-ключ; `NodeExportService` — DI-seam `ExportFilenameResolver` вместо наследования (арх-конфликт с H.5-гейтом P4.1, решён вторым OR-вариантом ТЗ) (F-P3.1-01/02/04), коммит `4bbaa7f` — детали см. phases/P4.md P4.5 Completion Notes. |
 | 2026-07-11 | plan-exec/sonnet | P4.6 закрыт (🟢): докблок фасада дополнен 5 методами (рефлексия-сверка), FQCN `UploadProtocolHandler` в доке выправлен, `EnumCaseAttributeResolver` — static-кеш → container-singleton-инстанс (F-P2.1-01/04/05), коммит `e4277a3` — детали см. phases/P4.md P4.6 Completion Notes. |
+| 2026-07-11 | plan-exec/sonnet | P4.7 закрыт (🟢): split-конфиг эмитит CHANGELOG.md в split-репо, deprecation-policy в CONTRIBUTING.md, `@vaulter/vue` `yjs`/`@tiptap/pm` → `peerDependencies`, README-формулировка `vaulter:install` выровнена, UPGRADE.md пополнен (F-P2.1-06/07, F-P2.5-07/04) — детали см. phases/P4.md P4.7 Completion Notes. |

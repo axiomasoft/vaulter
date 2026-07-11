@@ -51,6 +51,20 @@ npm run docs:dev     # VitePress docs dev server
 - **Docs:** plain Markdown only — no `[[wikilinks]]` (docs are synced to the Brain vault,
   which rejects wikilinks).
 
+## Deprecation policy
+
+- Mark a symbol slated for removal with `@deprecated` and a concrete removal target:
+  `@deprecated since X.Y, removed in the next major`.
+- A `@deprecated` symbol stays functional for **at least one minor release** after it is
+  marked — it is never removed in the same minor it was deprecated in. Removal happens on
+  the next **major** release.
+- While the package is pre-1.0 (`0.x`, no tagged release yet — see `UPGRADE.md`), breaking
+  changes ship directly without a deprecation cycle (no BC obligation exists yet); this
+  policy takes effect starting with the first `1.0` release, and any `@deprecated` symbol
+  added before then is still expected to carry a removal target for when it does.
+- Document every deprecation in `UPGRADE.md` (breaking-change log) with what replaces it and
+  why, once it is actually removed.
+
 ## Documentation sync
 
 The `docs/` folder is two-way synced with the Brain vault project
