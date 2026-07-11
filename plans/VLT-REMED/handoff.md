@@ -1,16 +1,16 @@
-# HANDOFF — 2026-07-11 — after P4.2
+# HANDOFF — 2026-07-11 — after P4.3
 
-**Next:** /task:plan-exec VLT-REMED P4.3
+**Next:** /task:plan-exec VLT-REMED P4.4
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium (дефолт §Routing — локальный код по готовому ТЗ, корень известен) |
 | Context | fresh session — handoff свежий, рекомендован /clear |
-| Суть | Исполнить **P4.3 (B16)** строго по ТЗ `phases/P4.md`: новая миграция индекс `(trashed_at)` на `v_nodes` + снятие избыточных/дубль-индексов (`v_nodes`, `v_blobs`, `v_activity`) (F-P4.1-01/02); `withMaxDepth` на обход ПРЕДКОВ в `AccessResolver::ancestorChain()`/`NodeReadRepository::ancestors()`/`breadcrumb()` (F-P4.2-01); уникальный тай-брейкер `id` в трёх курсор-фидах `search`/`trashed`/`forNode` (F-P4.2-05). Red-before на PG (`agelto_postgres`), F-id в описании тестов. |
+| Суть | Исполнить **P4.4 (B17)** строго по ТЗ `phases/P4.md`: семь «молчащих» швов (докблок ≠ код) по направлениям D22 — часть кодом (eager-резолв `PanelRegistry` на boot, `registerExporter()` принимает FQCN, доменное исключение с install-hint на кросс-пакетных швах, удаление мёртвого `StorageAdapter`), часть докблоком (`fillNode/presentNode/pipes` → `@unimplemented`, `gateAllows` под факт). Item трогает `packages/documents` — свой гейт валидации обязателен. |
 
 ```
-/task:plan-exec VLT-REMED P4.3
+/task:plan-exec VLT-REMED P4.4
 ```
 
 **Done:**
@@ -18,38 +18,45 @@
 - **Фаза P1 (W1 — быстрые высоко-эксплуатируемые) ТЕРМИНАЛЬНА (4/4 🟢).**
 - **Фаза P2 (W2 — авторизация и изоляция) ТЕРМИНАЛЬНА (3/3, 🟠 Done with deviations).**
 - **Фаза P3 (W3 — надстройки и интеграция) ТЕРМИНАЛЬНА (6/6 🟢).**
-- **Фаза P4 (W4) В РАБОТЕ (1/10 🟢, 1/10 🔴 Blocked-формально):**
+- **Фаза P4 (W4) В РАБОТЕ (2/10 🟢, 1/10 🔴 Blocked-формально):**
   - **P4.1 (B24 — Supply-chain, CI-матрица, arch- и mutation-гейты) — 🔴 Blocked**
     (коммит `74294e0`), 13 из 14 находок B24 закрыты штатно, заблокирована только
     F-P4.5-02 (hocuspocus-мажор, эскалирован по D6-гарду, `⛔ Skipped by decision`,
     реверчен на `^2.15`/`^2.13`). Полные детали — `phases/P4.md` P4.1 Completion Notes
     + ESCALATION-блок.
   - **P4.2 (B15 — Безопасность и корректность запросов) — 🟢 Done** (коммит `cd31116`):
-    (1) `NodeReadRepository::search()` экранирует `%`/`_`/`\` в пользовательском терме
-    (`addcslashes` + `LIKE ... ESCAPE '\'`) — раньше `%`/`_` работали как wildcard'ы
-    (F-P1.8-03); (2) `Node::enableCycleDetection(): true` — обход предков/потомков
-    останавливается на повторной строке цикла вместо раздутой/бесконечной рекурсии
-    (F-P4.2-02). Red-before подтверждён вручную (`git stash` фикса → прогон → `git
-    stash pop`): LIKE-тест падал на assertion (2 из 4), cycle-тест валил процесс
-    OOM-крашем (`memory_limit=512M`, `strace` подтвердил рост до предела и
-    `exit_group(1)`, НЕ бесконечный hang) на форсированном 2-узловом цикле
-    `parent_id` (raw `DB::table('v_nodes')->update()`, в обход `MoveNodeAction`).
-    Тесты — `packages/core/tests/Schema/{NodeSearchLikeEscapingTest,
-    NodeCycleDetectionTest}.php` (в `Schema/`, не `Drive/` — `tests/Pest.php` не
-    биндит `Drive/` к `TestCase`, только `DriveTestHelpers`, drive-suite переехал в
-    пакет `vaulter-drive`). Прогнано на SQLite (мгновенно) И PostgreSQL
-    (`agelto_postgres`, `php8.4`, 675мс) — оба зелёные. `UPGRADE.md` — новая секция
-    (behaviour-change, не breaking API). Known Deviation: трейт-guard staudenmeir —
-    bounded silent termination (`not(is_cycle)`), не throw, как буквально
-    сформулировано в Code Guidance «управляемое исключение» — цель находки (не
-    допустить раздутую рекурсию) достигнута тем же механизмом; расхождение
-    формулировки, не поведения. Полные Completion Notes — `phases/P4.md` P4.2.
+    LIKE-wildcard-экранирование в `NodeReadRepository::search()` (F-P1.8-03) +
+    `Node::enableCycleDetection(): true` (F-P4.2-02). Полные Completion Notes —
+    `phases/P4.md` P4.2.
+  - **P4.3 (B16 — Индексы и пагинация) — 🟢 Done** (коммит `408e17f`):
+    (1) F-P4.1-01 — новая миграция `2026_07_11_000001_optimize_hot_path_indexes.php`
+    (идемпотентна через `Schema::getIndexes()`) + `PanelTablesBuilder::addTrashedAtIndex()`
+    эмитят партиционный индекс `(trashed_at) WHERE trashed_at IS NOT NULL` на `v_nodes`
+    — `PurgeTrashCommand` больше не сканирует всю таблицу узлов на каждый плановый
+    прогон. (2) F-P4.1-02 — сняты три индекса-дубля: `v_nodes.(storage_id,parent_id)`
+    (строгий префикс составного), `v_blobs.status` (строгий префикс `_gc_idx`), второй
+    `created_at` на `v_activity` (буквальный дубль `_created_idx`) — правка
+    `PanelTablesBuilder::defineNodes/defineBlobs/defineActivity` убирает эмиссию у
+    источника (фреш-инсталляции больше не воспроизводят дубль), миграция чинит уже
+    смигрированные БД. (3) F-P4.2-01 — `withMaxDepth(NodeReadRepository::DEFAULT_MAX_DEPTH)`
+    на `AccessResolver::ancestorChain()` + `NodeReadRepository::ancestors()`/`breadcrumb()`
+    — симметрично с `descendants()`/`subtree()` (ADR-0005). (4) F-P4.2-05 — вторичный
+    `orderBy('id')`/`orderByDesc('id')` в `search()`/`trashed()`/`GrantReadRepository::forNode()`
+    (паттерн `Activity::scopeNewestFirst()`). Тесты: `HotPathIndexesTest.php` (4),
+    `NodeAncestorMaxDepthTest.php` (3), `CursorTieBreakerTest.php` (3) — все с F-id,
+    red-before подтверждён вручную (`git stash` фикса → 6/10 упали → `git stash pop`).
+    Прогнано на SQLite (composer test 435/435, test:types 100%) и PostgreSQL
+    (`agelto_postgres`, `php8.4`) — целевые 10 тестов зелёные. **Pending Work** этого
+    item'а несёт задокументированный ПРЕД-СУЩЕСТВУЮЩИЙ count-зависимый PG-флейк
+    (`MassAssignmentHardeningTest`), доказанно НЕ связанный с P4.3-кодом (воспроизведён
+    инертным пустым тестом без единой строчки диффа) — см. `phases/P4.md` P4.3
+    Completion/Pending Work.
 
 **Remaining:** (порядок исполнения P4)
 1. ~~**P4.1**~~ — исполнен, 🔴 Blocked ТОЛЬКО формально (plan-lint ESCALATION-инвариант).
 2. ~~**P4.2**~~ — исполнен, 🟢 Done.
-3. **P4.3** (B16) — индекс `trashed_at`, снятие дублей, `withMaxDepth` на предках, тай-брейкер курсора (PG). **← следующий**.
-4. **P4.4** (B17) — семь молчащих швов по D22 (5 код + 2 докблок).
+3. ~~**P4.3**~~ — исполнен, 🟢 Done.
+4. **P4.4** (B17) — семь молчащих швов по D22 (5 код + 2 докблок). **← следующий**.
 5. **P4.5** (B18) — расширяемость `DriveNameRules`/lang-ключ/`filenameFor`.
 6. **P4.6** (B20) — докблок фасада (12 методов), FQCN в доке, статкеш за инстанс.
 7. **P4.7** (B21) — split-changelog-конфиг, deprecation-policy, `@vaulter/vue` peerDeps, сток `UPGRADE.md`.
@@ -60,30 +67,30 @@
 Затем **P5** (3 items, СКЕЛЕТ — требует `/task:plan-design VLT-REMED P5`, после P4). Скелет-фаза не
 исполняется напрямую (`plan.md` §Execution Rules).
 
-**Открытый пункт (не блокирует P4.3, требует внимания владельца/будущей сессии):**
+**Открытый пункт (не блокирует P4.4, требует внимания владельца/будущей сессии):**
 **F-P4.5-02** (hocuspocus `2.x→4.x`) остаётся на `⛔ Skipped by decision` — см. ESCALATION-блок
 `phases/P4.md` P4.1 и Q-заводку ниже. `/task:plan-design VLT-REMED` (новый отдельный план на
 hocuspocus-мажор) — по решению владельца, вне текущего remaining-списка P4.
 
 **Sources of truth:** `plans/VLT-REMED/plan.md` (Context/Execution Rules/Routing/Status Board — P3
-терминальна 6/6, P4 в работе 1/10🟢+1/10🔴 / Decision Log D1–D23 / Update Log с записью P4.2) ·
-`plans/VLT-REMED/phases/P4.md` (P4.1 закрыт с ESCALATION-блоком; P4.2 закрыт 🟢; P4.3–P4.10
+терминальна 6/6, P4 в работе 2/10🟢+1/10🔴 / Decision Log D1–D23 / Update Log с записью P4.3) ·
+`plans/VLT-REMED/phases/P4.md` (P4.1 закрыт с ESCALATION-блоком; P4.2/P4.3 закрыты 🟢; P4.4–P4.10
 детализированы, готовы к исполнению) · `plans/VLT-REMED/phases/{P0,P1,P2,P3}.md` (закрыты; P2 🟠) ·
 `plans/VLT-REMED/open-questions.md` (Q3/Q4 pending — не блокируют P4) ·
 `plans/AUDIT-VLT/findings/REGISTER.md` (SSOT 103 находок, append-only, VLT-REMED в него НЕ пишет) ·
-`plans/AUDIT-VLT/findings/{P4.1-query-indexes,P4.2-nplus1-recursion-pagination,P4.3-test-strategy,`
-`P4.4-static-ci-supplychain,P4.5-frontend-e2e-docker}.md` (детальные находки батчей W4 — Required
-Reads P4.3 — F-P4.1-01/02, F-P4.2-01/05) · `plans/AUDIT-VLT/findings/{P3.1-naming-seam,`
-`P3.2-panel-seam,P3.3-handler-exporter-seam,P3.5-driver-seams,P1.2-role-drivers}.md` (семь швов
-P4.4/P4.5) · `plans/AUDIT-VLT/findings/{P2.1-public-surface,P2.4-host-integration,P2.5-dx}.md`
-(API/release/docs P4.6/P4.7/P4.8) · `UPGRADE.md` (4 записи P4.1 + 1 новая запись P4.2 — LIKE-escape
-+ cycle-detection behaviour-change) · `docs/adr/0005-unified-node-tree.md` (норма `withMaxDepth` —
-Required Read P4.3).
+`plans/AUDIT-VLT/findings/{P3.2-panel-seam,P3.3-handler-exporter-seam,P3.5-driver-seams,`
+`P3.1-naming-seam,P1.2-role-drivers}.md` (детальные находки батча B17 — Required Reads P4.4 —
+F-P3.2-01/02, F-P3.3-01/02, F-P3.5-01, F-P3.1-03, F-P1.2-02) · `docs/adr/0009-storage-panels.md`
+(норма «panel validated on boot» — Required Read P4.4) · `UPGRADE.md` (4 записи P4.1 + 1 запись
+P4.2 — LIKE-escape + cycle-detection behaviour-change; P4.3 не добавляла запись — индексы/withMaxDepth/
+тай-брейкер не меняют наблюдаемый публичный контракт, только перф/корректность внутри существующего
+поведения).
 
 **Open risks:**
-- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. P4-items, трогающие
-  documents/drive/media/filament, обязаны гонять свои `composer analyse && composer test &&
-  composer test:types` из директории пакета. P4.9/P4.10 трогают ВСЕ пакеты — прогон по каждому.
+- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. P4.4 трогает
+  `packages/documents` (`DocumentHandlerRegistry::registerExporter`) — обязателен свой
+  `cd packages/documents && composer analyse && composer test && composer test:types`.
+  P4.9/P4.10 трогают ВСЕ пакеты — прогон по каждому.
 - Root `composer lint:check` красный на пред-существующем `plans/AUDIT-VLT/artifacts/repro/**` (чужой
   read-only план, вне scope) — closure НЕ блокирует; свой новый код обязан быть pint-чистым
   (`vendor/bin/pint --test <файлы>`).
@@ -91,12 +98,28 @@ Required Read P4.3).
   P1.2/P1.4/P2.1/P2.2/P2.3/P3.1-P3.6/P4.1/P4.2 и далее. **F-P2.1-06 (P4.7) чинится КОНФИГОМ
   split-пайплайна** (D23), не наполнением файла; наполнение — Pending Work, сессия с доступом.
   `UPGRADE.md` (не `UPGRADING.md`, D23) — канонический сток breaking-changes (5 записей: 4 из P4.1
-  + 1 из P4.2).
+  + 1 из P4.2; P4.3 новую запись не добавила — behaviour-preserving перф/корректность-фикс).
 - **Локальная песочница exec-сессий не несёт coverage-драйвера (xdebug/pcov)** — ни `php` (8.5), ни
   `php8.4` не имеют модуля; `sudo`/`pecl` заблокированы harness'ом. Реальный измеренный MSI для
   P4.1's `infection.json5` (root + 4 per-package) НЕДОСТИЖИМ локально — используется провизорный
   порог 50/70 (advisory job, не блокирует CI). Фактический MSI можно узнать только из реального
   прогона `mutation.yml`/сателлитных workflow в CI (там PHP 8.4 + xdebug).
+- **Пред-существующий count-зависимый PG-флейк тестового харнесса (обнаружен в P4.3, вне scope
+  P4.3 чинить).** Полный прогон `composer test` НА POSTGRES (`agelto_postgres`, `DB_CONNECTION=pgsql`)
+  даёт спорадический 1 failure — `MassAssignmentHardeningTest`, последний кейс
+  (`WebhookEndpoint.signing_secret`), `SQLSTATE[25P02]` «current transaction is aborted» на
+  СЛЕДУЮЩЕЙ проверке (`select max(batch) from migrations`). Триггер — НЕ логика P4.3: добавление
+  СОДЕРЖАТЕЛЬНО ПУСТОГО `it('x', fn() => expect(true)->toBeTrue())` в ЛЮБОЙ существующий файл
+  `packages/core/tests/Schema/` ДО `MassAssignmentHardeningTest` по алфавиту (проверено на
+  `BlobDedupScopeTest.php`, откачено чисто без диффа) реплицирует ТОТ ЖЕ failure; тот же инертный
+  тест ПОСЛЕ него (алфавитно) — не реплицирует. Это порядко-/count-зависимая хрупкость PG-транзакции
+  внутри самого `MassAssignmentHardeningTest` (ожидаемый `QueryException` от NOT NULL нарушения
+  оставляет транзакцию Postgres aborted; эта абортация протекает в СЛЕДУЮЩИЙ тест-кейс/класс при
+  сдвиге его позиции в общем прогоне) — аналогична уже задокументированному PG-флейку
+  `NodeCommentSchemaTest` (jsonb `anchor` key-order round-trip, ниже). Новая находка НЕ заводится
+  (не поведенческий дефект пакета, инфраструктурная хрупкость тестового харнесса); будущая сессия,
+  занимающаяся стабилизацией PG CI, должна начать здесь. `composer test` (SQLite, дефолтный гейт
+  Validation) НЕ подвержен — 435/435 зелёных на каждом item'е W4 до сих пор.
 - **P4.10 — межпакетный namespace-refactor (closed-enum escalation-триггер, opus/high, D10).** Самый
   вероятный провал (pre-mortem R-refactor) — забытый morph-алиас: полиморфные строки в БД держат старый
   FQCN, связи молча ломаются в проде при зелёных тестах на свежей БД. Обязателен morph-инвариант-тест на
@@ -116,7 +139,8 @@ Required Read P4.3).
 - Testbench-снаги (унаследованы из P1.3/P3.1): `cache.default => 'array'` в тестовом
   `defineEnvironment()`; feature-флаги маршрутов — в `defineEnvironment()` (до boot), не `beforeEach`;
   `Auth::logout()` перед in-process `$this->artisan(...)`. PG-прогон для FK/SERIALIZABLE/индексов/CTE —
-  `php8.4` + БД `vaulter_test` в контейнере `agelto_postgres` (127.0.0.1:5455, роль `vaulter`).
+  `php8.4` + БД `vaulter_test` в контейнере `agelto_postgres` (127.0.0.1:5455, роль `vaulter`,
+  пароль `vaulter`).
 - **`packages/core/tests/Drive/` НЕ забинжен ни к какому `TestCase`** (`tests/Pest.php`: только
   `DriveTestHelpers`, drive-suite переехал в пакет `vaulter-drive`, комментарий явно фиксирует «не
   тест-кейс») — новые core-level тесты модели/репозитория (не HTTP drive-контроллеры) кладутся в
@@ -138,7 +162,11 @@ Required Read P4.3).
   для happy-dom ≥16 в `vi.spyOn`-фикстурах (P4.1); red-before для «раздутой/бесконечной рекурсии»
   безопасно верифицируется временным `git stash` фикса + прогон (никогда не оставлять сессию с
   реверченным фиксом) — на SQLite/малом cyclic-фикстуре она ограничена PHP `memory_limit`, не
-  бесконечным hang (P4.2-урок).
+  бесконечным hang (P4.2-урок); тот же `git stash`+прогон+`stash pop` паттерн подтвердил red-before
+  для четырёх F-id P4.3 разом (6/10 новых тестов упали без фикса, 4/10 — закрыты миграцией независимо
+  от `PanelTablesBuilder`); PG count-зависимый флейк тестового харнесса ИЗОЛИРУЕТСЯ прогоном
+  целевого `--filter` вместо полного `packages/core/tests` на PG, когда нужно доказать конкретный
+  F-id зелёным без шума пред-существующей хрупкости (P4.3-урок).
 - deferred: `docs/`-миграция и архивация AUDIT-VLT — `/task:plan-close archive AUDIT-VLT`. Ротация
   `signing_secret` (Q3) и абсолютный барьер wall-deny (Q4) — отдельные items по решению владельца.
   `CHANGELOG.md`-наполнение — сессия с доступом. Подключение хуков панели `fillNode/presentNode/pipes`
@@ -147,5 +175,8 @@ Required Read P4.3).
   Пред-существующий Rector-долг (112+2 файла) — отдельный item/бэклог по решению владельца.
   Реальный измеренный MSI — фактический прогон в CI (xdebug доступен там, не локально).
   Остаточный `npm audit high` в `packages/vue` (vite/esbuild dev-server) — апстрим `vite-plugin-dts`.
+  **Пред-существующий count-зависимый PG-флейк (`MassAssignmentHardeningTest`)** — стабилизация
+  тестового харнесса на Postgres, отдельная сессия/item по решению владельца (обнаружено, не заведено
+  отдельной находкой, см. Open risks P4.3).
 - open_questions: Q3 (ротация `signing_secret`), Q4 (абсолютный барьер wall-deny) — оба
   `Decision pending`, ни один P4-item не блокируют. Q1/Q2 — `Resolved → D1/D10`.

@@ -93,7 +93,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
-| P4 | W4 — Качество, DX, CI + канон структуры | 1/10 | 🔴 Blocked |
+| P4 | W4 — Качество, DX, CI + канон структуры | 2/10 | 🔴 Blocked |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -154,3 +154,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-design/opus | Фаза P4 (W4) развёрнута из скелета: 10 items (45 находок + 2 структурных), DoR закрыт. Несущие решения D22/D23 — детали см. phases/P4.md.
 | 2026-07-11 | plan-exec/sonnet | P4.1 🔴 Blocked: F-P4.5-02 (hocuspocus-мажор) эскалирован по D6-гарду, 13/14 находок B24 закрыты штатно — детали см. phases/P4.md P4.1 Completion Notes + ESCALATION-блок. |
 | 2026-07-11 | plan-exec/sonnet | P4.2 закрыт (🟢): LIKE-wildcard-экранирование в `NodeReadRepository::search()` + `Node::enableCycleDetection(): true` (F-P1.8-03, F-P4.2-02), red-before подтверждён на SQLite+PG — детали см. phases/P4.md P4.2 Completion Notes. |
+| 2026-07-11 | plan-exec/sonnet | P4.3 закрыт (🟢): индекс `(trashed_at)` на `v_nodes` + снятие трёх дубль-индексов, `withMaxDepth` на обходе предков, тай-брейкер `id` в трёх курсор-фидах (F-P4.1-01/02, F-P4.2-01/05) — детали см. phases/P4.md P4.3 Completion Notes. |
