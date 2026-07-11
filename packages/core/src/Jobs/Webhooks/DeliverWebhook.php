@@ -95,10 +95,17 @@ final class DeliverWebhook implements ShouldQueue
      * SSRF-hardened (§2.11 / N2 / F-P1.7-01): the guard resolves + range-checks the
      * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
      * connection (CURLOPT_RESOLVE) so DNS cannot rebind to an internal address between
-     * the check and the dial. Redirects are off by default (a public receiver must not
-     * 302 onto the metadata service), the transport is locked to HTTP(S), and the
-     * response body is capped (F-P1.7-06). A blocked URL throws and is recorded as a
-     * failed attempt — nothing leaves the process.
+     * the check and the dial. The transport is locked to HTTP(S) and the response body
+     * is capped (F-P1.7-06). A blocked URL throws and is recorded as a failed attempt —
+     * nothing leaves the process.
+     *
+     * REDIRECTS ARE NEVER FOLLOWED (VLT-REMED P5.2 / R-05 / D30). The pin covers only the
+     * ORIGINAL host:port; a redirect hop is resolved again, with no guard and no pin, so a
+     * receiver answering `302 Location: http://169.254.169.254/…` walks the request straight
+     * onto the metadata service and reopens the Blocker in full. This used to be a config
+     * key (`webhooks.follow_redirects`) — a boolean that switched a security barrier off is
+     * not flexibility, it is a mine, so the key is GONE and the behaviour is unconditional.
+     * A webhook receiver is expected to answer for itself, not to bounce us elsewhere.
      */
     private function post(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhookDelivery $delivery, WebhookEndpoint $endpoint): Response
     {
@@ -109,6 +116,8 @@ final class DeliverWebhook implements ShouldQueue
 
         $request = Http::timeout(Config::webhookTimeout())
             ->connectTimeout(Config::webhookConnectTimeout())
+            // Unconditional (D30) — see the docblock: a redirect hop escapes the pin.
+            ->withoutRedirecting()
             ->withOptions($this->transportOptions(pinned: $pinned))
             ->withHeaders([
                 'Content-Type' => 'application/json',
@@ -122,19 +131,17 @@ final class DeliverWebhook implements ShouldQueue
             ])
             ->withBody($body, 'application/json');
 
-        if (!Config::webhookFollowRedirects()) {
-            $request = $request->withoutRedirecting();
-        }
-
         return $request->post($endpoint->url);
     }
 
     /**
      * The Guzzle transport options that harden a delivery (§2.11 / N2): pin the vetted
-     * IP onto the connection, lock the protocol to HTTP(S) (so a redirect can't smuggle
-     * file://), and bound the response body — an oversized declared Content-Length is
-     * refused from the on_headers hook, and the buffering sink spills to a temp file so
-     * an UNDECLARED oversize body never lands whole in RAM.
+     * IP onto the connection, lock the protocol to HTTP(S), forbid the transport itself
+     * from following a redirect (the second barrier under `withoutRedirecting()` — R-05:
+     * a cURL handle that never follows Location cannot leave the pinned host even if the
+     * HTTP layer is reconfigured), and bound the response body — an oversized declared
+     * Content-Length is refused from the on_headers hook, and the buffering sink spills to
+     * a temp file so an UNDECLARED oversize body never lands whole in RAM.
      *
      * @return array<string, mixed>
      */
@@ -145,6 +152,7 @@ final class DeliverWebhook implements ShouldQueue
                 CURLOPT_RESOLVE => [$pinned->curlResolveEntry()],
                 CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_FOLLOWLOCATION => false,
             ],
         ];
 

@@ -108,6 +108,43 @@ it('does not follow a redirect onto a private address, F-P1.7-01', function (): 
     expect($delivery->refresh()->status)->toBe('failed');
 });
 
+/*
+ * VLT-REMED P5.2 / R-05 (D30). Барьер держался ИСКЛЮЧИТЕЛЬНО на дефолте `false` конфиг-ключа
+ * `webhooks.follow_redirects`: включив его, хост снимал SSRF-защиту целиком — `CURLOPT_RESOLVE`
+ * пинит только ИСХОДНЫЙ host:port, а redirect-хоп резолвится заново, без guard'а и без пина.
+ * Приёмник отвечает `302 Location: http://169.254.169.254/…` — и запрос уходит на metadata.
+ * Ключ УДАЛЁН, редиректы не следуются безусловно. Тест бьёт ровно в эту точку: хост ПЫТАЕТСЯ
+ * их включить.
+ */
+it('устаревший ключ follow_redirects=true НЕ включает редиректы — 302 на metadata не следуется, R-05', function (): void {
+    // Хост (или его легаси-конфиг) пытается вернуть старое поведение.
+    config(['vaulter.webhooks.delivery.follow_redirects' => true]);
+
+    Http::fake([
+        'https://hooks.test/*' => Http::response('', 302, ['Location' => 'http://169.254.169.254/latest/meta-data/']),
+        'http://169.254.169.254/*' => Http::response('secret-token', 200),
+    ]);
+
+    $endpoint = WebhookTestHelpers::endpoint(['url' => 'https://hooks.test/receive']);
+    $delivery = WebhookTestHelpers::delivery($endpoint);
+
+    deliverGuarded($delivery);
+
+    // На коде ДО фикса Guzzle-овский redirect-middleware (Http::fake строит стек через
+    // HandlerStack::create()) реально шёл по 302 → сюда прилетал запрос к metadata.
+    Http::assertNotSent(static fn (Request $request): bool => str_contains($request->url(), '169.254.169.254'));
+
+    // 302 — финальный не-2xx ответ: доставка не считается успешной.
+    expect($delivery->refresh()->status)->toBe('failed');
+});
+
+it('ключа follow_redirects больше нет в шипуемом конфиге, R-05', function (): void {
+    // Ground truth: ключ удалён из config/vaulter.php, а не просто игнорируется кодом.
+    $config = (string) file_get_contents(dirname(__DIR__, 3).'/core/config/vaulter.php');
+
+    expect($config)->not->toContain("'follow_redirects' =>");
+});
+
 it('delivers to a public host, pinning the vetted IP onto the connection, F-P1.7-01', function (): void {
     Http::fake(['https://good.test/*' => Http::response('', 200)]);
     fakeResolver()->set('good.test', [FakeHostResolver::PUBLIC_IP]);
