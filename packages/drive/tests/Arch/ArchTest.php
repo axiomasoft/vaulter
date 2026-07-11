@@ -62,3 +62,53 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 
     expect($offenders)->toBe([]);
 });
+
+/**
+ * ADR-0017 / VLT-REMED P4.9 — Canon A, Law 1 (layer-first placement).
+ *
+ * `drive` DIVERGES: the `Uploads/` module carries its own nested layer tree
+ * (`Uploads/Actions`, `Uploads/Models`, `Uploads/Repositories`, `Uploads/Http`,
+ * `Uploads/Enums`, `Uploads/Data`, `Uploads/Contracts`) — a layer nested UNDER a
+ * domain, the inverse of the core canon. This test asserts the CANON (no layer
+ * nested under a domain) and is RED on the current layout by design — it is the
+ * executable spec of the P4.10 move (dissolve `Uploads/*` into root layers
+ * `Actions/Uploads`, `Models/Uploads`, …). Marked `->todo()` so the P4.9 suite
+ * stays green; P4.10 makes it pass and removes the `->todo()`.
+ *
+ * Red-before proven (P4.9): running this body without `->todo()` fails with
+ * offenders `Uploads/Actions`, `Uploads/Contracts`, `Uploads/Data`,
+ * `Uploads/Enums`, `Uploads/Http`, `Uploads/Http/Controllers`,
+ * `Uploads/Http/Requests`, `Uploads/Http/Resources`, `Uploads/Models`,
+ * `Uploads/Repositories`.
+ */
+test('technical layers are never nested under a domain module (ADR-0017 Law 1)', function (): void {
+    $src = __DIR__.'/../../src';
+    $layers = ['Actions', 'Models', 'Repositories', 'Enums', 'Events', 'Data', 'Contracts', 'Http'];
+    $offenders = [];
+
+    // SELF_FIRST so DIRECTORIES are yielded (the default LEAVES_ONLY mode only
+    // yields files, which would make this dir-structure check an inert no-op).
+    /** @var Iterator<SplFileInfo> $dirs */
+    $dirs = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST,
+    );
+
+    foreach ($dirs as $dir) {
+        if (!$dir->isDir()) {
+            continue;
+        }
+
+        $relative = str_replace($src.'/', '', $dir->getPathname());
+        $segments = explode('/', $relative);
+
+        foreach ($segments as $index => $segment) {
+            if ($index > 0 && in_array($segment, $layers, true)) {
+                $offenders[] = $relative;
+                break;
+            }
+        }
+    }
+
+    expect(array_values(array_unique($offenders)))->toBe([]);
+})->todo('unblocked by P4.10 — ADR-0017 Canon A Law 1 (dissolve Uploads/* into root layers)');

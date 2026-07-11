@@ -298,6 +298,68 @@ test('split technical roots keep classes in domain subfolders', function (): voi
 });
 
 /**
+ * ADR-0017 / VLT-REMED P4.9 — Canon A, Law 1 (layer-first placement).
+ *
+ * A recognized technical-layer directory (Actions/Models/Repositories/Enums/
+ * Events/Data/Contracts/Http) must live as the FIRST namespace segment under the
+ * package root — NEVER nested inside a domain module folder. `core` is the canon
+ * reference and passes GREEN. The divergent `drive` layout (`Uploads/Actions`,
+ * `Uploads/Models`, …) is the same rule marked `->todo()` in drive's ArchTest,
+ * to be discharged by P4.10.
+ *
+ * (Law 2 — "layers group by a domain sub-namespace, not flat" — is enforced by
+ * the `split technical roots keep classes in domain subfolders` test above; the
+ * divergent flat `documents` layout is that rule marked `->todo()` in documents.)
+ *
+ * `Http` sub-layers (Controllers/Requests/Resources/Middleware/Support) are
+ * structural, not domains, so only `Http` itself is a layer segment here.
+ */
+test('technical layers are never nested under a domain module (ADR-0017 Law 1)', function (): void {
+    expect(layersNestedUnderDomain(__DIR__.'/../../src'))->toBe([]);
+});
+
+/**
+ * Walks $src and returns every layer-named directory that sits BELOW depth 0
+ * (i.e. nested under a domain folder) — the Canon A / ADR-0017 Law 1 offenders.
+ * Shared verbatim by the drive canon `->todo()` test.
+ *
+ * @return list<string> relative directory paths, e.g. "Uploads/Actions"
+ */
+function layersNestedUnderDomain(string $src): array
+{
+    $layers = ['Actions', 'Models', 'Repositories', 'Enums', 'Events', 'Data', 'Contracts', 'Http'];
+    $offenders = [];
+
+    // SELF_FIRST so DIRECTORIES are yielded (the default LEAVES_ONLY mode only
+    // yields files, which would make this dir-structure check an inert no-op).
+    /** @var Iterator<SplFileInfo> $dirs */
+    $dirs = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST,
+    );
+
+    foreach ($dirs as $dir) {
+        if (!$dir->isDir()) {
+            continue;
+        }
+
+        $relative = str_replace($src.'/', '', $dir->getPathname());
+        $segments = explode('/', $relative);
+
+        foreach ($segments as $index => $segment) {
+            if ($index > 0 && in_array($segment, $layers, true)) {
+                $offenders[] = $relative;
+                break;
+            }
+        }
+    }
+
+    sort($offenders);
+
+    return array_values(array_unique($offenders));
+}
+
+/**
  * The split domains live under the canonical domain set. Spot-check one class per
  * (root × domain) cell so a regression that drops a class back into a flat root —
  * or into a non-canonical domain name — trips here with a clear message naming the
