@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;

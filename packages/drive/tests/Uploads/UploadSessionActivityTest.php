@@ -8,6 +8,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Activity\ActivityTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -79,4 +80,32 @@ it('sweep-expire пишет activity-строку upload_session.expired без 
 
     expect($row->actor_id)->toBeNull()
         ->and($row->context['upload_id'])->toBe($uploadId);
+});
+
+/**
+ * P4.10 morph-invariant (ADR-0017 namespace move). The pre-mortem R-refactor risk is a
+ * forgotten morph alias: a moved model whose OLD FQCN is frozen in a polymorphic
+ * `*_type` column would silently break in production while a fresh-DB test stays green.
+ * This guards the invariant that makes the move safe WITHOUT any DB migration: the moved
+ * upload models are never persisted as a morph-type string. The upload lifecycle records
+ * activity with `target = null` (only node-attached events use `recordForNode`), so no
+ * `v_activity` row ever holds `UploadSession`'s FQCN — the move cannot orphan a row. The
+ * ONE Vaulter model that IS persisted as `target_type` is `Node` (via recordForNode), and
+ * Node did NOT move, so historical rows stay resolvable. A future regression that made an
+ * upload a morph target (or moved `Node`) trips this.
+ */
+it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
+    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+
+    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+        'name' => 'morph-invariant.bin',
+        'total_size_bytes' => 4,
+    ])->json('data.upload_id');
+
+    $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionInitiated->value);
+
+    expect(UploadSession::class)->toBe('Vaulter\\Drive\\Models\\Uploads\\UploadSession')
+        ->and($row->target_type)->toBeNull()
+        ->and($row->target_id)->toBeNull()
+        ->and((new Node)->getMorphClass())->toBe(Node::class);
 });

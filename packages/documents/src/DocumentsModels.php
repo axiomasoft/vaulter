@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents;
 
 use RuntimeException;
-use Vaulter\Documents\Models\NodeComment;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Support\Config;
 
 /**

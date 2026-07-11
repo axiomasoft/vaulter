@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Enums\DocumentType;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 

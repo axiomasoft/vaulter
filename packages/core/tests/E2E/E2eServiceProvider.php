@@ -6,10 +6,10 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Documents\Data\CreateDocumentNodeData;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Support\Config;

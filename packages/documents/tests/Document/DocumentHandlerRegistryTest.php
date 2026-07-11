@@ -8,7 +8,7 @@ use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
-use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Facades\Vaulter;
 use Vaulter\ValueObjects\Documents\DocumentCapabilities;
 use Vaulter\ValueObjects\Documents\FileDescriptor;

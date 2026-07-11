@@ -8,7 +8,7 @@ use Illuminate\Contracts\Container\Container;
 use Vaulter\Contracts\Documents\DocumentHandler;
 use Vaulter\Contracts\Documents\HandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Documents\FileDescriptor;
 

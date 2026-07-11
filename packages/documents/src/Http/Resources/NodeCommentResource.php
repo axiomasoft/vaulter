@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Documents\Models\NodeComment;
+use Vaulter\Documents\Models\Comments\NodeComment;
 
 /**
  * The read shape of a node comment (ADR-0014 шаг 1): the thread pointer (parent_id),

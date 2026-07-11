@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Models\NodeComment;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 
 /**
  * Mass-assignment hardening (P1.4 / B13): NodeComment/NodeDocumentVersion used to

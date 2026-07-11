@@ -34,8 +34,8 @@ php artisan vendor:publish --tag=vaulter-config
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
 | `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
-| `models.node_comment` | `Vaulter\Documents\Models\NodeComment` | `axioma-studio/vaulter-documents` |
-| `models.node_document_version` | `Vaulter\Documents\Models\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
+| `models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
+| `models.node_document_version` | `Vaulter\Documents\Models\Versions\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |
 | `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
 | `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Collaboration;
 
 use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\Documents\Data\CollaborationSessionData;
-use Vaulter\Documents\Enums\CollaborationDriverType;
+use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
+use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;

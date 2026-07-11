@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Firebase\JWT\JWT;
-use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Documents\Data\CreateDocumentNodeData;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;

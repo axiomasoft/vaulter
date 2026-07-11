@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Documents\Data\CreateNodeCommentData;
+use Vaulter\Documents\Data\Comments\CreateNodeCommentData;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**

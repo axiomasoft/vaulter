@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Collaboration;
 
 use Firebase\JWT\JWT;
 use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\Documents\Data\CollaborationSessionData;
-use Vaulter\Documents\Enums\CollaborationDriverType;
+use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
+use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Exceptions\CollaborationConfigException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;

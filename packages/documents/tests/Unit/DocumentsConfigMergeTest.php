@@ -7,8 +7,8 @@ use Vaulter\Documents\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
-use Vaulter\Documents\Models\NodeComment;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 
 /**

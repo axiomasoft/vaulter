@@ -73,22 +73,19 @@ arch('internal namespaces are not used outside the package (E3.1)')
     ->toOnlyBeUsedIn('Vaulter\Documents');
 
 /**
- * ADR-0017 / VLT-REMED P4.9 — Canon A, Law 2 (domain sub-namespace within layers).
+ * ADR-0017 / VLT-REMED P4.9 + P4.10 — Canon A, Law 2 (domain sub-namespace within layers).
  *
- * `documents` DIVERGES: its layers are layer-first (Law 1 ✅) but FLAT — classes
- * sit directly in the layer root with no domain sub-namespace (`Actions/*.php`,
- * `Enums/*.php`, `Events/*.php`, `Models/*.php`, `Repositories/*.php`,
- * `Data/*.php`), unlike core's `Actions/Sharing`, `Enums/Webhooks`, … . This test
- * asserts the CANON (no non-allow-listed class flat at a layer root) and is RED on
- * the current layout by design — it is the executable spec of the P4.10 move
- * (introduce domain sub-namespaces: `Actions/Documents`, `Actions/Comments`,
- * `Events/Comments`, `Enums/Export`, …). Marked `->todo()` so the P4.9 suite stays
- * green; P4.10 makes it pass and removes the `->todo()`.
+ * `documents` was DIVERGENT: its layers were layer-first (Law 1 ✅) but FLAT — classes
+ * sat directly in the layer root with no domain sub-namespace, unlike core's
+ * `Actions/Sharing`, `Enums/Webhooks`, … . P4.10 DISCHARGED it: the flat classes were
+ * grouped under domain sub-namespaces (`Actions/Comments`, `Actions/Documents`,
+ * `Actions/Versions`, `Actions/Collaboration`, `Enums/Export`, `Models/Versions`, …).
+ * This test now asserts the CANON (no non-allow-listed class flat at a layer root)
+ * and passes GREEN; the `->todo()` was removed by P4.10.
  *
  * Mirrors core's green `split technical roots keep classes in domain subfolders`
- * test. Red-before proven (P4.9): running this body without `->todo()` fails with
- * offenders in Actions (9), Data (6), Events (6), Enums (4), Repositories (4),
- * Models (2).
+ * test. Red-before proven (P4.9): before the move, this body failed with offenders
+ * in Actions (9), Data (6), Events (6), Enums (4), Repositories (4), Models (2).
  */
 test('layers group classes under a domain sub-namespace, not flat (ADR-0017 Law 2)', function (): void {
     $src = __DIR__.'/../../src';
@@ -127,4 +124,4 @@ test('layers group classes under a domain sub-namespace, not flat (ADR-0017 Law 
     }
 
     expect($offenders)->toBe([]);
-})->todo('unblocked by P4.10 — ADR-0017 Canon A Law 2 (introduce domain sub-namespaces in flat layers)');
+});

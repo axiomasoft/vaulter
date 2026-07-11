@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Documents;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Collaboration\NodeCollaborationDriverManager;
-use Vaulter\Documents\Data\CollaborationSessionData;
+use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;

@@ -8,7 +8,7 @@ use Vaulter\Contracts\Documents\DocumentContent;
 use Vaulter\Documents\Documents\DocumentFileDescriptorFactory;
 use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
-use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;

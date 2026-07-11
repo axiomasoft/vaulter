@@ -37,6 +37,35 @@ service classes (`UploadSessionManager`, `TusUploadHandler`, `S3MultipartHandler
 
 The upload service classes under `Vaulter\Drive\Uploads\*` (no layer segment) are unchanged.
 
+**`vaulter-documents` — the flat layer roots gained a domain sub-namespace** (their classes
+sat directly in `Actions/`, `Events/`, `Data/`, `Enums/`, `Repositories/`, `Models/` with no
+domain grouping, violating Canon A Law 2). Each class moved one level down into its domain
+(`Comments`, `Documents`, `Versions`, `Collaboration`, `Export`). The pre-existing domain-service
+folders `Vaulter\Documents\{Documents,Collaboration,Export,Access,Casts}` and the `Http/`,
+`Contracts/`, `ValueObjects/`, `Support/`, `Exceptions/` roots are unchanged. Update `use`
+statements — the key public ones:
+
+| Old FQCN | New FQCN |
+|:--|:--|
+| `Vaulter\Documents\Models\NodeComment` | `Vaulter\Documents\Models\Comments\NodeComment` |
+| `Vaulter\Documents\Models\NodeDocumentVersion` | `Vaulter\Documents\Models\Versions\NodeDocumentVersion` |
+| `Vaulter\Documents\Enums\DocumentType` | `Vaulter\Documents\Enums\Documents\DocumentType` |
+| `Vaulter\Documents\Enums\Capability` | `Vaulter\Documents\Enums\Documents\Capability` |
+| `Vaulter\Documents\Enums\ExportFormat` | `Vaulter\Documents\Enums\Export\ExportFormat` |
+| `Vaulter\Documents\Enums\CollaborationDriverType` | `Vaulter\Documents\Enums\Collaboration\CollaborationDriverType` |
+| `Vaulter\Documents\Events\NodeComment{Added,Deleted,Resolved}` | `Vaulter\Documents\Events\Comments\NodeComment{Added,Deleted,Resolved}` |
+| `Vaulter\Documents\Events\Document{ContentUpdated,NodeCreated}` | `Vaulter\Documents\Events\Documents\Document{ContentUpdated,NodeCreated}` |
+| `Vaulter\Documents\Events\DocumentVersionCreated` | `Vaulter\Documents\Events\Versions\DocumentVersionCreated` |
+| `Vaulter\Documents\Actions\*` (comment / document / version / snapshot) | `Vaulter\Documents\Actions\{Comments,Documents,Versions,Collaboration}\*` |
+| `Vaulter\Documents\Data\*` | `Vaulter\Documents\Data\{Comments,Documents,Versions,Collaboration}\*` |
+| `Vaulter\Documents\Repositories\NodeComment*Repository` | `Vaulter\Documents\Repositories\Comments\NodeComment*Repository` |
+| `Vaulter\Documents\Repositories\NodeDocumentVersion*Repository` | `Vaulter\Documents\Repositories\Versions\NodeDocumentVersion*Repository` |
+
+Model config defaults (`vaulter.models.node_comment` / `node_document_version`) resolve to the new
+FQCNs automatically; a host that pinned the FQCN explicitly must update it. `filament`, `media` and
+`permissions-azgard` were already canon-conformant (or, for `filament`, follow the framework's own
+plugin convention as a documented ADR-0017 exception) and did not move.
+
 ### TipTap content: a closed store-time schema (now with images/tables), a config seam to extend it, and read-time decay (P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)
 
 **What changed.** Rich-text content is validated against a **closed allow-list** before it is

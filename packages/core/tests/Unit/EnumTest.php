@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Enums\CollaborationDriverType;
-use Vaulter\Documents\Enums\DocumentType;
+use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Enums\Access\PermissionLevel;
 
 it('exposes document type metadata from attributes', function (): void {

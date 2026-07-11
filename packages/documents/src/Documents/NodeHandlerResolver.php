@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Documents;
 
 use Vaulter\Contracts\Documents\NodeHandlerResolver as NodeHandlerResolverContract;
-use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Documents\HandlerDescriptor;
 

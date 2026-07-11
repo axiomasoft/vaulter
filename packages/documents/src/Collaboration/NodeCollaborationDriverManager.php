@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
-use Vaulter\Documents\Enums\CollaborationDriverType;
+use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Config;
 

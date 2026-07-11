@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Documents\Handlers;
 
 use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\Documents\Enums\DocumentType;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\ValueObjects\Documents\DocumentCapabilities;
 use Vaulter\ValueObjects\Documents\FileDescriptor;
 use Vaulter\ValueObjects\Documents\HandlerUi;

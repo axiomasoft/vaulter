@@ -30,7 +30,7 @@ routes are only registered when it is on:
 ],
 ```
 
-With the flag off, `Vaulter\Documents\Models\NodeDocumentVersion` has no table and the
+With the flag off, `Vaulter\Documents\Models\Versions\NodeDocumentVersion` has no table and the
 `storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions`
 routes do not exist.
 :::
@@ -78,7 +78,7 @@ version, atomically. Content is a TipTap document wrapped in
 ::: code-group
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Data\CreateDocumentNodeData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -223,7 +223,7 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\UpdateDocumentContentAction;
+use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Data\UpdateDocumentContentData;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -271,7 +271,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
 use Vaulter\Data\CreateNamedVersionData;
 
 app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
@@ -349,7 +349,7 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\Versions\RestoreDocumentVersionAction;
 
 app(RestoreDocumentVersionAction::class)->execute(
     node:      $node,
@@ -401,9 +401,9 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Event | Fired by | Payload |
 |---|---|---|
-| `Vaulter\Documents\Events\DocumentNodeCreated` | create | `node`, `version` (v1), `actorId` |
-| `Vaulter\Documents\Events\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
-| `Vaulter\Documents\Events\DocumentVersionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentNodeCreated` | create | `node`, `version` (v1), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
+| `Vaulter\Documents\Events\Versions\DocumentVersionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Errors
 

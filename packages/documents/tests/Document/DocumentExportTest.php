@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Documents\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 

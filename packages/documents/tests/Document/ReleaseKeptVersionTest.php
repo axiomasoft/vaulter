@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\CreateDocumentNodeAction;
-use Vaulter\Documents\Actions\CreateNamedVersionAction;
-use Vaulter\Documents\Actions\ReleaseKeptVersionAction;
-use Vaulter\Documents\Data\CreateDocumentNodeData;
-use Vaulter\Documents\Data\CreateNamedVersionData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
+use Vaulter\Documents\Actions\Versions\ReleaseKeptVersionAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Data\Versions\CreateNamedVersionData;
 use Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException;
-use Vaulter\Documents\Models\NodeDocumentVersion;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\TestUser;

@@ -6,9 +6,9 @@ namespace Vaulter\Documents\Documents;
 
 use Vaulter\Contracts\Documents\DocumentExporter;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
-use Vaulter\Documents\Enums\Capability;
+use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
-use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
+use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Documents\TipTapContent;
