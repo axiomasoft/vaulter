@@ -45,7 +45,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        # @hocuspocus/server@4 declares engines.node >=22 (Hocuspocus 4 requires
+        # Node 22+). Node 20 was dropped in P4.1 — `npm ci` fails it under engine-strict
+        # and a Node-20 lane would "test" a config the direct dependency no longer supports.
+        node: ['22']
 
     steps:
       - name: Checkout

@@ -14,7 +14,8 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 | Orchestra Testbench (dev/CI) | `^10.0` (Laravel 12) \| `^11.0` (Laravel 13) |
 | Filament (optional `vaulter-filament` panel) | `^5.0`, requires Laravel **13** (Testbench `^11.0` only — see below) |
 | Vue | `3.x` |
-| Node (collab server / build) | `>=20` |
+| Node (collab server, `hocuspocus-server`) | `>=22` (Hocuspocus 4 requires Node 22+) |
+| Node (Vue build / tooling) | `>=20` |
 
 `vaulter-core`/`vaulter-drive`/`vaulter-media`/`vaulter-documents`/`vaulter-permissions-azgard` are
 CI-tested against **both** Laravel 12 and 13 (Testbench `^10.0`/`^11.0`). `vaulter-filament` pins

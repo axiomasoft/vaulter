@@ -6,6 +6,30 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
+
+**What changed.** `hocuspocus-server/package.json` raises `engines.node` from `>=20` to `>=22`, and
+the Hocuspocus CI lane in `.github/workflows/frontend.yml` dropped its Node 20 cell (it now runs
+Node 22 only). The reference Docker image already builds on `node:22-slim`.
+
+**Why.** `@hocuspocus/server@4` — the direct dependency the collab server pins (`^4.3`, closed in
+this same P4.1 major bump) — declares `engines.node >=22` (verified in `package-lock.json`;
+Hocuspocus 4 stable "requires Node 22+"). While the package still declared `>=20`, `npm ci` under
+`engine-strict` would fail on Node 20, and the Node 20 CI lane was "testing" a runtime the collab
+server's own direct dependency no longer supports — a fictitious support claim. Aligning the
+support range **up** (to what the dependency actually requires) is the honest fix. The other
+`@hocuspocus/*` packages (`extension-logger`/`redis`/`throttle`) declare no engines constraint;
+`yjs@13.6` requires `>=16` and `ws@8` requires `>=10`, so `>=22` is the single binding floor and the
+whole collab stack is engine-consistent at Node 22.
+
+**Who is affected.** Anyone running the `hocuspocus-server` collaboration hub on Node 20 (or any
+Node < 22): `npm ci`/`npm install` for the collab server now fails the engine check, and the
+runtime is no longer supported. This is a **breaking change** for consumers pinned to Node 20.
+
+**What you must do.** Upgrade the host running `hocuspocus-server` to Node 22 (LTS) or newer. The
+Node used to build/publish `@vaulter/vue` and other tooling is unaffected — only the collaboration
+server's runtime floor moved.
+
 ### Package internal structure canon — namespace moves (P4.10 / ADR-0017, Canon A)
 
 **Why.** The six packages drifted into three incompatible internal layouts. ADR-0017 declares one
@@ -593,13 +617,15 @@ Verified mechanical: `npm run build`/`typecheck`/`test` (102 tests) pass unchang
 `packages/vue`, and the `e2e/` playground builds cleanly — no source changes were required by the
 TipTap 3.0 API.
 
-**`@hocuspocus/*` stays on `2.x` for now (F-P4.5-02 — NOT bumped, see Known Deviations in
-`plans/VLT-REMED/phases/P4.md` P4.1).** Bumping `@hocuspocus/server`/extensions/`provider` to
-`^4.3.0` made the server's own `websocket-hardening.test.js` regression suite hang indefinitely —
-that suite asserts a v2.x-specific internal wiring path (`listen(port, host, websocketOptions)`
-3rd-argument propagation into the underlying `ws` server), which v4's internals appear to have
-reshaped. This is a real API-shape change, not a mechanical version bump, so it was reverted and
-escalated per the item's own escalation guard (D6) rather than forced green.
+**`@hocuspocus/*` was also raised to `^4.3` (F-P4.5-02).** The collab stack
+(`@hocuspocus/server`/extensions in `hocuspocus-server`, `@hocuspocus/provider` in `packages/vue`
+and `e2e/`) moved from `^2.x` to `^4.3`, with `yjs` aligned to `^13.6.8` under the server's peer
+requirement. Hocuspocus 4 reshaped the transport (`ws` → `crossws`) and moved `.listen()` off the
+`Hocuspocus` core onto a `Server` class with a `websocketOptions` config key, so `src/index.js` and
+the `websocket-hardening.test.js` regression suite were rewritten against the public v4 API (same
+frame-cap security invariant, `51/51` green, no hang). **This bump carries a runtime consequence:**
+`@hocuspocus/server@4` requires **Node >= 22** — see the "collaboration server now requires Node
+>= 22" section at the top of this file.
 
 ### New optional config('vaulter.connection') routes the whole schema onto a named connection (P3.6 / F-P2.3-02, F-P2.3-04)
 
