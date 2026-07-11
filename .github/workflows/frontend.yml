@@ -37,3 +37,37 @@ jobs:
 
       - name: Build
         run: npm run build --workspace @vaulter/vue
+
+  hocuspocus:
+    name: "@vaulter/hocuspocus-server (Node ${{ matrix.node }})"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        working-directory: ./hocuspocus-server
+        run: npm ci
+
+      # Syntax gate: every source module parses (mirrors the `check` script).
+      - name: Syntax check
+        working-directory: ./hocuspocus-server
+        run: npm run check
+
+      # Behaviour gate: the node:test suite — incl. websocket-hardening.test.js —
+      # runs on every PR/push so the collab-hub security invariants (frame cap,
+      # Throttle armed, JWT/webhook/Origin/expiry seams) cannot silently regress.
+      - name: Test
+        working-directory: ./hocuspocus-server
+        run: npm test
