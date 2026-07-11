@@ -113,6 +113,14 @@ being modified by a concurrent request, or the `Upload-Offset` header doesn't ma
 server's authoritative offset. Re-read the session `HEAD` to learn the current offset and
 resume from there.
 
+## staged-upload-missing
+
+`StagedUploadMissingException` — the session claims a non-zero `Upload-Offset`, but the
+staged object holding those already-received bytes is gone (a concurrent sweep/abort
+reclaimed it, or the bucket was cleaned out of band). The chunk is refused instead of being
+written on its own, which would silently truncate the file. Re-read the session `HEAD`; if
+the session is no longer open, start a new upload.
+
 ## upload-content-mismatch
 
 `UploadContentMismatchException` — the assembled upload's bytes don't match the declared

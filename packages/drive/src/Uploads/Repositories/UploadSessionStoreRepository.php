@@ -54,6 +54,15 @@ final class UploadSessionStoreRepository
      *  - mysql : SELECT … FOR UPDATE on the row (the portable pessimistic path).
      *  - sqlite: no row lock, but the single-writer transaction serialises the
      *            critical section, so the fresh read alone is correct.
+     *
+     * The same seam is taken by the sweeper/abort path (UploadSessionManager::expire /
+     * abort, R-02) — reclaiming a session's staged bytes is the same critical section
+     * as writing them, so the two can never interleave.
+     *
+     * The pgsql key is 64-bit (`hashtextextended`, R-09): the 32-bit `hashtext` shares
+     * a key between two DIFFERENT upload_ids often enough to matter (birthday bound over
+     * int4), and a collision there means a PATCH on session A is refused with a bogus 409
+     * because an unrelated session B holds the lock.
      */
     public function acquireForPatch(UploadSession $session): UploadSession
     {
@@ -64,7 +73,7 @@ final class UploadSessionStoreRepository
             // Non-blocking: pg_try_advisory_xact_lock returns false when another
             // PATCH already holds the upload_id lock → immediate conflict, no wait.
             $granted = $connection->selectOne(
-                'SELECT pg_try_advisory_xact_lock(hashtext(?)) AS granted',
+                'SELECT pg_try_advisory_xact_lock(hashtextextended(?, 0)) AS granted',
                 ['upload:'.$session->upload_id],
             );
 
@@ -111,15 +120,32 @@ final class UploadSessionStoreRepository
      * chunk has been appended (§2.8). The session flips to Uploading on the first
      * write. The offset is SET (not incremented) from the staged temp's new length,
      * so a re-sent identical chunk is idempotent.
+     *
+     * COMPARE-AND-SET on the status (VLT-REMED P5.2 / R-08): the write only lands while
+     * the session is still OPEN. The previous unconditional `forceFill(status =>
+     * Uploading)` could RESURRECT a session another actor had just moved to a terminal
+     * state (Expired by the sweeper, Aborted by the client) — the row went back to
+     * Uploading with a received_bytes that no longer described any real file. Zero rows
+     * affected means someone else won the race → a conflict, not a silent overwrite.
      */
     public function advanceReceived(UploadSession $session, int $receivedBytes): UploadSession
     {
-        $session->forceFill([
-            'received_bytes' => $receivedBytes,
-            'status' => UploadStatus::Uploading,
-        ])->save();
+        $model = UploadModels::session();
 
-        return $session;
+        $affected = $model::query()
+            ->whereKey($session->getKey())
+            ->whereIn('status', [UploadStatus::Initiated->value, UploadStatus::Uploading->value])
+            ->update([
+                'received_bytes' => $receivedBytes,
+                'status' => UploadStatus::Uploading->value,
+                'updated_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+
+        return $session->refresh();
     }
 
     /**

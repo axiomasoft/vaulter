@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -127,22 +128,20 @@ final readonly class UploadSessionManager
      * discard the staged temp, and tombstone the row as Aborted. Idempotent — a
      * terminal session is returned untouched (and, since nothing changed, emits no
      * activity — F-P1.4-13 traces state CHANGES, not no-op calls).
+     *
+     * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 / R-02) —
+     * see {@see reclaim()}. Throws UploadConflictException when a PATCH holds the lock.
      */
     public function abort(UploadSession $session, int|string|null $actorId = null): UploadSession
     {
-        if (!$session->status->isOpen() && $session->status !== UploadStatus::Assembled) {
-            return $session;
-        }
-
-        $this->handlerFor($session)->abort($session);
-        $this->staged->discard($session);
-
-        $session = $this->sessions->transition($session, UploadStatus::Aborted);
-
-        // F-P1.4-13: the lifecycle audit gap — abort had no activity trace at all.
-        event(new UploadSessionAborted($session, $actorId));
-
-        return $session;
+        return $this->reclaim(
+            session: $session,
+            terminal: UploadStatus::Aborted,
+            // F-P1.4-13: the lifecycle audit gap — abort had no activity trace at all.
+            audit: static function (UploadSession $aborted) use ($actorId): void {
+                event(new UploadSessionAborted($aborted, $actorId));
+            },
+        );
     }
 
     /**
@@ -150,18 +149,64 @@ final readonly class UploadSessionManager
      * terminal state is Expired (so the audit distinguishes a swept session from a
      * client-cancelled one). Runs outside an HTTP request (console/schedule) — the
      * activity row carries no actor (a system reclaim).
+     *
+     * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 / R-02) —
+     * see {@see reclaim()}. Throws UploadConflictException when a PATCH holds the lock;
+     * the sweeper treats that as "skip, it is alive", not as a failure.
      */
     public function expire(UploadSession $session): UploadSession
     {
-        $this->handlerFor($session)->abort($session);
-        $this->staged->discard($session);
+        return $this->reclaim(
+            session: $session,
+            terminal: UploadStatus::Expired,
+            // F-P1.4-13: the lifecycle audit gap — expire had no activity trace at all.
+            audit: static function (UploadSession $expired): void {
+                event(new UploadSessionExpired($expired));
+            },
+        );
+    }
 
-        $session = $this->sessions->transition($session, UploadStatus::Expired);
+    /**
+     * The shared abort/expire body — and the reason both exist at all: reclaiming a
+     * session DESTROYS bytes (staged temp discard) and moves the row to a terminal
+     * state, which is exactly the window a concurrent tus PATCH is writing into
+     * (VLT-REMED P5.2 / R-02).
+     *
+     * Before the fix, expire() ran with no lock at all: the sweeper could delete the
+     * staged object between a PATCH's "read offset" and its "append", so the PATCH wrote
+     * its chunk alone (losing the accepted prefix) and then forced the row back to
+     * Uploading — a resurrected session pointing at a truncated file, with no error
+     * anywhere. The barrier therefore has to stand on the path that DELIVERS the harm:
+     *
+     *   1. one transaction, taking the SAME per-session lock as the PATCH as its first
+     *      statement (a PATCH in flight → UploadConflictException, no wait);
+     *   2. the status is RE-READ under that lock (the row may have moved since the
+     *      caller/sweeper selected it) — a session that is no longer reclaimable is
+     *      returned untouched, and nothing is discarded;
+     *   3. only then are the protocol state and the staged bytes released.
+     *
+     * @param callable(UploadSession): void $audit
+     */
+    private function reclaim(UploadSession $session, UploadStatus $terminal, callable $audit): UploadSession
+    {
+        return DB::transaction(function () use ($session, $terminal, $audit): UploadSession {
+            $locked = $this->sessions->acquireForPatch($session);
 
-        // F-P1.4-13: the lifecycle audit gap — expire had no activity trace at all.
-        event(new UploadSessionExpired($session));
+            // Re-read under the lock: another actor may have reclaimed/committed it
+            // between the caller's SELECT and our lock. Terminal → no bytes to discard.
+            if (!$locked->status->isOpen() && $locked->status !== UploadStatus::Assembled) {
+                return $locked;
+            }
 
-        return $session;
+            $this->handlerFor($locked)->abort($locked);
+            $this->staged->discard($locked);
+
+            $reclaimed = $this->sessions->transition($locked, $terminal);
+
+            $audit($reclaimed);
+
+            return $reclaimed;
+        });
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 
@@ -36,16 +37,29 @@ final class SweepUploadsCommand extends Command
         $candidates = $sessions->sweepable($now)->get();
 
         $swept = 0;
+        $skipped = 0;
 
         foreach ($candidates as $session) {
-            $manager->expire($session);
-            $swept++;
+            try {
+                $manager->expire($session);
+                $swept++;
+            } catch (UploadConflictException) {
+                // A tus PATCH holds this session's lock — it is being written to RIGHT
+                // NOW, which is the one thing a "stale session" is not (VLT-REMED P5.2 /
+                // R-02). Reclaiming it here would delete the staged bytes out from under
+                // the in-flight append and corrupt the file. Leave it: it is either
+                // finished by its client, or still past its TTL on the next tick and
+                // swept then. Background housekeeping never destroys live data and never
+                // fails the command over it.
+                $skipped++;
+            }
         }
 
         $this->components->info(sprintf(
-            'Swept %d stale upload session%s.',
+            'Swept %d stale upload session%s%s.',
             $swept,
             $swept === 1 ? '' : 's',
+            $skipped > 0 ? sprintf(' (%d skipped — a PATCH is in flight)', $skipped) : '',
         ));
 
         return self::SUCCESS;

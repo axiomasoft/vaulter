@@ -33,6 +33,22 @@ final class UploadConflictException extends VaulterException
     }
 
     /**
+     * The session left its open states (Expired by the sweeper, Aborted by the client,
+     * already Committed) while this PATCH was mid-flight, so the compare-and-set that
+     * advances received_bytes matched zero rows (VLT-REMED P5.2 / R-08). It is refused
+     * rather than forced through: forcing it would resurrect a terminal session and
+     * publish an offset for bytes that no longer exist.
+     */
+    public static function forClosedSession(string $uploadId): self
+    {
+        return new self(
+            "[Vaulter] Upload session [{$uploadId}] is no longer open — it was expired or aborted while this chunk was in flight. ".
+            'Fix: re-read the session HEAD; a terminal session is never re-opened, so start a new upload. '.
+            'Docs: '.self::docs('upload-conflict'),
+        );
+    }
+
+    /**
      * Surface a concurrent-modification conflict as 409 — the client must re-read
      * HEAD and resume from the authoritative offset.
      */

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Drive\Exceptions\StagedUploadMissingException;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
@@ -100,6 +101,13 @@ final readonly class StagedUpload
      * spill ceiling regardless of upload size. A per-chunk ceiling is enforced
      * BEFORE any bytes are staged. Returns the new staged length.
      *
+     * FAIL-CLOSED (VLT-REMED P5.2 / R-03): a positive $offset with NO staged object is
+     * an impossible state — the bytes it names were accepted and acknowledged. It only
+     * happens when the object was removed underneath us (a concurrent sweep/abort — see
+     * R-02 — or an out-of-band bucket cleanup). Continuing would write the new chunk
+     * alone, drop the already-accepted prefix and hand the client a REGRESSED offset:
+     * a corrupted file with no error anywhere. We refuse instead.
+     *
      * @param resource $chunk
      */
     public function append(UploadSession $session, mixed $chunk, int $offset): int
@@ -108,6 +116,10 @@ final readonly class StagedUpload
 
         $disk = $this->diskFor($session);
         $key = $this->keyFor($session);
+
+        if ($offset > 0 && !$disk->exists($key)) {
+            throw StagedUploadMissingException::forSession($session->upload_id, $offset);
+        }
 
         // A spill-to-disk buffer: it holds up to SPILL_BYTES in RAM then transparently
         // spills to a temp file, so assembling a multi-GB staged file peaks at the
@@ -122,7 +134,8 @@ final readonly class StagedUpload
             // Honour the authoritative offset: stream only the bytes we already hold
             // up to it (anything past it is dropped — the server, not the client, owns
             // the resume point, H.3 / §2.8). Streamed, never materialised as a string.
-            if ($offset > 0 && $disk->exists($key)) {
+            // The object's existence is guaranteed above (fail-closed, R-03).
+            if ($offset > 0) {
                 $existing = $disk->readStream($key);
 
                 if (is_resource($existing)) {
