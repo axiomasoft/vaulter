@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Documents\Enums\DocumentType;
 use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -30,18 +31,20 @@ it('throws when the content exceeds the size limit', function (): void {
     TipTapContent::fromArray($large)->ensureWithin(1);
 })->throws(InvalidTipTapContentException::class);
 
-// ─── F-P1.11-02 — closed node/mark/attribute allow-list ─────────────────────
+// ─── F-P1.11-02 — closed node/mark/attribute allow-list (store time) ────────
 
 it('rejects an unknown node type', function (): void {
     TipTapContent::fromArray(['type' => 'doc', 'content' => [['type' => 'script']]]);
 })->throws(InvalidTipTapContentException::class);
 
 it('rejects an unknown mark type', function (): void {
+    // NB: 'underline' USED to be the example here — it is canonical since VLT-REMED P5.2
+    // (D27: StarterKit 3.x ships Underline). A genuinely unknown mark still fails closed.
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [[
             'type' => 'paragraph',
-            'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'underline']]]],
+            'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'blink']]]],
         ]],
     ]);
 })->throws(InvalidTipTapContentException::class);
@@ -59,7 +62,7 @@ it('accepts the full allowed node/mark set', function (): void {
         'content' => [
             ['type' => 'heading', 'attrs' => ['level' => 2], 'content' => [['type' => 'text', 'text' => 'Title']]],
             ['type' => 'paragraph', 'content' => [
-                ['type' => 'text', 'text' => 'a', 'marks' => [['type' => 'bold'], ['type' => 'italic'], ['type' => 'strike'], ['type' => 'code']]],
+                ['type' => 'text', 'text' => 'a', 'marks' => [['type' => 'bold'], ['type' => 'italic'], ['type' => 'strike'], ['type' => 'code'], ['type' => 'underline']]],
                 ['type' => 'text', 'text' => 'link', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://x.test']]]],
                 ['type' => 'hardBreak'],
             ]],
@@ -67,14 +70,112 @@ it('accepts the full allowed node/mark set', function (): void {
             ['type' => 'bulletList', 'content' => [['type' => 'listItem', 'content' => [['type' => 'paragraph', 'content' => []]]]]],
             ['type' => 'orderedList', 'content' => [['type' => 'listItem', 'content' => [['type' => 'paragraph', 'content' => []]]]]],
             ['type' => 'blockquote', 'content' => []],
-            ['type' => 'codeBlock', 'content' => [['type' => 'text', 'text' => 'code']]],
+            ['type' => 'codeBlock', 'attrs' => ['language' => 'php'], 'content' => [['type' => 'text', 'text' => 'code']]],
+            ['type' => 'image', 'attrs' => ['src' => 'https://x.test/a.png', 'alt' => 'a', 'title' => 't']],
+            ['type' => 'table', 'content' => [
+                ['type' => 'tableRow', 'content' => [
+                    ['type' => 'tableHeader', 'attrs' => ['colspan' => 1, 'rowspan' => 1, 'colwidth' => null], 'content' => []],
+                    ['type' => 'tableCell', 'content' => []],
+                ]],
+            ]],
         ],
     ]);
 
     expect($content)->toBeInstanceOf(TipTapContent::class);
 });
 
-// ─── F-P1.11-01 — link href scheme allow-list ───────────────────────────────
+// ─── R-01 (Blocker) — allow-list ⇄ #[TiptapExtensions]: контракт, не список ──
+
+/*
+ * Норма — не литеральный перечень узлов, а КЛАСС: пакет сам объявляет редактору набор
+ * extensions через #[TiptapExtensions] на DocumentType. До фикса P0.1 отвергал image,
+ * table и underline — узлы, которые пакет САМ отдаёт тулбару, — и документ было НЕВОЗМОЖНО
+ * СОХРАНИТЬ. Тест обходит DocumentType::cases() и требует, чтобы характерный узел/марка
+ * КАЖДОГО объявленного extension принимались store-time. Добавят extension в enum, забыв
+ * про allow-list, — тест покраснеет здесь, а не в проде.
+ */
+it('store-time allow-list принимает характерный узел КАЖДОГО extension из #[TiptapExtensions], R-01', function (): void {
+    // Характерный узел/марка на extension: то, ради чего его подключают.
+    $probes = [
+        'StarterKit' => ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'x']]],
+        'Image' => ['type' => 'image', 'attrs' => ['src' => 'https://x.test/a.png']],
+        'Table' => ['type' => 'table', 'content' => [
+            ['type' => 'tableRow', 'content' => [['type' => 'tableCell', 'content' => []]]],
+        ]],
+        'Link' => ['type' => 'paragraph', 'content' => [
+            ['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://x.test']]]],
+        ]],
+        'CodeBlock' => ['type' => 'codeBlock', 'attrs' => ['language' => 'php'], 'content' => [['type' => 'text', 'text' => 'x']]],
+        // Не производит собственных узлов (плейсхолдер пустого документа) — проверять нечего.
+        'Placeholder' => null,
+    ];
+
+    $checked = 0;
+
+    foreach (DocumentType::cases() as $type) {
+        foreach ($type->tiptapExtensions() as $extension) {
+            expect(array_key_exists($extension, $probes))->toBeTrue(
+                "DocumentType::{$type->name} объявляет extension [{$extension}], но тест не знает его характерный узел — ".
+                'допишите пробу И убедитесь, что allow-list TipTapContent его принимает (D27).',
+            );
+
+            $probe = $probes[$extension];
+
+            if ($probe === null) {
+                continue;
+            }
+
+            expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probe]]))
+                ->not->toThrow(InvalidTipTapContentException::class);
+
+            $checked++;
+        }
+    }
+
+    expect($checked)->toBeGreaterThan(0);
+});
+
+// ─── D28 — аддитивный конфиг-шов allow-list ────────────────────────────────
+
+it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты хоста в allow-list, R-01', function (): void {
+    $doc = ['type' => 'doc', 'content' => [
+        ['type' => 'mention', 'attrs' => ['id' => '7'], 'content' => [
+            ['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'highlight']]],
+        ]],
+    ]];
+
+    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidTipTapContentException::class);
+
+    config()->set('vaulter.tiptap.extra_nodes', ['mention']);
+    config()->set('vaulter.tiptap.extra_marks', ['highlight']);
+    config()->set('vaulter.tiptap.extra_attributes', ['mention' => ['id']]);
+
+    expect(TipTapContent::fromArray($doc))->toBeInstanceOf(TipTapContent::class);
+});
+
+it('конфиг-шов АДДИТИВЕН: канон не вычёркивается конфигом, R-01', function (): void {
+    // Хост «переопределил» список своим — канон обязан выжить, иначе он молча сломает
+    // сохранение любого документа (D28).
+    config()->set('vaulter.tiptap.extra_nodes', ['mention']);
+
+    expect(TipTapContent::allowedNodeTypes())->toContain('doc', 'text', 'paragraph', 'image', 'table', 'mention');
+});
+
+it('конфиг-шов НЕ расширяет схемы URL-несущих атрибутов, R-01', function (): void {
+    // Инвариант безопасности, а не вкус хоста: даже объявив href «своим» атрибутом,
+    // хост не может протащить javascript: (D28).
+    config()->set('vaulter.tiptap.extra_attributes', ['link' => ['href']]);
+
+    expect(fn () => TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'paragraph',
+            'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
+        ]],
+    ]))->toThrow(InvalidTipTapContentException::class);
+});
+
+// ─── F-P1.11-01 — URL scheme allow-list (link.href + image.src) ─────────────
 
 it('rejects a disallowed link href scheme', function (string $href): void {
     TipTapContent::fromArray([
@@ -91,6 +192,17 @@ it('rejects a disallowed link href scheme', function (string $href): void {
     'missing href' => [''],
 ])->throws(InvalidTipTapContentException::class);
 
+it('rejects a disallowed image src scheme, R-01', function (string $src): void {
+    TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [['type' => 'image', 'attrs' => ['src' => $src]]],
+    ]);
+})->with([
+    'javascript' => ['javascript:alert(1)'],
+    'data URI' => ['data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg=='],
+    'missing src' => [''],
+])->throws(InvalidTipTapContentException::class);
+
 it('accepts http, https and mailto link href schemes', function (string $href): void {
     $content = TipTapContent::fromArray([
         'type' => 'doc',
@@ -105,4 +217,51 @@ it('accepts http, https and mailto link href schemes', function (string $href): 
     'http' => ['http://x.test'],
     'https' => ['https://x.test'],
     'mailto' => ['mailto:a@x.test'],
+]);
+
+// ─── D29 — decayFrom(): чтение деградирует, а не бросает ────────────────────
+
+it('decayFrom() вырезает неизвестные узлы/марки/атрибуты и НЕ бросает, R-01', function (): void {
+    $content = TipTapContent::decayFrom([
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'script', 'content' => [['type' => 'text', 'text' => 'alert(1)']]],
+            ['type' => 'paragraph', 'attrs' => ['style' => 'color:red'], 'content' => [
+                ['type' => 'text', 'text' => 'ok', 'marks' => [['type' => 'bold'], ['type' => 'blink']]],
+            ]],
+        ],
+    ]);
+
+    expect($content->toArray())->toBe([
+        'type' => 'doc',
+        'content' => [
+            ['type' => 'paragraph', 'content' => [
+                ['type' => 'text', 'text' => 'ok', 'marks' => [['type' => 'bold']]],
+            ]],
+        ],
+    ]);
+});
+
+it('decayFrom() СОХРАНЯЕТ значения атрибутов (вход второго эшелона D4), R-07', function (): void {
+    // Значение href НЕ вычищается на чтении: его обезвреживает render-time санитайзер.
+    // Вычистить здесь — значит оставить эшелон 2 без входа и сделать его непроверяемым.
+    $content = TipTapContent::decayFrom([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'paragraph',
+            'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
+        ]],
+    ]);
+
+    $mark = $content->toArray()['content'][0]['content'][0]['marks'][0];
+
+    expect($mark['attrs']['href'])->toBe('javascript:alert(1)');
+});
+
+it('decayFrom() на мусорном корне отдаёт пустой doc, а не бросает, R-01', function (mixed $doc): void {
+    expect(TipTapContent::decayFrom($doc)->toArray())->toBe(['type' => 'doc', 'content' => []]);
+})->with([
+    'not a doc' => [['type' => 'paragraph']],
+    'no type' => [['content' => []]],
+    'content is a scalar' => [['type' => 'doc', 'content' => 'oops']],
 ]);

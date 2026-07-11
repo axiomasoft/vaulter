@@ -511,15 +511,6 @@ final class Config
     }
 
     /**
-     * Whether an outbound webhook delivery follows HTTP redirects (§2.11 / N2). Default
-     * FALSE: a public receiver must not 302 the request onto an internal address.
-     */
-    public static function webhookFollowRedirects(): bool
-    {
-        return config('vaulter.webhooks.delivery.follow_redirects', false) === true;
-    }
-
-    /**
      * The TCP connect timeout (seconds) for a delivery POST (§2.11 / N2). Floored at 1,
      * default 2 — a fast fail on an unreachable internal host.
      */
@@ -1387,6 +1378,59 @@ final class Config
 
         /** @var array<string, class-string<DocumentExporter>> $exporters */
         return $exporters;
+    }
+
+    /**
+     * Extra TipTap node types a host's own editor extensions produce
+     * (config('vaulter.tiptap.extra_nodes'), VLT-REMED D27/D28). ADDITIVE: they are added
+     * to the canon shipped in TipTapContent, never replace it — a host that could delete
+     * `doc`/`text` from the allow-list would silently break every save.
+     *
+     * @return list<string>
+     */
+    public static function tiptapExtraNodes(): array
+    {
+        return self::stringList(config('vaulter.tiptap.extra_nodes', []), []);
+    }
+
+    /**
+     * Extra TipTap mark types (config('vaulter.tiptap.extra_marks')). Additive — see
+     * {@see tiptapExtraNodes()}.
+     *
+     * @return list<string>
+     */
+    public static function tiptapExtraMarks(): array
+    {
+        return self::stringList(config('vaulter.tiptap.extra_marks', []), []);
+    }
+
+    /**
+     * Extra per-type TipTap attributes (config('vaulter.tiptap.extra_attributes')), keyed
+     * by node/mark type. Additive — merged with the canon for that type, never replacing
+     * it. URL-bearing attributes (`link.href`, `image.src`) stay scheme-checked regardless:
+     * that is a security invariant, not a host preference (D28).
+     *
+     * @return array<string, list<string>>
+     */
+    public static function tiptapExtraAttributes(): array
+    {
+        $value = config('vaulter.tiptap.extra_attributes', []);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $attributes = [];
+
+        foreach ($value as $type => $keys) {
+            if (!is_string($type) || !is_array($keys)) {
+                continue;
+            }
+
+            $attributes[$type] = array_values(array_filter($keys, 'is_string'));
+        }
+
+        return $attributes;
     }
 
     /**

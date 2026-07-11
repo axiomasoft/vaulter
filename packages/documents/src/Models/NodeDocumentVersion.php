@@ -82,18 +82,24 @@ class NodeDocumentVersion extends Model
     }
 
     /**
-     * The validated TipTap content of this version (the structural JSON projection).
-     * An empty/invalid snapshot decays to an empty doc rather than throwing on read.
+     * The TipTap content of this version (the structural JSON projection).
+     *
+     * READING NEVER THROWS (VLT-REMED D29 / R-01). A snapshot written before today's
+     * allow-list existed — or by a host extension since switched off — DECAYS: unknown
+     * nodes/marks/attribute keys are stripped and a valid doc comes back. Store-time
+     * validation is the strict gate ({@see TipTapContent::fromArray()}); making the read
+     * path equally strict meant a single legacy document threw on preview, export and in
+     * the listing UI, i.e. an XSS barrier bought at the price of denial of service.
+     *
+     * Attribute VALUES survive the decay by design: a legacy `href="javascript:…"` reaches
+     * the renderer, where the render-time HTML sanitizer (second echelon, D4) neutralises
+     * it — that is the echelon's only real input.
      */
     public function tipTapContent(): TipTapContent
     {
         $content = $this->content;
 
-        if (is_array($content) && ($content['type'] ?? null) === 'doc') {
-            return TipTapContent::fromArray($content);
-        }
-
-        return TipTapContent::empty();
+        return is_array($content) ? TipTapContent::decayFrom($content) : TipTapContent::empty();
     }
 
     /**

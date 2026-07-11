@@ -223,6 +223,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | TipTap content schema — the store-time allow-list seam (D27 / D28)
+    |--------------------------------------------------------------------------
+    | Vaulter validates rich-text content against a CLOSED allow-list of node types,
+    | mark types and per-type attributes before it is stored (F-P1.11-01/-02): an
+    | unknown node, an unlisted attribute or a non-http(s)/mailto URL rejects the whole
+    | document. The canon shipped in ValueObjects\Documents\TipTapContent covers exactly
+    | what this package offers the editor through #[TiptapExtensions] (StarterKit, Image,
+    | Table, Link, CodeBlock).
+    |
+    | If you mount your OWN Tiptap extensions in the editor, declare their nodes/marks/
+    | attributes here — otherwise the content they produce cannot be saved.
+    |
+    | The seam is ADDITIVE (D28): these keys only ADD to the canon, they never replace
+    | it — dropping 'doc'/'text' from the list would silently break every save, and
+    | "overriding" the attribute allow-list is a classic way to hand yourself an XSS.
+    | For the same reason URL-bearing attributes ('link.href', 'image.src') are ALWAYS
+    | scheme-checked (http/https/mailto) no matter what you put here.
+    |
+    | Example:
+    |   'extra_nodes' => ['mention', 'taskList', 'taskItem'],
+    |   'extra_marks' => ['highlight'],
+    |   'extra_attributes' => ['mention' => ['id', 'label'], 'taskItem' => ['checked']],
+    */
+    'tiptap' => [
+        'extra_nodes' => [],
+        'extra_marks' => [],
+        'extra_attributes' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenancy
     |--------------------------------------------------------------------------
     | When enabled the migrations add a tenant column. Vaulter does not scope
@@ -636,9 +667,11 @@ return [
             // by default — the guard stays closed until a host opts in.
             'allowed_ip_ranges' => [],
 
-            // Follow HTTP redirects? Off by default: a public receiver must not 302 the
-            // request onto an internal address.
-            'follow_redirects' => false,
+            // NB: there is deliberately no 'follow_redirects' key (VLT-REMED D30 / R-05).
+            // Redirects are NEVER followed: the IP pin above covers the original host only,
+            // so a receiver answering `302 Location: http://169.254.169.254/…` would send the
+            // delivery to the metadata service through a fresh, unguarded DNS resolve. A
+            // config flag that turns a security barrier off is a mine, not flexibility.
 
             // TCP connect timeout (seconds) — a fast fail on an unreachable host.
             'connect_timeout' => 2,
