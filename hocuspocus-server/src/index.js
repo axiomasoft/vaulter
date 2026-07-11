@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { Hocuspocus } from '@hocuspocus/server'
+import { Server } from '@hocuspocus/server'
 import { Throttle } from '@hocuspocus/extension-throttle'
 import { createServer } from 'node:http'
 import { config, isOriginAllowed, validateConfig } from './config.js'
@@ -213,13 +213,15 @@ async function onStoreDocument({ documentName, state, document, context, lastCon
 }
 
 /**
- * The hardened `ws` server options. maxPayload caps the frame size (the `ws` default is
- * ~100 MiB, far too high for incremental Yjs updates); perMessageDeflate off trims attack
- * surface and CPU. In @hocuspocus/server v2.x these are honoured ONLY as the 3rd argument
- * of `server.listen()` — a `websocketOptions` config KEY on the Hocuspocus constructor is
- * silently ignored (it only became a config key in v4), so passing it there is a no-op that
- * leaves the limits at the library defaults. Keep this as the single source so boot() and
- * the test exercise the exact same options.
+ * The hardened WebSocket transport options. maxPayload caps the frame size (the underlying
+ * `ws` default is ~100 MiB, far too high for incremental Yjs updates); perMessageDeflate off
+ * trims attack surface and CPU. In @hocuspocus/server v4 the transport moved to `crossws`,
+ * and these options are wired through the `websocketOptions` config KEY on the `Server`
+ * constructor — the Server forwards them verbatim to `crossws({ serverOptions })`, i.e. to
+ * the real ws.WebSocketServer. (In the retired v2 they had to be smuggled through the 3rd
+ * argument of `Hocuspocus.listen()`; the config key was a silent no-op there. The bump makes
+ * the config key the single, honoured path.) Keep this as the single source so buildServer()
+ * and the hardening test exercise the exact same options.
  */
 export function websocketOptions() {
   return {
@@ -229,18 +231,21 @@ export function websocketOptions() {
 }
 
 /**
- * Build the Hocuspocus server with the hardened configuration. name/timeout/debounce/
- * maxDebounce/quiet are production-tuned via env. The WebSocket frame limits are applied at
- * listen() time (see websocketOptions + boot), not here — v2.x ignores them on the config.
+ * Build the Hocuspocus `Server` with the hardened configuration. name/timeout/debounce/
+ * maxDebounce/quiet are production-tuned via env. In v4 the WebSocket frame limits are wired
+ * via the `websocketOptions` config key (forwarded to the crossws transport) — no longer via
+ * listen()'s 3rd argument. `Server` owns the HTTP server + upgrade handling; the core
+ * `Hocuspocus` class it wraps no longer exposes listen().
  */
 async function buildServer() {
-  return new Hocuspocus({
+  return new Server({
     name: config.instanceName,
     port: config.port,
     timeout: config.timeout,
     debounce: config.debounce,
     maxDebounce: config.maxDebounce,
     quiet: config.quiet,
+    websocketOptions: websocketOptions(),
     extensions: await buildExtensions(),
     onConnect,
     onAuthenticate,
@@ -311,9 +316,10 @@ async function boot() {
   startHealthEndpoint()
 
   const server = await buildServer()
-  // ws options (maxPayload / perMessageDeflate) MUST be passed here — v2.x only reads them
-  // from listen()'s 3rd arg, not the Hocuspocus config (see websocketOptions).
-  await server.listen(config.port, undefined, websocketOptions())
+  // The ws frame limits (maxPayload / perMessageDeflate) are already wired via the
+  // `websocketOptions` config key in buildServer() — v4 forwards them to the crossws
+  // transport, so listen() no longer needs (or accepts) them as an argument.
+  await server.listen()
   // eslint-disable-next-line no-console
   console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port}`)
 

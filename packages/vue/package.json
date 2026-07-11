@@ -51,7 +51,7 @@
     "yjs": "^13.6"
   },
   "dependencies": {
-    "@hocuspocus/provider": "^2.13",
+    "@hocuspocus/provider": "^4.3",
     "@tiptap/extension-link": "^3.0.0",
     "@tiptap/starter-kit": "^3.0.0",
     "@tiptap/vue-3": "^3.0.0"

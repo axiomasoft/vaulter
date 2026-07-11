@@ -12,7 +12,7 @@
     "test:headed": "playwright test --headed"
   },
   "dependencies": {
-    "@hocuspocus/provider": "^2.15",
+    "@hocuspocus/provider": "^4.3",
     "@tiptap/extension-collaboration": "^3.0.0",
     "@tiptap/pm": "^3.0.0",
     "@tiptap/starter-kit": "^3.0.0",
