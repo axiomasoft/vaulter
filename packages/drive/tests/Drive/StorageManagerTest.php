@@ -9,7 +9,6 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\Tests\Fixtures\Panels\TeamStoragePanel;
 
 /**
  * Vaulter::for($entity) get-or-creates the storage idempotently and provisions a
@@ -44,19 +43,8 @@ it('идемпотентен: второе обращение возвращае
         ->and(Node::query()->where('kind', NodeKind::Folder->value)->count())->toBe(1);
 });
 
-it('разводит storage по разным панелям одного владельца', function (): void {
-    config()->set('vaulter.panels', [TeamStoragePanel::class]);
-
-    $host = DriveTestHelpers::host();
-
-    $default = Vaulter::for($host, 'default')->storage();
-    $team = Vaulter::for($host, 'team')->storage();
-
-    expect($team->getKey())->not->toEqual($default->getKey())
-        ->and($team->panel)->toBe('team')
-        ->and($team->storage_type)->toBe('public')
-        ->and(Storage::query()->count())->toBe(2);
-});
+// Разведение storage по панелям переехало в StoragePanelSeparationTest: панель обязана быть
+// в конфиге ДО boot'а (PanelRegistry резолвится в packageBooted с P4.4) — см. PanelTestCase.
 
 it('применяет дефолтный диск из конфига к новому storage', function (): void {
     config()->set('vaulter.storage.default_disk', 'spaces');

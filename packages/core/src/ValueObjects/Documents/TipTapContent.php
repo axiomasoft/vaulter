@@ -67,13 +67,26 @@ final readonly class TipTapContent implements DocumentContent
      * them (`heading.level`) or where they are a security primitive (`link.href`,
      * `image.src` — URL schemes).
      *
+     * The unit here is the attribute set an extension SERIALIZES, not its name (VLT-REMED
+     * P5.2). Syncing the canon to extension names alone left the list one attribute short and
+     * reopened R-01 on the write path: ProseMirror's `toJSON()` dumps a node's WHOLE attrs bag
+     * — every key the extension's `addAttributes()` declares, defaults and `null`s included —
+     * so anything the extension declares but this list omits rejects the document outright.
+     * Two real cases from the shipped extensions (`@tiptap/extension-link ^3`,
+     * `@tiptap/starter-kit ^3`): Link declares `class` alongside href/target/rel, so ANY
+     * document containing a link could not be saved; OrderedList declares `start` and `type`.
+     *
+     * So: when a node/mark is added here, take its attribute set from the extension's
+     * `addAttributes()`, not from the subset this package's renderer happens to read.
+     *
      * @var array<string, list<string>>
      */
     private const array CANONICAL_ATTRIBUTES = [
         'heading' => ['level'],
-        'link' => ['href', 'target', 'rel'],
+        'link' => ['href', 'target', 'rel', 'class'],
         'image' => ['src', 'alt', 'title'],
         'codeBlock' => ['language'],
+        'orderedList' => ['start', 'type'],
         'tableCell' => ['colspan', 'rowspan', 'colwidth'],
         'tableHeader' => ['colspan', 'rowspan', 'colwidth'],
     ];

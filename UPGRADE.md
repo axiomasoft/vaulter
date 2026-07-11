@@ -122,6 +122,10 @@ it.
   throws `UploadConflictException` rather than forcing a terminal session back to `uploading`.
 - The Postgres advisory-lock key is now 64-bit (`hashtextextended`), so two different `upload_id`s
   no longer collide into a bogus 409.
+- **MySQL/MariaDB:** the session lock is now `SELECT … FOR UPDATE **NOWAIT**` (it was a plain,
+  blocking `FOR UPDATE`). "I could not take the lock" is an immediate answer on every engine now,
+  as the contract above already claimed. Needs **MySQL 8** / **MariaDB 10.3+** — both already the
+  floor in [database compatibility](docs/guide/database-compatibility.md).
 
 **Why.** The sweeper reclaimed sessions with no lock at all: it could delete the staged object
 between a live `PATCH`'s "read offset" and its "append", after which the `PATCH` wrote its chunk on
@@ -134,6 +138,30 @@ now throw `UploadConflictException`.
 
 **What you must check.** Wrap direct `abort()`/`expire()` calls in a `UploadConflictException`
 handler (surface a 409 / retry later). Clients must treat a 409 as "re-read `HEAD` and resume".
+
+### Panels are read at boot, not on first use (P4.4 / F-P3.2-01)
+
+**What changed.** `PanelRegistry` is now resolved during `VaulterServiceProvider::packageBooted()`,
+so every panel in `config('vaulter.panels')` is validated at **boot**. A panel with a bad model /
+pipe / resource FQCN — or a per-panel id strategy on the shared schema — now throws
+`InvalidPanelException` while the app boots (including under `config:cache`, `route:cache` and
+artisan commands), instead of surfacing on the first live request that happened to touch it.
+
+**Why.** That is what the ADR and `InvalidPanelException`'s own docblock always promised. A broken
+panel that only explodes on some later request is a landmine, not a config error.
+
+**Who is affected.** Anyone who registered a panel by writing `config('vaulter.panels')` **after the
+framework had booted** — most often a test that did `config()->set('vaulter.panels', [...])` inside
+the test body. The registry has already read the config by then, so the write is not picked up and
+the panel resolves as `UnknownPanelException`.
+
+**What you must check.** Panels must be in the config **before boot** — a config file, or (in tests)
+Testbench's `defineEnvironment()`. If you genuinely need to add a panel at runtime, use the seam
+built for it:
+
+```php
+app(\Vaulter\Panels\PanelRegistry::class)->registerProvider(new MyStoragePanel);
+```
 
 ### Raw-text/nosniff and rate-limit hardening on downloads and uploads (P1.1, P1.3 / F-P1.3-04, F-P1.11-03, F-P1.8-01, F-P1.4-09)
 

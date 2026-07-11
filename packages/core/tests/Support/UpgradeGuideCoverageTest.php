@@ -63,3 +63,23 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTapRenderer.php')],
     ];
 });
+
+/*
+ * Эта секция UPGRADE.md отсутствовала, и пробел стоил красного CI: P4.4 сделал резолв
+ * PanelRegistry эагерным (fail-loud на boot'е), а вместе с ним отнял у хоста возможность
+ * дописать панель в конфиг ПОСЛЕ boot'а — host-видимое изменение поведения, о котором дока
+ * молчала. Guard держит оба конца: факт в коде (резолв в packageBooted) и запись про него.
+ */
+it('UPGRADE.md документирует, что панели читаются на boot\'е — и резолв действительно там', function (): void {
+    $provider = (string) file_get_contents(dirname(__DIR__, 3).'/core/src/VaulterServiceProvider.php');
+
+    // Факт кода: реестр резолвится в packageBooted(), а не лениво на первом обращении.
+    $booted = substr($provider, (int) strpos($provider, 'public function packageBooted'));
+
+    expect($booted)->toContain('$this->app->make(PanelRegistry::class)');
+
+    // …и дока про это говорит — вместе с рантайм-швом на замену.
+    expect(upgradeGuide())
+        ->toContain('### Panels are read at boot, not on first use')
+        ->toContain('registerProvider');
+});

@@ -135,6 +135,45 @@ it('store-time allow-list принимает характерный узел К�
     expect($checked)->toBeGreaterThan(0);
 });
 
+/*
+ * Тест выше берёт пробы ВРУЧНУЮ — а значит, структурно не ловит дрейф АТРИБУТОВ: он пишет
+ * link только с href, и что редактор шлёт что-то ещё, узнать неоткуда.
+ *
+ * А шлёт он ВЕСЬ мешок: ProseMirror-овский toJSON() выгружает все ключи, объявленные в
+ * addAttributes() расширения, вместе с дефолтами и null'ами. Пробы ниже — форма, которую
+ * сериализует РЕАЛЬНЫЙ редактор на тех версиях, что пакет и отгружает (@tiptap/extension-link
+ * ^3, @tiptap/starter-kit ^3): у Link это href/target/rel/class, у OrderedList — start/type.
+ * До фикса allow-list синхронизировали с ИМЕНАМИ extension'ов, а не с их атрибутами, и на
+ * `class` он спотыкался: ЛЮБОЙ документ со ссылкой было невозможно сохранить — R-01 ровно на
+ * один атрибут в сторону.
+ *
+ * Ограничение (честно): node_modules этой среде недоступен, поэтому пробы сняты с
+ * документированного addAttributes() расширений, а не с живого round-trip'а редактора.
+ */
+it('store-time allow-list принимает АТРИБУТЫ, которые extension реально сериализует, R-01', function (array $node): void {
+    expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$node]]))
+        ->not->toThrow(InvalidTipTapContentException::class);
+})->with([
+    'Link: весь мешок марки, включая class=null' => [[
+        'type' => 'paragraph',
+        'content' => [[
+            'type' => 'text',
+            'text' => 'x',
+            'marks' => [['type' => 'link', 'attrs' => [
+                'href' => 'https://x.test',
+                'target' => '_blank',
+                'rel' => 'noopener noreferrer nofollow',
+                'class' => null,
+            ]]],
+        ]],
+    ]],
+    'OrderedList: start + type' => [[
+        'type' => 'orderedList',
+        'attrs' => ['start' => 1, 'type' => null],
+        'content' => [['type' => 'listItem', 'content' => [['type' => 'paragraph', 'content' => []]]]],
+    ]],
+]);
+
 // ─── D28 — аддитивный конфиг-шов allow-list ────────────────────────────────
 
 it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты хоста в allow-list, R-01', function (): void {

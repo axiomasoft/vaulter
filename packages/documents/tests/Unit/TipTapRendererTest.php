@@ -305,6 +305,83 @@ it('markdown-экспорт НЕ печатает HTML-сущности: & в UR
         ->and($markdown)->not->toContain('&amp;');
 });
 
+// ─── P5.2 — code-span и таблица: два пути в обход escapeMarkdown ─────────────
+
+/*
+ * Ветка `code` — единственная, которая НЕ проходит через escapeMarkdown (внутри code-span
+ * бэкслеши литеральны), и потому выпускала текст СЫРЫМ. Спан инертен ровно до тех пор, пока
+ * он смыкается, а пустая строка закрывает не спан, а весь АБЗАЦ: всё, что после неё, падает
+ * в .md как markup верхнего уровня. Store-time такой payload принимает — это легитимный
+ * ТЕКСТ, а не инъекция на уровне TipTap-JSON. Ровно класс F-P1.11-04 / R-04, который
+ * соседняя ветка text экранированием `<`/`>` и закрывает.
+ */
+it('markdown-экспорт: code-марка не выпускает сырой HTML через разрыв абзаца, R-04', function (): void {
+    $doc = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'paragraph',
+            'content' => [[
+                'type' => 'text',
+                'text' => "a\n\n<script>alert(1)</script>",
+                'marks' => [['type' => 'code']],
+            ]],
+        ]],
+    ]);
+
+    $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
+    $span = trim($markdown);
+
+    // До фикса: "`a\n\n<script>alert(1)</script>`" — пустая строка рвала абзац, спан не
+    // смыкался, и <script> выходил в .md ЖИВЫМ блоком сырого HTML.
+    expect($markdown)->not->toContain("\n\n")
+        // Ровно ОДИН сомкнутый code-span на весь вывод…
+        ->and(substr_count($span, '`'))->toBe(2)
+        ->and($span)->toStartWith('`')
+        ->and($span)->toEndWith('`')
+        // …и payload целиком внутри него — а значит инертен.
+        ->and($span)->toContain('<script>alert(1)</script>');
+});
+
+/*
+ * Пайп экранировался ДВАЖДЫ: escapeMarkdown уже отдаёт `\|`, а ячейка сверху делала
+ * str_replace('|', '\|') → `\\|`. GFM читает `\\` как экранированный обратный слэш, а
+ * следующий `|` — как ЖИВОЙ разделитель: ячейка разваливается на лишнюю колонку и сдвигает
+ * все следующие. Та самая column-injection, которую комментарий обещал предотвращать.
+ */
+it('markdown-экспорт: `|` в ячейке не добавляет колонку, R-04', function (): void {
+    $cell = static fn (string $type, string $text, bool $code = false): array => [
+        'type' => $type,
+        'content' => [['type' => 'paragraph', 'content' => [
+            ['type' => 'text', 'text' => $text] + ($code ? ['marks' => [['type' => 'code']]] : []),
+        ]]],
+    ];
+
+    $doc = TipTapContent::fromArray([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'table',
+            'content' => [
+                ['type' => 'tableRow', 'content' => [$cell('tableHeader', 'h1'), $cell('tableHeader', 'h2')]],
+                ['type' => 'tableRow', 'content' => [$cell('tableCell', 'a|b'), $cell('tableCell', 'c')]],
+                // code-span — вторая дорога в ячейку мимо escapeMarkdown.
+                ['type' => 'tableRow', 'content' => [$cell('tableCell', 'x|y', code: true), $cell('tableCell', 'z')]],
+            ],
+        ]],
+    ]);
+
+    $markdown = app(TipTapRenderer::class)->toMarkdown($doc);
+
+    // Двойного экранирования нет ни на одном пути…
+    expect($markdown)->not->toContain('\\\\|')
+        ->and($markdown)->toContain('| a\|b | c |')
+        ->and($markdown)->toContain('| `x\|y` | z |');
+
+    // …и каждая строка таблицы несёт РОВНО две колонки (заголовок задаёт ширину).
+    foreach (explode("\n", trim($markdown)) as $line) {
+        expect(substr_count($line, '|') - substr_count($line, '\|'))->toBe(3, "строка таблицы сломана: [{$line}]");
+    }
+});
+
 it('keeps a valid link and drops disallowed link schemes in markdown export, F-P1.11-04', function (): void {
     $doc = TipTapContent::fromArray([
         'type' => 'doc',

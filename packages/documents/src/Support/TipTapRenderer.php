@@ -210,9 +210,17 @@ final class TipTapRenderer
     }
 
     /**
-     * A GFM pipe table. The first row is the header (TipTap puts `tableHeader` cells there);
-     * cell text is markdown-escaped, and any `|` inside it is escaped too, so a cell can
-     * never add a column.
+     * A GFM pipe table. The first row is the header (TipTap puts `tableHeader` cells there).
+     *
+     * The cell does NOT re-escape the pipe (VLT-REMED P5.2): {@see escapeMarkdown()} already
+     * emits `\|`, and a second `str_replace('|', '\|')` on top of it produced `\\|` — which
+     * GFM reads as an escaped BACKSLASH followed by a LIVE delimiter, splitting the cell into
+     * an extra column and shifting every column after it. The escaping lives in exactly one
+     * place; the one path that cannot take a backslash escape (a code span) neutralises its
+     * own pipe — see {@see markdownCodeSpan()}.
+     *
+     * A newline inside a cell would end the row just as surely as a pipe would add a column,
+     * so cells are flattened to a single line.
      *
      * @param list<array<string, mixed>> $rows
      */
@@ -222,7 +230,7 @@ final class TipTapRenderer
 
         foreach ($rows as $index => $row) {
             $cells = array_map(
-                fn (array $cell): string => str_replace('|', '\|', trim($this->markdownInline($this->children($cell)))),
+                fn (array $cell): string => $this->singleLine(trim($this->markdownInline($this->children($cell)))),
                 $this->children($row),
             );
 
@@ -294,9 +302,7 @@ final class TipTapRenderer
                 'bold' => sprintf('**%s**', $text),
                 'italic' => sprintf('*%s*', $text),
                 'strike' => sprintf('~~%s~~', $text),
-                // Inside a code span the backslashes of markdown-escaping would show up
-                // literally — a code span is already inert, so the RAW text belongs here.
-                'code' => sprintf('`%s`', str_replace('`', '', $raw)),
+                'code' => $this->markdownCodeSpan($raw),
                 'underline' => sprintf('<u>%s</u>', $text),
                 'link' => $this->markdownLink($text, $this->stringValue($this->attrs($mark), 'href')),
                 default => $text,
@@ -304,6 +310,43 @@ final class TipTapRenderer
         }
 
         return $text;
+    }
+
+    /**
+     * An inline code span.
+     *
+     * A code span is inert — but ONLY while it actually closes, and backslash escapes are
+     * LITERAL inside one, so the text cannot simply be run through {@see escapeMarkdown()}.
+     * That left the branch emitting RAW text, and two characters can prise the span open
+     * (VLT-REMED P5.2):
+     *
+     *  - a BACKTICK closes it early (stripped, as before);
+     *  - a BLANK LINE ends the enclosing paragraph outright, so everything after it lands in
+     *    the document as top-level markup. That is how `a\n\n<script>alert(1)</script>` with
+     *    a `code` mark — which store-time validation accepts, it is legitimate TEXT — left
+     *    the span behind and emitted a LIVE raw-HTML block into the exported `.md`, exactly
+     *    the F-P1.11-04 class the sibling text branch escapes `<`/`>` to prevent. Newlines
+     *    are collapsed to spaces: the span always closes on the line it opened on.
+     *
+     * The pipe is the third: a raw `|` inside a table cell adds a column, and this branch is
+     * the one that bypasses {@see escapeMarkdown()}. `\|` is GFM's documented way to carry a
+     * pipe through a cell — including inside an inline span — so it is escaped here, at the
+     * cost of a literal `\|` when a code span outside a table happens to contain one.
+     */
+    private function markdownCodeSpan(string $raw): string
+    {
+        $inline = str_replace(['`', '|'], ['', '\|'], $this->singleLine($raw));
+
+        return $inline === '' ? '' : sprintf('`%s`', $inline);
+    }
+
+    /**
+     * Collapse the line terminators that would break out of an inline construct (a code span,
+     * a table row) into spaces.
+     */
+    private function singleLine(string $value): string
+    {
+        return str_replace(["\r\n", "\r", "\n"], ' ', $value);
     }
 
     /**

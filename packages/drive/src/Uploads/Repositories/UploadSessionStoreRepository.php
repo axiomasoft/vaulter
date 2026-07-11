@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads\Repositories;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
@@ -45,13 +46,22 @@ final class UploadSessionStoreRepository
      * act on — never the possibly-stale argument model (that would take the lock but
      * act on old data, defeating it).
      *
-     *  - pgsql : a NON-BLOCKING advisory lock keyed by upload_id (the same
-     *            pg_advisory_xact_lock seam BlobStore uses, in its try_ form). A
-     *            PATCH that cannot take it because another is in-flight is REJECTED
-     *            immediately with a conflict rather than made to wait — a retry storm
-     *            must not pile up blocked requests (§N3). The lock releases at
-     *            COMMIT/ROLLBACK.
-     *  - mysql : SELECT … FOR UPDATE on the row (the portable pessimistic path).
+     * The lock is NON-BLOCKING on every engine that has one, because "I could not take
+     * the lock" is a first-class ANSWER here, not a delay to sit out: a PATCH turns it
+     * into an immediate 409 instead of piling up blocked requests behind a retry storm
+     * (§N3), and the sweeper turns it into "skip, this session is alive" (R-02).
+     *
+     *  - pgsql : pg_try_advisory_xact_lock keyed by upload_id (the same advisory-lock
+     *            seam BlobStore uses, in its try_ form). Releases at COMMIT/ROLLBACK.
+     *  - mysql : SELECT … FOR UPDATE NOWAIT on the row (MySQL 8 / MariaDB 10.3, the
+     *            engines the compatibility guide declares). A plain blocking
+     *            lockForUpdate() here silently broke the contract above on MySQL alone
+     *            (VLT-REMED P5.2): the sweeper never got its UploadConflictException, it
+     *            WAITED on the PATCH's row lock instead and, at innodb_lock_wait_timeout,
+     *            threw a raw QueryException — which SweepUploadsCommand does not catch, so
+     *            one live upload aborted the whole scheduled sweep and left every remaining
+     *            stale session unswept. NOWAIT fails instantly and is mapped, below, onto
+     *            the same conflict the other engines raise.
      *  - sqlite: no row lock, but the single-writer transaction serialises the
      *            critical section, so the fresh read alone is correct.
      *
@@ -81,27 +91,55 @@ final class UploadSessionStoreRepository
                 throw UploadConflictException::forSession($session->upload_id);
             }
 
-            return $this->freshSession($session, lock: false);
+            return $this->freshSession($session, lock: null);
         }
 
-        // MySQL: a real FOR UPDATE row lock. SQLite: single-writer serialises, so the
-        // fresh read is enough (lockForUpdate is a harmless no-op there anyway).
-        return $this->freshSession($session, lock: $driver !== 'sqlite');
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            try {
+                return $this->freshSession($session, lock: 'for update nowait');
+            } catch (QueryException $e) {
+                if (!$this->isLockNotAvailable($e)) {
+                    throw $e;
+                }
+
+                throw UploadConflictException::forSession($session->upload_id);
+            }
+        }
+
+        // SQLite: single-writer serialises the critical section, so the fresh read is enough.
+        return $this->freshSession($session, lock: null);
     }
 
     /**
-     * Re-read the session row inside the current transaction, optionally FOR UPDATE.
+     * Re-read the session row inside the current transaction, optionally under a lock
+     * clause (a raw clause, not lockForUpdate(): NOWAIT has no builder shorthand).
      */
-    private function freshSession(UploadSession $session, bool $lock): UploadSession
+    private function freshSession(UploadSession $session, ?string $lock): UploadSession
     {
         $model = UploadModels::session();
         $query = $model::query()->whereKey($session->getKey());
 
-        if ($lock) {
-            $query->lockForUpdate();
+        if ($lock !== null) {
+            $query->lock($lock);
         }
 
         return $query->firstOrFail();
+    }
+
+    /**
+     * Did MySQL/MariaDB refuse the row lock because someone else holds it — as opposed to
+     * failing for a real reason (missing table, dead connection), which must NOT be dressed
+     * up as a conflict and swallowed by the sweeper.
+     *
+     *  - 3572 ER_LOCK_NOWAIT      — MySQL 8: "lock(s) could not be acquired immediately".
+     *  - 1205 ER_LOCK_WAIT_TIMEOUT — what MariaDB raises for the same NOWAIT refusal, and
+     *    what a host that pinned an engine without NOWAIT would hit on its lock timeout.
+     */
+    private function isLockNotAvailable(QueryException $e): bool
+    {
+        $code = $e->errorInfo[1] ?? null;
+
+        return $code === 3572 || $code === 1205;
     }
 
     /**
