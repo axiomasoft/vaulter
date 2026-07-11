@@ -46,6 +46,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $package
             ->name('vaulter')
             ->hasConfigFile()
+            ->hasTranslations()
             ->discoversMigrations()
             ->runsMigrations()
             ->hasRoute('api')

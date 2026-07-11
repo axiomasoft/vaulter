@@ -726,10 +726,22 @@ return [
     |  - allowed_mime: an OPTIONAL mime allowlist. EMPTY = permissive (any mime
     |    accepted, the default). Listing one or more mimes (e.g. 'application/pdf',
     |    'image/*') restricts uploads to that set via Laravel's `mimetypes` rule.
+    |  - name_rules: the shared node-name validation policy ({@see
+    |    \Vaulter\Support\DriveNameRules}), enforced identically by create/rename/
+    |    upload/copy requests (§2.2). max_length is the Laravel `max:` bound;
+    |    no_separators_pattern is the raw (no `regex:` prefix) negated-match pattern
+    |    that rejects a name carrying a path separator — the tree is adjacency-based,
+    |    a name is a single segment, never a path. Defaults reproduce the pre-P4.5
+    |    hardcoded values (255 / `/^[^\/\\]+$/`) — out-of-the-box behaviour does not
+    |    change until a host overrides one of these keys (VLT-REMED P4.5, F-P3.1-01).
     */
     'drive' => [
         'max_upload_kb' => null,
         'allowed_mime' => [],
+        'name_rules' => [
+            'max_length' => 255,
+            'no_separators_pattern' => '/^[^\/\\\\]+$/',
+        ],
     ],
 
     /*

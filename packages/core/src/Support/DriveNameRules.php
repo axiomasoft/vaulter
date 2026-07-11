@@ -10,21 +10,26 @@ namespace Vaulter\Support;
  * tree is adjacency-based — a name is a single segment, never a path). Kept in
  * one place so create/rename/upload/copy enforce the exact same rule and surface
  * the same message.
+ *
+ * The length bound and separator pattern are a config seam (P4.5 / F-P3.1-01):
+ * {@see Config::driveNameMaxLength()}/{@see Config::driveNameSeparatorsPattern()}
+ * read `config('vaulter.drive.name_rules')` — a host with a different naming
+ * policy points that config at its own values (published in `config/vaulter.php`)
+ * instead of forking this file. The class stays `final` and the DEFAULT values
+ * are unchanged (255 / no-slash-or-backslash) — only the source of truth moved
+ * from a hardcoded constant to config, out-of-the-box behaviour is identical.
  */
 final class DriveNameRules
 {
-    /**
-     * The reject pattern: any forward/back slash makes a name a path, not a
-     * segment. The leading `!` negates the regex match for Laravel's `regex` rule.
-     */
-    private const string NO_SEPARATORS = 'regex:/^[^\/\\\\]+$/';
-
     /**
      * @return list<string>
      */
     public static function rules(): array
     {
-        return ['required', 'string', 'max:255', self::NO_SEPARATORS];
+        $maxLength = Config::driveNameMaxLength();
+        $pattern = Config::driveNameSeparatorsPattern();
+
+        return ['required', 'string', "max:{$maxLength}", "regex:{$pattern}"];
     }
 
     /**
@@ -33,7 +38,7 @@ final class DriveNameRules
     public static function messages(): array
     {
         return [
-            'name.regex' => 'The name must not contain path separators (/ or \\).',
+            'name.regex' => trans('vaulter::validation.name_no_separators'),
         ];
     }
 }

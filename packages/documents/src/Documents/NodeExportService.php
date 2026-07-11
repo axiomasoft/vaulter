@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Documents;
 
 use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Enums\Capability;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Repositories\NodeDocumentVersionReadRepository;
@@ -24,6 +25,14 @@ use Vaulter\VaulterManager;
  * The existing HtmlExporter/MarkdownExporter are reused verbatim — the node-attached
  * path only adds the node→TipTapContent resolution. Heavy converters (PDF/DOCX) stay
  * a registerable seam; this service routes to whatever exporter is registered.
+ *
+ * The export filename scheme is a container seam, not an inheritance one (P4.5 /
+ * F-P3.1-04): this class stays `final` (H.5, `ArchTest::the_document_handler_
+ * registry_and_its_handlers_are_final` covers the whole `Vaulter\Documents\
+ * Documents` namespace — un-finalising it would weaken a P4.1 anti-self-deception
+ * gate) — the filename is delegated to the injected {@see ExportFilenameResolver},
+ * which a host rebinds to its own implementation for a different naming scheme
+ * (e.g. `{name}-v{version}.{ext}`) instead of forking this file.
  */
 final class NodeExportService
 {
@@ -32,6 +41,7 @@ final class NodeExportService
         private readonly DocumentHandlerRegistry $handlers,
         private readonly VaulterManager $manager,
         private readonly DocumentFileDescriptorFactory $descriptors,
+        private readonly ExportFilenameResolver $filenames,
     ) {}
 
     /**
@@ -52,7 +62,7 @@ final class NodeExportService
             format: $exporter->format(),
             content: $exporter->export($content),
             mimeType: $exporter->mimeType(),
-            filename: $this->filenameFor($node, $exporter->extension()),
+            filename: $this->filenames->resolve($node, $exporter->extension()),
         );
     }
 
@@ -81,13 +91,5 @@ final class NodeExportService
         $head = $this->versions->head($node) ?? $this->versions->latest($node);
 
         return $head?->tipTapContent() ?? TipTapContent::empty();
-    }
-
-    private function filenameFor(Node $node, string $extension): string
-    {
-        $base = pathinfo($node->name, PATHINFO_FILENAME);
-        $base = $base === '' ? 'document' : $base;
-
-        return $base.'.'.$extension;
     }
 }

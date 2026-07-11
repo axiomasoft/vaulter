@@ -6,6 +6,39 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Node-name policy is now a config seam; the reject message is now a lang key; `NodeExportService` takes a new constructor dependency (P4.5 / F-P3.1-01, F-P3.1-02, F-P3.1-04)
+
+**What changed.**
+
+1. `DriveNameRules::rules()`/`messages()` (the shared name validation for
+   create/rename/upload/copy Drive requests) now read `config('vaulter.drive.name_rules.
+   max_length')` and `config('vaulter.drive.name_rules.no_separators_pattern')` instead of
+   hardcoding `255` and the slash-reject regex. Defaults are byte-identical to the previous
+   hardcode — a host that never touches this config key sees no behaviour change.
+2. The reject message (`'The name must not contain path separators (/ or \\).'`) is now
+   resolved through `trans('vaulter::validation.name_no_separators')` (a new package lang
+   file, publishable via `--tag=vaulter-translations`) instead of an inline string literal.
+   Default text is unchanged.
+3. `Vaulter\Documents\Documents\NodeExportService` (the node-attached document export path)
+   gains a new constructor dependency, `Vaulter\Documents\Contracts\Export\
+   ExportFilenameResolver`, bound by `VaulterDocumentsServiceProvider` to a new
+   `DefaultExportFilenameResolver` that reproduces the pre-P4.5 filename scheme (node
+   basename + exporter extension) unchanged. The class stays `final` (it is covered by the
+   `Vaulter\Documents\Documents`-namespace `ArchTest` finality gate, P4.1/H.5) — a host
+   wanting a different export filename scheme rebinds `ExportFilenameResolver` in its own
+   provider instead of subclassing.
+
+**Why.** F-P3.1-01/02 (Minor/Nit): the name policy and its message were hardcoded in a
+`final` class with no config/lang seam, forcing a host with a different naming policy or
+locale to fork the file. F-P3.1-04 (Minor): the export filename scheme was a `private`
+method on the same `final` class — no override path existed at all.
+
+**Who is affected.** Config/lang consumers: nobody unless they now explicitly opt into a
+custom `name_rules`/translation — defaults are unchanged. `NodeExportService` consumers:
+only a host that manually `new`s the class instead of resolving it through the container
+(the documented/only supported way) — container resolution picks up the new dependency
+automatically via the provider's binding.
+
 ### `VaulterManager::for()`/`registerHandler()`/`handlers()` now throw a `MissingPackageException` (not a raw `BindingResolutionException`) when `vaulter-drive`/`vaulter-documents` are absent (P4.4 / F-P3.3-02, F-P3.5-01)
 
 **What changed.** These seams previously let the container's generic

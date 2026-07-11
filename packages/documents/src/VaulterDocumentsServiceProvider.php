@@ -17,9 +17,11 @@ use Vaulter\Contracts\Documents\HandlerRegistry;
 use Vaulter\Contracts\Documents\NodeHandlerResolver as NodeHandlerResolverContract;
 use Vaulter\Documents\Access\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
 use Vaulter\Documents\Documents\NodeHandlerResolver;
+use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
@@ -110,6 +112,13 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         // default DefaultHostUserResolver; a host (or a test) may swap it. Purely
         // documents machinery — core neither defines nor binds it (D2 finding).
         $this->app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
+
+        // The export filename seam (P4.5 / F-P3.1-04): NodeExportService stays
+        // `final` (H.5 arch gate), so a host wanting a different export filename
+        // scheme rebinds this contract to its own class instead of forking the
+        // service. Bound to the pre-P4.5 hardcoded scheme (node basename + exporter
+        // extension) — default behaviour is unchanged.
+        $this->app->bind(ExportFilenameResolver::class, DefaultExportFilenameResolver::class);
 
         // Second echelon of the F-P1.11-01 stored-XSS fix (D4): TipTapRenderer takes
         // the sanitizer through its constructor (never resolved inline from the

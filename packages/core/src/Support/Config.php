@@ -1450,6 +1450,34 @@ final class Config
     }
 
     /**
+     * The max length bound for a Drive node name ({@see \Vaulter\Support\
+     * DriveNameRules}, §2.2, P4.5 / F-P3.1-01). Reads
+     * config('vaulter.drive.name_rules.max_length'), falling back to the
+     * pre-P4.5 hardcoded default (255) when absent or non-numeric.
+     */
+    public static function driveNameMaxLength(): int
+    {
+        $value = config('vaulter.drive.name_rules.max_length', 255);
+
+        return is_numeric($value) ? (int) $value : 255;
+    }
+
+    /**
+     * The reject pattern (no `regex:` prefix) for a Drive node name — any name
+     * matching this negated pattern fails validation ({@see \Vaulter\Support\
+     * DriveNameRules}, §2.2, P4.5 / F-P3.1-01). Reads
+     * config('vaulter.drive.name_rules.no_separators_pattern'), falling back to
+     * the pre-P4.5 hardcoded default (reject forward/back slash) when absent or
+     * non-string.
+     */
+    public static function driveNameSeparatorsPattern(): string
+    {
+        $value = config('vaulter.drive.name_rules.no_separators_pattern', '/^[^\/\\\\]+$/');
+
+        return is_string($value) ? $value : '/^[^\/\\\\]+$/';
+    }
+
+    /**
      * @param  list<string> $default
      * @return list<string>
      */
