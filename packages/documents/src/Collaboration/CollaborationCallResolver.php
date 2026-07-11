@@ -120,15 +120,22 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        if (Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $tolerance) === false) {
-            // The exact same signature was already accepted within the tolerance
-            // window — a replayed request, not a fresh one.
+        $expected = $this->signer->sign(body: $rawBody, secret: $secret, timestamp: $timestamp);
+
+        if (!hash_equals($expected, $presentedSignature)) {
+            // Invalid signature for this exact rawBody — do NOT burn the nonce slot,
+            // otherwise a tampered/mutated delivery under a captured signature would
+            // permanently block a subsequent legitimate delivery of the original body.
             return false;
         }
 
-        $expected = $this->signer->sign(body: $rawBody, secret: $secret, timestamp: $timestamp);
+        if (Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $tolerance) === false) {
+            // The exact same (now verified-valid) signature was already accepted
+            // within the tolerance window — a replayed request, not a fresh one.
+            return false;
+        }
 
-        return hash_equals($expected, $presentedSignature);
+        return true;
     }
 
     /**

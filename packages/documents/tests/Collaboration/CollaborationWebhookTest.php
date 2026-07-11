@@ -318,6 +318,27 @@ it('rejects a store call whose signature was computed over a DIFFERENT body (tam
     test()->postJson('api/vaulter/collab/store', $tamperedBody, $headers)->assertStatus(401);
 });
 
+it('does not burn the nonce for a REJECTED tampered delivery, so the genuine original body still lands after (P3.2 review)', function (): void {
+    $node = webhookDocumentNode();
+
+    $signedBody = [
+        'node_id' => $node->getKey(),
+        'yjs_state' => base64_encode('original-bytes'),
+    ];
+    $headers = signedHeaders($signedBody, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]);
+
+    // An attacker (or a duplicating proxy) races in a body-mutated copy under the
+    // captured signature — correctly rejected (tamper-evidence).
+    $tamperedBody = $signedBody;
+    $tamperedBody['yjs_state'] = base64_encode('swapped-bytes');
+    test()->postJson('api/vaulter/collab/store', $tamperedBody, $headers)->assertStatus(401);
+
+    // The genuine delivery of the ORIGINAL, untampered body under the same
+    // signature must still be accepted — the nonce must only be consumed once the
+    // signature is confirmed valid for the exact rawBody presented, never before.
+    test()->postJson('api/vaulter/collab/store', $signedBody, $headers)->assertOk();
+});
+
 // ── collab/authenticate ─────────────────────────────────────────────────────────────
 
 it('authenticates a good room JWT and answers allowed + readOnly from the ability', function (): void {
