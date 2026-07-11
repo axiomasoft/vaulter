@@ -173,6 +173,52 @@ renderer that relied on the old HTML entities.
 
 **What you must check.** Re-generate any stored Markdown export fixtures.
 
+### `TipTapRenderer` now takes a required constructor dependency (`HtmlSanitizerInterface`) (P0.1 / F-P1.11-01)
+
+**What changed.** `Vaulter\Documents\Support\TipTapRenderer` (the public `final` renderer behind
+`toHtml()`/`toMarkdown()`, documented in `docs/guide/export.md`) gained a constructor:
+
+```php
+// Before — a stateless renderer with no constructor
+$renderer = new TipTapRenderer();
+
+// After
+public function __construct(private readonly HtmlSanitizerInterface $sanitizer) {}
+```
+
+The injected `Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface` is the **second echelon** of
+the stored-XSS fix: `toHtml()` re-sanitizes the rendered HTML on the way out (link schemes limited
+to `http`/`https`/`mailto`, media to `http`/`https`), so content persisted before the store-time
+allow-list existed is scrubbed on render too. `VaulterDocumentsServiceProvider::packageRegistered()`
+binds `HtmlSanitizerInterface` as a singleton, so **container resolution is unaffected** —
+`app(TipTapRenderer::class)`, and any class that constructor-injects `TipTapRenderer` (the pattern
+shown in `docs/guide/export.md`), pick up the dependency automatically.
+
+**Why.** The renderer had to sanitize the HTML it emits, and per the package's DI discipline the
+sanitizer is injected through the constructor rather than resolved from the container inline — the
+same reason `NodeExportService` grew a constructor dependency (see the P4.5 section below).
+
+**Who is affected.** Only a host that manually `new`s the renderer (`new TipTapRenderer()`) instead
+of resolving it through the container (the documented/only supported way) — that call now fatals
+with `ArgumentCountError: Too few arguments to function __construct()`. This is a
+constructor-signature change on a public class, i.e. a pre-1.0 **breaking change** for
+direct-instantiation consumers, shipped without a deprecation cycle.
+
+**What you must do.** Resolve the renderer through the container instead of constructing it
+directly:
+
+```php
+// Before
+$renderer = new TipTapRenderer();
+
+// After
+$renderer = app(\Vaulter\Documents\Support\TipTapRenderer::class);
+```
+
+If you must construct it by hand, pass an `HtmlSanitizerInterface` yourself
+(`app(\Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface::class)` gives you the package's
+configured instance). No config change or database migration is required for this upgrade note.
+
 ### `webhooks.delivery.follow_redirects` is removed — deliveries never follow redirects (P5.2 / R-05)
 
 **What changed.** The config key `vaulter.webhooks.delivery.follow_redirects` is **gone**. Outbound
