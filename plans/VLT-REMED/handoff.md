@@ -1,16 +1,16 @@
-# HANDOFF — 2026-07-11 — after P4.7
+# HANDOFF — 2026-07-11 — after P4.8
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | low (дефолт §Routing — P4.8 механическая docs-drift-сверка, thinking вреден) |
+| Model | opus |
+| Thinking | high — P4.9 закладывает канон структуры пакетов (ADR + arch-тесты), архитектурное решение под D10, opus/high по `plan.md` §Routing |
 | Context | fresh session — handoff свежий, рекомендован /clear |
-| Суть | Исполнить **P4.8 (B19)** строго по ТЗ `phases/P4.md`: механическая синхронизация 9 находок docs-drift (мёртвый `permission_resolver`, удалённый API `facade`/`contracts.md`, 7 недокументированных контрактов, `vaulter:prune-webhooks`, 5 маршрутов Drive, 9 битых якорей `errors.md`, `gc.orphan_grace_hours`, CORS-гайд, PHPStan-level в CONTRIBUTING.md). Doc-guard-инварианты (≥3 с F-id), не рассуждение. |
+| Суть | Исполнить **P4.9**: инвентарь раскладки всех шести PHP-пакетов, ADR `docs/adr/0017-*.md` (канон A, layer-first + доменный под-namespace), arch-тесты (Pest Arch), которые ПРОХОДЯТ на `core` (эталон) и ПАДАЮТ/`todo` на `documents`/`drive` (намеренно — ТЗ объёма P4.10). БЕЗ переноса кода (`git diff --stat packages/*/src` — ПУСТ). |
 
 ```
-/task:plan-exec VLT-REMED P4.8
+/task:plan-exec VLT-REMED P4.9
 ```
 
 **Done:**
@@ -18,7 +18,7 @@
 - **Фаза P1 (W1 — быстрые высоко-эксплуатируемые) ТЕРМИНАЛЬНА (4/4 🟢).**
 - **Фаза P2 (W2 — авторизация и изоляция) ТЕРМИНАЛЬНА (3/3, 🟠 Done with deviations).**
 - **Фаза P3 (W3 — надстройки и интеграция) ТЕРМИНАЛЬНА (6/6 🟢).**
-- **Фаза P4 (W4) В РАБОТЕ (6/10 🟢, 1/10 🔴 Blocked-формально):**
+- **Фаза P4 (W4) В РАБОТЕ (7/10 🟢, 1/10 🔴 Blocked-формально):**
   - **P4.1 (B24 — Supply-chain, CI-матрица, arch- и mutation-гейты) — 🔴 Blocked**
     (коммит `74294e0`), 13 из 14 находок B24 закрыты штатно, заблокирована только
     F-P4.5-02 (hocuspocus-мажор, эскалирован по D6-гарду, `⛔ Skipped by decision`,
@@ -29,87 +29,91 @@
   - **P4.4 (B17 — Молчащие швы: докблок ≠ код) — 🟢 Done** (коммиты `f3b51b7`, `2764d13`).
   - **P4.5 (B18 — Расширяемость швов именования и экспорта) — 🟢 Done** (коммит `4bbaa7f`).
   - **P4.6 (B20 — Гигиена публичного API) — 🟢 Done** (коммит `e4277a3`).
-  - **P4.7 (B21 — Release-readiness и UPGRADE.md) — 🟢 Done** (коммит `e00f82c`):
-    - **F-P2.1-06**: `.github/workflows/monorepo-split.yml` получил шаг «Copy root
-      CHANGELOG.md into packages/${{ matrix.package }}» (`cp CHANGELOG.md
-      packages/${{ matrix.package }}/CHANGELOG.md`) ПЕРЕД `monorepo-split-github-action`
-      — split-репо (Packagist-артефакт) теперь несёт `CHANGELOG.md` в своей
-      subtree-копии. `.changeset/config.json` НЕ тронут — он управляет только
-      npm-changesets, к PHP-split не относится (D23: достаточно конфига пайплайна,
-      не наполнения `CHANGELOG.md`).
-    - **F-P2.1-07**: секция «## Deprecation policy» в `CONTRIBUTING.md` — конкретный
-      срок («`@deprecated` держится ≥1 минорный релиз, удаляется в следующий мажор»),
-      плюс уточнение для pre-1.0 состояния пакета (D3: breaking без депрекейт-цикла
-      до первого `1.0`).
-    - **F-P2.5-07**: `packages/vue/package.json` — `yjs` (`^13.6`) и `@tiptap/pm`
-      (`^3.0.0`) перенесены из `dependencies` в `peerDependencies` (диапазоны
-      неизменны, реально протестированные); оставлены также в `devDependencies`
-      для локальной сборки/тестов пакета. `vue` остаётся peer. `version: "0.0.0"`
-      НЕ тронута (зафиксирована как осознанное состояние, не «баг»).
-    - **F-P2.5-04**: `README.md:67` — «`vaulter:install # publishes config +
-      migrations, runs them`» → «`… asks to run them`» (выровнено с
-      `docs/guide/installation.md:48`).
-    - **Сток `UPGRADE.md`**: грепом `F-P` сверено — все закрытые breaking-находки
-      P0.1–P4.5 присутствуют (46 упоминаний F-id, P4.6 сознательно без записи —
-      behaviour-preserving). Добавлена новая секция (newest-first) про
-      peerDeps-перенос как breaking-последствие для npm-потребителей `@vaulter/vue`.
-    - **Новый тест**: `packages/core/tests/Support/ReleaseReadinessGuardTest.php` —
-      4 green guard-теста (D19, red-before подтверждён `git stash`).
-    - **Node-гейт**: `cd packages/vue && npm run typecheck` (`vue-tsc --noEmit`) —
-      passed; `npm test` (`vitest run`) — 9 файлов/102 теста passed, без регрессии.
-    - Root: `composer test` 461/461 (было 457, +4), `test:types` 100%, `analyse` 0
-      errors, `lint:check` красный ТОЛЬКО на пред-существующем
+  - **P4.7 (B21 — Release-readiness и UPGRADE.md) — 🟢 Done** (коммит `e00f82c`).
+  - **P4.8 (B19 — Docs-drift) — 🟢 Done** (коммит `b5d7751`):
+    - **F-P2.4-01**: `docs/guide/configuration.md:189` — вычищен мёртвый ключ
+      `permission_resolver`; секция «Null driver» дополнена реальным путём
+      (`drivers.permission => 'database'`, с предупреждением про fail-closed на
+      пустом `v_node_grants`).
+    - **F-P2.1-02**: `docs/reference/facade.md` — убраны `resolvePermissionsWith()`,
+      `permissionResolver()`, `driver()` (ни одного метода нет на `VaulterManager`,
+      сверено грепом `public function`). `docs/reference/contracts.md` — убраны
+      `Access\PermissionResolver` и `Collaboration\CollaborationDriver` (legacy),
+      оба подтверждённо отсутствуют в коде.
+    - **F-P2.1-03**: `docs/reference/contracts.md` — добавлены 7 контрактов
+      (`Access\GrantAuthoritativeDriver`, `Cas\ListableContentStore`,
+      `Cas\ListableStorageDriver`, `Documents\DocumentContent`,
+      `Documents\HandlerRegistry`, `Documents\NodeHandlerResolver`,
+      `permissions-azgard`'s `AzgardBackedUser`).
+    - **F-P2.5-01**: `docs/reference/commands.md` — добавлена `vaulter:prune-webhooks`
+      (счётчик команд 9→10, добавлена в «Scheduling», weekly).
+    - **F-P2.5-02**: `docs/reference/rest-api.md` — секция «Comments» (4 маршрута
+      `NodeCommentController`) в Drive-раздел + `comments`/`grants` в таблицу
+      Feature gates. `GET shared` уже был задокументирован ранее (вероятно
+      P4.3/пагинация-фикс) — этот пункт находки был неактуален на момент P4.8.
+    - **F-P2.5-03**: `docs/guide/errors.md` — убран якорь удалённого
+      `DocumentNotFoundException`, добавлены **15** секций (не 9, как оценивал
+      P2.5-аудит — код разошёлся сильнее за P0–P4.7: 21 уникальный
+      `self::docs()`-якорь в коде на дату исполнения против 8 в старой доке;
+      ground truth взят по актуальному грепу, не по числу из finding).
+      `unknown-collaboration-driver` оставлен и переформулирован под актуальный
+      код (`NodeCollaborationDriverManager`, не `Vaulter::driver()`).
+    - **F-P2.5-05**: `docs/reference/configuration.md` — `gc.orphan_grace_hours`.
+    - **F-P1.8-04**: `docs/reference/rest-api.md` — секция «## CORS».
+    - **F-P2.5-08**: `CONTRIBUTING.md:29` — «level 8» → «level max».
+    - **Новый тест**: `packages/core/tests/Support/DocsDriftGuardTest.php` — 10
+      green doc-guard-инвариантов с F-id; red-before подтверждён `git stash`
+      изменённых недоковых файлов (docs/**, CONTRIBUTING.md) + `git stash pop`.
+    - Root: `composer test` 471/471 (было 461, +10), `test:types` 100%, `analyse`
+      0 errors, `lint:check` красный ТОЛЬКО на пред-существующем
       `plans/AUDIT-VLT/artifacts/repro/**` (вне scope), новый файл pint-чист.
-    - Полные Completion Notes — `phases/P4.md` P4.7.
+    - **Known Deviations**: исполнено sonnet/medium вместо sonnet/low из
+      `plan.md` §Routing (модель/effort сессии запинены оркестратором на уровне
+      запуска, не переключались вручную).
+    - Полные Completion Notes — `phases/P4.md` P4.8.
 
 **Remaining:** (порядок исполнения P4)
-1. ~~**P4.1**~~ — исполнен, 🔴 Blocked ТОЛЬКО формально (plan-lint ESCALATION-инвариант).
-2. ~~**P4.2**~~ — исполнен, 🟢 Done.
-3. ~~**P4.3**~~ — исполнен, 🟢 Done.
-4. ~~**P4.4**~~ — исполнен, 🟢 Done.
-5. ~~**P4.5**~~ — исполнен, 🟢 Done.
-6. ~~**P4.6**~~ — исполнен, 🟢 Done.
-7. ~~**P4.7**~~ — исполнен, 🟢 Done.
-8. **P4.8** (B19, sonnet/low) — docs-drift (9 находок, doc-guard-инварианты). **← следующий**.
-9. **P4.9** (opus/high, D10) — канон A: инвентарь + ADR-0017 + arch-тесты (БЕЗ переноса).
-10. **P4.10** (opus/high, D10) — namespace-refactor к канону (gate: P4.9 закрыт; `namespace-refactor-safety`).
+1. ~~**P4.1**~~–~~**P4.8**~~ — исполнены (P4.1 🔴 Blocked-формально, P4.2–P4.8 🟢 Done).
+2. **P4.9** (opus/high, D10) — канон A: инвентарь + ADR-0017 + arch-тесты (БЕЗ переноса). **← следующий**.
+3. **P4.10** (opus/high, D10) — namespace-refactor к канону (gate: P4.9 закрыт; `namespace-refactor-safety`).
 
 Затем **P5** (3 items, СКЕЛЕТ — требует `/task:plan-design VLT-REMED P5`, после P4). Скелет-фаза не
 исполняется напрямую (`plan.md` §Execution Rules).
 
-**Открытый пункт (не блокирует P4.8, требует внимания владельца/будущей сессии):**
+**Открытый пункт (не блокирует P4.9, требует внимания владельца/будущей сессии):**
 **F-P4.5-02** (hocuspocus `2.x→4.x`) остаётся на `⛔ Skipped by decision` — см. ESCALATION-блок
 `phases/P4.md` P4.1 и Q-заводку ниже. `/task:plan-design VLT-REMED` (новый отдельный план на
 hocuspocus-мажор) — по решению владельца, вне текущего remaining-списка P4.
 
 **Sources of truth:** `plans/VLT-REMED/plan.md` (Context/Execution Rules/Routing/Status Board — P3
-терминальна 6/6, P4 в работе 6/10🟢+1/10🔴 / Decision Log D1–D23 / Update Log с записью P4.7) ·
-`plans/VLT-REMED/phases/P4.md` (P4.1 закрыт с ESCALATION-блоком; P4.2–P4.7 закрыты 🟢/🟠;
-P4.8–P4.10 детализированы, готовы к исполнению) ·
+терминальна 6/6, P4 в работе 7/10🟢+1/10🔴 / Decision Log D1–D23 / Update Log с записью P4.8) ·
+`plans/VLT-REMED/phases/P4.md` (P4.1 закрыт с ESCALATION-блоком; P4.2–P4.8 закрыты 🟢/🟠;
+P4.9–P4.10 детализированы, готовы к исполнению) ·
 `plans/VLT-REMED/phases/{P0,P1,P2,P3}.md` (закрыты; P2 🟠) ·
 `plans/VLT-REMED/open-questions.md` (Q3/Q4 pending — не блокируют P4) ·
 `plans/AUDIT-VLT/findings/REGISTER.md` (SSOT 103 находок, append-only, VLT-REMED в него НЕ пишет) ·
-`plans/AUDIT-VLT/findings/{P2.4-host-integration,P2.5-dx,P2.1-public-surface,P1.8-secrets-config-http}.md`
-(F-P2.4-01, F-P2.5-01/02/03/05/08, F-P2.1-02/03, F-P1.8-04 — Required Reads P4.8) ·
-`UPGRADE.md` (9 записей: 4 P4.1 + 1 P4.2 + 2 P4.4 + 1 P4.5 + 1 P4.7 — P4.6 новую запись НЕ
-добавила, behaviour-preserving).
+`docs/adr/` (существующие ADR — стиль, следующий номер для P4.9 — проверить `ls docs/adr/`) ·
+`packages/core/tests/Arch/ArchTest.php` (стиль Pest Arch пакета, эталон канона A —
+`packages/core/src/**`) · `packages/documents/src/**`, `packages/drive/src/Uploads/**`
+(дивергентные раскладки — цель P4.9's инвентаря).
 
 **Open risks:**
-- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. **P4.8** трогает только
-  `docs/**`/`CONTRIBUTING.md`/`phpstan.neon` (нет PHP-кода вне возможного удаления мёртвого
-  `permission_resolver`-ключа, который живёт в доке, не в коде) — вероятно root-гейта достаточно;
-  если находка F-P2.4-01 всё же требует правки PHP в `packages/documents`/`drive`, прогнать их
-  собственный `composer analyse/test/test:types` тоже. P4.9/P4.10 трогают ВСЕ пакеты — прогон по
-  каждому.
+- Root `composer.json` phpstan/phpunit покрывают ТОЛЬКО `packages/core`. **P4.9** трогает ADR (doc)
+  + arch-тесты в КАЖДОМ из шести пакетов — прогнать `composer analyse/test/test:types` по каждому
+  пакету, не только root. **P4.10** трогает ВСЕ пакеты — прогон по каждому тоже.
 - Root `composer lint:check` красный на пред-существующем `plans/AUDIT-VLT/artifacts/repro/**`
   (чужой read-only план, вне scope) — closure НЕ блокирует; свой новый код обязан быть pint-чистым
   (`vendor/bin/pint --test <файлы>`).
 - **`CHANGELOG.md` заблокирован для Read/Write** (`deny: Read(**/CHANGELOG.md)`) — долг записей за
-  P1.2/P1.4/P2.1/P2.2/P2.3/P3.1-P3.6/P4.1/P4.2/P4.4/P4.5/P4.7 и далее. **F-P2.1-06 (P4.7) закрыта
-  КОНФИГОМ split-пайплайна** (D23) — split-репо теперь получает `CHANGELOG.md` целиком
-  (copy-step), не фильтрованный по пакету фрагмент; наполнение самого файла — по-прежнему
-  Pending Work, сессия с доступом. `UPGRADE.md` (не `UPGRADING.md`, D23) — канонический сток
-  breaking-changes (9 записей).
+  P1.2/P1.4/P2.1/P2.2/P2.3/P3.1-P3.6/P4.1/P4.2/P4.4/P4.5/P4.7 и далее. `UPGRADE.md` (не
+  `UPGRADING.md`, D23) — канонический сток breaking-changes (9 записей; P4.8 без новой записи —
+  behaviour-preserving, чистый docs-fix).
+- **P4.9 — item-гейт для P4.10 (анти-самообман, паттерн 2):** ЗАПРЕЩЕНО закрывать P4.9, если
+  arch-тесты не кодируют канон реально (правило проходит на `core`, падает/`todo` на
+  `documents`/`drive` — грепаемо в теле теста). Канон НЕ изобретать — зафиксирован D10 (схема
+  `core`), ADR его формализует, не переопределяет; отклонение от D10 = эскалация на plan-design.
+  Если канон физически неприменим к какому-то пакету при инвентаризации — зафиксировать исключение
+  в ADR с обоснованием и эскалировать (не «додумать»).
 - **P4.5-урок для будущих items, задевающих arch-гейты P4.1 (H.5 и другие):** ArchTest'ы,
   добавленные P4.1 как «анти-самообман»-гейт волны, — ТВЁРДАЯ рамка, не рекомендация; item, чьё
   ТЗ предполагает нарушение, обязан сверить Scope Included на альтернативный OR-вариант ДО
@@ -119,13 +123,18 @@ P4.8–P4.10 детализированы, готовы к исполнению)
   прогнозу предыдущего handoff — это прогноз планирования, не факт кода).
 - **P4.7-урок:** «сток UPGRADE.md — свести ВСЕ breaking плана» проверяется грепом `F-P` в
   `UPGRADE.md` против Completion Notes закрытых items, НЕ по памяти; будущий item, добавляющий
-  собственный breaking (как peerDeps-перенос здесь), обязан добавить СВОЮ секцию в UPGRADE.md
-  тоже — сток не только «наследие P0–P4.6», но и текущий item, если его фикс breaking.
+  собственный breaking, обязан добавить СВОЮ секцию в UPGRADE.md тоже.
+- **P4.8-урок:** доковая находка с числом («9 недостающих якорей» и т.п.) — числа могут устареть к
+  моменту исполнения (код продолжает жить между аудитом и ремедиацией); ground truth ВСЕГДА берётся
+  свежим грепом на момент исполнения, число из finding — ориентир, не потолок/пол. Фактически
+  оказалось 15 вместо 9 (код разошёлся сильнее за P0–P4.7), и один пункт (`GET shared`) уже был
+  закрыт другим item'ом (P4.3) до того, как P4.8 до него дошёл — сверять «уже закрыто?» тоже грепом,
+  не пропускать слепо по списку находки.
 - **Локальная песочница exec-сессий не несёт coverage-драйвера (xdebug/pcov)** — ни `php` (8.5), ни
   `php8.4` не имеют модуля; `sudo`/`pecl` заблокированы harness'ом. Реальный измеренный MSI для
   P4.1's `infection.json5` НЕДОСТИЖИМ локально — используется провизорный порог 50/70.
 - **Пред-существующий count-зависимый PG-флейк тестового харнесса (обнаружен в P4.3, вне scope
-  P4.3–P4.7 чинить).** Полный прогон `composer test` НА POSTGRES даёт спорадический 1 failure —
+  P4.3–P4.8 чинить).** Полный прогон `composer test` НА POSTGRES даёт спорадический 1 failure —
   `MassAssignmentHardeningTest`, последний кейс. Триггер — НЕ логика P4.x. `composer test` (SQLite,
   дефолтный гейт Validation) НЕ подвержен.
 - **P4.4 добавила новую `tests/Pest.php`-биндинг-директорию** (`$core.'/PanelBoot'` →
@@ -137,8 +146,7 @@ P4.8–P4.10 детализированы, готовы к исполнению)
 - **Пред-существующий Rector-долг** (112 файлов core/drive/media/documents + 2 filament) — вне
   Scope Included P4.1, Rector CI-шаг остаётся advisory (`|| true`).
 - **Остаточный `npm audit --audit-level=high` в `packages/vue`** (1 high, `vite<=6.4.2`↔esbuild
-  dev-server-only, GHSA-67mh-4wv8-2f99) — critical happy-dom RCE ЗАКРЫТ; не путать с P4.7
-  (peerDeps-перенос не затрагивает этот остаточный npm-audit-пункт).
+  dev-server-only, GHSA-67mh-4wv8-2f99) — critical happy-dom RCE ЗАКРЫТ.
 - Testbench-снаги (унаследованы из P1.3/P3.1): `cache.default => 'array'` в `defineEnvironment()`;
   фиче-флаги маршрутов — в `defineEnvironment()` (до boot); `Auth::logout()` перед in-process
   `$this->artisan(...)`. PG-прогон — `php8.4` + БД `vaulter_test` в контейнере `agelto_postgres`
@@ -148,7 +156,7 @@ P4.8–P4.10 детализированы, готовы к исполнению)
 - В рабочем дереве присутствуют НЕ относящиеся к VLT-REMED правки (`.claude/.maind-feature-log.last`,
   `.gitignore`, `.claude/workflows/vlt-remed-*.js`, `plans/ACTIVE.md`, `plans/AUDIT-VLT/*`,
   `plans/VLT-HSEAM/`) из конкурентной сессии/хука — НЕ трогать, коммитить только scoped-пути item'а.
-  Подтверждено ещё раз в P4.7: `git status` до и после коммита показывает эти пути нетронутыми.
+  Подтверждено ещё раз в P4.8: `git status` до и после коммита показывает эти пути нетронутыми.
 - Пред-существующий PG-only флейк `NodeCommentSchemaTest` (jsonb `anchor` key-order round-trip) — вне
   scope. Модели `UploadSession`/`UploadPart`/`NodeComment`/`NodeDocumentVersion` не подключают
   `ResolvesVaulterConnection` (P3.6 Pending Work).
@@ -160,8 +168,10 @@ P4.8–P4.10 детализированы, готовы к исполнению)
   через `Container::resolved()`/выделенный `TestCase`; **P4.6-урок:** считать call site ГРЕПОМ по
   факту кода перед выбором fallback-варианта; **P4.7-урок:** UPGRADE.md-сток сверяется грепом
   `F-P` против Completion Notes, не по памяти, и требует записи от ТЕКУЩЕГО item'а тоже, если он
-  сам breaking; red-before для doc/config/manifest-alignment guard-тестов верифицируется `git stash`
-  изменённых не-тестовых файлов (не самого теста) + прогон на голом коде.
+  сам breaking; **P4.8-урок:** доковая находка с фиксированным числом — перепроверять свежим грепом
+  на момент исполнения, число из finding могло устареть; red-before для doc/config/manifest-alignment
+  guard-тестов верифицируется `git stash` изменённых не-тестовых файлов (не самого теста) + прогон на
+  голом коде.
 - deferred: `docs/`-миграция и архивация AUDIT-VLT — `/task:plan-close archive AUDIT-VLT`. Ротация
   `signing_secret` (Q3) и абсолютный барьер wall-deny (Q4) — отдельные items по решению владельца.
   `CHANGELOG.md`-наполнение (содержимое) — сессия с доступом. Подключение хуков панели
