@@ -38,11 +38,18 @@ it('PATCH и sweep одной сессии: победитель ровно од
         $this->markTestSkipped('Тесту конкурентности нужны расширения pcntl + posix.');
     }
 
-    config()->set('vaulter.uploads.chunk_size', 64 * 1024 * 1024);
+    config()->set('vaulter.uploads.chunk_size', 256 * 1024 * 1024);
+    config()->set('vaulter.uploads.max_bytes', 0);
     Storage::fake('local');
 
-    $prefixLen = 4 * 1024 * 1024;
-    $chunkLen = 4 * 1024 * 1024;
+    // Чанк намеренно ТОЛСТЫЙ: append стримит prefix+chunk несколько сот миллисекунд, тогда
+    // как expire() отрабатывает за единицы. Уборщик стартует с небольшой задержкой — так он
+    // гарантированно попадает ВНУТРЬ окна PATCH (между чтением offset и записью байт), а не
+    // до/после него. Без этого гонка просто не материализуется, и тест зелен даже на
+    // дефектном коде — то есть НИЧЕГО не доказывает.
+    $prefixLen = 16 * 1024 * 1024;
+    $chunkLen = 64 * 1024 * 1024;
+    $sweepDelayUs = 25_000;
     $prefix = str_repeat('A', $prefixLen);
     $chunk = str_repeat('B', $chunkLen);
 
@@ -95,6 +102,9 @@ it('PATCH и sweep одной сессии: победитель ровно од
 
                     $outcome = 'patch:ok';
                 } else {
+                    // Пусть PATCH успеет войти в критическую секцию и начать писать байты.
+                    usleep($sweepDelayUs);
+
                     Artisan::call('vaulter:sweep-uploads');
 
                     $outcome = 'sweep:'.trim(Artisan::output());
