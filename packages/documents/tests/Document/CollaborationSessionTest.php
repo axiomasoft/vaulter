@@ -60,7 +60,7 @@ it('marks a reverb session read-only for a non-edit ability', function (): void 
 
 it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function (): void {
     config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
     config()->set('vaulter.collaboration.drivers.hocuspocus.url', 'ws://hub:1234');
     config()->set('vaulter.collaboration.drivers.hocuspocus.token_ttl', 900);
 
@@ -74,7 +74,7 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
         ->and($session->readOnly)->toBeFalse()
         ->and($session->token)->toBeString()->not->toBe('');
 
-    $claims = JWT::decode($session->token, new Key('shh-secret', 'HS256'));
+    $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     expect($claims->room)->toBe(Config::collaborationRoom($node->getKey()))
         ->and($claims->sub)->toBe('42')
@@ -84,25 +84,25 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
 });
 
 it('encodes readOnly=true into the hocuspocus JWT for a comment ability', function (): void {
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = documentNode();
     $session = app(HocuspocusNodeCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 1);
 
-    $claims = JWT::decode($session->token, new Key('shh-secret', 'HS256'));
+    $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     expect($session->readOnly)->toBeTrue()
         ->and($claims->readOnly)->toBeTrue();
 });
 
 it('binds the hocuspocus room JWT to a single node', function (): void {
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $nodeA = documentNode();
     $nodeB = documentNode();
 
     $sessionA = app(HocuspocusNodeCollaborationDriver::class)->issueSession($nodeA, Ability::Edit, actorId: 1);
-    $claimsA = JWT::decode($sessionA->token, new Key('shh-secret', 'HS256'));
+    $claimsA = JWT::decode($sessionA->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     // The token for node A carries node A's room — never node B's.
     expect($claimsA->room)->toBe(Config::collaborationRoom($nodeA->getKey()))

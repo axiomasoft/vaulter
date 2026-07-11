@@ -6,6 +6,66 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `firebase/php-jwt` raised to `^7.0` (CVE-2025-45769) — signing secrets now need ≥256 bits (P4.1 / F-P4.4-04)
+
+**What changed.** `firebase/php-jwt` moved from `^6.0` to `^7.0` (root `composer.json` and
+`packages/documents/composer.json`, the package minting the Hocuspocus collaboration room JWT).
+`^6.0` was affected by CVE-2025-45769 ("weak encryption"); `^7.0` closes it and adds a HS256
+minimum-key-length check (`DomainException: Provided key is too short` for keys under 256 bits /
+32 bytes).
+
+**Action required if you set a short `vaulter.collaboration.drivers.hocuspocus.secret`.** Any
+existing HS256 signing secret shorter than 32 bytes now throws at JWT-mint time instead of
+silently signing with a weak key. Generate a secret with at least 32 bytes, e.g.
+`php -r 'echo bin2hex(random_bytes(32));'` (64 hex chars = 32 bytes), and set it via
+`VAULTER_COLLAB_JWT_SECRET`/config. No action needed if your secret was already ≥32 bytes.
+
+### `happy-dom`/`vitest` raised in `packages/vue` devDependencies (critical RCE) — no consumer action (P4.1 / F-P4.4-05)
+
+**What changed.** `packages/vue`'s test tooling moved: `happy-dom` `^15.11.0` → `^20.10.6` (closes
+a critical VM Context Escape / RCE advisory, GHSA-37j7-fg3j-429f) and `vitest` `^2.1.0` → `^4.1.10`
+(pulled in by the happy-dom fix). Both are devDependencies — **never shipped in the published
+`dist/` bundle** — so this is not a consumer-facing change; only contributors running the test
+suite are affected. One internal test fixture (`tests/drive-components.test.ts`) needed a
+`window.prompt` stub before `vi.spyOn` (happy-dom ≥16 no longer defines `window.prompt` at all).
+
+**Known residual (tracked, not a regression from this change).** `npm audit --audit-level=high`
+in `packages/vue` still reports one advisory: `vite <=6.4.2` (esbuild dev-server request/response
+disclosure, GHSA-67mh-4wv8-2f99, moderate — the severity shown against the `vite` entry is
+inherited from its `esbuild` dependency). This is dev-server-only (never shipped), pre-existing
+before this change, and NOT the critical happy-dom RCE this entry closes. A full fix needs a
+`vite` 6→8 major bump; attempted and reverted here because `vite-plugin-dts` (Vue `.d.ts`
+generation) has no release compatible with `vite@8` yet (its `5.0.3` Volar-based rewrite needs an
+undeclared `@vue/language-core` dependency and breaks `npm run build`). Tracked for a follow-up
+once `vite-plugin-dts` ships `vite@8` support.
+
+### Reference Hocuspocus `docker-compose.yml` no longer defaults to `:latest` (P4.1 / F-P1.8-05)
+
+**What changed.** `hocuspocus-server/docker-compose.yml`'s `image:` now requires
+`VAULTER_COLLAB_IMAGE_TAG` to be set (no floating `:latest` default) — the file already documented
+"pin a version" in its header comment, but silently defaulted to `:latest` otherwise.
+
+**Action required if you copied this compose file.** Set `VAULTER_COLLAB_IMAGE_TAG` to a released
+`vaulter-hocuspocus` tag (e.g. `1.2.3`) or, in production, an immutable `@sha256:…` digest — see
+`docs/guide/hocuspocus-server.md`. Without it, `docker compose up` now fails fast at interpolation
+time instead of silently floating to whatever `:latest` currently resolves to.
+
+### `@tiptap/*` raised from `2.x` to `3.x` in `packages/vue` and `e2e/` — no code changes needed (P4.1 / F-P4.5-01)
+
+**What changed.** `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/vue-3`, `@tiptap/extension-link`
+(`packages/vue`) and `@tiptap/extension-collaboration` (`e2e/`) moved from `^2.10` to `^3.0.0`.
+Verified mechanical: `npm run build`/`typecheck`/`test` (102 tests) pass unchanged in
+`packages/vue`, and the `e2e/` playground builds cleanly — no source changes were required by the
+TipTap 3.0 API.
+
+**`@hocuspocus/*` stays on `2.x` for now (F-P4.5-02 — NOT bumped, see Known Deviations in
+`plans/VLT-REMED/phases/P4.md` P4.1).** Bumping `@hocuspocus/server`/extensions/`provider` to
+`^4.3.0` made the server's own `websocket-hardening.test.js` regression suite hang indefinitely —
+that suite asserts a v2.x-specific internal wiring path (`listen(port, host, websocketOptions)`
+3rd-argument propagation into the underlying `ws` server), which v4's internals appear to have
+reshaped. This is a real API-shape change, not a mechanical version bump, so it was reverted and
+escalated per the item's own escalation guard (D6) rather than forced green.
+
 ### New optional config('vaulter.connection') routes the whole schema onto a named connection (P3.6 / F-P2.3-02, F-P2.3-04)
 
 **What changed.** A new, nullable config key — `config('vaulter.connection')` (env

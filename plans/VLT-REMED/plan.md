@@ -93,7 +93,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P1 | W1 — Быстрые высоко-эксплуатируемые | 4/4 | 🟢 Done |
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
-| P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | ⬜ Not started |
+| P4 | W4 — Качество, DX, CI + канон структуры | 0/10 | 🟡 In progress |
 | P5 | Сквозной adversarial code review | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -152,3 +152,4 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-11 | plan-exec/sonnet | P3.5 закрыт (🟢): cache-safe `configurationIsCached()`-гвард в `VaulterDocumentsServiceProvider`, doc-предупреждение о каноническом режиме миграций в `installation.md` (F-P2.2-01/02) — детали см. phases/P3.md P3.5 Completion Notes.
 | 2026-07-11 | plan-exec/sonnet | P3.6 закрыт (🟢): `config('vaulter.connection')` параметризован в схеме+моделях, doc-политика изменения схемы (F-P2.3-02/04) — детали см. phases/P3.md P3.6 Completion Notes. **Фаза P3 (W3) ТЕРМИНАЛЬНА (6/6 🟢).**
 | 2026-07-11 | plan-design/opus | Фаза P4 (W4) развёрнута из скелета: 10 items (45 находок + 2 структурных), DoR закрыт. Несущие решения D22/D23 — детали см. phases/P4.md.
+| 2026-07-11 | plan-exec/sonnet | P4.1 закрыт (🟠): MSI/arch/type/Rector-гейты + честная CI-матрица + CVE php-jwt/happy-dom + образ-пиннинг + e2e-healthcheck + TipTap-мажор чисто; hocuspocus-мажор эскалирован по D6-гарду (F-P4.5-02 `⛔`) — детали см. phases/P4.md P4.1 Completion Notes.

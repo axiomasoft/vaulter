@@ -26,7 +26,7 @@ use Vaulter\Webhooks\WebhookSigner;
  * проекция. Комната жёстко привязана к узлу: токен узла A не может писать в узел B.
  */
 const WEBHOOK_SECRET = 'webhook-shared-secret';
-const JWT_SECRET = 'jwt-signing-secret';
+const JWT_SECRET = 'jwt-signing-secret-that-is-at-least-32-bytes';
 
 beforeEach(function (): void {
     config()->set('vaulter.drivers.permission', 'database');

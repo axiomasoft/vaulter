@@ -49,3 +49,19 @@ jobs:
       - name: Type coverage (100%)
         working-directory: packages/filament
         run: vendor/bin/pest --type-coverage --min=100
+
+      # F-P4.4-01: package-local Rector config (rector.php), advisory only — see
+      # code-style.yml's root Rector step for the same rationale (pre-existing backlog
+      # out of this item's remediation scope).
+      - name: Rector (dry-run, advisory)
+        working-directory: packages/filament
+        run: vendor/bin/rector process --dry-run --no-progress-bar || true
+
+      # F-P4.3-03/04: package-local Infection config (infection.json5), advisory only
+      # — mirrors the root mutation.yml job (mutation testing is expensive/noisy; not
+      # a PR blocker until the suite/thresholds have matured).
+      - name: Mutation testing (advisory)
+        working-directory: packages/filament
+        run: |
+          vendor/bin/pest --coverage-xml=build/coverage/xml --log-junit=build/junit.xml --min=0
+          vendor/bin/infection --threads=4 --coverage=build/coverage --skip-initial-tests --no-progress || true

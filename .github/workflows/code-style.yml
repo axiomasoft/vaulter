@@ -41,3 +41,11 @@ jobs:
 
       - name: Check code style
         run: vendor/bin/pint --test
+
+      # F-P4.4-01: Rector was configured (rector.php) but never wired into CI at all —
+      # this step closes that gap. Advisory only (`|| true`): the five-package src tree
+      # carries a pre-existing Rector backlog (not introduced or fixed by this step;
+      # out of this item's remediation scope) that a hard-blocking step would turn red
+      # on unrelated PRs. Promote to blocking once that backlog is cleared.
+      - name: Rector (dry-run, advisory)
+        run: vendor/bin/rector process --dry-run --no-progress-bar || true

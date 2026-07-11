@@ -67,6 +67,9 @@ jobs:
           DB_DATABASE: ':memory:'
           XDEBUG_MODE: coverage
 
+      - name: Type coverage (100%)
+        run: composer test:types
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

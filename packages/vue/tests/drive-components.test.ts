@@ -212,6 +212,8 @@ describe('VaulterDrive', () => {
     const movable = node({ id: 2, kind: 'file', name: 'doc.txt', parent_id: 99, abilities: { move: true } })
     const { client, move } = driveClient([movable])
     // Guard: the old placeholder must never be reached.
+    // happy-dom (>=16) no longer implements window.prompt at all, so vi.spyOn has nothing to wrap unless a stub is defined first (F-P4.4-05 happy-dom major bump).
+    window.prompt = window.prompt ?? ((): string | null => null)
     const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
     const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
 
@@ -241,6 +243,8 @@ describe('VaulterDrive', () => {
   it('opens the name dialog for "new folder" and creates the folder with the typed name (no window.prompt)', async () => {
     const { client, createFolder } = driveClient([])
     // Guard: the old browser prompt must never be reached.
+    // happy-dom (>=16) no longer implements window.prompt at all, so vi.spyOn has nothing to wrap unless a stub is defined first (F-P4.4-05 happy-dom major bump).
+    window.prompt = window.prompt ?? ((): string | null => null)
     const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
     const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
 
@@ -294,6 +298,8 @@ describe('VaulterDrive', () => {
   it('opens the name dialog prefilled for "rename" and renames with the new name (no window.prompt)', async () => {
     const target = node({ id: 3, kind: 'file', name: 'old.txt', abilities: { rename: true } })
     const { client, rename } = driveClient([target])
+    // happy-dom (>=16) no longer implements window.prompt at all, so vi.spyOn has nothing to wrap unless a stub is defined first (F-P4.4-05 happy-dom major bump).
+    window.prompt = window.prompt ?? ((): string | null => null)
     const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null)
     const wrapper = mount(VaulterDrive, { props: { storageId: 7 }, ...withClient(client) })
 

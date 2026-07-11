@@ -18,8 +18,21 @@ on:
 
 jobs:
   permissions-azgard:
-    name: vaulter-permissions-azgard (SQLite lane)
+    # F-P4.4-02: a bare `composer install` here used to resolve exactly ONE Laravel
+    # version (the constraint's upper bound) — the L12 lane never actually ran. The
+    # matrix mirrors tests.yml: an explicit `composer require` per cell forces BOTH
+    # declared Laravel/Testbench combinations to install and run.
+    name: vaulter-permissions-azgard (SQLite lane, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - laravel: '12.*'
+            testbench: '^10.0'
+          - laravel: '13.*'
+            testbench: '^11.0'
 
     steps:
       - name: Checkout
@@ -35,7 +48,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/permissions-azgard
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --dev --no-interaction --no-update
+          composer update --prefer-dist --no-interaction --no-progress
 
       - name: Code style (Pint)
         working-directory: packages/permissions-azgard

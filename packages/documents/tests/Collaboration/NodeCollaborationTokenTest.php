@@ -89,7 +89,7 @@ it('issues a writable session for a writer (edit)', function (): void {
 
 it('returns a hocuspocus descriptor with url + JWT when that driver is configured', function (): void {
     config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
     config()->set('vaulter.collaboration.drivers.hocuspocus.url', 'ws://hub:1234');
 
     actAsCollaborator();

@@ -22,6 +22,7 @@
         "spatie/laravel-package-tools": "^1.92"
     },
     "require-dev": {
+        "infection/infection": "^0.33",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
         "orchestra/testbench": "^10.0|^11.0",
@@ -71,7 +72,8 @@
     "prefer-stable": true,
     "config": {
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "infection/extension-installer": true
         }
     },
     "scripts": {
@@ -79,6 +81,7 @@
         "test:types": "vendor/bin/pest --type-coverage --min=100",
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "mutate": "vendor/bin/infection --threads=4"
     }
 }

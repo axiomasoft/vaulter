@@ -5,11 +5,16 @@
 # and configure it entirely through environment variables. For LOCAL development against
 # this repo, uncomment `build: .` to build the image from source instead.
 #
+# F-P1.8-05: the tag is REQUIRED (no floating `:latest` default) — set
+# VAULTER_COLLAB_IMAGE_TAG to a released vaulter-hocuspocus version (semver, e.g. `1.2.3`;
+# in production prefer the immutable `@sha256:…` digest published alongside each release —
+# see .github/workflows/hocuspocus-image.yml) before bringing this stack up.
+#
 # Full env contract + security guidance (wss/TLS, Origin allowlist, scaling): see
 # docs/guide/hocuspocus-server.md.
 services:
   vaulter-collab:
-    image: ghcr.io/axioma-studio/vaulter-hocuspocus:latest
+    image: ghcr.io/axioma-studio/vaulter-hocuspocus:${VAULTER_COLLAB_IMAGE_TAG:?Set VAULTER_COLLAB_IMAGE_TAG to a pinned vaulter-hocuspocus release tag or @sha256 digest — see docs/guide/hocuspocus-server.md}
     # build: .   # ← local dev: build from source instead of pulling the published image
     ports:
       # Bound to 127.0.0.1 by default: the WS port must NOT face the internet directly.

@@ -33,6 +33,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # F-P4.5-03: `testbench serve` only starts listening AFTER `migrate:fresh`
+    # completes (see Dockerfile.laravel's CMD) — a plain TCP-connect probe is
+    # therefore already a faithful "migrations done + accepting requests" signal, no
+    # HTTP client needed inside this bare php:8.4-cli image.
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\",8000)?0:1);'"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
 
   hub:
     build:
@@ -48,7 +57,16 @@ services:
     ports:
       - "1234:1234"
     depends_on:
-      - laravel
+      laravel:
+        condition: service_healthy
+    # F-P4.5-03: symmetric with the reference deployment's own healthcheck
+    # (hocuspocus-server/docker-compose.yml) — the hub exposes the same /health
+    # endpoint on VAULTER_COLLAB_HEALTH_PORT.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   vite:
     image: node:20-alpine
@@ -62,5 +80,13 @@ services:
     ports:
       - "5273:5273"
     depends_on:
-      - laravel
-      - hub
+      laravel:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+    # F-P4.5-03: node:20-alpine ships wget (busybox) — no extra install needed.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:5273 >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40

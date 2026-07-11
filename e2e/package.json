@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@hocuspocus/provider": "^2.15",
-    "@tiptap/extension-collaboration": "^2.10",
-    "@tiptap/pm": "^2.10",
-    "@tiptap/starter-kit": "^2.10",
-    "@tiptap/vue-3": "^2.10",
+    "@tiptap/extension-collaboration": "^3.0.0",
+    "@tiptap/pm": "^3.0.0",
+    "@tiptap/starter-kit": "^3.0.0",
+    "@tiptap/vue-3": "^3.0.0",
     "vue": "^3.5",
     "yjs": "^13.6"
   },

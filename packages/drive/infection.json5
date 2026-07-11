@@ -1,0 +1,17 @@
+{
+  "$schema": "../../vendor/infection/infection/resources/schema.json",
+  "source": {
+    "directories": ["src"]
+  },
+  "mutators": {
+    "@default": true
+  },
+  // P4.1/F-P4.3-04: this package was fully outside Infection's source scope. Local
+  // re-baseline was not possible in the executing sandbox (no xdebug/pcov coverage
+  // driver — see plans/VLT-REMED/phases/P4.md P4.1 Known Deviations); the per-package
+  // CI job's own PHP 8.4 + xdebug run is the environment able to measure the real MSI.
+  // Conservative provisional non-zero floors, advisory job (`|| true`) until raised to
+  // the actual measured value.
+  "minMsi": 50,
+  "minCoveredMsi": 70
+}

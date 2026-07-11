@@ -11,8 +11,16 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 |---|---|
 | PHP | `^8.4` |
 | Laravel | `^12` \| `^13` |
+| Orchestra Testbench (dev/CI) | `^10.0` (Laravel 12) \| `^11.0` (Laravel 13) |
+| Filament (optional `vaulter-filament` panel) | `^5.0`, requires Laravel **13** (Testbench `^11.0` only — see below) |
 | Vue | `3.x` |
 | Node (collab server / build) | `>=20` |
+
+`vaulter-core`/`vaulter-drive`/`vaulter-media`/`vaulter-documents`/`vaulter-permissions-azgard` are
+CI-tested against **both** Laravel 12 and 13 (Testbench `^10.0`/`^11.0`). `vaulter-filament` pins
+`orchestra/testbench: ^11.0` deliberately: Filament 5 targets Laravel 11.28+/13, and its own CI
+matrix therefore covers only the Laravel 13 lane — installing the Filament panel on a Laravel 12
+host is not currently CI-verified.
 
 ## Features
 

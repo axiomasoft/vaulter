@@ -12,6 +12,91 @@ arch('all package code declares strict types')
     ->toUseStrictTypes();
 
 /**
+ * E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`).
+ * `App\*` never exists as an autoloadable class in the package's own dev/test
+ * environment, so this namespace-graph check can never observe a real "uses" edge
+ * (PestArch has nothing to resolve `App\*` against) — proven by the file-scan test
+ * directly below, which is the test that ACTUALLY enforces the invariant (red-before
+ * verified against an injected `use App\...;` fixture).
+ */
+arch('the package never depends on the host application (E5.1)')
+    ->expect('Vaulter')
+    ->not->toUse('App');
+
+/**
+ * E5.1 / F-P4.3-01 — vaulter-core is an embeddable Laravel package: it must never
+ * reach into the HOST application's namespace. A stray `App\*` import (e.g.
+ * copy-pasted from the consuming app while building a feature) breaks installability
+ * in a clean host that does not carry that class.
+ *
+ * `Console/MakePanelCommand.php` is a deliberate, allow-listed exception: it is a
+ * scaffolding command (`make:vaulter-panel`) that EMITS the string `App\Vaulter\Panels`
+ * as the target namespace for code it generates INTO the host application — the
+ * package itself never imports or executes anything under `App\*`.
+ */
+test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', function (): void {
+    $src = __DIR__.'/../../src';
+    $offenders = [];
+
+    // Scaffolding commands legitimately emit `App\*` as a STRING (the namespace of
+    // generated host code), never as a real import/dependency of the package itself.
+    $allowlist = [
+        'Console/MakePanelCommand.php',
+    ];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        $relative = str_replace($src.'/', '', $file->getPathname());
+
+        if (in_array($relative, $allowlist, true)) {
+            continue;
+        }
+
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        $code = '';
+
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            $code .= is_array($token) ? $token[1] : $token;
+        }
+
+        if (preg_match('/\\bApp\\\\/', $code) === 1) {
+            $offenders[] = $file->getPathname();
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+/**
+ * E3.1 / F-P4.3-02 — the package's public surface is deliberately thin: contracts,
+ * facades, DTO/VO and events. `Repositories/`/`Support/` are internal implementation
+ * detail — the kernel-sharing design (ADR-0005) lets sibling Vaulter packages
+ * (Drive/Media/Documents/Filament) consume them as the shared kernel, so the
+ * enforceable boundary here is NOT "same package only" (core has no sub-namespace of
+ * its own to scope against) but "never consumed from OUTSIDE the Vaulter namespace
+ * tree" — i.e. never becomes a host-application dependency. `Vaulter\<Root>` boundary
+ * tests below enforce the stricter same-package form where a satellite HAS its own
+ * sub-namespace (documents/filament).
+ */
+arch('internal namespaces are not consumed outside the Vaulter package tree (E3.1)')
+    ->expect(['Vaulter\Repositories', 'Vaulter\Support'])
+    ->toOnlyBeUsedIn('Vaulter');
+
+/**
  * H.2 — the AccessResolver is Vaulter-OWNED and NOT swappable: it is a concrete
  * final class, never an interface/contract. Only the HostRoleDriver lane is
  * pluggable. (If someone made AccessResolver a contract, this fails.)
