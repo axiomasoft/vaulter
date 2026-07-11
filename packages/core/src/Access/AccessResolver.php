@@ -21,7 +21,9 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantReadRepository;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -552,14 +554,27 @@ final class AccessResolver
      * back to a manual parent walk if the relation yields nothing (defensive — a
      * detached node still resolves against itself).
      *
+     * Runs under withMaxDepth(NodeReadRepository::DEFAULT_MAX_DEPTH) — F-P4.2-01,
+     * VLT-REMED P4.3: this method executes on EVERY authorization check
+     * (can()/effectiveGrants()), so an unbounded recursive-CTE ancestor walk pays
+     * its cost on every request and, on SQLite, can hit
+     * SQLITE_MAX_RECURSION_DEPTH on a deep tree. ADR-0005 requires the same cap
+     * symmetrically on both traversal directions; descendants()/subtree() already
+     * carry it (NodeReadRepository), this was the missing ascend-side half.
+     *
      * @return list<Node>
      */
     private function ancestorChain(Node $node): array
     {
         $chain = [$node];
 
+        $model = Config::nodeModel();
+
         /** @var Collection<int, Node> $ancestors */
-        $ancestors = $node->ancestors()->get();
+        $ancestors = $model::withMaxDepth(
+            NodeReadRepository::DEFAULT_MAX_DEPTH,
+            static fn (): Collection => $node->ancestors()->get(),
+        );
 
         // ancestors() returns nearest-first already; bound it to the same storage so
         // a misconfigured tree can never escape the workspace (defence-in-depth on

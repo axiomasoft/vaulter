@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
@@ -52,7 +53,12 @@ final class GrantReadRepository
 
     /**
      * Every live grant directly on a node (the permissions UI listing, §2.6).
-     * Returns a Builder so the controller paginates it.
+     * Returns a Builder so the controller paginates it. `orderByDesc('id')` is a
+     * stable tie-breaker (F-P4.2-05, VLT-REMED P4.3): grants created in the same
+     * transaction/batch share an identical created_at timestamp, so
+     * cursorPaginate()'s keyset would otherwise skip/duplicate rows on that page
+     * boundary — the same pattern already applied in
+     * {@see Activity::scopeNewestFirst()}.
      *
      * @return Builder<NodeGrant>
      */
@@ -62,7 +68,8 @@ final class GrantReadRepository
 
         return $model::query()
             ->where('node_id', $node->getKey())
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
     }
 
     /**

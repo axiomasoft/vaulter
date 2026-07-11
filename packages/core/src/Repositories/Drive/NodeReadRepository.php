@@ -136,25 +136,42 @@ final class NodeReadRepository
     }
 
     /**
-     * The ancestor chain from the node up to the storage root (nearest first).
+     * The ancestor chain from the node up to the storage root (nearest first),
+     * bounded by withMaxDepth (F-P4.2-01, VLT-REMED P4.3) — the same cap
+     * descendants()/subtree() already apply on the other traversal direction
+     * (ADR-0005 requires the symmetry; this was the missing ascend-side half).
      *
      * @return Collection<int, Node>
      */
     public function ancestors(Node $node): Collection
     {
-        return $node->ancestors()->get();
+        $model = Config::nodeModel();
+
+        /** @var Collection<int, Node> $result */
+        $result = $model::withMaxDepth(
+            self::DEFAULT_MAX_DEPTH,
+            static fn (): Collection => $node->ancestors()->get(),
+        );
+
+        return $result;
     }
 
     /**
      * Breadcrumb from the storage root down to the node (root first), the node
-     * included as the last crumb.
+     * included as the last crumb. Bounded by withMaxDepth (F-P4.2-01) — same
+     * reasoning as ancestors() above.
      *
      * @return Collection<int, Node>
      */
     public function breadcrumb(Node $node): Collection
     {
+        $model = Config::nodeModel();
+
         /** @var Collection<int, Node> $crumbs */
-        $crumbs = $node->ancestorsAndSelf()->get();
+        $crumbs = $model::withMaxDepth(
+            self::DEFAULT_MAX_DEPTH,
+            static fn (): Collection => $node->ancestorsAndSelf()->get(),
+        );
 
         /** @var Collection<int, Node> $ordered */
         $ordered = $crumbs->reverse()->values();
@@ -171,7 +188,11 @@ final class NodeReadRepository
      * around it, with an explicit `ESCAPE '\'` clause — a raw `%`/`_` in the
      * term is matched LITERALLY, never as a wildcard, on both SQLite and
      * PostgreSQL. Case-folding happens first so escaping never touches
-     * multibyte case-mapping.
+     * multibyte case-mapping. `orderBy('id')` is a stable tie-breaker
+     * (F-P4.2-05, VLT-REMED P4.3): `name` is unique only per-parent (ADR-0005)
+     * and this method searches across the WHOLE tree, so cursorPaginate()'s
+     * keyset would otherwise skip/duplicate rows across a page boundary that
+     * lands on two nodes sharing a name in different folders.
      *
      * @return Builder<Node>
      */
@@ -183,12 +204,17 @@ final class NodeReadRepository
             ->treeOf($storage->id)
             ->whereNull('trashed_at')
             ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
-            ->orderBy('name');
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
     /**
      * The trash view: trashed (but not yet permanently deleted) nodes in a
-     * storage, newest first.
+     * storage, newest first. `orderByDesc('id')` is a stable tie-breaker
+     * (F-P4.2-05, VLT-REMED P4.3): several nodes trashed by the same
+     * operation/request share an identical trashed_at timestamp, so
+     * cursorPaginate()'s keyset would otherwise skip/duplicate rows on that
+     * page boundary.
      *
      * @return Builder<Node>
      */
@@ -197,7 +223,8 @@ final class NodeReadRepository
         return $this->query()
             ->treeOf($storage->id)
             ->whereNotNull('trashed_at')
-            ->orderByDesc('trashed_at');
+            ->orderByDesc('trashed_at')
+            ->orderByDesc('id');
     }
 
     /**

@@ -228,8 +228,11 @@ final class PanelTablesBuilder
         $table->softDeletes();
         $table->timestamps();
 
-        // Hot listing indexes (§2.2 index plan).
-        $table->index(['storage_id', 'parent_id']);
+        // Hot listing indexes (§2.2 index plan). (storage_id, parent_id) is NOT
+        // repeated as its own index (F-P4.1-02, VLT-REMED P4.3): it is a strict
+        // column-prefix of the composite below, so it never wins over it and only
+        // pays extra write cost. The purge-trash scan index (trashed_at, driver-aware
+        // partial) is emitted in afterCreate() — F-P4.1-01.
         $table->index(['storage_id', 'parent_id', 'position']);
         $table->index(['storage_id', 'kind', 'trashed_at']);
 
@@ -266,8 +269,11 @@ final class PanelTablesBuilder
         $table->text('storage_key');
 
         // Blob state machine (logic is M1b; the columns exist now): pending →
-        // committed → tombstoned → deleting → deleted.
-        $table->string('status', 12)->default('pending')->index();
+        // committed → tombstoned → deleting → deleted. No standalone index on
+        // status (F-P4.1-02, VLT-REMED P4.3): it is a strict column-prefix of the
+        // (status, ref_count, delete_after_at) GC index below, so it never wins
+        // over it and only pays extra write cost.
+        $table->string('status', 12)->default('pending');
         $table->bigInteger('ref_count')->default(0);
         $table->string('dedup_scope', 8)->default('tenant');
         $table->string('etag', 64)->nullable();
@@ -769,8 +775,12 @@ final class PanelTablesBuilder
         $this->extraData(table: $table, panel: $panel);
 
         // Append-only: created_at ONLY. No timestamps()/softDeletes() — there is no
-        // update or delete path for an audit row.
-        $table->timestamp('created_at')->nullable()->index();
+        // update or delete path for an audit row. No inline ->index() here
+        // (F-P4.1-02, VLT-REMED P4.3): addActivityCreatedAtIndex() below already
+        // emits the one (created_at) index this table carries; a second one on the
+        // very same single column was a literal duplicate, pure write cost on this
+        // append-only, write-hottest table with zero read benefit.
+        $table->timestamp('created_at')->nullable();
 
         $name = $table->getTable();
 
@@ -886,6 +896,7 @@ final class PanelTablesBuilder
 
         if ($entity === 'nodes') {
             $this->addSiblingUniqueIndex(table: $panel->table('nodes'));
+            $this->addTrashedAtIndex(table: $panel->table('nodes'));
         }
 
         if ($entity === 'node_grants') {
@@ -973,6 +984,36 @@ final class PanelTablesBuilder
 
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->index('expires_at', $name);
+        });
+    }
+
+    /**
+     * F-P4.1-01 (VLT-REMED P4.3): the trashed_at scan index PurgeTrashCommand's
+     * predicate needs — trashedBefore() filters `whereNotNull('trashed_at')
+     * ->where('trashed_at', '<=', $threshold)`, and without a leading-column index
+     * on trashed_at that scan is a full v_nodes seq-scan on every scheduled run
+     * (the only existing index touching this column, (storage_id, kind,
+     * trashed_at), never wins for a query that filters neither storage_id nor
+     * kind — leftmost-prefix rule). Driver-aware like every other partial index
+     * in this file: a real partial index `WHERE trashed_at IS NOT NULL` on
+     * Postgres/SQLite (the predicate already excludes NULLs, so the partial index
+     * covers 100% of the scan and nothing else), a plain btree elsewhere.
+     */
+    private function addTrashedAtIndex(string $table): void
+    {
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
+        $name = "{$table}_trashed_idx";
+
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            $this->dbConnection()->statement(
+                "CREATE INDEX {$name} ON {$table} (trashed_at) WHERE trashed_at IS NOT NULL",
+            );
+
+            return;
+        }
+
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
+            $blueprint->index('trashed_at', $name);
         });
     }
 
