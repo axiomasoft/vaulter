@@ -60,28 +60,73 @@ it('sweep НЕ трогает уже завершённые/aborted сессии
     expect($committed->refresh()->status)->toBe(UploadStatus::Committed);
 });
 
-it('sweepable scope выбирает только initiated|uploading в границах expires_at', function (): void {
+it('sweepable scope выбирает initiated|uploading|assembled в границах expires_at (F-P1.4-10)', function (): void {
+    // Contract updated by F-P1.4-10: Assembled is now a sweep candidate too (a
+    // session stuck Assembled past its TTL — commit interrupted after every byte
+    // landed — used to leak its staged temp / S3 parts forever).
     $storage = UploadTestHelpers::storage();
     $threshold = Carbon::now();
 
+    // Distinct, staggered expires_at (the scope orders by it) so the assertion
+    // below is not at the mercy of insertion-order ties.
     // initiated + stale → swept.
-    UploadTestHelpers::session($storage)->forceFill(['expires_at' => $threshold->copy()->subHour()])->save();
+    UploadTestHelpers::session($storage)->forceFill(['expires_at' => $threshold->copy()->subHours(3)])->save();
     // uploading + stale → swept.
     UploadTestHelpers::session($storage)->forceFill([
         'status' => UploadStatus::Uploading,
-        'expires_at' => $threshold->copy()->subHour(),
+        'expires_at' => $threshold->copy()->subHours(2),
     ])->save();
-    // assembled + stale → NOT in the open set.
+    // assembled + stale → NOW in the sweepable set (F-P1.4-10).
     UploadTestHelpers::session($storage)->forceFill([
         'status' => UploadStatus::Assembled,
         'expires_at' => $threshold->copy()->subHour(),
     ])->save();
 
-    $candidates = UploadSession::query()->sweepable($threshold)->get();
+    // The model scope itself makes no ordering promise (only the read-repository's
+    // sweepable() wraps it with orderBy('expires_at')) — order by id here so the
+    // assertion checks MEMBERSHIP, not an incidental row order.
+    $candidates = UploadSession::query()->sweepable($threshold)->orderBy('id')->get();
 
-    expect($candidates)->toHaveCount(2)
+    expect($candidates)->toHaveCount(3)
         ->and($candidates->pluck('status')->map->value->all())
-        ->toEqual([UploadStatus::Initiated->value, UploadStatus::Uploading->value]);
+        ->toEqual([
+            UploadStatus::Initiated->value,
+            UploadStatus::Uploading->value,
+            UploadStatus::Assembled->value,
+        ]);
+});
+
+it('sweep сметает застрявшую Assembled-сессию за TTL и чистит staged-байты (F-P1.4-10, red-before: остаётся)', function (): void {
+    $storage = UploadTestHelpers::storage();
+
+    $stuck = UploadTestHelpers::session($storage, totalSizeBytes: 10);
+    app(TusUploadHandler::class)->patch($stuck->refresh(), UploadTestHelpers::streamFor('1234567890'), 0);
+    // Commit was interrupted after every byte landed: force Assembled, past TTL.
+    $stuck->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->subHour()])->save();
+
+    $stagedKey = app(StagedUpload::class)->keyFor($stuck);
+    Storage::disk('local')->assertExists($stagedKey);
+
+    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+
+    expect($stuck->refresh()->status)->toBe(UploadStatus::Expired);
+    Storage::disk('local')->assertMissing($stagedKey);
+});
+
+it('sweep НЕ трогает свежую Assembled-сессию в пределах TTL (F-P1.4-10, контроль)', function (): void {
+    $storage = UploadTestHelpers::storage();
+
+    $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 10);
+    app(TusUploadHandler::class)->patch($fresh->refresh(), UploadTestHelpers::streamFor('1234567890'), 0);
+    // Assembled but still well within its TTL — a valid in-flight commit, not stuck.
+    $fresh->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->addHour()])->save();
+
+    $stagedKey = app(StagedUpload::class)->keyFor($fresh);
+
+    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+
+    expect($fresh->refresh()->status)->toBe(UploadStatus::Assembled);
+    Storage::disk('local')->assertExists($stagedKey);
 });
 
 it('sweep абортит S3-multipart части протухшей сессии', function (): void {

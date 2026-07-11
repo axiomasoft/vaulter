@@ -27,6 +27,7 @@ use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
 
 /**
  * The tus.io CORE resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it resolves
@@ -174,7 +175,7 @@ final class TusUploadController extends Controller
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
 
-        $this->manager->abort($session);
+        $this->manager->abort($session, $this->actorId($request));
 
         return response()->noContent(headers: ['Tus-Resumable' => self::TUS_VERSION]);
     }
@@ -232,7 +233,11 @@ final class TusUploadController extends Controller
 
     /**
      * Authorize a request acting on an EXISTING session by its target shape: Edit on
-     * the node for a new version, else Create under the destination folder.
+     * the node for a new version, else Create under the destination folder — THEN
+     * (F-P1.4-12) confirm the acting actor is the session's OWNER. The ability check
+     * alone lets any actor with Create/Edit in the same folder/node — having merely
+     * learned the (unguessable) upload_id — drive someone else's in-flight session;
+     * ownership closes that IDOR without loosening the existing ability gate.
      */
     private function authorizeSession(Request $request, UploadSession $session): void
     {
@@ -241,15 +246,34 @@ final class TusUploadController extends Controller
         if ($session->isNewVersion()) {
             $node = $this->findNodeInStorage($session->node_id ?? '', $storage);
             $this->guard($request, Ability::Edit, $node);
+        } else {
+            $parent = $session->target_parent_id === null
+                ? $this->rootOf($storage)
+                : $this->findNodeInStorage($session->target_parent_id, $storage);
 
+            $this->guardCreate($request, $storage, $parent);
+        }
+
+        $this->guardOwnership($request, $session);
+    }
+
+    /**
+     * F-P1.4-12: the session row belongs to whoever's `created_by` it carries — a
+     * mismatched actor is refused even though they hold a legitimate ability on the
+     * target. A session with no recorded owner (system-minted, created_by null) has
+     * nothing to compare against and is left to the ability gate alone.
+     */
+    private function guardOwnership(Request $request, UploadSession $session): void
+    {
+        if ($session->created_by === null) {
             return;
         }
 
-        $parent = $session->target_parent_id === null
-            ? $this->rootOf($storage)
-            : $this->findNodeInStorage($session->target_parent_id, $storage);
+        $actorId = $this->actorId($request);
 
-        $this->guardCreate($request, $storage, $parent);
+        if (Identity::stringify($session->created_by) !== Identity::stringify($actorId)) {
+            throw PermissionDeniedException::forAbility('upload-session-owner');
+        }
     }
 
     private function storageOf(UploadSession $session): Storage

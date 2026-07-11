@@ -18,6 +18,9 @@ use Vaulter\Drive\Events\NodeRestored;
 use Vaulter\Drive\Events\NodeTrashed;
 use Vaulter\Drive\Events\NodeVersionCommitted;
 use Vaulter\Drive\Events\StorageCreated;
+use Vaulter\Drive\Events\UploadSessionAborted;
+use Vaulter\Drive\Events\UploadSessionExpired;
+use Vaulter\Drive\Events\UploadSessionInitiated;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Support\Identity;
 
@@ -52,6 +55,9 @@ final readonly class RecordsDriveActivity
         $events->listen(NodeTrashed::class, [self::class, 'handleNodeTrashed']);
         $events->listen(NodeRestored::class, [self::class, 'handleNodeRestored']);
         $events->listen(NodeForceDeleted::class, [self::class, 'handleNodeForceDeleted']);
+        $events->listen(UploadSessionInitiated::class, [self::class, 'handleUploadSessionInitiated']);
+        $events->listen(UploadSessionAborted::class, [self::class, 'handleUploadSessionAborted']);
+        $events->listen(UploadSessionExpired::class, [self::class, 'handleUploadSessionExpired']);
     }
 
     public function handleStorageCreated(StorageCreated $event): void
@@ -195,6 +201,58 @@ final readonly class RecordsDriveActivity
                 'freed_bytes' => $event->freedBytes,
             ],
         ), NodeForceDeleted::class);
+    }
+
+    /**
+     * F-P1.4-13: the upload-session lifecycle audit gap — commit already lands
+     * FileUploaded/NodeVersionCommitted, but create/abort/expire had no activity
+     * trace at all. These three close it, sharing the same context shape (actor/
+     * tenant/storage come from the record() scope scalars; upload_id/protocol/
+     * target_name identify the session in the row).
+     */
+    public function handleUploadSessionInitiated(UploadSessionInitiated $event): void
+    {
+        $this->safely(fn (): mixed => $this->recorder->record(
+            verb: ActivityVerb::UploadSessionInitiated,
+            storageId: $event->session->storage_id,
+            tenantId: $event->session->tenant_id,
+            actorId: $event->actorId,
+            context: [
+                'upload_id' => $event->session->upload_id,
+                'protocol' => $event->session->protocol->value,
+                'target_name' => $event->session->target_name,
+            ],
+        ), UploadSessionInitiated::class);
+    }
+
+    public function handleUploadSessionAborted(UploadSessionAborted $event): void
+    {
+        $this->safely(fn (): mixed => $this->recorder->record(
+            verb: ActivityVerb::UploadSessionAborted,
+            storageId: $event->session->storage_id,
+            tenantId: $event->session->tenant_id,
+            actorId: $event->actorId,
+            context: [
+                'upload_id' => $event->session->upload_id,
+                'protocol' => $event->session->protocol->value,
+                'received_bytes' => $event->session->received_bytes,
+            ],
+        ), UploadSessionAborted::class);
+    }
+
+    public function handleUploadSessionExpired(UploadSessionExpired $event): void
+    {
+        $this->safely(fn (): mixed => $this->recorder->record(
+            verb: ActivityVerb::UploadSessionExpired,
+            storageId: $event->session->storage_id,
+            tenantId: $event->session->tenant_id,
+            actorId: $event->actorId,
+            context: [
+                'upload_id' => $event->session->upload_id,
+                'protocol' => $event->session->protocol->value,
+                'received_bytes' => $event->session->received_bytes,
+            ],
+        ), UploadSessionExpired::class);
     }
 
     /**

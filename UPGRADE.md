@@ -6,6 +6,54 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Upload-session lifecycle: a stuck Assembled upload now gets swept, only the session's OWNER may drive it, and initiate/abort/expire now write activity rows (P3.3 / F-P1.4-10, F-P1.4-12, F-P1.4-13)
+
+**What changed.**
+
+1. **The sweeper (`vaulter:sweep-uploads`) now reclaims a session stuck in `Assembled`** — every
+   byte landed but the commit that follows was interrupted — once it is past its TTL, exactly as
+   it already did for `Initiated`/`Uploading`. Before this, an `Assembled` session was never
+   swept: its staged temp (and any known S3-multipart parts) leaked forever. A session that
+   reaches `Assembled` well within its TTL is unaffected — `expires_at` is stamped once at
+   `initiate` and never bumped, so only a session that got stuck PAST its original TTL is
+   reclaimed.
+
+   **Who is affected.** Any host running `vaulter:sweep-uploads` (or its schedule) with resumable
+   uploads whose commit step can be interrupted after assembly (process kill, deploy mid-request,
+   `BlobStore.commit` failure). No action required — this only reclaims sessions that were
+   already permanently stuck.
+
+2. **`authorizeSession` (tus HEAD/PATCH/DELETE and S3-multipart parts/complete) now ALSO checks
+   that the acting actor is the session's `created_by` owner**, on top of the existing
+   Create/Edit ability check on the target folder/node. Previously any actor holding a
+   legitimate Create/Edit grant on the SAME folder/node — having merely learned the
+   (unguessable, server-minted) `upload_id` — could HEAD/PATCH/DELETE or drive someone ELSE's
+   in-flight session to completion or abort it. A session with no recorded `created_by`
+   (system-minted, no owner to compare against) is unaffected — the ability gate alone still
+   applies.
+
+   **Breaking consequence:** a session that used to be drivable by ANY actor sharing the
+   Create/Edit grant on its target is now refused (403) to everyone except its original creator.
+
+   **Who is affected.** Any host where multiple actors share a Create/Edit grant on the same
+   folder/node AND rely on being able to resume/abort a colleague's resumable-upload session by
+   its `upload_id`. This was never a supported/intended workflow (the finding is exactly that it
+   should not have worked) — if your integration depended on it, have the ORIGINAL uploader
+   drive their own session instead, or open a new session under the actor who needs to act.
+
+3. **`initiate`/abort (client DELETE)/`expire` (sweeper) on a resumable-upload session now each
+   write ONE activity row** (`upload_session.initiated` / `upload_session.aborted` /
+   `upload_session.expired`, gated on the existing `features.activity` flag, same as every other
+   Drive activity row). Previously only the terminal commit
+   (`file.uploaded`/`version.created`) was audited; session creation/abandonment/reclaim left no
+   trace at all. `expire` rows carry no actor (the sweeper runs outside an HTTP request).
+
+   **Who is affected.** Hosts consuming the activity feed (`GET .../activity`, the Filament
+   `ActivityResource`) will start seeing three new verbs. No action required unless your
+   integration enumerates a closed list of expected verbs.
+
+No database migration is required for this upgrade note.
+
 ### Every collab webhook call must now carry a valid HMAC body signature; `webhook_secret` is REQUIRED for collaboration to work at all (P3.2 / F-P1.6-02, F-P1.6-03)
 
 **What changed.**

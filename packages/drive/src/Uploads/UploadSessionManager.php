@@ -9,6 +9,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Drive\Events\UploadSessionAborted;
+use Vaulter\Drive\Events\UploadSessionExpired;
+use Vaulter\Drive\Events\UploadSessionInitiated;
 use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
 use Vaulter\Drive\Uploads\Data\UploadInitData;
 use Vaulter\Drive\Uploads\Enums\UploadProtocol;
@@ -75,7 +78,12 @@ final readonly class UploadSessionManager
 
         $this->handlerFor($session)->initialise($session);
 
-        return $session->refresh();
+        $session = $session->refresh();
+
+        // F-P1.4-13: the lifecycle audit gap — create had no activity trace at all.
+        event(new UploadSessionInitiated($session, $data->actorId));
+
+        return $session;
     }
 
     /**
@@ -117,9 +125,10 @@ final readonly class UploadSessionManager
     /**
      * Abort a session (§2.8): reclaim the protocol-side state (S3 AbortMultipartUpload),
      * discard the staged temp, and tombstone the row as Aborted. Idempotent — a
-     * terminal session is returned untouched.
+     * terminal session is returned untouched (and, since nothing changed, emits no
+     * activity — F-P1.4-13 traces state CHANGES, not no-op calls).
      */
-    public function abort(UploadSession $session): UploadSession
+    public function abort(UploadSession $session, int|string|null $actorId = null): UploadSession
     {
         if (!$session->status->isOpen() && $session->status !== UploadStatus::Assembled) {
             return $session;
@@ -128,20 +137,31 @@ final readonly class UploadSessionManager
         $this->handlerFor($session)->abort($session);
         $this->staged->discard($session);
 
-        return $this->sessions->transition($session, UploadStatus::Aborted);
+        $session = $this->sessions->transition($session, UploadStatus::Aborted);
+
+        // F-P1.4-13: the lifecycle audit gap — abort had no activity trace at all.
+        event(new UploadSessionAborted($session, $actorId));
+
+        return $session;
     }
 
     /**
      * Expire a stale session (§2.8 sweeper): the same cleanup as abort but the
      * terminal state is Expired (so the audit distinguishes a swept session from a
-     * client-cancelled one).
+     * client-cancelled one). Runs outside an HTTP request (console/schedule) — the
+     * activity row carries no actor (a system reclaim).
      */
     public function expire(UploadSession $session): UploadSession
     {
         $this->handlerFor($session)->abort($session);
         $this->staged->discard($session);
 
-        return $this->sessions->transition($session, UploadStatus::Expired);
+        $session = $this->sessions->transition($session, UploadStatus::Expired);
+
+        // F-P1.4-13: the lifecycle audit gap — expire had no activity trace at all.
+        event(new UploadSessionExpired($session));
+
+        return $session;
     }
 
     /**

@@ -11,10 +11,11 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 
 /**
  * Sweep stale resumable-upload sessions (§2.8 / D16 / M3a). It scans the OPEN
- * sessions (status initiated|uploading) whose expires_at has elapsed and reclaims
- * each through {@see UploadSessionManager::expire}: the protocol-side state is
- * released (S3 AbortMultipartUpload / per-part objects), the staged temp under tmp/
- * is deleted, and the row is marked Expired. Schedulable.
+ * sessions (status initiated|uploading) PLUS any session stuck in Assembled past its
+ * TTL (F-P1.4-10 — commit interrupted after every byte landed) whose expires_at has
+ * elapsed, and reclaims each through {@see UploadSessionManager::expire}: the
+ * protocol-side state is released (S3 AbortMultipartUpload / per-part objects), the
+ * staged temp under tmp/ is deleted, and the row is marked Expired. Schedulable.
  *
  * Pair with an S3 bucket lifecycle rule `AbortIncompleteMultipartUpload`: the sweeper
  * aborts the multiparts it KNOWS about (its v_upload_parts rows), and the lifecycle

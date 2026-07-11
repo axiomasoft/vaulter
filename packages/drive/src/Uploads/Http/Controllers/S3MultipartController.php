@@ -21,6 +21,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Support\Identity;
 
 /**
  * The S3-multipart resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it
@@ -102,6 +103,13 @@ final class S3MultipartController extends Controller
         return $session;
     }
 
+    /**
+     * Authorize a request acting on an EXISTING session by its target shape: Edit on
+     * the node for a new version, else Create under the destination folder — THEN
+     * (F-P1.4-12) confirm the acting actor is the session's OWNER (see
+     * TusUploadController::authorizeSession for the full rationale — the two
+     * controllers share the identical guard).
+     */
     private function authorizeSession(Request $request, UploadSession $session): void
     {
         $storage = $this->storageOf($session);
@@ -109,15 +117,33 @@ final class S3MultipartController extends Controller
         if ($session->isNewVersion()) {
             $node = $this->findNodeInStorage($session->node_id ?? '', $storage);
             $this->guard($request, Ability::Edit, $node);
+        } else {
+            $parent = $session->target_parent_id === null
+                ? $this->rootOf($storage)
+                : $this->findNodeInStorage($session->target_parent_id, $storage);
 
+            $this->guardCreate($request, $storage, $parent);
+        }
+
+        $this->guardOwnership($request, $session);
+    }
+
+    /**
+     * F-P1.4-12: see TusUploadController::guardOwnership — identical guard, shared
+     * rationale, no shared base class to hang it on (kept in sync manually, exactly
+     * like the rest of this authorizeSession/guard/guardCreate trio).
+     */
+    private function guardOwnership(Request $request, UploadSession $session): void
+    {
+        if ($session->created_by === null) {
             return;
         }
 
-        $parent = $session->target_parent_id === null
-            ? $this->rootOf($storage)
-            : $this->findNodeInStorage($session->target_parent_id, $storage);
+        $actorId = $this->actorId($request);
 
-        $this->guardCreate($request, $storage, $parent);
+        if (Identity::stringify($session->created_by) !== Identity::stringify($actorId)) {
+            throw PermissionDeniedException::forAbility('upload-session-owner');
+        }
     }
 
     private function storageOf(UploadSession $session): Storage

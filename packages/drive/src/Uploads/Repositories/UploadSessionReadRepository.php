@@ -33,9 +33,10 @@ final class UploadSessionReadRepository
     }
 
     /**
-     * The §2.8 sweeper candidates: OPEN sessions (initiated|uploading) whose
-     * expires_at is at or before $threshold. Returns a Builder so the command chunks
-     * it. Backed by the (status, expires_at) index.
+     * The §2.8 sweeper candidates: OPEN sessions (initiated|uploading) PLUS stuck
+     * Assembled sessions (F-P1.4-10), whose expires_at is at or before $threshold.
+     * Returns a Builder so the command chunks it. Backed by the (status, expires_at)
+     * index.
      *
      * @return Builder<UploadSession>
      */

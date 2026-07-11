@@ -117,9 +117,15 @@ class UploadSession extends Model
     }
 
     /**
-     * The §2.8 sweeper scope: OPEN sessions (initiated|uploading) whose expires_at is
-     * at or before $threshold — the stale candidates the sweeper reclaims. Backed by
-     * the (status, expires_at) index.
+     * The §2.8 sweeper scope: OPEN sessions (initiated|uploading) PLUS stuck
+     * `Assembled` sessions (F-P1.4-10 — a session whose commit was interrupted after
+     * every byte landed but before BlobStore.commit ran) whose expires_at is at or
+     * before $threshold — the stale candidates the sweeper reclaims. `expires_at` is
+     * stamped once at initiate and never bumped on assembly, so a session that
+     * reaches Assembled well within its TTL is NOT swept (the same threshold that
+     * protects an in-flight PATCH also protects an in-flight commit); only a session
+     * that got stuck in Assembled past its original TTL is reclaimed. Backed by the
+     * (status, expires_at) index.
      *
      * @param  Builder<$this> $query
      * @return Builder<$this>
@@ -127,7 +133,11 @@ class UploadSession extends Model
     public function scopeSweepable(Builder $query, Carbon $threshold): Builder
     {
         return $query
-            ->whereIn('status', [UploadStatus::Initiated->value, UploadStatus::Uploading->value])
+            ->whereIn('status', [
+                UploadStatus::Initiated->value,
+                UploadStatus::Uploading->value,
+                UploadStatus::Assembled->value,
+            ])
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', $threshold);
     }

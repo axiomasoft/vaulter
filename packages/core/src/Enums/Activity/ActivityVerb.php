@@ -32,6 +32,15 @@ enum ActivityVerb: string
     #[Label('Version created')]
     case VersionCreated = 'version.created';
 
+    #[Label('Upload session initiated')]
+    case UploadSessionInitiated = 'upload_session.initiated';
+
+    #[Label('Upload session aborted')]
+    case UploadSessionAborted = 'upload_session.aborted';
+
+    #[Label('Upload session expired')]
+    case UploadSessionExpired = 'upload_session.expired';
+
     #[Label('Node moved')]
     case NodeMoved = 'node.moved';
 

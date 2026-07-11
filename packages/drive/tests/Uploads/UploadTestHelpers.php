@@ -67,6 +67,7 @@ final class UploadTestHelpers
         ?string $targetName = 'upload.bin',
         int|string|null $parentId = null,
         int|string|null $nodeId = null,
+        int|string|null $createdBy = null,
     ): UploadSession {
         // forceFill (P1.4/F-P1.8-02): storage_id/status/received_bytes/… are
         // excluded from UploadSession's $fillable — bypassed here exactly like
@@ -83,6 +84,7 @@ final class UploadTestHelpers
             'total_size_bytes' => $totalSizeBytes,
             'received_bytes' => 0,
             'mime_type' => 'application/octet-stream',
+            'created_by' => $createdBy,
         ]);
         $session->save();
 
