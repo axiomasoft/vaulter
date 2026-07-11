@@ -6,6 +6,42 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Node name search now escapes `%`/`_`/`\`; cycle detection now on for tree reads (P4.2 / F-P1.8-03, F-P4.2-02)
+
+**What changed.** Two `packages/core` behaviour changes, both narrowing a previously-loose
+result rather than adding a new capability:
+
+1. `NodeReadRepository::search()` (backing the `GET storages/{storage}/search` endpoint) now
+   escapes `%`, `_` and `\` in the caller-supplied search term before it is wrapped in `LIKE`
+   wildcards (`... like ? escape '\'`). A term of `%` or `_` used to match every node in the
+   tree (unescaped `LIKE` wildcard); it now matches only nodes whose name literally contains
+   that character.
+2. `Vaulter\Models\Drive\Node::enableCycleDetection()` now returns `true` (the
+   staudenmeir/laravel-adjacency-list trait default is `false`). `ancestors()`/`descendants()`
+   (and everything built on them: `AccessResolver::ancestorChain()`, breadcrumbs, subtree
+   reads) now stop the recursive CTE at a repeated row instead of recursing without a bound.
+
+**Why.** (1) a search term containing `%`/`_` previously behaved as a wildcard rather than a
+literal character — surprising results, and a pathological term could force a full-table scan.
+(2) the only existing guard against a `parent_id` cycle was `MoveNodeAction::assertNoCycle()`,
+exercised solely on the move-through-Action write path; a cycle introduced any other way (raw
+SQL, a seeder, a legacy import) went undetected on read and could exhaust memory/hang a request.
+
+**Who is affected.** (1) Any caller of the node search endpoint/repository method whose search
+terms may contain a literal `%` or `_` and previously relied on (or worked around) the
+wildcard behaviour. (2) Only hosts whose data can contain a `parent_id` cycle bypassing
+`MoveNodeAction` (raw writes, imports, seeders) — a tree with no cycle is completely unaffected;
+a tree that does have one will now get a bounded/truncated ancestor or descendant list instead
+of an unbounded recursive scan.
+
+**What you must check.** If you depended on `%`/`_` behaving as a search wildcard, switch to
+a proper wildcard/filter API instead (this was never a documented contract). If you suspect
+cyclic `parent_id` data (only reachable by bypassing the package's own write paths), audit and
+repair it — cycle detection now surfaces the cycle as a truncated traversal instead of masking
+it with an unbounded/failing query.
+
+No config change, migration, or database schema change is required for this upgrade note.
+
 ### `firebase/php-jwt` raised to `^7.0` (CVE-2025-45769) — signing secrets now need ≥256 bits (P4.1 / F-P4.4-04)
 
 **What changed.** `firebase/php-jwt` moved from `^6.0` to `^7.0` (root `composer.json` and

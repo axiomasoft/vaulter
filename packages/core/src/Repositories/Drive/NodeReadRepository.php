@@ -166,14 +166,23 @@ final class NodeReadRepository
      * Name search within a storage tree (live nodes only). Matches a case-folded
      * substring of the node name — the §2.2 search index backs this.
      *
+     * The caller-supplied term is untrusted (F-P1.8-03): `LIKE` metacharacters
+     * (`%`, `_`, `\`) are escaped BEFORE the substring wildcards are wrapped
+     * around it, with an explicit `ESCAPE '\'` clause — a raw `%`/`_` in the
+     * term is matched LITERALLY, never as a wildcard, on both SQLite and
+     * PostgreSQL. Case-folding happens first so escaping never touches
+     * multibyte case-mapping.
+     *
      * @return Builder<Node>
      */
     public function search(Storage $storage, string $term): Builder
     {
+        $escaped = addcslashes(mb_strtolower($term), '%_\\');
+
         return $this->query()
             ->treeOf($storage->id)
             ->whereNull('trashed_at')
-            ->whereRaw('lower(name) like ?', ['%'.mb_strtolower($term).'%'])
+            ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
             ->orderBy('name');
     }
 

@@ -111,6 +111,20 @@ class Node extends Model
     }
 
     /**
+     * Cycle detection on READ (F-P4.2-02): a cycle in `parent_id` that reached
+     * the data outside `MoveNodeAction::assertNoCycle()` (raw SQL, a seeder, a
+     * legacy import, a future bulk-write path) must not send `ancestors()`/
+     * `descendants()` into an inflated or unbounded recursive scan. The trait
+     * defaults this to `false` — every Node overrides it `true`, so the
+     * recursive CTE stops at the repeated row (a `not(is_cycle)` guard on the
+     * recursive leg) on every adjacency-list read, not only through the Action.
+     */
+    public function enableCycleDetection(): bool
+    {
+        return true;
+    }
+
+    /**
      * Restrict a query (and any recursive descent built on it) to a single
      * storage's tree.
      *
