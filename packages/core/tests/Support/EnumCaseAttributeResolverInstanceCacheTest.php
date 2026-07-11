@@ -31,6 +31,22 @@ it('does not share its reflection-attribute cache across instances, F-P2.1-05', 
     expect($cacheProperty->getValue($second))->toBe([]);
 });
 
-it('is bound as a container singleton, so its lifecycle follows the container not the process, F-P2.1-05', function (): void {
-    expect(app(EnumCaseAttributeResolver::class))->toBe(app(EnumCaseAttributeResolver::class));
+/*
+ * P4.6 review (Major): the binding must be `scoped()`, not `singleton()` — only
+ * `scoped()` resets the container's cached instance between requests/jobs on
+ * Octane/queue workers (see StorageReadRepository's binding in the same
+ * ServiceProvider, which relies on exactly this). `singleton()` would persist
+ * for the whole worker process, reproducing the same failure mode as the
+ * removed process-wide static cache.
+ */
+it('is bound as a container scoped instance, so its lifecycle follows the container not the process, F-P2.1-05', function (): void {
+    $withinRequest = app(EnumCaseAttributeResolver::class);
+
+    expect(app(EnumCaseAttributeResolver::class))->toBe($withinRequest);
+
+    // Octane/queue workers call this between requests/jobs — a plain singleton()
+    // binding would survive it, a scoped() one must not.
+    app()->forgetScopedInstances();
+
+    expect(app(EnumCaseAttributeResolver::class))->not->toBe($withinRequest);
 });

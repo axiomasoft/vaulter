@@ -69,12 +69,15 @@ final class VaulterServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton(IdStrategyResolver::class);
 
-        // Container-owned singleton (F-P2.1-05): the enum-attribute reflection cache
-        // used to be a process-wide `static $cache`, a literal E3.3 violation (global
-        // state outside the facade). Binding it here means the cache's lifecycle
-        // follows the container — reset between requests/jobs on Octane/queue
-        // workers, never accumulating across the whole PHP process.
-        $this->app->singleton(EnumCaseAttributeResolver::class);
+        // Container-owned, scoped (F-P2.1-05 / P4.6 review): the enum-attribute
+        // reflection cache used to be a process-wide `static $cache`, a literal
+        // E3.3 violation (global state outside the facade). Binding it here means
+        // the cache's lifecycle follows the container instance instead of the
+        // class — and scoped() (not singleton(), see StorageReadRepository right
+        // below) is what actually resets it between requests/jobs on Octane/queue
+        // workers, since singleton() persists for the whole worker process just
+        // like the removed static cache did.
+        $this->app->scoped(EnumCaseAttributeResolver::class);
 
         // Scoped (P1.3 / F-P4.2-03): StorageReadRepository memoizes find() by id in
         // an in-request identity map, so `AccessResolver::storageOf()` resolved
