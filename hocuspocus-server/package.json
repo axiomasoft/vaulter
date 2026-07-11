@@ -18,8 +18,11 @@
     "@hocuspocus/extension-throttle": "^4.3",
     "@hocuspocus/server": "^4.3",
     "dotenv": "^16.4.5",
-    "ioredis": "^4.31",
+    "ioredis": "^5.11.1",
     "yjs": "^13.6.8"
+  },
+  "devDependencies": {
+    "ws": "^8.21.0"
   },
   "engines": {
     "node": ">=20"

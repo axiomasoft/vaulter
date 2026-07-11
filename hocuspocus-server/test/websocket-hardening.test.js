@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { Server } from '@hocuspocus/server'
+import { WebSocket } from 'ws'
 
 // F-P4.5-02 — regression for the WebSocket frame-size hardening (master plan Addendum A.3)
 // after the @hocuspocus/* bump to v4. In v4 the transport moved from `ws` to `crossws`, and
@@ -32,7 +33,11 @@ async function listenEphemeral(server) {
 /**
  * Open a client socket, send one binary frame of `frameSize` bytes, and resolve the close code
  * the transport reports — or the sentinel 'OPEN' if the socket is still up after `settleMs`
- * (i.e. the frame was accepted). Node ships a global WebSocket client, so no extra dependency.
+ * (i.e. the frame was accepted). Uses the `ws` client (a devDependency) rather than Node's
+ * global WebSocket: the global is only stable from Node 22 (undefined on Node 20 without
+ * --experimental-websocket), and the hocuspocus CI matrix runs `npm test` on Node 20 and 22 —
+ * so a global-WebSocket probe would fail the Node 20 lane and leave the frame-cap invariant
+ * unverified on the lower bound of the declared support range (engines.node >= 20).
  */
 function sendFrameAndAwaitClose(port, frameSize, settleMs = 1500) {
   return new Promise((resolve, reject) => {
