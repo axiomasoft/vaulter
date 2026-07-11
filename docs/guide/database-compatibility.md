@@ -80,6 +80,18 @@ migration `PanelTablesBuilder` creates and every shipped model's `getConnectionN
 connection instead, e.g. to shard Vaulter onto its own database or isolate a heavy CAS/activity
 workload. Leaving the key `null` (the default) keeps the current behaviour exactly as it is today.
 
+::: warning Known gap: `packages/drive` and `packages/documents` models
+The `v_*` tables owned by `packages/drive` (`UploadSession`, `UploadPart`) and
+`packages/documents` (`NodeComment`, `NodeDocumentVersion`) ARE created on
+`config('vaulter.connection')` — they go through the same `PanelTablesBuilder` as every other
+Vaulter table. Their Eloquent models, however, do **not** yet resolve `getConnectionName()` from
+that key (only the 12 `packages/core` models do, via `ResolvesVaulterConnection`). If you set
+`VAULTER_DB_CONNECTION` to a connection other than the host's default, these 4 models will keep
+resolving to the default connection and throw "table not found" on first access. Do not set
+`vaulter.connection` to a non-default value while relying on `NodeComment`, `NodeDocumentVersion`,
+`UploadSession`, or `UploadPart` until this is closed. Track/resolve in a follow-up item.
+:::
+
 ## Schema change policy
 
 Vaulter is pre-`v0.1.0` today, so every table is create-only or empty for every consumer — a

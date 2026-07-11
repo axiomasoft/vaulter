@@ -21,6 +21,16 @@ same key via the new `Vaulter\Models\Concerns\ResolvesVaulterConnection` trait.
 **This is purely additive — no action required.** The key defaults to `null`, which resolves
 exactly as before (the host's default connection); nothing changes unless you explicitly set it.
 
+**Known gap — `packages/drive`/`packages/documents` models.** Only the 12 `packages/core` models
+(`Node`, `Storage`, `NodeGrant`, `Activity`, `File`, `FileVersion`, `FileVersionBlob`, `NodeShare`,
+`Outbox`, `WebhookEndpoint`, `WebhookDelivery`, `Blob`) resolve `getConnectionName()` from this
+key. `UploadSession`/`UploadPart` (`packages/drive`) and `NodeComment`/`NodeDocumentVersion`
+(`packages/documents`) do NOT — their tables ARE created on `config('vaulter.connection')` (same
+`PanelTablesBuilder`), but the models still resolve to the host's default connection. If you set
+`VAULTER_DB_CONNECTION` to a non-default connection, these 4 models will throw "table not found"
+on first access. Do not point `vaulter.connection` away from the default while using drive
+upload-session or document-comment/version features until this is closed in a follow-up.
+
 **Docs:** `docs/guide/database-compatibility.md` gained a "Dedicated database connection" section
 covering this key, and a "Schema change policy" section formalising how the shipped `v_*` schema
 is allowed to evolve after the package's first tag (F-P2.3-04, doc-only — no code/behaviour
