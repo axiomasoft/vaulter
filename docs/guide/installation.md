@@ -79,6 +79,20 @@ migrations run from `vendor/` without being published. Publish them with
 before a custom panel). The published config lands at `config/vaulter.php`.
 :::
 
+::: warning Publishing migrations switches the canonical mode — don't run both
+`vendor:publish --tag=vaulter-migrations` generates **new timestamp-prefixed filenames**
+for every migration (e.g. `2026_06_13_000007_create_v_storages_table.php` becomes
+`2026_07_10_101542_create_v_storages_table.php`). Laravel tracks executed migrations by
+**filename**, so once you publish, the vendor-discovered copies (still active through
+`discoversMigrations()->runsMigrations()`) are no longer the same migrations Laravel has
+already run — the next `php artisan migrate` will try to run the published copies a
+**second time** and fail with `SQLSTATE[42S01]: table already exists`.
+
+Publishing migrations is a one-way switch: once you publish `vaulter-migrations` to edit
+the schema, migrate **only** from the published copies from then on. Do not leave the
+vendor auto-run active alongside a published copy of the same migration.
+:::
+
 ## 2. Frontend — the Vue package
 
 Install the Vue components, composables and API client:

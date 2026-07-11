@@ -59,21 +59,33 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         // `vaulter.exporters` keys. Core ships no defaults for any of the three, so
         // this merge is authoritative; a host's own config still wins on key overlap
         // (array_merge, host second) — the drive/media provider precedent.
-        /** @var array{models: array<string, class-string>, handlers: list<class-string>, exporters: array<string, class-string>} $defaults */
-        $defaults = require __DIR__.'/../config/vaulter-documents.php';
+        //
+        // Cache-safety (F-P2.2-01, D19): a single config file back three DIFFERENT
+        // top-level `vaulter.*` keys, so a plain `mergeConfigFrom($path, 'vaulter.models')`
+        // is not viable here — it would merge the WHOLE returned array (models +
+        // handlers + exporters) under `vaulter.models`, mis-nesting the latter two.
+        // The merge is instead gated the same way `mergeConfigFrom` gates itself
+        // (`configurationIsCached()`): when the host has run `config:cache`, the
+        // merged values are already baked into the cached config, so re-reading the
+        // file from disk and recomputing the merge on every request is redundant I/O
+        // in `register()` (`.claude/rules/service-provider.md`).
+        if (!$this->app->configurationIsCached()) {
+            /** @var array{models: array<string, class-string>, handlers: list<class-string>, exporters: array<string, class-string>} $defaults */
+            $defaults = require __DIR__.'/../config/vaulter-documents.php';
 
-        /** @var array<string, class-string> $existingModels */
-        $existingModels = config('vaulter.models', []);
-        /** @var list<class-string> $existingHandlers */
-        $existingHandlers = config('vaulter.handlers', []);
-        /** @var array<string, class-string> $existingExporters */
-        $existingExporters = config('vaulter.exporters', []);
+            /** @var array<string, class-string> $existingModels */
+            $existingModels = config('vaulter.models', []);
+            /** @var list<class-string> $existingHandlers */
+            $existingHandlers = config('vaulter.handlers', []);
+            /** @var array<string, class-string> $existingExporters */
+            $existingExporters = config('vaulter.exporters', []);
 
-        config([
-            'vaulter.models' => array_merge($defaults['models'], $existingModels),
-            'vaulter.handlers' => array_merge($defaults['handlers'], $existingHandlers),
-            'vaulter.exporters' => array_merge($defaults['exporters'], $existingExporters),
-        ]);
+            config([
+                'vaulter.models' => array_merge($defaults['models'], $existingModels),
+                'vaulter.handlers' => array_merge($defaults['handlers'], $existingHandlers),
+                'vaulter.exporters' => array_merge($defaults['exporters'], $existingExporters),
+            ]);
+        }
 
         // The format-extensibility registry (§4.5 / §7 / H.5 / M4a). Singleton — it
         // memoises the merged handler set + resolutions. Bound behind the core
