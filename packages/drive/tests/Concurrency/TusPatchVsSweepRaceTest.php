@@ -6,12 +6,15 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
+use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Models\Drive\Node;
 
 /**
  * VLT-REMED P5.2 / R-02 — гонка PATCH ↔ sweep. P0.3 закрыл гонку PATCH↔PATCH, но лок
@@ -158,6 +161,59 @@ it('PATCH и sweep одной сессии: победитель ровно од
         ->and($stagedSize)->toBe(0, $context)
         ->and($final->received_bytes)->toBeLessThanOrEqual($prefixLen, $context)
         ->and($patchResult)->toStartWith('patch:rejected:', $context);
+});
+
+/**
+ * VLT-REMED P5.2 / R-11 — commit-путь обязан входить в ТУ ЖЕ критическую секцию, что и
+ * PATCH. До фикса `markAssembled()` + `CommitUploadAction::execute()` шли ВНЕ лока, а
+ * `scopeSweepable` включает Assembled: уборщик брал лок беспрепятственно и сносил
+ * staged-объект ПОСЕРЕДИНЕ стрима в BlobStore.commit — коммит либо падал на «нет
+ * staged-байтов», либо фиксировал УСЕЧЁННЫЙ блоб (CAS честно перехэшировал обрезанные
+ * байты, и поймать это было нечем).
+ *
+ * Наблюдаемость лока требует ДВУХ сеансов (advisory-лок реентрантен внутри одного) —
+ * поэтому здесь второе независимое соединение, как в R-09, а не форк.
+ */
+it('commitAssembled() берёт ту же критическую секцию: пока лок сессии держит другой сеанс, коммит отбивается, R-11', function (): void {
+    if (DB::connection()->getDriverName() !== 'pgsql') {
+        $this->markTestSkipped('Неблокирующий лок сессии наблюдаем только на PostgreSQL (SQLite сериализует записи).');
+    }
+
+    Storage::fake('local');
+
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 6, parentId: $storage->root_node_id);
+
+    app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('abcdef'), 0);
+    app(UploadSessionStoreRepository::class)->advanceReceived($session, 6);
+
+    $default = DB::getDefaultConnection();
+    config(['database.connections.vlt_commit_second' => config("database.connections.{$default}")]);
+
+    DB::connection($default)->beginTransaction();
+
+    try {
+        // Сеанс A (уборщик/второй PATCH) держит лок сессии.
+        app(UploadSessionStoreRepository::class)->acquireForPatch($session->refresh());
+
+        DB::setDefaultConnection('vlt_commit_second');
+        DB::connection('vlt_commit_second')->beginTransaction();
+
+        try {
+            // Сеанс B — контроллер, дошедший до assemble→commit. До фикса он не брал лок
+            // вовсе и спокойно коммитил параллельно с реклеймом.
+            expect(fn () => app(UploadSessionManager::class)->commitAssembled(
+                $session->refresh(),
+                static fn (UploadSession $locked): Node => throw new RuntimeException('коммит не должен идти без лока сессии'),
+            ))->toThrow(UploadConflictException::class);
+        } finally {
+            DB::connection('vlt_commit_second')->rollBack();
+            DB::setDefaultConnection($default);
+            DB::purge('vlt_commit_second');
+        }
+    } finally {
+        DB::connection($default)->rollBack();
+    }
 });
 
 /**

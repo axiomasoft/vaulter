@@ -127,6 +127,11 @@ class UploadSession extends Model
      * that got stuck in Assembled past its original TTL is reclaimed. Backed by the
      * (status, expires_at) index.
      *
+     * The TTL is a heuristic, not the barrier: an upload that lands its last chunk AFTER
+     * expires_at (a PATCH is gated on status, never on expiry) reaches Assembled already
+     * sweepable. What actually keeps the sweeper off a live commit is the session lock the
+     * commit path now holds (UploadSessionManager::commitAssembled, VLT-REMED P5.2 / R-11).
+     *
      * @param  Builder<$this> $query
      * @return Builder<$this>
      */

@@ -86,8 +86,12 @@ final class S3MultipartController extends Controller
 
         $this->s3Handler()->complete($session);
 
-        $session = $this->manager->markAssembled($session->refresh());
-        $node = $this->commit->execute($session->refresh());
+        // Inside the session's critical section (R-11) — the sweeper reclaims an Assembled
+        // session too, and out here it was free to discard the staged bytes mid-commit.
+        $node = $this->manager->commitAssembled(
+            $session->refresh(),
+            fn (UploadSession $locked): Node => $this->commit->execute($locked),
+        );
 
         return NodeResource::make($node)->response()->setStatusCode(201);
     }

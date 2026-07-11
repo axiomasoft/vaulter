@@ -155,9 +155,14 @@ final class TusUploadController extends Controller
             ]);
         }
 
-        // All bytes in: assemble→commit (the SAME race-free CAS path, H.3).
-        $session = $this->manager->markAssembled($session->refresh());
-        $node = $this->commit->execute($session->refresh());
+        // All bytes in: assemble→commit (the SAME race-free CAS path, H.3) — driven through
+        // the manager so it runs INSIDE the session's critical section (R-11): a sweeper
+        // may legally reclaim an Assembled session, and out here it used to be free to
+        // discard the staged bytes mid-commit.
+        $node = $this->manager->commitAssembled(
+            $session->refresh(),
+            fn (UploadSession $locked): Node => $this->commit->execute($locked),
+        );
 
         return NodeResource::make($node)
             ->response()

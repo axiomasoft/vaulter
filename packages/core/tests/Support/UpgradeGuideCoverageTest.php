@@ -61,7 +61,30 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         'P5.2 upload lock' => ['(P5.2 / R-02, R-03, R-08)', (string) file_get_contents($root.'/packages/drive/src/Uploads/UploadSessionManager.php')],
         // P5.2 — markdown-экранирование.
         'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTapRenderer.php')],
+        // P5.2 — commit внутри критической секции + CAS на markCommitted.
+        'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Uploads/Repositories/UploadSessionStoreRepository.php')],
+        // P5.2 — обеззараживание TipTap-контента на JSON-чтении.
+        'P5.2 read sanitization' => ['(P5.2 / R-12)', (string) file_get_contents($root.'/packages/documents/src/Http/Resources/NodeDocumentVersionResource.php')],
     ];
+});
+
+/*
+ * R-12 — дока обещает, что JSON-чтение отдаёт обеззараженный контент. Guard держит оба
+ * конца: сам факт скраба URL в коде (а не только строку в UPGRADE.md).
+ */
+it('UPGRADE.md обещает скраб URL на чтении — и скраб действительно есть в коде, R-12', function (): void {
+    $scrubbed = TipTapContent::decayFrom([
+        'type' => 'doc',
+        'content' => [[
+            'type' => 'text',
+            'text' => 'x',
+            'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]],
+        ]],
+    ])->withSanitizedUrls();
+
+    expect((string) json_encode($scrubbed->toArray()))->not->toContain('javascript:');
+
+    expect(upgradeGuide())->toContain('(P5.2 / R-12)');
 });
 
 /*

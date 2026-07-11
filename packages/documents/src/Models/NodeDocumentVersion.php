@@ -92,8 +92,14 @@ class NodeDocumentVersion extends Model
      * the listing UI, i.e. an XSS barrier bought at the price of denial of service.
      *
      * Attribute VALUES survive the decay by design: a legacy `href="javascript:…"` reaches
-     * the renderer, where the render-time HTML sanitizer (second echelon, D4) neutralises
+     * the RENDERER, where the render-time HTML sanitizer (second echelon, D4) neutralises
      * it — that is the echelon's only real input.
+     *
+     * That covers the HTML paths (export/preview) and NOTHING else, so the JSON read path —
+     * NodeDocumentVersionResource, which hands the content straight to the editor with no
+     * renderer in between — scrubs the URL values itself through
+     * {@see TipTapContent::withSanitizedUrls()} (VLT-REMED P5.2 / R-12). A caller that uses
+     * tipTapContent() to build its OWN client-facing payload must do the same.
      */
     public function tipTapContent(): TipTapContent
     {

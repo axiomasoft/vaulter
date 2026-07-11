@@ -13,6 +13,7 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Drive\Events\UploadSessionAborted;
 use Vaulter\Drive\Events\UploadSessionExpired;
 use Vaulter\Drive\Events\UploadSessionInitiated;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler;
 use Vaulter\Drive\Uploads\Data\UploadInitData;
 use Vaulter\Drive\Uploads\Enums\UploadProtocol;
@@ -121,6 +122,45 @@ final readonly class UploadSessionManager
         $this->guardTransition($session, UploadStatus::Assembled);
 
         return $this->sessions->transition($session, UploadStatus::Assembled);
+    }
+
+    /**
+     * Drive assemble→commit INSIDE the same critical section as a tus PATCH (VLT-REMED
+     * P5.2 / R-11). The controller used to do it in the open: `markAssembled()` then
+     * `CommitUploadAction::execute()`, each on its own connection-level transaction, with
+     * nothing holding the session lock in between — while {@see reclaim()} explicitly
+     * reclaims an Assembled session and {@see UploadSession::scopeSweepable()} lists one
+     * past its TTL. A sweeper tick therefore took the lock unopposed and discarded the
+     * staged object MID-STREAM: the commit either died on "no staged bytes" or wrote a
+     * TRUNCATED blob (the CAS re-hashes whatever it is handed — nothing downstream could
+     * tell). Holding the lock across the whole "assemble → BlobStore.commit → markCommitted"
+     * window makes the sweeper's non-blocking acquire fail instead, which it already reads
+     * as "skip, this session is alive".
+     *
+     * The status is RE-READ under the lock: a session reclaimed between the last chunk and
+     * this call is refused with a conflict and $commit is never invoked — no bytes of a
+     * terminal session ever reach the Drive.
+     *
+     * @template TResult
+     *
+     * @param  callable(UploadSession): TResult $commit
+     * @return TResult
+     */
+    public function commitAssembled(UploadSession $session, callable $commit): mixed
+    {
+        return DB::transaction(function () use ($session, $commit): mixed {
+            $locked = $this->sessions->acquireForPatch($session);
+
+            if ($locked->status !== UploadStatus::Assembled) {
+                if (!$locked->status->canTransitionTo(UploadStatus::Assembled)) {
+                    throw UploadConflictException::forClosedSession($locked->upload_id);
+                }
+
+                $locked = $this->sessions->transition($locked, UploadStatus::Assembled);
+            }
+
+            return $commit($locked);
+        });
     }
 
     /**

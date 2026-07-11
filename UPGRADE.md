@@ -139,6 +139,67 @@ now throw `UploadConflictException`.
 **What you must check.** Wrap direct `abort()`/`expire()` calls in a `UploadConflictException`
 handler (surface a 409 / retry later). Clients must treat a 409 as "re-read `HEAD` and resume".
 
+### The upload COMMIT now runs inside the session lock too; `markCommitted()` is a compare-and-set (P5.2 / R-11)
+
+**What changed.**
+
+- New `UploadSessionManager::commitAssembled(UploadSession $session, callable $commit)`: it takes
+  the per-session lock, re-reads the status under it, moves the session to `assembled`, and runs
+  your commit callback **inside** that critical section. Both shipped controllers (tus `PATCH`
+  completion, S3 `complete-multipart`) now go through it instead of calling
+  `markAssembled()` + `CommitUploadAction::execute()` in the open.
+- `UploadSessionStoreRepository::markCommitted()` is now a compare-and-set on `assembled`: it
+  throws `UploadConflictException` (409) instead of force-writing `committed`, and the commit
+  transaction rolls back with it.
+- A session reclaimed (expired/aborted) between its last chunk and its commit is now refused with
+  `UploadConflictException` rather than committed.
+
+**Why.** The sweeper legitimately reclaims an `assembled` session past its TTL (F-P1.4-10), and a
+`PATCH` is gated on status, never on expiry — so an upload could land its last chunk after
+`expires_at`, and the commit then streamed the staged bytes into `BlobStore.commit` with **nothing
+holding the lock**. A sweeper tick discarded the staged object mid-stream: the commit either died
+on "no staged bytes" or committed a **truncated** blob (the CAS re-hashes whatever it is handed —
+nothing downstream could tell), and `markCommitted()` then resurrected the terminal row as
+`committed`.
+
+**Who is affected.** Hosts that drive `CommitUploadAction` themselves (a custom upload controller,
+a queued commit job), or call `markCommitted()` directly.
+
+**What you must check.** Wrap your commit in `commitAssembled()`:
+
+```php
+$node = $manager->commitAssembled($session, fn (UploadSession $locked) => $commitAction->execute($locked));
+```
+
+and handle `UploadConflictException` (surface a 409 — the session was reclaimed; the client starts
+a new upload).
+
+### The document read API now returns SANITIZED TipTap content (decayed + scheme-scrubbed), not the raw row (P5.2 / R-12)
+
+**What changed.** `NodeDocumentVersionResource` (behind `GET nodes/{node}/content`) no longer echoes
+the persisted `content` column verbatim for TipTap documents. It now returns
+`TipTapContent::decayFrom(...)->withSanitizedUrls()`:
+
+- unknown nodes/marks and attribute keys outside the allow-list are **stripped**;
+- `link.href` / `image.src` whose scheme is not `http`/`https`/`mailto` are **dropped** (the same
+  `LinkSchemeValidator` the store-time gate uses, so `java\tscript:` obfuscation is caught too).
+
+A non-rich-text handler's opaque snapshot (a Univer workbook, §7 level 2) is still returned
+**verbatim** — the content shape decides, not the `format` label.
+
+**Why.** This is the path the editor actually mounts, and both XSS echelons missed it: the
+store-time validator never saw rows written before it existed, and `symfony/html-sanitizer` guards
+only the HTML render (export/preview). A legacy `href="javascript:alert(1)"` therefore travelled
+straight from the API into the DOM as an `<a href>`.
+
+**Who is affected.** Hosts whose client reads `data.content` and relies on custom TipTap
+nodes/marks of their own.
+
+**What you must check.** Declare your extensions in `vaulter.tiptap.extra_nodes` /
+`extra_marks` / `extra_attributes` (the same config seam the store-time allow-list uses — see the
+TipTap section above). Anything not declared there is now stripped on **read** as well as rejected
+on write.
+
 ### Panels are read at boot, not on first use (P4.4 / F-P3.2-01)
 
 **What changed.** `PanelRegistry` is now resolved during `VaulterServiceProvider::packageBooted()`,

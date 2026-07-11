@@ -65,9 +65,12 @@ final class UploadSessionStoreRepository
      *  - sqlite: no row lock, but the single-writer transaction serialises the
      *            critical section, so the fresh read alone is correct.
      *
-     * The same seam is taken by the sweeper/abort path (UploadSessionManager::expire /
-     * abort, R-02) — reclaiming a session's staged bytes is the same critical section
-     * as writing them, so the two can never interleave.
+     * The same seam is taken by every OTHER actor that touches those staged bytes, which is
+     * the whole point: the sweeper/abort path (UploadSessionManager::expire / abort, R-02)
+     * and the commit path (UploadSessionManager::commitAssembled, R-11 — an Assembled
+     * session is reclaimable, so streaming its bytes into BlobStore must exclude the sweeper
+     * exactly as a PATCH does). Reclaiming a session's staged bytes, appending to them and
+     * committing them are ONE critical section; none of the three can interleave.
      *
      * The pgsql key is 64-bit (`hashtextextended`, R-09): the 32-bit `hashtext` shares
      * a key between two DIFFERENT upload_ids often enough to matter (birthday bound over
@@ -190,14 +193,34 @@ final class UploadSessionStoreRepository
      * Stamp the assembled blob id + flip to Committed once the assembled bytes have
      * gone through BlobStore.commit (§2.8 / H.3). The single writer of
      * assembled_blob_id.
+     *
+     * COMPARE-AND-SET on Assembled (VLT-REMED P5.2 / R-11) — the last writer that was still
+     * a plain forceFill after R-08 gave one to advanceReceived(). It closes the same
+     * resurrection hole on the OTHER end of the lifecycle: `scopeSweepable` includes an
+     * Assembled session past its TTL, so a sweeper may reclaim the row (staged bytes
+     * discarded, status → Expired) while the commit is streaming those very bytes into
+     * BlobStore — and the unconditional forceFill then declared that terminal, byte-less
+     * session Committed, with an assembled_blob_id pointing at whatever the CAS happened to
+     * hash. Zero rows affected means someone else won → a conflict, never a silent
+     * overwrite; the commit transaction rolls back with it.
      */
     public function markCommitted(UploadSession $session, int|string $assembledBlobId): UploadSession
     {
-        $session->forceFill([
-            'assembled_blob_id' => $assembledBlobId,
-            'status' => UploadStatus::Committed,
-        ])->save();
+        $model = UploadModels::session();
 
-        return $session;
+        $affected = $model::query()
+            ->whereKey($session->getKey())
+            ->where('status', UploadStatus::Assembled->value)
+            ->update([
+                'assembled_blob_id' => $assembledBlobId,
+                'status' => UploadStatus::Committed->value,
+                'updated_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+
+        return $session->refresh();
     }
 }

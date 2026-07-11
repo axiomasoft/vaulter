@@ -135,6 +135,10 @@ final readonly class TipTapContent implements DocumentContent
      * that echelon with nothing to catch and make it untestable (VLT-REMED R-07) — and the
      * Markdown path re-applies {@see LinkSchemeValidator} on its own.
      *
+     * A consumer that hands this content to a CLIENT without a renderer in between (the JSON
+     * API resource, an editor payload) has no such echelon behind it and must therefore take
+     * {@see withSanitizedUrls()} (VLT-REMED P5.2 / R-12).
+     *
      * @param array<string, mixed> $doc
      */
     public static function decayFrom(array $doc): self
@@ -152,6 +156,27 @@ final readonly class TipTapContent implements DocumentContent
     public static function empty(): self
     {
         return new self(['type' => 'doc', 'content' => []]);
+    }
+
+    /**
+     * A copy whose `link.href` / `image.src` values are guaranteed to carry an allowed
+     * scheme — every other URL is DROPPED (VLT-REMED P5.2 / R-12).
+     *
+     * This is the echelon for the JSON read path (the API resource that hands the stored
+     * content straight to the editor). {@see decayFrom()} deliberately leaves attribute
+     * VALUES alone because the HTML renderer has `symfony/html-sanitizer` behind it — but
+     * the JSON path has NO renderer: whatever it returns is mounted by the client as-is,
+     * so a legacy `javascript:` href would reach the DOM through the host's own editor. The
+     * scheme check is {@see LinkSchemeValidator} (the same one the store-time gate uses), so
+     * a control-character split like `java\tscript:` is caught with it.
+     *
+     * Dropping the attribute (rather than the node/mark) keeps the document readable: a link
+     * without an href is inert text, an image without a src is an empty box — the content
+     * degrades, it does not vanish.
+     */
+    public function withSanitizedUrls(): self
+    {
+        return new self(self::scrubNode($this->doc));
     }
 
     /**
@@ -431,6 +456,72 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         return $kept;
+    }
+
+    // ─── Read time: URL scrub (the JSON path's own echelon) ──────────────────
+
+    /**
+     * Recursively drop every URL attribute whose scheme is not allowed, normalising the
+     * ones that are (see {@see withSanitizedUrls()}). Structure and every other attribute
+     * are left exactly as they were — this is a value guard, not a second decay.
+     *
+     * @param  array<string, mixed> $node a node OR a mark (both carry type/attrs)
+     * @return array<string, mixed>
+     */
+    private static function scrubNode(array $node): array
+    {
+        $type = $node['type'] ?? null;
+
+        if (is_string($type) && isset($node['attrs']) && is_array($node['attrs'])) {
+            /** @var array<string, mixed> $attrs */
+            $attrs = $node['attrs'];
+            $node['attrs'] = self::scrubUrlAttribute($type, $attrs);
+        }
+
+        foreach (['marks', 'content'] as $key) {
+            if (!isset($node[$key]) || !is_array($node[$key])) {
+                continue;
+            }
+
+            $scrubbed = [];
+
+            foreach ($node[$key] as $child) {
+                if (is_array($child)) {
+                    /** @var array<string, mixed> $child */
+                    $scrubbed[] = self::scrubNode($child);
+                }
+            }
+
+            $node[$key] = $scrubbed;
+        }
+
+        return $node;
+    }
+
+    /**
+     * @param  array<string, mixed> $attrs
+     * @return array<string, mixed>
+     */
+    private static function scrubUrlAttribute(string $type, array $attrs): array
+    {
+        $urlAttribute = self::URL_ATTRIBUTES[$type] ?? null;
+
+        if ($urlAttribute === null || !array_key_exists($urlAttribute, $attrs)) {
+            return $attrs;
+        }
+
+        $url = $attrs[$urlAttribute];
+        $safe = is_string($url) ? LinkSchemeValidator::sanitize($url) : null;
+
+        if ($safe === null) {
+            unset($attrs[$urlAttribute]);
+
+            return $attrs;
+        }
+
+        $attrs[$urlAttribute] = $safe;
+
+        return $attrs;
     }
 
     /**

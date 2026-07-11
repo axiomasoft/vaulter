@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Exceptions\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\Actions\CommitUploadAction;
 use Vaulter\Drive\Uploads\Enums\UploadStatus;
 use Vaulter\Drive\Uploads\Models\UploadSession;
 use Vaulter\Drive\Uploads\Repositories\UploadSessionStoreRepository;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Models\Drive\Node;
 
 /**
  * VLT-REMED P5.2 — критическая секция upload-сессии. Это ДЕТЕРМИНИРОВАННЫЕ братья
@@ -120,6 +122,88 @@ it('vaulter:sweep-uploads реклеймит стухшую сессию и чи
 
     expect($after->status)->toBe(UploadStatus::Expired)
         ->and(app(StagedUpload::class)->size($after))->toBe(0);
+});
+
+/*
+ * R-11 — markCommitted() был ЕДИНСТВЕННЫМ писателем статуса, которому не досталось
+ * compare-and-set из R-08: голый forceFill('committed'). Пока commit-путь шёл ВНЕ
+ * критической секции, sweep успевал реклеймить Assembled-сессию (scopeSweepable её
+ * включает) прямо во время коммита — и markCommitted воскрешал терминальную строку в
+ * Committed, дорисовывая ей assembled_blob_id. CAS по Assembled: 0 строк → конфликт.
+ */
+it('markCommitted() НЕ воскрешает реклеймленную сессию — CAS по Assembled, R-11', function (UploadStatus $terminal): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 10);
+
+    $session->forceFill(['status' => $terminal])->save();
+
+    expect(fn () => app(UploadSessionStoreRepository::class)->markCommitted($session, 777))
+        ->toThrow(UploadConflictException::class);
+
+    $after = UploadSession::query()->findOrFail($session->getKey());
+
+    // До фикса: status → committed, assembled_blob_id → 777. Сессия, у которой sweep уже
+    // снёс staged-байты, объявлялась успешно закоммиченной.
+    expect($after->status)->toBe($terminal)
+        ->and($after->assembled_blob_id)->toBeNull();
+})->with([
+    'expired' => [UploadStatus::Expired],
+    'aborted' => [UploadStatus::Aborted],
+]);
+
+/*
+ * R-11 (сквозной) — сессия, реклеймленная ПОКА её байты ещё лежат на стадии (ровно окно
+ * между markAssembled и BlobStore.commit), не должна закоммититься. До фикса
+ * CommitUploadAction спокойно доводил её до конца: узел создавался, а терминальная строка
+ * воскресала в Committed — sweep и commit молча делили одни и те же байты.
+ */
+it('коммит реклеймленной сессии отбивается, узел не создаётся, статус не воскресает, R-11', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 6, parentId: $storage->root_node_id);
+
+    app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('abcdef'), 0);
+    app(UploadSessionStoreRepository::class)->advanceReceived($session, 6);
+    app(UploadSessionManager::class)->markAssembled($session->refresh());
+
+    $nodesBefore = Node::query()->count();
+
+    // Sweep успел перевести сессию в терминал, но staged-объект ещё читается (discard и
+    // commit — одно и то же окно; на реальной гонке байты исчезают ПОСЕРЕДИНЕ стрима).
+    UploadSession::query()->whereKey($session->getKey())->update(['status' => UploadStatus::Expired->value]);
+
+    expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))
+        ->toThrow(UploadConflictException::class);
+
+    $after = UploadSession::query()->findOrFail($session->getKey());
+
+    expect($after->status)->toBe(UploadStatus::Expired)
+        ->and($after->assembled_blob_id)->toBeNull()
+        ->and(Node::query()->count())->toBe($nodesBefore);
+});
+
+/*
+ * R-11 — commitAssembled() (шов, которым контроллер загоняет assemble→commit в ТУ ЖЕ
+ * критическую секцию, что и PATCH) обязан перечитывать статус под локом: сессия, ушедшая
+ * в терминал между последним чанком и коммитом, отбивается конфликтом, а сам коммит не
+ * вызывается вовсе.
+ */
+it('commitAssembled() перечитывает статус под локом и не зовёт коммит терминальной сессии, R-11', function (): void {
+    $storage = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($storage, totalSizeBytes: 6, parentId: $storage->root_node_id);
+
+    app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('abcdef'), 0);
+    app(UploadSessionStoreRepository::class)->advanceReceived($session, 6);
+
+    // Снимок, с которым контроллер пришёл коммитить; строка уже реклеймлена уборщиком.
+    $stale = UploadSession::query()->findOrFail($session->getKey());
+    app(UploadSessionManager::class)->expire($session->refresh());
+
+    expect(fn () => app(UploadSessionManager::class)->commitAssembled(
+        $stale,
+        static fn (UploadSession $locked): Node => throw new RuntimeException('коммит терминальной сессии не должен быть вызван'),
+    ))->toThrow(UploadConflictException::class);
+
+    expect(UploadSession::query()->findOrFail($session->getKey())->status)->toBe(UploadStatus::Expired);
 });
 
 /*
