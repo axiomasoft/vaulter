@@ -20,7 +20,7 @@ structure-only items (P0.3, P3.5, P4.3, P4.8, P4.9, P5.1), где предмет
 - Критерий 3 (`UPGRADE.md` покрывает ВСЕ breaking) — **✅ (было ⚠️)** — независимая построчная сверка
   проведена дважды (`0cecc06` + повторный проход этой сессии), пропусков не осталось.
 - Критерий 4 (гейты зелёные из корня/по сателлитам) — ✅ (с известным долгом: `lint:check` красный
-  только на `plans/AUDIT-VLT/artifacts/repro/**`).
+  только на `plans/archive/AUDIT-VLT/artifacts/repro/**`).
 - Критерий 5 (реальный измеренный MSI) — **❌** (провизорный порог по-прежнему `50/70`; Infection
   физически не запускается в этой песочнице — нет `xdebug`/`pcov`, `sudo`/`pecl` заблокированы
   harness'ом; **это честное ограничение окружения**, НЕ решение принять advisory-MSI. Требует прогона в
@@ -83,7 +83,7 @@ Node-engine Major и построчная сверка UPGRADE.md):
 - `docs/adr/0017-package-structure-canon.md` — канон структуры (P4.9), исполнен P4.10.
 - `UPGRADE.md` — сток breaking changes плана (D3/D23); построчно сверен дважды против всех 29 items,
   включая namespace-BC карту P4.10 и конструкторную зависимость `TipTapRenderer` (P0.1, `0cecc06`).
-- `plans/AUDIT-VLT/findings/REGISTER.md` — 103 находки, append-only (D13), НЕ править.
+- `plans/archive/AUDIT-VLT/findings/REGISTER.md` — 103 находки, append-only (D13), НЕ править.
 - `plans/VLT-REMED/plan.md` — §Routing · Decision Log **D1–D30** · Status Board (P4 = `10/10 🟢`) ·
   Update Log.
 

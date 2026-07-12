@@ -79,3 +79,9 @@ Blocker'ов. См. `findings/P5.2-remediation-backlog.md` §4 (Blocker'ы) и �
   `docs/`-миграция долгоживущего материала (Diátaxis-манифест готов в P5.3) — ждёт
   `plan-close archive` после решения по R4.2.
 - open questions: нет открытых (Q1–Q4 закрыты D11–D13, D15).
+
+**Архивация (2026-07-12):** план перенесён `plans/AUDIT-VLT` → `plans/archive/AUDIT-VLT`.
+R4.2 материализован как follow-up-план `VLT-REMED` (ссылается на находки этого плана —
+пути обновлены на `plans/archive/AUDIT-VLT/...`). `root/`-каталога в плане не было —
+Diátaxis-миграция в `docs/` не потребовалась (материал плана — `findings/`/`artifacts/`,
+остаётся в архиве). `plans/ACTIVE.md` уже указывал на `VLT-REMED`, правка не нужна.

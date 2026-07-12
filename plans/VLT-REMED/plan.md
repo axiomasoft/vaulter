@@ -28,7 +28,7 @@ vaulter — встраиваемое документохранилище для
 
 Пакет прошёл сплошной read-only аудит **AUDIT-VLT** (6 фаз, 34 items, 4 опровергнутые находки).
 Результат — **103 активные находки**: 3 Blocker · 37 Major · 58 Minor · 5 Nit. SSOT находок —
-`plans/AUDIT-VLT/findings/REGISTER.md`; ранжирование и топ-10 — `findings/P5.1-synthesis-report.md`;
+`plans/archive/AUDIT-VLT/findings/REGISTER.md`; ранжирование и топ-10 — `findings/P5.1-synthesis-report.md`;
 партиция находок на **24 батча по корню** и sequencing **5 волнами W0→W4** —
 `findings/P5.2-remediation-backlog.md`. Аудит кода не чинил (D2 того плана).
 
