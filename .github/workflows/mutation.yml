@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  infection:
-    name: Infection (advisory)
+  mutation-testing:
+    name: Mutation (advisory)
     runs-on: ubuntu-latest
 
     steps:
@@ -35,28 +35,16 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-infection-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-composer-mutation-${{ hashFiles('**/composer.json') }}
           restore-keys: |
-            ${{ runner.os }}-composer-infection-
+            ${{ runner.os }}-composer-mutation-
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Generate coverage for Infection
-        run: vendor/bin/pest --coverage-xml=build/coverage/xml --log-junit=build/coverage/junit.xml --min=0
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
-          XDEBUG_MODE: coverage
-
-      - name: Run Infection
-        run: |
-          vendor/bin/infection \
-            --threads=4 \
-            --coverage=build/coverage \
-            --skip-initial-tests \
-            --no-progress || true
+      - name: Mutation testing
+        run: vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
