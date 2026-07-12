@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Documents;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;

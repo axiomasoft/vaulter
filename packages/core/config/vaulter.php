@@ -206,7 +206,7 @@ return [
     |--------------------------------------------------------------------------
     | Document handlers — the format-extensibility registry (§4.5 / §7 / H.5)
     |--------------------------------------------------------------------------
-    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\Documents\DocumentHandler
+    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\Handlers\FileHandler
     | for a file by mime → extension → capability → priority, falling back to the
     | DownloadOnlyHandler null-object. List FQCNs here (cache-safe — FQCN only, no
     | closures); a host adds a NEW format with ONE class + an entry here (or a tagged
@@ -795,7 +795,7 @@ return [
     |--------------------------------------------------------------------------
     | Export formats
     |--------------------------------------------------------------------------
-    | Map of format => \Vaulter\Contracts\Documents\DocumentExporter. Add your own (PDF,
+    | Map of format => \Vaulter\Contracts\Handlers\DocumentExporter. Add your own (PDF,
     | DOCX, …) here, or at runtime via Vaulter::registerExporter().
     |
     | The built-in html/markdown exporters are OWNED by axioma-studio/vaulter-documents

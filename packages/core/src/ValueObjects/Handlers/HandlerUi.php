@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\ValueObjects\Handlers;
 
 /**
  * The front-end mount descriptor a document handler returns for a file (master plan

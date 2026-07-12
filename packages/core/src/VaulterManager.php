@@ -7,12 +7,12 @@ namespace Vaulter;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Contracts\Documents\DocumentExporter;
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\Contracts\Documents\HandlerRegistry;
-use Vaulter\Contracts\Documents\NodeHandlerResolver;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\Contracts\Handlers\HandlerRegistry;
+use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Storage;
@@ -165,9 +165,9 @@ final class VaulterManager
      * call — no migration, no core change. Fails loudly without vaulter-documents
      * installed — document handling needs the documents package.
      *
-     * @param DocumentHandler|class-string<DocumentHandler> $handler
+     * @param FileHandler|class-string<FileHandler> $handler
      */
-    public function registerHandler(DocumentHandler|string $handler): void
+    public function registerHandler(FileHandler|string $handler): void
     {
         $this->handlers()->register($handler);
     }

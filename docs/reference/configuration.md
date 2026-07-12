@@ -129,7 +129,7 @@ of these per-panel.
 
 ## Document handlers — `handlers`
 
-A list of `DocumentHandler` FQCNs, resolved by the `DocumentHandlerRegistry` by
+A list of `FileHandler` FQCNs, resolved by the `DocumentHandlerRegistry` by
 mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
 null-object.
 

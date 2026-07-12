@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
 /**
  * The format-extensibility registry seam (§4.5 / §7 / H.5) behind
@@ -22,15 +22,15 @@ interface HandlerRegistry
      * Register a handler at runtime (the Vaulter::registerHandler seam). FQCN or
      * instance.
      *
-     * @param DocumentHandler|class-string<DocumentHandler> $handler
+     * @param FileHandler|class-string<FileHandler> $handler
      */
-    public function register(DocumentHandler|string $handler): void;
+    public function register(FileHandler|string $handler): void;
 
     /**
      * Every registered handler (the introspection surface a host/admin lists formats
      * from), including the built-in null-object fallback.
      *
-     * @return list<DocumentHandler>
+     * @return list<FileHandler>
      */
     public function all(): array;
 }

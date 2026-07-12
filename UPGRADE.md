@@ -6,6 +6,36 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### The format-handler contract is kind-neutral now: `DocumentHandler` → `FileHandler` (VLT-CANON P0.1 / D7)
+
+**Why.** The contract describes ANY file a host might route to a handler — image/pdf preview,
+download-only fallback — not only editable documents. "Document" naming was misleading for the
+built-in `DownloadOnlyHandler`/`PreviewHandler` fallbacks, which are not editors. VLT-CANON P0.1
+renames the core seam to a kind-neutral vocabulary ahead of pluggable non-editor handlers. This is
+a **breaking change to public FQCNs only** — no behaviour, schema, config-key, or route changes.
+`config('vaulter.handlers')` / `config('vaulter.exporters')` keys are unaffected.
+
+| Old FQCN | New FQCN |
+|:--|:--|
+| `Vaulter\Contracts\Documents\DocumentHandler` | `Vaulter\Contracts\Handlers\FileHandler` |
+| `Vaulter\Contracts\Documents\HandlerRegistry` | `Vaulter\Contracts\Handlers\HandlerRegistry` |
+| `Vaulter\Contracts\Documents\NodeHandlerResolver` | `Vaulter\Contracts\Handlers\NodeHandlerResolver` |
+| `Vaulter\Contracts\Documents\DocumentContent` | `Vaulter\Contracts\Handlers\DocumentContent` |
+| `Vaulter\Contracts\Documents\DocumentExporter` | `Vaulter\Contracts\Handlers\DocumentExporter` |
+| `Vaulter\ValueObjects\Documents\DocumentCapabilities` | `Vaulter\ValueObjects\Handlers\HandlerCapabilities` |
+| `Vaulter\ValueObjects\Documents\HandlerDescriptor` | `Vaulter\ValueObjects\Handlers\HandlerDescriptor` |
+| `Vaulter\ValueObjects\Documents\HandlerUi` | `Vaulter\ValueObjects\Handlers\HandlerUi` |
+| `Vaulter\ValueObjects\Documents\FileDescriptor` | `Vaulter\ValueObjects\Handlers\FileDescriptor` |
+
+`Vaulter\ValueObjects\Documents\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}` are
+unaffected — they stay in `ValueObjects\Documents` pending the TipTap-isolation item (P0.3). Any
+`FileHandler` implementation (host-registered or third-party) must update its `implements`
+clause and constructor/method type-hints to the new FQCNs; a class still implementing the old
+`Vaulter\Contracts\Documents\DocumentHandler` interface no longer satisfies `HandlerRegistry`.
+
+**`@vaulter/vue`.** The TS type mirroring `DocumentCapabilities` in `types.ts` is renamed to
+`HandlerCapabilities`. `HandlerDescriptor`/`HandlerUi` are unchanged.
+
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 
 **What changed.** `hocuspocus-server/package.json` raises `engines.node` from `>=20` to `>=22`, and

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Documents\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
 /**
  * The built-in preview handler (master plan §7 level 4): PDFs and images render a
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Documents\HandlerUi;
  * wants sandboxed HTML/SVG preview registers its own handler with an explicit
  * sandbox prop; core never inlines active content by default.
  */
-final class PreviewHandler implements DocumentHandler
+final class PreviewHandler implements FileHandler
 {
     public const int PRIORITY = 80;
 
@@ -54,9 +54,9 @@ final class PreviewHandler implements DocumentHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable: false,
             previewable: true,
             downloadable: true,

@@ -35,7 +35,7 @@ over the facade.
 | `registerPanel(StoragePanelProvider\|Panel $panel)` | `void` | Register a storage panel at runtime |
 | `registerDocumentType(string $type, array $definition)` | `void` | Register a custom document type |
 | `documentTypes()` | `array` | The registered custom document types |
-| `registerHandler(DocumentHandler\|string $handler)` | `void` | Register a document handler (format extensibility) |
+| `registerHandler(FileHandler\|string $handler)` | `void` | Register a document handler (format extensibility) |
 | `handlers()` | `HandlerRegistry` | The document-handler registry |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Register a custom export format |
 | `exporter(string $format)` | `DocumentExporter` | Resolve an exporter by format key |
@@ -115,7 +115,7 @@ Register and read back custom document-type definitions (kept in-memory on the
 manager). The built-in document types are configured separately via
 `config('vaulter.enabled_document_types')`.
 
-### `registerHandler(DocumentHandler|string $handler): void` / `handlers(): HandlerRegistry`
+### `registerHandler(FileHandler|string $handler): void` / `handlers(): HandlerRegistry`
 
 The format-extensibility seam. Adding a new format is one class + one call —
 `registerHandler()` accepts an FQCN or an instance and delegates to the

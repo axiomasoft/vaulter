@@ -281,7 +281,7 @@ final class AppRoleDriver implements HostRoleDriver
 
 ## Написать свой обработчик формата {#format-handler}
 
-`DocumentHandler` заявляет права на mime-типы / расширения и говорит клиенту, как смонтировать
+`FileHandler` заявляет права на mime-типы / расширения и говорит клиенту, как смонтировать
 узел (редактор, превью или скачивание). `DocumentHandlerRegistry` подбирает лучший по
 mime → расширение → возможность → приоритет, откатываясь к `DownloadOnlyHandler`. Добавить
 формат — это **один класс + один вызов регистрации — без миграции, без правки ядра**
@@ -290,12 +290,12 @@ mime → расширение → возможность → приоритет,
 ```php
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-final class CadHandler implements DocumentHandler
+final class CadHandler implements FileHandler
 {
     public function id(): string { return 'cad'; }
 
@@ -308,9 +308,9 @@ final class CadHandler implements DocumentHandler
     // Higher wins among handlers matching the same file; DownloadOnly sits lowest.
     public function priority(): int { return 100; }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable: false,
             previewable: true,
             downloadable: true,
@@ -423,12 +423,12 @@ CAS-бакет должен быть **без версионирования**. 
 ## Свой формат экспорта {#custom-export}
 
 Встроенные экспортёры `html` и `markdown` рендерят TipTap-содержимое документа. Добавьте свой
-(PDF, DOCX, …), реализовав `Vaulter\Contracts\Documents\DocumentExporter`:
+(PDF, DOCX, …), реализовав `Vaulter\Contracts\Handlers\DocumentExporter`:
 
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class PdfExporter implements DocumentExporter

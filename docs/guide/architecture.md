@@ -320,8 +320,8 @@ Every seam a host plugs into, and where it is documented:
 | `Contracts\Access\AzgardGuard` | container binding (host adapter) | [Troubleshooting — Azgard morphs](/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
-| `Contracts\Documents\DocumentHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
-| `Contracts\Documents\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
+| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
+| `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
 | `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
 | `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |

@@ -111,8 +111,8 @@ export interface NodeAbilities {
   [ability: string]: boolean | undefined
 }
 
-/** What a document handler declares it can do (`DocumentCapabilities`). */
-export interface DocumentCapabilities {
+/** What a file handler declares it can do (`HandlerCapabilities`). */
+export interface HandlerCapabilities {
   editable: boolean
   previewable: boolean
   downloadable: boolean
@@ -133,7 +133,7 @@ export interface HandlerUi {
  */
 export interface HandlerDescriptor {
   id: string
-  capabilities: DocumentCapabilities
+  capabilities: HandlerCapabilities
   ui: HandlerUi
 }
 

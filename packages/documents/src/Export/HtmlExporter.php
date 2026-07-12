@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Export;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Enums\Export\ExportFormat;
 use Vaulter\Documents\Support\TipTapRenderer;
 use Vaulter\ValueObjects\Documents\TipTapContent;

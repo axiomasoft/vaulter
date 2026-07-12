@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Documents;
 
-use Vaulter\Contracts\Documents\DocumentContent;
+use Vaulter\Contracts\Handlers\DocumentContent;
 
 /**
  * A document version payload the core stores VERBATIM, without imposing the TipTap

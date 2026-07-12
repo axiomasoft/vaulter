@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Fixtures\Documents;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**

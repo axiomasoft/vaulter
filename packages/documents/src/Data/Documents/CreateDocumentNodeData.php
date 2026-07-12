@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
-use Vaulter\Contracts\Documents\DocumentContent;
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;

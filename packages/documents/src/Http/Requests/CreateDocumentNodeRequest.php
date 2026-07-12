@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
-use Vaulter\Contracts\Documents\DocumentContent;
-use Vaulter\Contracts\Documents\DocumentHandler;
+use Vaulter\Contracts\Handlers\DocumentContent;
+use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
@@ -14,9 +14,9 @@ use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Support\DriveNameRules;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
 use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
 use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**
  * Validates a create-document-node request (§2.5 / M4a). The destination parent +
@@ -35,7 +35,7 @@ use Vaulter\ValueObjects\Documents\TipTapContent;
  */
 final class CreateDocumentNodeRequest extends VaulterFormRequest
 {
-    private ?DocumentHandler $handler = null;
+    private ?FileHandler $handler = null;
 
     /**
      * @return array<string, mixed>
@@ -144,7 +144,7 @@ final class CreateDocumentNodeRequest extends VaulterFormRequest
      * capability from the descriptor's mime (SSOT, §4.5) — the default TipTap document
      * mime when the request names no format.
      */
-    private function resolvedHandler(): DocumentHandler
+    private function resolvedHandler(): FileHandler
     {
         return $this->handler ??= app(DocumentHandlerRegistry::class)
             ->resolve($this->descriptor(), Capability::Edit);

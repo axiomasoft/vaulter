@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
 /**
  * A pluggable document-processing handler — THE format-extensibility headline
@@ -24,7 +24,7 @@ use Vaulter\ValueObjects\Documents\HandlerUi;
  *
  * Every new handler is a SemVer-frozen public API from its release (H.5).
  */
-interface DocumentHandler
+interface FileHandler
 {
     /**
      * A stable, unique string id for this handler (e.g. 'tiptap', 'preview',
@@ -62,7 +62,7 @@ interface DocumentHandler
      * downloadable / thumbnailable / collaborative (§4.5). Computed per file so a
      * handler may, e.g., advertise editable only for a sub-format.
      */
-    public function capabilities(FileDescriptor $file): DocumentCapabilities;
+    public function capabilities(FileDescriptor $file): HandlerCapabilities;
 
     /**
      * The front-end mount descriptor for the file: the Vue component + open route +

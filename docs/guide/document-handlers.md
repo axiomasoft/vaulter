@@ -26,16 +26,16 @@ every leaf node, not just `kind=document`. For rendering content out to a file, 
 
 ## The contract
 
-A handler implements `Vaulter\Contracts\Documents\DocumentHandler`:
+A handler implements `Vaulter\Contracts\Handlers\FileHandler`:
 
 ```php
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-interface DocumentHandler
+interface FileHandler
 {
     /** A stable, unique id surfaced to the client (e.g. 'tiptap', 'preview', 'download'). */
     public function id(): string;
@@ -50,7 +50,7 @@ interface DocumentHandler
     public function priority(): int;
 
     /** What this handler can do with THIS file (computed per file). */
-    public function capabilities(FileDescriptor $file): DocumentCapabilities;
+    public function capabilities(FileDescriptor $file): HandlerCapabilities;
 
     /** The front-end mount descriptor — component + route + props the client mounts. */
     public function ui(FileDescriptor $file): HandlerUi;
@@ -59,12 +59,12 @@ interface DocumentHandler
 
 ### Capabilities
 
-`Vaulter\ValueObjects\Documents\DocumentCapabilities` is what a handler advertises per file.
+`Vaulter\ValueObjects\Handlers\HandlerCapabilities` is what a handler advertises per file.
 `downloadable` defaults to `true` (anything can be downloaded as bytes); the richer flags are
 opt-in:
 
 ```php
-new DocumentCapabilities(
+new HandlerCapabilities(
     editable:      false,
     previewable:   false,
     downloadable:  true,   // default
@@ -86,7 +86,7 @@ advertises that a preview exists.
 
 ### The front-end mount descriptor
 
-`Vaulter\ValueObjects\Documents\HandlerUi` tells the client which Vue component to mount, the
+`Vaulter\ValueObjects\Handlers\HandlerUi` tells the client which Vue component to mount, the
 route to open the node through, and any extra serialisable props:
 
 ```php
@@ -104,7 +104,7 @@ so the Vue client routes the node without re-running mime logic. The
 
 ### The file descriptor
 
-`Vaulter\ValueObjects\Documents\FileDescriptor` is the immutable description the registry
+`Vaulter\ValueObjects\Handlers\FileDescriptor` is the immutable description the registry
 routes on — claimed mime, the server-**sniffed** detected mime, extension and size — without
 touching the bytes or the database. Routing keys on `canonicalMime()`.
 
@@ -254,12 +254,12 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-final class CsvHandler implements DocumentHandler
+final class CsvHandler implements FileHandler
 {
     public function id(): string
     {
@@ -284,9 +284,9 @@ final class CsvHandler implements DocumentHandler
         return 70;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable:      false,
             previewable:   true,   // render a read-only table preview
             downloadable:  true,
@@ -398,10 +398,10 @@ otherwise it uses the autosave path described in [Document nodes](./documents.md
 
 ## Reference
 
-- Contract — `Vaulter\Contracts\Documents\DocumentHandler`
+- Contract — `Vaulter\Contracts\Handlers\FileHandler`
 - Registry — `Vaulter\Documents\DocumentHandlerRegistry` (`resolve`, `register`, `all`)
 - Resolver — `Vaulter\Documents\NodeHandlerResolver` (per-node descriptor)
 - Manager seam — `Vaulter\VaulterManager::registerHandler()` / `::handlers()`
-- VOs — `DocumentCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
+- VOs — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Documents\Capability`
 - Built-ins — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`

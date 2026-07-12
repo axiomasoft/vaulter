@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Documents;
 
 use Illuminate\Contracts\Container\Container;
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\Contracts\Documents\HandlerRegistry;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\Contracts\Handlers\HandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**
  * THE format-extensibility engine (master plan §4.5 / §7 / H.5). Resolves the best
- * {@see DocumentHandler} for a {@see FileDescriptor} and a requested {@see
+ * {@see FileHandler} for a {@see FileDescriptor} and a requested {@see
  * Capability}, from three cache-safe sources merged once:
  *
  *   1. the tagged container binding 'vaulter.handlers' (FQCN-tagged, no closures);
@@ -40,9 +40,9 @@ final class DocumentHandlerRegistry implements HandlerRegistry
 {
     /**
      * The merged handler set (built lazily, once). Each entry is a resolved
-     * DocumentHandler instance.
+     * FileHandler instance.
      *
-     * @var list<DocumentHandler>|null
+     * @var list<FileHandler>|null
      */
     private ?array $handlers = null;
 
@@ -51,14 +51,14 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * config/tagged set so a runtime register after the first resolve re-primes the
      * merged set.
      *
-     * @var list<DocumentHandler>
+     * @var list<FileHandler>
      */
     private array $runtime = [];
 
     /**
      * Memoised resolutions keyed by "mime|ext|capability".
      *
-     * @var array<string, DocumentHandler>
+     * @var array<string, FileHandler>
      */
     private array $cache = [];
 
@@ -71,9 +71,9 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * instance; an FQCN is resolved through the container. Re-priming the merged set
      * + clearing the resolution cache keeps a later resolve correct.
      *
-     * @param DocumentHandler|class-string<DocumentHandler> $handler
+     * @param FileHandler|class-string<FileHandler> $handler
      */
-    public function register(DocumentHandler|string $handler): void
+    public function register(FileHandler|string $handler): void
     {
         $this->runtime[] = $this->resolveInstance($handler);
         $this->handlers = null;
@@ -89,7 +89,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * only those whose capabilities satisfy $capability; sort by priority desc; take
      * the first, else DownloadOnly.
      */
-    public function resolve(FileDescriptor $file, Capability $capability = Capability::Download): DocumentHandler
+    public function resolve(FileDescriptor $file, Capability $capability = Capability::Download): FileHandler
     {
         $cacheKey = $this->cacheKey($file, $capability);
 
@@ -105,7 +105,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * host/admin lists formats from). The DownloadOnly null-object is included as the
      * terminal entry.
      *
-     * @return list<DocumentHandler>
+     * @return list<FileHandler>
      */
     public function all(): array
     {
@@ -115,7 +115,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
         return $handlers;
     }
 
-    private function resolveUncached(FileDescriptor $file, Capability $capability): DocumentHandler
+    private function resolveUncached(FileDescriptor $file, Capability $capability): FileHandler
     {
         $handlers = $this->handlers();
 
@@ -132,7 +132,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
         // Step 3 — capability-filter: keep only handlers that can do what was asked.
         $capable = array_values(array_filter(
             $matched,
-            static fn (DocumentHandler $handler): bool => $capability->satisfiedBy($handler->capabilities($file)),
+            static fn (FileHandler $handler): bool => $capability->satisfiedBy($handler->capabilities($file)),
         ));
 
         // Step 4 — priority-sort (desc); the highest-priority capable handler wins.
@@ -148,8 +148,8 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * then a wildcard ("image/*"), then the catch-all ("*"). A null mime matches
      * only the catch-all.
      *
-     * @param  list<DocumentHandler> $handlers
-     * @return list<DocumentHandler>
+     * @param  list<FileHandler> $handlers
+     * @return list<FileHandler>
      */
     private function matchByMime(array $handlers, ?string $mime): array
     {
@@ -206,8 +206,8 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * no extensions, so it is reached only through the null-object fallback, never
      * here.
      *
-     * @param  list<DocumentHandler> $handlers
-     * @return list<DocumentHandler>
+     * @param  list<FileHandler> $handlers
+     * @return list<FileHandler>
      */
     private function matchByExtension(array $handlers, ?string $extension): array
     {
@@ -217,7 +217,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
 
         return array_values(array_filter(
             $handlers,
-            static fn (DocumentHandler $handler): bool => in_array(
+            static fn (FileHandler $handler): bool => in_array(
                 $extension,
                 array_map(static fn (string $ext): string => mb_strtolower($ext), $handler->extensions()),
                 strict: true,
@@ -230,7 +230,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * A handler appears at most once per FQCN so the same class registered in two
      * sources does not double-resolve.
      *
-     * @return list<DocumentHandler>
+     * @return list<FileHandler>
      */
     private function handlers(): array
     {
@@ -261,7 +261,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
      * The container-tagged handler set ('vaulter.handlers'). The tag is optional — a
      * stock install registers via config — so a missing tag yields an empty list.
      *
-     * @return list<DocumentHandler>
+     * @return list<FileHandler>
      */
     private function taggedHandlers(): array
     {
@@ -271,7 +271,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
         $resolved = $this->container->tagged('vaulter.handlers');
 
         foreach ($resolved as $handler) {
-            if ($handler instanceof DocumentHandler) {
+            if ($handler instanceof FileHandler) {
                 $tagged[] = $handler;
             }
         }
@@ -280,15 +280,15 @@ final class DocumentHandlerRegistry implements HandlerRegistry
     }
 
     /**
-     * @param DocumentHandler|class-string<DocumentHandler> $handler
+     * @param FileHandler|class-string<FileHandler> $handler
      */
-    private function resolveInstance(DocumentHandler|string $handler): DocumentHandler
+    private function resolveInstance(FileHandler|string $handler): FileHandler
     {
-        if ($handler instanceof DocumentHandler) {
+        if ($handler instanceof FileHandler) {
             return $handler;
         }
 
-        /** @var DocumentHandler $instance */
+        /** @var FileHandler $instance */
         $instance = $this->container->make($handler);
 
         return $instance;
@@ -299,7 +299,7 @@ final class DocumentHandlerRegistry implements HandlerRegistry
         return $this->container->make(DownloadOnlyHandler::class);
     }
 
-    private function byPriorityDesc(DocumentHandler $a, DocumentHandler $b): int
+    private function byPriorityDesc(FileHandler $a, FileHandler $b): int
     {
         return $b->priority() <=> $a->priority();
     }

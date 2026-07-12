@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
-use Vaulter\Contracts\Documents\DocumentContent;
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Documents\Documents\DocumentFileDescriptorFactory;
 use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;

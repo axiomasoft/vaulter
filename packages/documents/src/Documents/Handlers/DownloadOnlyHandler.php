@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Documents\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
 /**
  * The NULL-OBJECT handler (master plan §4.5): claims everything ("*") at the lowest
@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Documents\HandlerUi;
  * resolution NEVER returns null. Archives, unknown binaries and anything unhandled
  * land on this handler.
  */
-final class DownloadOnlyHandler implements DocumentHandler
+final class DownloadOnlyHandler implements FileHandler
 {
     /**
      * The floor priority — every real handler sits above this, so DownloadOnly only
@@ -50,9 +50,9 @@ final class DownloadOnlyHandler implements DocumentHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return DocumentCapabilities::downloadOnly();
+        return HandlerCapabilities::downloadOnly();
     }
 
     public function ui(FileDescriptor $file): HandlerUi

@@ -119,7 +119,7 @@ php artisan vendor:publish --tag=vaulter-config
 
 ## Обработчики документов — `handlers`
 
-Список FQCN `DocumentHandler`, которые `DocumentHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`.
+Список FQCN `FileHandler`, которые `DocumentHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`.
 
 | Записи по умолчанию |
 |---|

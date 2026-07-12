@@ -27,11 +27,11 @@ signatures and the binding point you swap it through.
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (legacy) |
 | Collaboration | `NodeCollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
-| Documents | `DocumentContent` | returned by a `DocumentHandler`'s content parser |
-| Documents | `DocumentHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
-| Documents | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
-| Documents | `HandlerRegistry` | `Vaulter::handlers()` / `Vaulter::registerHandler()` |
-| Documents | `NodeHandlerResolver` | container binding (vaulter-documents) |
+| Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
+| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
+| Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
+| Handlers | `HandlerRegistry` | `Vaulter::handlers()` / `Vaulter::registerHandler()` |
+| Handlers | `NodeHandlerResolver` | container binding (vaulter-documents) |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -359,9 +359,9 @@ See [Collaboration → Drivers](/guide/collaboration).
 
 ---
 
-## Documents
+## Handlers
 
-### `Vaulter\Contracts\Documents\DocumentHandler`
+### `Vaulter\Contracts\Handlers\FileHandler`
 
 A pluggable document-processing handler — the format-extensibility headline. A
 handler claims a set of mime types (exact or wildcards like `"image/*"`) and/or
@@ -371,7 +371,7 @@ extensions, declares its capabilities and front-end mount descriptor per file, a
 `Vaulter::registerHandler()`.
 
 ```php
-interface DocumentHandler
+interface FileHandler
 {
     public function id(): string;
 
@@ -383,7 +383,7 @@ interface DocumentHandler
 
     public function priority(): int;
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities;
+    public function capabilities(FileDescriptor $file): HandlerCapabilities;
 
     public function ui(FileDescriptor $file): HandlerUi;
 }
@@ -403,7 +403,7 @@ interface DocumentHandler
 
 See [Recipes → Custom handler](/guide/recipes).
 
-### `Vaulter\Contracts\Documents\DocumentExporter`
+### `Vaulter\Contracts\Handlers\DocumentExporter`
 
 Renders a document's TipTap content into an export format. Built-in HTML and Markdown
 exporters ship; register your own (PDF, DOCX, …) via `config('vaulter.exporters')` or
@@ -427,7 +427,7 @@ interface DocumentExporter
 
 See [Recipes → Custom export](/guide/recipes).
 
-### `Vaulter\Contracts\Documents\DocumentContent`
+### `Vaulter\Contracts\Handlers\DocumentContent`
 
 The content payload a document version stores. A handler decides the shape: a
 rich-text handler produces a validated TipTap doc (`TipTapContent`); a non-rich-text
@@ -446,10 +446,10 @@ interface DocumentContent
 }
 ```
 
-**Implement when** your `DocumentHandler` needs a content shape other than TipTap or
+**Implement when** your `FileHandler` needs a content shape other than TipTap or
 the bundled opaque snapshot.
 
-### `Vaulter\Contracts\Documents\HandlerRegistry`
+### `Vaulter\Contracts\Handlers\HandlerRegistry`
 
 The format-extensibility registry seam behind `Vaulter::registerHandler()` /
 `Vaulter::handlers()`. The contract lives in core; the concrete engine
@@ -459,15 +459,15 @@ that has not installed vaulter-documents still type-hints against this interface
 ```php
 interface HandlerRegistry
 {
-    /** @param DocumentHandler|class-string<DocumentHandler> $handler */
-    public function register(DocumentHandler|string $handler): void;
+    /** @param FileHandler|class-string<FileHandler> $handler */
+    public function register(FileHandler|string $handler): void;
 
-    /** @return list<DocumentHandler> */
+    /** @return list<FileHandler> */
     public function all(): array;
 }
 ```
 
-### `Vaulter\Contracts\Documents\NodeHandlerResolver`
+### `Vaulter\Contracts\Handlers\NodeHandlerResolver`
 
 Resolves the format-handler descriptor for a node — the `(id + capabilities + ui)`
 bundle the `GET .../handler` endpoint returns, so the Vue client routes the node to

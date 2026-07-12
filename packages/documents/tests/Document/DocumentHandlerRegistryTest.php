@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Documents\DocumentHandler;
+use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
 use Vaulter\Documents\Documents\Handlers\PreviewHandler;
@@ -10,9 +10,9 @@ use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
 use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Facades\Vaulter;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability
@@ -131,16 +131,16 @@ it('sorts matching handlers by priority (the more specific handler beats Downloa
 
 it('keeps the built-in handlers final and config-driven (cache-safe)', function (): void {
     expect(TipTapHandler::class)->toBeString()
-        ->and(new TipTapHandler)->toBeInstanceOf(DocumentHandler::class)
-        ->and(new PreviewHandler)->toBeInstanceOf(DocumentHandler::class)
-        ->and(new DownloadOnlyHandler)->toBeInstanceOf(DocumentHandler::class);
+        ->and(new TipTapHandler)->toBeInstanceOf(FileHandler::class)
+        ->and(new PreviewHandler)->toBeInstanceOf(FileHandler::class)
+        ->and(new DownloadOnlyHandler)->toBeInstanceOf(FileHandler::class);
 });
 
 /**
  * A host's custom handler for a brand-new format — the extensibility proof. ONE
  * class, registered at runtime, no migration, no core/enum change.
  */
-final class CadHandler implements DocumentHandler
+final class CadHandler implements FileHandler
 {
     public function id(): string
     {
@@ -168,9 +168,9 @@ final class CadHandler implements DocumentHandler
         return 200;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(editable: true, previewable: true);
+        return new HandlerCapabilities(editable: true, previewable: true);
     }
 
     public function ui(FileDescriptor $file): HandlerUi

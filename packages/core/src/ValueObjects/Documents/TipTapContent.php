@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Documents;
 
-use Vaulter\Contracts\Documents\DocumentContent;
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 use Vaulter\Support\Config;
 

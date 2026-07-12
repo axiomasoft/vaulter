@@ -12,10 +12,10 @@ outline: deep
 
 ## Контракт экспортёра
 
-Экспортёр реализует `Vaulter\Contracts\Documents\DocumentExporter`:
+Экспортёр реализует `Vaulter\Contracts\Handlers\DocumentExporter`:
 
 ```php
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -130,7 +130,7 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Exporters;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Support\TipTapRenderer;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -228,7 +228,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 
 ## Справочник
 
-- Контракт — `Vaulter\Contracts\Documents\DocumentExporter`
+- Контракт — `Vaulter\Contracts\Handlers\DocumentExporter`
 - Встроенные — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
 - Рендерер — `Vaulter\Support\TipTapRenderer` (`toHtml`, `toMarkdown`)
 - Экспорт узла — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)

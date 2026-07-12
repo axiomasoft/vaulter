@@ -33,13 +33,13 @@ separate real-time transport from the Hocuspocus/Yjs path TipTap uses).
 - Source: `docs/plan/00-master-plan.md` §7 / M5, line ~540 ("XLSX — Univer ... v1 single-user").
 
 ### OnlyOffice / Collabora (WOPI) handlers
-High-fidelity OOXML editing via WOPI, as an opt-in `DocumentHandler` implementation. BYO-licence
+High-fidelity OOXML editing via WOPI, as an opt-in `FileHandler` implementation. BYO-licence
 (OnlyOffice Developer / Collabora are not bundled dependencies).
-- Seam: `Contracts\Documents\DocumentHandler` (same registry as TipTap/Preview/Univer).
+- Seam: `Contracts\Handlers\FileHandler` (same registry as TipTap/Preview/Univer).
 - Source: `docs/plan/00-master-plan.md` §7 / M5; Decision D4 area.
 
 ### PDF / DOCX exporters
-`Contracts\Documents\DocumentExporter` seam exists (HTML/Markdown ship today); PDF/DOCX are
+`Contracts\Handlers\DocumentExporter` seam exists (HTML/Markdown ship today); PDF/DOCX are
 unbuilt but need no core change — same registry, `config('vaulter.exporters')` or
 `Vaulter::registerExporter()`.
 - Source: `docs/plan/00-master-plan.md` item P4 #12.

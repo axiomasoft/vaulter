@@ -326,8 +326,8 @@ Yjs — источник истины; TipTap JSON — производная п
 | `Contracts\Access\AzgardGuard` | привязка в контейнере (адаптер хоста) | [Устранение неполадок — морфы Azgard](/ru/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Рецепты — переход на S3](/ru/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
-| `Contracts\Documents\DocumentHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |
-| `Contracts\Documents\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
+| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |
+| `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
 | `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | тег контейнера | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
 | `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |

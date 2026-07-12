@@ -9,8 +9,8 @@ use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Contracts\Documents\DocumentExporter;
-use Vaulter\Contracts\Documents\DocumentHandler;
+use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
@@ -1334,11 +1334,11 @@ final class Config
 
     /**
      * The registered document handler FQCNs (config('vaulter.handlers')) — the
-     * format-extensibility registry source (§4.5 / H.5). Only valid DocumentHandler
+     * format-extensibility registry source (§4.5 / H.5). Only valid FileHandler
      * subclasses are returned; the config stays FQCN-only (cache-safe — no closures),
      * so a runtime-registered format works with no migration and no core change.
      *
-     * @return list<class-string<DocumentHandler>>
+     * @return list<class-string<FileHandler>>
      */
     public static function documentHandlers(): array
     {
@@ -1351,12 +1351,12 @@ final class Config
         $handlers = [];
 
         foreach ($value as $class) {
-            if (is_string($class) && is_a($class, DocumentHandler::class, allow_string: true)) {
+            if (is_string($class) && is_a($class, FileHandler::class, allow_string: true)) {
                 $handlers[] = $class;
             }
         }
 
-        /** @var list<class-string<DocumentHandler>> $handlers */
+        /** @var list<class-string<FileHandler>> $handlers */
         return $handlers;
     }
 

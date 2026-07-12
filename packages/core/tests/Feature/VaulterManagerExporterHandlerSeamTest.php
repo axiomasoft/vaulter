@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
-use Vaulter\Contracts\Documents\HandlerRegistry;
+use Vaulter\Contracts\Handlers\HandlerRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\Documents\FakeExporter;

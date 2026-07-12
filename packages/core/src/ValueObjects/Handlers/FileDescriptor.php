@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\ValueObjects\Handlers;
 
 /**
  * The immutable description of a file the {@see

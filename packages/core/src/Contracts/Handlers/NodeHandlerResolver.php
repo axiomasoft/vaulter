@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
-use Vaulter\ValueObjects\Documents\HandlerDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerDescriptor;
 
 /**
  * Resolves the format-handler descriptor for a node (§4.5 / §5 / M4a) — the (id +

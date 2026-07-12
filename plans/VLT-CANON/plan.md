@@ -80,7 +80,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 0/5 | ⬜ Not started |
+| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 0/5 | 🟡 In progress |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
@@ -113,6 +113,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 любой сторонний движок биндится по тому же шву. Пре-1.0 — переименования бесплатны.
 
 - **P0.1 — Kind-нейтральный нейминг контрактов движка** (opus/high, `vaulter-api-surface`+`vaulter-reviewer`).
+  **Status:** 🟡 In progress
   Решить D7 (§8.1) ПЕРВЫМ. Затем по `php:namespace-refactor-safety`:
   - `core/src/Contracts/Documents/DocumentHandler.php` → `Contracts/Handlers/FileHandler.php`
     (ИЛИ `Contracts/Engines/DocumentEngine.php` — по D7); `HandlerRegistry`, `NodeHandlerResolver`,

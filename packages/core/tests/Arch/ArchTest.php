@@ -135,15 +135,15 @@ arch('no debug helpers leak into the package')
 
 /**
  * H.5 — the format-extensibility registry is a concrete, final source of truth (one
- * bounded registry per concern, no god-object). The DocumentHandler contract is an
+ * bounded registry per concern, no god-object). The FileHandler contract is an
  * interface; the built-in handlers are final; the registry is final.
  */
 arch('the document handler registry and its handlers are final')
     ->expect('Vaulter\Documents\Documents')
     ->toBeFinal();
 
-arch('the DocumentHandler contract is an interface (H.5)')
-    ->expect('Vaulter\Contracts\Documents\DocumentHandler')
+arch('the FileHandler contract is an interface (H.5)')
+    ->expect('Vaulter\Contracts\Handlers\FileHandler')
     ->toBeInterface();
 
 arch('actions are final')
@@ -268,11 +268,12 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
-        // Revived in Phase D2 (P2 #5): the Documents extensibility-seam VOs
-        // (FileDescriptor/DocumentCapabilities/HandlerUi/HandlerDescriptor/
-        // TipTapContent/OpaqueDocumentContent) are kernel-shared — core's own
-        // Contracts\Documents\* interfaces type against them — so they live at
-        // Vaulter\ValueObjects\Documents\*, not in the extracted documents package.
+        // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
+        // handler extensibility-seam VOs (FileDescriptor/HandlerCapabilities/HandlerUi/
+        // HandlerDescriptor) are kernel-shared — core's own Contracts\Handlers\*
+        // interfaces type against them — so they live at Vaulter\ValueObjects\Handlers\*,
+        // not in the extracted documents package. TipTapContent/OpaqueDocumentContent
+        // stay at Vaulter\ValueObjects\Documents\* pending TipTap isolation (P0.3).
         'ValueObjects' => [],
     ];
 

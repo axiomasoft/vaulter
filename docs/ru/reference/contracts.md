@@ -26,8 +26,8 @@ outline: deep
 | Collaboration | `CollaborationDriver` | `config('vaulter.collaboration.drivers.*.class')` (легаси-путь документов) |
 | Collaboration | `NodeCollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
-| Documents | `DocumentHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
-| Documents | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
+| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
+| Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | в комплекте (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -328,9 +328,9 @@ interface HostUserResolver
 
 ---
 
-## Documents
+## Handlers
 
-### `Vaulter\Contracts\Documents\DocumentHandler`
+### `Vaulter\Contracts\Handlers\FileHandler`
 
 Подключаемый обработчик обработки документов — заголовочная фича расширяемости по форматам.
 Обработчик заявляет набор mime-типов (точных или вайлдкардов вроде `"image/*"`) и/или
@@ -340,7 +340,7 @@ interface HostUserResolver
 `Vaulter::registerHandler()`.
 
 ```php
-interface DocumentHandler
+interface FileHandler
 {
     public function id(): string;
 
@@ -352,7 +352,7 @@ interface DocumentHandler
 
     public function priority(): int;
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities;
+    public function capabilities(FileDescriptor $file): HandlerCapabilities;
 
     public function ui(FileDescriptor $file): HandlerUi;
 }
@@ -372,7 +372,7 @@ interface DocumentHandler
 
 См. [Рецепты → Свой обработчик](/ru/guide/recipes).
 
-### `Vaulter\Contracts\Documents\DocumentExporter`
+### `Vaulter\Contracts\Handlers\DocumentExporter`
 
 Рендерит TipTap-контент документа в формат экспорта. В комплекте поставляются экспортёры
 HTML и Markdown; зарегистрируйте свой (PDF, DOCX, …) через `config('vaulter.exporters')`

@@ -12,10 +12,10 @@ Export runs over the node-attached [document path](./documents.md).
 
 ## The exporter contract
 
-An exporter implements `Vaulter\Contracts\Documents\DocumentExporter`:
+An exporter implements `Vaulter\Contracts\Handlers\DocumentExporter`:
 
 ```php
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -128,7 +128,7 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Exporters;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Support\TipTapRenderer;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -225,7 +225,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 
 ## Reference
 
-- Contract — `Vaulter\Contracts\Documents\DocumentExporter`
+- Contract — `Vaulter\Contracts\Handlers\DocumentExporter`
 - Built-ins — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
 - Renderer — `Vaulter\Support\TipTapRenderer` (`toHtml`, `toMarkdown`)
 - Node export — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)

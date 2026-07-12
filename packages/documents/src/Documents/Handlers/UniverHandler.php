@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Documents\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
 /**
  * The FEATURE-FLAGGED spreadsheet handler (master plan §7 level 2): the Univer
@@ -22,7 +22,7 @@ use Vaulter\ValueObjects\Documents\HandlerUi;
  * slice. It proves the one-class + register extensibility for a non-rich-text
  * editor.
  */
-final class UniverHandler implements DocumentHandler
+final class UniverHandler implements FileHandler
 {
     public const int PRIORITY = 90;
 
@@ -55,9 +55,9 @@ final class UniverHandler implements DocumentHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable: true,
             previewable: true,
             downloadable: true,

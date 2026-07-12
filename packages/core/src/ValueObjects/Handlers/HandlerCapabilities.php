@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\ValueObjects\Handlers;
 
 /**
  * What a document handler declares it can do with a given file (master plan §4.5).
@@ -17,7 +17,7 @@ namespace Vaulter\ValueObjects\Documents;
  * sandbox (see PreviewHandler) — the client decides the sandboxing, the capability
  * only advertises that a preview exists.
  */
-final readonly class DocumentCapabilities
+final readonly class HandlerCapabilities
 {
     /**
      * @param bool $richText Whether this handler's editable content is a TipTap rich-text

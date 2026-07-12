@@ -75,6 +75,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   guard-throw when the documents package is absent; `vaulter.handlers` / `vaulter.exporters`
   default to `[]` in core. Dependency direction is one-way (documents → core; no cycle) —
   `vaulter-drive` is not a runtime dependency of `vaulter-documents`.
+- **BREAKING (pre-1.0): the format-handler contract is kind-neutral now — `DocumentHandler` →
+  `FileHandler`, `Contracts\Documents\*` → `Contracts\Handlers\*`** (VLT-CANON P0.1, D7). The
+  contract describes ANY file (image/pdf/download-only), not only editable documents, so
+  "Engine" / "Document" naming was misleading for the built-in `DownloadOnlyHandler` /
+  `PreviewHandler` fallbacks. Renamed: `Contracts\Documents\DocumentHandler` →
+  `Contracts\Handlers\FileHandler`; `Contracts\Documents\{HandlerRegistry,NodeHandlerResolver,
+  DocumentContent,DocumentExporter}` moved to `Contracts\Handlers\*` (same class names);
+  `ValueObjects\Documents\DocumentCapabilities` → `ValueObjects\Handlers\HandlerCapabilities`;
+  `ValueObjects\Documents\{HandlerDescriptor,HandlerUi,FileDescriptor}` moved to
+  `ValueObjects\Handlers\*` (same class names). `ValueObjects\Documents\{TipTapContent,
+  OpaqueDocumentContent,LinkSchemeValidator}` are unaffected (stay in `ValueObjects\Documents`
+  pending P0.3). The npm package `@vaulter/vue` renamed the mirrored TS type
+  `DocumentCapabilities` → `HandlerCapabilities` (`types.ts`); `HandlerDescriptor`/`HandlerUi`
+  are unchanged. `config('vaulter.handlers')` / `config('vaulter.exporters')` keys are
+  unaffected. See `UPGRADE.md` for the FQCN migration table.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

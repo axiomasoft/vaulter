@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\ValueObjects\Handlers;
 
 /**
  * The resolved-handler descriptor embedded in a node payload (§4.5 / §5 / M4a): the
@@ -14,7 +14,7 @@ final readonly class HandlerDescriptor
 {
     public function __construct(
         public string $id,
-        public DocumentCapabilities $capabilities,
+        public HandlerCapabilities $capabilities,
         public HandlerUi $ui,
     ) {}
 

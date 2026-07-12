@@ -279,7 +279,7 @@ For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom 
 
 ## Write a custom format handler {#format-handler}
 
-A `DocumentHandler` claims mime types / extensions and tells the client how to mount a node
+A `FileHandler` claims mime types / extensions and tells the client how to mount a node
 (editor, preview, or download). The `DocumentHandlerRegistry` resolves the best one by
 mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`. Adding a
 format is **one class + one register call — no migration, no core change**
@@ -288,12 +288,12 @@ format is **one class + one register call — no migration, no core change**
 ```php
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-final class CadHandler implements DocumentHandler
+final class CadHandler implements FileHandler
 {
     public function id(): string { return 'cad'; }
 
@@ -306,9 +306,9 @@ final class CadHandler implements DocumentHandler
     // Higher wins among handlers matching the same file; DownloadOnly sits lowest.
     public function priority(): int { return 100; }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable: false,
             previewable: true,
             downloadable: true,
@@ -420,12 +420,12 @@ The `StorageDriver` surface: `disk()`, `put($key, $stream, $disk, $ifNoneMatch, 
 ## Custom export format {#custom-export}
 
 The built-in `html` and `markdown` exporters render a document's TipTap content. Add your own
-(PDF, DOCX, …) by implementing `Vaulter\Contracts\Documents\DocumentExporter`:
+(PDF, DOCX, …) by implementing `Vaulter\Contracts\Handlers\DocumentExporter`:
 
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Contracts\Documents\DocumentExporter;
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class PdfExporter implements DocumentExporter

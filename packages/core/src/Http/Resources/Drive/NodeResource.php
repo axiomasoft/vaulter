@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Contracts\Documents\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 

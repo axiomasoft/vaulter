@@ -37,7 +37,7 @@ $panel = Vaulter::panel('project_drive'); // резолв Storage Panel
 | `permissionResolver()` | `?PermissionResolver` | Разрешённый легаси-резолвер разрешений или `null` |
 | `registerDocumentType(string $type, array $definition)` | `void` | Зарегистрировать пользовательский тип документа |
 | `documentTypes()` | `array` | Зарегистрированные пользовательские типы документов |
-| `registerHandler(DocumentHandler\|string $handler)` | `void` | Зарегистрировать document handler (расширяемость по форматам) |
+| `registerHandler(FileHandler\|string $handler)` | `void` | Зарегистрировать document handler (расширяемость по форматам) |
 | `handlers()` | `DocumentHandlerRegistry` | Реестр document handler'ов |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Зарегистрировать пользовательский формат экспорта |
 | `exporter(string $format)` | `DocumentExporter` | Резолв экспортёра по ключу формата |
@@ -133,7 +133,7 @@ Vaulter::registerPanel(Panel::make('reports', /* … */));    // собранн�
 (хранятся в памяти на manager'е). Встроенные типы документов настраиваются отдельно
 через `config('vaulter.enabled_document_types')`.
 
-### `registerHandler(DocumentHandler|string $handler): void` / `handlers(): DocumentHandlerRegistry`
+### `registerHandler(FileHandler|string $handler): void` / `handlers(): DocumentHandlerRegistry`
 
 Шов расширяемости по форматам. Добавить новый формат — это один класс + один вызов:
 `registerHandler()` принимает FQCN или инстанс и делегирует привязанному к

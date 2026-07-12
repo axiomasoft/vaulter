@@ -27,16 +27,16 @@ outline: deep
 
 ## Контракт
 
-Обработчик реализует `Vaulter\Contracts\Documents\DocumentHandler`:
+Обработчик реализует `Vaulter\Contracts\Handlers\FileHandler`:
 
 ```php
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-interface DocumentHandler
+interface FileHandler
 {
     /** A stable, unique id surfaced to the client (e.g. 'tiptap', 'preview', 'download'). */
     public function id(): string;
@@ -51,7 +51,7 @@ interface DocumentHandler
     public function priority(): int;
 
     /** What this handler can do with THIS file (computed per file). */
-    public function capabilities(FileDescriptor $file): DocumentCapabilities;
+    public function capabilities(FileDescriptor $file): HandlerCapabilities;
 
     /** The front-end mount descriptor — component + route + props the client mounts. */
     public function ui(FileDescriptor $file): HandlerUi;
@@ -60,12 +60,12 @@ interface DocumentHandler
 
 ### Возможности (capabilities)
 
-`Vaulter\ValueObjects\Documents\DocumentCapabilities` — это то, что обработчик объявляет по каждому
+`Vaulter\ValueObjects\Handlers\HandlerCapabilities` — это то, что обработчик объявляет по каждому
 файлу. `downloadable` по умолчанию `true` (что угодно можно скачать как байты); более богатые флаги
 включаются явно:
 
 ```php
-new DocumentCapabilities(
+new HandlerCapabilities(
     editable:      false,
     previewable:   false,
     downloadable:  true,   // default
@@ -87,7 +87,7 @@ new DocumentCapabilities(
 
 ### Фронтендовый дескриптор монтирования
 
-`Vaulter\ValueObjects\Documents\HandlerUi` сообщает клиенту, какой Vue-компонент монтировать, через
+`Vaulter\ValueObjects\Handlers\HandlerUi` сообщает клиенту, какой Vue-компонент монтировать, через
 какой маршрут открывать узел и какие дополнительные сериализуемые props передать:
 
 ```php
@@ -105,7 +105,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 ### Дескриптор файла
 
-`Vaulter\ValueObjects\Documents\FileDescriptor` — это неизменяемое описание, по которому реестр
+`Vaulter\ValueObjects\Handlers\FileDescriptor` — это неизменяемое описание, по которому реестр
 маршрутизирует: заявленный mime, определённый сервером **по сигнатуре** mime, расширение и размер —
 без обращения к байтам или базе данных. Маршрутизация опирается на `canonicalMime()`.
 
@@ -244,12 +244,12 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Handlers;
 
-use Vaulter\Contracts\Documents\DocumentHandler;
-use Vaulter\ValueObjects\Documents\DocumentCapabilities;
-use Vaulter\ValueObjects\Documents\FileDescriptor;
-use Vaulter\ValueObjects\Documents\HandlerUi;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
+use Vaulter\ValueObjects\Handlers\HandlerUi;
 
-final class CsvHandler implements DocumentHandler
+final class CsvHandler implements FileHandler
 {
     public function id(): string
     {
@@ -274,9 +274,9 @@ final class CsvHandler implements DocumentHandler
         return 70;
     }
 
-    public function capabilities(FileDescriptor $file): DocumentCapabilities
+    public function capabilities(FileDescriptor $file): HandlerCapabilities
     {
-        return new DocumentCapabilities(
+        return new HandlerCapabilities(
             editable:      false,
             previewable:   true,   // render a read-only table preview
             downloadable:  true,
@@ -390,10 +390,10 @@ const componentMap = {
 
 ## Справочник
 
-- Контракт — `Vaulter\Contracts\Documents\DocumentHandler`
+- Контракт — `Vaulter\Contracts\Handlers\FileHandler`
 - Реестр — `Vaulter\Documents\DocumentHandlerRegistry` (`resolve`, `register`, `all`)
 - Резолвер — `Vaulter\Documents\NodeHandlerResolver` (дескриптор по узлу)
 - Шов менеджера — `Vaulter\VaulterManager::registerHandler()` / `::handlers()`
-- VO — `DocumentCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
+- VO — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Documents\Capability`
 - Встроенные — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`

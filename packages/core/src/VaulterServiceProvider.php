@@ -142,7 +142,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
         // The host-user resolver seam (M4b) and the document-handler registry (§4.5)
         // moved to axioma-studio/vaulter-documents (P2 #5 / ADR-0015, D2). Core resolves
-        // the Contracts\Documents\{HandlerRegistry,NodeHandlerResolver} seams that
+        // the Contracts\Handlers\{HandlerRegistry,NodeHandlerResolver} seams that
         // package binds; `Vaulter::registerHandler()`/`handlers()` fail loudly when
         // the package is absent (NodeResource's embedded handler degrades to null).
     }

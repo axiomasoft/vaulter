@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Documents;
+namespace Vaulter\Contracts\Handlers;
 
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
