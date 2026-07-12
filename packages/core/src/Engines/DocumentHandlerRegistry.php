@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Documents;
+namespace Vaulter\Engines;
 
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\HandlerRegistry;
-use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Documents\Enums\Documents\Capability;
+use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 

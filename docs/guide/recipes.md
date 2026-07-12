@@ -280,8 +280,9 @@ For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom 
 ## Write a custom format handler {#format-handler}
 
 A `FileHandler` claims mime types / extensions and tells the client how to mount a node
-(editor, preview, or download). The `DocumentHandlerRegistry` resolves the best one by
-mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`. Adding a
+(editor, preview, or download). The core-owned `Vaulter\Engines\DocumentHandlerRegistry` resolves
+the best one by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`.
+Adding a
 format is **one class + one register call — no migration, no core change**
 ([H.5 / ADR-0004](/adr/0004-content-format)).
 

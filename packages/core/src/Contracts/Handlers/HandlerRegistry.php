@@ -6,14 +6,15 @@ namespace Vaulter\Contracts\Handlers;
 
 /**
  * The format-extensibility registry seam (§4.5 / §7 / H.5) behind
- * `Vaulter::registerHandler()` / `Vaulter::handlers()`. The contract lives in core
- * (VaulterManager's public entrypoint), the concrete engine ships in vaulter-documents
- * (its DocumentHandlerRegistry — the SSOT resolver, still `final`, H.5). A host that
- * has not installed vaulter-documents still type-hints against this interface;
- * resolving it fails loudly with an install hint.
+ * `Vaulter::registerHandler()` / `Vaulter::handlers()`. Both the contract and the
+ * concrete engine (`Vaulter\Engines\DocumentHandlerRegistry` — the SSOT resolver,
+ * still `final`, H.5) are core-owned since VLT-CANON P0.4 (D10, superseding H.5/T5):
+ * this binding always resolves, even without vaulter-documents installed, so a
+ * drive-only host still gets preview/download resolution. Packages like
+ * vaulter-documents only ADD handlers (TipTap, Univer, …) to this same registry.
  *
  * Deliberately minimal: only the two methods VaulterManager's public surface needs.
- * The richer resolve() API (mime/extension/capability routing) is a documents-internal
+ * The richer resolve() API (mime/extension/capability routing) is an engine-internal
  * concern — {@see NodeHandlerResolver} is the core seam for per-node resolution.
  */
 interface HandlerRegistry

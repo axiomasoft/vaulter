@@ -282,8 +282,9 @@ final class AppRoleDriver implements HostRoleDriver
 ## Написать свой обработчик формата {#format-handler}
 
 `FileHandler` заявляет права на mime-типы / расширения и говорит клиенту, как смонтировать
-узел (редактор, превью или скачивание). `DocumentHandlerRegistry` подбирает лучший по
-mime → расширение → возможность → приоритет, откатываясь к `DownloadOnlyHandler`. Добавить
+узел (редактор, превью или скачивание). Принадлежащий core `Vaulter\Engines\DocumentHandlerRegistry`
+подбирает лучший по mime → расширение → возможность → приоритет, откатываясь к `DownloadOnlyHandler`.
+Добавить
 формат — это **один класс + один вызов регистрации — без миграции, без правки ядра**
 ([H.5 / ADR-0004](/adr/0004-content-format)).
 

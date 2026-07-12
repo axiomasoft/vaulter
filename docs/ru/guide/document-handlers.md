@@ -10,8 +10,11 @@ outline: deep
 набор mime-типов и/или расширений, объявляет, что он умеет делать с файлом (редактировать /
 показывать превью / скачивать / генерировать миниатюру / совместно редактировать) и возвращает
 фронтендовый дескриптор монтирования — в каком Vue-компоненте клиент откроет узел.
-`DocumentHandlerRegistry` подбирает лучший обработчик для файла, и клиент направляет узел на эту
-поверхность **без зашитой mime-логики**.
+`Vaulter\Engines\DocumentHandlerRegistry` подбирает лучший обработчик для файла, и клиент
+направляет узел на эту поверхность **без зашитой mime-логики**. Реестр и его базовые обработчики
+(`PreviewHandler`/`DownloadOnlyHandler`) принадлежат core — хост только с Drive, без других
+пакетов, всё равно резолвит preview/download для любого файла; пакет вроде `vaulter-documents`
+лишь добавляет более богатые форматы (TipTap, Univer, …).
 
 Главное свойство: **добавление нового формата — это операция «один класс + одна регистрация»: без
 миграции, без правки ядра, без ограничения каким-либо запечатанным enum.** Строковые ключи реестра
@@ -135,7 +138,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 ## Алгоритм подбора
 
-`Vaulter\Documents\DocumentHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
+`Vaulter\Engines\DocumentHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
 возвращает лучший обработчик и **никогда не возвращает null**. Порядок такой:
 
 1. **Сначала mime** — собираем обработчики, заявившие канонический (снятый по сигнатуре) mime: точное
@@ -391,9 +394,9 @@ const componentMap = {
 ## Справочник
 
 - Контракт — `Vaulter\Contracts\Handlers\FileHandler`
-- Реестр — `Vaulter\Documents\DocumentHandlerRegistry` (`resolve`, `register`, `all`)
-- Резолвер — `Vaulter\Documents\NodeHandlerResolver` (дескриптор по узлу)
+- Реестр — `Vaulter\Engines\DocumentHandlerRegistry` (`resolve`, `register`, `all`) — принадлежит core
+- Резолвер — `Vaulter\Engines\NodeHandlerResolver` (дескриптор по узлу) — принадлежит core
 - Шов менеджера — `Vaulter\VaulterManager::registerHandler()` / `::handlers()`
 - VO — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
-- Enum — `Vaulter\Enums\Documents\Capability`
+- Enum — `Vaulter\Enums\Handlers\Capability`
 - Встроенные — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`

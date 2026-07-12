@@ -160,10 +160,9 @@ final class VaulterManager
     /**
      * Register a custom document handler at runtime — the format-extensibility seam
      * (§4.5 / H.5). Thin delegation to the container-bound {@see HandlerRegistry}
-     * (the single source of truth, concretely vaulter-documents's DocumentHandlerRegistry
-     * — P2 #5); accepts an FQCN or an instance. A NEW format is a one-class + this
-     * call — no migration, no core change. Fails loudly without vaulter-documents
-     * installed — document handling needs the documents package.
+     * (the single source of truth, `Vaulter\Engines\DocumentHandlerRegistry` —
+     * core-owned since P0.4/D10); accepts an FQCN or an instance. A NEW format is a
+     * one-class + this call — no migration, no core change, no package required.
      *
      * @param FileHandler|class-string<FileHandler> $handler
      */
@@ -173,18 +172,16 @@ final class VaulterManager
     }
 
     /**
-     * The container-bound document handler registry (§4.5). The single source of
-     * truth for format resolution — kept here as a thin accessor so callers reach it
-     * through the facade without inflating the manager. The concrete engine ships in
-     * vaulter-documents (P2 #5); this seam fails loudly (with an install hint,
-     * F-P3.3-02) without it installed.
+     * The container-bound handler registry (§4.5). The single source of truth for
+     * format resolution — kept here as a thin accessor so callers reach it through
+     * the facade without inflating the manager. The engine is core-owned (P0.4/D10,
+     * superseding H.5/T5): it always resolves, even without vaulter-documents
+     * installed (a drive-only host still gets preview/download resolution; TipTap and
+     * other rich formats are additional handlers a package/host tags in).
      */
     public function handlers(): HandlerRegistry
     {
-        /** @var HandlerRegistry $registry */
-        $registry = $this->resolveSeam(HandlerRegistry::class, 'axioma-studio/vaulter-documents');
-
-        return $registry;
+        return $this->container->make(HandlerRegistry::class);
     }
 
     /**

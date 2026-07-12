@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Documents\Handlers;
+namespace Vaulter\Engines\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;

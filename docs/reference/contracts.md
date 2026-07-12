@@ -366,7 +366,7 @@ See [Collaboration → Drivers](/guide/collaboration).
 A pluggable document-processing handler — the format-extensibility headline. A
 handler claims a set of mime types (exact or wildcards like `"image/*"`) and/or
 extensions, declares its capabilities and front-end mount descriptor per file, and the
-`DocumentHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
+`Vaulter\Engines\DocumentHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
 `config('vaulter.handlers')` (FQCN list), the tagged binding `'vaulter.handlers'`, or
 `Vaulter::registerHandler()`.
 
@@ -453,9 +453,11 @@ the bundled opaque snapshot.
 ### `Vaulter\Contracts\Handlers\HandlerRegistry`
 
 The format-extensibility registry seam behind `Vaulter::registerHandler()` /
-`Vaulter::handlers()`. The contract lives in core; the concrete engine
-(`DocumentHandlerRegistry`, the SSOT resolver) ships in vaulter-documents. A host
-that has not installed vaulter-documents still type-hints against this interface.
+`Vaulter::handlers()`. Both the contract and the concrete engine
+(`Vaulter\Engines\DocumentHandlerRegistry`, the SSOT resolver — final, H.5) are
+core-owned: this binding always resolves, even without vaulter-documents installed
+(a drive-only host still gets preview/download resolution). Packages like
+vaulter-documents only ADD handlers (TipTap, Univer, …) to this same registry.
 
 ```php
 interface HandlerRegistry

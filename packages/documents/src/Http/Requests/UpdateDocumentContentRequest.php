@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Documents\DocumentFileDescriptorFactory;
-use Vaulter\Documents\Documents\DocumentHandlerRegistry;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
-use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Engines\DocumentFileDescriptorFactory;
+use Vaulter\Engines\DocumentHandlerRegistry;
+use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
 

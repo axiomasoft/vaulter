@@ -73,9 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   kind-neutral-rename entry below for the FQCNs a consumer actually lands on
   (`Contracts\Handlers\*` / `ValueObjects\Handlers\*`).
   `vaulter.models.{node_comment,node_document_version}` are no longer defaulted by core and now
-  guard-throw when the documents package is absent; `vaulter.handlers` / `vaulter.exporters`
-  default to `[]` in core. Dependency direction is one-way (documents → core; no cycle) —
-  `vaulter-drive` is not a runtime dependency of `vaulter-documents`.
+  guard-throw when the documents package is absent; `vaulter.exporters` defaults to `[]` in core
+  (`vaulter.handlers` has since gained a core-owned baseline — see VLT-CANON P0.4 below).
+  Dependency direction is one-way (documents → core; no cycle) — `vaulter-drive` is not a runtime
+  dependency of `vaulter-documents`.
 - **BREAKING (pre-1.0): the format-handler contract is kind-neutral now — `DocumentHandler` →
   `FileHandler`, `Contracts\Documents\*` → `Contracts\Handlers\*`** (VLT-CANON P0.1, D7). The
   contract describes ANY file (image/pdf/download-only), not only editable documents, so
@@ -111,6 +112,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   decay and URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byte. A
   core-only host (no `vaulter-documents` installed) is unaffected. `config('vaulter.tiptap.*')`
   stays in core (host-facing config, not a TipTap shape). See `UPGRADE.md`.
+- **BREAKING (pre-1.0): the format-handler registry ENGINE moved from `vaulter-documents` to
+  core** (VLT-CANON P0.4, D10 — superseding H.5 / the T5 Option-B topology allocation).
+  `DocumentHandlerRegistry`, `NodeHandlerResolver`, `DocumentFileDescriptorFactory`, the
+  `Capability` enum and the baseline `PreviewHandler`/`DownloadOnlyHandler` moved to
+  `Vaulter\Engines\*` / `Vaulter\Enums\Handlers\Capability` (same class names, new FQCN root); a
+  drive-only host with no `vaulter-documents` installed now resolves a REAL preview/download
+  handler descriptor for every node instead of a silent `null` degrade.
+  `Vaulter::registerHandler()` / `Vaulter::handlers()` no longer throw `MissingPackageException`
+  when `vaulter-documents` is absent — the seam is core-owned and unconditional now.
+  `vaulter-documents` keeps only its own format additions (`TipTapHandler`, the feature-flagged
+  `UniverHandler`). Also: `v_node_document_versions.format` no longer carries a schema
+  `default('tiptap')` — every writer already stamped it explicitly. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

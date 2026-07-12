@@ -335,7 +335,7 @@ interface HostUserResolver
 Подключаемый обработчик обработки документов — заголовочная фича расширяемости по форматам.
 Обработчик заявляет набор mime-типов (точных или вайлдкардов вроде `"image/*"`) и/или
 расширений, декларирует свои возможности и фронтенд-дескриптор монтирования на каждый файл,
-а `DocumentHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
+а `Vaulter\Engines\DocumentHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
 `config('vaulter.handlers')` (список FQCN), тегированную привязку `'vaulter.handlers'` или
 `Vaulter::registerHandler()`.
 

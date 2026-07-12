@@ -23,9 +23,13 @@ use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RelayOutboxCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Handlers\HandlerRegistry;
+use Vaulter\Contracts\Handlers\NodeHandlerResolver as NodeHandlerResolverContract;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Engines\DocumentHandlerRegistry;
+use Vaulter\Engines\NodeHandlerResolver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Panels\PanelRegistry;
@@ -140,11 +144,24 @@ final class VaulterServiceProvider extends PackageServiceProvider
             fn (): HostRoleDriver => $this->app->make(HostRoleDriverManager::class)->driver(),
         );
 
-        // The host-user resolver seam (M4b) and the document-handler registry (§4.5)
-        // moved to axioma-studio/vaulter-documents (P2 #5 / ADR-0015, D2). Core resolves
-        // the Contracts\Handlers\{HandlerRegistry,NodeHandlerResolver} seams that
-        // package binds; `Vaulter::registerHandler()`/`handlers()` fail loudly when
-        // the package is absent (NodeResource's embedded handler degrades to null).
+        // The host-user resolver seam (M4b) stays in axioma-studio/vaulter-documents
+        // (P2 #5 / ADR-0015, D2) — collaboration is documents-only machinery.
+        //
+        // The format-extensibility registry (§4.5 / §7 / H.5 / M4a) — superseding H.5
+        // + the T5 Option-B allocation (VLT-CANON P0.4, D10): a drive-only host (no
+        // vaulter-documents installed) still needs a preview/download handler
+        // descriptor, so the ENGINE (not just its contract) is core-owned. Singleton —
+        // it memoises the merged handler set + resolutions. `Vaulter::registerHandler()`
+        // / `handlers()` resolve this binding unconditionally now (no MissingPackage
+        // fail-loud — the engine always exists; only extra formats like TipTap need a
+        // package installed).
+        $this->app->singleton(DocumentHandlerRegistry::class);
+        $this->app->bind(HandlerRegistry::class, DocumentHandlerRegistry::class);
+
+        // NodeResource resolves this seam to embed the handler descriptor on every
+        // leaf node — unconditionally bound, so Drive-only serialisation gets a real
+        // preview/download descriptor instead of degrading to null (P0.4/D10).
+        $this->app->bind(NodeHandlerResolverContract::class, NodeHandlerResolver::class);
     }
 
     public function packageBooted(): void

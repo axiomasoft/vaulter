@@ -129,15 +129,17 @@ of these per-panel.
 
 ## Document handlers — `handlers`
 
-A list of `FileHandler` FQCNs, resolved by the `DocumentHandlerRegistry` by
-mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
-null-object.
+A list of `FileHandler` FQCNs, resolved by the core-owned `Vaulter\Engines\DocumentHandlerRegistry`
+by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
+null-object. The two baseline entries are core's OWN default (VLT-CANON P0.4/D10 — resolved even
+without `vaulter-documents` installed); `vaulter-documents` ADDS `TipTapHandler` via its own
+config merge.
 
-| Default entries |
-|---|
-| `Vaulter\Documents\Handlers\TipTapHandler` |
-| `Vaulter\Documents\Handlers\PreviewHandler` |
-| `Vaulter\Documents\Handlers\DownloadOnlyHandler` |
+| Default entries | Owner |
+|---|---|
+| `Vaulter\Engines\Handlers\PreviewHandler` | core |
+| `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
+| `Vaulter\Documents\Documents\Handlers\TipTapHandler` | vaulter-documents |
 
 `UniverHandler` (xlsx) is appended by the service provider **only** when
 `features.spreadsheets` is on. Add a new format with one class + an entry here (or

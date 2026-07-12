@@ -8,7 +8,7 @@ namespace Vaulter\ValueObjects\Handlers;
  * What a document handler declares it can do with a given file (master plan §4.5).
  * Immutable; a handler computes one of these per FileDescriptor, and the
  * DocumentHandlerRegistry filters resolutions by the requested {@see
- * \Vaulter\Documents\Enums\Documents\Capability}. downloadable defaults to true (anything can be
+ * \Vaulter\Enums\Handlers\Capability}. downloadable defaults to true (anything can be
  * downloaded as bytes); the richer flags are opt-in.
  *
  * NOTE on previewable vs safe-to-inline (H.5 hardening): `previewable` means a

@@ -597,7 +597,10 @@ final class PanelTablesBuilder
         $this->binaryColumn(table: $table, column: 'yjs_state');
         $table->integer('yjs_state_size')->nullable();
 
-        $table->string('format', 16)->default('tiptap');
+        // No DB default (VLT-CANON P0.4/L3): the writing engine stamps its own format
+        // label explicitly — a silent 'tiptap' default protected exactly the kind of
+        // stale mime→editor association H.5 exists to prevent (D4/D12).
+        $table->string('format', 16);
         $table->char('content_hash', 64)->nullable();
         $table->string('snapshot_label')->nullable();
         $table->boolean('is_autosave')->default(false);

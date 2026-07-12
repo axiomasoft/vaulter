@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Documents;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentData;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
@@ -71,6 +72,11 @@ final readonly class UpdateDocumentContentAction
             $version = $this->store->create([
                 'node_id' => $node->getKey(),
                 'version_no' => $this->store->nextVersionNo($node),
+                // A new autosave row on an existing document CONTINUES its format —
+                // never a schema default (P0.4/L3, D4/D12). Falls back to the
+                // rich-text default only for the (practically unreachable) case of a
+                // document node with no prior version at all.
+                'format' => $head?->format ?? DocumentType::RichText->value,
                 'is_autosave' => true,
                 'status' => 'committed',
                 'created_at' => now(),

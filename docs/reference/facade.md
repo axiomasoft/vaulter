@@ -119,8 +119,10 @@ manager). The built-in document types are configured separately via
 
 The format-extensibility seam. Adding a new format is one class + one call —
 `registerHandler()` accepts an FQCN or an instance and delegates to the
-container-bound `DocumentHandlerRegistry` (the single source of truth for
-mime → extension → capability → priority resolution). No migration, no core change.
+container-bound `Vaulter\Engines\DocumentHandlerRegistry` (core-owned since P0.4/D10 —
+the single source of truth for mime → extension → capability → priority resolution,
+always resolvable even without `vaulter-documents` installed). No migration, no core change,
+no package required.
 
 ```php
 Vaulter::registerHandler(\App\Vaulter\CadHandler::class);

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Actions\Versions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Documents\Data\Versions\CreateNamedVersionData;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Versions\DocumentVersionCreated;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
@@ -50,7 +51,7 @@ final readonly class CreateNamedVersionAction
                 'content' => $head instanceof NodeDocumentVersion ? $head->content : null,
                 'yjs_state' => $head?->yjs_state,
                 'yjs_state_size' => $head?->yjs_state_size,
-                'format' => $head instanceof NodeDocumentVersion ? $head->format : 'tiptap',
+                'format' => $head instanceof NodeDocumentVersion ? $head->format : DocumentType::RichText->value,
                 'content_hash' => $head?->content_hash,
                 'snapshot_label' => $data->label,
                 'is_autosave' => false,

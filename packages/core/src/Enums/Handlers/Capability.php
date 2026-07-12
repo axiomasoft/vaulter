@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Enums\Documents;
+namespace Vaulter\Enums\Handlers;
 
-use Vaulter\Documents\Documents\DocumentHandlerRegistry;
+use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
 
 /**

@@ -122,6 +122,7 @@ Drive and Documents each ship as their own package:
 | `Drivers/Permission/` | The shipped `HostRoleDriver` lanes: `database`, `gate`, `spatie`, `azgard`. |
 | `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
 | `Panels/` | `Panel` builder, `StoragePanelProvider`, `PanelRegistry`, `PanelTablesBuilder`, `PanelMigrationGenerator`. |
+| `Engines/` | The format-extensibility registry ENGINE (VLT-CANON P0.4, superseding H.5/T5): `DocumentHandlerRegistry`, `NodeHandlerResolver`, `DocumentFileDescriptorFactory`, and the baseline `Handlers/{PreviewHandler,DownloadOnlyHandler}` — always bound, so a drive-only host resolves preview/download with no other package installed. |
 | `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, `PanelTablesBuilder` columns. |
 | `Sharing/` | The bearer-link channel: `ShareResolver`, `ShareContext`, `ShareResult`. |
 | `Webhooks/` | The reliability layer: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
@@ -135,7 +136,7 @@ Drive and Documents each ship as their own package:
 | Package | Namespace | Adds |
 |---|---|---|
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, the Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) and their Events. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, `DocumentHandlerRegistry`, node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the TipTap/Univer format drivers (added to core's registry — the engine itself is core-owned since P0.4), node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). |

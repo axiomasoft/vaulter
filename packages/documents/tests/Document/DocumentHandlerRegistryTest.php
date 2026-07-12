@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Documents\Documents\DocumentHandlerRegistry;
-use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Documents\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
-use Vaulter\Documents\Enums\Documents\Capability;
+use Vaulter\Engines\DocumentHandlerRegistry;
+use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Engines\Handlers\PreviewHandler;
+use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Facades\Vaulter;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\ValueObjects\Handlers\HandlerCapabilities;

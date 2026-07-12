@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Documents\NodeHandlerResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Resources\Drive\NodeResource;

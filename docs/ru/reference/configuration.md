@@ -119,13 +119,13 @@ php artisan vendor:publish --tag=vaulter-config
 
 ## Обработчики документов — `handlers`
 
-Список FQCN `FileHandler`, которые `DocumentHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`.
+Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Engines\DocumentHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` ДОБАВЛЯЕТ `TipTapHandler` своим слиянием конфига.
 
-| Записи по умолчанию |
-|---|
-| `Vaulter\Documents\Handlers\TipTapHandler` |
-| `Vaulter\Documents\Handlers\PreviewHandler` |
-| `Vaulter\Documents\Handlers\DownloadOnlyHandler` |
+| Записи по умолчанию | Владелец |
+|---|---|
+| `Vaulter\Engines\Handlers\PreviewHandler` | core |
+| `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
+| `Vaulter\Documents\Documents\Handlers\TipTapHandler` | vaulter-documents |
 
 `UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::registerHandler()`).
 

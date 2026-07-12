@@ -116,7 +116,59 @@ lives in `vaulter-documents`.
 `config('vaulter.tiptap.*')` (the `extra_nodes`/`extra_marks`/`extra_attributes`/`url_attributes`
 allow-list seam, `Vaulter\Support\Config`) stays in **core** — it is host-facing config surface,
 not a TipTap shape, and is out of this item's scope. `v_node_document_versions.format` and its
-`default('tiptap')` are untouched here (tracked separately in P0.4).
+`default('tiptap')` have since been addressed — see P0.4 below.
+
+### `v_node_document_versions.format` no longer defaults to `'tiptap'`; the handler-registry ENGINE moved from `vaulter-documents` to core (VLT-CANON P0.4 / D10, superseding H.5 / T5)
+
+**Schema.** `v_node_document_versions.format` (`PanelTablesBuilder::defineDocumentVersions`) no
+longer carries `->default('tiptap')`. The writing side (`CreateDocumentNodeAction`,
+`UpdateDocumentContentAction`, `PersistYjsSnapshotAction`, `CreateNamedVersionAction`,
+`RestoreDocumentVersionAction`) already stamped `format` explicitly on every INSERT — the DB
+default was dead weight that only ever protected the exact class of stale mime→editor
+association H.5 exists to prevent (D4/D12). **Behaviour is unchanged** for every existing write
+path; a document created through the package's own Actions never relied on the default. If you
+insert `v_node_document_versions` rows directly (bypassing the Actions — not a supported path),
+you must now set `format` explicitly or the insert fails the `NOT NULL` constraint. Migrating an
+EXISTING install: this is a column-default removal on an already-shipped migration file
+(`PanelTablesBuilder` is the single column-source a fresh install AND `panel:migrations` both
+read), not a new migration — the package has no tagged release yet (pre-1.0, `[Unreleased]`), so
+no ALTER migration ships for it.
+
+**Engine ownership (D10).** The format-extensibility registry ENGINE — `DocumentHandlerRegistry`,
+`NodeHandlerResolver`, `DocumentFileDescriptorFactory`, the `Capability` enum, and the baseline
+`PreviewHandler`/`DownloadOnlyHandler` — moved from `vaulter-documents` to **core**
+(`Vaulter\Engines\*` / `Vaulter\Enums\Handlers\Capability`), superseding H.5's "concrete engine
+ships in vaulter-documents" allocation and the T5 Option-B topology's `Documents\*
+(registry/handlers/services) → docdrive` allocation. **Why:** a drive-only host with no
+`vaulter-documents` installed previously got `null` for every node's `handler` payload
+(`NodeResource::handler()` degraded silently); it now resolves a real preview/download
+descriptor, because the engine + its two baseline handlers are unconditionally bound by core's
+own `VaulterServiceProvider`. `vaulter-documents` keeps ONLY its own format additions
+(`TipTapHandler`, the feature-flagged `UniverHandler`) — it no longer owns the registry, and
+`config('vaulter.handlers')` now has core's two baseline entries by default (documents' own
+config merge ADDS `TipTapHandler` on top, same merge mechanism as before).
+
+| Old FQCN | New FQCN |
+|:--|:--|
+| `Vaulter\Documents\Documents\DocumentHandlerRegistry` | `Vaulter\Engines\DocumentHandlerRegistry` |
+| `Vaulter\Documents\Documents\NodeHandlerResolver` | `Vaulter\Engines\NodeHandlerResolver` |
+| `Vaulter\Documents\Documents\DocumentFileDescriptorFactory` | `Vaulter\Engines\DocumentFileDescriptorFactory` |
+| `Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler` | `Vaulter\Engines\Handlers\DownloadOnlyHandler` |
+| `Vaulter\Documents\Documents\Handlers\PreviewHandler` | `Vaulter\Engines\Handlers\PreviewHandler` |
+| `Vaulter\Documents\Enums\Documents\Capability` | `Vaulter\Enums\Handlers\Capability` |
+
+**Who breaks.** Any code (host or third-party) naming one of the six old FQCNs directly —
+`instanceof` checks, `use` imports, a direct `app(\Vaulter\Documents\Documents\DocumentHandlerRegistry::class)`
+resolution. `Vaulter::registerHandler()`/`Vaulter::handlers()`/`Vaulter\Contracts\Handlers\{HandlerRegistry,NodeHandlerResolver}`
+are **unaffected** — they were always the stable seam; only the concrete engine behind them
+moved. `VaulterManager::handlers()`/`registerHandler()` no longer throw `MissingPackageException`
+when `vaulter-documents` is absent (the seam is core-owned now, never package-conditional); a
+host or test that caught that exception around these two calls specifically must drop the catch.
+
+Not in scope of this item (tracked separately): `NodeExportService::contentOf()` still resolves
+every version through `TipTapContent` (P0.2 finding) — a non-TipTap node's export still decays to
+an empty document rather than being refused; this is unchanged by P0.4 and remains open for
+P0.5/the read-path work.
 
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 

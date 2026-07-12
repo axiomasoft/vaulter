@@ -9,8 +9,11 @@ outline: deep
 Document handlers are Vaulter's **format-extensibility** layer. A handler claims a set of
 mime types and/or extensions, declares what it can do with a file (edit / preview / download
 / thumbnail / collaborate), and returns the front-end mount descriptor — which Vue component
-the client opens the node in. The `DocumentHandlerRegistry` resolves the best handler for a
-file, and the client routes the node to that surface **without hard-coding mime logic**.
+the client opens the node in. The `Vaulter\Engines\DocumentHandlerRegistry` resolves the best
+handler for a file, and the client routes the node to that surface **without hard-coding mime
+logic**. The registry and its baseline handlers (`PreviewHandler`/`DownloadOnlyHandler`) are
+core-owned — a drive-only host with no other package installed still resolves preview/download
+for every file; a package like `vaulter-documents` only adds richer formats (TipTap, Univer, …).
 
 The headline property: **adding a new format is a one-class + one-register operation — no
 migration, no core change, not gated by any sealed enum.** The registry's string keys
@@ -134,7 +137,7 @@ node](./documents.md#creating-a-document-node) (default `richtext`).
 
 ## Resolution algorithm
 
-`Vaulter\Documents\DocumentHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
+`Vaulter\Engines\DocumentHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
 returns the best handler and **never returns null**. The order is:
 
 1. **Mime-first** — collect handlers claiming the canonical (sniffed) mime: an exact match
@@ -399,9 +402,9 @@ otherwise it uses the autosave path described in [Document nodes](./documents.md
 ## Reference
 
 - Contract — `Vaulter\Contracts\Handlers\FileHandler`
-- Registry — `Vaulter\Documents\DocumentHandlerRegistry` (`resolve`, `register`, `all`)
-- Resolver — `Vaulter\Documents\NodeHandlerResolver` (per-node descriptor)
+- Registry — `Vaulter\Engines\DocumentHandlerRegistry` (`resolve`, `register`, `all`) — core-owned
+- Resolver — `Vaulter\Engines\NodeHandlerResolver` (per-node descriptor) — core-owned
 - Manager seam — `Vaulter\VaulterManager::registerHandler()` / `::handlers()`
 - VOs — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
-- Enum — `Vaulter\Enums\Documents\Capability`
+- Enum — `Vaulter\Enums\Handlers\Capability`
 - Built-ins — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`

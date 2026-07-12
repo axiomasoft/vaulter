@@ -136,10 +136,17 @@ arch('no debug helpers leak into the package')
 /**
  * H.5 — the format-extensibility registry is a concrete, final source of truth (one
  * bounded registry per concern, no god-object). The FileHandler contract is an
- * interface; the built-in handlers are final; the registry is final.
+ * interface; the built-in handlers are final; the registry is final. The ENGINE
+ * (registry/resolver/baseline handlers) is core-owned since VLT-CANON P0.4 (D10,
+ * superseding H.5/T5); this remaining `Vaulter\Documents\Documents` slice covers the
+ * documents-only additions (TipTap/Univer drivers, NodeExportService).
  */
 arch('the document handler registry and its handlers are final')
     ->expect('Vaulter\Documents\Documents')
+    ->toBeFinal();
+
+arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
+    ->expect('Vaulter\Engines')
     ->toBeFinal();
 
 arch('the FileHandler contract is an interface (H.5)')

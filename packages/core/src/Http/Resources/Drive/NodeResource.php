@@ -112,16 +112,17 @@ final class NodeResource extends JsonResource
      * for a folder. Resolved lazily via the container so the Resource stays a pure
      * transform and only computes it when serialising a leaf.
      *
-     * The {@see NodeHandlerResolver} contract is bound by vaulter-documents (P2 #5):
-     * a host running Drive WITHOUT documents still lists/serializes file nodes through
-     * this same resource, so an absent binding degrades to null rather than throwing
-     * — the format-handler surface is documents's addition, not a Drive requirement.
+     * The {@see NodeHandlerResolver} contract and its engine are core-owned since
+     * P0.4/D10: a host running Drive WITHOUT vaulter-documents still gets a real
+     * preview/download descriptor (never a degrade-to-null) — the built-in
+     * PreviewHandler/DownloadOnlyHandler are the guaranteed baseline; vaulter-documents
+     * only adds richer formats (TipTap, Univer, …) on top.
      *
      * @return array<string, mixed>|null
      */
     private function handler(Node $node): ?array
     {
-        if ($node->kind === NodeKind::Folder || !app()->bound(NodeHandlerResolver::class)) {
+        if ($node->kind === NodeKind::Folder) {
             return null;
         }
 

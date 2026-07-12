@@ -67,6 +67,9 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         'P5.2 read sanitization' => ['(P5.2 / R-12)', (string) file_get_contents($root.'/packages/documents/src/Http/Resources/NodeDocumentVersionResource.php')],
         // Ревью P5.2 — per-chunk кап включён из коробки (BC: тело >64 MiB теперь 413).
         'P5.2-review chunk cap' => ['(P5.2 review / F-P1.4-04, RV-03)', (string) file_get_contents($root.'/packages/drive/src/Http/Controllers/Uploads/TusUploadController.php')],
+        // P0.4 — движок реестра переехал в core (D10); факт кода — реальная привязка в
+        // VaulterServiceProvider, не просто наличие файла.
+        'P0.4 registry engine in core' => ['(VLT-CANON P0.4 / D10', (string) file_get_contents($root.'/packages/core/src/VaulterServiceProvider.php')],
     ];
 });
 

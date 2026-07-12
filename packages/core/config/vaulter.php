@@ -6,6 +6,8 @@ use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
+use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -213,13 +215,17 @@ return [
     | 'vaulter.handlers' binding, or Vaulter::registerHandler() at runtime) — NO
     | migration, NO core change, NOT gated by any sealed enum (H.5).
     |
-    | The built-in handlers (TipTap/Preview/DownloadOnly, + UniverHandler when the
-    | 'spreadsheets' feature is on) are OWNED by axioma-studio/vaulter-documents
-    | (P2 #5 / ADR-0015, T9): core ships no default here — the documents provider
-    | merges them via config/vaulter-documents.php. Support\Config::documentHandlers()
-    | falls back to [] (no documents installed = no handlers to resolve).
+    | Preview/DownloadOnly are the core-owned BASELINE (VLT-CANON P0.4/D10, superseding
+    | H.5/T5): a drive-only host with no other package installed still resolves a real
+    | preview/download descriptor for every leaf node. axioma-studio/vaulter-documents
+    | (P2 #5 / ADR-0015, T9) ADDS TipTapHandler (+ UniverHandler when the 'spreadsheets'
+    | feature is on) via its own config/vaulter-documents.php merge — it never owns the
+    | baseline.
     */
-    'handlers' => [],
+    'handlers' => [
+        PreviewHandler::class,
+        DownloadOnlyHandler::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -7,11 +7,13 @@ namespace Vaulter\Documents\Documents;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
-use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Engines\DocumentFileDescriptorFactory;
+use Vaulter\Engines\DocumentHandlerRegistry;
+use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\VaulterManager;
 

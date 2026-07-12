@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Documents\Handlers\DownloadOnlyHandler;
-use Vaulter\Documents\Documents\Handlers\PreviewHandler;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
+use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Engines\Handlers\PreviewHandler;
 
 /**
  * Cache-safe config merge (P3.5 / B22 / F-P2.2-01, D19 characterization).
