@@ -31,7 +31,7 @@ use Vaulter\Support\Config;
  * (P2 #5 / ADR-0015, D2). This package OWNS the document Actions, the format-handler
  * registry, the NodeComment/NodeDocumentVersion models, the real-time collaboration
  * manager/broadcast channel and the document REST routes. Core keeps the schema, the
- * Node/Storage models, Access/Sharing/Activity/Webhooks and the Contracts\Documents
+ * Node/Storage models, Access/Sharing/Activity/Webhooks and the Contracts\Handlers
  * seam (+ its VOs — they are kernel-shared, T9/D2 finding). The Documents domain
  * events (DocumentNodeCreated, NodeCommentAdded, …) are Laravel ShouldBroadcast
  * events consumed directly by the broadcast channel below — there is no

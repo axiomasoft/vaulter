@@ -106,7 +106,7 @@ Vaulter никогда не ссылается на конкретный кла�
 ### Value-объекты, DTO, enum-ы
 
 `Vaulter\Data\*` — это `final readonly` DTO, которые потребляют Actions. `Vaulter\ValueObjects\*`
-держат доменные значения (`TipTapContent`, `FileDescriptor`, `DocumentCapabilities`, ACL-овые
+держат доменные значения (`TipTapContent`, `FileDescriptor`, `HandlerCapabilities`, ACL-овые
 `Subject`/`Decision`/`GrantSet`/`AclScope`). `Vaulter\Enums\*` — это запечатанные словари
 (`Ability`, `NodeKind`, `BlobStatus`, …).
 
@@ -128,8 +128,9 @@ Vaulter никогда не ссылается на конкретный кла�
 | `Webhooks/` | Слой надёжности: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Только Access, Sharing и Webhooks — Actions/Events Drive и Documents теперь живут в своих пакетах (см. ниже). |
-| `ValueObjects/Documents/` · `Exceptions/Documents/` | Формат-агностичные value-объекты, от которых зависят и Drive, и Documents: `TipTapContent`, `DocumentCapabilities`, `FileDescriptor`, `HandlerUi`, `InvalidTipTapContentException`. |
-| `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Documents/*` (интерфейсы, которые реализуют вынесенные пакеты). |
+| `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
+| `ValueObjects/Documents/` · `Exceptions/Documents/` | Формы rich-text-контента: `TipTapContent`, `OpaqueDocumentContent`, `LinkSchemeValidator`, `InvalidTipTapContentException`. |
+| `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Handlers/*` (интерфейсы, которые реализуют вынесенные пакеты). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — общие/read-часть; свои write-модели поставляют и Drive, и Documents. |
 | `Testing/` | Заглушки, поставляемые с пакетом: `NullRoleDriver`, `FakeAzgardGuard`. |
 

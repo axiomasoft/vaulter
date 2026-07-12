@@ -65,12 +65,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   controllers moved from `Vaulter\*` to `Vaulter\Documents\*`. Hosts referencing those FQCNs
   directly, or relying on `vaulter-core` alone for document editing, versioning, comments or
   collaboration, must now also `require axioma-studio/vaulter-documents`.
-  `Contracts\Documents\DocumentHandler`, `Contracts\Documents\DocumentContent`,
-  `Contracts\Documents\DocumentExporter`, `Contracts\Documents\HandlerRegistry` and
-  `Contracts\Documents\NodeHandlerResolver`, plus the value objects
-  `ValueObjects\Documents\FileDescriptor`, `DocumentCapabilities`, `HandlerUi`,
-  `HandlerDescriptor`, `TipTapContent` and `OpaqueDocumentContent`, and the `v_node_comments`/
-  `v_node_document_versions` schemas remain in core.
+  The handler-seam contracts (`FileHandler`, `DocumentContent`, `DocumentExporter`,
+  `HandlerRegistry`, `NodeHandlerResolver`), the value objects (`FileDescriptor`,
+  `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `TipTapContent`,
+  `OpaqueDocumentContent`) and the `v_node_comments`/`v_node_document_versions` schemas remain
+  in core. **Their namespaces were subsequently renamed in the same unreleased cycle** — see the
+  kind-neutral-rename entry below for the FQCNs a consumer actually lands on
+  (`Contracts\Handlers\*` / `ValueObjects\Handlers\*`).
   `vaulter.models.{node_comment,node_document_version}` are no longer defaulted by core and now
   guard-throw when the documents package is absent; `vaulter.handlers` / `vaulter.exporters`
   default to `[]` in core. Dependency direction is one-way (documents → core; no cycle) —

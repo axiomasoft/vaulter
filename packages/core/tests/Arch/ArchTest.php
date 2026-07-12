@@ -520,7 +520,7 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
 /**
  * P2 #5 / ADR-0015, Phase D2 — vaulter-documents is now PHYSICALLY extracted (its code
  * lives in packages/documents, namespace Vaulter\Documents\*). The transitional seams
- * are cut: the 7 Contracts\Documents extensibility VOs + InvalidTipTapContentException/
+ * are cut: the 7 Contracts\Handlers extensibility VOs + InvalidTipTapContentException/
  * UnknownExportFormatException moved to core (kernel-shared, T6/D2 finding); the
  * HandlerRegistry/NodeHandlerResolver contracts + `Vaulter::registerHandler()` resolve
  * the documents package's bindings without naming its classes; HostUserResolver

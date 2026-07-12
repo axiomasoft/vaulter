@@ -104,7 +104,7 @@ ULID behaviour, tenant scoping, or audit. Models are the one part of the package
 ### Value objects, DTOs, enums
 
 `Vaulter\Data\*` are the `final readonly` DTOs Actions consume. `Vaulter\ValueObjects\*` hold
-domain values (`TipTapContent`, `FileDescriptor`, `DocumentCapabilities`, the ACL
+domain values (`TipTapContent`, `FileDescriptor`, `HandlerCapabilities`, the ACL
 `Subject`/`Decision`/`GrantSet`/`AclScope`). `Vaulter\Enums\*` are the sealed vocabularies
 (`Ability`, `NodeKind`, `BlobStatus`, …).
 
@@ -126,8 +126,9 @@ Drive and Documents each ship as their own package:
 | `Webhooks/` | The reliability layer: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Access, Sharing and Webhooks only — Drive and Documents actions/events now live in their own packages (see below). |
-| `ValueObjects/Documents/` · `Exceptions/Documents/` | Format-agnostic value objects that both Drive and Documents depend on: `TipTapContent`, `DocumentCapabilities`, `FileDescriptor`, `HandlerUi`, `InvalidTipTapContentException`. |
-| `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Documents/*` (the interfaces the split packages implement). |
+| `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
+| `ValueObjects/Documents/` · `Exceptions/Documents/` | The rich-text content shapes: `TipTapContent`, `OpaqueDocumentContent`, `LinkSchemeValidator`, `InvalidTipTapContentException`. |
+| `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Handlers/*` (the interfaces the split packages implement). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
 | `Testing/` | Ship-with-package doubles: `NullRoleDriver`, `FakeAzgardGuard`. |
 
