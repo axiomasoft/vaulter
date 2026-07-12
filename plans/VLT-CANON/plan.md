@@ -95,7 +95,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | D4 | 2026-07-11 | **Динамический резолв движка по mime сохраняем; handler-id на Node НЕ персистим** (наследует VLT-HSEAM D7) | WOPI/NC/Drive резолвят динамически; персист протухает при регистрации лучшего движка |
 | D5 | 2026-07-11 | **Bespoke узкий контракт движка, НЕ `Illuminate\Support\Manager`** (наследует VLT-HSEAM D4) | statefulness/$app-coupling/__call; публичный контракт пакета = узкий интерфейс, Manager максимум внутренняя деталь |
 | D6 | 2026-07-11 | **Filament — вне активного scope** (ROADMAP-задел; ADR-0017-исключение) | Директива owner'а 2026-07-11: не тратить ресурсы, задел на будущее |
-| D7 | — | *[нейминг контракта: `DocumentEngine` vs `FileHandler`]* — резолвится в P0.1 по ## Обсуждение §8.1 + research | см. §8.1 |
+| D7 | 2026-07-12 | **Нейминг контракта движка: `FileHandler` + `Contracts/Handlers/`, kind-нейтраль (вариант A, §8.1)** — owner approved (Dmitry Vostrikov, запуск `/task:plan-exec VLT-CANON P0.1`) | см. §8.1: контракт описывает ЛЮБОЙ файл (не только редактируемые), fallback-хендлеры (`DownloadOnlyHandler`/`PreviewHandler`) — не «движки»; уже согласовано RAG VLT-HSEAM (L5) |
 | D8 | — (рекомендация 2026-07-11; **закрывается owner'ом в P1.1**) | *[упаковка фронт-движков]* — рекомендация research'а: единый `@vaulter/vue` как shell/core; per-engine npm НЕ вводить до реального внешнего потребителя; TipTap — один version-train с PHP. **Открыт до P1.1**: P1.2/P1.3 стартуют ТОЛЬКО после закрытия D8 (гейт) | RAG:✅ 2026-07-11 `findings/frontend-engine-packaging-research.md`: Filament v4/Nova 5/Statamic v5 НЕ публикуют отдельный npm на плагин (CONFIRMED); awcodes/filament-tiptap-editor бандлит TipTap+15 расширений в одном пакете (CONFIRMED). Мой предварительный lean «per-engine npm» опровергнут research'ем — см. §8.2 |
 | D9 | — | *[media→drive слияние]* — резолвится в P2.2 по ## Обсуждение §8.3 | см. §8.3 |
 | D10 | — | *[Q1 VLT-HSEAM: движок реестра → core]* — резолвится в P0.4 по ## Обсуждение §8.4. При выборе A запись оформляется как **superseding H.5 + T5 (Option B-топология)** — явная ревизия обоих предшественников, не молчаливый переворот | см. §8.4 (⚠-блок) |
@@ -247,7 +247,8 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 - **Вариант B: `DocumentEngine` + `Contracts/Engines/`.** Плюсы: буква брифа, «движок» звучит продуктовее.
   Минусы: сужает семантику (preview/download — не движки); придётся отдельный контракт для не-редакторов ИЛИ
   натяжка имени. **Рекомендация: A** — при желании owner'а «Engine» вынести как ПОДтип `FileHandler` для
-  редактируемых (capabilities.editable), сохранив нейтральную базу. Финал — owner в P0.1.
+  редактируемых (capabilities.editable), сохранив нейтральную базу. **Закрыто: вариант A** (D7, 2026-07-12,
+  owner approved) — исполнение (сам рефакторинг) остаётся в скоупе P0.1 exec.
 
 ### 8.2 Упаковка/нейминг фронт-движков (→ D8, P1.1) — research ЗАВЕРШЁН, рекомендация зафиксирована
 Research (`findings/frontend-engine-packaging-research.md`; verify: несущие Filament/no-npm/tiptap-editor
@@ -305,6 +306,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-11 | design/opus (fable) | План создан: рекон + research-фан-аут (3 фронта, `workflows/wf-vlt-canon-research.js`), инвентарь `findings/structure-canon-inventory.md`, P0–P3 с D1–D11, ## Обсуждение §8. Filament выведен из scope (D6). |
 | 2026-07-11 | design/opus (fable) | Research завершён (6 агентов, 302k токенов, adversarial verify): 3 `findings/*-research.md`; D8 зафиксирован (единый `@vaulter/vue`, per-engine npm лениво — прежний lean опровергнут), D12 добавлен (server-дескриптор = WOPI-класс, не универсалия); P0.5/P1.1/P1.2 обогащены (payload-асимметрия, schemaVersion, dev-warning, explicit-import реестр). |
 | 2026-07-11 | design/opus (fable) | DoR-аудит (`workflows/wf-vlt-canon-audit.js`, 4 finder-измерения + adversarial verify, 6 находок / 0 REJECTED) — все исправлены: (1-Blocker) supersede-тайминг унифицирован (cross-notice в VLT-HSEAM plan.md сейчас, формальная маркировка P3.3), Meta-поле выровнено; (2) D8 переоформлен открытым до P1.1, P1.1 = гейт для P1.2/P1.3; (3) Routing дополнен P0.4/P0.5; (4) §8.4/D10 явно называют ревизию T5-аллокации Option B (не только H.5); (5) P0.2/P0.3 дополнены точками правки core/tests (FakeExporter, E2eServiceProvider), grep расширен на core/tests; (6) §8.2 честно фиксирует REFUTED-нюанс Statamic-API. |
+| 2026-07-12 | plan-exec/sonnet (prep P0.1) | D7 (§8.1) закрыт owner'ом: вариант A — `FileHandler` + `Contracts/Handlers/`, kind-нейтраль. Approve получен запуском `/task:plan-exec VLT-CANON P0.1`. Сам рефакторинг (rename+перенос) — предмет исполнения P0.1, ещё не начат. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
