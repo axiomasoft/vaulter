@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\Documents\ValueObjects;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 

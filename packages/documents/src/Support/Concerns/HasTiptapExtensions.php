@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support\Concerns;
 
-use Vaulter\Attributes\TiptapExtensions;
+use Vaulter\Documents\Attributes\TiptapExtensions;
 use Vaulter\Support\EnumCaseAttributeResolver;
 
 /**

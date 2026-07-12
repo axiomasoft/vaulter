@@ -106,9 +106,10 @@ Vaulter никогда не ссылается на конкретный кла�
 ### Value-объекты, DTO, enum-ы
 
 `Vaulter\Data\*` — это `final readonly` DTO, которые потребляют Actions. `Vaulter\ValueObjects\*`
-держат доменные значения (`TipTapContent`, `FileDescriptor`, `HandlerCapabilities`, ACL-овые
-`Subject`/`Decision`/`GrantSet`/`AclScope`). `Vaulter\Enums\*` — это запечатанные словари
-(`Ability`, `NodeKind`, `BlobStatus`, …).
+держат доменные значения (`FileDescriptor`, `HandlerCapabilities`, ACL-овые
+`Subject`/`Decision`/`GrantSet`/`AclScope`) — только kind-нейтральные; core не знает форму контента
+ни одного обработчика (`TipTapContent` и соседи живут в `vaulter-documents`, VLT-CANON P0.3).
+`Vaulter\Enums\*` — это запечатанные словари (`Ability`, `NodeKind`, `BlobStatus`, …).
 
 ## Доменная структура
 
@@ -129,7 +130,6 @@ Vaulter никогда не ссылается на конкретный кла�
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Только Access, Sharing и Webhooks — Actions/Events Drive и Documents теперь живут в своих пакетах (см. ниже). |
 | `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
-| `ValueObjects/Documents/` · `Exceptions/Documents/` | Формы rich-text-контента: `TipTapContent`, `OpaqueDocumentContent`, `LinkSchemeValidator`, `InvalidTipTapContentException`. |
 | `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Handlers/*` (интерфейсы, которые реализуют вынесенные пакеты). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — общие/read-часть; свои write-модели поставляют и Drive, и Documents. |
 | `Testing/` | Заглушки, поставляемые с пакетом: `NullRoleDriver`, `FakeAzgardGuard`. |
@@ -137,7 +137,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | Пакет | Namespace | Добавляет |
 |---|---|---|
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) и их события. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, `DocumentHandlerRegistry`, экспорт узлов, сервис сессий совместного редактирования узлов. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, `DocumentHandlerRegistry`, экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
 | `@vaulter/vue` | — | Drive UI + composable-функции (npm). |

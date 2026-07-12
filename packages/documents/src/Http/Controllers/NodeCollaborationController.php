@@ -15,13 +15,13 @@ use Vaulter\Documents\Data\Collaboration\PersistYjsSnapshotData;
 use Vaulter\Documents\Documents\CollaborationSessionService;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The M4b realtime-collaboration HTTP surface for document nodes (master plan §7 /

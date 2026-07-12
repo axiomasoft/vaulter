@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Support;
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Documents\Enums\Export\ExportFormat;
-use Vaulter\ValueObjects\Documents\LinkSchemeValidator;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\LinkSchemeValidator;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Covers the node/mark set the package

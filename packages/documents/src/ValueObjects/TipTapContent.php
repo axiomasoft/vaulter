@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\ValueObjects\Documents;
+namespace Vaulter\Documents\ValueObjects;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
+use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
 use Vaulter\Support\Config;
 
 /**

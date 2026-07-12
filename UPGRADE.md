@@ -27,8 +27,8 @@ a **breaking change to public FQCNs only** — no behaviour, schema, config-key,
 | `Vaulter\ValueObjects\Documents\HandlerUi` | `Vaulter\ValueObjects\Handlers\HandlerUi` |
 | `Vaulter\ValueObjects\Documents\FileDescriptor` | `Vaulter\ValueObjects\Handlers\FileDescriptor` |
 
-`Vaulter\ValueObjects\Documents\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}` are
-unaffected — they stay in `ValueObjects\Documents` pending the TipTap-isolation item (P0.3). Any
+`Vaulter\ValueObjects\Documents\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}` were
+unaffected by P0.1 — they have since moved to `vaulter-documents` in P0.3 (see below). Any
 `FileHandler` implementation (host-registered or third-party) must update its `implements`
 clause and constructor/method type-hints to the new FQCNs; a class still implementing the old
 `Vaulter\Contracts\Documents\DocumentHandler` interface no longer satisfies `HandlerRegistry`.
@@ -62,7 +62,7 @@ concrete shape it renders, e.g.:
 ```php
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 public function export(DocumentContent $content): string
 {
@@ -88,6 +88,35 @@ kind-neutral read path lands; it is not yet reachable through `GET .../export`.
 
 `config('vaulter.exporters')` keys and every exporter's `format()`/`mimeType()`/`extension()` are
 unaffected.
+
+### TipTap's content shapes moved out of core into `vaulter-documents` (VLT-CANON P0.3)
+
+**Why.** `core` declares only the kind-neutral `DocumentContent` contract (§P0.2); it must not
+know the concrete shape of any handler's content. `TipTapContent`, `LinkSchemeValidator` (its
+URL-scheme allow-list guard), `OpaqueDocumentContent`, the `#[TiptapExtensions]` attribute, and
+`InvalidTipTapContentException` were still physically in `packages/core` — a leftover of the P2 #5
+extraction. P0.3 moves all five into the TipTap driver's own package, `vaulter-documents`. This is
+a **breaking change to public FQCNs only**: the store-time allow-list, the read-time decay, and
+the URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byte.
+
+| Old FQCN | New FQCN |
+|:--|:--|
+| `Vaulter\ValueObjects\Documents\TipTapContent` | `Vaulter\Documents\ValueObjects\TipTapContent` |
+| `Vaulter\ValueObjects\Documents\LinkSchemeValidator` | `Vaulter\Documents\ValueObjects\LinkSchemeValidator` |
+| `Vaulter\ValueObjects\Documents\OpaqueDocumentContent` | `Vaulter\Documents\ValueObjects\OpaqueDocumentContent` |
+| `Vaulter\Attributes\TiptapExtensions` | `Vaulter\Documents\Attributes\TiptapExtensions` |
+| `Vaulter\Exceptions\Documents\InvalidTipTapContentException` | `Vaulter\Documents\Exceptions\InvalidTipTapContentException` |
+
+**Who breaks.** Any code (host or third-party) that names one of the old FQCNs directly —
+`instanceof` checks, `catch` clauses, `use` imports, a custom `#[TiptapExtensions]`-tagged enum
+case. A **core-only host with no `vaulter-documents` installed** is unaffected: none of these five
+classes were ever reachable without the TipTap driver's own `DocumentType` enum, which already
+lives in `vaulter-documents`.
+
+`config('vaulter.tiptap.*')` (the `extra_nodes`/`extra_marks`/`extra_attributes`/`url_attributes`
+allow-list seam, `Vaulter\Support\Config`) stays in **core** — it is host-facing config surface,
+not a TipTap shape, and is out of this item's scope. `v_node_document_versions.format` and its
+`default('tiptap')` are untouched here (tracked separately in P0.4).
 
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 
@@ -176,7 +205,7 @@ plugin convention as a documented ADR-0017 exception) and did not move.
 ### TipTap content: a closed store-time schema (now with images/tables), a config seam to extend it, and read-time decay (P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)
 
 **What changed.** Rich-text content is validated against a **closed allow-list** before it is
-stored (`Vaulter\ValueObjects\Documents\TipTapContent::fromArray()`): unknown node types, unknown
+stored (`Vaulter\Documents\ValueObjects\TipTapContent::fromArray()`): unknown node types, unknown
 marks, attributes outside the per-type list, and `link.href`/`image.src` URLs whose scheme is not
 `http`/`https`/`mailto` all reject the whole document with `InvalidTipTapContentException`.
 

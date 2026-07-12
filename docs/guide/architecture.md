@@ -104,9 +104,10 @@ ULID behaviour, tenant scoping, or audit. Models are the one part of the package
 ### Value objects, DTOs, enums
 
 `Vaulter\Data\*` are the `final readonly` DTOs Actions consume. `Vaulter\ValueObjects\*` hold
-domain values (`TipTapContent`, `FileDescriptor`, `HandlerCapabilities`, the ACL
-`Subject`/`Decision`/`GrantSet`/`AclScope`). `Vaulter\Enums\*` are the sealed vocabularies
-(`Ability`, `NodeKind`, `BlobStatus`, …).
+domain values (`FileDescriptor`, `HandlerCapabilities`, the ACL
+`Subject`/`Decision`/`GrantSet`/`AclScope`) — kind-neutral only; core does not know the shape of
+any handler's content (`TipTapContent` and friends live in `vaulter-documents`, VLT-CANON P0.3).
+`Vaulter\Enums\*` are the sealed vocabularies (`Ability`, `NodeKind`, `BlobStatus`, …).
 
 ## Domain structure
 
@@ -127,7 +128,6 @@ Drive and Documents each ship as their own package:
 | `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Access, Sharing and Webhooks only — Drive and Documents actions/events now live in their own packages (see below). |
 | `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
-| `ValueObjects/Documents/` · `Exceptions/Documents/` | The rich-text content shapes: `TipTapContent`, `OpaqueDocumentContent`, `LinkSchemeValidator`, `InvalidTipTapContentException`. |
 | `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Handlers/*` (the interfaces the split packages implement). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
 | `Testing/` | Ship-with-package doubles: `NullRoleDriver`, `FakeAzgardGuard`. |
@@ -135,7 +135,7 @@ Drive and Documents each ship as their own package:
 | Package | Namespace | Adds |
 |---|---|---|
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, the Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) and their Events. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, `DocumentHandlerRegistry`, node export, the node-collaboration session service. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, `DocumentHandlerRegistry`, node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). |

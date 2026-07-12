@@ -12,10 +12,10 @@ use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Documents\Handlers\UniverHandler;
 use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Support\DriveNameRules;
-use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**

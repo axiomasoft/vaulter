@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
-use Vaulter\ValueObjects\Documents\TipTapContent;
-
 /**
  * The content payload a document version stores (§2.5 / M4a). A document node's
  * handler decides the SHAPE: a rich-text handler produces a validated TipTap doc
- * ({@see TipTapContent}); a non-rich-text handler
+ * (e.g. the tiptap driver's `TipTapContent`); a non-rich-text handler
  * (e.g. the vaulter-documents spreadsheet handler) produces an
- * OPAQUE JSON snapshot the core stores verbatim ({@see OpaqueDocumentContent}).
+ * OPAQUE JSON snapshot the core stores verbatim (e.g. `OpaqueDocumentContent`). Core
+ * knows only this interface, never the concrete shape — see VLT-CANON P0.3.
  *
  * The write path (request → action) speaks to this interface, so it never assumes
  * TipTap: it stores `toArray()` in the version's jsonb `content` and dedups identical

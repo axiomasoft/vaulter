@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
+use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
-use Vaulter\ValueObjects\Documents\OpaqueDocumentContent;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /*
  * VLT-CANON P0.2: `DocumentExporter::export()` takes the OPAQUE `DocumentContent`, so an

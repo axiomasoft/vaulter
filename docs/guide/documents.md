@@ -73,14 +73,14 @@ intact; this page documents only the node-attached path.
 
 A document node is created under a folder (or the storage root) together with its **v1**
 version, atomically. Content is a TipTap document wrapped in
-`Vaulter\ValueObjects\Documents\TipTapContent` — the root node must be `{"type":"doc", ...}`.
+`Vaulter\Documents\ValueObjects\TipTapContent` — the root node must be `{"type":"doc", ...}`.
 
 ::: code-group
 
 ```php [PHP — the Action]
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
     storage: $storage,                       // the resolved v_storages row
@@ -225,7 +225,7 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 ```php [PHP — the Action]
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Data\UpdateDocumentContentData;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
     node:     $node,
@@ -410,7 +410,7 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 | Exception | When |
 |---|---|
 | `Exceptions\Documents\NotADocumentNodeException` | A content/version operation targets a node that is not `kind=document`. |
-| `Exceptions\Documents\InvalidTipTapContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
+| `Documents\Exceptions\InvalidTipTapContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
 | `Exceptions\Documents\NodeDocumentVersionNotFoundException` | A restore targets a version id that does not belong to the node. |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Tests\Document;
 
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Drive\DriveContext;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Builders for the M4a Documents tests: a Drive handle and a quick TipTap document.

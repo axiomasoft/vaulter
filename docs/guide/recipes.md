@@ -428,7 +428,7 @@ namespace App\Vaulter;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 final class PdfExporter implements DocumentExporter
 {

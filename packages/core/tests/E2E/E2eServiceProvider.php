@@ -10,13 +10,13 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Провайдер e2e-стенда realtime-коллаборации (P1.1 мастер-плана).

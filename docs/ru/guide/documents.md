@@ -73,14 +73,14 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 Узел-документ создаётся под папкой (или в корне хранилища) вместе со своей версией **v1**,
 атомарно. Контент — это документ TipTap, обёрнутый в
-`Vaulter\ValueObjects\Documents\TipTapContent`; корневой узел должен быть `{"type":"doc", ...}`.
+`Vaulter\Documents\ValueObjects\TipTapContent`; корневой узел должен быть `{"type":"doc", ...}`.
 
 ::: code-group
 
 ```php [PHP — Action]
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Data\CreateDocumentNodeData;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
     storage: $storage,                       // the resolved v_storages row
@@ -228,7 +228,7 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 ```php [PHP — Action]
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Data\UpdateDocumentContentData;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
     node:     $node,
@@ -414,7 +414,7 @@ app(RestoreDocumentVersionAction::class)->execute(
 | Исключение | Когда |
 |---|---|
 | `Exceptions\Documents\NotADocumentNodeException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
-| `Exceptions\Documents\InvalidTipTapContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
+| `Documents\Exceptions\InvalidTipTapContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
 | `Exceptions\Documents\NodeDocumentVersionNotFoundException` | Восстановление нацелено на id версии, не принадлежащий узлу. |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |
 

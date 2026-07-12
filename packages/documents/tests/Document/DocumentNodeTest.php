@@ -15,13 +15,13 @@ use Vaulter\Documents\Data\Versions\CreateNamedVersionData;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
 use Vaulter\Documents\Events\Documents\DocumentNodeCreated;
 use Vaulter\Documents\Events\Versions\DocumentVersionCreated;
+use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Support\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Documents\InvalidTipTapContentException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * The M4a document-node lifecycle (§2.5): create a kind=document node with its v1

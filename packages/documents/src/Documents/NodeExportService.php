@@ -11,8 +11,8 @@ use Vaulter\Documents\Enums\Documents\Capability;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Models\Drive\Node;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 use Vaulter\VaulterManager;
 
 /**

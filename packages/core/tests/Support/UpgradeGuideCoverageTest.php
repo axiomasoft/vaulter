@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /*
  * VLT-REMED P5.2 / R-06 — системный пробел UPGRADE.md (подтверждает MORNING-QUEUE §4).
@@ -52,7 +52,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
 
     return [
         // P0.1 — контракт TipTap (самый host-видимый BC плана; секции не было вовсе).
-        'P0.1 TipTap allow-list' => ['(P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)', (string) file_get_contents($root.'/packages/core/src/ValueObjects/Documents/TipTapContent.php')],
+        'P0.1 TipTap allow-list' => ['(P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)', (string) file_get_contents($root.'/packages/documents/src/ValueObjects/TipTapContent.php')],
         // P1.1 — безусловный nosniff + whitelist Content-Type на раздаче.
         'P1.1 nosniff' => ['(P1.1, P1.3 / F-P1.3-04, F-P1.11-03, F-P1.8-01, F-P1.4-09)', (string) file_get_contents($root.'/packages/core/src/Http/Support/DownloadHeaders.php')],
         // P1.3 — именованные лимитеры + кап активных сессий.

@@ -9,13 +9,13 @@ use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Events\Documents\DocumentNodeCreated;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionStoreRepository;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * Create a kind=document node under a folder (or the storage root) with its initial

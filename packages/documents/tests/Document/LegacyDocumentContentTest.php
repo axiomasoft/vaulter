@@ -7,7 +7,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Support\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\ValueObjects\Documents\TipTapContent;
+use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /**
  * VLT-REMED P5.2 / R-01 (Blocker) — ВТОРОЙ, более тяжёлый удар барьера P0.1: он бил не

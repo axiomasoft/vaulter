@@ -86,8 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueObjects\Documents\DocumentCapabilities` → `ValueObjects\Handlers\HandlerCapabilities`;
   `ValueObjects\Documents\{HandlerDescriptor,HandlerUi,FileDescriptor}` moved to
   `ValueObjects\Handlers\*` (same class names). `ValueObjects\Documents\{TipTapContent,
-  OpaqueDocumentContent,LinkSchemeValidator}` are unaffected (stay in `ValueObjects\Documents`
-  pending P0.3). The npm package `@vaulter/vue` renamed the mirrored TS type
+  OpaqueDocumentContent,LinkSchemeValidator}` were unaffected by this item — they have since
+  moved to `vaulter-documents` in P0.3 (see below). The npm package `@vaulter/vue` renamed the mirrored TS type
   `DocumentCapabilities` → `HandlerCapabilities` (`types.ts`); `HandlerDescriptor`/`HandlerUi`
   are unchanged. `config('vaulter.handlers')` / `config('vaulter.exporters')` keys are
   unaffected. See `UPGRADE.md` for the FQCN migration table.
@@ -101,6 +101,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TipTapContent` and throw the new
   `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` otherwise. See
   `UPGRADE.md`.
+- **BREAKING (pre-1.0): TipTap's content shapes moved out of `vaulter-core` into
+  `vaulter-documents`** (VLT-CANON P0.3). `core` declares only the kind-neutral `DocumentContent`
+  contract; it must not know any handler's concrete shape. Moved (same class names, new FQCN
+  root `Vaulter\Documents\*`): `ValueObjects\Documents\{TipTapContent,LinkSchemeValidator,
+  OpaqueDocumentContent}` → `Documents\ValueObjects\*`; `Attributes\TiptapExtensions` →
+  `Documents\Attributes\TiptapExtensions`; `Exceptions\Documents\InvalidTipTapContentException` →
+  `Documents\Exceptions\InvalidTipTapContentException`. The store-time allow-list, read-time
+  decay and URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byte. A
+  core-only host (no `vaulter-documents` installed) is unaffected. `config('vaulter.tiptap.*')`
+  stays in core (host-facing config, not a TipTap shape). See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

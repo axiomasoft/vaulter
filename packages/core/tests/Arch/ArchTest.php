@@ -272,8 +272,9 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         // handler extensibility-seam VOs (FileDescriptor/HandlerCapabilities/HandlerUi/
         // HandlerDescriptor) are kernel-shared — core's own Contracts\Handlers\*
         // interfaces type against them — so they live at Vaulter\ValueObjects\Handlers\*,
-        // not in the extracted documents package. TipTapContent/OpaqueDocumentContent
-        // stay at Vaulter\ValueObjects\Documents\* pending TipTap isolation (P0.3).
+        // not in the extracted documents package. TipTapContent/LinkSchemeValidator/
+        // OpaqueDocumentContent moved to Vaulter\Documents\ValueObjects\* (VLT-CANON
+        // P0.3) — core no longer knows TipTap's shape.
         'ValueObjects' => [],
     ];
 
@@ -389,7 +390,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Contracts\Cas\BlobStore',
         'Vaulter\Contracts\Access\HostRoleDriver',
-        'Vaulter\ValueObjects\Documents\TipTapContent',
+        'Vaulter\Documents\ValueObjects\TipTapContent',
         'Vaulter\Access\Abilities\NodeAbilities',
     ];
 
@@ -520,8 +521,11 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
 /**
  * P2 #5 / ADR-0015, Phase D2 — vaulter-documents is now PHYSICALLY extracted (its code
  * lives in packages/documents, namespace Vaulter\Documents\*). The transitional seams
- * are cut: the 7 Contracts\Handlers extensibility VOs + InvalidTipTapContentException/
- * UnknownExportFormatException moved to core (kernel-shared, T6/D2 finding); the
+ * are cut: the 7 Contracts\Handlers extensibility VOs + UnknownExportFormatException/
+ * UnsupportedDocumentContentException moved to core (kernel-shared, T6/D2 finding);
+ * TipTapContent/LinkSchemeValidator/OpaqueDocumentContent/TiptapExtensions/
+ * InvalidTipTapContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
+ * isolation, core never knew their shape beyond the DocumentContent contract); the
  * HandlerRegistry/NodeHandlerResolver contracts + `Vaulter::registerHandler()` resolve
  * the documents package's bindings without naming its classes; HostUserResolver
  * (default + binding) moved to that package entirely; the upload/comment/
