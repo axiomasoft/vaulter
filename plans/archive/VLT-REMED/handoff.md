@@ -41,9 +41,19 @@ plan-lint Known Deviations; порог `--min=95` по факту, коммит 
 remainder-долг release-readiness, зафиксировав в `plan.md` Decision Log) — вне автономного исполнения.
 `CHANGELOG.md`-наполнение (D23, deny-правило харнесса) остаётся отдельным процедурным долгом.
 
-**Sources of truth:** plans/VLT-REMED/plan.md (§4 Status Board — P5 3/10 🔴 (мех., все items терминальны
+**Migration checklist (archive, 2026-07-12):** план перенесён `plans/VLT-REMED` →
+`plans/archive/VLT-REMED` (`git mv`, коммит `chore(plan): archive VLT-REMED`). Каталога `root/` в
+плане не было — миграция в `docs/` не требовалась (Diátaxis-материал плана и так уже жил в
+`docs/adr/0017-package-structure-canon.md` и `docs/reference/rest-api.md`, только пути-ссылки
+поправлены). `artifacts/`, `findings/`, `MORNING-QUEUE.md`, `open-questions.md` остались в архиве
+как есть — не мигрируют по правилу шага 3 конвейера. Обновлены живые ссылки на старый путь:
+`plans/RUNBOOK.md:60`, `docs/adr/0017-package-structure-canon.md:32`, `docs/reference/rest-api.md:159`,
+`plans/VLT-CANON/plan.md:312` — все переставлены на `plans/archive/VLT-REMED/...`.
+`plans/ACTIVE.md` уже был `—` (сброшен предыдущим `/task:plan-close VLT-REMED`).
+
+**Sources of truth:** plans/archive/VLT-REMED/plan.md (§4 Status Board — P5 3/10 🔴 (мех., все items терминальны
 по существу) · §5 D31/D34/D35/D38/D39/D40
-— в силе дословно · §6 Update Log) · plans/VLT-REMED/phases/P5.md (P5.10 Completion Notes; Phase
+— в силе дословно · §6 Update Log) · plans/archive/VLT-REMED/phases/P5.md (P5.10 Completion Notes; Phase
 Handoff «ОБНОВЛЕНИЕ №6» — итог фазы) · `findings/P5.10-score-verdict.md` (адреса всех прогонов P5.10,
 арифметика порога, вердикт по шести критериям) · `findings/P5.9-pest-mutate-migration.md` (норма
 лейна, вход-Score) · `findings/P5.3-closure-matrix.md` §2/§4/§5 (пересобраны под P5.10 — 52 sha,
@@ -79,4 +89,4 @@ D13) · plans/RUNBOOK.md (Часть 2).
   VLT-REMED (RUNBOOK 2.5); решение владельца по долгу покрытия (критерий 4);
   простановка `covers()`/`mutates()` по сьюту ради производительности Pest-мутации (вне scope P5.9/P5.10).
 - open_questions: открытых блокирующих нет — все эскалации разрешены решениями владельца (P5.1 → D27 ·
-  P5.4 → D33–D35 · P5.6 → D36/D37 · P5.7 → D38/D39/D40); реестр — plans/VLT-REMED/open-questions.md.
+  P5.4 → D33–D35 · P5.6 → D36/D37 · P5.7 → D38/D39/D40); реестр — plans/archive/VLT-REMED/open-questions.md.

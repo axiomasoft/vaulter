@@ -29,7 +29,7 @@ decision 2026-07-10):
    plus a partly domain-first `Documents/` folder.
 
 The full six-package inventory is in
-`plans/VLT-REMED/findings/P4.9-structure-inventory.md`.
+`plans/archive/VLT-REMED/findings/P4.9-structure-inventory.md`.
 
 This ADR **declares the canon**; it moves NO code. Enforcement is by Pest arch
 tests added in the same change (VLT-REMED P4.9); the physical namespace refactor

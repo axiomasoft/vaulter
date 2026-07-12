@@ -57,7 +57,7 @@ Model/Thinking/Context/Суть + голая команда отдельным c
   **P5.10 (🟢 порог `--min=95` по факту, критерий 5 закрыт, `tests.yml` для критерия 4 — коверидж
   `78.6 % < 80 %`, D35, честный долг)**. **Фаза P5 терминальна 10/10 🟢.** Итоговый вердикт
   release-readiness — «НЕ ГОТОВ К РЕЛИЗУ» по единственной причине (критерий 4, долг покрытия), не MSI.
-  Детали — `plans/VLT-REMED/handoff.md`, `findings/P5.10-score-verdict.md`.
+  Детали — `plans/archive/VLT-REMED/handoff.md`, `findings/P5.10-score-verdict.md`.
 - [ ] **2.4 — Перевести план в терминал** · `Model: sonnet · Thinking: low · Context: fresh session`
   ```
   /task:plan-close VLT-REMED
