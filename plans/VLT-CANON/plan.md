@@ -80,7 +80,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 0/5 | 🟡 In progress |
+| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 1/5 | 🟡 In progress |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
@@ -113,7 +113,6 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 любой сторонний движок биндится по тому же шву. Пре-1.0 — переименования бесплатны.
 
 - **P0.1 — Kind-нейтральный нейминг контрактов движка** (opus/high, `vaulter-api-surface`+`vaulter-reviewer`).
-  **Status:** 🟡 In progress
   Решить D7 (§8.1) ПЕРВЫМ. Затем по `php:namespace-refactor-safety`:
   - `core/src/Contracts/Documents/DocumentHandler.php` → `Contracts/Handlers/FileHandler.php`
     (ИЛИ `Contracts/Engines/DocumentEngine.php` — по D7); `HandlerRegistry`, `NodeHandlerResolver`,
@@ -124,6 +123,52 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
     docs (`docs/reference/contracts.md`, `docs/guide/document-handlers.md`).
   - **Приёмка:** оба гейта зелёные; `vaulter-api-surface` diff = только переименования; BC-запись
     UPGRADE/CHANGELOG; фронт-типы (`packages/vue/src/types.ts` `HandlerDescriptor`) синхронны.
+
+  **Completion Notes.** Rename исполнен по D7=A (`FileHandler` + `Contracts/Handlers/`), hard rename
+  без alias-фазы (пре-1.0). Перенесены `git mv` (renames трекаются, similarity 83–98%):
+  `Contracts/Documents/{DocumentHandler→FileHandler, HandlerRegistry, NodeHandlerResolver,
+  DocumentContent, DocumentExporter}` → `Contracts/Handlers/*`;
+  `ValueObjects/Documents/{DocumentCapabilities→HandlerCapabilities, HandlerDescriptor, HandlerUi,
+  FileDescriptor}` → `ValueObjects/Handlers/*`. Обновлены все `use` (FQN-anchored, ловушка
+  `DocumentHandler ⊂ DocumentHandlerRegistry` обойдена негативным lookahead `(?!Registry)`) в core
+  (VaulterManager, Support/Config, Facades/Vaulter, VaulterServiceProvider, NodeResource, ArchTest,
+  VaulterManagerExporterHandlerSeamTest, FakeExporter) и documents (14 файлов src + 1 tests).
+  Фронт: `packages/vue/src/types.ts` TS-тип `DocumentCapabilities`→`HandlerCapabilities`
+  (`HandlerDescriptor`/`HandlerUi` не менялись). Docs: 14 файлов (en+ru: guide/document-handlers,
+  guide/architecture, guide/recipes, guide/export, reference/{contracts,facade,configuration});
+  в contracts.md секция `## Documents` → `## Handlers`. BC-записи: UPGRADE.md (таблица 9 старых→новых
+  FQCN + нота по `@vaulter/vue`), CHANGELOG.md `[Unreleased]`. ROADMAP.md — швы WOPI/экспортёров.
+  Config-ключи (`vaulter.handlers`/`vaulter.exporters`) НЕ трогались — только комментарии.
+  `TipTapContent`/`OpaqueDocumentContent`/`LinkSchemeValidator` намеренно остались в
+  `ValueObjects/Documents` (их изоляция — P0.3, вне scope).
+  **Гейты:** `vendor/bin/pint --test` → passed (pint прогнан перед коммитом, авто-фикс
+  ordered_imports/phpdoc_align); `phpstan analyse` (max) → passed, 0 errors; `pest` → passed,
+  487/487, 1267 assertions; `pest --type-coverage --min=100` → 100.0%; `@vaulter/vue`:
+  `vue-tsc --noEmit` → clean, `vitest run` → 10 files / 104 tests passed, `vite build` → ✓ built.
+  **Ревью:** `vaulter-api-surface` → «clean rename-only diff», 32 файла, ноль изменений сигнатур/
+  дефолтов/возвращаемых типов, ноль новых/удалённых public-методов. `vaulter-reviewer` → BC/SemVer,
+  ServiceProvider, Facade, Publishables — pass; 3 находки по докам (2×MED, 1×LOW): недочищенные
+  старые FQCN в `architecture.md` (en/ru — проза §Value objects + таблица доменной структуры),
+  самопротиворечивый bullet D2-извлечения в CHANGELOG, 2 стух­ших докблока
+  (VaulterDocumentsServiceProvider, ArchTest). Все три починены ОТДЕЛЬНЫМ коммитом (6088c50),
+  гейт после фикса перепрогнан зелёным.
+  **Commits:** `e7db977` — refactor(core)!: kind-нейтральный нейминг контрактов движка — FileHandler (P0.1);
+  `6088c50` — docs(core): дочистить старые FQCN после rename движка (P0.1).
+
+  **Pending Work:** —
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P0.1 **opus/high**; фактически исполнено **opus/medium**
+     (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`, которая пинит medium и
+     запрещает ручное переключение). Модель совпала, effort ниже заявленного; риск снят обязательными
+     прогонами `vaulter-api-surface` + `vaulter-reviewer` (оба в Routing item'а) — находки ревью
+     найдены и закрыты отдельным коммитом.
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P0.1 (не регресс item'а): линтер требует `phases/P0..P3.md` и
+     секцию `## 6. Update Log`, а план держит детализацию фаз инлайном в `## 6. Phases (детализация)`
+     (Update Log — `## 9`), каталог `plans/VLT-CANON/phases/` пуст с момента создания плана.
+     Структуру плана правит plan-design, не исполнитель — вынесено в handoff Open risks.
+
+  **Status:** 🟠 Done with deviations
 
 - **P0.2 — Exporter принимает опаковый контент** (opus/high, `vaulter-reviewer`).
   `DocumentExporter::export(TipTapContent)` → `export(DocumentContent)` (опаковый); TipTap-специфика — внутри
@@ -308,6 +353,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-11 | design/opus (fable) | Research завершён (6 агентов, 302k токенов, adversarial verify): 3 `findings/*-research.md`; D8 зафиксирован (единый `@vaulter/vue`, per-engine npm лениво — прежний lean опровергнут), D12 добавлен (server-дескриптор = WOPI-класс, не универсалия); P0.5/P1.1/P1.2 обогащены (payload-асимметрия, schemaVersion, dev-warning, explicit-import реестр). |
 | 2026-07-11 | design/opus (fable) | DoR-аудит (`workflows/wf-vlt-canon-audit.js`, 4 finder-измерения + adversarial verify, 6 находок / 0 REJECTED) — все исправлены: (1-Blocker) supersede-тайминг унифицирован (cross-notice в VLT-HSEAM plan.md сейчас, формальная маркировка P3.3), Meta-поле выровнено; (2) D8 переоформлен открытым до P1.1, P1.1 = гейт для P1.2/P1.3; (3) Routing дополнен P0.4/P0.5; (4) §8.4/D10 явно называют ревизию T5-аллокации Option B (не только H.5); (5) P0.2/P0.3 дополнены точками правки core/tests (FakeExporter, E2eServiceProvider), grep расширен на core/tests; (6) §8.2 честно фиксирует REFUTED-нюанс Statamic-API. |
 | 2026-07-12 | plan-exec/sonnet (prep P0.1) | D7 (§8.1) закрыт owner'ом: вариант A — `FileHandler` + `Contracts/Handlers/`, kind-нейтраль. Approve получен запуском `/task:plan-exec VLT-CANON P0.1`. Сам рефакторинг (rename+перенос) — предмет исполнения P0.1, ещё не начат. |
+| 2026-07-12 | plan-exec/opus (medium) | P0.1 закрыт (🟠, deviation по effort в Routing): `DocumentHandler`→`FileHandler`, контракты/VO движка → `Contracts\Handlers\*` / `ValueObjects\Handlers\*`, фронт-тип + docs + BC-записи синхронны — детали см. §6 P0.1 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
