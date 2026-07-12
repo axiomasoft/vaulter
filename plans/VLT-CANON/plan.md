@@ -80,7 +80,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 2/5 | 🟡 In progress |
+| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 3/5 | 🟡 In progress |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
@@ -239,6 +239,92 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   новый FQCN; core уже require-dev'ит documents) + прочие use в core/tests по grep.
   **Приёмка:** `grep -ri tiptap core/src core/tests` → 0 (кроме нейтральных комментариев и легитимных
   cross-package use на documents-FQCN); XSS-тесты зелёные обе стороны.
+
+  **Completion Notes.** Hard rename без alias-фазы (пре-1.0), `git mv` (renames трекаются): 5 файлов
+  `core/src/ValueObjects/Documents/{TipTapContent,LinkSchemeValidator,OpaqueDocumentContent}` →
+  `documents/src/ValueObjects/*`; `core/src/Attributes/TiptapExtensions.php` →
+  `documents/src/Attributes/TiptapExtensions.php`;
+  `core/src/Exceptions/Documents/InvalidTipTapContentException.php` →
+  `documents/src/Exceptions/InvalidTipTapContentException.php`. Namespace-маппинг зеркалит уже
+  существующую документную конвенцию (`Vaulter\Documents\{ValueObjects,Attributes,Exceptions}`, тот
+  же корень, что у `DocumentExport.php`/`UnknownDocumentTypeException.php`). Тесты уже жили в
+  `documents/tests` (cross-package на core-класс) — переезжать физически не пришлось, только `use`.
+  Обновлены `use`-импорты (FQN-anchored) в 24 файлах: 14 production (`documents/src/**`) + 6 tests
+  (`documents/tests/**`) + 4 core (`core/tests/{E2E/E2eServiceProvider,Support/UpgradeGuideCoverageTest,
+  Arch/ArchTest}.php`, `core/src/Contracts/Handlers/DocumentContent.php`). Последний — единственная
+  production-точка core, реально знавшая форму: `use TipTapContent`/`OpaqueDocumentContent` убраны,
+  `{@see}`-ссылки в докблоке заменены прозой (сигнатуры `toArray()`/`contentHash()`/`sizeInBytes()` не
+  тронуты) — core больше не импортирует ни одной конкретной формы контента (`grep` → 0 в
+  `core/src`). `ArchTest.php`: обновлена строка `'Vaulter\ValueObjects\Documents\TipTapContent'` →
+  `'Vaulter\Documents\ValueObjects\TipTapContent'` в тесте канонических FQCN + докоммент теста
+  «core never references vaulter-documents» (D2) дополнен новыми 5 классами.
+  `UpgradeGuideCoverageTest.php`: путь-константа P0.1-кейса переставлена на новый файл. XSS-барьер
+  (store-time allow-list, `decayFrom` read-time decay, `LinkSchemeValidator` URL-scheme allow-list,
+  R-01/R-11/R-12) перенесён байт-в-байт — только `namespace`/`use`-строки менялись, тела методов не
+  тронуты (подтверждено ревью diff'ом против pre-move git-blob'ов).
+  Доки: `docs/guide/architecture.md` + ru-зеркало — убрана строка `ValueObjects/Documents/` ·
+  `Exceptions/Documents/` из таблицы директорий core (папка ушла из core), в таблицу пакетов добавлена
+  строка про 5 перенесённых классов в `vaulter-documents`, прозу §Value objects поправлена (core
+  знает только kind-нейтральные VO). `docs/{guide,ru/guide}/{export,documents,recipes}.md` — FQCN
+  везде обновлены. UPGRADE.md: ретро-исправлена стухшая фраза P0.1-секции («TipTapContent... stay
+  pending P0.3» → «have since moved... see below»); новая секция с таблицей old→new FQCN,
+  byte-for-byte гарантией и «core-only host unaffected». CHANGELOG.md `[Unreleased]`: аналогично
+  ретро-фикс P0.1-буллета + новый P0.3-буллет.
+  **Гейты:** `vendor/bin/pint packages/core packages/documents --test` → passed;
+  `phpstan analyse` (max, монорепо) → passed, 0 errors; root `pest` (core) → 487/487, 1268
+  assertions; `packages/documents` `pest` → 209 passed / 1 skipped, 521 assertions (без изменений
+  против P0.2-баз­лайна); `pest --type-coverage --min=100` → 100.0% обе стороны.
+  **Ревью.** `vaulter-api-surface` (второй прогон — первый ошибочно сравнил с `main`, false-positive
+  «200+ файлов/vue» на всей истории ветки, не на диффе сессии) → clean rename-only diff, 65
+  файлов, +248/-275, зеро изменений сигнатур/конфиг-ключей/`packages/vue`. `vaulter-reviewer` →
+  approve, byte-for-byte XSS-барьер подтверждён построчным диффом против pre-move blob'ов,
+  BC/UPGRADE честные, ServiceProvider/publishables/config не задеты; 1 Major + 1 Minor + 1 Nit
+  (см. Known Deviations/Pending Work — ни один не блокирует, все зафиксированы, а не тихо
+  проигнорированы).
+  **Commits:** `a1f2f7c` — refactor(core)!: TipTap-формы контента переезжают в documents (P0.3).
+
+  **Pending Work:**
+  1. [Major, ревью] **Гейт-скоуп:** `TipTapContent`/`LinkSchemeValidator` (XSS-барьер R-01/R-11/R-12)
+     покинули `packages/core/src`, а с ним — enforcing-пороги `.github/workflows/mutation.yml`
+     (`--min=95`, `--path=packages/core/src`) и `tests.yml` coverage (`--min=80`, source =
+     `packages/core/src`). Новый дом `packages/documents` в CI (`documents.yml`) гоняет `pest --ci`
+     БЕЗ `--coverage --min=N`, mutation-шаг — `infection ... || true` (неблокирующий). Итог: будущее
+     ослабление allow-list-теста в `documents`-сьюте не покраснит НИ ОДИН гейт, хотя раньше `--min=95`
+     поймал бы это в core. Не регресс поведения (тесты сами зелёные и переехали корректно) — регрессия
+     гарантии, что они останутся осмысленными. Чинить: явное решение — либо enforcing mutation/coverage
+     лейн для `packages/documents/src/ValueObjects` (+ `Attributes`/`Exceptions`), либо перенос порога
+     в `documents.yml`. Вне Scope Included этого item'а (правка `.github/workflows/*.yml` — не
+     файловый перенос 5 классов) — не делал, эскалирую как Pending Work на следующий CI/gate-item.
+  2. [Nit, ревью] `packages/core/composer.json` `require-dev` не объявляет
+     `axioma-studio/vaulter-documents` явно, хотя core-тестсьют на него ссылается
+     (`E2eServiceProvider.php`, теперь ещё `UpgradeGuideCoverageTest.php`) — работает только потому,
+     что core-сьют гоняется из корня монорепы. Пред-существующее (не регресс P0.3, `E2eServiceProvider`
+     так делал и до диффа) — standalone-сборка core со своим `require-dev` (только drive+media) не
+     собрала бы этот сьют. Не чинил (вне Scope Included).
+  3. Kind-нейтральный `NodeExportService::contentOf()` (P0.2 Pending Work) — не трогал, ждёт
+     P0.4/P0.5 как и планировалось.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P0.3 **opus/high**; фактически исполнено **opus/medium**
+     (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`, которая пинит medium и
+     запрещает ручное переключение). Модель совпала, effort ниже заявленного; риск снят обязательными
+     прогонами `vaulter-api-surface` + `vaulter-reviewer` (оба в Routing item'а) — оба прошли,
+     находки зафиксированы выше.
+  2. Приёмка item'а («`grep -ri tiptap core/src core/tests` → 0») выполнена НЕ буквально: остаются
+     `Config::tiptapExtraNodes()/tiptapExtraMarks()/tiptapExtraAttributes()/tiptapUrlAttributes()/
+     tiptapAttributeMap()` (`core/src/Support/Config.php:1394-1451`, host-facing config-аксессоры для
+     `vaulter.tiptap.*`) и `$table->string('format', 16)->default('tiptap')`
+     (`core/src/Schema/PanelTablesBuilder.php:600`). Оба — сознательно НЕ в Scope Included этого
+     item'а (Scope перечисляет ровно 5 классов; `default('tiptap')` явно назван в тексте P0.4, а
+     config-сиим — host-facing поверхность, не форма TipTap-контента, переименование config-ключа —
+     отдельное BC-решение вне этого item'а). Формулировка критерия приёмки в plan.md шире фактического
+     Scope item'а — правка формулировки принадлежит plan-design, не exec (см. п.4 протокола); отмечено
+     находкой ревью (Minor), не правил текст плана сам.
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P0.1/P0.2/P0.3 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases (детализация)`
+     (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+
+  **Status:** 🟠 Done with deviations
 
 - **P0.4 — Схема: убрать `default('tiptap')`; движок реестра → core (Q1/D10)** (opus/high).
   Утечка L3 + VLT-HSEAM Q1. Решить D10 (§8.4). Убрать `default('tiptap')` у
@@ -408,6 +494,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-12 | plan-exec/sonnet (prep P0.1) | D7 (§8.1) закрыт owner'ом: вариант A — `FileHandler` + `Contracts/Handlers/`, kind-нейтраль. Approve получен запуском `/task:plan-exec VLT-CANON P0.1`. Сам рефакторинг (rename+перенос) — предмет исполнения P0.1, ещё не начат. |
 | 2026-07-12 | plan-exec/opus (medium) | P0.1 закрыт (🟠, deviation по effort в Routing): `DocumentHandler`→`FileHandler`, контракты/VO движка → `Contracts\Handlers\*` / `ValueObjects\Handlers\*`, фронт-тип + docs + BC-записи синхронны — детали см. §6 P0.1 Completion Notes. |
 | 2026-07-12 | plan-exec/opus (medium) | P0.2 закрыт (🟠): `DocumentExporter::export()` принимает опаковый `DocumentContent`, TipTap-сужение — внутри экспортёров; kind-нейтральный read-path (`contentOf()`) вынесен в Pending Work → P0.4/P0.5 — детали см. §6 P0.2 Completion Notes. |
+| 2026-07-13 | plan-exec/opus (medium) | P0.3 закрыт (🟠): 5 TipTap-форм контента переезжают core→documents (`Vaulter\Documents\{ValueObjects,Attributes,Exceptions}\*`), XSS-барьер byte-for-byte, гейты+ревью зелёные, gate-scope Pending Work — детали см. §6 P0.3 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
