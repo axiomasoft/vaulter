@@ -13,8 +13,9 @@
 /task:plan-exec VLT-CANON P0.2
 ```
 
-**Done:** P0.1 🟠 Done with deviations (deviation — только Routing: исполнено sonnet/medium вместо
-opus/high, компенсировано обязательными `vaulter-api-surface` + `vaulter-reviewer`). Контракт движка
+**Done:** P0.1 🟠 Done with deviations (deviation — только Routing: исполнено opus/**medium** вместо
+opus/**high**; модель совпала, effort ниже — компенсировано обязательными `vaulter-api-surface` +
+`vaulter-reviewer`, находки ревью найдены и закрыты). Контракт движка
 kind-нейтрален: `DocumentHandler`→`FileHandler`, `Contracts\Documents\*`→`Contracts\Handlers\*`,
 `ValueObjects\Documents\{DocumentCapabilities→HandlerCapabilities, HandlerDescriptor, HandlerUi,
 FileDescriptor}`→`ValueObjects\Handlers\*`. Фронт-тип `@vaulter/vue` (`DocumentCapabilities`→
