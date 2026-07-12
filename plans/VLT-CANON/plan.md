@@ -80,7 +80,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 3/5 | 🟡 In progress |
+| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 4/5 | 🟡 In progress |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
@@ -98,7 +98,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | D7 | 2026-07-12 | **Нейминг контракта движка: `FileHandler` + `Contracts/Handlers/`, kind-нейтраль (вариант A, §8.1)** — owner approved (Dmitry Vostrikov, запуск `/task:plan-exec VLT-CANON P0.1`) | см. §8.1: контракт описывает ЛЮБОЙ файл (не только редактируемые), fallback-хендлеры (`DownloadOnlyHandler`/`PreviewHandler`) — не «движки»; уже согласовано RAG VLT-HSEAM (L5) |
 | D8 | — (рекомендация 2026-07-11; **закрывается owner'ом в P1.1**) | *[упаковка фронт-движков]* — рекомендация research'а: единый `@vaulter/vue` как shell/core; per-engine npm НЕ вводить до реального внешнего потребителя; TipTap — один version-train с PHP. **Открыт до P1.1**: P1.2/P1.3 стартуют ТОЛЬКО после закрытия D8 (гейт) | RAG:✅ 2026-07-11 `findings/frontend-engine-packaging-research.md`: Filament v4/Nova 5/Statamic v5 НЕ публикуют отдельный npm на плагин (CONFIRMED); awcodes/filament-tiptap-editor бандлит TipTap+15 расширений в одном пакете (CONFIRMED). Мой предварительный lean «per-engine npm» опровергнут research'ем — см. §8.2 |
 | D9 | — | *[media→drive слияние]* — резолвится в P2.2 по ## Обсуждение §8.3 | см. §8.3 |
-| D10 | — | *[Q1 VLT-HSEAM: движок реестра → core]* — резолвится в P0.4 по ## Обсуждение §8.4. При выборе A запись оформляется как **superseding H.5 + T5 (Option B-топология)** — явная ревизия обоих предшественников, не молчаливый переворот | см. §8.4 (⚠-блок) |
+| D10 | 2026-07-13 | **Движок реестра → core (вариант A, §8.4)** — `DocumentHandlerRegistry`+`NodeHandlerResolver`+`DocumentFileDescriptorFactory`+`Capability`+baseline `PreviewHandler`/`DownloadOnlyHandler` переехали в `Vaulter\Engines\*` / `Vaulter\Enums\Handlers\*`; documents оставляет TipTap/Univer-драйверы. **Superseding-запись: явно пересматривает (1) H.5 («движок в documents, core fail-loud») и (2) T5/§Аллокацию Option B-топологии** (`docs/plan/p2-5-option-b-topology.md`: «`Documents\*` (registry/handlers/services) → docdrive»). Закрыт исполнением P0.4 | Новое требование, которого не было в скоупе при T5-разрезе: **drive-only хост** (файлы без редактирования) обязан получать preview/download-дескриптор БЕЗ `vaulter-documents`. До P0.4 `NodeResource::handler()` молча отдавал `null` такому хосту. Реестр = инфра ядра (как `PanelRegistry`); «tiptap — одно из расширений» стало буквальным |
 | D11 | — | *[Q2 VLT-HSEAM: `yjs_state`→`crdt_state`]* — резолвится в P0.5 по ## Обсуждение §8.5 | см. §8.5 |
 | D12 | 2026-07-11 | **Server-side дескриптор (`GET nodes/{node}/handler`) сохраняем — это WOPI-класс паттерна, НЕ универсальная норма** (Drive/Box/Dropbox мапят mime→viewer на клиенте — adversarial verify REFUTED «универсальность»); честное основание: (а) WOPI CheckFileInfo-модель подтверждена; (б) статика реестра (mime/priority/capabilities ≈ discovery.xml) отделена от динамики прав per-file/per-user — у нас это AccessResolver, НЕ смешивать в capabilities; (в) баг-класс протухших mime→editor ассоциаций при персисте — CONFIRMED (усиливает D4) | RAG:✅ 2026-07-11 `findings/drive-editor-resolution-research.md` (вкл. REFUTED-ноты) |
 
@@ -335,6 +335,100 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   **Приёмка:** миграция без `default`; drive-only хост получает preview/download-дескриптор без documents
   (если D10=A); гейт зелёный.
 
+  **Completion Notes.** **D10 закрыт = вариант A** (§8.4) — оформлен как superseding-запись к H.5
+  и T5-аллокации Option B (обе названы явно в Decision Log). Движок реестра переехал `git mv`
+  (renames трекаются) из `documents/src/Documents/` в core: `DocumentHandlerRegistry`,
+  `NodeHandlerResolver`, `DocumentFileDescriptorFactory` → `core/src/Engines/*`;
+  `Handlers/{DownloadOnlyHandler,PreviewHandler}` → `core/src/Engines/Handlers/*`;
+  `Documents\Enums\Documents\Capability` → `core/src/Enums/Handlers/Capability.php`
+  (`Vaulter\Enums\Handlers\Capability`). Публичные контракты (`Contracts\Handlers\*`) НЕ
+  двигались — переехали только конкретные реализации (подтверждено `vaulter-api-surface`:
+  ноль изменений сигнатур).
+  **Проводка.** core `VaulterServiceProvider` вяжет `HandlerRegistry`/`NodeHandlerResolver`
+  БЕЗУСЛОВНО (было — условно в documents-провайдере) + тегирует baseline в `'vaulter.handlers'`
+  (см. находку ревью HIGH-1 ниже). `core/config/vaulter.php` `handlers` дефолт `[]` →
+  `[PreviewHandler, DownloadOnlyHandler]`; `documents/config/vaulter-documents.php` оставил
+  только `TipTapHandler` (Univer по-прежнему тегируется по фича-флагу). `VaulterManager::handlers()`
+  больше не оборачивает резолв в `resolveSeam()` → `MissingPackageException` для ЭТОГО шва
+  (шов `DriveHandleFactory` — не тронут). `NodeResource::handler()` снял гвард
+  `!app()->bound(...)`: drive-only хост получает реальный preview/download-дескриптор вместо
+  `null` — это и есть выгода D10.
+  **Схема (L3).** `PanelTablesBuilder::defineDocumentVersions` — `format` без
+  `->default('tiptap')`. Два write-path реально полагались на этот дефолт при ДОПИСЫВАНИИ новой
+  версии существующему документу: `UpdateDocumentContentAction` (автосейв) и
+  `PersistYjsSnapshotAction` (yjs-снапшот) — оба теперь несут формат головы вперёд
+  (`$head?->format ?? DocumentType::RichText->value`). Следствие (BC): у markdown/univer-документа
+  дописываемые строки штамповались `'tiptap'`, теперь — реальным форматом.
+  `CreateNamedVersionAction` — литерал `'tiptap'` → `DocumentType::RichText->value`.
+  **Тесты.** Новые: `core/tests/Feature/HandlerBaselineTest.php` (3 кейса, red-before-fix
+  проверен снятием тега), `documents/tests/Document/VersionFormatCarryForwardTest.php` (3 кейса).
+  Перевёрнут по смыслу `VaulterManagerExporterHandlerSeamTest` — вместо «fail-loud без
+  vaulter-documents» пиннит ОБРАТНОЕ: реестр резолвится и `registerHandler()` работает БЕЗ
+  пакета. `ArchTest` — новый гейт финальности `Vaulter\Engines`. `UpgradeGuideCoverageTest` —
+  новый data-кейс, привязывающий секцию UPGRADE.md к факту привязки в `VaulterServiceProvider`.
+  **Доки/BC.** UPGRADE.md — секция P0.4 (таблица 6 old→new FQCN, смена значения `format`,
+  value-space колонки, отсутствие backfill, шаг для хоста с опубликованным конфигом); CHANGELOG
+  `[Unreleased]` — два BREAKING-буллета (переезд движка · `format`). Обновлены 12 файлов доков
+  (en+ru: architecture, document-handlers, recipes, reference/{contracts,configuration,facade}).
+  **Гейты:** `pint --test` → passed; `phpstan analyse` (max, монорепо) → passed, 0 errors;
+  root `pest` (core) → 491/491, 1271 assertion; `packages/documents` `pest` → 212 passed /
+  1 skipped, 527 assertions; `pest --type-coverage --min=100` → 100.0% обе стороны.
+  **Ревью.** `vaulter-api-surface` → clean move-only diff: 6 FQCN переехали, ноль изменений
+  сигнатур публичных контрактов, config-ключи сменили владельца (core baseline + documents
+  add-on). `vaulter-reviewer` → **needs-work**, 2 HIGH + 3 MED + 1 LOW; оба HIGH закрыты
+  отдельным коммитом `651b54c`:
+  - **(HIGH-1)** `hasConfigFile()` мержит через shallow existing-wins `mergeConfigFrom` — хост,
+    опубликовавший конфиг ДО P0.4, несёт литеральный `'handlers' => []`, который ВЫИГРЫВАЕТ у
+    нового core-дефолта и молча выключает `PreviewHandler` ровно у drive-only хоста, ради
+    которого делался item. Починено тегом `'vaulter.handlers'` в core-провайдере (второй,
+    конфиг-независимый источник; реестр дедуплицирует по FQCN) — заодно снята неявная
+    зависимость merge от порядка регистрации провайдеров (MED-5). Регресс-тест + шаг в UPGRADE.
+  - **(HIGH-2)** UPGRADE.md утверждал «все writer'ы и так ставили `format` явно» и «behaviour
+    unchanged» — ложь, опровергаемая собственным диффом item'а. Секция переписана честно;
+    CHANGELOG получил отдельный BREAKING-буллет про смену значения `format` (MED-3 про
+    `'tiptap'`→`'richtext'` фолбэк закрыт там же; MED-4 про смешанный value-space колонки и
+    отсутствие backfill — задокументирован как известное свойство).
+  **Commits:** `73b135e` — refactor(core)!: движок реестра форматов переезжает в core; format без
+  DB-дефолта (P0.4); `651b54c` — fix(core): findings ревью P0.4 — baseline-хендлеры через тег,
+  честные доки по format (P0.4).
+
+  **Pending Work:**
+  1. [MED-4, ревью] **`format` — смешанный value-space, каста/валидации нет.** Колонка хранит и
+     значения `DocumentType` (`richtext`/`table`/`markdown`/`template`), и handler-id (`univer`;
+     исторически `'tiptap'` из DB-дефолта — не валидный `DocumentType`). Backfill не шипается,
+     старые строки сохраняют что записано. Задокументировано в UPGRADE.md как advisory-label
+     (хендлер резолвится от mime, не от колонки — D4), но унификация словаря — отдельное решение
+     (кандидат в P0.5, где живёт `format`-дискриминатор).
+  2. **`CreateDocumentNodeData::$format` дефолт = `'tiptap'`** (`documents/src/Data/Documents/`) —
+     тот же класс проблемы, что и снятый DB-дефолт: строка не валидный `DocumentType`, бьёт
+     только по прямой программной конструкции DTO (HTTP-путь всегда задаёт формат через
+     `CreateDocumentNodeRequest::versionFormat()`). Не трогал: Scope Included item'а — схема +
+     переезд движка; смена дефолта публичного DTO — отдельное BC-решение. → P0.5.
+  3. [LOW-6, ревью] Фолбэк `$head?->format ?? RichText` в автосейве/снапшоте может записать
+     `'richtext'` не-рич-текст узлу, если у документа нет головы (`current_version_id === null`).
+     Достижимость низкая (Create/Restore всегда перенаводят голову), не хуже прежнего `'tiptap'`;
+     инлайн-комментарий честен. Оставлено как есть.
+  4. Kind-нейтральный `NodeExportService::contentOf()` (Pending Work P0.2/P0.3) — НЕ тронут, как
+     и планировалось; ждёт P0.5.
+  5. Gate-scope gap CI (Pending Work P0.3 #1) — не тронут, вне Scope.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P0.4 **opus/high**; фактически исполнено
+     **opus/medium** (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`,
+     которая пинит medium и запрещает ручное переключение). Модель совпала, effort ниже
+     заявленного; риск снят обязательными прогонами `vaulter-api-surface` + `vaulter-reviewer`
+     (оба в Routing item'а) — reviewer вернул needs-work с 2 HIGH, оба закрыты отдельным коммитом.
+  2. Приёмка item'а («миграция без `default`») выполнена на уровне `PanelTablesBuilder` —
+     единственного column-source, который читают и свежая установка, и `panel:migrations`.
+     Отдельная ALTER-миграция НЕ шипается: пакет пре-1.0 без тегированного релиза (`[Unreleased]`),
+     уже мигрированная БД сохраняет свой column-default до перераската схемы — ничего не ломается,
+     т.к. writer'ы на него больше не полагаются. Зафиксировано в UPGRADE.md.
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P0.4 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+
+  **Status:** 🟠 Done with deviations
+
 - **P0.5 — `richText` дефолт + policy эволюции capabilities + DX-каркас + Q2** (sonnet/medium → opus для Q2).
   Утечки L4/L5. `richText=true` → нейтральный дефолт; тест-инвариант «добавление оси capabilities не ломает
   клиента» (открытое множество, аддитивные оси, клиент игнорит незнакомые ключи). DX: `AbstractFileHandler`-база
@@ -495,6 +589,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-12 | plan-exec/opus (medium) | P0.1 закрыт (🟠, deviation по effort в Routing): `DocumentHandler`→`FileHandler`, контракты/VO движка → `Contracts\Handlers\*` / `ValueObjects\Handlers\*`, фронт-тип + docs + BC-записи синхронны — детали см. §6 P0.1 Completion Notes. |
 | 2026-07-12 | plan-exec/opus (medium) | P0.2 закрыт (🟠): `DocumentExporter::export()` принимает опаковый `DocumentContent`, TipTap-сужение — внутри экспортёров; kind-нейтральный read-path (`contentOf()`) вынесен в Pending Work → P0.4/P0.5 — детали см. §6 P0.2 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P0.3 закрыт (🟠): 5 TipTap-форм контента переезжают core→documents (`Vaulter\Documents\{ValueObjects,Attributes,Exceptions}\*`), XSS-барьер byte-for-byte, гейты+ревью зелёные, gate-scope Pending Work — детали см. §6 P0.3 Completion Notes. |
+| 2026-07-13 | plan-exec/opus (medium) | P0.4 закрыт (🟠): D10=A (движок реестра → `Vaulter\Engines\*` в core, superseding H.5+T5) — drive-only хост получает preview/download без documents; `format` без `default('tiptap')`, два write-path штампуют формат явно (BC) — детали см. §6 P0.4 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
