@@ -133,7 +133,8 @@ namespace App\Vaulter\Exporters;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Support\TipTapRenderer;
+use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class PdfExporter implements DocumentExporter
@@ -159,10 +160,13 @@ final class PdfExporter implements DocumentExporter
 
     public function export(DocumentContent $content): string
     {
-        // This exporter only understands TipTap docs — narrow before rendering
-        // (route only editable/previewable TipTap nodes to it).
+        // The contract is opaque — this exporter only understands TipTap docs, so
+        // narrow before rendering. Throw the package's own exception so a host
+        // catching VaulterException still catches this.
         if (!$content instanceof TipTapContent) {
-            throw new \RuntimeException('PdfExporter only supports TipTap content.');
+            throw UnsupportedDocumentContentException::forExporter(
+                $this->format(), TipTapContent::class, $content::class,
+            );
         }
 
         // Render the TipTap doc to HTML, then to a PDF with your library of choice

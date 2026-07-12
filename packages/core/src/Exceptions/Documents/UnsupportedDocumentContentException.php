@@ -2,10 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Exceptions;
+namespace Vaulter\Exceptions\Documents;
 
+use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Exceptions\VaulterException;
 
+/**
+ * Lives in CORE, next to {@see UnknownExportFormatException}: the contract it guards
+ * ({@see DocumentExporter}) is a core seam, and a core-only
+ * host registering its own exporter through config('vaulter.exporters') must be able to
+ * throw it without pulling in vaulter-documents.
+ */
 final class UnsupportedDocumentContentException extends VaulterException
 {
     public static function forExporter(string $exporterFormat, string $expected, string $actual): self

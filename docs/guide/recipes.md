@@ -427,6 +427,7 @@ namespace App\Vaulter;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
 final class PdfExporter implements DocumentExporter
@@ -439,7 +440,9 @@ final class PdfExporter implements DocumentExporter
     {
         // The contract is opaque — narrow to what this exporter understands.
         if (!$content instanceof TipTapContent) {
-            throw new \RuntimeException('PdfExporter only supports TipTap content.');
+            throw UnsupportedDocumentContentException::forExporter(
+                $this->format(), TipTapContent::class, $content::class,
+            );
         }
 
         // Binary formats return an encoded string (e.g. base64) + the matching mime.

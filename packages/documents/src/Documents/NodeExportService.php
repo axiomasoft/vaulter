@@ -87,6 +87,15 @@ final class NodeExportService
         return $this->manager->exporterFormats();
     }
 
+    /**
+     * The return type is the opaque {@see DocumentContent} (P0.2), but the BODY still
+     * resolves every version through {@see TipTapContent} — a non-TipTap snapshot decays
+     * to an EMPTY TipTap doc here instead of reaching the exporter as its own shape. So a
+     * non-rich-text node (the Univer/spreadsheet path) currently exports as an empty
+     * document rather than being refused by the exporter's narrowing guard. Making this
+     * kind-neutral (opaque handlers → OpaqueDocumentContent) is deliberately OUT of P0.2's
+     * scope — it belongs with the read-path work in P0.4/P0.5.
+     */
     private function contentOf(Node $node): DocumentContent
     {
         $head = $this->versions->head($node) ?? $this->versions->latest($node);

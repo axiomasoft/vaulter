@@ -109,9 +109,15 @@ Register one via `config('vaulter.exporters')` or `Vaulter::registerExporter()`.
 ## unsupported-document-content
 
 `UnsupportedDocumentContentException` — an exporter received a `DocumentContent` shape it
-doesn't understand (e.g. the built-in HTML/Markdown exporters only render `TipTapContent`).
-Only route nodes whose resolved handler produces the expected content shape to that
-exporter (`config('vaulter.exporters')`).
+doesn't understand. `DocumentExporter::export()` takes the opaque `DocumentContent`, so an
+exporter that only renders one shape (the built-in HTML/Markdown exporters render
+`TipTapContent`) narrows with an `instanceof` and throws this when the narrowing fails.
+Throw it from your own exporter's guard; catch it if you call an exporter directly.
+
+Note: the package's own node-export path (`NodeExportService`) does not currently produce
+a non-TipTap `DocumentContent` — it resolves every version through `TipTapContent`, so a
+non-TipTap snapshot decays to an empty TipTap doc rather than reaching this guard. This
+error therefore surfaces on **direct exporter calls and custom exporters** today.
 
 ## upload-conflict
 

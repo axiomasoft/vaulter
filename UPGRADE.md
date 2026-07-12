@@ -43,6 +43,10 @@ once `DocumentContent` (the same opaque interface the write path already stores)
 non-TipTap handler's content should be exportable through the same seam without the contract
 forcing a TipTap shape on it.
 
+**Who breaks.** Callers are fine — a `TipTapContent` *is* a `DocumentContent`. **Implementations
+break**: the parameter widened, so an exporter still declaring `export(TipTapContent $content)` is
+no longer signature-compatible with the interface and fatals on class load.
+
 ```diff
  interface DocumentExporter
  {
@@ -56,20 +60,34 @@ parameter type to `Vaulter\Contracts\Handlers\DocumentContent` and narrow intern
 concrete shape it renders, e.g.:
 
 ```php
+use Vaulter\Contracts\Handlers\DocumentContent;
+use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
+use Vaulter\ValueObjects\Documents\TipTapContent;
+
 public function export(DocumentContent $content): string
 {
     if (!$content instanceof TipTapContent) {
-        throw new \RuntimeException('MyExporter only supports TipTap content.');
+        throw UnsupportedDocumentContentException::forExporter(
+            $this->format(), TipTapContent::class, $content::class,
+        );
     }
 
     // ... render $content as before
 }
 ```
 
-The built-in `HtmlExporter`/`MarkdownExporter` (vaulter-documents) do exactly this and throw the
-new `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` when handed a non-TipTap
-`DocumentContent`. `config('vaulter.exporters')` keys and every exporter's `format()`/
-`mimeType()`/`extension()` are unaffected.
+`UnsupportedDocumentContentException` is new and lives in **core**
+(`Vaulter\Exceptions\Documents\`), next to `UnknownExportFormatException` — a core-only host that
+registers its own exporter can throw it without requiring `vaulter-documents`. The built-in
+`HtmlExporter`/`MarkdownExporter` guard exactly as above.
+
+Note: the package's own node-export path does not yet hand a non-TipTap `DocumentContent` to an
+exporter — `NodeExportService::contentOf()` still resolves every version through `TipTapContent`.
+The guard is what makes a custom exporter safe today and what makes the seam correct once a
+kind-neutral read path lands; it is not yet reachable through `GET .../export`.
+
+`config('vaulter.exporters')` keys and every exporter's `format()`/`mimeType()`/`extension()` are
+unaffected.
 
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 
