@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-12 (эскалация P5.7 разрешена владельцем — D38/D39/D40: Infection 0.33 структурно не поддерживает Pest 4, mutation-гейт переводится на нативную мутацию Pest; P5.8 ⛔ superseded, P5 расширена items P5.9/P5.10, фаза 2/10 🟡) |
+| Last Updated | 2026-07-12 (P5.10 закрыт — фаза P5 терминальна 10/10 🟢; критерий 5 (mutation-гейт) ✅ по факту Score 100.00%/--min=95, критерий 4 ❌ по CI-факту tests.yml (coverage 78.6% < 80%, D35); итоговый вердикт «НЕ ГОТОВ К РЕЛИЗУ» по единственной причине; план — на грани терминальности, следующий шаг процедурный (RUNBOOK 2.4)) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-media, vaulter-documents, vaulter-filament, vaulter-permissions-azgard, @vaulter/vue, hocuspocus-server |
 | Execution Mode | phase-first |
@@ -103,7 +103,7 @@ Pre-mortem — `findings/P0-premortem.md`.
 | P2 | W2 — Авторизация и изоляция | 2/3 | 🟠 Done with deviations |
 | P3 | W3 — Надстройки и интеграция | 6/6 | 🟢 Done |
 | P4 | W4 — Качество, DX, CI + канон структуры | 10/10 | 🟢 Done |
-| P5 | Сквозной adversarial code review | 3/10 | 🔴 Blocked |
+| P5 | Сквозной adversarial code review | 10/10 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -211,4 +211,5 @@ Pre-mortem — `findings/P0-premortem.md`.
 | 2026-07-12 | plan-exec/sonnet | P5.7 остановлен эскалацией (🔴 Blocked): фикс `--log-junit` устранил заявленный дефект (0 `CoverageChecker`/`JUnitReportLocator` в логе, коммит `e35e816`, run `29201294605`, headSha `e35e816`), но Infection упал ДО генерации мутантов на НОВОМ классе отказа — `TestNotFound` (Pest пишет JUnit `<testcase classname>` с префиксом `P\`, source-to-test mapper Infection ожидает FQCN без префикса). Обеих метрик MSI/Covered Code MSI нет — детали см. phases/P5.md P5.7 Completion Notes + ESCALATION-блок, `findings/P5.7-infection-coverage-layout.md` §5. P5 остаётся 2/8, 🔴 Blocked. |
 | 2026-07-12 | plan-design/opus | Эскалация P5.7 разрешена владельцем: **D38** (Infection 0.33 не поддерживает Pest 4 — гейт на нативную мутацию Pest), **D39** (метрика `Score`, `--min` по факту −5; supersedes D32), **D40** (P5.8 ⛔ superseded) — детали см. §5 Decision Log. |
 | 2026-07-12 | plan-design/opus | P5 расширена items **P5.9** (⬜ лейн на `pest --mutate`) и **P5.10** (⬜ порог по факту + вердикт), P5.8 → ⛔; фаза 2/10 (🔴 — формальный инвариант: живут исторические 🔴-items P5.1/P5.4/P5.6/P5.7; работа разблокирована). Норма — `findings/P5.9-pest-mutate-migration.md`. |
-| 2026-07-12 | plan-exec/sonnet | P5.9 закрыт (🟢): лейн `mutation.yml` переведён на `pest --mutate --path=packages/core/src --covered-only --parallel --processes=4`, `infection.json5` удалён, `infection/infection` снят из `require-dev` (сеть была доступна); коммит `f9d478d`. Диспатч `run 29202699131` (headSha `f9d478d`) впервые в истории репозитория напечатал мутационную метрику: `Score: 100.00%`, `Mutations: 3476 tested` (0 escaped) — детали см. phases/P5.md P5.9 Completion Notes, `findings/P5.9-pest-mutate-migration.md` §7. P5 → 3/10. |
+| 2026-07-12 | plan-exec/sonnet | P5.9 закрыт (🟢): лейн `mutation.yml` переведён на `pest --mutate --path=packages/core/src --covered-only --parallel --processes=4`, `infection.json5` удалён, `infection/infection` снят из `require-dev` (сеть была доступна); коммит `f9d478d`. Диспатч `run 29202699131` (headSha `f9d478d`) впервые в истории репозитория напечатал мутационную метрику: `Score: 100.00%`, `Mutations: 3476 tested` (0 escaped) — детали см. phases/P5.md P5.9 Completion Notes, `findings/P5.9-pest-mutate-migration.md` §7. P5 → 3/10.
+| 2026-07-12 | plan-exec/sonnet | P5.10 закрыт (🟢): порог `--min=95` (`floor(Score 100.00%) − 5`) в `mutation.yml`, коммит `e79b175`; контрольный диспатч `run 29203343030` зелёный (exit 0) — **критерий 5 вердикта (mutation-гейт) ✅**, честная ретроспектива «гейт не измерял ничего с P4.1 по P5.7» зафиксирована. Диспатч `tests.yml` (`run 29203669361`) — критерий 4 ❌ по CI-факту: коверидж 78.6 % < 80 % (D35, тесты сами 487/487 зелёные); `P5.3-closure-matrix.md` пересобрана (коммит `26e8ff9`) — итоговый вердикт «НЕ ГОТОВ К РЕЛИЗУ» по единственной причине (критерий 4, было — критерий 5). **Фаза P5 ТЕРМИНАЛЬНА (10/10 🟢).** Детали — phases/P5.md P5.10 Completion Notes, `findings/P5.10-score-verdict.md`. |
