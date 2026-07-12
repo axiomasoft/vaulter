@@ -29,6 +29,8 @@ use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Engines\DocumentHandlerRegistry;
+use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Engines\NodeHandlerResolver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
@@ -157,6 +159,16 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // package installed).
         $this->app->singleton(DocumentHandlerRegistry::class);
         $this->app->bind(HandlerRegistry::class, DocumentHandlerRegistry::class);
+
+        // The baseline is TAGGED, not merely config-defaulted (P0.4 review, HIGH-1).
+        // `hasConfigFile()` merges via Laravel's shallow, existing-wins mergeConfigFrom:
+        // a host that ran `vendor:publish --tag=vaulter-config` BEFORE P0.4 carries a
+        // literal `'handlers' => []` in its own config, which would WIN over core's new
+        // default and silently drop PreviewHandler (exactly the drive-only host P0.4
+        // exists for). The tag is a second, config-independent source the registry
+        // merges and de-duplicates by FQCN, so the baseline survives a stale or emptied
+        // config — and the merge stops depending on provider-registration order.
+        $this->app->tag([PreviewHandler::class, DownloadOnlyHandler::class], 'vaulter.handlers');
 
         // NodeResource resolves this seam to embed the handler descriptor on every
         // leaf node — unconditionally bound, so Drive-only serialisation gets a real

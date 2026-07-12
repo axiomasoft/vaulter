@@ -122,8 +122,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Vaulter::registerHandler()` / `Vaulter::handlers()` no longer throw `MissingPackageException`
   when `vaulter-documents` is absent — the seam is core-owned and unconditional now.
   `vaulter-documents` keeps only its own format additions (`TipTapHandler`, the feature-flagged
-  `UniverHandler`). Also: `v_node_document_versions.format` no longer carries a schema
-  `default('tiptap')` — every writer already stamped it explicitly. See `UPGRADE.md`.
+  `UniverHandler`). The baseline `PreviewHandler`/`DownloadOnlyHandler` are also registered under
+  the container tag `'vaulter.handlers'`, so a host carrying a pre-P0.4 published config
+  (`'handlers' => []`, which wins the shallow config merge) does not silently lose preview. See
+  `UPGRADE.md`.
+- **BREAKING (pre-1.0): `v_node_document_versions.format` no longer carries a schema
+  `default('tiptap')`; the autosave and Yjs-snapshot writers now stamp the format explicitly**
+  (VLT-CANON P0.4). `UpdateDocumentContentAction` and `PersistYjsSnapshotAction` previously let
+  the DB default fill `format` when appending a NEW version row to an existing document — so a
+  **markdown or univer document's autosave rows were stamped `'tiptap'` regardless of its real
+  format**. They now carry the head version's format forward. The value reaches clients through
+  `NodeDocumentVersionResource.format` and the version-history API: **a client branching on
+  `format === 'tiptap'` must be updated.** `CreateNamedVersionAction`'s no-head fallback likewise
+  changed from the literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`). No
+  backfill ships — pre-existing rows keep their stored value; `format` is an advisory label, the
+  handler is always resolved from the node's mime (D4). See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

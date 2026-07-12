@@ -121,18 +121,46 @@ not a TipTap shape, and is out of this item's scope. `v_node_document_versions.f
 ### `v_node_document_versions.format` no longer defaults to `'tiptap'`; the handler-registry ENGINE moved from `vaulter-documents` to core (VLT-CANON P0.4 / D10, superseding H.5 / T5)
 
 **Schema.** `v_node_document_versions.format` (`PanelTablesBuilder::defineDocumentVersions`) no
-longer carries `->default('tiptap')`. The writing side (`CreateDocumentNodeAction`,
-`UpdateDocumentContentAction`, `PersistYjsSnapshotAction`, `CreateNamedVersionAction`,
-`RestoreDocumentVersionAction`) already stamped `format` explicitly on every INSERT — the DB
-default was dead weight that only ever protected the exact class of stale mime→editor
-association H.5 exists to prevent (D4/D12). **Behaviour is unchanged** for every existing write
-path; a document created through the package's own Actions never relied on the default. If you
-insert `v_node_document_versions` rows directly (bypassing the Actions — not a supported path),
-you must now set `format` explicitly or the insert fails the `NOT NULL` constraint. Migrating an
-EXISTING install: this is a column-default removal on an already-shipped migration file
-(`PanelTablesBuilder` is the single column-source a fresh install AND `panel:migrations` both
-read), not a new migration — the package has no tagged release yet (pre-1.0, `[Unreleased]`), so
-no ALTER migration ships for it.
+longer carries `->default('tiptap')`. The engine that writes a version now stamps `format`
+explicitly — a silent `'tiptap'` DB default is exactly the stale mime→editor association H.5
+exists to prevent (D4/D12).
+
+**This changes the value written on two paths.** `CreateDocumentNodeAction`,
+`CreateNamedVersionAction` and `RestoreDocumentVersionAction` already stamped `format` on every
+INSERT and are unaffected. But **`UpdateDocumentContentAction` (autosave) and
+`PersistYjsSnapshotAction` (Yjs snapshot) did NOT** — when they appended a NEW version row for an
+existing document (outside the autosave-debounce window), they let the DB default fill the
+column. Both now carry the format forward from the node's head version
+(`$head?->format ?? DocumentType::RichText->value`). Consequence: for a **non-rich-text document**
+(e.g. a `markdown` node, or a `univer` spreadsheet with `features.spreadsheets` on), an appended
+autosave/snapshot row used to be stamped `'tiptap'` regardless of the document's real format; it
+is now stamped with the document's actual format (`'markdown'`, `'univer'`, …). That value is
+surfaced to clients via `NodeDocumentVersionResource` (`format` field) and via the version-history
+API. **If your client branches on `format === 'tiptap'`, it must be updated** — a document whose
+head says `markdown` now has autosave rows that say `markdown` too, not `tiptap`. Rich-text
+documents are unaffected in practice (their head already carried `richtext`, and autosave rows
+now inherit it instead of `'tiptap'` — see the value-space note below).
+
+**Value-space note.** The column has always mixed two vocabularies: `DocumentType` values
+(`richtext` / `table` / `markdown` / `template` — what `CreateDocumentNodeRequest` validates and
+what `CreateDocumentNodeAction` writes) and handler ids (`univer`, and formerly the `'tiptap'` DB
+default, which is `TipTapHandler::id()` and is NOT a valid `DocumentType`). P0.4 does not unify
+them, and **no backfill ships**: rows written before this change keep whatever they were stamped
+with (including `'tiptap'` on old autosave rows of a markdown document). Treat `format` as an
+advisory label, not a closed enum — the handler is resolved from the node's mime, never from this
+column (D4). `CreateNamedVersionAction`'s no-head fallback changed from the literal `'tiptap'` to
+`DocumentType::RichText->value` (`'richtext'`) for the same reason.
+
+**Direct inserts.** If you insert `v_node_document_versions` rows yourself (bypassing the Actions
+— not a supported path), you must now set `format` explicitly or the insert fails the `NOT NULL`
+constraint.
+
+**Migrating an existing install.** This is a column-default removal on an already-shipped
+migration file (`PanelTablesBuilder` is the single column-source a fresh install AND
+`panel:migrations` both read), not a new migration — the package has no tagged release yet
+(pre-1.0, `[Unreleased]`), so no ALTER migration ships for it. An already-migrated database keeps
+its column default until you re-run the schema; nothing breaks either way, because the writers no
+longer depend on it.
 
 **Engine ownership (D10).** The format-extensibility registry ENGINE — `DocumentHandlerRegistry`,
 `NodeHandlerResolver`, `DocumentFileDescriptorFactory`, the `Capability` enum, and the baseline
@@ -164,6 +192,24 @@ are **unaffected** — they were always the stable seam; only the concrete engin
 moved. `VaulterManager::handlers()`/`registerHandler()` no longer throw `MissingPackageException`
 when `vaulter-documents` is absent (the seam is core-owned now, never package-conditional); a
 host or test that caught that exception around these two calls specifically must drop the catch.
+
+**If you published `config/vaulter.php`.** Your published copy carries the pre-P0.4
+`'handlers' => []`, and Laravel's `mergeConfigFrom` is a shallow, *existing-wins* merge — so your
+empty array wins over core's new baseline default. The baseline handlers are ALSO registered
+through the container tag `'vaulter.handlers'` precisely so this cannot silently disable them, so
+**no action is strictly required**: preview/download keep working. But your published config no
+longer reflects the shipped defaults — refresh the `handlers` key to keep it honest:
+
+```php
+// config/vaulter.php
+'handlers' => [
+    \Vaulter\Engines\Handlers\PreviewHandler::class,
+    \Vaulter\Engines\Handlers\DownloadOnlyHandler::class,
+],
+```
+
+(`vaulter-documents` still adds `TipTapHandler` — and `UniverHandler` when `features.spreadsheets`
+is on — on top of whatever this list holds; you never list those yourself.)
 
 Not in scope of this item (tracked separately): `NodeExportService::contentOf()` still resolves
 every version through `TipTapContent` (P0.2 finding) — a non-TipTap node's export still decays to
