@@ -80,7 +80,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 1/5 | 🟡 In progress |
+| P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 2/5 | 🟡 In progress |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
@@ -175,6 +175,59 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   реализаций экспортёров `documents/src/Export/*`. Утечка L1. **Известные точки правки в core/tests:**
   `packages/core/tests/Fixtures/Documents/FakeExporter.php` (реализует старую сигнатуру — разойдётся с
   интерфейсом). **Приёмка:** контракт опаковый, phpstan-clean обе стороны; export-тесты зелёные.
+
+  **Completion Notes.** Контракт `Vaulter\Contracts\Handlers\DocumentExporter::export()` расширен с
+  конкретного `TipTapContent` до опакового `DocumentContent` (интерфейс УЖЕ существовал в том же
+  namespace — новый тип не вводился). Реализации сужают сами: `documents/src/Export/{HtmlExporter,
+  MarkdownExporter}` проверяют `instanceof TipTapContent` и бросают новое
+  `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` (в CORE, рядом с
+  `UnknownExportFormatException` — по находке ревью, см. ниже). `NodeExportService::contentOf()`
+  сменил возвращаемый тип на `DocumentContent`; `core/tests/Fixtures/Documents/FakeExporter.php`
+  приведён к новой сигнатуре. Доки (7 файлов: `docs/{guide/export,guide/recipes,reference/contracts,
+  guide/errors}.md` + ru-зеркала) и BC-записи (`UPGRADE.md` — секция с diff'ом и рецептом миграции;
+  `CHANGELOG.md [Unreleased]`) синхронны. Новый тест `documents/tests/Document/ExporterContentGuardTest.php`
+  (3 кейса) пиннит guard.
+  **Гейты (после фиксов ревью):** `vendor/bin/pint --test packages/core packages/documents` → passed;
+  `phpstan analyse` (max, монорепо) → passed, 0 errors; `pest packages/core/tests` → 487/487, 1268
+  assertions; `pest` в `packages/documents` → 209 passed / 1 skipped, 521 assertion (+3 новых);
+  `pest --type-coverage --min=100` → 100.0% обе стороны.
+  **Ревью.** `vaulter-api-surface` → дифф ровно ожидаемый: сигнатура `export()` + новый класс
+  исключения, ноль изменений config-ключей и прочих public-сигнатур. `vaulter-reviewer` → **needs-work**,
+  6 находок, все закрыты отдельным коммитом `5b3a352`: (1-HIGH) guard и класс исключения имели 0%
+  покрытия — добавлен `ExporterContentGuardTest`; (2-MED) guard недостижим через собственный путь
+  экспорта (см. Known Deviations 2) — доки перестали обещать защиту, которой у хоста нет; (3-MED)
+  исключение лежало в `documents`, хотя контракт — core-шов и core-only хост со своим экспортёром
+  обязан уметь его бросать → перенесено в `Vaulter\Exceptions\Documents\`; (4-LOW) примеры в доках
+  бросали `\RuntimeException` в обход `VaulterException` → каноническое исключение; (5-LOW)
+  формулировка CHANGELOG была инвертирована («narrows») — параметр РАСШИРЯЕТСЯ, ломаются реализаторы;
+  (6-LOW, pre-existing) стухший FQCN `Vaulter\Support\TipTapRenderer` в примерах → `Vaulter\Documents\Support\`.
+  **Commits:** `03b302c` — refactor(core)!: экспортёр принимает опаковый DocumentContent (P0.2);
+  `5b3a352` — fix(core): findings ревью P0.2 — тесты guard'а, исключение в core, честные доки (P0.2).
+
+  **Pending Work:**
+  - **Kind-нейтральный `NodeExportService::contentOf()`** — тело до сих пор гонит любую версию через
+    `NodeDocumentVersion::tipTapContent()` → `TipTapContent::decayFrom()`, который при `type !== 'doc'`
+    возвращает `TipTapContent::empty()`, а не бросает. Следствие: не-TipTap-узел (Univer/spreadsheet,
+    `capabilities.editable=true` ⇒ `availableFormats()` отдаёт `['html','markdown']`) экспортируется
+    в ПУСТОЙ документ вместо отказа. Опаковый контракт (scope P0.2) это подготовил, но read-path
+    остался TipTap-only — доводить в P0.4/P0.5 (там же живёт схема/`format`-дискриминатор). Зафиксировано
+    докблоком на `contentOf()` и нотой в `docs/guide/errors.md` / `UPGRADE.md`.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P0.2 **opus/high**; фактически исполнено **opus/medium**
+     (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`, которая пинит medium и
+     запрещает ручное переключение). Модель совпала, effort ниже заявленного; риск снят обязательным
+     прогоном `vaulter-reviewer` (в Routing item'а) — он вернул needs-work с 6 находками, все закрыты.
+  2. Приёмка item'а («контракт опаковый, phpstan-clean обе стороны, export-тесты зелёные») выполнена
+     буквально, но опаковость КОНТРАКТА не делает опаковым READ-PATH: guard в экспортёрах сегодня
+     недостижим через `GET .../export` (см. Pending Work). Это не регресс — до P0.2 не-TipTap-узел
+     экспортировался в пустой док ровно так же; P0.2 не ухудшил и не исправил этот путь, он лишь
+     сделал контракт готовым к исправлению. Доки не обещают несуществующую защиту.
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P0.2 (не регресс item'а, наследуется из P0.1): линтер требует
+     `phases/P0..P3.md` и секцию `## 6. Update Log`, а план держит детализацию фаз инлайном в
+     `## 6. Phases (детализация)` (Update Log — `## 9`). Структуру плана правит plan-design.
+
+  **Status:** 🟠 Done with deviations
 
 - **P0.3 — TipTap-валидатор/рендер/расширения переезжают из core в documents** (opus/high).
   `core/src/ValueObjects/Documents/{TipTapContent, LinkSchemeValidator, OpaqueDocumentContent}`,
@@ -354,6 +407,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-11 | design/opus (fable) | DoR-аудит (`workflows/wf-vlt-canon-audit.js`, 4 finder-измерения + adversarial verify, 6 находок / 0 REJECTED) — все исправлены: (1-Blocker) supersede-тайминг унифицирован (cross-notice в VLT-HSEAM plan.md сейчас, формальная маркировка P3.3), Meta-поле выровнено; (2) D8 переоформлен открытым до P1.1, P1.1 = гейт для P1.2/P1.3; (3) Routing дополнен P0.4/P0.5; (4) §8.4/D10 явно называют ревизию T5-аллокации Option B (не только H.5); (5) P0.2/P0.3 дополнены точками правки core/tests (FakeExporter, E2eServiceProvider), grep расширен на core/tests; (6) §8.2 честно фиксирует REFUTED-нюанс Statamic-API. |
 | 2026-07-12 | plan-exec/sonnet (prep P0.1) | D7 (§8.1) закрыт owner'ом: вариант A — `FileHandler` + `Contracts/Handlers/`, kind-нейтраль. Approve получен запуском `/task:plan-exec VLT-CANON P0.1`. Сам рефакторинг (rename+перенос) — предмет исполнения P0.1, ещё не начат. |
 | 2026-07-12 | plan-exec/opus (medium) | P0.1 закрыт (🟠, deviation по effort в Routing): `DocumentHandler`→`FileHandler`, контракты/VO движка → `Contracts\Handlers\*` / `ValueObjects\Handlers\*`, фронт-тип + docs + BC-записи синхронны — детали см. §6 P0.1 Completion Notes. |
+| 2026-07-12 | plan-exec/opus (medium) | P0.2 закрыт (🟠): `DocumentExporter::export()` принимает опаковый `DocumentContent`, TipTap-сужение — внутри экспортёров; kind-нейтральный read-path (`contentOf()`) вынесен в Pending Work → P0.4/P0.5 — детали см. §6 P0.2 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
