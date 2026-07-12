@@ -43,8 +43,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      # --min=95: floor(Score) - 5, измерено run 29202699131, headSha f9d478d, 2026-07-12 (Score: 100.00%).
       - name: Mutation testing
-        run: vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4
+        run: vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4 --min=95
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
