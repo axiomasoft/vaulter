@@ -374,10 +374,11 @@ interface FileHandler
 
 ### `Vaulter\Contracts\Handlers\DocumentExporter`
 
-Рендерит TipTap-контент документа в формат экспорта. В комплекте поставляются экспортёры
-HTML и Markdown; зарегистрируйте свой (PDF, DOCX, …) через `config('vaulter.exporters')`
-или `Vaulter::registerExporter()`. Бинарные форматы должны возвращать закодированную строку
-(например, base64) и объявлять соответствующий mime-тип.
+Рендерит содержимое документа (`DocumentContent` — тот же опаковый payload, что хранит
+write-путь) в формат экспорта — контракт не завязан на TipTap. В комплекте поставляются
+экспортёры HTML и Markdown; зарегистрируйте свой (PDF, DOCX, …) через
+`config('vaulter.exporters')` или `Vaulter::registerExporter()`. Бинарные форматы должны
+возвращать закодированную строку (например, base64) и объявлять соответствующий mime-тип.
 
 ```php
 interface DocumentExporter
@@ -390,7 +391,7 @@ interface DocumentExporter
     /** File extension, without the dot. */
     public function extension(): string;
 
-    public function export(TipTapContent $content): string;
+    public function export(DocumentContent $content): string;
 }
 ```
 

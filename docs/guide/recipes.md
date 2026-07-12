@@ -425,6 +425,7 @@ The built-in `html` and `markdown` exporters render a document's TipTap content.
 ```php
 namespace App\Vaulter;
 
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\ValueObjects\Documents\TipTapContent;
 
@@ -434,8 +435,13 @@ final class PdfExporter implements DocumentExporter
     public function mimeType(): string { return 'application/pdf'; }
     public function extension(): string { return 'pdf'; }
 
-    public function export(TipTapContent $content): string
+    public function export(DocumentContent $content): string
     {
+        // The contract is opaque — narrow to what this exporter understands.
+        if (!$content instanceof TipTapContent) {
+            throw new \RuntimeException('PdfExporter only supports TipTap content.');
+        }
+
         // Binary formats return an encoded string (e.g. base64) + the matching mime.
         return MyPdfLibrary::fromTiptap($content->toArray())->toBytes();
     }

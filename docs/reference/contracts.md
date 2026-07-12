@@ -405,9 +405,10 @@ See [Recipes → Custom handler](/guide/recipes).
 
 ### `Vaulter\Contracts\Handlers\DocumentExporter`
 
-Renders a document's TipTap content into an export format. Built-in HTML and Markdown
-exporters ship; register your own (PDF, DOCX, …) via `config('vaulter.exporters')` or
-`Vaulter::registerExporter()`. Binary formats should return an encoded string (e.g.
+Renders a document's content (`DocumentContent`, the same opaque payload the write path
+stores) into an export format — the contract does not assume TipTap. Built-in HTML and
+Markdown exporters ship; register your own (PDF, DOCX, …) via `config('vaulter.exporters')`
+or `Vaulter::registerExporter()`. Binary formats should return an encoded string (e.g.
 base64) and advertise the matching mime type.
 
 ```php
@@ -421,7 +422,7 @@ interface DocumentExporter
     /** File extension, without the dot. */
     public function extension(): string;
 
-    public function export(TipTapContent $content): string;
+    public function export(DocumentContent $content): string;
 }
 ```
 

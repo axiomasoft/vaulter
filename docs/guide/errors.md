@@ -106,6 +106,13 @@ append the role/team `Subject`s.
 `UnknownExportFormatException` — no exporter is registered for the requested format.
 Register one via `config('vaulter.exporters')` or `Vaulter::registerExporter()`.
 
+## unsupported-document-content
+
+`UnsupportedDocumentContentException` — an exporter received a `DocumentContent` shape it
+doesn't understand (e.g. the built-in HTML/Markdown exporters only render `TipTapContent`).
+Only route nodes whose resolved handler produces the expected content shape to that
+exporter (`config('vaulter.exporters')`).
+
 ## upload-conflict
 
 `UploadConflictException` / `OffsetMismatchException` — the resumable-upload session is

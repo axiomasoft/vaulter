@@ -17,8 +17,6 @@ outline: deep
 ```php
 namespace Vaulter\Contracts\Handlers;
 
-use Vaulter\ValueObjects\Documents\TipTapContent;
-
 interface DocumentExporter
 {
     /** The format key (e.g. 'html', 'pdf') — also echoed in the API response. */
@@ -29,9 +27,14 @@ interface DocumentExporter
     /** File extension, without the dot. */
     public function extension(): string;
 
-    public function export(TipTapContent $content): string;
+    public function export(DocumentContent $content): string;
 }
 ```
+
+`DocumentContent` — тот же опаковый интерфейс payload'а, что хранит write-путь;
+контракт не завязан на TipTap. Экспортёр сужает содержимое до конкретной формы,
+которую понимает (например, `TipTapContent`), внутри `export()` — так же, как
+`FileHandler` сужает дескриптор.
 
 Бинарные форматы возвращают закодированную строку (например, base64) и объявляют
 соответствующий mime-тип.
@@ -130,6 +133,7 @@ declare(strict_types=1);
 
 namespace App\Vaulter\Exporters;
 
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Support\TipTapRenderer;
 use Vaulter\ValueObjects\Documents\TipTapContent;
@@ -155,8 +159,14 @@ final class PdfExporter implements DocumentExporter
         return 'pdf';
     }
 
-    public function export(TipTapContent $content): string
+    public function export(DocumentContent $content): string
     {
+        // Этот экспортёр понимает только TipTap-документы — сужаем перед рендером
+        // (маршрутизируйте на него только editable/previewable TipTap-узлы).
+        if (!$content instanceof TipTapContent) {
+            throw new \RuntimeException('PdfExporter only supports TipTap content.');
+        }
+
         // Render the TipTap doc to HTML, then to a PDF with your library of choice
         // (e.g. dompdf / wkhtmltopdf / a service). A BINARY format returns an
         // ENCODED string (base64 here) and advertises its mime above.

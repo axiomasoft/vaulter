@@ -91,6 +91,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `DocumentCapabilities` → `HandlerCapabilities` (`types.ts`); `HandlerDescriptor`/`HandlerUi`
   are unchanged. `config('vaulter.handlers')` / `config('vaulter.exporters')` keys are
   unaffected. See `UPGRADE.md` for the FQCN migration table.
+- **BREAKING (pre-1.0): `DocumentExporter::export()` narrows to `DocumentContent` (opaque)
+  instead of `TipTapContent`** (VLT-CANON P0.2). The contract no longer assumes TipTap;
+  a custom exporter must accept `Vaulter\Contracts\Handlers\DocumentContent` and narrow
+  internally to the concrete shape it renders (the built-in `HtmlExporter` /
+  `MarkdownExporter` narrow to `TipTapContent` and throw the new
+  `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` otherwise). See
+  `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

@@ -36,6 +36,41 @@ clause and constructor/method type-hints to the new FQCNs; a class still impleme
 **`@vaulter/vue`.** The TS type mirroring `DocumentCapabilities` in `types.ts` is renamed to
 `HandlerCapabilities`. `HandlerDescriptor`/`HandlerUi` are unchanged.
 
+### `DocumentExporter::export()` now takes the opaque `DocumentContent`, not `TipTapContent` (VLT-CANON P0.2)
+
+**Why.** The exporter contract assumed every document is TipTap; that stopped being kind-neutral
+once `DocumentContent` (the same opaque interface the write path already stores) exists. A
+non-TipTap handler's content should be exportable through the same seam without the contract
+forcing a TipTap shape on it.
+
+```diff
+ interface DocumentExporter
+ {
+-    public function export(TipTapContent $content): string;
++    public function export(DocumentContent $content): string;
+ }
+```
+
+Any custom `DocumentExporter` (host-registered or third-party) must update its `export()`
+parameter type to `Vaulter\Contracts\Handlers\DocumentContent` and narrow internally to the
+concrete shape it renders, e.g.:
+
+```php
+public function export(DocumentContent $content): string
+{
+    if (!$content instanceof TipTapContent) {
+        throw new \RuntimeException('MyExporter only supports TipTap content.');
+    }
+
+    // ... render $content as before
+}
+```
+
+The built-in `HtmlExporter`/`MarkdownExporter` (vaulter-documents) do exactly this and throw the
+new `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` when handed a non-TipTap
+`DocumentContent`. `config('vaulter.exporters')` keys and every exporter's `format()`/
+`mimeType()`/`extension()` are unaffected.
+
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 
 **What changed.** `hocuspocus-server/package.json` raises `engines.node` from `>=20` to `>=22`, and

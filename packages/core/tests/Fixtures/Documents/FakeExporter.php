@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Fixtures\Documents;
 
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\ValueObjects\Documents\TipTapContent;
 
 /**
  * A minimal DocumentExporter used to prove VaulterManager::registerExporter()
@@ -29,7 +29,7 @@ final class FakeExporter implements DocumentExporter
         return 'fake';
     }
 
-    public function export(TipTapContent $content): string
+    public function export(DocumentContent $content): string
     {
         return 'fake-export';
     }
