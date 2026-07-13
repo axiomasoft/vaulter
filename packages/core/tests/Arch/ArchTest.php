@@ -3,6 +3,7 @@
 declare(strict_types=1);
 use Illuminate\Http\Request;
 use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -562,3 +563,63 @@ test('core source never references the extracted vaulter-documents package (P2 #
 test('core source never references the vaulter-azgard package (P2.1)', function (): void {
     expect(coreReferencesTo('Azgard'))->toBe([]);
 });
+
+/**
+ * VLT-CANON P0.3/P3.2 — TipTap is fully isolated behind the opaque
+ * {@see DocumentContent} seam; core must never name a
+ * concrete TipTap CLASS (`TipTapContent`, `TiptapExtensions`, `InvalidTipTapContentException`,
+ * …) in real code. Matches the CamelCase class-name spelling only — the lower-case
+ * `vaulter.tiptap.*` config keys (Support/Config.php) are a deliberate, documented
+ * pass-through for a host's own TipTap extensions (VLT-REMED D27/D28) and are NOT a
+ * class coupling, so they never trip this pattern. Prose mentions of "TipTap" in
+ * comments/docblocks (e.g. DocumentContent/DocumentExporter explaining the seam) are
+ * legitimate and stripped the same way `coreReferencesTo()` strips them.
+ */
+test('core source never references a concrete TipTap class (VLT-CANON P0.3)', function (): void {
+    $src = __DIR__.'/../../src';
+    $offenders = [];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        $code = '';
+
+        foreach (token_get_all($contents) as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            $code .= is_array($token) ? $token[1] : $token;
+        }
+
+        if (preg_match('/\bTipTap[A-Za-z]+\b/', $code) === 1) {
+            $offenders[] = $file->getPathname();
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+/**
+ * VLT-CANON P0.1/D7/P3.2 — the engine-extensibility contract is kind-neutral
+ * (`FileHandler`, not `DocumentHandler`): it describes ANY file, editable or not, so
+ * it must never depend on the extracted vaulter-documents package (TipTap/Univer are
+ * one KIND of handler among many — preview/download are not "engines"). This is the
+ * final-canon guard for D7: a regression that re-couples the contract seam to a
+ * specific document engine trips here, not just the broader core⊥documents guard
+ * above (which only scans `src/`, not the namespace-graph form PestArch offers for a
+ * single sub-namespace).
+ */
+arch('the FileHandler contract seam is kind-neutral and never depends on vaulter-documents (D7)')
+    ->expect('Vaulter\Contracts\Handlers')
+    ->not->toUse('Vaulter\Documents');
