@@ -1,29 +1,11 @@
 ---
 name: vaulter-reviewer
 description: >-
-  Use this agent when код Laravel-ПАКЕТА vaulter только что написан или изменён
-  и нужен read-only ревью свежим контекстом: публичный контракт/BC (SemVer),
-  ServiceProvider register-vs-boot, publishables, composer-констрейнты, Testbench-инфра.
-  Вызывай после каждой единицы реализации — передай дифф/ветку/список файлов. Кода НЕ
-  меняет, гоняет vendor/bin/phpstan analyse и целевые тесты через /usr/bin/php8.4.
-  <example>Context: slice-builder закоммитил фичу с новым интерфейсом в Contracts/.
-  user: "Готова фича rate-limiter, добавился публичный контракт — проверь"
-  assistant: "Новая публичная поверхность = SemVer-обязательство пакета — запускаю
-  vaulter-reviewer на дифф против base."
-  <commentary>Расширение публичного API пакета — рискованный концерн: нужен свежий
-  read-only взгляд на BC-поверхность, делегируем reviewer, а не самопроверку.</commentary></example>
-  <example>Context: правка ServiceProvider пакета.
-  user: "Перенёс регистрацию биндингов и publishables в ServiceProvider, посмотри"
-  assistant: "ServiceProvider — точка входа у КАЖДОГО потребителя: зову
-  vaulter-reviewer проверить register-vs-boot и publishables."
-  <commentary>Ошибка register/boot (I/O в register, publishes не в boot) бьёт по всем
-  потребителям сразу — ревью оправдан даже на средней правке.</commentary></example>
-  <example>Context: переименование локальной переменной в private-методе.
-  user: "Переименовал переменную, посмотри"
-  assistant: "Косметика без выхода на публичную поверхность — проверяю инлайн,
-  субагента не зову."
-  <commentary>Анти-триггер: мелочь, не трогающая контракт пакета, делаем напрямую —
-  принудительная декомпозиция — налог.</commentary></example>
+  Use this agent when код Laravel-пакета vaulter написан/изменён и нужен
+  read-only ревью: BC/SemVer, ServiceProvider, publishables.
+  <example>user: "Готова фича пакета, проверь" assistant: "Запускаю
+  vaulter-reviewer на дифф против base."</example> Анти-триггер:
+  косметика — правь напрямую.
 tools: Read, Grep, Glob, Bash
 skills:
   - laravel-package-testing
@@ -37,7 +19,7 @@ color: yellow
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.0
+Pack: laravel-package@0.2.2
 Template: agents/reviewer.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md
@@ -148,6 +130,10 @@ grep по `**/*ServiceProvider.php` в диффе:
   `$table`), `#[ObservedBy]` при наличии Observer, `$fillable` — явный protected-список;
   критерий не зависит от раскладки (модели пакета живут в `src/`); канон — скилл
   `php:laravel` → `snippets/eloquent-model.md`.
+- **Glossary impact?**: новый/переименованный термин (агрегат, сущность, событие) —
+  сверен с `CONTEXT.md` пакета и term-index (`02-Knowledge/00-Strategy/Ecosystem_Glossary.md`
+  для кросс-пакетных, Rule of Two); использован `_Avoid_`-синоним вместо канона → находка
+  (дисциплина `architect/domain-modeling`).
 <!-- shared:config-honesty -->
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при
   использовании (анти-паттерн `?? 'echo'` без зарегистрированного драйвера).

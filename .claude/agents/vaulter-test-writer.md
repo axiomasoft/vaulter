@@ -1,18 +1,10 @@
 ---
 name: vaulter-test-writer
 description: >-
-  Use this agent when код фичи Laravel-ПАКЕТА vaulter уже готов и нужно написать
-  тесты (pest на Orchestra Testbench) и итерировать до зелёного через
-  /usr/bin/php8.4. Вызывай после vaulter-slice-builder — передай пути и acceptance
-  criteria. Прикладной код не меняет, расхождения репортит как баг.
-  <example>Context: slice-builder завершил фичу пакета.
-  user: "Фича готова, нужны тесты на контракт и регистрацию в провайдере"
-  assistant: "Зову vaulter-test-writer написать Testbench-тесты и догнать до зелёного."
-  <commentary>Код есть, поведение определено — пора покрывать тестами отдельным агентом.</commentary></example>
-  <example>Context: тест нашёл расхождение с ожидаемым поведением.
-  user: "Тест падает — подгони его под код"
-  assistant: "Не ослабляю тест: репортю расхождение как баг для slice-builder."
-  <commentary>Тест-райтер не маскирует баги подгонкой ассертов.</commentary></example>
+  Use this agent when код фичи Laravel-пакета vaulter готов — нужно
+  написать тесты (pest на Testbench) до зелёного.
+  <example>user: "Фича готова, напиши тесты" assistant: "Зову
+  vaulter-test-writer после slice-builder."</example>
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - laravel-package-testing
@@ -22,7 +14,7 @@ color: cyan
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.0
+Pack: laravel-package@0.2.2
 Template: agents/test-writer.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md

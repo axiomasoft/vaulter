@@ -2,7 +2,7 @@
   "schema": 1,
   "packs": {
     "role-maintainer": {
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "harness:configs/claude-code/agent-packs/role-maintainer",
       "answers": {
         "PACK_PREFIX": "vaulter"
@@ -12,34 +12,31 @@
           "src": "agents/issue-triager.md",
           "target": ".claude/agents/vaulter-issue-triager.md",
           "kind": "template",
-          "base_sha256": "d11a97c6280c44a74b54859a87e09c2438d6f543b8d2b93f7f2b3dc56cff9803",
+          "base_sha256": "9bb556fbdd5b1c3a427ea65fd28cd7746ecc3f6d8eeee45d00c9baadb411e622",
           "local_modified": false,
-          "user_owned": false,
-          "preserve_frontmatter": false
+          "user_owned": false
         },
         {
           "src": "agents/contribution-reviewer.md",
           "target": ".claude/agents/vaulter-contribution-reviewer.md",
           "kind": "template",
-          "base_sha256": "41b681ee0012b32919a308870c3f13a8802a0d691c76bfe55aa38614321c9bf6",
+          "base_sha256": "ef27de1c660c92685067d7937e86f9f508a836e186edd3cf16c7c1483e9a4a22",
           "local_modified": false,
-          "user_owned": false,
-          "preserve_frontmatter": false
+          "user_owned": false
         },
         {
           "src": "agents/release-conductor.md",
           "target": ".claude/agents/vaulter-release-conductor.md",
           "kind": "template",
-          "base_sha256": "1be89bd76b9607c5a378a6e78076e8bd11fcfe30513826a7602311d235906f36",
+          "base_sha256": "b989c80fed914362e27f4840d77f29ae420c6fd2ef5cf820ea6a5a6a47543097",
           "local_modified": false,
-          "user_owned": false,
-          "preserve_frontmatter": false
+          "user_owned": false
         }
       ],
       "removed_optional": []
     },
     "laravel-package": {
-      "version": "0.2.0",
+      "version": "0.2.2",
       "source": "harness:configs/claude-code/agent-packs/laravel-package",
       "answers": {
         "PACK_PREFIX": "vaulter",
@@ -69,7 +66,7 @@
           "src": "agents/slice-builder.md",
           "target": ".claude/agents/vaulter-slice-builder.md",
           "kind": "template",
-          "base_sha256": "5cc51f12a0f9f5fc6fcfd4cee95695018e3dfe4cbe89d1dec0f1e61482d99ff8",
+          "base_sha256": "443704520ffce4419c360d4160dd2bc4036a57d06ffa5880053c26dd39793f06",
           "local_modified": false,
           "user_owned": false
         },
@@ -77,7 +74,7 @@
           "src": "agents/test-writer.md",
           "target": ".claude/agents/vaulter-test-writer.md",
           "kind": "template",
-          "base_sha256": "7ec38a0045b605ef26df4b975269e9632ece654eddf4c9b26054b96a51e889a6",
+          "base_sha256": "eeeb0ea330ca24ac5ffc8e3be90a89b66106f7fa753a1663f03867e03a0e1f54",
           "local_modified": false,
           "user_owned": false
         },
@@ -85,7 +82,7 @@
           "src": "agents/reviewer.md",
           "target": ".claude/agents/vaulter-reviewer.md",
           "kind": "template",
-          "base_sha256": "858919d3e4cb9eee112995ad02dc67904c11eb3057afcc740113a94ba399e388",
+          "base_sha256": "19283604f37f81a005e115b83202f2f1cd1dd0db850425230575db1a1e9d51d0",
           "local_modified": false,
           "user_owned": false
         },
@@ -93,7 +90,7 @@
           "src": "agents/spec-writer.md",
           "target": ".claude/agents/vaulter-spec-writer.md",
           "kind": "template",
-          "base_sha256": "86dce42f7cbe4b775f96f65cfc63eac685d5cb5d8145d2b7aa3935f9a31589a3",
+          "base_sha256": "01e669d39f06a6831b7f52a5adbae3032e11cc27b72df6221a10bd48bcb74039",
           "local_modified": false,
           "user_owned": false
         },
@@ -101,7 +98,7 @@
           "src": "agents/api-surface.md",
           "target": ".claude/agents/vaulter-api-surface.md",
           "kind": "template",
-          "base_sha256": "fe892ffc2591785343b7675c82ea34afa598c1470cb16420d6c58cf48c545046",
+          "base_sha256": "5a7019c92007f9b3873b7ed18abf0ba6f8f61cf61a8fb5fc4f791defcfea2761",
           "local_modified": false,
           "user_owned": false
         },
@@ -109,7 +106,7 @@
           "src": "agents/test-verifier.md",
           "target": ".claude/agents/vaulter-test-verifier.md",
           "kind": "template",
-          "base_sha256": "65172955e831d3e9d582ec142e061979afbe20edd8b6b00824973cb11499a3b5",
+          "base_sha256": "abbf2793107aa7f0efb344feb99f50e6ca4b106fb16a56123b045646892287d0",
           "local_modified": false,
           "user_owned": false
         },
@@ -117,7 +114,7 @@
           "src": "agents/security-review.md",
           "target": ".claude/agents/vaulter-security-review.md",
           "kind": "template",
-          "base_sha256": "54f7fae241d1a23ebda618be09a7e552d0b6d0b850282f90ce9214173ade31cd",
+          "base_sha256": "6d272bffe75327cb6ec1af3a477b9b6569e2e8c279eeafe82da0917e5a713386",
           "local_modified": false,
           "user_owned": false
         },
@@ -125,7 +122,7 @@
           "src": "workflows/dev-loop.js",
           "target": ".claude/workflows/vaulter-dev-loop.js",
           "kind": "template",
-          "base_sha256": "6b572f352a9ddcaf05df5ce635c43a89cebc4b7708d87883b32ef3be742f320c",
+          "base_sha256": "5f739b126c1fab5f3cf5382ce9a05f86e3b18e4b710cc5b8c83a1feb099823a9",
           "local_modified": false,
           "user_owned": false
         },
@@ -133,7 +130,7 @@
           "src": "hooks/review-gate.sh",
           "target": ".claude/hooks/review-gate.sh",
           "kind": "verbatim",
-          "base_sha256": "026627ca7d633a67bfe8f79bc1f90cacea95e9d242a15b811cb15bc5a09da1a7",
+          "base_sha256": "22a744687970eff3122e3c2dea8869f89031dc62dc956dfd7f96c98b83b41a20",
           "local_modified": false,
           "user_owned": false
         },
@@ -141,7 +138,7 @@
           "src": "hooks/review-gate.env.ini",
           "target": ".claude/review-gate.env.ini",
           "kind": "template",
-          "base_sha256": "1bf4a25e643f32b489da30b2b5eb596b895d029b9a59cf2a1dedd738658d7761",
+          "base_sha256": "406013e231d6c318f50aedd9639a070f0d98b9ac4c36120cc6d56047a1baf918",
           "local_modified": false,
           "user_owned": true
         },
@@ -157,7 +154,7 @@
           "src": "docs/subagents-and-workflows.md",
           "target": ".claude/guidelines/subagents-and-workflows.md",
           "kind": "template",
-          "base_sha256": "89d74e21d90821d1835ed65852bec9c09f8441477bdf285dc069d4e152b70024",
+          "base_sha256": "bd00d562ea874b4e52483820de415938b70d3193b14e70ef5d4d69e8c444144b",
           "local_modified": false,
           "user_owned": false
         },
@@ -165,7 +162,7 @@
           "src": "rules/public-api.md",
           "target": ".claude/rules/public-api.md",
           "kind": "verbatim",
-          "base_sha256": "37917ea3cb472fad53b136a189abff777a928db8bb645e32f1052f2369f0f786",
+          "base_sha256": "c8d9029bcfed9b2429aa9d15f772748cc80eb5467075402ad34a91bf2e3564cf",
           "local_modified": false,
           "user_owned": false
         },
@@ -173,7 +170,7 @@
           "src": "rules/service-provider.md",
           "target": ".claude/rules/service-provider.md",
           "kind": "verbatim",
-          "base_sha256": "1646c3044a1b78fa238e44dff8573c8ba165f4a35437d852bc9c45401b1ca74f",
+          "base_sha256": "a594b8001a998b896ebd50931bf5930962ddaff3d6c16688a8b5f94b11f75392",
           "local_modified": false,
           "user_owned": false
         },
@@ -181,7 +178,7 @@
           "src": "rules/package-migrations.md",
           "target": ".claude/rules/package-migrations.md",
           "kind": "verbatim",
-          "base_sha256": "10c3280bfb8c5f598939cce2184066927453f4f72bf5ed55e89b0f1dd7caac50",
+          "base_sha256": "3e5fd557259c3686f01f96b38172ffeb722aa93b9988538b1f2dbb94e313bc53",
           "local_modified": false,
           "user_owned": false
         },
@@ -189,7 +186,7 @@
           "src": "rules/tests.md",
           "target": ".claude/rules/tests.md",
           "kind": "template",
-          "base_sha256": "f4ced89130d6f14db15a3e882e0d419bfe3286a5dbddee623e32f2550a0a27ab",
+          "base_sha256": "96012db51571a3d399c27dddf24614eec971cd2e09d121f50954b7c9c23d6aa3",
           "local_modified": false,
           "user_owned": false
         },
@@ -197,7 +194,7 @@
           "src": "rules/reviewer-overrides.md",
           "target": ".claude/rules/vaulter-reviewer-overrides.md",
           "kind": "template",
-          "base_sha256": "d882555c0c8263d6b550e4e42d0ea9b7cbe28d992738e6340e61d2c97dc03729",
+          "base_sha256": "523a089f80de6a5fec169d87652f2bc776b75169fd522d58ec63a6a05c766958",
           "local_modified": false,
           "user_owned": true
         }
@@ -205,7 +202,7 @@
       "removed_optional": []
     },
     "_common": {
-      "version": "0.4.0",
+      "version": "0.4.1",
       "source": "harness:configs/claude-code/agent-packs/_common",
       "answers": {
         "PACK_PREFIX": "vaulter",
@@ -216,7 +213,7 @@
           "src": "agents/orchestrator.md",
           "target": ".claude/agents/vaulter-orchestrator.md",
           "kind": "template",
-          "base_sha256": "c7b61ac3a728343b77ac32ca56bf538a1ee4c14ab1b848b0bd26e060820dbad3",
+          "base_sha256": "09bfe7b6bb53fbbb652c9d34500d04d299b91ea8ab84dc02482caa570b6dfb1d",
           "local_modified": false,
           "user_owned": false
         },
@@ -224,7 +221,7 @@
           "src": "rules/generated-assets.md",
           "target": ".claude/rules/generated-assets.md",
           "kind": "verbatim",
-          "base_sha256": "cd0db4f3c999e659a179a770d98e8a26693c00701dee4b74dfd47520870eaca2",
+          "base_sha256": "71d61af8bb3e897870f17921997dc3b1e824ee8e69b5752f330bbd3f08f5e201",
           "local_modified": false,
           "user_owned": false
         }

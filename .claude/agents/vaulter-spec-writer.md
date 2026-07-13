@@ -1,19 +1,10 @@
 ---
 name: vaulter-spec-writer
 description: >-
-  Use this agent when перед крупной/неоднозначной фичей пакета vaulter (новая
-  подсистема, ≥3 контрактов/компонентов) нужен короткий tech-spec: требования, публичная
-  поверхность, разбивка на задачи, критерии приёмки → docs/specs/. Опциональная роль, НЕ
-  глобальный гейт — по тому же порогу, что и делегирование субагентам.
-  <example>Context: запрос на крупную подсистему пакета.
-  user: "Нужна подсистема драйверов хранилищ с фасадом, контрактами и публикуемым конфигом"
-  assistant: "Сначала зову vaulter-spec-writer — tech-spec и разбивка на фичи."
-  <commentary>Большая неоднозначная подсистема с новой публичной поверхностью — спека до
-  кода экономит переделки и лишние SemVer-обязательства.</commentary></example>
-  <example>Context: добавить опцию в существующий метод.
-  user: "Добавь необязательный параметр ttl в remember()"
-  assistant: "Мелочь на один компонент — спека не нужна, делаю фичей напрямую."
-  <commentary>Анти-триггер: маленькое однозначное изменение спеки не требует.</commentary></example>
+  Use this agent when перед крупной/неоднозначной фичей пакета vaulter
+  (новая подсистема, ≥3 контракта) нужен короткий tech-spec.
+  <example>user: "Нужна новая подсистема кэша в пакете" assistant: "Зову
+  vaulter-spec-writer — контракты и разбивка."</example>
 tools: Read, Grep, Glob, Write
 skills:
   - architecture
@@ -24,7 +15,7 @@ color: magenta
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.0
+Pack: laravel-package@0.2.2
 Template: agents/spec-writer.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md

@@ -4,7 +4,7 @@ paths:
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.0
+Pack: laravel-package@0.2.2
 Template: rules/service-provider.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md

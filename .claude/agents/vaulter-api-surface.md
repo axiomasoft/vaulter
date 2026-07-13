@@ -1,21 +1,17 @@
 ---
 name: vaulter-api-surface
 description: >-
-  Use this agent for READ-ONLY reconnaissance of the vaulter package's PUBLIC
-  surface diff: public methods / contracts / facades / config keys / events —
-  added/changed/removed against base, in an ISOLATED context, returning only a compact
-  map. Feed it to the reviewer's BC-axis before judging SemVer impact.
-  <example>Context: перед ревью нужно понять BC-эффект диффа.
-  user: "Что изменилось в публичной поверхности пакета на этой ветке?"
-  assistant: "Зову vaulter-api-surface — карта added/changed/removed публичного API."
-  <commentary>Тяжёлый дифф-анализ поверхности — в субагент, ревьюеру — компактная карта.</commentary></example>
+  Use this agent for READ-ONLY recon of vaulter package PUBLIC surface
+  diff (методы/контракты/facades/config) — только карта для BC-оси reviewer'а.
+  <example>user: "Что поменялось в публичном API пакета?" assistant: "Зову
+  vaulter-api-surface — вернёт карту диффа."</example>
 tools: Read, Grep, Glob, Bash
 model: haiku
 color: blue
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.0
+Pack: laravel-package@0.2.2
 Template: agents/api-surface.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md
