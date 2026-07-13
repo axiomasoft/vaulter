@@ -91,9 +91,9 @@ VLT-REMED P5.9 / Open risk #4 (VLT-CANON handoff) объявили mutation-ге
 
 | Фаза | Название | Items | Статус |
 |:--|:--|:--|:--|
-| P0 | Доказательство дефекта + честная базовая линия пяти пакетов | 2 | 🔵 In progress |
-| P1 | Честная форма гейта в CI (снять `--parallel`, PG-лейн drive, ratchet-порог, шардинг) | 3 | ⚪ Todo |
-| P2 | `vaulter-drive` → Score ≥ 95 | TBD (по P0.2) | ⚪ Todo |
+| P0 | Доказательство дефекта + честная базовая линия пяти пакетов | 2 | 🔵 In progress (drive 🟢, остальные четыре ⚪) |
+| P1 | Честная форма гейта в CI (снять `--parallel`, PG-лейн drive, ratchet-порог, шардинг) | 3 | 🔵 In progress (drive 🟢) |
+| P2 | `vaulter-drive` → Score ≥ 95 (база 48.34 %, 780 выживших) | TBD | ⚪ Todo |
 | P3 | `vaulter-core` → Score ≥ 95 | TBD | ⚪ Todo |
 | P4 | `vaulter-documents` → Score ≥ 95 | TBD | ⚪ Todo |
 | P5 | `vaulter-media` → Score ≥ 95 | TBD | ⚪ Todo |
@@ -120,26 +120,43 @@ VLT-REMED P5.9 / Open risk #4 (VLT-CANON handoff) объявили mutation-ге
   методика честного замера (холодный кэш + БД на шард + tmpfs storage) записана и воспроизводима.
 - Артефакт: `findings/P0.1-parallel-defect.md`.
 
-**P0.2 — Честная базовая линия всех пяти пакетов.** 🔵 In progress
+**P0.2 — Честная базовая линия всех пяти пакетов.** 🔵 In progress (drive 🟢, четыре ⚪)
 - DoD: для каждого пакета — Score на холодном кэше без `--parallel`, полный список выживших мутантов
   (файл:строка:мутатор), сгруппированный по причине (контрактный текст / косметика / реальная дыра).
   drive меряется **на Postgres** (D3).
 - Артефакты: `findings/P0.2-baseline-{drive,core,documents,media,filament}.md`.
 - Списки выживших = ТЗ фаз P2–P6; без них фазы не стартуют.
 
+- **drive** 🟢 Done (2026-07-13): **Score 48.34 %** — 722 убито, **780 выжило**, 8 таймаутов из 1510
+  мутантов (прежние «100.00 % / 1569» — артефакт). Артефакты: `findings/P0.2-baseline-drive.md` +
+  `findings/P0.2-drive-escaped.txt` (полный перечень, 780 строк). Крупнейшая группа — 237 выживших
+  `RemoveArrayItem`: незапиненные payload outbox-события, `context` активности, **правила валидации**
+  в Request'ах и поля API-ресурсов. Это не косметика, а прямые дыры внешнего контракта.
+- **core / documents / media / filament** ⚪ Todo. documents и media мерить **на Postgres** — у них свои
+  PG-лейны (yjs/gin и CAS), т.е. та же недомутация, что была у drive.
+
 ### P1 — Честная форма гейта в CI
 
-**P1.1 — Снять `--parallel` во всех пяти workflow.** ⚪ Todo
+**P1.1 — Снять `--parallel` во всех пяти workflow.** 🔵 In progress
 - `.github/workflows/{mutation,documents,drive,media,filament}.yml`.
 - Порог на этом шаге — ratchet по измеренному Score (D4), с комментарием-пойнтером на этот план.
+- **drive** 🟢 Done (2026-07-13): `--parallel --processes=4` снят, `--min=95` → `--min=43`
+  (`floor(48.34) − 5`). Это НЕ понижение планки: 95 никогда не был измерен — прежний Score был
+  артефактом. 43 — страховка от регресса на время P2; цель 95 остаётся.
+- Остальные четыре ⚪ — ждут своей базовой линии (P0.2). До неё `--parallel` в них НЕ снимаем: без
+  измеренного порога получится либо вечно-красный лейн, либо гейт без `--min`, т.е. та же фикция.
 
-**P1.2 — `drive-mutation` на Postgres.** ⚪ Todo
-- Зеркалить `drive-pgsql`: `services: postgres:16-alpine` + healthcheck `pg_isready`, extensions
+**P1.2 — `drive-mutation` на Postgres.** 🟢 Done (2026-07-13)
+- Зеркалит `drive-pgsql`: `services: postgres:16-alpine` + healthcheck `pg_isready`, extensions
   `pdo_pgsql,pgsql,pcntl,posix`, DB_* из job-env, `coverage: xdebug`.
 
-**P1.3 — Шардинг mutation-job'ов (время прогона).** ⚪ Todo
-- Sequential-мутация drive ≈ 90 мин в один процесс. Matrix по `src/*`; на шард — своя БД (D5).
-- Учесть: шард без мутантов даёт `Score 0.00 %` и уронит `--min` — пустые шарды исключать явно.
+**P1.3 — Шардинг mutation-job'ов (время прогона).** ⚪ Todo — **отложен намеренно**
+- Sequential-мутация drive ≈ 90 мин в один job. Пока это терпимо: гейты всё равно не блокируют merge
+  (branch protection недоступен, §8 Q1), и корректность важнее минут CI.
+- Если/когда станет больно — matrix по `src/*`, на шард своя БД (D5). Две ловушки, обе проверены на
+  локальном замере: шард без мутантов даёт `Score 0.00 %` и уронит `--min` (исключать явно), а шарды
+  обязаны иметь свои БД/storage/coverage — иначе роняют друг другу миграции и staged-файлы.
+- Смена формы job'а меняет имена чеков — делать ДО того, как чеки станут required (§8 Q1).
 
 ### P2–P6 — Довести пакеты до Score ≥ 95
 

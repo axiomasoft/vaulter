@@ -73,13 +73,50 @@ jobs:
 
   # Native Pest mutation, not Infection (VLT-REMED D38 / P5.9): Infection 0.33.3 ships
   # no Pest adapter, so the step this replaced never ran a single mutant — `|| true`
-  # only hid that. The threshold is real and the job has no `|| true`: Pest exits
-  # non-zero when Score drops below it. Own job so the coverage driver, which the
-  # SQLite lane does not need, stays off the fast lanes and mutation runs once rather
-  # than once per Laravel cell.
+  # only hid that. Own job so the coverage driver, which the SQLite lane does not need,
+  # stays off the fast lanes and mutation runs once rather than once per Laravel cell.
+  #
+  # NO `--parallel` (VLT-MUT D2). The flag made this gate incapable of failing: Pest hands
+  # each mutant subprocess the parent's argv, `--parallel` included, so the child re-enters
+  # Pest\Plugins\Parallel → ParaTest, which chokes on --mutate/--path and on a --filter that
+  # still carries literal quotes, exits non-zero without running a single test — and a
+  # non-zero child is how Pest recognises a KILLED mutant. Every mutant was "killed"; the
+  # 100.00 % this lane used to report was an artefact, not a measurement. Proof and
+  # reproduction: plans/VLT-MUT/findings/P0.1-parallel-defect.md. Sequential is slow
+  # (~90 min) and correct; parallelism, if it is ever needed, belongs at the job level.
+  #
+  # The lane runs on POSTGRES, not SQLite (mirrors the drive-pgsql service block).
+  # `--covered-only` mutates only what the suite covers, and five tests — the four
+  # tests/Concurrency race guards and the FK-cascade case in tests/Feature/PurgeTrashTest
+  # — self-skip on SQLite. On the old SQLite lane their code (the advisory-xact-lock /
+  # FOR UPDATE critical sections, cascade-delete) was therefore never mutated, so the
+  # Score was computed over a smaller body of code than the package actually ships.
   drive-mutation:
     name: vaulter-drive (mutation gate)
     runs-on: ubuntu-latest
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: vaulter_test
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vaulter -d vaulter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout
@@ -89,7 +126,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pcntl, posix
           coverage: xdebug
           tools: composer:v2
         env:
@@ -99,15 +136,18 @@ jobs:
         working-directory: packages/drive
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # --min=95: floor(Score) - 5, измерено 2026-07-13 на pcov/PHP 8.5,
-      # `pest --mutate --path=src --covered-only --parallel` → Score 100.00%,
-      # 1569 mutations tested.
+      # --min — ratchet ВВЕРХ (VLT-MUT D4 / дисциплина D35): цель 95, порог поднимается каждой
+      # фазой и НИКОГДА не опускается. Текущее значение = floor(Score) − 5 по ЧЕСТНОМУ замеру
+      # 2026-07-13 (последовательная мутация, pcov/PHP 8.4, Postgres 16, холодный кэш мутаций):
+      # Score 48.34 % — 722 убито, 780 выжило, 8 таймаутов из 1510 мутантов. Прежние «100.00 %,
+      # 1569 мутантов» были артефактом `--parallel`, а не измерением.
+      #
+      # 43 — не «планка качества», а страховка от регресса, пока P2 плана VLT-MUT добивает 780
+      # выживших тестами. Опускать нельзя; поднимать — по каждому перемеру на холодном кэше.
       - name: Mutation testing
         working-directory: packages/drive
-        run: vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95
+        run: vendor/bin/pest --mutate --path=src --covered-only --min=43
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
           XDEBUG_MODE: coverage
 
   drive-pgsql:
