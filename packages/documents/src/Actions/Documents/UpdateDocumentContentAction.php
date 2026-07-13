@@ -55,8 +55,7 @@ final readonly class UpdateDocumentContentAction
         return DB::transaction(function () use ($node, $data): NodeDocumentVersion {
             $head = $this->read->head($node);
 
-            if ($this->shouldOverwrite($head)) {
-                /** @var NodeDocumentVersion $head */
+            if ($head !== null && $this->shouldOverwrite($head)) {
                 $version = $this->store->update($head, $this->payload($data));
 
                 event(new DocumentContentUpdated(
@@ -76,7 +75,7 @@ final readonly class UpdateDocumentContentAction
                 // never a schema default (P0.4/L3, D4/D12). Falls back to the
                 // rich-text default only for the (practically unreachable) case of a
                 // document node with no prior version at all.
-                'format' => $head?->format ?? DocumentType::RichText->value,
+                'format' => $head->format ?? DocumentType::RichText->value,
                 'is_autosave' => true,
                 'status' => 'committed',
                 'created_at' => now(),
@@ -107,9 +106,9 @@ final readonly class UpdateDocumentContentAction
      * within the debounce window. A committed/named head, or an autosave older than
      * the window, forces a fresh row so the history keeps the older state.
      */
-    private function shouldOverwrite(?NodeDocumentVersion $head): bool
+    private function shouldOverwrite(NodeDocumentVersion $head): bool
     {
-        if ($head === null || !$head->is_autosave) {
+        if (!$head->is_autosave) {
             return false;
         }
 

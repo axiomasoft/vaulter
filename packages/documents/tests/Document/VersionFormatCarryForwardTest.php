@@ -72,6 +72,30 @@ it('keeps a rich-text document on richtext across an appended autosave row (P0.4
     expect($version->format)->toBe('richtext');
 });
 
+it('appends onto a document node that has no head at all, without dereferencing null', function (): void {
+    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+        storage: $this->drive->storage(),
+        name: 'Headless',
+        content: DocumentTestHelpers::content(),
+        parent: $this->drive->root(),
+        format: DocumentType::Markdown->value,
+    ));
+
+    // A document node whose head pointer is unset: head() returns null, so the APPEND
+    // branch runs with $head === null and the format line falls through to its `??`
+    // default. That branch had no test, so `--covered-only` never mutated it either.
+    $node->forceFill(['current_version_id' => null])->save();
+
+    expect(app(NodeDocumentVersionReadRepository::class)->head($node))->toBeNull();
+
+    $version = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
+        node: $node,
+        content: DocumentTestHelpers::content('Updated'),
+    ));
+
+    expect($version->format)->toBe(DocumentType::RichText->value);
+});
+
 it('carries the format forward onto a NAMED version too (P0.4/L3)', function (): void {
     $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
         storage: $this->drive->storage(),
