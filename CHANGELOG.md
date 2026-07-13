@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Mutation testing moved off Infection onto native Pest mutation, with real thresholds
+  everywhere** (VLT-CANON Open risk #4 / VLT-REMED D38). Every package lane —
+  `documents`, `drive`, `media`, `filament` — carried an Infection step under `|| true`, and
+  **none of them had ever executed a single mutant**: Infection 0.33.3 ships no Pest adapter
+  (its `testFramework` enum is `phpunit`/`phpspec`/`codeception`/`testo`), so it could not map
+  this suite's tests to mutants at all. `|| true` reported that as green. The root lane had
+  already moved to `pest --mutate` for `vaulter-core`; the four package lanes now follow.
+  Each has its own mutation job with a coverage driver and a **real threshold with no
+  `|| true`** — Pest exits non-zero below it. `--min=95` (= `floor(Score) - 5`) from a measured
+  baseline: `core` and all four packages score **100.00%** (documents 1472 mutants, drive 1569,
+  media 380, filament 189). The four `infection.json5` files are gone, `infection/infection` is
+  out of every `require-dev`, and the `mutate` composer scripts plus `make mutate` (which still
+  invoked the `vendor/bin/infection` removed in P5.9) now call Pest.
 - **Re-platformed into an embeddable virtual document storage** (#20). The document/folder
   model gave way to a **Drive** domain — storages and a recursive node tree (folders/files) —
   backed by a content-addressable blob store (CAS). Collaboration became **node-attached** and

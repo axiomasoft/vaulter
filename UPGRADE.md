@@ -6,6 +6,29 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### CI: mutation testing runs on native Pest, Infection is gone (VLT-CANON Open risk #4)
+
+Not consumer-facing — a contributor/CI note; no published API, config key or schema changes.
+
+Every package lane (`documents`, `drive`, `media`, `filament`) ran Infection under `|| true` and
+**never executed a mutant**: Infection 0.33.3 has no Pest adapter, so it could not map this
+suite's tests to mutants, and `|| true` reported the failure as green. The four lanes now use
+the same tool as the root `vaulter-core` lane (`pest --mutate`, VLT-REMED D38/P5.9), each in its
+own job with a coverage driver and a real `--min=95` threshold and **no** `|| true`.
+
+What this changes for a contributor:
+
+- `composer mutate` in `packages/{documents,drive,media,filament}` and `make mutate` at the root
+  now invoke `vendor/bin/pest --mutate …`, not `vendor/bin/infection` (the root binary has not
+  existed since P5.9 — `make mutate` was broken).
+- Running mutation testing locally needs a coverage driver (`pcov` or `xdebug`); without one Pest
+  reports that coverage is unavailable.
+- `infection/infection` is no longer a dev dependency and the four `infection.json5` files are
+  removed. If you had local tooling pointing at them, point it at the Pest invocation instead.
+
+Baseline at the time of the switch: `--min=95` = `floor(Score) - 5`, measured 2026-07-13 —
+`core`, `documents`, `drive`, `media` and `filament` all score **100.00%**.
+
 ### `documents/src/Access/HostUserResolver` moves into `Collaboration/` (VLT-CANON P2.4)
 
 **Why.** `Access/` in `vaulter-documents` held exactly one class, and it was not an access-control
@@ -1517,3 +1540,91 @@ will misbehave under transaction rollback.
 
 No config change, migration, or database schema change is required for this upgrade note; it is a
 pure code-contract change on the four events listed above.
+
+### `vaulter-core` split into four Composer packages — require the ones you use (P2 #5 / D1, D2, D3)
+
+**Why.** `vaulter-core` shipped the CAS blob engine, the Drive tree/uploads and the whole document
+& collaboration stack in one package, so a host that wanted only a node tree still pulled in TipTap
+and Yjs. The engines moved out into three standalone packages. The dependency direction is one-way
+(`drive` → `core` + `media`; `documents` → `core`) — there is no cycle, and `vaulter-drive` is not a
+runtime dependency of `vaulter-documents`.
+
+**What moved.**
+
+| Package | Namespace | What went there |
+|:--|:--|:--|
+| `axioma-studio/vaulter-media` | `Vaulter\Media\*` | The CAS engine — `Sha256ContentStore`, `FlysystemStorageDriver`, `BlobStore`, `BlobGarbageCollector`, `BlobReconciler`, `StagedTempObject` (was `Vaulter\Cas\*`) — and the `vaulter:gc-blobs` / `vaulter:reconcile-blobs` commands. |
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\*` | `DriveContext`, `DriveManager`, `StorageManager`, the Drive Actions (`TrashNodeAction`, `UploadFileAction`), the Drive events (`FileUploaded`, `NodeCreated`, `NodeMoved`, `NodeTrashed`, `StorageCreated`, …), the Drive/Storage/Upload HTTP layer, the whole `Uploads\*` subtree (tus + S3-multipart), and the `vaulter:purge-trash` / `vaulter:sweep-uploads` commands. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\*` | The document Actions (`CreateDocumentNodeAction`, `UpdateDocumentContentAction`, `CreateNamedVersionAction`, `RestoreDocumentVersionAction`, the comment Actions, `PersistYjsSnapshotAction`), the `Collaboration\*` drivers, the handlers (`TipTapHandler`, `PreviewHandler`, `DownloadOnlyHandler`, `UniverHandler`), `HtmlExporter` / `MarkdownExporter`, the `NodeComment` / `NodeDocumentVersion` models and the document/collaboration/comment controllers. |
+
+**What stays in `vaulter-core`.** The contracts and schema, so the seams a host implements against
+do not move: `Contracts\Cas\*`, the `v_blobs` schema, `Models\Cas\Blob`, `Enums\Cas\BlobStatus`,
+`Repositories\Cas\BlobStoreRepository`; `Contracts\Drive\{DriveHandle,DriveHandleFactory}`,
+`Support\DriveNameRules`, `Exceptions\Nodes\NodeNameConflictException`,
+`Http\Resources\Drive\NodeResource` and the `v_nodes` / `v_upload_sessions` / `v_upload_parts`
+schemas; the handler-seam contracts and value objects and the `v_node_comments` /
+`v_node_document_versions` schemas.
+
+**What to do.**
+
+1. Add the packages whose behaviour you actually use:
+   - node CRUD, `Vaulter::for()` / `forStorage()`, uploads or downloads →
+     `composer require axioma-studio/vaulter-drive`
+   - file upload/download/versioning (the blob engine behind Drive) →
+     `composer require axioma-studio/vaulter-media`
+   - document editing, versioning, comments or realtime collaboration →
+     `composer require axioma-studio/vaulter-documents`
+2. Repoint any direct FQCN references per the table above. If a host referenced only the contracts
+   and value objects listed under *What stays in core*, nothing changes.
+
+   > The handler-seam contracts and value objects were renamed **again** later in this same
+   > unreleased cycle. Land on `Contracts\Handlers\*` / `ValueObjects\Handlers\*` — see the
+   > kind-neutral-rename note above for the final FQCNs.
+3. Config: `vaulter.cas.*` and `vaulter.dedup.*` are unchanged. `vaulter.models.{upload_session,
+   upload_part}` and `vaulter.models.{node_comment,node_document_version}` are no longer defaulted
+   by core — they **guard-throw** when the owning package is absent, which is the intended signal
+   that you need to `require` it. `vaulter.exporters` defaults to `[]` in core.
+
+### The legacy `document_id`-bound path (DocVault) is removed (ADR-0014 step 2)
+
+**Why.** Two parallel document models coexisted: the original `document_id`-bound one
+(`v_document*` tables) and the node-attached one on `v_nodes`. One canonical path replaces both —
+`kind=document` nodes, with comments and versions attached to the node.
+
+**Removed.** The `Document`, `DocumentFolder`, `DocumentVersion`, `DocumentPermission`,
+`DocumentComment` and `DocumentShare` models, their `v_document*` tables and migrations, and the
+matching repositories, controllers, Actions, events, resources and requests. Also removed: the
+`Document`-bound collaboration seam (`Contracts\Collaboration\CollaborationDriver`, its Reverb and
+Hocuspocus implementations, and `Vaulter::driver()`); the `Contracts\Access\PermissionResolver`
+seam (`Vaulter::resolvePermissionsWith()`, `permissionResolver()` and the
+`vaulter.permission_resolver` config key); and the
+`vaulter.models.{document,version,folder,permission,comment,share}` config entries with their
+table names.
+
+**What to do.** Move to `Vaulter::for()` and the node/document endpoints. Replace a
+`CollaborationDriver` implementation with `Contracts\NodeCollaborationDriver` (node-attached, see
+the collaboration notes above), and a `PermissionResolver` implementation with the host role driver.
+Drop the removed `vaulter.models.*` and `vaulter.permission_resolver` keys from your published
+config.
+
+**Data.** A dev-only, idempotent `drop_legacy_docvault_tables` migration drops any pre-existing
+`v_document*` tables. It does **not** migrate data. If you carry production rows in `v_document*`,
+back them up and port them onto `v_nodes` **before** running migrations — the package ships no
+backfill.
+
+### `@vaulter/vue` dropped the legacy document-centric surface (ADR-0014 step 4)
+
+**Why.** The removed client surface called the `/documents`, `/folders` and `/documents/*` HTTP
+endpoints that no longer exist after the DocVault excision above; it could only have 404'd.
+
+**Removed → use instead.**
+
+| Removed | Replacement |
+|:--|:--|
+| client namespaces `documents`, `versions`, `folders`, `permissions`, `shares`, legacy `collaboration` | `client.nodes`, `client.grants`, `client.nodeShares` |
+| `useDocuments`, `usePermissions`, `useShares`, `useDocumentExport`, `useCollaboration`, `useVaulterEditor` | `useNodes`, `useNodeGrants`, `useNodeShares`, `useDocumentNode`, `useNodeCollaboration` |
+| `VaulterFileManager`, `VaulterEditor`, `VaulterVersionHistory`, `VaulterPermissionsPanel`, `VaulterSharePanel`, `VaulterBreadcrumb` | `VaulterDrive` |
+| `createCollaborationSession` transport | `useNodeCollaboration` |
+
+`useComments` and `VaulterCommentsPanel` survive but were **repointed** to the node comment API
+(`/nodes/{node}/comments`): the prop is now `nodeId`, not `documentId`.
