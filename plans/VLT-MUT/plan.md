@@ -171,10 +171,26 @@ VLT-REMED P5.9 / Open risk #4 (VLT-CANON handoff) объявили mutation-ге
 
 ## 8. Открытые вопросы
 
-- **Q1.** Пять mutation-job'ов не входят в required status checks `main` — и не могут: org `axioma-studio`
-  на плане **free** + репозиторий **private** → `branches/main/protection` и `rulesets` отвечают 403
-  «Upgrade to GitHub Pro». Зафиксировано в `plans/archive/VLT-CANON/handoff.md` Open risk #1. До смены
-  плана GitHub гейты остаются **сигнальными**: падают, но merge не блокируют. Решение — за владельцем.
+- **Q1 → решено по существу, ждёт действия владельца (покупка).** Пять mutation-job'ов не входят в
+  required status checks `main` и не могут: org `axioma-studio` на плане **free** + репозиторий
+  **private** → `branches/main/protection` и `rulesets` отвечают 403. Зафиксировано в
+  `plans/archive/VLT-CANON/handoff.md` Open risk #1.
+
+  **GitHub Pro не подходит** — это план личного аккаунта, а репозиторий принадлежит организации;
+  на org-owned private репо он не влияет (текст ошибки GitHub вводит в заблуждение). Работающих
+  вариантов два: сделать репо публичным (Free enforce-ит всё на public) — **отклонено владельцем
+  2026-07-13** («vaulter вряд ли будет публичным, и добавятся ещё закрытые пакеты») — либо
+  **GitHub Team на организацию**.
+
+  Решение владельца: **Team**. Считается за место, а не за репозиторий: одно место покрывает vaulter,
+  corex, loqum, botkit, erp-sdk и будущие закрытые пакеты; плюс открывает **org-level rulesets** — один
+  набор правил на всю организацию, иначе каждый новый пакет стартует с незащищённым `main`. Действие
+  (оплата) — за владельцем; как только план сменится, required checks проставляются через
+  `gh api …/rulesets`, и Open risk #1 закрывается по-настоящему.
+
+  **До смены плана `main` не защищён ничем:** красный PR мержится, прямой push и force-push в `main`
+  проходят. Весь CI, включая честный mutation-гейт этого плана, остаётся **сигнальным** — умеет сказать
+  «сломано», не умеет не пустить.
 - **Q2.** `Mutation Testing / Mutation (advisory)` (core, `mutation.yml`) поднят только на `push: [main]` +
   `workflow_dispatch` — на PR не исполняется. Даже при доступном branch protection required-check'ом не
   стал бы. Менять триггер на `pull_request`? Решение — за владельцем (шапка объявляет job advisory
