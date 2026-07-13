@@ -1,44 +1,40 @@
-# HANDOFF — 2026-07-13 — after P2.3
+# HANDOFF — 2026-07-13 — after P2.4
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | low — вердикт «канон ок / no-op» по уже готовому списку папок |
+| Thinking | low — docs/ROADMAP-item по готовым материалам плана |
 | Context | continue (/clear) — ручной item |
-| Суть | P2.4: Access/Uploads-сверка — `documents/src/Access/HostUserResolver` (свернуть в слой ЛИБО подтвердить домен-сервисом) + core `Access/`/`Webhooks/` сверка с ADR-0017 (вероятно no-op) — вердикт по каждой папке в Completion Notes |
+| Суть | P3.1: ROADMAP (пункт про `vaulter-filament`-задел, D6) + обновить `docs/guide/*`, `docs/reference/contracts.md`, `docs/adr/index.md` (новый ADR канона движков, см. P3.3); заодно кандидат на дочистку накопленных стухших FQCN в `docs/plan/*`/`document-handlers.md` (Open risks 2/5) |
 
 ```
-/task:plan-exec VLT-CANON P2.4
+/task:plan-exec VLT-CANON P3.1
 ```
 
-**Done:** P2.3 🟢 Done. Три catch-all папки разобраны по роли (git mv, 9 файлов + 48
-файлов-потребителей): `documents/src/Documents/Handlers/{TipTapHandler,UniverHandler}` →
-`Engines/Handlers/*`; `Documents/NodeExportService` → `Export/NodeExportService` (присоединился
-к `HtmlExporter`/`MarkdownExporter`); `Documents/CollaborationSessionService` →
-`Collaboration/CollaborationSessionService` (присоединился к `NodeCollaborationDriverManager`);
-`Support/{TipTapRenderer,Concerns/HasTiptapExtensions}` → `Support/TipTap/*`
-(`DocumentContentHasher` остался движок-нейтральным в `Support/`); `drive/src/Uploads/
-{MagicByteSniffer,StagedUpload,UploadModels}` → `Support/Uploads/*` (`UploadSessionManager`/
-`S3MultipartHandler`/`TusUploadHandler` остались в `Uploads/` — оркестраторы). Тавтология
-`Documents/Documents` устранена. Найдена и починена ловушка same-namespace `use`
-(`StagedUpload`/`CollaborationSessionService` — переехавшие классы, на которые ссылались
-классы из старого/нового же namespace без явного импорта). Гейты (pint/phpstan/pest ×3
-пакета/type-cov 100%) зелёные; `vaulter-api-surface` → PASS clean rename-only diff (BC MAJOR,
-задокументирован); `vaulter-test-verifier` → все три сьюта зелёные. Decision по ролям
-`NodeExportService`/`CollaborationSessionService` (Export/Collaboration вместо буквальных
-Support/Actions из текста item'а) — трактовка «по роли», не расхождение по существу, см.
-Known Deviations. `vaulter-reviewer` не вызывал — Routing P2.2–P2.4 его не требует. Status
-Board P2 = 3/4. Commits: `427b9ce`.
+**Done:** P2.4 🟢 Done, **фаза P2 терминальна (4/4, 1🟠)**. Три вердикта:
+`documents/src/Access/HostUserResolver` → `Collaboration/HostUserResolver` (`git mv`, namespace
+`Vaulter\Documents\Access`→`Vaulter\Documents\Collaboration`) — класс не был access-control, реализует
+контракт коллаборационного вебхука («purely collaboration-webhook machinery» по собственному
+докблоку), присоединился к `NodeCollaborationDriverManager`/драйверам в существующей папке
+`Collaboration/`; core `Access/` и `Webhooks/` сверены с ADR-0017 — **no-op**, ADR называет их
+эталонной формой самого паттерна domain-service folder. Попутно исправлен пред-существующий стухший
+FQCN в доках (`docs/{reference,ru/reference}/contracts.md` несли `Vaulter\Access\HostUserResolver`
+без сегмента `\Documents\`). Гейты (pint/phpstan max/pest×2 пакета/type-cov 100%) зелёные;
+`vaulter-reviewer` не требовался Routing'ом; `vaulter-test-verifier` — documents suite зелёный
+(214/1 skip), core suite упал внутри саб-агента по причине окружения (стандэлон-тестсьют core требует
+запуска из корня монорепы — известное свойство, не регресс), перепроверено вручную из корня: 497/497.
+Commits: `da3e64b`.
 
-**Remaining:** P2.4 (Access/Uploads-сверка) → P3 (docs/ROADMAP/arch-тесты/supersede VLT-HSEAM).
-Открытых owner-развилок больше нет: D7/D8/D9/D10/D11 — все закрыты.
+**Remaining:** P3.1 → P3.2 (arch-тесты финального канона) → P3.3 (ADR канона движков + supersede
+VLT-HSEAM). Фаза P3 — последняя, план после неё терминален. Открытых owner-развилок больше нет:
+D7/D8/D9/D10/D11 — все закрыты.
 
-**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P2.3 Completion Notes, §4 Status
-Board P2=3/4) · `docs/adr/0017-package-structure-canon.md` (нормативный канон структуры) ·
-`findings/structure-canon-inventory.md` §2.3/§2.4 (P2.3/P2.4 источник разбора) ·
-`UPGRADE.md`/`CHANGELOG.md` `[Unreleased]` · наследие: `plans/VLT-HSEAM/root/adr-file-handler-seam.md`.
+**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P2.4 Completion Notes, §4 Status
+Board P2=4/4 терминальна) · `docs/adr/0017-package-structure-canon.md` (нормативный канон структуры) ·
+`findings/structure-canon-inventory.md` §2.4 (источник вердиктов P2.4) · `UPGRADE.md`/`CHANGELOG.md`
+`[Unreleased]` · наследие: `plans/VLT-HSEAM/root/adr-file-handler-seam.md` (supersede — предмет P3.3).
 
 **Open risks:**
 1. **Required status checks на `main` не переименованы** (MED, наследуется из P2.1, **вне

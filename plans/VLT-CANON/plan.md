@@ -82,7 +82,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
-| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 3/4 (1 🟠) | 🟡 In progress |
+| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 4/4 (1 🟠) | 🟢 Done |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -912,6 +912,50 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   core `Access/`/`Webhooks/` — сверить с ADR-0017 (вероятно no-op, задокументировать вердикт).
   **Приёмка:** вердикт по каждой папке (перенос ЛИБО «канон ок, no-op») в Completion Notes.
 
+  **Completion Notes.** Три вердикта по `findings/structure-canon-inventory.md §2.3/§2.4`:
+  1. **`documents/src/Access/HostUserResolver` — ПЕРЕНОС.** Единственный класс папки не был
+     access-control-классом: реализует `Vaulter\Documents\Contracts\Collaboration\HostUserResolver`
+     (собственный докблок класса: «purely collaboration-webhook machinery»). `git mv` →
+     `documents/src/Collaboration/HostUserResolver.php`, namespace `Vaulter\Documents\Access` →
+     `Vaulter\Documents\Collaboration` — присоединился к `NodeCollaborationDriverManager`/драйверам
+     в уже существующей папке `Collaboration/`. Обновлены: `use`-импорт в
+     `VaulterDocumentsServiceProvider.php` (biding алиас `DefaultHostUserResolver` не менялся),
+     `{@see}`-ссылка в докблоке контракта `Contracts/Collaboration/HostUserResolver.php`. Попутно
+     исправлен пред-существующий баг FQCN в доках (`docs/{reference,ru/reference}/contracts.md` несли
+     `Vaulter\Access\HostUserResolver` — без сегмента `\Documents\`, стухший ДО этого item'а) →
+     полный правильный FQCN. Папка `documents/src/Access/` пуста и удалена.
+  2. **core `Access/` — NO-OP, канон ок.** `AccessResolver`/`Abilities/`/`HostRoleDriverManager`/
+     `ValueObjects/` — легитимная domain-service-папка по ADR-0017 (§«Canon A», Node-coupled ACL-движок,
+     topology T1). Изменений не требуется.
+  3. **core `Webhooks/` — NO-OP, канон ок.** `ADR-0017` называет `core/src/{Access,Sharing,Webhooks,Cas,
+     Activity}` **эталонной формой** самого паттерна domain-service folder (не просто допустимым
+     случаем) — сверка тривиально положительна, изменений не требуется.
+  **Гейты:** `pint packages/documents --test` → passed; `phpstan analyse` (max, монорепо) → passed,
+  0 errors; root `pest` (core) → 497/497, 1281 assertion (без изменений); `packages/documents`
+  standalone `pest` → 214 passed / 1 skipped, 531 assertion (без изменений); `pest --type-coverage
+  --min=100` → 100.0% обе стороны.
+  **Ревью:** `vaulter-reviewer` не вызывал — Routing P2.2–P2.4 его не требует (только
+  `vaulter-test-verifier`). `vaulter-test-verifier` → documents suite: 214/1 skip, PASS; core suite
+  внутри агента упал (393/497) из-за окружения саб-агента (`BindingResolutionException: Target class
+  [config]` — core standalone-тестсьют требует запуска из корня монорепы, известное свойство пакета,
+  не регресс диффа) — перепроверено вручную из корня монорепы: 497/497 зелёные, диффа P2.4 в core нет
+  вообще (`git show --stat` затрагивает только documents + docs + BC-файлы), падение саб-агента не
+  связано с этим item'ом.
+  **Commits:** `da3e64b` — refactor(documents)!: Access/HostUserResolver → Collaboration/HostUserResolver
+  (P2.4).
+
+  **Pending Work:** —
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P2.4 **sonnet/medium** (строка `P2.2–P2.4 |
+     sonnet/medium`); фактически исполнено **sonnet/medium** — совпадает, отклонений нет.
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P2.4 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
+
 ### P3 — Docs · ROADMAP · arch-тесты · supersede
 
 - **P3.1 — ROADMAP + docs** (sonnet/low). ROADMAP: пункт «доделать `vaulter-filament` (движки/reсources под
@@ -1013,6 +1057,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/opus (medium) | P2.1 закрыт (🟠): пакет-мост переименован `permissions-azgard`→`azgard` (dir/composer/namespace/CI), core-шов `AzgardGuard` не тронут, добавлен arch-гвард dependency-direction — детали см. §6 P2.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.2 закрыт (🟢): D9 = вариант A (owner approved) — `vaulter-media` остаётся standalone-пакетом, кода нет — детали см. §6 P2.2 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.3 закрыт (🟢): 3 catch-all папки (`documents/src/{Documents,Support}`, `drive/src/Uploads`) разобраны по роли — драйверы→`Engines/Handlers`, эвалюаторы→существующие `Export`/`Collaboration`, TipTap-хелперы→`Support/TipTap`, upload-хелперы→`Support/Uploads`; тавтология `Documents/Documents` устранена — детали см. §6 P2.3 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P2.4 закрыт (🟢), **фаза P2 терминальна (4/4, 1🟠)**: `documents/src/Access/HostUserResolver` → `Collaboration/HostUserResolver` (не был access-control-классом); core `Access/`/`Webhooks/` сверены с ADR-0017 — no-op, канон ок (эталонная форма паттерна) — детали см. §6 P2.4 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
