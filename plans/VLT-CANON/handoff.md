@@ -7,10 +7,10 @@
 | Model | sonnet |
 | Thinking | low — plan-closure/архивация, не design/exec решение |
 | Context | continue (/clear) — ручной шаг |
-| Суть | **План закрыт.** Фаза P3 терминальна (3/3), план VLT-CANON целиком терминален (P0 5/5, P1 3/3, P2 4/4, P3 3/3) — открытых item'ов нет, `/task:plan-exec` запускать нечего. Следующий шаг — plan-closure: сверить `## 0. Meta` `Status`-поле (сейчас стухшее «⬜ Not started (design в работе)»), решить архивацию плана. |
+| Суть | **план закрыт** целиком (P0 5/5, P1 3/3, P2 4/4, P3 3/3; Meta Status → 🟠 Done with deviations; `plans/ACTIVE.md` → `—`). Следующий шаг вне протокола — архивация по решению owner'а. |
 
 ```
-/task:plan-close VLT-CANON
+/task:plan-close archive VLT-CANON
 ```
 
 **Done:** P3.3 🟢 Done — последний item плана. Создан `docs/adr/0018-editor-engine-canon.md`

@@ -7,7 +7,7 @@
 | Plan ID | VLT-CANON |
 | Title | Подключаемые движки-редакторы (Google-Drive-модель) + финальный структурный канон |
 | Version | 0.1.0 |
-| Status | ⬜ Not started (design в работе) |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus (fable) / high |
 | Last Updated | 2026-07-11 |
@@ -1192,6 +1192,8 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.1 закрыт (🟢): ROADMAP получил секцию `vaulter-filament` engine-aware-resources (D6-задел); 3 реальных стухших FQCN/ссылки P0.1–P0.4 починены в `docs/guide/document-handlers.md`+ru, `docs/reference/contracts.md`, `docs/guide/search-trash.md`+ru; `docs/adr/index.md` сознательно отложен до P3.3 (там создаётся сам ADR-файл) — детали см. §6 P3.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.2 закрыт (🟢): 2 новых arch-теста в `core/tests/Arch/ArchTest.php` — «0 конкретных TipTap-классов в core» (file-scan) и «FileHandler-контракт kind-нейтрален, не зависит от vaulter-documents» (D7-регрессия); dependency-direction azgard/media уже была покрыта существующими guard'ами — детали см. §6 P3.2 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.3 закрыт (🟢), **фаза P3 терминальна (3/3), план VLT-CANON целиком терминален**: `docs/adr/0018-editor-engine-canon.md` консолидирует Decision Log D1–D12, `docs/adr/index.md` получил строку; `plans/VLT-HSEAM/plan.md` формально помечен superseded (Status + notice) — детали см. §6 P3.3 Completion Notes. |
+
+| 2026-07-13 | plan-close/sonnet (low) | Реконсиляция целиком: все 4 фазы (P0–P3) 🟢/🟠 терминальны — план закрыт. Meta Status ⬜→🟠 Done with deviations (агрегат: P1/P2 несут по 1 🟠-item), `plans/ACTIVE.md` сброшен на `—`. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
