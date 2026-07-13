@@ -1,38 +1,42 @@
-# HANDOFF — 2026-07-13 — after P1.1
+# HANDOFF — 2026-07-13 — after P1.2
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — публичный фронт-шов (`componentMap`→registry API), DX-обязательство |
+| Model | sonnet |
+| Thinking | low — механический скелет/гайд по уже закрытому шву (D8, P1.2) |
 | Context | continue (/clear) — ручной item |
-| Суть | P1.2: формализовать фронт-реестр компонентов (`VaulterDocumentNode.vue` `componentMap`) как публичный API — explicit `registerEngineComponent(id, component)` (не implicit-глобал), dev-mode warning на незарегистрированный `handler.id`, экспортировать типы; view не переписывать, только формализовать шов; prop `componentMap` остаётся обратно совместимым |
+| Суть | P1.3: скелет-пакет/гайд стороннего фронт-движка — по D8 (единый `@vaulter/vue`, engine внутри) показать, как хост регистрирует компонент по имени движка (`registerEngineComponent`, только что формализован в P1.2) и получает `HandlerUi.props`; гайд/скелет проходит собственный build |
 
 ```
-/task:plan-exec VLT-CANON P1.2
+/task:plan-exec VLT-CANON P1.3
 ```
 
-**Done:** P1.1 🟠 Done with deviations — D8 закрыт owner'ом буквально как вариант A
-(§8.2, прямой вопрос в сессии, Dmitry Vostrikov, 2026-07-13): единый `@vaulter/vue` остаётся
-shell/core, TipTap-движок живёт внутри него на одном version-train с PHP; per-engine npm
-(`@vaulter/vue-engine-<name>`) вводится лениво — только при реальном внешнем потребителе.
-Альтернатива не выбрана → P1.2/P1.3 передетализация НЕ требуется, их текущая детализация в
-plan.md уже написана под D8=A. Кода/структуры пакетов item не менял (D8 — решение о будущей
-политике). Known Deviation: effort исполнен `opus/medium` вместо заявленного `opus/high`
-(дефолт `/task:plan-exec`) — риск низкий, item решал готовую owner-развилку без техреализации.
+**Done:** P1.2 🟢 Done — фронт-реестр компонентов (`VaulterDocumentNode.vue` `componentMap`)
+формализован как публичный API: новый модуль `packages/vue/src/engineRegistry.ts`
+(`registerEngineComponent`/`unregisterEngineComponent`/`resolveEngineComponent`/
+`registeredEngineComponentIds`/`clearEngineComponents`), explicit ES-module import вместо
+implicit-глобала (урок Nextcloud Viewer). Реестр — фолбэк ПОСЛЕ `componentMap` prop (BC
+bit-for-bit, подтверждено `vaulter-api-surface`). Dev-mode `console.warn` на unmapped
+`ui.component`/`id` — в `watch`, не в `computed` (находка ревью MED, исправлено). Доки (en+ru)
++ CHANGELOG `[Unreleased] Added` синхронны; UPGRADE.md НЕ тронут (чисто аддитивно, без
+обязательного действия потребителя). `vaulter-reviewer` вернул needs-work (1 HIGH задублированный
+ru-блок доков, 1 MED side-effect в computed, 1 LOW отсутствие теста на warn) — все три закрыты
+отдельным коммитом. Гейты зелёные: `vue-tsc` clean, `vitest` 112/112, `vite build` ✓.
+Commits: `879d370`, `ea7eacb`, `e02dfc9` (закрытие плана).
 
-**Remaining:** P1.2 (формализация фронт-реестра — публичный API) → P1.3 (скелет-пакет/гайд
-стороннего движка, sonnet/low) → P2 (структурный канон: azgard-rename P2.1, media→drive
-развилка D9 в P2.2, catch-all P2.3, Access/Uploads P2.4) → P3 (docs/ROADMAP/arch-тесты/
-supersede VLT-HSEAM). Открытая owner-развилка: **D9** (media→drive, P2.2). D7/D8/D10/D11 —
-закрыты.
+**Remaining:** P1.3 (скелет-пакет/гайд стороннего движка, sonnet/low) → P2 (структурный канон:
+azgard-rename P2.1 opus/high, media→drive развилка D9 в P2.2, catch-all P2.3, Access/Uploads
+P2.4) → P3 (docs/ROADMAP/arch-тесты/supersede VLT-HSEAM). Открытая owner-развилка: **D9**
+(media→drive, P2.2). D7/D8/D10/D11 — закрыты.
 
-**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P1.1 Completion Notes, §5
-Decision Log D8 закрыт, §4 Phase Status Board P1=0/3 (1🟠) 🟡) · `UPGRADE.md` (SSOT миграции
-P0.1–P0.5, P1.1 кода не меняла) · `findings/*` (4 файла, вкл.
-`frontend-engine-packaging-research.md` — основание D8) · `docs/guide/writing-an-engine.md`
-(+ru) · наследие: `plans/VLT-HSEAM/root/adr-file-handler-seam.md`.
+**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P1.2 Completion Notes, §4 Phase
+Status Board P1=1/3 (1🟠) 🟡) · `CHANGELOG.md [Unreleased] Added` (P1.2 запись) ·
+`docs/guide/document-handlers.md` §«Mounting the resolved handler in Vue» + §Reference (+ru) ·
+`docs/guide/writing-an-engine.md` §7 (+ru) · `packages/vue/src/engineRegistry.ts` ·
+`findings/*` (4 файла, вкл. `frontend-engine-packaging-research.md` — основание D8) · наследие:
+`plans/VLT-HSEAM/root/adr-file-handler-seam.md`.
 
 **Open risks:**
 1. **`format` — смешанный value-space, backfill не шипается** (наследуется из P0.4 ревью,
@@ -44,7 +48,7 @@ P0.1–P0.5, P1.1 кода не меняла) · `findings/*` (4 файла, в�
    CI/gate-item — ни в одном текущем P1.x/P2.x/P3.x его нет.
 3. `docs/guide/document-handlers.md` несёт стухшие FQCN в примерах конфига (со времён
    P0.1/P0.4 renames). Кандидат в P3.1 (docs-item) или отдельную мелкую правку.
-4. `plan-lint.py plans/VLT-CANON` — красный ДО и ПОСЛЕ P0.1–P1.1 (не регресс): линтер требует
+4. `plan-lint.py plans/VLT-CANON` — красный ДО и ПОСЛЕ P0.1–P1.2 (не регресс): линтер требует
    `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
    (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
    Структуру плана правит plan-design, не exec.
