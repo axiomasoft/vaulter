@@ -417,7 +417,10 @@ registerEngineComponent('AppCsvPreview', AppCsvPreview)
 
 Every `VaulterDocumentNode` on the page now resolves these without a local `componentMap`.
 `unregisterEngineComponent(id)` removes an entry; `registeredEngineComponentIds()` lists what is
-currently registered (mostly for diagnostics/tests).
+currently registered (mostly for diagnostics/tests). The registry lookup is **not reactive**:
+register before mounting the app (or at least before mounting the `VaulterDocumentNode` that
+needs the entry) — an already-mounted node does not re-resolve just because a later
+`registerEngineComponent` call added its `ui.component` key.
 
 In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.component`/`id`
 (not repeated for the same key WITHIN ONE component instance) naming both registration
