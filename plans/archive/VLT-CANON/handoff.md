@@ -42,6 +42,30 @@ Board все фазы 🟢) · `docs/adr/0018-editor-engine-canon.md` (новы�
 задокументированный residual, ни один не закрыт этим item'ом)
 1. **Required status checks на `main` не переименованы** (MED, наследуется из P2.1, вне дерева
    репо): job id/display-name azgard-лейна сменились; чинит owner в настройках репозитория.
+
+   **Дополнено 2026-07-13** (`/task:dev`, хвосты VLT-REMED, вне дерева VLT-CANON): к тому же
+   классу долга — mutation-гейты `vaulter-{documents,drive,media,filament} (mutation gate)`
+   (все четыре поднимаются на `pull_request`) не входят в required status checks `main`.
+   **Причина — не права**: токен несёт scope `repo`+`workflow`, `viewerPermission = ADMIN`, но
+   org `axioma-studio` на плане **free**, а репозиторий **private** — и
+   `repos/:owner/:repo/branches/main/protection`, и `repos/:owner/:repo/rulesets` отвечают
+   `403 Upgrade to GitHub Pro or make this repository public to enable this feature`. В этой
+   конфигурации required checks на `main` **невозможны в принципе** — что делает неисполнимым и
+   исходный пункт про «переименовать». Разблокирует владелец: план Team/Pro на org — либо
+   публичный репозиторий.
+
+   Хуже: сделать их required сейчас было бы **бессмысленно**. Тем же прогоном вскрыто, что все пять
+   mutation-гейтов не могут упасть в принципе — флаг `--parallel` заставляет Pest считать убитым
+   каждого мутанта (детали и воспроизведение: `plans/VLT-MUT/plan.md` §1 и
+   `plans/VLT-MUT/findings/P0.1-parallel-defect.md`). Порядок работ: сначала VLT-MUT чинит измерение
+   и доводит Score до реальных ≥ 95, и только потом имеет смысл требовать эти чеки на `main`.
+
+   Отдельный факт (не про права, а про триггер): пятый гейт — core — это job
+   `Mutation Testing / Mutation (advisory)` (`.github/workflows/mutation.yml`), поднятый только
+   на `push: [main]` + `workflow_dispatch`. На PR он не исполняется, поэтому required-check'ом не
+   стал бы и при доступном branch protection — для этого ему нужен триггер `pull_request`.
+   Оставлен как есть: шапка workflow объявляет его advisory by design, смена контракта — решение
+   владельца, не побочный эффект этого item'а.
 2. ~~**`docs/plan/*` держат старые FQCN в настоящем времени** (LOW, наследуется из P2.1/P2.3).~~
    **Closed 2026-07-13** (`/task:fix`, вне дерева VLT-CANON): `00-master-plan.md:539` —
    хеджированное «`vaulter-permissions-azgard` или внутри media/core drivers» заменено на
