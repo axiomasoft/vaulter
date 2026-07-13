@@ -77,7 +77,7 @@ new HandlerCapabilities(
 );
 ```
 
-Они один-к-одному соответствуют кейсам `Vaulter\Enums\Documents\Capability`, по которым фильтрует
+Они один-к-одному соответствуют кейсам `Vaulter\Enums\Handlers\Capability`, по которым фильтрует
 реестр: `Edit`, `Preview`, `Download`, `Thumbnail`, `Collaborate`.
 
 ::: warning `previewable` ≠ безопасно для инлайна
@@ -212,7 +212,7 @@ curl https://app.test/api/vaulter/nodes/77/handler
 ```
 
 ```php [PHP — the resolver]
-use Vaulter\Documents\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 
 $descriptor = app(NodeHandlerResolver::class)->describe($node);
 // HandlerDescriptor: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)

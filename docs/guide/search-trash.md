@@ -44,7 +44,7 @@ await client.nodes.forceDelete(nodeId)  // permanent
 ```
 
 Both the reversible delete and the permanent purge are recorded in the
-[activity feed](./activity.md), so your app can treat hard deletes differently in audit logs.
+[activity feed](/reference/rest-api#activity-feed), so your app can treat hard deletes differently in audit logs.
 
 ## Move & copy
 

@@ -31,7 +31,7 @@ signatures and the binding point you swap it through.
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
 | Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
 | Handlers | `HandlerRegistry` | `Vaulter::handlers()` / `Vaulter::registerHandler()` |
-| Handlers | `NodeHandlerResolver` | container binding (vaulter-documents) |
+| Handlers | `NodeHandlerResolver` | container binding (core) |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -481,9 +481,11 @@ interface HandlerRegistry
 
 Resolves the format-handler descriptor for a node — the `(id + capabilities + ui)`
 bundle the `GET .../handler` endpoint returns, so the Vue client routes the node to
-the right editor/preview/download surface. The contract lives in core; the concrete
-resolver ships in vaulter-documents. A direct `app(NodeHandlerResolver::class)`
-resolution without vaulter-documents installed fails loudly with an install hint.
+the right editor/preview/download surface. Both the contract and the concrete
+`Vaulter\Engines\NodeHandlerResolver` are core-owned (D10): `app(NodeHandlerResolver::class)`
+always resolves, even without vaulter-documents installed — a drive-only host still gets a
+preview/download descriptor. Packages like vaulter-documents only ADD handlers to the
+registry the resolver consults.
 
 ```php
 interface NodeHandlerResolver

@@ -83,7 +83,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 4/4 (1 🟠) | 🟢 Done |
-| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
+| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -961,6 +961,62 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 - **P3.1 — ROADMAP + docs** (sonnet/low). ROADMAP: пункт «доделать `vaulter-filament` (движки/reсources под
   панель)» как задел (D6). Обновить `docs/guide/*`, `docs/reference/contracts.md`, `docs/adr/index.md`
   (новый ADR канона движков, см. P3.3). **Приёмка:** docs собираются; ROADMAP несёт Filament-пункт.
+
+  **Completion Notes.** ROADMAP: новая секция «`vaulter-filament` — engine-aware resources» под
+  «## Admin UI» — фиксирует D6 (Filament вне scope VLT-CANON) и называет seam для будущей работы
+  (`HandlerRegistry`/`NodeHandlerResolver`, тот же шов, что уже потребляет Vue-клиент). Docs:
+  найдены и починены 3 реальных стухших FQCN/ссылки, накопленные P0.1–P0.4 (Open risks 2/5/6
+  handoff.md), все — в объявленном Scope Included (`docs/guide/*` + `docs/reference/contracts.md`):
+  1. `docs/reference/contracts.md` — таблица контрактов и раздел `NodeHandlerResolver` утверждали
+     «concrete resolver ships in vaulter-documents» / «fails loudly without vaulter-documents» —
+     фактически неверно с P0.4 (D10): резолвер безусловно живёт и биндится в core. Переписано на
+     факт (core-owned, всегда резолвится).
+  2. `docs/guide/document-handlers.md` + ru-зеркало — пример «PHP — the resolver» импортировал
+     несуществующий `Vaulter\Documents\NodeHandlerResolver` → `Vaulter\Contracts\Handlers\NodeHandlerResolver`
+     (контракт, на который реально забинжен резолвер).
+  3. `docs/guide/document-handlers.md` + ru-зеркало — `Vaulter\Enums\Documents\Capability` (не
+     существует с P0.4) → `Vaulter\Enums\Handlers\Capability` (реальный FQCN).
+  4. `docs/guide/search-trash.md` + ru-зеркало — dead-link `./activity.md` (страницы `guide/activity.md`
+     никогда не существовало) ломал `docs:build`; перенаправлен на реальный якорь
+     `/reference/rest-api#activity-feed` (ru: `/ru/reference/rest-api#лента-активности`).
+  **`docs/adr/index.md` НЕ тронут** — сознательное решение exec, не молчаливый пропуск: пункт плана
+  ссылается на «новый ADR канона движков, см. P3.3» — сам ADR-файл создаёт P3.3 (консолидирует
+  D1–D11, там же выбирается номер `00XX`); добавление строки в индекс на несуществующий файл
+  сломало бы `docs:build` (проект уже нетерпим к dead links — см. находку 4 выше). Индекс-запись
+  логично закрывается вместе с созданием файла в P3.3 — зафиксировано ниже как Pending Work,
+  не как молчаливое расхождение со Scope.
+  **Гейт:** `pnpm run docs:build` (он же `vitepress build docs`) → `build complete`, 0 ошибок,
+  0 dead-link warnings.
+  **Commits:** _(будет добавлен после коммита ниже)_.
+
+  **Pending Work:**
+  1. `docs/adr/index.md` — строка на новый ADR канона движков добавляется вместе с созданием
+     самого файла в P3.3 (см. выше).
+  2. `docs/plan/*` (`00-master-plan.md:54,539`, `p2-5-option-b-topology.md`,
+     `p2-5-namespace-strategy-drive-docdrive.md`) держат стухшие FQCN в настоящем времени
+     (`permissions-azgard`, `Documents\Documents`, `Drive\Uploads\StagedUpload`) — наследуется из
+     handoff Open risk 2. Вне объявленного Scope Included этого item'а (`docs/guide/*` +
+     `reference/contracts.md`, не `docs/plan/*`) — эти файлы историческая калька design-фазы, не
+     часть публикуемых docs guide/reference; правка — отдельное решение (эти файлы вообще не
+     участвуют в `docs:build`-навигации, `docs/plan/` не в sidebar).
+  3. `docs/ru/reference/contracts.md` не несёт секций `HandlerRegistry`/`NodeHandlerResolver`
+     вообще (ru-перевод контрактов заметно отстал от en с более ранних фаз, местами держит совсем
+     другую номенклатуру — `PermissionResolver` вместо текущей). Полная синхронизация ru
+     contracts.md — контент-объём, выходящий за рамки docs-item'а sonnet/low; не часть
+     объявленного Scope (который называет `docs/reference/contracts.md`, без уточнения ru/en —
+     трактовано как «en, основной источник», ru зеркала правились точечно там, где нашлась
+     конкретная стухшая ссылка). Кандидат в отдельный docs-item.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P3.x **sonnet/low**; фактически исполнено
+     **sonnet/medium** (дефолт effort команды `/task:plan-exec`, которая запрещает ручное
+     переключение). Модель совпала, effort выше заявленного (безопасное расхождение — не ниже).
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P3.1 (не регресс, наследуется из P0.1–P2.4): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
 - **P3.2 — arch-тесты финального канона** (sonnet/medium). Расширить arch-suite: «0 tiptap-ссылок в core»,
   «движок-контракт kind-нейтраль», dependency-direction после azgard-rename/media-решения. **Приёмка:** зелёные.
 - **P3.3 — ADR канона движков + supersede VLT-HSEAM** (sonnet/low). Новый `docs/adr/00XX-editor-engine-canon.md`
@@ -1058,6 +1114,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.2 закрыт (🟢): D9 = вариант A (owner approved) — `vaulter-media` остаётся standalone-пакетом, кода нет — детали см. §6 P2.2 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.3 закрыт (🟢): 3 catch-all папки (`documents/src/{Documents,Support}`, `drive/src/Uploads`) разобраны по роли — драйверы→`Engines/Handlers`, эвалюаторы→существующие `Export`/`Collaboration`, TipTap-хелперы→`Support/TipTap`, upload-хелперы→`Support/Uploads`; тавтология `Documents/Documents` устранена — детали см. §6 P2.3 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.4 закрыт (🟢), **фаза P2 терминальна (4/4, 1🟠)**: `documents/src/Access/HostUserResolver` → `Collaboration/HostUserResolver` (не был access-control-классом); core `Access/`/`Webhooks/` сверены с ADR-0017 — no-op, канон ок (эталонная форма паттерна) — детали см. §6 P2.4 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P3.1 закрыт (🟢): ROADMAP получил секцию `vaulter-filament` engine-aware-resources (D6-задел); 3 реальных стухших FQCN/ссылки P0.1–P0.4 починены в `docs/guide/document-handlers.md`+ru, `docs/reference/contracts.md`, `docs/guide/search-trash.md`+ru; `docs/adr/index.md` сознательно отложен до P3.3 (там создаётся сам ADR-файл) — детали см. §6 P3.1 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,

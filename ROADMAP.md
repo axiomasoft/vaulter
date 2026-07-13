@@ -69,6 +69,18 @@ backlog, not built.
 
 ## Admin UI
 
+### `vaulter-filament` — engine-aware resources
+The Filament panel's `Node`/`Document` resources are unaware of the pluggable-engine model
+(`Contracts\Handlers\FileHandler`, `Vaulter\Engines\DocumentHandlerRegistry` — see
+[Document handlers](/guide/document-handlers)): they don't surface which handler resolved a node,
+let an admin browse registered handlers, or route a row action through a handler-specific
+preview/export. Deliberately deferred — VLT-CANON scoped the engine canon itself and excluded
+Filament from its scope (D6); this is the follow-up once a real consumer needs it.
+- Seam: same `HandlerRegistry`/`NodeHandlerResolver` core seam the Vue client already consumes —
+  a Filament resource would call `Vaulter::handlers()` / `app(NodeHandlerResolver::class)` like
+  any other consumer, no core changes needed.
+- Source: `plans/VLT-CANON/plan.md` D6; ADR-00XX (editor engine canon, see P3.3).
+
 ### `vaulter-livewire` (native Livewire components)
 An alternative to the Vue client for hosts that want native Livewire/Blade components instead
 of a Vue SPA island. Not started — Filament (admin) and Vue (end-user Drive UI) cover the

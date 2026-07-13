@@ -76,7 +76,7 @@ new HandlerCapabilities(
 );
 ```
 
-These map one-to-one to the `Vaulter\Enums\Documents\Capability` cases the registry filters
+These map one-to-one to the `Vaulter\Enums\Handlers\Capability` cases the registry filters
 by: `Edit`, `Preview`, `Download`, `Thumbnail`, `Collaborate`.
 
 ::: warning `previewable` ≠ safe-to-inline
@@ -222,7 +222,7 @@ curl https://app.test/api/vaulter/nodes/77/handler
 ```
 
 ```php [PHP — the resolver]
-use Vaulter\Documents\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 
 $descriptor = app(NodeHandlerResolver::class)->describe($node);
 // HandlerDescriptor: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)
