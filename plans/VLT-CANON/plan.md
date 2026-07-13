@@ -81,7 +81,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
-| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 (1 🟠) | 🟡 In progress |
+| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 1/3 (1 🟠) | 🟡 In progress |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
@@ -572,6 +572,58 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   **Приёмка:** публичный фронт-API задокументирован; типы экспортированы; dev-warning есть;
   `vue-tsc`+vitest+build зелёные; обратная совместимость prop `componentMap` сохранена.
 
+  **Completion Notes.** Новый модуль `packages/vue/src/engineRegistry.ts` — module-level
+  `Map<string, Component>`-реестр за 5 явными функциями: `registerEngineComponent(id, component)`,
+  `unregisterEngineComponent(id)`, `resolveEngineComponent(id)`, `registeredEngineComponentIds()`,
+  `clearEngineComponents()`. Explicit ES-module import/call, НЕ implicit-глобал (урок Nextcloud
+  Viewer — research F10). `VaulterDocumentNode.vue`: `resolved` computed теперь проверяет
+  `componentMap[uiKey] ?? componentMap[h.id] ?? resolveEngineComponent(uiKey) ??
+  resolveEngineComponent(h.id)` — `componentMap` prop СТРОГО первым (`??`, не `||`), реестр —
+  фолбэк; порядок и дефолт `componentMap` не менялись, BC сохранена байт-в-байт (подтверждено
+  `vaulter-api-surface`). Dev-mode `console.warn` (once per unmapped `ui.component`/`id` в
+  пределах одного инстанса компонента) вынесен в отдельный `watch([handler, resolved], ...)` —
+  computed остался чистым (находка ревью MED, см. ниже). `isDevMode()` — `process.env.NODE_ENV
+  !== 'production'` (не `import.meta.env`, т.к. пакет — plain library без Vite-типов в tsconfig).
+  Экспорты реестра добавлены в `packages/vue/src/index.ts`. View (`VaulterDocumentNode.vue`
+  template) НЕ переписан — только script-логика резолва (по директиве брифа). Тесты — новый файл
+  `packages/vue/tests/engine-registry.test.ts` (10 кейсов): CRUD реестра, componentMap-precedence
+  над реестром, mount через реестр как фолбэк, fallback-slot при отсутствии в обоих источниках,
+  warn-once-per-instance, отсутствие warn при резолве через реестр. Доки (en+ru):
+  `docs/guide/document-handlers.md` §«Mounting the resolved handler in Vue» — два источника
+  сопоставления explicit, пример `registerEngineComponent` в `main.ts`, обновлён §Reference
+  (5 фронтовых экспортов); `docs/guide/writing-an-engine.md` §7 — упомянут реестр как альтернатива
+  `componentMap`. CHANGELOG.md `[Unreleased] Added` — запись про реестр. UPGRADE.md НЕ тронут:
+  изменение чисто аддитивное (SemVer MINOR), без обязательного действия потребителя (файл по
+  своему объявленному назначению покрывает только breaking-changes).
+  **Гейты:** `vue-tsc --noEmit` → clean; `vitest run` → 112/112 (10 файлов, +8 новых тестов);
+  `vite build` → ✓ built (dist/vaulter-vue.js 78.32 kB gzip 19.04 kB).
+  **Ревью.** `vaulter-api-surface` → clean, чисто аддитивная поверхность (5 новых экспортов),
+  `componentMap` BC подтверждена bit-for-bit, ноль изменений config-ключей/дескриптора (PHP-сторона
+  вне скоупа item'а). `vaulter-reviewer` → **needs-work**, 1 HIGH + 1 MED + 1 LOW, все закрыты
+  отдельным коммитом `ea7eacb`: (HIGH) `docs/ru/guide/document-handlers.md` нёс задублированный
+  блок §«Или зарегистрируйте…» (copy-paste ru-зеркала) — второй экземпляр удалён; (MED) side-effect
+  (`console.warn`+мутация `Set`) жил внутри `computed`-геттера (нарушение чистоты реактивности,
+  геттер может пересчитываться спекулятивно вне цикла рендера) — вынесен в `watch`; (LOW) не было
+  теста на «warn once» и на отсутствие warn при резолве через реестр — добавлены 2 кейса; заодно
+  уточнена формулировка доков: warn не повторяется в пределах ОДНОГО инстанса компонента, не
+  приложения целиком (было неточно сформулировано).
+  **Commits:** `879d370` — feat(vue): формализовать фронт-реестр компонентов движков как публичный
+  API (P1.2); `ea7eacb` — fix(vue): findings ревью P1.2 — чистый computed, дедуп ru-доки, тест на
+  warn (P1.2).
+
+  **Pending Work:** —
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P1.x **opus/high (решение) → sonnet (механика)**;
+     решение (D8) уже закрыто в P1.1, этот item — чистая механика формализации шва, исполнено
+     `sonnet/medium` — совпадает с ожиданием для механики, отклонений нет.
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P1.2 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
+
 - **P1.3 — Скелет-пакет/гайд стороннего фронт-движка** (sonnet/low).
   По D8: skeleton (`docs/guide/writing-an-engine.md` фронт-часть ИЛИ example-пакет) — как хост регистрирует
   компонент по имени движка + получает `HandlerUi.props`. **Приёмка:** гайд/скелет проходит собственный build.
@@ -703,6 +755,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/opus (medium) | P0.4 закрыт (🟠): D10=A (движок реестра → `Vaulter\Engines\*` в core, superseding H.5+T5) — drive-only хост получает preview/download без documents; `format` без `default('tiptap')`, два write-path штампуют формат явно (BC) — детали см. §6 P0.4 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P0.5 закрыт (🟢), **фаза P0 терминальна (5/5)**: `richText`-дефолт `true→false` (kind-нейтраль), `NodeExportService::contentOf()` стал kind-нейтральным (закрыл Pending Work P0.2/P0.3/P0.4), `AbstractFileHandler` DX-база + гайд `writing-an-engine.md` (+ru), capability-policy-тесты (аддитивность осей + priority-конфликт), D11 закрыт (yjs_state остаётся) — детали см. §6 P0.5 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P1.1 закрыт (🟠): D8 закрыт owner'ом = вариант A (единый `@vaulter/vue` shell/core, per-engine npm лениво) — гейт для P1.2/P1.3 снят, передетализация не требуется — детали см. §6 P1.1 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P1.2 закрыт (🟢): фронт-реестр компонентов формализован как публичный API (`registerEngineComponent`/4 сестры в `engineRegistry.ts`), фолбэк ПОСЛЕ `componentMap` prop (BC bit-for-bit), dev-warn через `watch` (не `computed`, находка ревью), доки+CHANGELOG синхронны — детали см. §6 P1.2 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
