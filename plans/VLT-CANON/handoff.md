@@ -1,46 +1,40 @@
-# HANDOFF — 2026-07-13 — after P3.1
+# HANDOFF — 2026-07-13 — after P3.2
 
 **Next:**
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | medium — расширение arch-suite (dependency-direction поверх результатов azgard-rename/media-решения), не чистая механика |
+| Thinking | low — механический ADR-компоновка из уже принятых Decision Log D1–D11, никаких новых решений |
 | Context | continue (/clear) — ручной item |
-| Суть | P3.2: расширить arch-suite финального канона — «0 tiptap-ссылок в core», «движок-контракт kind-нейтраль», dependency-direction после azgard-rename (P2.1)/media-решения (D9) |
+| Суть | P3.3: новый `docs/adr/00XX-editor-engine-canon.md` (консолидирует D1–D11) + строка в `docs/adr/index.md` + пометить `plans/VLT-HSEAM/` superseded ← VLT-CANON. Последний item плана — фаза P3 и весь план станут терминальны. |
 
 ```
-/task:plan-exec VLT-CANON P3.2
+/task:plan-exec VLT-CANON P3.3
 ```
 
-**Done:** P3.1 🟢 Done. ROADMAP получил секцию «`vaulter-filament` — engine-aware resources»
-(под «## Admin UI»), фиксирующую D6 (Filament вне scope VLT-CANON) как задел. Docs: найдены и
-починены 3 реальных стухших FQCN/ссылки, накопленные P0.1–P0.4 (закрывают Open risks 2/5/6 из
-предыдущего handoff — частично, см. Remaining):
-1. `docs/reference/contracts.md` — таблица + раздел `NodeHandlerResolver` утверждали «concrete
-   resolver ships in vaulter-documents» / «fails loudly without vaulter-documents» — неверно
-   с P0.4/D10 (резолвер безусловно в core) → переписано на факт.
-2. `docs/guide/document-handlers.md`+ru — пример импортировал несуществующий
-   `Vaulter\Documents\NodeHandlerResolver` → `Vaulter\Contracts\Handlers\NodeHandlerResolver`.
-3. `docs/guide/document-handlers.md`+ru — `Vaulter\Enums\Documents\Capability` (не существует
-   с P0.4) → `Vaulter\Enums\Handlers\Capability`.
-4. `docs/guide/search-trash.md`+ru — dead-link `./activity.md` (страница никогда не
-   существовала, ломала `docs:build`) → `/reference/rest-api#activity-feed` (ru: якорь
-   «лента-активности»).
-`docs/adr/index.md` сознательно НЕ тронут — строка на новый ADR добавляется вместе с созданием
-самого файла в P3.3 (иначе dead-link сломал бы `docs:build`). Гейт: `pnpm run docs:build` →
-`build complete`, 0 ошибок. Commits: `950ae25`.
+**Done:** P3.2 🟢 Done. Расширен arch-suite `packages/core/tests/Arch/ArchTest.php` двумя тестами:
+(1) file-scan «core source never references a concrete TipTap class» (CamelCase-паттерн
+`\bTipTap[A-Za-z]+\b` на очищенном от комментариев коде; `config('vaulter.tiptap.*')` в
+`Support/Config.php` не триггерит — регистр другой, это задокументированный host passthrough,
+не class-coupling); (2) `arch('the FileHandler contract seam is kind-neutral and never depends on
+vaulter-documents (D7)')` — namespace-graph форма поверх `Vaulter\Contracts\Handlers`. Dependency-
+direction после azgard-rename (P2.1) и media-решения (D9) — рекон показал: уже покрыты
+существующими guard'ами (`core source never references the vaulter-azgard package`, `core never
+depends on the extracted vaulter-media package`), новый код не потребовался. Гейты: pint/phpstan
+max/pest 499/499/type-cov 100% — все зелёные. Commits: `53b5df3`.
 
-**Remaining:** P3.2 (arch-тесты финального канона) → P3.3 (ADR канона движков + supersede
-VLT-HSEAM, туда же — строка в `docs/adr/index.md`). Фаза P3 — последняя, план после неё
-терминален.
+**Remaining:** P3.3 (последний item плана) — новый ADR + supersede VLT-HSEAM + строка в
+`docs/adr/index.md` (отложена намеренно с P3.1, см. §6 P3.1 Completion Notes). После P3.3 фаза P3
+терминальна (3/3) и план VLT-CANON целиком терминален — следующий шаг после P3.3 не exec, а
+plan-closure/архивация (вне протокола exec).
 
-**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P3.1 Completion Notes, §4 Status
-Board P3=1/3) · `docs/adr/0017-package-structure-canon.md` (нормативный канон структуры) ·
-`findings/structure-canon-inventory.md` · `UPGRADE.md`/`CHANGELOG.md` `[Unreleased]` ·
-наследие: `plans/VLT-HSEAM/root/adr-file-handler-seam.md` (supersede — предмет P3.3).
+**Sources of truth:** `plans/VLT-CANON/plan.md` (primary; §6 P3.2 Completion Notes, §4 Status
+Board P3=2/3) · `docs/adr/0017-package-structure-canon.md` (нормативный канон структуры) ·
+`findings/structure-canon-inventory.md` · Decision Log §5 (D1–D12) — прямой источник для P3.3 ADR
+· наследие: `plans/VLT-HSEAM/root/adr-file-handler-seam.md` (supersede — предмет P3.3).
 
-**Open risks:**
+**Open risks:** (без изменений с P3.1, ничего не закрыто/не добавлено в P3.2)
 1. **Required status checks на `main` не переименованы** (MED, наследуется из P2.1, **вне
    дерева репо**): job id/display-name azgard-лейна сменились; чинит owner в настройках
    репозитория, не коммитом.
@@ -79,5 +73,5 @@ Board P3=1/3) · `docs/adr/0017-package-structure-canon.md` (нормативн�
 - workarounds: —
 - deferred: required checks в branch protection (Open risk 1, owner). `docs/plan/*` стухшие
   имена (2). `format` value-space (3). CI gate-scope gap (4). ru contracts.md синхронизация (5).
-  `docs/adr/index.md` строка (6, → P3.3). README-vs-CI расхождение azgard (9).
+  `docs/adr/index.md` строка (6, → P3.3, следующий item). README-vs-CI расхождение azgard (9).
 - open_questions: —

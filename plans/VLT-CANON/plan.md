@@ -83,7 +83,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 4/4 (1 🟠) | 🟢 Done |
-| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 1/3 | 🟡 In progress |
+| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 2/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -1019,6 +1019,46 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   **Status:** 🟢 Done
 - **P3.2 — arch-тесты финального канона** (sonnet/medium). Расширить arch-suite: «0 tiptap-ссылок в core»,
   «движок-контракт kind-нейтраль», dependency-direction после azgard-rename/media-решения. **Приёмка:** зелёные.
+
+  **Completion Notes.** Рекон `packages/core/tests/Arch/ArchTest.php` показал: dependency-direction
+  после azgard-rename (P2.1) и media-решения (D9) УЖЕ покрыты существующими guard'ами (`core source
+  never references the vaulter-azgard package (P2.1)` L562-564; `core (and all Vaulter code) never
+  depends on the extracted vaulter-media package` L474-477) — новый код не требовался, только
+  оставшиеся два пункта item'а были непокрыты. Добавлены 2 теста: (1) `core source never references
+  a concrete TipTap class (VLT-CANON P0.3)` — file-scan (та же техника стрипа комментариев, что и
+  `coreReferencesTo()`) на паттерн `\bTipTap[A-Za-z]+\b` (CamelCase class-name spelling); намеренно
+  НЕ триггерится на `config('vaulter.tiptap.*')` (Support/Config.php) — регистр другой (lower-case
+  config-ключ — задокументированный host passthrough, VLT-REMED D27/D28), это разные инварианты, не
+  дыра в guard'е. (2) `arch('the FileHandler contract seam is kind-neutral and never depends on
+  vaulter-documents (D7)')` — `expect('Vaulter\Contracts\Handlers')->not->toUse('Vaulter\Documents')`,
+  namespace-graph форма поверх уже существующего широкого core⊥documents file-scan guard'а (L552-554),
+  специально нацеленная на сам движок-контракт (D7-регрессия: обратная связь FileHandler/HandlerRegistry/
+  NodeHandlerResolver/DocumentContent/DocumentExporter → конкретный документ-движок). Оба теста red-
+  before не потребовали — рекон подтвердил инварианты уже держатся с P0.1/P0.3/P0.4, тесты — регрессионная
+  сетка, не фикс.
+  **Гейты:** `pint --test` → passed (авто-фикс `fully_qualified_strict_types`/`ordered_imports`,
+  добавил `use Vaulter\Contracts\Handlers\DocumentContent;` для `{@see DocumentContent}` в докблоке);
+  `phpstan analyse` (max, монорепо) → passed, 0 errors; `pest --filter=Arch` → 35/35 passed (43
+  assertions), новые тесты входят; `pest` (весь core) → 499/499 passed, 1284 assertions; `pest
+  --type-coverage --min=100` → 100.0%. `vaulter-api-surface` не гонялся — item не трогает
+  Contracts/фасад/config-ключи (только тесты).
+  **Commits:** `53b5df3` — test(core): арх-тесты финального канона — 0 TipTap-ссылок, kind-нейтральный
+  контракт (P3.2).
+
+  **Pending Work:** —
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P3.x sonnet/low; item сам заявлен sonnet/medium в
+     заголовке (не расхождение с Routing — Routing-таблица говорит «P3.x | sonnet/low», а инлайн-
+     заголовок item'а — sonnet/medium; наследуется дословно из handoff launch-block предыдущей
+     сессии). Фактически исполнено sonnet/medium (дефолт `/task:plan-exec`) — совпадает с
+     заголовком item'а, расходится с табличным Routing на один шаг вверх (безопасное расхождение).
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P3.2 (не регресс, наследуется из P0.1–P3.1): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
 - **P3.3 — ADR канона движков + supersede VLT-HSEAM** (sonnet/low). Новый `docs/adr/00XX-editor-engine-canon.md`
   (консолидирует D1–D11). Пометить `plans/VLT-HSEAM/` superseded ← VLT-CANON. **Приёмка:** ADR принят; VLT-HSEAM
   помечен; `plans/ACTIVE.md` не тронут (если VLT-CANON не стал ACTIVE решением owner'а).
@@ -1115,6 +1155,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.3 закрыт (🟢): 3 catch-all папки (`documents/src/{Documents,Support}`, `drive/src/Uploads`) разобраны по роли — драйверы→`Engines/Handlers`, эвалюаторы→существующие `Export`/`Collaboration`, TipTap-хелперы→`Support/TipTap`, upload-хелперы→`Support/Uploads`; тавтология `Documents/Documents` устранена — детали см. §6 P2.3 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.4 закрыт (🟢), **фаза P2 терминальна (4/4, 1🟠)**: `documents/src/Access/HostUserResolver` → `Collaboration/HostUserResolver` (не был access-control-классом); core `Access/`/`Webhooks/` сверены с ADR-0017 — no-op, канон ок (эталонная форма паттерна) — детали см. §6 P2.4 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.1 закрыт (🟢): ROADMAP получил секцию `vaulter-filament` engine-aware-resources (D6-задел); 3 реальных стухших FQCN/ссылки P0.1–P0.4 починены в `docs/guide/document-handlers.md`+ru, `docs/reference/contracts.md`, `docs/guide/search-trash.md`+ru; `docs/adr/index.md` сознательно отложен до P3.3 (там создаётся сам ADR-файл) — детали см. §6 P3.1 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P3.2 закрыт (🟢): 2 новых arch-теста в `core/tests/Arch/ArchTest.php` — «0 конкретных TipTap-классов в core» (file-scan) и «FileHandler-контракт kind-нейтрален, не зависит от vaulter-documents» (D7-регрессия); dependency-direction azgard/media уже была покрыта существующими guard'ами — детали см. §6 P3.2 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
