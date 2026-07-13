@@ -83,7 +83,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 4/4 (1 🟠) | 🟢 Done |
-| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 2/3 (🟡 P3.3 in progress) | 🟡 In progress |
+| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 3/3 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -1063,7 +1063,40 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   (консолидирует D1–D11). Пометить `plans/VLT-HSEAM/` superseded ← VLT-CANON. **Приёмка:** ADR принят; VLT-HSEAM
   помечен; `plans/ACTIVE.md` не тронут (если VLT-CANON не стал ACTIVE решением owner'а).
 
-  **Status:** 🟡 In progress
+  **Completion Notes.** Новый `docs/adr/0018-editor-engine-canon.md` (Status: accepted) —
+  консолидирует Decision Log D1–D12 (не D1–D11: в плане накопился D12 про server-side
+  дескриптор, добавлен в ADR наравне с остальными) плюс сводку исполненных пунктов P0–P2
+  (kind-нейтральные capability-дефолты, опаковый exporter, изоляция TipTap, снятие DB-дефолта
+  `format`, DX-каркас, финальный структурный канон), с явным разделом «Consequences» (residual
+  debt: `format` value-space, CI gate-scope gap, ru-доки, стухшие `docs/plan/*`) и разделом
+  «Supersession». `docs/adr/index.md` получил строку на ADR-0018 (Pending Work из P3.1, теперь
+  закрыт). `plans/VLT-HSEAM/plan.md` формально помечен: Meta `Status` → `⛔ Superseded — see
+  VLT-CANON P3.3 / ADR-0018`; верхний notice-блок переписан с «поглощён, маркировка в P3.3»
+  на «SUPERSEDED формально» + ссылка на ADR. `plans/ACTIVE.md` не тронут — уже указывает
+  `VLT-CANON` (обновлён 2026-07-12, до этого item'а), приёмочное условие выполнено без правки.
+  **Гейт:** `pnpm run docs:build` (vitepress) → `build complete`, 0 ошибок, 0 dead-link
+  warnings (ADR-0018 корректно резолвится по ссылке из index.md).
+  **Commits:** `c8d3136` — docs(canon): ADR-0018 канона движков + формальный supersede VLT-HSEAM (P3.3).
+
+  **Pending Work:** — (весь Pending Work P3.1 п.1 «строка индекса на новый ADR» закрыт этим
+  item'ом; residual-риски D-debt задокументированы в самом ADR-0018 §Consequences, отдельных
+  назначенных item'ов на них по-прежнему нет — см. handoff.md Open risks)
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P3.x **sonnet/low**; фактически исполнено
+     **sonnet/medium** (дефолт effort команды `/task:plan-exec`, которая запрещает ручное
+     переключение). Модель совпала, effort выше заявленного (безопасное расхождение).
+  2. `plans/VLT-HSEAM/` как каталог не был закоммичен в git ни разу с момента создания (весь
+     `plans/VLT-HSEAM/` untracked до этого item'а — пред-существующее состояние, не моё).
+     Закоммичен точечно ТОЛЬКО `plan.md` (единственный файл в Scope Included этого item'а —
+     формальная маркировка superseded); `handoff.md`/`phases/P0.md`/`root/adr-file-handler-seam.md`/
+     `findings/*` остаются untracked — вне Scope, не трогал, не коммитил.
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P3.3 (не регресс, наследуется из P0.1–P3.2): линтер
+     требует `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
 
 ## 7. Инварианты / критерии приёмки (каждая фаза)
 1. Гейты затронутых пакетов зелёные: pint + phpstan **max** + pest + type-cov 100% (+ фронт: vue-tsc+vitest+build).
@@ -1158,6 +1191,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.4 закрыт (🟢), **фаза P2 терминальна (4/4, 1🟠)**: `documents/src/Access/HostUserResolver` → `Collaboration/HostUserResolver` (не был access-control-классом); core `Access/`/`Webhooks/` сверены с ADR-0017 — no-op, канон ок (эталонная форма паттерна) — детали см. §6 P2.4 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.1 закрыт (🟢): ROADMAP получил секцию `vaulter-filament` engine-aware-resources (D6-задел); 3 реальных стухших FQCN/ссылки P0.1–P0.4 починены в `docs/guide/document-handlers.md`+ru, `docs/reference/contracts.md`, `docs/guide/search-trash.md`+ru; `docs/adr/index.md` сознательно отложен до P3.3 (там создаётся сам ADR-файл) — детали см. §6 P3.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P3.2 закрыт (🟢): 2 новых arch-теста в `core/tests/Arch/ArchTest.php` — «0 конкретных TipTap-классов в core» (file-scan) и «FileHandler-контракт kind-нейтрален, не зависит от vaulter-documents» (D7-регрессия); dependency-direction azgard/media уже была покрыта существующими guard'ами — детали см. §6 P3.2 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P3.3 закрыт (🟢), **фаза P3 терминальна (3/3), план VLT-CANON целиком терминален**: `docs/adr/0018-editor-engine-canon.md` консолидирует Decision Log D1–D12, `docs/adr/index.md` получил строку; `plans/VLT-HSEAM/plan.md` формально помечен superseded (Status + notice) — детали см. §6 P3.3 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
