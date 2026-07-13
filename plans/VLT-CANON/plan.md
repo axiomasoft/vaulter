@@ -81,7 +81,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
-| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 | ⬜ Not started |
+| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 0/3 (1 🟠) | 🟡 In progress |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
@@ -96,7 +96,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | D5 | 2026-07-11 | **Bespoke узкий контракт движка, НЕ `Illuminate\Support\Manager`** (наследует VLT-HSEAM D4) | statefulness/$app-coupling/__call; публичный контракт пакета = узкий интерфейс, Manager максимум внутренняя деталь |
 | D6 | 2026-07-11 | **Filament — вне активного scope** (ROADMAP-задел; ADR-0017-исключение) | Директива owner'а 2026-07-11: не тратить ресурсы, задел на будущее |
 | D7 | 2026-07-12 | **Нейминг контракта движка: `FileHandler` + `Contracts/Handlers/`, kind-нейтраль (вариант A, §8.1)** — owner approved (Dmitry Vostrikov, запуск `/task:plan-exec VLT-CANON P0.1`) | см. §8.1: контракт описывает ЛЮБОЙ файл (не только редактируемые), fallback-хендлеры (`DownloadOnlyHandler`/`PreviewHandler`) — не «движки»; уже согласовано RAG VLT-HSEAM (L5) |
-| D8 | — (рекомендация 2026-07-11; **закрывается owner'ом в P1.1**) | *[упаковка фронт-движков]* — рекомендация research'а: единый `@vaulter/vue` как shell/core; per-engine npm НЕ вводить до реального внешнего потребителя; TipTap — один version-train с PHP. **Открыт до P1.1**: P1.2/P1.3 стартуют ТОЛЬКО после закрытия D8 (гейт) | RAG:✅ 2026-07-11 `findings/frontend-engine-packaging-research.md`: Filament v4/Nova 5/Statamic v5 НЕ публикуют отдельный npm на плагин (CONFIRMED); awcodes/filament-tiptap-editor бандлит TipTap+15 расширений в одном пакете (CONFIRMED). Мой предварительный lean «per-engine npm» опровергнут research'ем — см. §8.2 |
+| D8 | 2026-07-13 | **Упаковка фронт-движков: вариант A (§8.2) — единый `@vaulter/vue` остаётся shell/core**; TipTap-движок внутри него, один version-train с PHP; per-engine npm (`@vaulter/vue-engine-<name>`) вводится лениво — только при реальном внешнем потребителе. Owner подтвердил A буквально (2026-07-13, Dmitry Vostrikov, `/task:plan-exec VLT-CANON P1.1`), альтернатива не выбрана — P1.2/P1.3 передетализация НЕ требуется | RAG:✅ 2026-07-11 `findings/frontend-engine-packaging-research.md`: Filament v4/Nova 5/Statamic v5 НЕ публикуют отдельный npm на плагин (CONFIRMED); awcodes/filament-tiptap-editor бандлит TipTap+15 расширений в одном пакете (CONFIRMED). Мой предварительный lean «per-engine npm» опровергнут research'ем — см. §8.2. Закрыт исполнением P1.1 |
 | D9 | — | *[media→drive слияние]* — резолвится в P2.2 по ## Обсуждение §8.3 | см. §8.3 |
 | D10 | 2026-07-13 | **Движок реестра → core (вариант A, §8.4)** — `DocumentHandlerRegistry`+`NodeHandlerResolver`+`DocumentFileDescriptorFactory`+`Capability`+baseline `PreviewHandler`/`DownloadOnlyHandler` переехали в `Vaulter\Engines\*` / `Vaulter\Enums\Handlers\*`; documents оставляет TipTap/Univer-драйверы. **Superseding-запись: явно пересматривает (1) H.5 («движок в documents, core fail-loud») и (2) T5/§Аллокацию Option B-топологии** (`docs/plan/p2-5-option-b-topology.md`: «`Documents\*` (registry/handlers/services) → docdrive»). Закрыт исполнением P0.4 | Новое требование, которого не было в скоупе при T5-разрезе: **drive-only хост** (файлы без редактирования) обязан получать preview/download-дескриптор БЕЗ `vaulter-documents`. До P0.4 `NodeResource::handler()` молча отдавал `null` такому хосту. Реестр = инфра ядра (как `PanelRegistry`); «tiptap — одно из расширений» стало буквальным |
 | D11 | 2026-07-13 | **Q2 VLT-HSEAM: оставить `yjs_state`** (вариант A, §8.5) — колонка nullable, чужой движок её не пишет, дискриминатор — `format`; переименование в `crdt_state` — чистая косметика без функциональной выгоды | см. §8.5; закрыт исполнением P0.5, без кода (сохранение статус-кво) |
@@ -536,6 +536,32 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   при альтернативе — P1.2/P1.3 передетализировать ДО старта (эскалация в design, не импровизация).
   **Приёмка:** D8 закрыт (дата+вердикт в Decision Log); нейминг-решение в Completion Notes.
 
+  **Completion Notes.** Owner подтвердил вариант A (§8.2) буквально, без альтернативы —
+  запрошено прямым вопросом в сессии `/task:plan-exec VLT-CANON P1.1` (2026-07-13, Dmitry
+  Vostrikov). Модель упаковки: единый `@vaulter/vue` остаётся shell/core, TipTap-движок живёт
+  внутри него на одном version-train с PHP; per-engine npm (`@vaulter/vue-engine-<name>`)
+  вводится лениво — только при появлении реального внешнего потребителя конкретного движка.
+  Кода/структуры пакетов эта запись НЕ меняет (D8 — решение о БУДУЩЕЙ политике, не о
+  сегодняшнем рефакторинге); P1.2/P1.3 остаются в своей текущей детализации (написаны под
+  D8=A) — эскалация design не требуется. Решение закрыто записью D8 в Decision Log
+  (§5, дата+вердикт).
+  **Commits:** — (решение задокументировано в plan.md; кода нет).
+
+  **Pending Work:** —
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует **opus/high**; фактически исполнено **opus/medium**
+     (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`, которая пинит
+     medium и запрещает ручное переключение). Модель совпала, effort ниже заявленного; риск
+     низкий — item решает готовую owner-развилку с research-обоснованной рекомендацией, не
+     содержит технической реализации.
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P1.1 (не регресс, наследуется из P0.1–P0.5): линтер
+     требует `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в
+     `## 6. Phases (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с
+     момента создания плана. Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟠 Done with deviations
+
 - **P1.2 — Формализация фронт-реестра компонентов как публичного шва** (opus решение → sonnet).
   `VaulterDocumentNode.vue` `componentMap` (по `handler.id`/`ui.component`) — сейчас prop-шов. Формализовать
   как публичный registry-API — **явная экспортируемая функция** (`registerEngineComponent(id, component)`
@@ -676,6 +702,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/opus (medium) | P0.3 закрыт (🟠): 5 TipTap-форм контента переезжают core→documents (`Vaulter\Documents\{ValueObjects,Attributes,Exceptions}\*`), XSS-барьер byte-for-byte, гейты+ревью зелёные, gate-scope Pending Work — детали см. §6 P0.3 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P0.4 закрыт (🟠): D10=A (движок реестра → `Vaulter\Engines\*` в core, superseding H.5+T5) — drive-only хост получает preview/download без documents; `format` без `default('tiptap')`, два write-path штампуют формат явно (BC) — детали см. §6 P0.4 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P0.5 закрыт (🟢), **фаза P0 терминальна (5/5)**: `richText`-дефолт `true→false` (kind-нейтраль), `NodeExportService::contentOf()` стал kind-нейтральным (закрыл Pending Work P0.2/P0.3/P0.4), `AbstractFileHandler` DX-база + гайд `writing-an-engine.md` (+ru), capability-policy-тесты (аддитивность осей + priority-конфликт), D11 закрыт (yjs_state остаётся) — детали см. §6 P0.5 Completion Notes. |
+| 2026-07-13 | plan-exec/opus (medium) | P1.1 закрыт (🟠): D8 закрыт owner'ом = вариант A (единый `@vaulter/vue` shell/core, per-engine npm лениво) — гейт для P1.2/P1.3 снят, передетализация не требуется — детали см. §6 P1.1 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
