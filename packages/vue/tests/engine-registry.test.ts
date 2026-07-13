@@ -126,4 +126,37 @@ describe('VaulterDocumentNode — engine resolution', () => {
 
     expect(wrapper.find('.vaulter-document-node__fallback').exists()).toBe(true)
   })
+
+  it('warns once (not repeated) in dev mode for an unmapped handler', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const descriptor = handler({ id: 'unmapped-engine', ui: { component: 'AppUnmapped', route: null, props: {} } })
+    const wrapper = mount(VaulterDocumentNode, {
+      props: { nodeId: 1 },
+      ...withClient(mockClient(descriptor)),
+    })
+    await flushPromises()
+    // Trigger a second reactive pass over the same resolved (unmapped) handler —
+    // the warning must not repeat within this component instance.
+    await wrapper.setProps({ nodeId: 1 })
+    await flushPromises()
+
+    const ownWarnings = warn.mock.calls.filter(([msg]) => String(msg).includes('unmapped-engine'))
+    expect(ownWarnings).toHaveLength(1)
+    expect(String(ownWarnings[0][0])).toContain('AppUnmapped')
+    warn.mockRestore()
+  })
+
+  it('does not warn when a handler resolves via the global registry', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    registerEngineComponent('AppCustomEngine', defineComponent({ render: () => h('div') }))
+    const descriptor = handler()
+    mount(VaulterDocumentNode, {
+      props: { nodeId: 1 },
+      ...withClient(mockClient(descriptor)),
+    })
+    await flushPromises()
+
+    expect(warn.mock.calls.filter(([msg]) => String(msg).includes('custom-engine'))).toHaveLength(0)
+    warn.mockRestore()
+  })
 })

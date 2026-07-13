@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
+import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, type Component } from 'vue'
 import type { Doc as YDoc } from 'yjs'
 import { useDocumentNode } from '../composables/useDocumentNode'
 import { useNodeCollaboration } from '../composables/useNodeCollaboration'
@@ -112,8 +112,8 @@ const collaborative = ref(false)
  * `id`) first in the host `componentMap` prop, then in the global
  * `registerEngineComponent` registry. If neither maps but the ui.component is a
  * known TipTap key, the host MUST have provided a TipTap editor under one of those
- * keys — otherwise we fall back to the preview/download slot and (dev mode only)
- * warn once per unmapped handler so the gap is visible during development.
+ * keys — otherwise we fall back to the preview/download slot (the `watch` below
+ * additionally warns once per unmapped handler in dev mode).
  */
 const warnedUnmapped = new Set<string>()
 
@@ -139,19 +139,25 @@ const resolved = computed<{ component: Component | null, isTipTap: boolean }>(()
     ?? resolveEngineComponent(h.id)
     ?? null
   const isTipTap = TIPTAP_COMPONENTS.includes(uiKey)
-
-  if (!mapped && isDevMode() && !warnedUnmapped.has(uiKey)) {
-    warnedUnmapped.add(uiKey)
-    console.warn(
-      `[VaulterDocumentNode] No editor registered for handler "${h.id}" `
-      + `(ui.component: "${uiKey}"). Register one via the "componentMap" prop or `
-      + `"registerEngineComponent('${uiKey}', YourComponent)" from "@vaulter/vue".`,
-    )
-  }
-
   // `markRaw` keeps the component out of the reactivity system (it may arrive via
   // a reactive prop) — avoids the "reactive Component" perf warning.
   return { component: mapped ? markRaw(mapped) : null, isTipTap }
+})
+
+// The dev-mode warning is a side effect, so it runs in a `watch` rather than inside
+// the `resolved` computed above — a computed getter must stay pure (it may be
+// re-evaluated speculatively by devtools/Suspense without that meaning "the UI
+// actually rendered this state").
+watch([handler, resolved], ([h, r]) => {
+  if (!h || r.component || !isDevMode() || warnedUnmapped.has(h.ui.component)) {
+    return
+  }
+  warnedUnmapped.add(h.ui.component)
+  console.warn(
+    `[VaulterDocumentNode] No editor registered for handler "${h.id}" `
+    + `(ui.component: "${h.ui.component}"). Register one via the "componentMap" prop or `
+    + `"registerEngineComponent('${h.ui.component}', YourComponent)" from "@vaulter/vue".`,
+  )
 })
 
 /** Read-only is forced by the prop OR by a read-only collaboration session. */

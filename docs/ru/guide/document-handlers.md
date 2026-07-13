@@ -411,29 +411,9 @@ registerEngineComponent('AppCsvPreview', AppCsvPreview)
 перечисляет, что зарегистрировано сейчас (в основном для диагностики/тестов).
 
 В dev-режиме `VaulterDocumentNode` логирует один `console.warn` на каждый несопоставленный
-`ui.component`/`id` (не повторяется для одного и того же ключа), называя оба канала регистрации —
-тот же пробел, который string-key биндинг `Nova.booting` у Nova оставляет молчаливым.
-
-Либо зарегистрируйте однократно при старте приложения — явный ES-module импорт/вызов, а не
-неявный глобал (урок отказа Nextcloud Viewer от `OCA.Viewer.registerHandler`):
-
-```ts
-// main.ts — однократно, до монтирования приложения
-import { registerEngineComponent } from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue'
-import AppCsvPreview from './AppCsvPreview.vue'
-
-registerEngineComponent('VaulterEditor', AppTipTapEditor)
-registerEngineComponent('AppCsvPreview', AppCsvPreview)
-```
-
-Теперь каждый `VaulterDocumentNode` на странице резолвит их без локального `componentMap`.
-`unregisterEngineComponent(id)` удаляет запись; `registeredEngineComponentIds()` перечисляет
-текущие регистрации (в основном для диагностики/тестов).
-
-В dev-режиме `VaulterDocumentNode` логирует один `console.warn` на каждый незарегистрированный
-`ui.component`/`id` (не повторяется для одного и того же ключа), называя оба канала регистрации —
-тот же пробел, который у Nova остаётся незамеченным при string-key биндинге `Nova.booting`.
+`ui.component`/`id` (не повторяется для одного и того же ключа В ПРЕДЕЛАХ ОДНОГО инстанса
+компонента), называя оба канала регистрации — тот же пробел, который string-key биндинг
+`Nova.booting` у Nova оставляет молчаливым.
 
 Если подобранный обработчик **collaborative** (например, `TipTapHandler`) и совместное редактирование
 включено, `VaulterDocumentNode` открывает Yjs-сессию и запускает редактор в режиме совместного

@@ -420,8 +420,8 @@ Every `VaulterDocumentNode` on the page now resolves these without a local `comp
 currently registered (mostly for diagnostics/tests).
 
 In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.component`/`id`
-(not repeated for the same key) naming both registration channels — the same gap Nova's
-string-key `Nova.booting` binding leaves silent.
+(not repeated for the same key WITHIN ONE component instance) naming both registration
+channels — the same gap Nova's string-key `Nova.booting` binding leaves silent.
 
 If the resolved handler is **collaborative** (e.g. `TipTapHandler`) and collaboration is
 enabled, `VaulterDocumentNode` opens a Yjs session and runs the editor in collaborative mode;
