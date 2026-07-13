@@ -987,7 +987,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   не как молчаливое расхождение со Scope.
   **Гейт:** `pnpm run docs:build` (он же `vitepress build docs`) → `build complete`, 0 ошибок,
   0 dead-link warnings.
-  **Commits:** _(будет добавлен после коммита ниже)_.
+  **Commits:** `950ae25` — docs(canon): ROADMAP-задел vaulter-filament + дочистка стухших FQCN после rename движка (P3.1).
 
   **Pending Work:**
   1. `docs/adr/index.md` — строка на новый ADR канона движков добавляется вместе с созданием
