@@ -42,6 +42,16 @@ export type {
   UseNodeCollaborationReturn,
 } from './composables/useNodeCollaboration'
 
+// Engine component registry (VLT-CANON P1.2) — explicit, host-owned mapping from a
+// handler's `ui.component`/`id` to the Vue component `VaulterDocumentNode` mounts.
+export {
+  clearEngineComponents,
+  registerEngineComponent,
+  registeredEngineComponentIds,
+  resolveEngineComponent,
+  unregisterEngineComponent,
+} from './engineRegistry'
+
 // Node collaboration transport (M4b)
 export { createNodeCollaborationSession } from './nodeCollaboration'
 export type {

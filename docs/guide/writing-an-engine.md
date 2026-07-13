@@ -177,8 +177,10 @@ Same three channels as any handler — see
 ## 7. Mounting it on the client
 
 See [Document Handlers → Mounting the resolved handler in Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue).
-Map your handler's `ui.component` id to your Vue (or other framework) component in the host's
-`componentMap` — the registry never assumes a specific frontend stack.
+Map your handler's `ui.component` id to your Vue (or other framework) component either through
+the host's local `componentMap` prop, or once globally via `@vaulter/vue`'s
+`registerEngineComponent(id, component)` — the server-side registry never assumes a specific
+frontend stack.
 
 ## Checklist
 

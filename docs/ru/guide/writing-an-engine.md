@@ -179,8 +179,10 @@ public function ui(FileDescriptor $file): HandlerUi
 ## 7. Монтирование на клиенте
 
 См. [Обработчики документов → Монтирование резолвленного обработчика во Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue).
-Смэпьте `ui.component` вашего обработчика на свой Vue- (или другого фреймворка) компонент в
-хостовом `componentMap` — реестр не предполагает конкретный фронтенд-стек.
+Смэпьте `ui.component` вашего обработчика на свой Vue- (или другого фреймворка) компонент —
+либо через локальный `componentMap` хоста, либо один раз глобально через
+`registerEngineComponent(id, component)` из `@vaulter/vue` — реестр на сервере не предполагает
+конкретный фронтенд-стек.
 
 ## Чек-лист
 

@@ -3,16 +3,20 @@ import { computed, markRaw, onBeforeUnmount, onMounted, ref, type Component } fr
 import type { Doc as YDoc } from 'yjs'
 import { useDocumentNode } from '../composables/useDocumentNode'
 import { useNodeCollaboration } from '../composables/useNodeCollaboration'
+import { resolveEngineComponent } from '../engineRegistry'
 import type { Collaborator, CreateNodeCollaborationOptions } from '../nodeCollaboration'
 import type { HandlerDescriptor, NodeId, TipTapDocument } from '../types'
 
 // The bridge from a document node's HANDLER REGISTRY descriptor to a concrete
 // editor/preview UI. It loads the handler (`useDocumentNode.loadHandler`) and the
 // head content, then mounts the component the handler's `ui.component` maps to.
-// The mapping is a prop (`componentMap`) so hosts register their own editors per
-// handler/ui-component id; the built-in TipTap-editor keys resolve to a host-
-// supplied editor (typically the slice-1 VaulterEditor, passed in). Anything
-// unmapped falls back to a preview/download surface.
+// Two mapping sources exist: the `componentMap` prop (checked first, for a scoped
+// mapping local to one mount point) and the global `registerEngineComponent` registry
+// (`../engineRegistry`, checked as a fallback — a host calls it once at startup for
+// engines shared across every mount point). The built-in TipTap-editor keys resolve
+// to a host-supplied editor (typically the slice-1 VaulterEditor) registered through
+// either source. Anything unmapped falls back to a preview/download surface, and in
+// dev mode logs a console warning naming the unmapped `ui.component`/`id`.
 //
 // M4b: when the handler is COLLABORATIVE and collaboration is enabled, the editor is
 // mounted in collaborative mode — a Yjs session (useNodeCollaboration) is opened and
@@ -50,8 +54,10 @@ const props = withDefaults(
     nodeId: NodeId
     /**
      * Maps a handler's `ui.component` string (or the handler `id`) to the editor
-     * component to mount. The default set of TipTap-editor identifiers
-     * ({@link TIPTAP_COMPONENTS}) is recognised; hosts extend/override here.
+     * component to mount. Checked BEFORE the global `registerEngineComponent`
+     * registry (`../engineRegistry`) — a local override always wins. The default
+     * set of TipTap-editor identifiers ({@link TIPTAP_COMPONENTS}) is recognised;
+     * hosts extend/override here.
      */
     componentMap?: Record<string, Component>
     readonly?: boolean
@@ -103,18 +109,46 @@ const collaborative = ref(false)
 
 /**
  * Resolve which component to mount: look up the handler's `ui.component` (then its
- * `id`) in the host `componentMap`. If neither maps but the ui.component is a known
- * TipTap key, the host MUST have provided a TipTap editor under one of those keys —
- * otherwise we fall back to the preview/download slot.
+ * `id`) first in the host `componentMap` prop, then in the global
+ * `registerEngineComponent` registry. If neither maps but the ui.component is a
+ * known TipTap key, the host MUST have provided a TipTap editor under one of those
+ * keys — otherwise we fall back to the preview/download slot and (dev mode only)
+ * warn once per unmapped handler so the gap is visible during development.
  */
+const warnedUnmapped = new Set<string>()
+
+/**
+ * True outside a production build. Avoids depending on Vite-specific
+ * `import.meta.env` typings (this package ships as a plain library, not a Vite
+ * app) — `process.env.NODE_ENV` is the bundler-agnostic convention every major
+ * build tool (Vite, webpack, Rollup) replaces at build time.
+ */
+function isDevMode(): boolean {
+  return typeof process === 'undefined' || process.env?.NODE_ENV !== 'production'
+}
+
 const resolved = computed<{ component: Component | null, isTipTap: boolean }>(() => {
   const h = handler.value
   if (!h) {
     return { component: null, isTipTap: false }
   }
   const uiKey = h.ui.component
-  const mapped = props.componentMap[uiKey] ?? props.componentMap[h.id] ?? null
+  const mapped = props.componentMap[uiKey]
+    ?? props.componentMap[h.id]
+    ?? resolveEngineComponent(uiKey)
+    ?? resolveEngineComponent(h.id)
+    ?? null
   const isTipTap = TIPTAP_COMPONENTS.includes(uiKey)
+
+  if (!mapped && isDevMode() && !warnedUnmapped.has(uiKey)) {
+    warnedUnmapped.add(uiKey)
+    console.warn(
+      `[VaulterDocumentNode] No editor registered for handler "${h.id}" `
+      + `(ui.component: "${uiKey}"). Register one via the "componentMap" prop or `
+      + `"registerEngineComponent('${uiKey}', YourComponent)" from "@vaulter/vue".`,
+    )
+  }
+
   // `markRaw` keeps the component out of the reactivity system (it may arrive via
   // a reactive prop) — avoids the "reactive Component" perf warning.
   return { component: mapped ? markRaw(mapped) : null, isTipTap }

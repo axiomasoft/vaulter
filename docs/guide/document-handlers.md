@@ -370,7 +370,14 @@ is included as the terminal entry.
 
 `VaulterDocumentNode` is the bridge from a handler descriptor to a concrete editor/preview. It
 loads the handler + head content, then mounts the component the descriptor's `ui.component`
-maps to. The mapping is a prop, so a host registers its own editors per handler id:
+maps to. Two mapping sources exist, checked in order:
+
+1. the `componentMap` prop — scoped to one `VaulterDocumentNode` mount point;
+2. the global `registerEngineComponent` registry (`@vaulter/vue`) — an explicit function a host
+   calls once at startup, for engines shared across every mount point (VLT-CANON P1.2).
+
+`componentMap` always wins when both map the same key. Neither is required — use whichever fits
+how many mount points your app has.
 
 ```vue
 <script setup lang="ts">
@@ -395,6 +402,27 @@ const componentMap = {
 </template>
 ```
 
+Or register once at app startup — an explicit ES-module import/call, not an ambient global (the
+lesson behind Nextcloud Viewer's move away from `OCA.Viewer.registerHandler`):
+
+```ts
+// main.ts — once, before mounting the app
+import { registerEngineComponent } from '@vaulter/vue'
+import AppTipTapEditor from './AppTipTapEditor.vue'
+import AppCsvPreview from './AppCsvPreview.vue'
+
+registerEngineComponent('VaulterEditor', AppTipTapEditor)
+registerEngineComponent('AppCsvPreview', AppCsvPreview)
+```
+
+Every `VaulterDocumentNode` on the page now resolves these without a local `componentMap`.
+`unregisterEngineComponent(id)` removes an entry; `registeredEngineComponentIds()` lists what is
+currently registered (mostly for diagnostics/tests).
+
+In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.component`/`id`
+(not repeated for the same key) naming both registration channels — the same gap Nova's
+string-key `Nova.booting` binding leaves silent.
+
 If the resolved handler is **collaborative** (e.g. `TipTapHandler`) and collaboration is
 enabled, `VaulterDocumentNode` opens a Yjs session and runs the editor in collaborative mode;
 otherwise it uses the autosave path described in [Document nodes](./documents.md#autosave-vs-named-versions).
@@ -408,3 +436,5 @@ otherwise it uses the autosave path described in [Document nodes](./documents.md
 - VOs — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
 - Built-ins — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`
+- Frontend registry (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
+  `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`

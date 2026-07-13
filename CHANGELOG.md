@@ -178,6 +178,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prop `nodeId` instead of `documentId`).
 
 ### Added
+- **`@vaulter/vue` explicit engine-component registry** (VLT-CANON P1.2) —
+  `registerEngineComponent(id, component)` / `unregisterEngineComponent(id)` /
+  `resolveEngineComponent(id)` / `registeredEngineComponentIds()` / `clearEngineComponents()`,
+  formalising `VaulterDocumentNode`'s `ui.component`→editor mapping as a public, explicitly
+  imported API (not an ambient global). `componentMap` stays fully supported and takes
+  precedence; the registry is an additional global fallback for hosts with many mount points.
+  In development builds, an unmapped handler now logs one `console.warn` per unique
+  `ui.component`/`id`. Purely additive — no existing prop or behaviour changed.
 - **Config-first Storage Panels** — `Vaulter::for()`, per-panel table prefixes and id strategy
   (`bigint` | `ulid` | `uuid7`), with a per-panel schema/migration generator.
 - **Content-addressable blob store (CAS)** — scoped dedup (global/tenant/storage), race-safe

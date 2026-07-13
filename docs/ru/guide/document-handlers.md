@@ -360,8 +360,14 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.handlers');
 
 `VaulterDocumentNode` — это мост от дескриптора обработчика к конкретному редактору/превью. Он
 загружает обработчик + head-контент, затем монтирует компонент, на который указывает `ui.component`
-дескриптора. Сопоставление задаётся через prop, поэтому хост регистрирует свои редакторы по id
-обработчика:
+дескриптора. Есть два источника сопоставления, проверяются по порядку:
+
+1. prop `componentMap` — область действия ограничена одной точкой монтирования `VaulterDocumentNode`;
+2. глобальный реестр `registerEngineComponent` (`@vaulter/vue`) — явная функция, которую хост
+   вызывает один раз при старте, для движков, общих для всех точек монтирования (VLT-CANON P1.2).
+
+`componentMap` всегда побеждает, если оба источника сопоставляют один и тот же ключ. Ни один из
+них не обязателен — используйте тот, что подходит числу точек монтирования в вашем приложении.
 
 ```vue
 <script setup lang="ts">
@@ -386,6 +392,49 @@ const componentMap = {
 </template>
 ```
 
+Или зарегистрируйте один раз при старте приложения — явный ES-module импорт/вызов, а не
+неявный глобал (тот же урок, что стоит за отходом Nextcloud Viewer от
+`OCA.Viewer.registerHandler`):
+
+```ts
+// main.ts — один раз, до монтирования приложения
+import { registerEngineComponent } from '@vaulter/vue'
+import AppTipTapEditor from './AppTipTapEditor.vue'
+import AppCsvPreview from './AppCsvPreview.vue'
+
+registerEngineComponent('VaulterEditor', AppTipTapEditor)
+registerEngineComponent('AppCsvPreview', AppCsvPreview)
+```
+
+Теперь каждый `VaulterDocumentNode` на странице подбирает эти компоненты без локального
+`componentMap`. `unregisterEngineComponent(id)` удаляет запись; `registeredEngineComponentIds()`
+перечисляет, что зарегистрировано сейчас (в основном для диагностики/тестов).
+
+В dev-режиме `VaulterDocumentNode` логирует один `console.warn` на каждый несопоставленный
+`ui.component`/`id` (не повторяется для одного и того же ключа), называя оба канала регистрации —
+тот же пробел, который string-key биндинг `Nova.booting` у Nova оставляет молчаливым.
+
+Либо зарегистрируйте однократно при старте приложения — явный ES-module импорт/вызов, а не
+неявный глобал (урок отказа Nextcloud Viewer от `OCA.Viewer.registerHandler`):
+
+```ts
+// main.ts — однократно, до монтирования приложения
+import { registerEngineComponent } from '@vaulter/vue'
+import AppTipTapEditor from './AppTipTapEditor.vue'
+import AppCsvPreview from './AppCsvPreview.vue'
+
+registerEngineComponent('VaulterEditor', AppTipTapEditor)
+registerEngineComponent('AppCsvPreview', AppCsvPreview)
+```
+
+Теперь каждый `VaulterDocumentNode` на странице резолвит их без локального `componentMap`.
+`unregisterEngineComponent(id)` удаляет запись; `registeredEngineComponentIds()` перечисляет
+текущие регистрации (в основном для диагностики/тестов).
+
+В dev-режиме `VaulterDocumentNode` логирует один `console.warn` на каждый незарегистрированный
+`ui.component`/`id` (не повторяется для одного и того же ключа), называя оба канала регистрации —
+тот же пробел, который у Nova остаётся незамеченным при string-key биндинге `Nova.booting`.
+
 Если подобранный обработчик **collaborative** (например, `TipTapHandler`) и совместное редактирование
 включено, `VaulterDocumentNode` открывает Yjs-сессию и запускает редактор в режиме совместного
 редактирования; иначе он использует путь автосохранения, описанный в
@@ -400,3 +449,5 @@ const componentMap = {
 - VO — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
 - Встроенные — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`
+- Фронтовый реестр (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
+  `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`
