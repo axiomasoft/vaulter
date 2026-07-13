@@ -314,7 +314,7 @@ interface CollaborationDriver
 редактирования (server-to-server) — который несёт лишь id пользователя, без сессии — мог
 прогнать `AccessResolver` относительно реального актора. Возвращает `null`, когда id ни во
 что не резолвится (тогда вебхук отвечает `allowed=false`, а не открывается наружу). По
-умолчанию `Vaulter\Access\HostUserResolver` делегирует настроенному auth user-provider;
+умолчанию `Vaulter\Documents\Collaboration\HostUserResolver` делегирует настроенному auth user-provider;
 привяжите свой, чтобы переопределить.
 
 ```php

@@ -13,7 +13,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Documents\Access\HostUserResolver as DefaultHostUserResolver;
+use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;

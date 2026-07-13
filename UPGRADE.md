@@ -6,6 +6,26 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `documents/src/Access/HostUserResolver` moves into `Collaboration/` (VLT-CANON P2.4)
+
+**Why.** `Access/` in `vaulter-documents` held exactly one class, and it was not an access-control
+class: `HostUserResolver` implements `Vaulter\Documents\Contracts\Collaboration\HostUserResolver`
+and exists purely to let the M4b collaboration webhook materialise an `Authorizable` from a bare
+user id (see its own docblock: "purely collaboration-webhook machinery"). Its folder disagreed
+with its contract. It now sits next to the collaboration drivers it serves
+(`NodeCollaborationDriverManager`, `HocuspocusNodeCollaborationDriver`, …). core's `Access/` and
+`Webhooks/` domain-service folders were also audited against ADR-0017 in this pass — both conform
+(they are in fact ADR-0017's own reference shape for the pattern) and needed no change.
+
+| Old | New |
+|---|---|
+| `Vaulter\Documents\Access\HostUserResolver` | `Vaulter\Documents\Collaboration\HostUserResolver` |
+
+Only hosts that bind or reference the *default* implementation directly are affected — the
+contract FQCN (`Vaulter\Documents\Contracts\Collaboration\HostUserResolver`) that hosts normally
+type-hint or swap is unchanged. Pre-1.0 — hard rename, no alias phase. Pure move: zero behavior
+change.
+
 ### Catch-all folders resolved by role: `documents/src/Documents`, `documents/src/Support`, `drive/src/Uploads` (VLT-CANON P2.3)
 
 **Why.** Final structural canon (Part 3): `documents/src/Documents/` was a tautologically-named

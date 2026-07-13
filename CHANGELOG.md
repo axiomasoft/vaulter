@@ -169,6 +169,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `HasTiptapExtensions` → `Vaulter\Documents\Support\TipTap(\Concerns)`; `MagicByteSniffer`/
   `StagedUpload`/`UploadModels` → `Vaulter\Drive\Support\Uploads`. Pure move, zero behaviour
   change. See `UPGRADE.md`.
+- **BREAKING (pre-1.0): `documents/src/Access/HostUserResolver` moved to
+  `Vaulter\Documents\Collaboration\HostUserResolver`** (VLT-CANON P2.4, final structural canon).
+  `Access/` held a single class that wasn't an access-control class — it implements the
+  collaboration webhook's `HostUserResolver` contract, not anything ACL-shaped — so it now sits
+  next to the collaboration drivers it serves. core's `Access/` and `Webhooks/` domain-service
+  folders were audited against ADR-0017 in the same pass and left unchanged (they conform). Pure
+  move, zero behaviour change. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,
