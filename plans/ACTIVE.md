@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** VLT-CANON
-**Updated:** 2026-07-12
+**Active:** —
+**Updated:** 2026-07-13
