@@ -176,11 +176,57 @@ Same three channels as any handler — see
 
 ## 7. Mounting it on the client
 
-See [Document Handlers → Mounting the resolved handler in Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue).
-Map your handler's `ui.component` id to your Vue (or other framework) component either through
-the host's local `componentMap` prop, or once globally via `@vaulter/vue`'s
-`registerEngineComponent(id, component)` — the server-side registry never assumes a specific
-frontend stack.
+See [Document Handlers → Mounting the resolved handler in Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue)
+for the two registration channels (`componentMap` prop vs. the global
+`registerEngineComponent(id, component)`) — the server-side registry never assumes a specific
+frontend stack. What follows is the client-side skeleton itself: the component
+`VaulterDocumentNode` mounts receives one `handler` prop, typed `HandlerDescriptor` (exported by
+`@vaulter/vue`), carrying your `ui.props` map verbatim.
+
+```vue
+<!-- AppMyEditor.vue — the component registered for handler id "my-editor" -->
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { DocumentNodeEditorProps } from '@vaulter/vue'
+
+// `VaulterDocumentNode` binds this shape (`DocumentNodeEditorProps`) — `content`/`onChange`
+// are typed for TipTap in the exported interface (the built-in editor), so a non-rich-text
+// handler narrows `handler.ui.props` to its own shape instead of relying on `content`.
+// `handler.ui.props` is whatever your PHP handler's ui() returned (step 1/3) — an
+// arbitrary, handler-decided map; the contract does not validate it for you.
+interface MyEditorProps {
+  format: string
+  extensions: string[]
+}
+
+const props = defineProps<DocumentNodeEditorProps>()
+
+const editorProps = computed(() => props.handler.ui.props as unknown as MyEditorProps)
+</script>
+
+<template>
+  <div class="app-my-editor">
+    <!-- Read editorProps.format / editorProps.extensions here; call onChange(next)
+         on every local edit unless readonly is true. -->
+  </div>
+</template>
+```
+
+Register it once at startup, the same way as [any handler component](./document-handlers.md#mounting-the-resolved-handler-in-vue):
+
+```ts
+// main.ts
+import { registerEngineComponent } from '@vaulter/vue'
+import AppMyEditor from './AppMyEditor.vue'
+
+registerEngineComponent('my-editor', AppMyEditor)
+```
+
+No separate frontend package is required (D8, VLT-CANON P1.1): a third-party engine ships as
+plain host application code — a `.vue` file plus one `registerEngineComponent` call — the same
+way `@vaulter/vue` itself bundles `TipTapHandler`'s editor rather than publishing it standalone.
+A dedicated `@vaulter/vue-engine-<name>` package is introduced later, lazily, only once a real
+external consumer of that specific engine exists.
 
 ## Checklist
 

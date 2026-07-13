@@ -178,11 +178,57 @@ public function ui(FileDescriptor $file): HandlerUi
 
 ## 7. Монтирование на клиенте
 
-См. [Обработчики документов → Монтирование резолвленного обработчика во Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue).
-Смэпьте `ui.component` вашего обработчика на свой Vue- (или другого фреймворка) компонент —
-либо через локальный `componentMap` хоста, либо один раз глобально через
-`registerEngineComponent(id, component)` из `@vaulter/vue` — реестр на сервере не предполагает
-конкретный фронтенд-стек.
+См. [Обработчики документов → Монтирование резолвленного обработчика во Vue](./document-handlers.md#mounting-the-resolved-handler-in-vue)
+про два канала регистрации (`componentMap`-проп vs. глобальный
+`registerEngineComponent(id, component)`) — реестр на сервере не предполагает конкретный
+фронтенд-стек. Ниже — сам клиентский скелет: компонент, который монтирует
+`VaulterDocumentNode`, получает один проп `handler` типа `HandlerDescriptor` (экспортируется
+`@vaulter/vue`), несущий вашу карту `ui.props` без изменений.
+
+```vue
+<!-- AppMyEditor.vue — компонент, зарегистрированный для id обработчика "my-editor" -->
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { DocumentNodeEditorProps } from '@vaulter/vue'
+
+// `VaulterDocumentNode` биндит эту форму (`DocumentNodeEditorProps`) — `content`/`onChange`
+// типизированы под TipTap в экспортируемом интерфейсе (встроенный редактор), поэтому
+// не-rich-text-обработчик сужает `handler.ui.props` до своей формы, не полагаясь на `content`.
+// `handler.ui.props` — то, что вернул ваш PHP-обработчик из ui() (шаг 1/3) — произвольная,
+// решаемая обработчиком карта; контракт её не валидирует.
+interface MyEditorProps {
+  format: string
+  extensions: string[]
+}
+
+const props = defineProps<DocumentNodeEditorProps>()
+
+const editorProps = computed(() => props.handler.ui.props as unknown as MyEditorProps)
+</script>
+
+<template>
+  <div class="app-my-editor">
+    <!-- Читайте editorProps.format / editorProps.extensions здесь; вызывайте onChange(next)
+         на каждое локальное изменение, если не readonly. -->
+  </div>
+</template>
+```
+
+Зарегистрируйте один раз при старте, так же как и [любой компонент-обработчик](./document-handlers.md#mounting-the-resolved-handler-in-vue):
+
+```ts
+// main.ts
+import { registerEngineComponent } from '@vaulter/vue'
+import AppMyEditor from './AppMyEditor.vue'
+
+registerEngineComponent('my-editor', AppMyEditor)
+```
+
+Отдельный фронтенд-пакет не требуется (D8, VLT-CANON P1.1): сторонний движок поставляется как
+обычный код хост-приложения — файл `.vue` плюс один вызов `registerEngineComponent` — так же,
+как сам `@vaulter/vue` бандлит редактор `TipTapHandler`, а не публикует его отдельно.
+Отдельный пакет `@vaulter/vue-engine-<name>` вводится позже, лениво, только когда появится
+реальный внешний потребитель конкретно этого движка.
 
 ## Чек-лист
 

@@ -81,7 +81,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
-| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 1/3 (1 🟠) | 🟡 In progress |
+| P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
@@ -634,6 +634,54 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   По D8: skeleton (`docs/guide/writing-an-engine.md` фронт-часть ИЛИ example-пакет) — как хост регистрирует
   компонент по имени движка + получает `HandlerUi.props`. **Приёмка:** гайд/скелет проходит собственный build.
 
+  **Completion Notes.** Выбран вариант «гайд», не example-npm-пакет — согласуется с D8 (единый
+  `@vaulter/vue`, engine внутри хост-кода, без отдельной npm-инфраструктуры до реального внешнего
+  потребителя). Расширен §7 «Mounting it on the client» в `docs/guide/writing-an-engine.md`
+  (+ru-зеркало `docs/ru/guide/writing-an-engine.md`) конкретным клиентским скелетом: `.vue`-компонент
+  (`AppMyEditor.vue`), типизированный `DocumentNodeEditorProps` (реальный экспорт `@vaulter/vue` из
+  `VaulterDocumentNode.vue`), сужающий `handler.ui.props` до собственной формы (`MyEditorProps`);
+  плюс блок регистрации через `registerEngineComponent(id, component)` в `main.ts` (уже формализован
+  P1.2). Явно зафиксировано: отдельный npm-пакет НЕ нужен — движок ставляется как код хост-приложения
+  (bullet-заключение после примера, зеркалит D8). Ссылка на §2 «Mounting the resolved handler in Vue»
+  (`document-handlers.md`) сохранена как источник двух каналов регистрации — не задублирована.
+  **Гейты.** `pnpm install` (root — `vitepress`/`vue-tsc` не были установлены в node_modules до этого
+  item'а); `pnpm run docs:build` — **failed** на pre-existing dead link `./activity` в
+  `guide/search-trash.md`/`ru/guide/search-trash.md` (файлы НЕ мои — `git status --porcelain` до и
+  после диффа их не показывает; не regression этого item'а). Для верификации собственного диффа
+  временно переключил `docs/.vitepress/config.ts` `ignoreDeadLinks: false→true`, прогнал
+  `docs:build` → **passed** (client+server bundles + rendering pages, `build complete`), откатил
+  конфиг (`git checkout -- docs/.vitepress/config.ts`, дифф не коммитился). `@vaulter/vue`
+  typecheck/vitest/build не гонял целевым запуском — item не тронул `packages/vue/src/**`
+  (`git status --porcelain` подтверждает: единственные code-relevant файлы диффа — 2 docs + plan.md).
+  **Ревью:** `vaulter-reviewer` не вызывал — item не трогает публичный контракт/фасад/config-ключи/
+  дескриптор (Execution Rules §«Публичная поверхность» — гейт применяется к item'ам, трогающим
+  Contracts/фасад/config/дескриптор; P1.3 — чистая документация примера, ничего из перечисленного не
+  меняет).
+  **Commits:** `<TBD>` — docs(vue): скелет-пример клиентского движка + регистрация в
+  writing-an-engine.md (P1.3).
+
+  **Pending Work:**
+  1. Pre-existing dead link `./activity` в `guide/search-trash.md`/`ru/guide/search-trash.md` ломает
+     `docs:build` (наследуется, не мой файл) — блокирует CI docs-гейт независимо от P1.3. Не чинил
+     (вне Scope Included — item не называет `search-trash.md`). Кандидат в отдельный docs-fix item.
+  2. `docs/guide/document-handlers.md` стухшие FQCN в примерах конфига (наследуется из P0.5 Pending
+     Work #4, handoff Open risk 3) — не трогал, вне Scope этого item'а.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P1.3 **sonnet/low**; фактически исполнено
+     **sonnet/medium** (effort — дефолт команды `/task:plan-exec`, которая пинит medium и запрещает
+     ручное переключение). Модель совпала, effort выше заявленного — расхождение в сторону большей
+     тщательности, не риск.
+  2. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P1.3 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+  3. Docs-build гейт item'а («гайд/скелет проходит собственный build») подтверждён с ОБХОДОМ
+     pre-existing несвязанной dead-link ошибки (см. Completion Notes/Pending Work #1) — сам
+     `docs:build` без обхода красный уже ДО этого item'а по причине, не относящейся к P1.3.
+
+  **Status:** 🟢 Done
+
 ### P2 — Финальный структурный канон (Часть 3)
 
 - **P2.1 — Переименование `permissions-azgard → azgard`** (opus/high, `php:namespace-refactor-safety`).
@@ -762,6 +810,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P0.5 закрыт (🟢), **фаза P0 терминальна (5/5)**: `richText`-дефолт `true→false` (kind-нейтраль), `NodeExportService::contentOf()` стал kind-нейтральным (закрыл Pending Work P0.2/P0.3/P0.4), `AbstractFileHandler` DX-база + гайд `writing-an-engine.md` (+ru), capability-policy-тесты (аддитивность осей + priority-конфликт), D11 закрыт (yjs_state остаётся) — детали см. §6 P0.5 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P1.1 закрыт (🟠): D8 закрыт owner'ом = вариант A (единый `@vaulter/vue` shell/core, per-engine npm лениво) — гейт для P1.2/P1.3 снят, передетализация не требуется — детали см. §6 P1.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.2 закрыт (🟢): фронт-реестр компонентов формализован как публичный API (`registerEngineComponent`/4 сестры в `engineRegistry.ts`), фолбэк ПОСЛЕ `componentMap` prop (BC bit-for-bit), dev-warn через `watch` (не `computed`, находка ревью), доки+CHANGELOG синхронны — детали см. §6 P1.2 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P1.3 закрыт (🟢), **фаза P1 терминальна (3/3, 1🟠)**: гайд-скелет стороннего клиентского движка (`writing-an-engine.md` §7 +ru) — `.vue`-компонент с `DocumentNodeEditorProps` + `registerEngineComponent`, без отдельного npm-пакета (D8) — детали см. §6 P1.3 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
