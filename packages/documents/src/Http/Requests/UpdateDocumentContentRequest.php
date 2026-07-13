@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Engines\DocumentFileDescriptorFactory;

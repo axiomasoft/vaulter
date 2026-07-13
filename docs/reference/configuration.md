@@ -139,7 +139,7 @@ config merge.
 |---|---|
 | `Vaulter\Engines\Handlers\PreviewHandler` | core |
 | `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
-| `Vaulter\Documents\Documents\Handlers\TipTapHandler` | vaulter-documents |
+| `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
 `UniverHandler` (xlsx) is appended by the service provider **only** when
 `features.spreadsheets` is on. Add a new format with one class + an entry here (or

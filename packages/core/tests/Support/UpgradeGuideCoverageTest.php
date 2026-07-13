@@ -60,7 +60,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // P5.2 — критическая секция upload-сессии.
         'P5.2 upload lock' => ['(P5.2 / R-02, R-03, R-08)', (string) file_get_contents($root.'/packages/drive/src/Uploads/UploadSessionManager.php')],
         // P5.2 — markdown-экранирование.
-        'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTapRenderer.php')],
+        'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTap/TipTapRenderer.php')],
         // P5.2 — commit внутри критической секции + CAS на markCommitted.
         'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php')],
         // P5.2 — обеззараживание TipTap-контента на JSON-чтении.

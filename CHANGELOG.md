@@ -160,6 +160,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bridge under its final name. Only a host tracking this monorepo's dev branch — requiring the old
   package name via a path/VCS repo, or importing `Vaulter\Permissions\Azgard\*` FQCNs — has to
   update. See `UPGRADE.md`.
+- **BREAKING (pre-1.0): catch-all folders resolved by role** (VLT-CANON P2.3, final structural
+  canon). `documents/src/Documents/` (tautological name), the TipTap-only slice of
+  `documents/src/Support/`, and the pure-helper slice of `drive/src/Uploads/` were dissolved into
+  the domain-service folder/layer matching each class's actual role: `TipTapHandler`/`UniverHandler`
+  → `Vaulter\Documents\Engines\Handlers`; `NodeExportService` → `Vaulter\Documents\Export`;
+  `CollaborationSessionService` → `Vaulter\Documents\Collaboration`; `TipTapRenderer`/
+  `HasTiptapExtensions` → `Vaulter\Documents\Support\TipTap(\Concerns)`; `MagicByteSniffer`/
+  `StagedUpload`/`UploadModels` → `Vaulter\Drive\Support\Uploads`. Pure move, zero behaviour
+  change. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

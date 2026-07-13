@@ -56,7 +56,7 @@ interface DocumentExporter
 | `html` | `HtmlExporter` | `text/html` | `html` |
 | `markdown` | `MarkdownExporter` | `text/markdown` | `md` |
 
-Оба делегируют в `Vaulter\Support\TipTapRenderer`, который обрабатывает общий набор узлов и
+Оба делегируют в `Vaulter\Documents\Support\TipTap\TipTapRenderer`, который обрабатывает общий набор узлов и
 меток — заголовки, абзацы, маркированные/нумерованные списки, элементы списков, цитаты, блоки
 кода, горизонтальные линии и жёсткие переносы, плюс метки **bold / italic / strike / code /
 link** — с экранированием HTML-вывода (`htmlspecialchars`). Неизвестные узлы откатываются к
@@ -135,7 +135,7 @@ namespace App\Vaulter\Exporters;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
@@ -244,7 +244,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 
 - Контракт — `Vaulter\Contracts\Handlers\DocumentExporter`
 - Встроенные — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
-- Рендерер — `Vaulter\Support\TipTapRenderer` (`toHtml`, `toMarkdown`)
+- Рендерер — `Vaulter\Documents\Support\TipTap\TipTapRenderer` (`toHtml`, `toMarkdown`)
 - Экспорт узла — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)
 - Шов менеджера — `Vaulter\VaulterManager::registerExporter()` / `::exporter()` / `::exporterFormats()`
 - Enum — `Vaulter\Enums\Documents\ExportFormat`

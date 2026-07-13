@@ -21,6 +21,7 @@ use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Support\Config;
 
 /**

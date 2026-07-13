@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
-use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 

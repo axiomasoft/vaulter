@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Documents;
+namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
@@ -34,9 +34,9 @@ use Vaulter\VaulterManager;
  *
  * The export filename scheme is a container seam, not an inheritance one (P4.5 /
  * F-P3.1-04): this class stays `final` (H.5, `ArchTest::the_document_handler_
- * registry_and_its_handlers_are_final` covers the whole `Vaulter\Documents\
- * Documents` namespace — un-finalising it would weaken a P4.1 anti-self-deception
- * gate) — the filename is delegated to the injected {@see ExportFilenameResolver},
+ * registry_and_its_handlers_are_final` covers this class alongside `Vaulter\
+ * Documents\Engines\Handlers` — un-finalising it would weaken a P4.1
+ * anti-self-deception gate) — the filename is delegated to the injected {@see ExportFilenameResolver},
  * which a host rebinds to its own implementation for a different naming scheme
  * (e.g. `{name}-v{version}.{ext}`) instead of forking this file.
  */

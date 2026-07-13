@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
-use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
 function sampleDocument(): TipTapContent

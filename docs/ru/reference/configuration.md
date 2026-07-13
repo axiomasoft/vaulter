@@ -125,7 +125,7 @@ php artisan vendor:publish --tag=vaulter-config
 |---|---|
 | `Vaulter\Engines\Handlers\PreviewHandler` | core |
 | `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
-| `Vaulter\Documents\Documents\Handlers\TipTapHandler` | vaulter-documents |
+| `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
 `UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::registerHandler()`).
 

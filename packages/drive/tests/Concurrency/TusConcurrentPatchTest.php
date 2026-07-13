@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Exceptions\OffsetMismatchException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 
 /**

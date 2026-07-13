@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Uploads\UploadModels;
+use Vaulter\Drive\Support\Uploads\UploadModels;
 
 /**
  * Write-side row work for v_upload_sessions (§2.8 / M3a). Bare create + the

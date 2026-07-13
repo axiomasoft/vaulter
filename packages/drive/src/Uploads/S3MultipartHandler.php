@@ -14,6 +14,7 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Support\Config;
 
 /**

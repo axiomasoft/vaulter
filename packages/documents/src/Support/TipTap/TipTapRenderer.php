@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Support;
+namespace Vaulter\Documents\Support\TipTap;
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Documents\Enums\Export\ExportFormat;

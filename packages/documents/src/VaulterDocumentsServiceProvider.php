@@ -16,7 +16,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Access\HostUserResolver as DefaultHostUserResolver;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
-use Vaulter\Documents\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;

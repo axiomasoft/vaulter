@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;

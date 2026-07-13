@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Enums\Documents;
 use Vaulter\Attributes\Icon;
 use Vaulter\Attributes\Label;
 use Vaulter\Documents\Attributes\TiptapExtensions;
-use Vaulter\Documents\Support\Concerns\HasTiptapExtensions;
+use Vaulter\Documents\Support\TipTap\Concerns\HasTiptapExtensions;
 use Vaulter\Support\Concerns\HasIcon;
 use Vaulter\Support\Concerns\HasLabel;
 

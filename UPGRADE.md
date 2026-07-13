@@ -6,6 +6,52 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Catch-all folders resolved by role: `documents/src/Documents`, `documents/src/Support`, `drive/src/Uploads` (VLT-CANON P2.3)
+
+**Why.** Final structural canon (Part 3): `documents/src/Documents/` was a tautologically-named
+grab-bag mixing the (already core-owned, VLT-CANON P0.4) engine registry remnants with TipTap/Univer
+drivers and two read-only evaluator services; `documents/src/Support/` mixed engine-neutral helpers
+with TipTap-only ones; `drive/src/Uploads/` mixed orchestrator classes with pure helpers. Each moved
+class now sits in the domain-service folder or layer matching its actual role — the registry/driver
+classes join `Engines/Handlers` (mirrors core's `Vaulter\Engines\Handlers`), the two evaluators join
+the existing `Export`/`Collaboration` domain-service folders (ADR-0017) alongside their siblings
+(`HtmlExporter`/`MarkdownExporter`; `NodeCollaborationDriverManager`/drivers), the TipTap-only
+Support helpers get a `TipTap` domain sub-namespace, and the Uploads helpers join a new
+`Support/Uploads`. Pre-1.0 — hard rename, no alias phase. Pure move: zero behavior change.
+
+**What moved (documents):**
+
+| Old | New |
+|---|---|
+| `Vaulter\Documents\Documents\Handlers\TipTapHandler` | `Vaulter\Documents\Engines\Handlers\TipTapHandler` |
+| `Vaulter\Documents\Documents\Handlers\UniverHandler` | `Vaulter\Documents\Engines\Handlers\UniverHandler` |
+| `Vaulter\Documents\Documents\NodeExportService` | `Vaulter\Documents\Export\NodeExportService` |
+| `Vaulter\Documents\Documents\CollaborationSessionService` | `Vaulter\Documents\Collaboration\CollaborationSessionService` |
+| `Vaulter\Documents\Support\TipTapRenderer` | `Vaulter\Documents\Support\TipTap\TipTapRenderer` |
+| `Vaulter\Documents\Support\Concerns\HasTiptapExtensions` | `Vaulter\Documents\Support\TipTap\Concerns\HasTiptapExtensions` |
+
+`Vaulter\Documents\Support\DocumentContentHasher` is engine-neutral and did NOT move.
+
+**What moved (drive):**
+
+| Old | New |
+|---|---|
+| `Vaulter\Drive\Uploads\MagicByteSniffer` | `Vaulter\Drive\Support\Uploads\MagicByteSniffer` |
+| `Vaulter\Drive\Uploads\StagedUpload` | `Vaulter\Drive\Support\Uploads\StagedUpload` |
+| `Vaulter\Drive\Uploads\UploadModels` | `Vaulter\Drive\Support\Uploads\UploadModels` |
+
+`Vaulter\Drive\Uploads\{UploadSessionManager,S3MultipartHandler,TusUploadHandler}` are orchestrators
+(`*Manager`/`*Handler`) and stay in `Vaulter\Drive\Uploads` — the domain-service folder shape itself
+did not change, only the pure-helper classes it also held moved out.
+
+**Not renamed:** `Vaulter\Contracts\Handlers\*` (the public contract interfaces), `Vaulter\Engines\*`
+(the core-owned registry, moved earlier in P0.4), and the `config('vaulter.handlers')`/
+`config('vaulter-documents.handlers')` KEYS — only the FQCN *values* configured under them changed.
+
+**Who breaks.** A host that directly references any of the old FQCNs above (a manual `use`, an
+`instanceof` check, `app(OldFqcn::class)`, or a published `config/vaulter-documents.php` copy still
+listing `TipTapHandler::class` under its old FQCN) must update to the new FQCN.
+
 ### Package renamed: `axioma-studio/vaulter-permissions-azgard` → `axioma-studio/vaulter-azgard` (VLT-CANON P2.1)
 
 **Why.** Final structural canon (Part 3): the AzGuard bridge package's `permissions-` prefix was

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Documents\Handlers\UniverHandler;
-use Vaulter\Documents\Documents\NodeExportService;
+use Vaulter\Documents\Engines\Handlers\UniverHandler;
+use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Storage;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;

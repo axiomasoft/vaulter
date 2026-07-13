@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Uploads\UploadModels;
+use Vaulter\Drive\Support\Uploads\UploadModels;
 
 /**
  * Read-side lookups over v_upload_sessions (§2.8 / M3a). The resumable endpoints

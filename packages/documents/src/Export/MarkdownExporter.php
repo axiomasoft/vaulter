@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Export;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Enums\Export\ExportFormat;
-use Vaulter\Documents\Support\TipTapRenderer;
+use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 

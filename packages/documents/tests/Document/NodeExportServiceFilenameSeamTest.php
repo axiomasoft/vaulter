@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Documents\NodeExportService;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
+use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 

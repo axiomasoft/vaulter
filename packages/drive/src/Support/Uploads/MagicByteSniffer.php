@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Drive\Uploads;
+namespace Vaulter\Drive\Support\Uploads;
 
 use finfo;
 

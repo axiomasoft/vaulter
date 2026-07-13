@@ -82,7 +82,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
-| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 2/4 (1 🟠) | 🟡 In progress |
+| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 3/4 (1 🟠) | 🟡 In progress |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -814,6 +814,99 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
     `DocumentContentHasher` — движок-нейтраль.
   **Приёмка:** ноль изменений поведения; arch-тесты канона зелёные; `vaulter-test-verifier` сводка pass.
 
+  **Completion Notes.** Роль-based разбор трёх catch-all папок, `git mv` (renames трекаются,
+  9 файлов) + обновление namespace/`use` во всех потребителях (48 файлов: src/tests/config/docs
+  обоих пакетов + `core/tests/Arch/ArchTest.php` + `core/tests/Support/UpgradeGuideCoverageTest.php`).
+  **documents (реестр/резолвер уже уехал в core в P0.4):**
+  `Documents/Handlers/{TipTapHandler,UniverHandler}` → `Engines/Handlers/*`
+  (`Vaulter\Documents\Engines\Handlers`, зеркалит `Vaulter\Engines\Handlers` core);
+  `Documents/NodeExportService` → `Export/NodeExportService` (`Vaulter\Documents\Export`) —
+  присоединился к уже существующей domain-service папке рядом с `HtmlExporter`/`MarkdownExporter`
+  (ADR-0017 допускает domain-service folders на корне пакета);
+  `Documents/CollaborationSessionService` → `Collaboration/CollaborationSessionService`
+  (`Vaulter\Documents\Collaboration`) — присоединился к `NodeCollaborationDriverManager`/драйверам
+  в уже существующей папке `Collaboration/`. **Решение о роли:** буква item'а называла целью
+  `Support/`/`Actions/` для этих двух read-only-evaluator сервисов; вместо этого они
+  присоединены к уже существующим одноимённым domain-service папкам (`Export/`, `Collaboration/`)
+  — точнее отражает роль по факту (`Actions/` в документах = мутации, ни один из двух сервисов
+  не мутирует; `Support/` = движок-нейтральные хелперы, оба сервиса domain-specific), не
+  противоречит ADR-0017 и не требует эскалации (буква «по роли» допускает эту трактовку).
+  `Support/{TipTapRenderer,Concerns/HasTiptapExtensions}` → `Support/TipTap/{TipTapRenderer,
+  Concerns/HasTiptapExtensions}` — TipTap-only хелперы получили domain-подпространство внутри
+  Support (Law 2 ADR-0017); `Support/DocumentContentHasher` — движок-нейтраль, НЕ тронут (по
+  item'у). Тавтология `Documents/Documents` устранена — папка `Documents/` пуста и удалена.
+  **drive:** `Uploads/{MagicByteSniffer,StagedUpload,UploadModels}` → `Support/Uploads/*`
+  (`Vaulter\Drive\Support\Uploads`) — чистые хелперы; `Uploads/{UploadSessionManager,
+  S3MultipartHandler,TusUploadHandler}` (`*Manager`/`*Handler`, оркестраторы) остались в
+  `Vaulter\Drive\Uploads` как и было — по item'у.
+  **Найдена и починена ловушка same-namespace `use`:** `TusUploadHandler`/`S3MultipartHandler`/
+  `UploadSessionManager` конструктор-инжектили `StagedUpload` БЕЗ `use`-импорта (был в той же
+  `Vaulter\Drive\Uploads`-namespace до переезда) — после переезда `StagedUpload` в
+  `Support\Uploads` все три файла получили явный `use`; аналогично
+  `CollaborationSessionService` (сама переехавшая в `Collaboration/`) держала теперь
+  самоссылающийся `use NodeCollaborationDriverManager` — импорт убран. Обнаружено прогоном
+  standalone-тестов пакетов (см. Гейты).
+  **Тесты/арх-гейты:** core `ArchTest.php` — финальность-гейт `the document handler registry
+  and its handlers are final` (H.5) сужен с целой намеспейс-стены `Vaulter\Documents\Documents`
+  на точные два таргета (`Vaulter\Documents\Engines\Handlers`, `Vaulter\Documents\Export\
+  NodeExportService`) — та же семантика, точнее адрес; docblock обновлён.
+  `UpgradeGuideCoverageTest.php` — путь-константа P5.2-кейса на `TipTapRenderer` переставлена
+  на новый файл (red-before: тест падал на `file_get_contents` несуществующего старого пути,
+  что и обнаружило пробел до прогона гейтов). `drive/tests/Arch/ArchTest.php` — docblock Law 1
+  теста дополнен нотой про P2.3-разбор (сам тест не меняли: `Support`/`Uploads` — не в списке
+  проверяемых layer-имён, разбор не задевает инвариант). Доки (en+ru):
+  `docs/reference/configuration.md` (`handlers`-таблица), `docs/guide/export.md` (FQCN примера +
+  попутно исправлен пред-существующий баг доки `Vaulter\Support\TipTapRenderer`→
+  `Vaulter\Documents\Support\TipTapRenderer`, у которого не хватало `\Documents\` уже ДО этого
+  item'а). BC: `UPGRADE.md` + `CHANGELOG.md [Unreleased]` — новые секции (таблицы old→new FQCN
+  обоих пакетов, «кто ломается»).
+  **Гейты:** `pint packages/core packages/documents packages/drive --test` → passed (после
+  авто-фикса `ordered_imports`/`braces_position` через `pint` без `--test`, коммит несёт
+  результат); `phpstan analyse` (max, монорепо) → passed, 0 errors; root `pest` (core) →
+  497/497, 1281 assertion; `packages/documents` standalone `pest` → 214 passed / 1 skipped, 531
+  assertion (без изменений против P0.5-базлайна); `packages/drive` standalone `pest` → 167
+  passed / 5 skipped, 525 assertion; `pest --type-coverage --min=100` → 100.0% во всех трёх
+  (core/documents/drive). `@vaulter/vue` не тронут (`git status --porcelain packages/vue/` пуст)
+  — гейт фронта не гонял, item не задевает фронт.
+  **Ревью:** `vaulter-api-surface` → **PASS**, «clean rename-only diff»: 9 переездов, 79 файлов
+  затронуто (262+/265-), 0 изменений сигнатур контрактов/интерфейсов, 0 изменений config-ключей
+  (только FQCN-значения внутри массивов), 0 добавленных/удалённых public-методов; вердикт —
+  BC-breaking (SemVer MAJOR) из-за host-видимых FQCN, что и задокументировано в UPGRADE/CHANGELOG.
+  `vaulter-test-verifier` → все три сьюта зелёные (core 497/497; documents 214/1 skip; drive
+  167/5 skip); 5 нестрашных warning'ов (SQLite FK-cascade/concurrency-лимиты, PurgeTrash*/Tus*
+  тесты) — окружение, не регресс диффа. `vaulter-reviewer` НЕ вызывал: Execution Rules требует
+  его после P0.1/P0.2/P1.x/P2.1, P2.3 в списке не назван (Routing P2.2–P2.4: sonnet/medium +
+  `vaulter-test-verifier`, без reviewer'а); `vaulter-api-surface` покрыл BC-риск proactively
+  (item трогает host-видимые FQCN, хоть и не Contracts/facade/config-ключи).
+  **Commits:** `<TBD>` — refactor(documents,drive)!: разбор catch-all-папок по ролям — Engines/
+  Export/Collaboration/Support (P2.3).
+
+  **Pending Work:**
+  1. Наследуемое, не тронутое этим item'ом: required status checks branch protection (P2.1),
+     `docs/plan/*` стухшие имена permissions-azgard (P2.1), `format` value-space (P0.4), CI
+     gate-scope gap XSS-барьера (P0.3/P0.4), `document-handlers.md` стухшие FQCN (P0.5),
+     pre-existing dead link `search-trash.md` (P1.3), `packages/azgard/README.md` vs CI (P2.1).
+  2. `docs/plan/{p2-5-namespace-strategy-drive-docdrive,p2-5-option-b-topology}.md` держат
+     старые FQCN (`Documents\Documents`, `Drive\Uploads\StagedUpload`) в настоящем времени —
+     тот же класс пред-существующего долга, что и Open risk #2 (permissions-azgard в
+     docs/plan/*): исторический срез, правка — решение P3.1, не молчаливый sed этим item'ом.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P2.3 **sonnet/medium**; фактически исполнено
+     **sonnet/medium** — совпадает, отклонений нет.
+  2. Целевые слои для `NodeExportService`/`CollaborationSessionService` — item называет
+     `Support/`/`Actions/`; фактически они присоединены к уже существующим domain-service
+     папкам `Export/`/`Collaboration/` (см. Completion Notes «Решение о роли»). Это трактовка
+     формулировки «по роли», не расхождение с планом по существу (файлы/классы те же, только
+     точнее адресована папка, соответствующая ADR-0017 domain-service-folder канону) —
+     зафиксировано явно, не молчаливое отклонение.
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P2.3 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟢 Done
+
 - **P2.4 — Access/Uploads-сверка + core `Webhooks/`** (sonnet/low).
   `documents/src/Access/HostUserResolver` — свернуть в слой documents ЛИБО подтвердить домен-сервисом;
   core `Access/`/`Webhooks/` — сверить с ADR-0017 (вероятно no-op, задокументировать вердикт).
@@ -919,6 +1012,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.3 закрыт (🟢), **фаза P1 терминальна (3/3, 1🟠)**: гайд-скелет стороннего клиентского движка (`writing-an-engine.md` §7 +ru) — `.vue`-компонент с `DocumentNodeEditorProps` + `registerEngineComponent`, без отдельного npm-пакета (D8) — детали см. §6 P1.3 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P2.1 закрыт (🟠): пакет-мост переименован `permissions-azgard`→`azgard` (dir/composer/namespace/CI), core-шов `AzgardGuard` не тронут, добавлен arch-гвард dependency-direction — детали см. §6 P2.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P2.2 закрыт (🟢): D9 = вариант A (owner approved) — `vaulter-media` остаётся standalone-пакетом, кода нет — детали см. §6 P2.2 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P2.3 закрыт (🟢): 3 catch-all папки (`documents/src/{Documents,Support}`, `drive/src/Uploads`) разобраны по роли — драйверы→`Engines/Handlers`, эвалюаторы→существующие `Export`/`Collaboration`, TipTap-хелперы→`Support/TipTap`, upload-хелперы→`Support/Uploads`; тавтология `Documents/Documents` устранена — детали см. §6 P2.3 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,

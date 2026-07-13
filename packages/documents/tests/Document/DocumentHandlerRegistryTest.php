@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Documents\Documents\Handlers\TipTapHandler;
-use Vaulter\Documents\Documents\Handlers\UniverHandler;
+use Vaulter\Documents\Engines\Handlers\TipTapHandler;
+use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;

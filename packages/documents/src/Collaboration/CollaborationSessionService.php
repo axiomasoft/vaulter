@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Documents;
+namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Documents\Collaboration\NodeCollaborationDriverManager;
 use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Enums\Access\Ability;
