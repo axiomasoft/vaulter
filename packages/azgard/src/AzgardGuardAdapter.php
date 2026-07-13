@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard;
+namespace Vaulter\Azgard;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
 
 /**
  * The REAL {@see AzgardGuard} adapter (master plan P1 #2 / §6 / H.2 / ADR-0007): it

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Vaulter\Permissions\Azgard\Tests\RealAzgard\RealAzgardTestCase;
-use Vaulter\Permissions\Azgard\Tests\TestCase;
+use Vaulter\Azgard\Tests\RealAzgard\RealAzgardTestCase;
+use Vaulter\Azgard\Tests\TestCase;
 
 // The real-ecosystem e2e (real azguard + azguard-context, DB-backed) uses its own case.
 uses(RealAzgardTestCase::class, RefreshDatabase::class)->in('RealAzgard');

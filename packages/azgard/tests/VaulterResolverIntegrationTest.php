@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
-use Vaulter\Permissions\Azgard\Tests\Stubs\SpyAzgardUser;
 
 /**
  * The bridge driving the REAL Vaulter AzgardPermissionResolver: the adapter is bound as

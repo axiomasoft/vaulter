@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
-use Vaulter\Permissions\Azgard\NullAzgardGuard;
-use Vaulter\Permissions\Azgard\Tests\Stubs\SpyAzgardUser;
-use Vaulter\Permissions\Azgard\Tests\Stubs\WorkspaceStub;
+use Vaulter\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\NullAzgardGuard;
+use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
+use Vaulter\Azgard\Tests\Stubs\WorkspaceStub;
 
 /**
  * The adapter's job is a faithful translation of the Vaulter AzgardGuard seam onto the

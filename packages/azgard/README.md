@@ -1,6 +1,6 @@
 # Vaulter · AzGuard permission bridge
 
-`axioma-studio/vaulter-permissions-azgard` wires the [AzGuard](https://github.com/axioma-studio/azguard)
+`axioma-studio/vaulter-azgard` wires the [AzGuard](https://github.com/axioma-studio/azguard)
 scoped-permission system (and, through it, the CoreX tenant context) into Vaulter's
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
@@ -31,7 +31,7 @@ Vaulter AccessResolver ─▶ AzgardPermissionResolver ─▶ AzgardGuard (seam)
 ## Install
 
 ```bash
-composer require axioma-studio/vaulter-permissions-azgard
+composer require axioma-studio/vaulter-azgard
 ```
 
 Select the driver in `config/vaulter.php`:
@@ -47,7 +47,7 @@ Select the driver in `config/vaulter.php`:
    ```php
    use AzGuard\Concerns\HasAzGuard;
    use AzGuard\Concerns\HasScopedRoles;
-   use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
+   use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
    class User extends Authenticatable implements AzgardBackedUser
    {

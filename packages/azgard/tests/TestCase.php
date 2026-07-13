@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests;
+namespace Vaulter\Azgard\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
-use Vaulter\Permissions\Azgard\VaulterAzgardServiceProvider;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
+use Vaulter\Azgard\VaulterAzgardServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**

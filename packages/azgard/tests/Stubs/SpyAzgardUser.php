@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\Stubs;
+namespace Vaulter\Azgard\Tests\Stubs;
 
 use AzGuard\Contracts\PermissionContext;
 use AzGuard\Models\Role;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
 use UnitEnum;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
 /**
  * A controllable stand-in for the host's AzGuard-backed User: it IS an Eloquent user

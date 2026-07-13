@@ -39,7 +39,7 @@ it('has an errors.md heading for every self::docs() anchor actually used in code
         dirname(__DIR__, 4).'/packages/media/src',
         dirname(__DIR__, 4).'/packages/documents/src',
         dirname(__DIR__, 4).'/packages/filament/src',
-        dirname(__DIR__, 4).'/packages/permissions-azgard/src',
+        dirname(__DIR__, 4).'/packages/azgard/src',
     ])->name('*.php') as $file) {
         if (preg_match_all("/self::docs\\('([a-z-]+)'\\)/", $file->getContents(), $matches)) {
             foreach ($matches[1] as $anchor) {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\Stubs;
+namespace Vaulter\Azgard\Tests\Stubs;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\AzgardGuardAdapter;
 
 /**
  * A minimal Eloquent model standing in for a host workspace/resource — the entity an

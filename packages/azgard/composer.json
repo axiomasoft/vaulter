@@ -1,5 +1,5 @@
 {
-    "name": "axioma-studio/vaulter-permissions-azgard",
+    "name": "axioma-studio/vaulter-azgard",
     "description": "AzGuard permission bridge for Vaulter — a real AzgardGuard adapter delegating to AzGuard's scoped roles and workspace-context checks, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
@@ -32,18 +32,18 @@
     },
     "autoload": {
         "psr-4": {
-            "Vaulter\\Permissions\\Azgard\\": "src/"
+            "Vaulter\\Azgard\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Permissions\\Azgard\\Tests\\": "tests/"
+            "Vaulter\\Azgard\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Vaulter\\Permissions\\Azgard\\VaulterAzgardServiceProvider"
+                "Vaulter\\Azgard\\VaulterAzgardServiceProvider"
             ]
         },
         "branch-alias": {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\RealAzgard\Stubs;
+namespace Vaulter\Azgard\Tests\RealAzgard\Stubs;
 
 use AzGuard\Concerns\HasAzGuard;
 use AzGuard\Concerns\HasScopedRoles;
 use Illuminate\Foundation\Auth\User;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
 /**
  * A REAL AzGuard-backed user — the exact shape a host declares: the AzGuard traits

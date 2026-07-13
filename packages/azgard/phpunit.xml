@@ -5,7 +5,7 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="permissions-azgard">
+        <testsuite name="azgard">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

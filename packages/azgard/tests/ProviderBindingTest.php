@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
+use Vaulter\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\NullAzgardGuard;
+use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
-use Vaulter\Permissions\Azgard\NullAzgardGuard;
-use Vaulter\Permissions\Azgard\Tests\Stubs\SpyAzgardUser;
 
 /**
  * The provider resolves the AzgardGuard seam from the CURRENT request's user: an

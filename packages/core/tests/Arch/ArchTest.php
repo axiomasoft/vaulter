@@ -550,3 +550,13 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
 test('core source never references the extracted vaulter-documents package (P2 #5 / D2)', function (): void {
     expect(coreReferencesTo('Documents'))->toBe([]);
 });
+
+/**
+ * VLT-CANON P2.1 — the AzGuard bridge (`Vaulter\Azgard\*`, formerly `Vaulter\Permissions\Azgard\*`)
+ * is a satellite package like drive/documents/media: core only knows the narrow
+ * `Vaulter\Contracts\Access\AzgardGuard` seam, never the concrete adapter. Same file-scan
+ * form as the drive (D1) and documents (D2) guards above.
+ */
+test('core source never references the vaulter-azgard package (P2.1)', function (): void {
+    expect(coreReferencesTo('Azgard'))->toBe([]);
+});

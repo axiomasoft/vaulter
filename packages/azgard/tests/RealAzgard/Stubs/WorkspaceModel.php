@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\RealAzgard\Stubs;
+namespace Vaulter\Azgard\Tests\RealAzgard\Stubs;
 
 use Illuminate\Database\Eloquent\Model;
 

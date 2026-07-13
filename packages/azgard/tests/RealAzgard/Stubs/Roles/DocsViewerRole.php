@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\RealAzgard\Stubs\Roles;
+namespace Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles;
 
 use AzGuard\Roles\BaseRole;
 

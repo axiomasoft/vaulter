@@ -6,6 +6,39 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Package renamed: `axioma-studio/vaulter-permissions-azgard` → `axioma-studio/vaulter-azgard` (VLT-CANON P2.1)
+
+**Why.** Final structural canon (Part 3): the AzGuard bridge package's `permissions-` prefix was
+the only package in the monorepo naming a *layer* rather than the *thing it bridges* (`vaulter-core`,
+`vaulter-drive`, `vaulter-media`, `vaulter-documents`, `vaulter-filament` all name a domain/framework,
+not a role). Pre-1.0, so the rename ships without an alias/deprecation phase.
+
+**What moved:**
+
+| Old | New |
+|---|---|
+| `packages/permissions-azgard/` (dir) | `packages/azgard/` |
+| `axioma-studio/vaulter-permissions-azgard` (Composer package) | `axioma-studio/vaulter-azgard` |
+| `Vaulter\Permissions\Azgard\*` (namespace) | `Vaulter\Azgard\*` |
+| `Vaulter\Permissions\Azgard\VaulterAzgardServiceProvider` | `Vaulter\Azgard\VaulterAzgardServiceProvider` |
+| `Vaulter\Permissions\Azgard\AzgardGuardAdapter` | `Vaulter\Azgard\AzgardGuardAdapter` |
+| `Vaulter\Permissions\Azgard\NullAzgardGuard` | `Vaulter\Azgard\NullAzgardGuard` |
+| `Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser` | `Vaulter\Azgard\Contracts\AzgardBackedUser` |
+
+**Not renamed — the core-owned contract seam is untouched:** `Vaulter\Contracts\Access\AzgardGuard`
+(the narrow interface `AzgardPermissionResolver` calls through) stays in `vaulter-core` under its
+existing FQCN. Only the bridge/adapter package that implements it moved.
+
+**Who breaks.** Any host that:
+- `require`s `axioma-studio/vaulter-permissions-azgard` in `composer.json` — switch to
+  `axioma-studio/vaulter-azgard`.
+- imports `Vaulter\Permissions\Azgard\*` classes directly (service provider registration, the
+  `AzgardGuardAdapter`/`NullAzgardGuard`/`AzgardBackedUser` FQCNs) — update the `use` statements to
+  `Vaulter\Azgard\*`.
+
+The published config file name (`config/vaulter-azgard.php`, tag `vaulter-azgard-config`) and its
+contents are unchanged — only the package/namespace names moved.
+
 ### `HandlerCapabilities::$richText` now defaults to `false`; the export read path is kind-neutral (VLT-CANON P0.5)
 
 **`richText` default flipped from `true` to `false`.** `Vaulter\ValueObjects\Handlers\
@@ -333,7 +366,7 @@ statements — the key public ones:
 
 Model config defaults (`vaulter.models.node_comment` / `node_document_version`) resolve to the new
 FQCNs automatically; a host that pinned the FQCN explicitly must update it. `filament`, `media` and
-`permissions-azgard` were already canon-conformant (or, for `filament`, follow the framework's own
+`azgard` were already canon-conformant (or, for `filament`, follow the framework's own
 plugin convention as a documented ADR-0017 exception) and did not move.
 
 ### TipTap content: a closed store-time schema (now with images/tables), a config seam to extend it, and read-time decay (P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)

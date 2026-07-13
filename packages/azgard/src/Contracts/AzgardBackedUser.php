@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Contracts;
+namespace Vaulter\Azgard\Contracts;
 
 use AzGuard\Contracts\HasPermissions;
 use AzGuard\Contracts\HasScopedRoles;
-use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\AzgardGuardAdapter;
 
 /**
  * The host user the {@see AzgardGuardAdapter} bridges into
@@ -20,7 +20,7 @@ use Vaulter\Permissions\Azgard\AzgardGuardAdapter;
  *
  *   use AzGuard\Concerns\HasAzGuard;       // hasPermission / hasPermissionIn / isSuperAdmin
  *   use AzGuard\Concerns\HasScopedRoles;   // hasScopedPermission
- *   use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
+ *   use Vaulter\Azgard\Contracts\AzgardBackedUser;
  *
  *   class User extends Authenticatable implements AzgardBackedUser
  *   {

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backed by a content-addressable blob store (CAS). Collaboration became **node-attached** and
   standardised on **Hocuspocus** (Reverb is now for notifications, not collaboration). The
   release artifacts are the split Composer packages `vaulter-core`, `vaulter-filament`,
-  `vaulter-permissions-azgard` and the npm package `@vaulter/vue`.
+  `vaulter-azgard` and the npm package `@vaulter/vue`.
 - **BREAKING (pre-1.0, MAJOR): `NodeGrantCreated`, `NodeGrantRevoked`, `NodeShareCreated` and
   `NodeShareRevoked` are no longer deferred to commit** (security remediation P0.2 / F-P1.7-03).
   All four events dropped `ShouldDispatchAfterCommit` and are now dispatched **synchronously
@@ -149,6 +149,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of silently rendering blank content. `CreateDocumentNodeData::$format`'s default
   changed from the invalid literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`).
   See `UPGRADE.md`.
+- **BREAKING (pre-1.0): `axioma-studio/vaulter-permissions-azgard` renamed to
+  `axioma-studio/vaulter-azgard`** (VLT-CANON P2.1, final structural canon). The package
+  directory moved `packages/permissions-azgard/` → `packages/azgard/` and the namespace
+  `Vaulter\Permissions\Azgard\*` → `Vaulter\Azgard\*`. The core-owned contract seam
+  `Vaulter\Contracts\Access\AzgardGuard` is unaffected — only the bridge package's own name
+  and namespace changed. A host requiring the old package name or importing the old FQCNs
+  must update both. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

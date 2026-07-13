@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard;
+namespace Vaulter\Azgard;
 
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
 
 /**
  * Wires the AzGuard/Corex permission bridge (master plan P1 #2). It binds the Vaulter

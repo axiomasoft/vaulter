@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard\Tests\RealAzgard;
+namespace Vaulter\Azgard\Tests\RealAzgard;
 
 use AzGuard\AzGuardServiceProvider;
 use AzGuard\Context\AzGuardContextServiceProvider;
@@ -11,7 +11,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Vaulter\Permissions\Azgard\VaulterAzgardServiceProvider;
+use Vaulter\Azgard\VaulterAzgardServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**

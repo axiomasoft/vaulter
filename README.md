@@ -17,7 +17,7 @@ a new auth system** — it delegates every permission check to a `PermissionReso
 | Node (collab server, `hocuspocus-server`) | `>=22` (Hocuspocus 4 requires Node 22+) |
 | Node (Vue build / tooling) | `>=20` |
 
-`vaulter-core`/`vaulter-drive`/`vaulter-media`/`vaulter-documents`/`vaulter-permissions-azgard` are
+`vaulter-core`/`vaulter-drive`/`vaulter-media`/`vaulter-documents`/`vaulter-azgard` are
 CI-tested against **both** Laravel 12 and 13 (Testbench `^10.0`/`^11.0`). `vaulter-filament` pins
 `orchestra/testbench: ^11.0` deliberately: Filament 5 targets Laravel 11.28+/13, and its own CI
 matrix therefore covers only the Laravel 13 lane — installing the Filament panel on a Laravel 12
@@ -102,7 +102,7 @@ vaulter/
 │   ├── drive/                 # axioma-studio/vaulter-drive — folders/files, uploads, storage manager
 │   ├── documents/             # axioma-studio/vaulter-documents — TipTap/Yjs editing, versions, comments
 │   ├── media/                 # axioma-studio/vaulter-media — content-addressed (CAS) file/blob layer
-│   ├── permissions-azgard/    # axioma-studio/vaulter-permissions-azgard — AzGuard PermissionResolver adapter
+│   ├── azgard/                # axioma-studio/vaulter-azgard — AzGuard PermissionResolver adapter
 │   ├── vue/                   # @vaulter/vue — TypeScript Vue 3 client, composables & components
 │   └── filament/              # axioma-studio/vaulter-filament — Filament 5 admin (Vaulter\Filament\)
 ├── hocuspocus-server/    # optional Node Hocuspocus collaboration hub (+ Docker)

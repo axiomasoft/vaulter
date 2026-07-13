@@ -1,28 +1,28 @@
-name: Permissions AzGuard
+name: AzGuard
 
-# The vaulter-permissions-azgard package (real AzgardGuard adapter delegating to
-# AzGuard's scoped roles / workspace-context checks) is tested in isolation on the
-# fast SQLite lane. It has no Postgres-specific critical-section tests, so a single
+# The vaulter-azgard package (real AzgardGuard adapter delegating to AzGuard's
+# scoped roles / workspace-context checks) is tested in isolation on the fast
+# SQLite lane. It has no Postgres-specific critical-section tests, so a single
 # lane is enough. It requires vaulter-core (path-repo), so a change to either package
 # retriggers it.
 on:
   push:
     branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
     paths:
-      - 'packages/permissions-azgard/**'
+      - 'packages/azgard/**'
       - 'packages/core/**'
-      - '.github/workflows/permissions-azgard.yml'
+      - '.github/workflows/azgard.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  permissions-azgard:
+  azgard:
     # F-P4.4-02: a bare `composer install` here used to resolve exactly ONE Laravel
     # version (the constraint's upper bound) — the L12 lane never actually ran. The
     # matrix mirrors tests.yml: an explicit `composer require` per cell forces BOTH
     # declared Laravel/Testbench combinations to install and run.
-    name: vaulter-permissions-azgard (SQLite lane, Laravel ${{ matrix.laravel }})
+    name: vaulter-azgard (SQLite lane, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -47,19 +47,19 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        working-directory: packages/permissions-azgard
+        working-directory: packages/azgard
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --dev --no-interaction --no-update
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: Code style (Pint)
-        working-directory: packages/permissions-azgard
+        working-directory: packages/azgard
         run: vendor/bin/pint --test
 
       - name: Static analysis (Larastan)
-        working-directory: packages/permissions-azgard
+        working-directory: packages/azgard
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
       - name: Tests (Pest)
-        working-directory: packages/permissions-azgard
+        working-directory: packages/azgard
         run: vendor/bin/pest --ci

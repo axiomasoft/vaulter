@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Permissions\Azgard;
+namespace Vaulter\Azgard;
 
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Drivers\Permission\AzgardPermissionResolver;
-use Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser;
 
 /**
  * The deny-all {@see AzgardGuard} the provider binds when the current request has no

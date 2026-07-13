@@ -16,7 +16,7 @@ signatures and the binding point you swap it through.
 |---|---|---|
 | Access | `HostRoleDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
 | Access | `AzgardGuard` | container binding (host adapter) |
-| Access | `AzgardBackedUser` (permissions-azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
+| Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `HostRoleDriver` implements |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
@@ -111,7 +111,7 @@ ships by default — tests bind `Vaulter\Testing\FakeAzgardGuard`.
 adapter and align ULID morphs (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid`
 + `AZ_GUARD_MORPH_TYPE=ulid`). See [Auth → Host role driver](/guide/permission-drivers).
 
-### `Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser` (permissions-azgard)
+### `Vaulter\Azgard\Contracts\AzgardBackedUser` (azgard)
 
 The host `User` model contract the `AzgardGuardAdapter` bridges into Vaulter,
 composed straight from AzGuard's own public contracts (`HasPermissions` +
