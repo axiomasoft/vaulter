@@ -83,7 +83,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
 | P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 4/4 (1 🟠) | 🟢 Done |
-| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 2/3 | 🟡 In progress |
+| P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 2/3 (🟡 P3.3 in progress) | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -1062,6 +1062,8 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 - **P3.3 — ADR канона движков + supersede VLT-HSEAM** (sonnet/low). Новый `docs/adr/00XX-editor-engine-canon.md`
   (консолидирует D1–D11). Пометить `plans/VLT-HSEAM/` superseded ← VLT-CANON. **Приёмка:** ADR принят; VLT-HSEAM
   помечен; `plans/ACTIVE.md` не тронут (если VLT-CANON не стал ACTIVE решением owner'а).
+
+  **Status:** 🟡 In progress
 
 ## 7. Инварианты / критерии приёмки (каждая фаза)
 1. Гейты затронутых пакетов зелёные: pint + phpstan **max** + pest + type-cov 100% (+ фронт: vue-tsc+vitest+build).

@@ -18,3 +18,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0014 — Legacy DocVault: build parity, then excise from core](/adr/0014-legacy-docvault-strangler)
 - [ADR-0016 — Trash retention & purge erasure](/adr/0016-trash-retention-erasure)
 - [ADR-0017 — Internal package structure canon (layer-first + domain sub-namespace)](/adr/0017-package-structure-canon)
+- [ADR-0018 — Pluggable editor-engine canon (kind-neutral handler contract)](/adr/0018-editor-engine-canon)
