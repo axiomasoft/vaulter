@@ -16,6 +16,11 @@ name: Monorepo split (PHP)
 #      hard-depends on axioma-studio/azguard-core (^0.2), so keep that package resolvable on
 #      Packagist before registering the bridge (its local path-repositories are dev-only and
 #      Composer ignores a dependency's own `repositories`, so consumers are unaffected).
+#   4. VLT-CANON P2.1 renamed the bridge (permissions-azgard → azgard). If the old target repo
+#      axioma-studio/vaulter-permissions-azgard was already created (or registered on Packagist)
+#      under the pre-rename prerequisites, delete/abandon it — this workflow will never push to
+#      it again, and an abandoned empty package under the old name would outrank nothing but
+#      confuse everyone.
 # Until the repos + secret exist this workflow will fail, so it is authored but dormant.
 on:
   push:

@@ -29,12 +29,17 @@ not a role). Pre-1.0, so the rename ships without an alias/deprecation phase.
 (the narrow interface `AzgardPermissionResolver` calls through) stays in `vaulter-core` under its
 existing FQCN. Only the bridge/adapter package that implements it moved.
 
-**Who breaks.** Any host that:
-- `require`s `axioma-studio/vaulter-permissions-azgard` in `composer.json` — switch to
-  `axioma-studio/vaulter-azgard`.
-- imports `Vaulter\Permissions\Azgard\*` classes directly (service provider registration, the
-  `AzgardGuardAdapter`/`NullAzgardGuard`/`AzgardBackedUser` FQCNs) — update the `use` statements to
-  `Vaulter\Azgard\*`.
+**Who breaks — and who does not.** The bridge has **never been published**: this repo carries no
+tag, and the split-to-Packagist pipeline (`monorepo-split.yml`) is tag-triggered, so
+`axioma-studio/vaulter-permissions-azgard` never existed on Packagist. **A host installing from
+Packagist therefore has nothing to migrate — it only ever sees `axioma-studio/vaulter-azgard`.**
+
+Only a host tracking this monorepo's dev branch directly is affected. Such a host must:
+- change a `require` of `axioma-studio/vaulter-permissions-azgard` (via a path/VCS repository) to
+  `axioma-studio/vaulter-azgard`, and update the repo path if it points at
+  `packages/permissions-azgard`;
+- update any direct import of `Vaulter\Permissions\Azgard\*` (service-provider registration, the
+  `AzgardGuardAdapter`/`NullAzgardGuard`/`AzgardBackedUser` FQCNs) to `Vaulter\Azgard\*`.
 
 The published config file name (`config/vaulter-azgard.php`, tag `vaulter-azgard-config`) and its
 contents are unchanged — only the package/namespace names moved.

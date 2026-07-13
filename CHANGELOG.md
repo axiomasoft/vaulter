@@ -149,13 +149,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of silently rendering blank content. `CreateDocumentNodeData::$format`'s default
   changed from the invalid literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`).
   See `UPGRADE.md`.
-- **BREAKING (pre-1.0): `axioma-studio/vaulter-permissions-azgard` renamed to
-  `axioma-studio/vaulter-azgard`** (VLT-CANON P2.1, final structural canon). The package
-  directory moved `packages/permissions-azgard/` → `packages/azgard/` and the namespace
+- **The AzGuard bridge is named `axioma-studio/vaulter-azgard`, not
+  `axioma-studio/vaulter-permissions-azgard`** (VLT-CANON P2.1, final structural canon). The
+  package directory moved `packages/permissions-azgard/` → `packages/azgard/` and the namespace
   `Vaulter\Permissions\Azgard\*` → `Vaulter\Azgard\*`. The core-owned contract seam
-  `Vaulter\Contracts\Access\AzgardGuard` is unaffected — only the bridge package's own name
-  and namespace changed. A host requiring the old package name or importing the old FQCNs
-  must update both. See `UPGRADE.md`.
+  `Vaulter\Contracts\Access\AzgardGuard` is unaffected — only the bridge package's own name and
+  namespace changed. **Note this is not a released-package break:** the bridge has never been
+  published (the repo carries no tag, and the split/Packagist pipeline is tag-triggered), so
+  `vaulter-permissions-azgard` never existed on Packagist and the `Added` entry below lists the
+  bridge under its final name. Only a host tracking this monorepo's dev branch — requiring the old
+  package name via a path/VCS repo, or importing `Vaulter\Permissions\Azgard\*` FQCNs — has to
+  update. See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,
@@ -206,7 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   owner and idempotent delivery.
 - **Handler-aware documents** — rich-text (TipTap) and opaque snapshots (e.g. the Univer
   spreadsheet handler), plus a handler-aware create-path (`mime` resolves the node's handler).
-- **AzGuard bridge** (`axioma-studio/vaulter-permissions-azgard`) — a real `AzgardGuard` adapter
+- **AzGuard bridge** (`axioma-studio/vaulter-azgard`) — a real `AzgardGuard` adapter
   delegating to AzGuard scoped roles and workspace-context checks, keeping core AzGuard-free.
 - **Vue client** (`@vaulter/vue`) — Drive components (folder-picker, no `window.prompt`),
   shared-with-me view, node-collaboration composables and the headless spreadsheet shell.
