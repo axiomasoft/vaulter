@@ -82,7 +82,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
-| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 1/4 (1 🟠) | 🟡 In progress |
+| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 2/4 (1 🟠) | 🟡 In progress |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -97,7 +97,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 | D6 | 2026-07-11 | **Filament — вне активного scope** (ROADMAP-задел; ADR-0017-исключение) | Директива owner'а 2026-07-11: не тратить ресурсы, задел на будущее |
 | D7 | 2026-07-12 | **Нейминг контракта движка: `FileHandler` + `Contracts/Handlers/`, kind-нейтраль (вариант A, §8.1)** — owner approved (Dmitry Vostrikov, запуск `/task:plan-exec VLT-CANON P0.1`) | см. §8.1: контракт описывает ЛЮБОЙ файл (не только редактируемые), fallback-хендлеры (`DownloadOnlyHandler`/`PreviewHandler`) — не «движки»; уже согласовано RAG VLT-HSEAM (L5) |
 | D8 | 2026-07-13 | **Упаковка фронт-движков: вариант A (§8.2) — единый `@vaulter/vue` остаётся shell/core**; TipTap-движок внутри него, один version-train с PHP; per-engine npm (`@vaulter/vue-engine-<name>`) вводится лениво — только при реальном внешнем потребителе. Owner подтвердил A буквально (2026-07-13, Dmitry Vostrikov, `/task:plan-exec VLT-CANON P1.1`), альтернатива не выбрана — P1.2/P1.3 передетализация НЕ требуется | RAG:✅ 2026-07-11 `findings/frontend-engine-packaging-research.md`: Filament v4/Nova 5/Statamic v5 НЕ публикуют отдельный npm на плагин (CONFIRMED); awcodes/filament-tiptap-editor бандлит TipTap+15 расширений в одном пакете (CONFIRMED). Мой предварительный lean «per-engine npm» опровергнут research'ем — см. §8.2. Закрыт исполнением P1.1 |
-| D9 | — | *[media→drive слияние]* — резолвится в P2.2 по ## Обсуждение §8.3 | см. §8.3 |
+| D9 | 2026-07-13 | **`vaulter-media` остаётся standalone-пакетом (вариант A, §8.3)** — owner approved (Dmitry Vostrikov, интерактивный выбор в `/task:plan-exec VLT-CANON P2.2`) | media = переиспользуемый CAS-движок (ADR-0008 topology); `documents` его не требует; `drive` и так `requires media` — установка не меняется; слияние ломает «media = чистый движок» без продуктовой выгоды и требует BC-переноса namespace. Закрыт исполнением P2.2, без кода (сохранение статус-кво) |
 | D10 | 2026-07-13 | **Движок реестра → core (вариант A, §8.4)** — `DocumentHandlerRegistry`+`NodeHandlerResolver`+`DocumentFileDescriptorFactory`+`Capability`+baseline `PreviewHandler`/`DownloadOnlyHandler` переехали в `Vaulter\Engines\*` / `Vaulter\Enums\Handlers\*`; documents оставляет TipTap/Univer-драйверы. **Superseding-запись: явно пересматривает (1) H.5 («движок в documents, core fail-loud») и (2) T5/§Аллокацию Option B-топологии** (`docs/plan/p2-5-option-b-topology.md`: «`Documents\*` (registry/handlers/services) → docdrive»). Закрыт исполнением P0.4 | Новое требование, которого не было в скоупе при T5-разрезе: **drive-only хост** (файлы без редактирования) обязан получать preview/download-дескриптор БЕЗ `vaulter-documents`. До P0.4 `NodeResource::handler()` молча отдавал `null` такому хосту. Реестр = инфра ядра (как `PanelRegistry`); «tiptap — одно из расширений» стало буквальным |
 | D11 | 2026-07-13 | **Q2 VLT-HSEAM: оставить `yjs_state`** (вариант A, §8.5) — колонка nullable, чужой движок её не пишет, дискриминатор — `format`; переименование в `crdt_state` — чистая косметика без функциональной выгоды | см. §8.5; закрыт исполнением P0.5, без кода (сохранение статус-кво) |
 | D12 | 2026-07-11 | **Server-side дескриптор (`GET nodes/{node}/handler`) сохраняем — это WOPI-класс паттерна, НЕ универсальная норма** (Drive/Box/Dropbox мапят mime→viewer на клиенте — adversarial verify REFUTED «универсальность»); честное основание: (а) WOPI CheckFileInfo-модель подтверждена; (б) статика реестра (mime/priority/capabilities ≈ discovery.xml) отделена от динамики прав per-file/per-user — у нас это AccessResolver, НЕ смешивать в capabilities; (в) баг-класс протухших mime→editor ассоциаций при персисте — CONFIRMED (усиливает D4) | RAG:✅ 2026-07-11 `findings/drive-editor-resolution-research.md` (вкл. REFUTED-ноты) |
@@ -784,6 +784,25 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   убрать `vaulter-media` из require, CI-lane. **Приёмка:** решение зафиксировано D9; при слиянии — гейт drive
   зелёный, цикла нет, BC-запись.
 
+  **Completion Notes.** Owner (Dmitry Vostrikov, интерактивный вопрос в `/task:plan-exec VLT-CANON
+  P2.2`) выбрал **вариант A — `vaulter-media` остаётся standalone-пакетом**. Обоснование
+  (§8.3): media = переиспользуемый CAS-движок (topology-решение ADR-0008); `documents` его не
+  требует; `drive` и так несёт `requires media` — установка для конечного потребителя не
+  меняется; слияние сломало бы «media = чистый движок» без продуктовой выгоды, потребовало бы
+  BC-переноса `Vaulter\Media\*`→`Vaulter\Drive\*` и заставило бы file-tree-only хостов (без CAS)
+  тянуть блоб-стор бесплатно. Кода нет — решение фиксируется записью D9 в Decision Log (см.
+  ниже); дерево пакетов и namespace'ы не тронуты.
+  **Гейты:** без изменений (нет диффа кода), N/A.
+  **Ревью:** не требовалось (нет публичной поверхности, нет кода).
+  **Pending Work:** —
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует opus/high для решения D9; фактически исполнено
+     sonnet/medium (модель/effort этой сессии — дефолт `/task:plan-exec`, ручное переключение
+     запрещено протоколом). Решение принял owner напрямую интерактивным вопросом (тот же
+     прецедент, что D7/D8) — риск снят: развилка не требовала анализа кода/архитектуры сверх уже
+     готового §8.3 в плане, только выбор варианта.
+  **Status:** 🟢 Done
+
 - **P2.3 — Разбор catch-all: `Documents/`, `Uploads/`, `Support/`** (sonnet/medium, `vaulter-test-verifier`).
   По `findings/structure-canon-inventory.md §2.3`:
   - `documents/src/Documents/` → развести (частично сделано P0.4): реестр/резолвер (→ `Engines/` или core),
@@ -899,6 +918,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.2 закрыт (🟢): фронт-реестр компонентов формализован как публичный API (`registerEngineComponent`/4 сестры в `engineRegistry.ts`), фолбэк ПОСЛЕ `componentMap` prop (BC bit-for-bit), dev-warn через `watch` (не `computed`, находка ревью), доки+CHANGELOG синхронны — детали см. §6 P1.2 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.3 закрыт (🟢), **фаза P1 терминальна (3/3, 1🟠)**: гайд-скелет стороннего клиентского движка (`writing-an-engine.md` §7 +ru) — `.vue`-компонент с `DocumentNodeEditorProps` + `registerEngineComponent`, без отдельного npm-пакета (D8) — детали см. §6 P1.3 Completion Notes. |
 | 2026-07-13 | plan-exec/opus (medium) | P2.1 закрыт (🟠): пакет-мост переименован `permissions-azgard`→`azgard` (dir/composer/namespace/CI), core-шов `AzgardGuard` не тронут, добавлен arch-гвард dependency-direction — детали см. §6 P2.1 Completion Notes. |
+| 2026-07-13 | plan-exec/sonnet (medium) | P2.2 закрыт (🟢): D9 = вариант A (owner approved) — `vaulter-media` остаётся standalone-пакетом, кода нет — детали см. §6 P2.2 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
