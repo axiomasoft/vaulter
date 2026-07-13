@@ -79,7 +79,7 @@ Filament from its scope (D6); this is the follow-up once a real consumer needs i
 - Seam: same `HandlerRegistry`/`NodeHandlerResolver` core seam the Vue client already consumes —
   a Filament resource would call `Vaulter::handlers()` / `app(NodeHandlerResolver::class)` like
   any other consumer, no core changes needed.
-- Source: `plans/VLT-CANON/plan.md` D6; ADR-00XX (editor engine canon, see P3.3).
+- Source: `plans/archive/VLT-CANON/plan.md` D6; ADR-00XX (editor engine canon, see P3.3).
 
 ### `vaulter-livewire` (native Livewire components)
 An alternative to the Vue client for hosts that want native Livewire/Blade components instead

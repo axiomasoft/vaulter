@@ -2,7 +2,7 @@
 
 **Status:** accepted
 
-> Consolidates the design-and-execution record of **VLT-CANON** (`plans/VLT-CANON/plan.md`,
+> Consolidates the design-and-execution record of **VLT-CANON** (`plans/archive/VLT-CANON/plan.md`,
 > Decision Log D1–D12, phases P0–P3). Supersedes `plans/VLT-HSEAM/` in full — VLT-HSEAM's scope
 > (leaks L1–L5, capability-policy, DX scaffolding, Q1/Q2) was absorbed and closed here; see
 > "Supersession" below.
@@ -130,7 +130,7 @@ is confirmed real, reinforcing D4.
   that does not recognize it. This is arch/behaviour-tested (P0.5 `CapabilityPolicyTest`), not just
   documented.
 - **Known residual debt, deliberately left open by this ADR** (tracked in
-  `plans/VLT-CANON/handoff.md` "Open risks", not assigned to any closed item):
+  `plans/archive/VLT-CANON/handoff.md` "Open risks", not assigned to any closed item):
   1. `format` column mixed value-space, no cast/validation, no backfill for pre-P0.4 rows.
   2. CI gate-scope gap: the XSS allow-list/decay barrier now lives in `packages/documents`, whose
      CI lane (`documents.yml`) runs `pest --ci` without an enforcing `--coverage`/mutation

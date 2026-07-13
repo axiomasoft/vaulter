@@ -1,16 +1,18 @@
 # HANDOFF — 2026-07-13 — after P3.3
 
-**Next:**
+**Next:** план закрыт — все 4 фазы (P0–P3, 15 items) терминальны (🟢, 2 🟠); Meta Status →
+🟠 Done with deviations; `plans/ACTIVE.md` → `—`; заархивирован (`archive VLT-CANON`,
+коммиты `6102638`/`27992a2`). Следующий план — по решению owner'а, вне протокола.
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
 | Thinking | low — plan-closure/архивация, не design/exec решение |
 | Context | continue (/clear) — ручной шаг |
-| Суть | **план закрыт** целиком (P0 5/5, P1 3/3, P2 4/4, P3 3/3; Meta Status → 🟠 Done with deviations; `plans/ACTIVE.md` → `—`). Следующий шаг вне протокола — архивация по решению owner'а. |
+| Суть | план закрыт и заархивирован; следующий шаг вне протокола |
 
 ```
-/task:plan-close archive VLT-CANON
+план закрыт
 ```
 
 **Done:** P3.3 🟢 Done — последний item плана. Создан `docs/adr/0018-editor-engine-canon.md`
@@ -68,6 +70,17 @@ Board все фазы 🟢) · `docs/adr/0018-editor-engine-canon.md` (новы�
 10. `plans/VLT-HSEAM/` (кроме `plan.md`) остаётся untracked в git (пред-существующее с момента
     создания плана, не регресс P3.3) — `handoff.md`/`phases/P0.md`/
     `root/adr-file-handler-seam.md`/`findings/*` вне Scope Included этого item'а, не коммитил.
+
+**Archive migration checklist (2026-07-13, `archive VLT-CANON`):**
+- `root/` — пуст (каталог не создавался за жизнь плана) → миграция в docs пропущена, переносить нечего.
+- `artifacts/`, `findings/`, `20_research/` — только `findings/` (4 файла) присутствует, остаётся в
+  архиве как есть (`plans/archive/VLT-CANON/findings/`), в docs НЕ мигрирует (канон §12 п.3).
+- `workflows/` (`wf-vlt-canon-audit.js`, `wf-vlt-canon-research.js`) — остаются в архиве.
+- Ссылки на `plans/VLT-CANON/` в живых доках обновлены на `plans/archive/VLT-CANON/`:
+  `ROADMAP.md:82`, `docs/adr/0018-editor-engine-canon.md:5,133`, `plans/VLT-HSEAM/plan.md:5`.
+- `plans/ACTIVE.md` уже указывал `—` (сброшен на предыдущем шаге, 2026-07-13) — без изменений.
+- Осталось в архиве целиком: `plan.md`, `handoff.md`, `findings/*`, `workflows/*` (перенесённая
+  директория `plans/archive/VLT-CANON/`, коммит `27992a2`).
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —

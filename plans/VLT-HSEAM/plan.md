@@ -2,7 +2,7 @@
 
 > ⛔ **SUPERSEDED — формально помечен VLT-CANON P3.3 (2026-07-13).** Этот план НЕ исполнять.
 > Весь скоуп P0.1–P0.5 (утечки L1–L5, capability-policy, DX-каркас) и развилки Q1/Q2 перенесены
-> в `plans/VLT-CANON/plan.md` (фаза P0, Decision Log D7/D10/D11) и там исполнены и закрыты
+> в `plans/archive/VLT-CANON/plan.md` (фаза P0, Decision Log D7/D10/D11) и там исполнены и закрыты
 > (🟢 Done). Консолидирующий ADR: `docs/adr/0018-editor-engine-canon.md`. Единственный владелец
 > поверхности — VLT-CANON.
 
