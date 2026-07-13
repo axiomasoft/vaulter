@@ -878,8 +878,8 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   его после P0.1/P0.2/P1.x/P2.1, P2.3 в списке не назван (Routing P2.2–P2.4: sonnet/medium +
   `vaulter-test-verifier`, без reviewer'а); `vaulter-api-surface` покрыл BC-риск proactively
   (item трогает host-видимые FQCN, хоть и не Contracts/facade/config-ключи).
-  **Commits:** `<TBD>` — refactor(documents,drive)!: разбор catch-all-папок по ролям — Engines/
-  Export/Collaboration/Support (P2.3).
+  **Commits:** `427b9ce` — refactor(documents,drive)!: разбор catch-all-папок по ролям —
+  Engines/Export/Collaboration/Support (P2.3).
 
   **Pending Work:**
   1. Наследуемое, не тронутое этим item'ом: required status checks branch protection (P2.1),
