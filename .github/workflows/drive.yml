@@ -71,13 +71,44 @@ jobs:
         working-directory: packages/drive
         run: vendor/bin/pest --type-coverage --min=100
 
-      # F-P4.3-03/04: package-local Infection config, advisory only (see root
-      # mutation.yml for the same rationale).
-      - name: Mutation testing (advisory)
+  # Native Pest mutation, not Infection (VLT-REMED D38 / P5.9): Infection 0.33.3 ships
+  # no Pest adapter, so the step this replaced never ran a single mutant — `|| true`
+  # only hid that. The threshold is real and the job has no `|| true`: Pest exits
+  # non-zero when Score drops below it. Own job so the coverage driver, which the
+  # SQLite lane does not need, stays off the fast lanes and mutation runs once rather
+  # than once per Laravel cell.
+  drive-mutation:
+    name: vaulter-drive (mutation gate)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 (with coverage driver)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: xdebug
+          tools: composer:v2
+        env:
+          XDEBUG_MODE: coverage
+
+      - name: Install dependencies
         working-directory: packages/drive
-        run: |
-          vendor/bin/pest --coverage-xml=build/coverage/xml --log-junit=build/junit.xml --min=0
-          vendor/bin/infection --threads=4 --coverage=build/coverage --skip-initial-tests --no-progress || true
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # --min=95: floor(Score) - 5, измерено 2026-07-13 на pcov/PHP 8.5,
+      # `pest --mutate --path=src --covered-only --parallel` → Score 100.00%,
+      # 1569 mutations tested.
+      - name: Mutation testing
+        working-directory: packages/drive
+        run: vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          XDEBUG_MODE: coverage
 
   drive-pgsql:
     name: vaulter-drive (Postgres upload-commit lane)
