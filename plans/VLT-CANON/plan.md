@@ -82,7 +82,7 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
 |:--|:--|:--|:--|
 | P0 | Изоляция TipTap в драйвер + kind-нейтральный контракт движка (поглощает VLT-HSEAM) | 5/5 | 🟢 Done |
 | P1 | Упаковка/дистрибуция фронт-движков + формализация фронт-реестра (Часть 1) | 3/3 (1 🟠) | 🟢 Done |
-| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 0/4 | ⬜ Not started |
+| P2 | Финальный структурный канон: azgard-rename, media-развилка, catch-all, Access/Uploads | 1/4 (1 🟠) | 🟡 In progress |
 | P3 | Docs · ROADMAP (вкл. Filament-задел) · arch-тесты · supersede VLT-HSEAM | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -691,6 +691,93 @@ SemVer (шумный дифф, но без BC-обязательств). **Filam
   arch-guard'ы, docs. **Приёмка:** гейт azgard зелёный; core не сломан; BC UPGRADE/CHANGELOG; arch «0 ссылок
   core→azgard» зелёный.
 
+  **Completion Notes.** Hard rename без alias-фазы (пре-1.0), `git mv` — renames трекаются (27 файлов
+  пакета + workflow, similarity 100% на всех, кроме тронутых namespace-правкой). Переименовано:
+  dir `packages/permissions-azgard/` → `packages/azgard/`; composer `axioma-studio/vaulter-permissions-azgard`
+  → `axioma-studio/vaulter-azgard` (`name`, `autoload.psr-4`, `autoload-dev.psr-4`,
+  `extra.laravel.providers`); namespace `Vaulter\Permissions\Azgard\*` → `Vaulter\Azgard\*` во всех
+  4 `src/` + 12 `tests/` файлах (FQN-anchored `sed` на полный `Vaulter\Permissions\Azgard`, ловушки
+  префикс-коллизии нет — токен уникален). CI: `.github/workflows/permissions-azgard.yml` → `azgard.yml`
+  (path-фильтры, 4× `working-directory`, job id, display-name, self-reference); `monorepo-split.yml` —
+  matrix-энтри + prerequisites. Core: `DocsDriftGuardTest.php:42` (путь `packages/azgard/src`) +
+  **новый arch-гвард** `core source never references the vaulter-azgard package (P2.1)` в
+  `ArchTest.php` через существующий `coreReferencesTo('Azgard')` (тот же shared-хелпер, что у
+  drive/documents-гвардов; ревьюер верифицировал не-vacuous: подсаженный `use Vaulter\Azgard\*` в
+  копии core/src → тест падает). Доки: root `README.md` (матрица CI + дерево пакетов),
+  `docs/reference/contracts.md` (FQCN `AzgardBackedUser`), `rector.php` (комментарий),
+  `packages/azgard/README.md`, `phpunit.xml` (testsuite name). BC: `UPGRADE.md` (новая секция —
+  таблица old→new FQCN, «who breaks», нота о неизменности config/publish-тега) + `CHANGELOG.md`
+  `[Unreleased]`.
+  **Не тронуто (по Scope):** `Vaulter\Contracts\Access\AzgardGuard` + `Vaulter\Testing\FakeAzgardGuard`
+  + `Vaulter\Drivers\Permission\AzgardPermissionResolver` в core — контракт-шов и драйвер остаются на
+  своих FQCN (`git diff HEAD -- packages/core/src` → пусто). Config `config/vaulter-azgard.php`,
+  merge-ключ `vaulter-azgard`, publish-тег `vaulter-azgard-config` — байт-идентичны, только путь
+  переехал. Root `composer.json` правки не потребовал: path-repo = wildcard `packages/*`. `testbench.yaml`
+  azgard-провайдера не несёт — правки не потребовал.
+  **Гейты:** `pint --test packages/core packages/azgard` → passed (pint прогнан перед коммитом,
+  авто-фикс `ordered_imports`/`braces_position` после смены namespace); `phpstan analyse` (max,
+  монорепо) → passed, 0 errors; root `pest` (core) → **497/497, 1281 assertion**;
+  `pest --type-coverage --min=100` → 100.0%; гейт самого пакета из его vendor
+  (`packages/azgard`): `pint --test` → passed, `phpstan analyse` → OK, `pest --ci` → **20 passed,
+  50 assertions** (после `composer dump-autoload` — PSR-4-мапа старого namespace висела в
+  локальном vendor'е).
+  **Ревью.** `vaulter-api-surface` → **PASS**, clean rename-only diff: ноль изменений сигнатур,
+  возвращаемых типов, дефолтов, добавленных/удалённых public-методов; core-шов не тронут; config
+  байт-идентичен. `vaulter-reviewer` → **approve**, 2 MED + 2 LOW, все MED/LOW-в-скоупе закрыты
+  отдельным коммитом `987cb3a`:
+  - **(MED-1)** `[Unreleased]` сам себе противоречил: секция `Added` рекламировала мост под
+    СТАРЫМ именем, пока `Changed` объявлял его переименование — при том что пакет **ни разу не
+    публиковался** (тегов в репо нет, split-пайплайн `on: push: tags`). `Added` → новое имя;
+    BREAKING-буллет переформулирован честно (не слом опубликованного пакета — правка дев-ветки);
+    UPGRADE «Who breaks» аналогично: потребитель с Packagist мигрировать не должен.
+  - **(MED-2)** `docs/adr/0017-package-structure-canon.md` (**нормативный** канон структуры,
+    Status: accepted, на него ссылается UPGRADE) держал `permissions-azgard` в составе монорепо →
+    обе строки на новое имя + amendment-заметка.
+  - **(LOW-4)** `monorepo-split.yml` prerequisites не говорили, что делать с уже созданным
+    split-репо под старым именем → пункт 4 (удалить/abandon).
+  **Commits:** `2c3b9cb` — refactor(azgard)!: переименование пакета permissions-azgard → azgard
+  (P2.1); `987cb3a` — docs(azgard): findings ревью P2.1 — честный CHANGELOG, ADR-0017,
+  осиротевший split-таргет (P2.1).
+
+  **Pending Work:**
+  1. [MED-3, ревью, **вне дерева репо**] **Required status checks в branch protection `main`.**
+     Сменились и job id (`permissions-azgard`→`azgard`), и display-name
+     (`vaulter-permissions-azgard (SQLite lane, Laravel 12.*)` → `vaulter-azgard (...)`). GitHub
+     матчит required checks **по имени**: если старые имена прописаны в branch protection, PR'ы
+     повиснут в pending навсегда; если не прописаны — azgard-гейт молча выпадет из merge-gate.
+     Чинится в настройках репозитория (owner), не коммитом.
+  2. [LOW-5, ревью] `docs/plan/00-master-plan.md:54,539` и `docs/plan/p2-5-option-b-topology.md`
+     держат `packages/permissions-azgard` / `Vaulter\Permissions\Azgard\` в НАСТОЯЩЕМ времени
+     («✅ СДЕЛАНО как отдельный пакет `packages/permissions-azgard`»). `docs/plan/` — исторический
+     срез (сам план объявляет себя удаляемым после реализации), правка — осознанное решение
+     отдельным item'ом (кандидат в P3.1 docs), не молчаливый sed.
+  3. [пред-существующее, ревью] `packages/azgard/README.md` утверждает, что `tests/RealAzgard/`
+     «runs in the monorepo / host CI, not Vaulter's standalone matrix», а `azgard.yml` гоняет
+     `vendor/bin/pest --ci` БЕЗ фильтра — т.е. включая RealAzgard. Расхождение доки и CI было и
+     ДО P2.1 (не регресс), вне Scope Included.
+  4. Наследуемое из P0.x/P1.x и не тронутое: `format` value-space (MED-4 P0.4), CI gate-scope gap
+     XSS-барьера (P0.3 #1), стухшие FQCN в `document-handlers.md`, pre-existing dead link
+     `./activity` в `search-trash.md`.
+
+  **Known Deviations:**
+  1. Routing-adherence: §Routing требует для P2.1 **opus/high**; фактически исполнено
+     **opus/medium** (сессия на `claude-opus-4-8`, effort — дефолт команды `/task:plan-exec`,
+     которая пинит medium и запрещает ручное переключение). Модель совпала, effort ниже
+     заявленного; риск снят обязательными прогонами `vaulter-api-surface` + `vaulter-reviewer` —
+     оба отработали, находки ревью закрыты отдельным коммитом.
+  2. Приёмка item'а называет точками правки `composer path-repos`, root `composer.json` и
+     `testbench.yaml` — фактически **ни один из трёх не потребовал изменений**: root path-repo =
+     wildcard `packages/*` (rename прозрачен), root `composer.json` не `require`'ит мост,
+     `testbench.yaml` не несёт azgard-провайдера. Формулировка приёмки шире фактической
+     поверхности; отсутствие диффа в этих файлах — не пропуск, а факт (верифицировано grep'ом
+     и ревьюером).
+  3. `plan-lint.py` красный ДО и ПОСЛЕ P0.1–P2.1 (не регресс, наследуется): линтер требует
+     `phases/P0..P3.md` + `## 6. Update Log`, план держит фазы инлайном в `## 6. Phases
+     (детализация)` (Update Log — `## 9`); `plans/VLT-CANON/phases/` пуст с создания плана.
+     Структуру плана правит plan-design, не exec.
+
+  **Status:** 🟠 Done with deviations
+
 - **P2.2 — [Развилка D9/§8.3] media→drive?** (opus решение → sonnet если сливаем).
   Решить §8.3. Рекомендация — ОСТАВИТЬ standalone (media = чистый CAS-движок). Если owner выберет слияние —
   перенести `media/src/{Cas,Console}` в `drive/src/`, drive поглощает CAS, обновить `Contracts\Cas\*`-биндинги,
@@ -811,6 +898,7 @@ documents, core fail-loud») и (2) **аллокации T5/§Слои Option B-
 | 2026-07-13 | plan-exec/opus (medium) | P1.1 закрыт (🟠): D8 закрыт owner'ом = вариант A (единый `@vaulter/vue` shell/core, per-engine npm лениво) — гейт для P1.2/P1.3 снят, передетализация не требуется — детали см. §6 P1.1 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.2 закрыт (🟢): фронт-реестр компонентов формализован как публичный API (`registerEngineComponent`/4 сестры в `engineRegistry.ts`), фолбэк ПОСЛЕ `componentMap` prop (BC bit-for-bit), dev-warn через `watch` (не `computed`, находка ревью), доки+CHANGELOG синхронны — детали см. §6 P1.2 Completion Notes. |
 | 2026-07-13 | plan-exec/sonnet (medium) | P1.3 закрыт (🟢), **фаза P1 терминальна (3/3, 1🟠)**: гайд-скелет стороннего клиентского движка (`writing-an-engine.md` §7 +ru) — `.vue`-компонент с `DocumentNodeEditorProps` + `registerEngineComponent`, без отдельного npm-пакета (D8) — детали см. §6 P1.3 Completion Notes. |
+| 2026-07-13 | plan-exec/opus (medium) | P2.1 закрыт (🟠): пакет-мост переименован `permissions-azgard`→`azgard` (dir/composer/namespace/CI), core-шов `AzgardGuard` не тронут, добавлен arch-гвард dependency-direction — детали см. §6 P2.1 Completion Notes. |
 
 ## 10. Провенанс
 - Внутренние: `plans/VLT-HSEAM/{plan.md, handoff.md, root/adr-file-handler-seam.md, findings/P0-*.md}`,
