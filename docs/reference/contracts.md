@@ -401,7 +401,14 @@ interface FileHandler
   collaborative, computed per file.
 - `ui()` — the Vue component + open route + props the client mounts.
 
-See [Recipes → Custom handler](/guide/recipes).
+See [Recipes → Custom handler](/guide/recipes) and [Writing a Handler/Engine](/guide/writing-an-engine)
+for a full worked example.
+
+`Vaulter\Engines\Handlers\AbstractFileHandler` is an optional DX base a third-party
+handler MAY extend — it only defaults `extensions()` to `[]`; every other method stays
+handler-specific. Implementing `FileHandler` directly is always enough; the base class
+saves nothing beyond that one line. The built-in handlers do not extend it — they stay
+`final` with zero inheritance (H.5).
 
 ### `Vaulter\Contracts\Handlers\DocumentExporter`
 

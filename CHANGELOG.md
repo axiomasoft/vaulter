@@ -137,6 +137,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changed from the literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`). No
   backfill ships — pre-existing rows keep their stored value; `format` is an advisory label, the
   handler is always resolved from the node's mime (D4). See `UPGRADE.md`.
+- **BREAKING (pre-1.0): `HandlerCapabilities::$richText` now defaults to `false` (was `true`)**
+  (VLT-CANON P0.5). A kind-neutral handler makes no rich-text claim unless it opts in. The two
+  built-in editable handlers are unaffected in behaviour (`TipTapHandler` now declares
+  `richText: true` explicitly; `UniverHandler` already declared `richText: false`); a
+  third-party handler relying on the implicit `true` default must now set it explicitly.
+- **`NodeExportService::contentOf()` is now kind-neutral** (VLT-CANON P0.5, closing a P0.2/P0.3/
+  P0.4 open finding). A non-rich-text node's export now returns its own `OpaqueDocumentContent`
+  shape instead of decaying to an empty TipTap document — `HtmlExporter`/`MarkdownExporter`'s
+  existing narrowing guard now correctly rejects it with `UnsupportedDocumentContentException`
+  instead of silently rendering blank content. `CreateDocumentNodeData::$format`'s default
+  changed from the invalid literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`).
+  See `UPGRADE.md`.
 - **BREAKING (pre-1.0): the legacy `document_id`-bound DocVault path was excised**
   (ADR-0014 step 2), leaving a single canonical `v_nodes` document path (kind=document
   nodes with node-attached comments and versions). Removed: the `Document`,

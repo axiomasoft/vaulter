@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Documents\Casts\BinaryString;
+use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -106,6 +107,17 @@ class NodeDocumentVersion extends Model
         $content = $this->content;
 
         return is_array($content) ? TipTapContent::decayFrom($content) : TipTapContent::empty();
+    }
+
+    /**
+     * This version's content as an opaque, unvalidated snapshot (§7 level 2) — the
+     * shape a non-rich-text handler's content round-trips as, e.g. a Univer workbook.
+     */
+    public function opaqueContent(): OpaqueDocumentContent
+    {
+        $content = $this->content;
+
+        return OpaqueDocumentContent::fromArray(is_array($content) ? $content : []);
     }
 
     /**

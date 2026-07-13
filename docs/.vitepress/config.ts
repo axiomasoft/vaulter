@@ -27,6 +27,7 @@ const guideSidebar = [
       { text: 'Drive — storages, folders & nodes', link: '/guide/drive' },
       { text: 'Storage & Blobs', link: '/guide/storage-and-blobs' },
       { text: 'Document Handlers', link: '/guide/document-handlers' },
+      { text: 'Writing a Handler/Engine', link: '/guide/writing-an-engine' },
     ],
   },
   {
@@ -138,6 +139,7 @@ const ruGuideSidebar = [
       { text: 'Drive — хранилища, папки и узлы', link: '/ru/guide/drive' },
       { text: 'Хранилище и блобы', link: '/ru/guide/storage-and-blobs' },
       { text: 'Обработчики документов', link: '/ru/guide/document-handlers' },
+      { text: 'Написание движка/обработчика', link: '/ru/guide/writing-an-engine' },
     ],
   },
   {

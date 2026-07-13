@@ -21,11 +21,14 @@ final readonly class HandlerCapabilities
 {
     /**
      * @param bool $richText Whether this handler's editable content is a TipTap rich-text
-     *                       doc ({"type":"doc"}). Defaults TRUE — the historical shape. A
-     *                       non-rich-text editor (e.g. the spreadsheet handler) sets it
-     *                       FALSE, and the content write path then stores its JSON snapshot
-     *                       verbatim (OpaqueDocumentContent) instead of validating and
-     *                       projecting it as TipTap.
+     *                       doc ({"type":"doc"}). Defaults FALSE (VLT-CANON P0.5; was
+     *                       TRUE before) — a kind-neutral handler makes no claim about
+     *                       content shape unless it opts in. A
+     *                       rich-text editor (e.g. a TipTap-backed handler) sets it TRUE; any
+     *                       other editable handler (e.g. the spreadsheet handler) leaves it
+     *                       at the default, and the content write path then stores its JSON
+     *                       snapshot verbatim (OpaqueDocumentContent) instead of validating
+     *                       and projecting it as TipTap.
      */
     public function __construct(
         public bool $editable = false,
@@ -33,7 +36,7 @@ final readonly class HandlerCapabilities
         public bool $downloadable = true,
         public bool $thumbnailable = false,
         public bool $collaborative = false,
-        public bool $richText = true,
+        public bool $richText = false,
     ) {}
 
     /**

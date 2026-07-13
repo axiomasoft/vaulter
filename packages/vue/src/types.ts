@@ -111,13 +111,20 @@ export interface NodeAbilities {
   [ability: string]: boolean | undefined
 }
 
-/** What a file handler declares it can do (`HandlerCapabilities`). */
+/**
+ * What a file handler declares it can do (`HandlerCapabilities`). This is an
+ * ADDITIVE, open axis set (VLT-CANON P0.5): the server may ship a new boolean flag
+ * (e.g. `rich_text`) at any time, and existing client code that destructures a
+ * known subset keeps working unchanged — the index signature is the contract that
+ * an unrecognised key is ignored, never an error.
+ */
 export interface HandlerCapabilities {
   editable: boolean
   previewable: boolean
   downloadable: boolean
   thumbnailable: boolean
   collaborative: boolean
+  [capability: string]: boolean | undefined
 }
 
 /** The front-end mount descriptor a handler returns (`HandlerUi`). */

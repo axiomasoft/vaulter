@@ -75,6 +75,7 @@ final class TipTapHandler implements FileHandler
             downloadable: true,
             thumbnailable: false,
             collaborative: true,
+            richText: true,
         );
     }
 

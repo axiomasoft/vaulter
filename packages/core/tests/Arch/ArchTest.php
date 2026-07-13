@@ -145,9 +145,16 @@ arch('the document handler registry and its handlers are final')
     ->expect('Vaulter\Documents\Documents')
     ->toBeFinal();
 
+/**
+ * `AbstractFileHandler` (P0.5) is the one deliberate exception: an optional DX base
+ * a THIRD-PARTY handler extends, so it must stay abstract, not final. Every other
+ * class under `Vaulter\Engines` — the registry, the resolver, the baseline
+ * handlers — is sealed core-internal.
+ */
 arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
     ->expect('Vaulter\Engines')
-    ->toBeFinal();
+    ->toBeFinal()
+    ->ignoring('Vaulter\Engines\Handlers\AbstractFileHandler');
 
 arch('the FileHandler contract is an interface (H.5)')
     ->expect('Vaulter\Contracts\Handlers\FileHandler')

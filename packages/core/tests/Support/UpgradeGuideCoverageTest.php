@@ -70,6 +70,8 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // P0.4 — движок реестра переехал в core (D10); факт кода — реальная привязка в
         // VaulterServiceProvider, не просто наличие файла.
         'P0.4 registry engine in core' => ['(VLT-CANON P0.4 / D10', (string) file_get_contents($root.'/packages/core/src/VaulterServiceProvider.php')],
+        // P0.5 — richText дефолт flip; факт кода — сам VO несёт дефолт false.
+        'P0.5 richText default' => ['(VLT-CANON P0.5)', (string) file_get_contents($root.'/packages/core/src/ValueObjects/Handlers/HandlerCapabilities.php')],
     ];
 });
 

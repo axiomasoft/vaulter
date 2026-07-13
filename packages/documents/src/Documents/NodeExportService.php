@@ -8,12 +8,15 @@ use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
+use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Engines\DocumentFileDescriptorFactory;
 use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Enums\Handlers\Capability;
+use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\VaulterManager;
 
@@ -90,18 +93,30 @@ final class NodeExportService
     }
 
     /**
-     * The return type is the opaque {@see DocumentContent} (P0.2), but the BODY still
-     * resolves every version through {@see TipTapContent} — a non-TipTap snapshot decays
-     * to an EMPTY TipTap doc here instead of reaching the exporter as its own shape. So a
-     * non-rich-text node (the Univer/spreadsheet path) currently exports as an empty
-     * document rather than being refused by the exporter's narrowing guard. Making this
-     * kind-neutral (opaque handlers → OpaqueDocumentContent) is deliberately OUT of P0.2's
-     * scope — it belongs with the read-path work in P0.4/P0.5.
+     * The version content shaped for the node's resolved handler (P0.5, kind-neutral):
+     * a rich-text handler's head decays to {@see TipTapContent} (never throws — see
+     * {@see NodeDocumentVersion::tipTapContent()}); any other editable handler's head
+     * is an opaque snapshot, returned verbatim as {@see OpaqueDocumentContent}. A
+     * non-rich-text node used to decay to an EMPTY TipTap doc here and export as
+     * blank content instead of being refused by the exporter's narrowing guard
+     * ({@see UnsupportedDocumentContentException}) — it now reaches the guard as
+     * its own shape.
      */
     private function contentOf(Node $node): DocumentContent
     {
         $head = $this->versions->head($node) ?? $this->versions->latest($node);
 
-        return $head?->tipTapContent() ?? TipTapContent::empty();
+        if ($head === null) {
+            return TipTapContent::empty();
+        }
+
+        $descriptor = $this->descriptors->forNode($node);
+        $handler = $this->handlers->resolve($descriptor, Capability::Preview);
+
+        if (!$handler->capabilities($descriptor)->richText) {
+            return $head->opaqueContent();
+        }
+
+        return $head->tipTapContent();
     }
 }

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Data\Documents;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Documents\Documents\Handlers\TipTapHandler;
+use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 
@@ -28,7 +29,7 @@ final readonly class CreateDocumentNodeData
         public string $name,
         public DocumentContent $content,
         public ?Node $parent = null,
-        public string $format = 'tiptap',
+        public string $format = DocumentType::RichText->value,
         public string $mimeType = TipTapHandler::DOCUMENT_MIME,
         public int|string|null $actorId = null,
     ) {}

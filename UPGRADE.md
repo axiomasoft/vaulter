@@ -6,6 +6,44 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `HandlerCapabilities::$richText` now defaults to `false`; the export read path is kind-neutral (VLT-CANON P0.5)
+
+**`richText` default flipped from `true` to `false`.** `Vaulter\ValueObjects\Handlers\
+HandlerCapabilities` no longer assumes rich text (TipTap) is the default shape for editable
+content — a handler that doesn't explicitly declare `richText: true` is now treated as
+non-rich-text (opaque content), not rich-text. **Who breaks:** any THIRD-PARTY `FileHandler`
+that relies on omitting `richText` to mean "rich text" — it must now set `richText: true`
+explicitly. The two built-in editable handlers are unaffected: `TipTapHandler` now sets
+`richText: true` explicitly (it always behaved as rich-text; only the *declaration* changed from
+implicit to explicit); `UniverHandler` already set `richText: false` explicitly. A request with
+NO bound node (`UpdateDocumentContentRequest::isRichText()`'s no-node fallback) now defaults to
+`false` (kind-neutral — no claim without a resolved handler) instead of `true`; this path is only
+reachable outside normal route-model-binding and has no known consumer.
+
+**`CreateDocumentNodeData::$format` default changed from the literal `'tiptap'` to
+`DocumentType::RichText->value` (`'richtext'`).** `'tiptap'` was never a valid `DocumentType`
+value (see the P0.4 value-space note above) — only direct construction of this DTO (bypassing the
+HTTP create endpoint, which always supplies `format` explicitly via
+`CreateDocumentNodeRequest::versionFormat()`) is affected.
+
+**The export read path (`NodeExportService::contentOf()`) is now kind-neutral**, closing the gap
+P0.2/P0.3/P0.4 tracked as open: it used to resolve EVERY node's head through `TipTapContent`
+regardless of the node's actual handler, so a non-rich-text node (e.g. a `univer` spreadsheet)
+decayed to an EMPTY TipTap document and exported as blank content instead of being refused. It
+now resolves the node's handler and branches on `richText`: a rich-text node's head still decays
+through `TipTapContent` exactly as before (no change for TipTap documents); a non-rich-text
+node's head is now returned as its own `OpaqueDocumentContent` snapshot, which the existing
+`HtmlExporter`/`MarkdownExporter` narrowing guard rejects with
+`UnsupportedDocumentContentException` instead of silently rendering nothing. **Who breaks:**
+any client exporting a non-rich-text (e.g. Univer) document to HTML/Markdown — it now gets a 4xx
+`UnsupportedDocumentContentException` instead of a 200 with blank/empty content. This is a
+correctness fix, not a new restriction: the blank export was never useful output.
+
+**Frontend:** `HandlerCapabilities` in `@vaulter/vue` now carries `rich_text: boolean` (was
+missing from the TS type entirely, even though the backend always serialised it) plus an open
+index signature (`[capability: string]: boolean | undefined`) — capabilities are an additive axis
+set, and future new flags won't break existing client code that destructures a known subset.
+
 ### The format-handler contract is kind-neutral now: `DocumentHandler` → `FileHandler` (VLT-CANON P0.1 / D7)
 
 **Why.** The contract describes ANY file a host might route to a handler — image/pdf preview,
@@ -211,10 +249,8 @@ longer reflects the shipped defaults — refresh the `handlers` key to keep it h
 (`vaulter-documents` still adds `TipTapHandler` — and `UniverHandler` when `features.spreadsheets`
 is on — on top of whatever this list holds; you never list those yourself.)
 
-Not in scope of this item (tracked separately): `NodeExportService::contentOf()` still resolves
-every version through `TipTapContent` (P0.2 finding) — a non-TipTap node's export still decays to
-an empty document rather than being refused; this is unchanged by P0.4 and remains open for
-P0.5/the read-path work.
+`NodeExportService::contentOf()`'s TipTap-only read path (tracked as open here) is fixed in
+VLT-CANON P0.5 — see above.
 
 ### The collaboration server (`hocuspocus-server`) now requires Node >= 22 (P4.1 / F-P4.5-02)
 

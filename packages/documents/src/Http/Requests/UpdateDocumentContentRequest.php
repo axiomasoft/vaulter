@@ -76,8 +76,9 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
 
     /**
      * Whether the route node's editable content is rich text (TipTap). Resolves the
-     * node's handler and reads its capability; defaults to true (the historical shape)
-     * when no node is bound. Memoised — the registry itself also caches the resolution.
+     * node's handler and reads its capability; defaults to false (kind-neutral — no
+     * claim without a handler) when no node is bound. Memoised — the registry itself
+     * also caches the resolution.
      */
     private function isRichText(): bool
     {
@@ -88,7 +89,7 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
         $node = $this->route('node');
 
         if (!$node instanceof Node) {
-            return $this->richText = true;
+            return $this->richText = false;
         }
 
         $descriptor = app(DocumentFileDescriptorFactory::class)->forNode($node);
