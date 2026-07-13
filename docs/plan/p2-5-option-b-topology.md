@@ -4,6 +4,14 @@
 > рабочий нейминг **DocDrive**/`vaulter-docdrive` — то же самое, что впоследствии вышло под именем
 > пакета `axioma-studio/vaulter-documents` (namespace **Vaulter Documents**). Актуальное имя и
 > историю переименования см. в `CHANGELOG.md`; тело документа ниже не переписано намеренно.
+> Аллокация «`Documents\*` (registry/handlers/services) → docdrive» (ниже, §TL;DR и §Аллокация)
+> тоже устарела: engine-ownership (D10) впоследствии увёл registry/`DocumentHandlerRegistry`/
+> `NodeHandlerResolver`/`DocumentFileDescriptorFactory`/baseline-хендлеры обратно в core
+> (`Vaulter\Engines\*`); `vaulter-documents` держит только свои форматные хендлеры
+> (`TipTapHandler`, `UniverHandler`) в `Vaulter\Documents\Engines\Handlers\*`. Актуальные FQCN
+> и P2.3-переезд (`Documents\Documents\*` → `Documents\Engines\*`/`Export`/`Collaboration`,
+> `Drive\Uploads\StagedUpload` → `Drive\Support\Uploads\StagedUpload`) см. `UPGRADE.md`
+> [Unreleased] («Engine ownership (D10)», «Catch-all folders resolved by role… (VLT-CANON P2.3)»).
 
 > **Статус:** Proposed (design-фаза `/task:design`, кода нет). Primary source для фаз Kernel-harden →
 > Drive → DocDrive. Продолжение линии `docs/plan/p2-5-vaulter-media-extraction.md` (media уже извлечён).

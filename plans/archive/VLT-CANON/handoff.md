@@ -42,15 +42,38 @@ Board все фазы 🟢) · `docs/adr/0018-editor-engine-canon.md` (новы�
 задокументированный residual, ни один не закрыт этим item'ом)
 1. **Required status checks на `main` не переименованы** (MED, наследуется из P2.1, вне дерева
    репо): job id/display-name azgard-лейна сменились; чинит owner в настройках репозитория.
-2. **`docs/plan/*` держат старые FQCN в настоящем времени** (LOW, наследуется из P2.1/P2.3):
-   `00-master-plan.md:54,539`, `p2-5-option-b-topology.md` (permissions-azgard);
-   `p2-5-namespace-strategy-drive-docdrive.md`, `p2-5-option-b-topology.md`
-   (`Documents\Documents`, `Drive\Uploads\StagedUpload`). Не в `docs:build`-навигации.
+2. ~~**`docs/plan/*` держат старые FQCN в настоящем времени** (LOW, наследуется из P2.1/P2.3).~~
+   **Closed 2026-07-13** (`/task:fix`, вне дерева VLT-CANON): `00-master-plan.md:539` —
+   хеджированное «`vaulter-permissions-azgard` или внутри media/core drivers» заменено на
+   фактический пакет+FQCN (`Vaulter\Permissions\Azgard\AzgardPermissionResolver`);
+   `p2-5-namespace-strategy-drive-docdrive.md:214` — `Drive\Uploads\StagedUpload` заменён на
+   актуальный `Drive\Support\Uploads\StagedUpload` (P2.3); `p2-5-option-b-topology.md` — decision-лог
+   намеренно не переписан (см. его же пре-существующее примечание про DocDrive→vaulter-documents),
+   примечание расширено пойнтером на D10 engine-ownership (registry/handlers ушли в
+   `Vaulter\Engines\*`) и на `UPGRADE.md` [Unreleased] с актуальными FQCN. Не в `docs:build`-навигации.
 3. **`format` — смешанный value-space, backfill не шипается** (наследуется из P0.4, MED).
    Задокументировано в ADR-0018 §Consequences. Назначенного item'а нет.
-4. **Gate-scope gap CI** (наследуется из P0.3/P0.4, Major): XSS-барьер в `packages/documents`
-   не несёт enforcing-порогов mutation/coverage. Задокументировано в ADR-0018 §Consequences.
-   Нужен отдельный CI/gate-item — ни в одном P-item'е плана его нет.
+4. ~~**Gate-scope gap CI** (наследуется из P0.3/P0.4, Major): XSS-барьер в `packages/documents`
+   не несёт enforcing-порогов mutation/coverage.~~ **Closed 2026-07-13** (`/task:dev`, вне дерева
+   VLT-CANON), коммиты `6ca1b2a`/`7a3c89f`/`e3dd60e`.
+
+   > **Отменяет более раннюю запись того же дня** (`/task:fix`), объявлявшую риск закрытым снятием
+   > `|| true` с Infection-шага `documents.yml` при провизорных `minMsi: 50`/`minCoveredMsi: 70`.
+   > Это было **ложное закрытие**: шаг физически не мог отработать — job поднят с `coverage: none`,
+   > а Infection 0.33.3 не несёт Pest-адаптера (`testFramework` = phpunit/phpspec/codeception/testo),
+   > ровно та причина, по которой VLT-REMED D38/P5.9 сняли Infection с корня. Снятие `|| true` не
+   > включило гейт, а сделало лейн вечно-красным.
+
+   Гейт закрыт по-настоящему и тем же инструментом, что корень: `pest --mutate --path=src
+   --covered-only --parallel --min=95` в отдельном job'е с coverage-драйвером, без `|| true` —
+   Pest роняет процесс сам при `Score < --min`. Порог = `floor(Score) − 5` по измерению 2026-07-13
+   (pcov, PHP 8.5): `documents` — **Score 100.00 %, 1472 мутанта**. Гейт проверен на падение.
+   Заодно закрыт тот же gap в трёх соседних лейнах (`drive` 100.00 %/1569, `media` 100.00 %/380,
+   `filament` 100.00 %/189) — они несли ту же неработающую Infection-ступень. Четыре
+   `infection.json5` удалены, `infection/infection` снят из require-dev, `make mutate` починен.
+   Отдельно: `composer analyse` пакета `documents` был **красным** (2 × `nullsafe.neverNull`) —
+   починено в `0247c53`, иначе гейт не на чем было бы строить. См. `CHANGELOG.md`/`UPGRADE.md`
+   [Unreleased] и `plans/archive/VLT-REMED/findings/P5.3-closure-matrix.md` §6.
 5. **`docs/ru/reference/contracts.md` заметно отстал от en** (LOW, найдено в P3.1): нет секций
    `HandlerRegistry`/`NodeHandlerResolver`, местами устаревшая номенклатура. Кандидат в
    отдельный docs-item вне VLT-CANON.
@@ -84,8 +107,9 @@ Board все фазы 🟢) · `docs/adr/0018-editor-engine-canon.md` (новы�
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: required checks в branch protection (Open risk 1, owner). `docs/plan/*` стухшие
-  имена (2). `format` value-space (3). CI gate-scope gap (4). ru contracts.md синхронизация
-  (5). Реактивность `registerEngineComponent` (6). README-vs-CI расхождение azgard (7).
+- deferred: required checks в branch protection (Open risk 1, owner). ~~`docs/plan/*` стухшие
+  имена (2)~~ — closed 2026-07-13. `format` value-space (3). ~~CI gate-scope gap (4)~~ — closed 2026-07-13. ru
+  contracts.md синхронизация (5). Реактивность `registerEngineComponent` (6). README-vs-CI
+  расхождение azgard (7).
   `plans/VLT-HSEAM/` частичная незакоммиченность (10, вне Scope P3.3).
 - open_questions: —

@@ -211,7 +211,8 @@ Vaulter\Drive\Http\Requests\{CopyNodeRequest,CreateFolderRequest,DriveNameRules,
 Vaulter\Drive\Http\Resources\{NodeResource,StorageResource,FileVersionResource}                                           (было Http\Resources\Drive\*, минус NodeGrantResource)
 Vaulter\Drive\Console\{PurgeTrashCommand,SweepUploadsCommand}                                                              (было плоский Vaulter\Console\*, см. §Инвентарь #10; паттерн 1:1 как media → Vaulter\Media\Console\*)
 -- под-домен Uploads --
-Vaulter\Drive\Uploads\{UploadSessionManager,S3MultipartHandler,TusUploadHandler,StagedUpload}                             (было Uploads\*)
+Vaulter\Drive\Uploads\{UploadSessionManager,S3MultipartHandler,TusUploadHandler}                                          (было Uploads\*)
+Vaulter\Drive\Support\Uploads\{StagedUpload,MagicByteSniffer,UploadModels}                                                 (было Uploads\* — вынесены P2.3, см. UPGRADE.md)
 Vaulter\Drive\Uploads\Actions\CommitUploadAction                                                                          (было Actions\Uploads\CommitUploadAction)
 Vaulter\Drive\Uploads\Repositories\{UploadPartStoreRepository,UploadSessionReadRepository,UploadSessionStoreRepository}   (было Repositories\Uploads\*)
 Vaulter\Drive\Uploads\Enums\{UploadProtocol,UploadStatus}                                                                 (было Enums\Uploads\*)
