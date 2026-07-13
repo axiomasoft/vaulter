@@ -84,12 +84,21 @@ jobs:
         working-directory: packages/filament
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # --min=95: floor(Score) - 5, измерено 2026-07-13 на pcov/PHP 8.5,
-      # `pest --mutate --path=src --covered-only --parallel` → Score 100.00%,
-      # 189 mutations tested.
+      # NO `--parallel` (VLT-MUT D2): флаг делал гейт неспособным упасть — Pest отдаёт мутант-процессу
+      # argv родителя вместе с `--parallel`, ребёнок уходит в ParaTest, падает на --mutate/--path, не
+      # выполнив ни одного теста, а ненулевой exit ребёнка Pest считает признаком «мутант убит». Убиты
+      # были все. Доказательство: plans/VLT-MUT/findings/P0.1-parallel-defect.md.
+      #
+      # SQLite — единственный драйвер: драйвер-условных тестов у filament нет (VLT-MUT D6).
+      #
+      # --min — ratchet ВВЕРХ (D4/D35): цель 95, поднимается каждой фазой, НИКОГДА не опускается.
+      # 54 = floor(59.26) − 5 по честному замеру 2026-07-13 (последовательно, pcov/PHP 8.4, холодный
+      # кэш): Score 59.26 % — 112 убито, 77 выжило из 189 мутантов. Число мутантов совпало с прежним,
+      # Score — нет: их «убивал» сломанный флаг, а не тесты. 91 % выживших — в NodeShareResource (45)
+      # и NodeGrantResource (25), т.е. в формах выдачи прав. Добивание — фаза P6 плана VLT-MUT.
       - name: Mutation testing
         working-directory: packages/filament
-        run: vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95
+        run: vendor/bin/pest --mutate --path=src --covered-only --min=54
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'

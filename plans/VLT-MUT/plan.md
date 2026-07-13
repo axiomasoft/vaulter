@@ -91,13 +91,13 @@ VLT-REMED P5.9 / Open risk #4 (VLT-CANON handoff) объявили mutation-ге
 
 | Фаза | Название | Items | Статус |
 |:--|:--|:--|:--|
-| P0 | Доказательство дефекта + честная базовая линия пяти пакетов | 2 | 🔵 In progress (drive 🟢, остальные четыре ⚪) |
-| P1 | Честная форма гейта в CI (снять `--parallel`, PG-лейн drive, ratchet-порог, шардинг) | 3 | 🔵 In progress (drive 🟢) |
+| P0 | Доказательство дефекта + честная базовая линия пяти пакетов | 2 | 🔵 In progress (drive · media · filament 🟢; core · documents ⚪) |
+| P1 | Честная форма гейта в CI (снять `--parallel`, PG-лейн drive, ratchet-порог, шардинг) | 3 | 🔵 In progress (drive · media · filament 🟢) |
 | P2 | `vaulter-drive` → Score ≥ 95 (база 48.34 %, 780 выживших) | TBD | ⚪ Todo |
 | P3 | `vaulter-core` → Score ≥ 95 | TBD | ⚪ Todo |
 | P4 | `vaulter-documents` → Score ≥ 95 | TBD | ⚪ Todo |
-| P5 | `vaulter-media` → Score ≥ 95 | TBD | ⚪ Todo |
-| P6 | `vaulter-filament` → Score ≥ 95 | TBD | ⚪ Todo |
+| P5 | `vaulter-media` → Score ≥ 95 (база 71.25 %, 115 выживших) | TBD | ⚪ Todo |
+| P6 | `vaulter-filament` → Score ≥ 95 (база 59.26 %, 77 выживших — 91 % в формах выдачи прав) | TBD | ⚪ Todo |
 | P7 | Пороги = 95, документация, пересмотр ложных закрытий, release-readiness | 3 | ⚪ Todo |
 
 ## 5. Decision Log
@@ -133,19 +133,31 @@ VLT-REMED P5.9 / Open risk #4 (VLT-CANON handoff) объявили mutation-ге
   `findings/P0.2-drive-escaped.txt` (полный перечень, 780 строк). Крупнейшая группа — 237 выживших
   `RemoveArrayItem`: незапиненные payload outbox-события, `context` активности, **правила валидации**
   в Request'ах и поля API-ресурсов. Это не косметика, а прямые дыры внешнего контракта.
-- **core / documents / media / filament** ⚪ Todo. documents и media мерить **на Postgres** — у них свои
-  PG-лейны (yjs/gin и CAS), т.е. та же недомутация, что была у drive.
+- **media** 🟢 Done (2026-07-13): **union Score 71.25 %** — 285 убито / 400, выжило 115.
+  По драйверам: Postgres 71.14 % (281/395), SQLite 68.16 % (259/380). Артефакт: `findings/
+  P0.2-baseline-media-filament.md`. Профиль: 46 из 115 — вывод консольных команд (`ReconcileBlobs`,
+  `GcBlobs`), но 45 — **`BlobGarbageCollector` (26) и `Sha256ContentStore` (19)**, т.е. ядро GC и
+  инкрементальное хеширование CAS.
+- **filament** 🟢 Done (2026-07-13): **Score 59.26 %** — 112 убито, **77 выжило** из 189 мутантов.
+  Число мутантов совпало с прежней фиктивной цифрой, Score — нет. **91 % выживших — в двух ресурсах:
+  `NodeShareResource` (45) и `NodeGrantResource` (25)**, т.е. в формах ВЫДАЧИ ПРАВ ДОСТУПА. Худший
+  профиль из трёх измеренных пакетов.
+- **core / documents** ⚪ Todo. documents мерить на Postgres (0 sqlite-only / 2 pg-only), core — union
+  (D6). core крупнейший: 202 файла в `src`.
 
 ### P1 — Честная форма гейта в CI
 
 **P1.1 — Снять `--parallel` во всех пяти workflow.** 🔵 In progress
 - `.github/workflows/{mutation,documents,drive,media,filament}.yml`.
 - Порог на этом шаге — ratchet по измеренному Score (D4), с комментарием-пойнтером на этот план.
-- **drive** 🟢 Done (2026-07-13): `--parallel --processes=4` снят, `--min=95` → `--min=43`
-  (`floor(48.34) − 5`). Это НЕ понижение планки: 95 никогда не был измерен — прежний Score был
-  артефактом. 43 — страховка от регресса на время P2; цель 95 остаётся.
-- Остальные четыре ⚪ — ждут своей базовой линии (P0.2). До неё `--parallel` в них НЕ снимаем: без
-  измеренного порога получится либо вечно-красный лейн, либо гейт без `--min`, т.е. та же фикция.
+- **drive** 🟢 Done: `--parallel` снят, `--min=95` → **43** (`floor(48.34) − 5`), лейн на Postgres.
+- **media** 🟢 Done: `--parallel` снят; job получил PG-сервис и гоняет **два прогона, оба с порогом** —
+  Postgres `--min=66`, SQLite `--min=63` (D6: скипы в обе стороны). Пройти надо оба — это строго
+  сильнее, чем порог по union.
+- **filament** 🟢 Done: `--parallel` снят, `--min=95` → **54** (`floor(59.26) − 5`), SQLite.
+- **core / documents** ⚪ — ждут своей базовой линии. До неё `--parallel` не снимаем: без измеренного
+  порога получится либо вечно-красный лейн, либо гейт без `--min`, т.е. та же фикция.
+- Ни один порог не является «планкой качества» — это страховки от регресса. Цель 95 в силе для всех.
 
 **P1.2 — `drive-mutation` на Postgres.** 🟢 Done (2026-07-13)
 - Зеркалит `drive-pgsql`: `services: postgres:16-alpine` + healthcheck `pg_isready`, extensions
