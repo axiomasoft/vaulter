@@ -33,6 +33,18 @@ on:
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:
+    # P2.7 — a dispatch must be able to pick ONE lane: measuring runner CV means five
+    # smoke-perf runs, not five smoke-perf + five 60-minute regressions. The block is
+    # byte-identical to the registration stub on `main` (a workflow is only dispatchable
+    # if a file of that name exists on the default branch — GitHub resolves the workflow
+    # by name there, then runs THIS file from the selected ref); a divergent input list
+    # between the two would fail dispatch validation.
+    inputs:
+      run:
+        description: 'Which lane to run'
+        type: choice
+        options: [smoke-perf, regression, both]
+        default: smoke-perf
 
 concurrency:
   group: load-${{ github.workflow }}-${{ github.ref }}
@@ -40,15 +52,35 @@ concurrency:
 
 jobs:
   smoke-perf:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: >-
+      github.event_name == 'pull_request'
+      || (github.event_name == 'workflow_dispatch' && inputs.run != 'regression')
     name: smoke-perf (S0, class A blocking)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 25, not 15 (P2.6's estimate): on a real runner the job also pays for `composer
+    # install` and a cold `docker build` — neither is visible on a laptop with a warm
+    # cache. The real end-to-end duration is recorded in findings/P2.7-cv-runner.md.
+    timeout-minutes: 25
     env:
       TIER: S0
       LOAD_APP_PORT: 8080
     steps:
       - uses: actions/checkout@v4
+
+      # P2.7 — the SUT image does NOT copy the code in: `app` bind-mounts the repo
+      # (load/docker-compose.load.yml), and its entrypoint runs `vendor/bin/testbench
+      # migrate:fresh`. On a laptop `vendor/` is simply there; on a fresh checkout it is
+      # not, and the stand died before serving a single request.
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies (the stand bind-mounts vendor/ from the host)
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Bring up the S0 stand
         run: TIER=S0 ./load/scripts/up.sh
@@ -107,7 +139,9 @@ jobs:
           retention-days: 14
 
   regression:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: >-
+      github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.run != 'smoke-perf')
     name: regression (nightly, median-3)
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -115,9 +149,21 @@ jobs:
       TIER: S0
       LOAD_APP_PORT: 8080
     steps:
+      # No `ref: main` pin (P2.6): a scheduled run already checks out the default branch,
+      # while a dispatch on any other ref got `main` — which carries no `load/` at all, so
+      # the job could only ever fail. The triggering ref is the right checkout for both.
       - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
         with:
-          ref: main
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies (the stand bind-mounts vendor/ from the host)
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Bring up the S0 stand
         run: TIER=S0 ./load/scripts/up.sh
