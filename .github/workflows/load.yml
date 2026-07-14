@@ -85,6 +85,24 @@ jobs:
       - name: Bring up the S0 stand
         run: TIER=S0 ./load/scripts/up.sh
 
+      - name: Wait for the SUT to serve
+        # `up.sh` runs `compose up -d`, which waits for the DEPENDENCIES to be healthy but
+        # not for `app` itself: its entrypoint still has to run `migrate:fresh` before nginx
+        # binds. On a laptop the human's next keystroke hid that gap; a runner curls the
+        # port ~0s later and gets a connection reset (P2.7, run 1).
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8080/load/health; then
+              echo "SUT is serving."
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "::error::SUT never served /load/health — app container log follows."
+          docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env logs app
+          exit 1
+
       - name: Confirm the SUT is real (not just container-healthy)
         run: |
           curl -fsS http://127.0.0.1:8080/load/health
@@ -167,6 +185,24 @@ jobs:
 
       - name: Bring up the S0 stand
         run: TIER=S0 ./load/scripts/up.sh
+
+      - name: Wait for the SUT to serve
+        # `up.sh` runs `compose up -d`, which waits for the DEPENDENCIES to be healthy but
+        # not for `app` itself: its entrypoint still has to run `migrate:fresh` before nginx
+        # binds. On a laptop the human's next keystroke hid that gap; a runner curls the
+        # port ~0s later and gets a connection reset (P2.7, run 1).
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8080/load/health; then
+              echo "SUT is serving."
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "::error::SUT never served /load/health — app container log follows."
+          docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env logs app
+          exit 1
 
       - name: Confirm the SUT is real (not just container-healthy)
         run: |
