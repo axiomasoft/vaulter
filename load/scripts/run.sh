@@ -76,8 +76,14 @@ case "$TARGET" in
     *) SCRIPT="$TARGET" ;;
 esac
 
+# P2.7 — `--no-deps` is load-bearing, not tidiness: `docker compose run` re-evaluates the
+# dependency graph of `k6` (depends_on: app) and RECREATED `app` on a clean runner. Its
+# entrypoint runs `migrate:fresh` on every start, so the seed (P2.3) was wiped seconds
+# before k6 measured — 86 % of requests then 404'd and the gate read it as an SLO
+# failure (run 29362400228). The stand is already up and healthy by `up.sh`; the k6
+# container has no business touching it.
 if [ -n "${LOAD_PROFILE:-}" ]; then
-    docker compose -f docker-compose.load.yml --env-file "$ENV_FILE" --profile bench run --rm -T \
+    docker compose -f docker-compose.load.yml --env-file "$ENV_FILE" --profile bench run --rm -T --no-deps \
         --workdir /scripts \
         -e ENV_FINGERPRINT="$ENV_FINGERPRINT" -e GIT_COMMIT_SHA="$GIT_COMMIT_SHA" \
         -e LOAD_PROFILE="$LOAD_PROFILE" -e TIER="$TIER" -e DURATION="$DURATION" k6 \
@@ -103,7 +109,7 @@ export function handleSummary(data) {
 export { setup, interactive, upload, download };
 JS
 else
-    docker compose -f docker-compose.load.yml --env-file "$ENV_FILE" --profile bench run --rm \
+    docker compose -f docker-compose.load.yml --env-file "$ENV_FILE" --profile bench run --rm --no-deps \
         -e ENV_FINGERPRINT="$ENV_FINGERPRINT" -e GIT_COMMIT_SHA="$GIT_COMMIT_SHA" k6 \
         run --out experimental-prometheus-rw "/scripts/${SCRIPT}"
 fi

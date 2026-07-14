@@ -113,8 +113,34 @@ jobs:
           docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
             'TIER=S0 vendor/bin/testbench load:seed --fresh'
 
+      # P2.7 — an empty database answers 404 to every id-bound route, and k6 records that
+      # as `http_req_failed` — i.e. a wiped seed is indistinguishable from an SLO failure
+      # unless something asserts otherwise. It is not hypothetical: `docker compose run`
+      # recreated `app` (whose entrypoint runs `migrate:fresh`) right before the measured
+      # window, and the gate dutifully reported 86 % errors as a red class A.
+      - name: Record the seeded row count
+        run: |
+          NODES="$(docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env \
+            exec -T postgres psql -U vaulter -d vaulter_load -tAc 'SELECT count(*) FROM v_nodes')"
+          echo "v_nodes after seed: ${NODES}"
+          test "${NODES}" -gt 1000
+          echo "NODES_AFTER_SEED=${NODES}" >> "$GITHUB_ENV"
+
       - name: k6 smoke-perf (mixed.js, class-A thresholds, 1 run)
         run: TIER=S0 ./load/scripts/run.sh smoke-perf
+
+      - name: Assert the stand was not recreated under the run
+        if: always()
+        run: |
+          NODES="$(docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env \
+            exec -T postgres psql -U vaulter -d vaulter_load -tAc 'SELECT count(*) FROM v_nodes')"
+
+          if [ "${NODES}" != "${NODES_AFTER_SEED}" ]; then
+            echo "::error::v_nodes went ${NODES_AFTER_SEED} → ${NODES} DURING the run — the stand was rebuilt under k6 (app's entrypoint re-runs migrate:fresh). Whatever this run measured, it is not the SLO."
+            exit 1
+          fi
+
+          echo "Seed intact (v_nodes=${NODES}) — the run measured the seeded stand."
 
       - name: perf-assert — server plane (class A blocking, class B advisory)
         if: always()
