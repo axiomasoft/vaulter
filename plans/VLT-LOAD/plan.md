@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | VLT-LOAD |
 | Title | Нагрузочная готовность vaulter: SLO → сценарии → профилирование → память/стриминг → конкуренция → очереди → деградация → наблюдаемость |
-| Version | 0.1.0 |
-| Status | 🔵 In progress (P0 — проектирование; исполнение фаз — по DoR) |
+| Version | 0.2.0 |
+| Status | 🟡 In progress (P0 🟢; P1 спроектирована — DoR пройден, исполнение с P1.1) |
 | Document Type | Executable Master Plan (design-first: до P3 — артефакты и решения, не код) |
 | Authoring Model | opus/high (design-профиль task:design; см. §3 Routing — все фазы этого плана роутятся на opus/high) |
-| Last Updated | 2026-07-13 |
+| Last Updated | 2026-07-14 |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Стек | PHP 8.4, Laravel 12/13-contracts, Postgres 16, Flysystem+S3, tus/S3-multipart, staudenmeir HasRecursiveRelationships, Laravel queues, Reverb/Hocuspocus |
@@ -22,9 +22,10 @@
 | Branch | `remediation/audit-vlt` (design-фаза — коммитим только артефакты plans/; код фаз — по решению владельца) |
 
 > **Как поднять из файла после /clear:** читать этот `plan.md` целиком + `findings/P0-rag-load-tooling.md`
-> (провенанс внешних фактов: k6/Postgres/очереди/OTel — 2026, верифицировано через RAG). Факты рекона
-> кодовой базы (горячие пути, индексы, память-vs-стриминг, unbounded-scan'ы) вплавлены в §1 и в
-> per-phase «Опора в коде» — с точными `file:line`. Никакого чата не требуется: план самодостаточен.
+> и `findings/P1-rag-slo-ci-gate.md` (провенанс внешних фактов: k6/Postgres/очереди/OTel; CI-гейт на
+> shared-раннерах; docker cpuset vs квота — верифицировано через RAG). Факты рекона кодовой базы
+> (горячие пути, индексы, память-vs-стриминг, unbounded-scan'ы) вплавлены в §1 — с точными `file:line`.
+> Детализация фаз и ТЗ items — в `phases/Pn.md`; текущая точка — `handoff.md`. Чата не требуется.
 
 ---
 
@@ -53,8 +54,9 @@ VLT-MUT меряет **корректность** (мутационный гей
   инкрементально (`packages/media/src/Cas/Sha256ContentStore.php:37-78`); `BlobStore::commit()` хеширует
   ВНЕ транзакции, лок держит только на liveness (`packages/media/src/Cas/BlobStore.php:52-94`).
 - Download **стримит** 256 KiB через `streamDownload` (`packages/drive/src/Http/Controllers/DownloadController.php:112-140`),
-  НО **всегда через PHP, без presigned-redirect (D15)** — каждое скачивание занимает PHP-воркер на всю
-  длительность (`:26-31`). Один blob на версию, мульти-blob reassembly на download-пути нет (`:90-106`).
+  НО **всегда через PHP, без presigned-redirect** (решение владельца — **AUDIT-VLT D15**, не D15 этого
+  плана) — каждое скачивание занимает PHP-воркер на всю длительность (`:26-31`). Один blob на версию,
+  мульти-blob reassembly на download-пути нет (`:90-106`).
 
 **Конкуренция (фаза P5):**
 - Per-session критическая секция — NOWAIT advisory-lock, общий для PATCH/putPart/commit/abort/expire:
@@ -158,7 +160,10 @@ VLT-MUT меряет **корректность** (мутационный гей
 
 | Items | Model/effort · Tool Capability | Why |
 |:--|:--|:--|
-| P1 (SLO) | opus/high | цифры-обязательства каскадят на все фазы; ошибка тут инвалидирует программу |
+| P1.1, P1.3 (тиры, SLO-числа) | opus/high | цифры-обязательства каскадят на все фазы; ошибка тут инвалидирует программу |
+| P1.2 (каталог операций) | sonnet/medium + `Explore` | рекогносцировка маршрутов/команд с якорями — механика, не решение; критерий полноты машинный (обход `Route::` + `Console/`) |
+| P1.4 (гейт-политика) | opus/high + tool-capability `context7`/`perplexity-web` (RAG) | синтаксис порогов k6 и политика baseline — внешние факты; «по памяти» = дефект (см. `findings/P1-rag-slo-ci-gate.md`) |
+| P1.5 (sign-off) | человек (владелец) + sonnet/low на механическую правку статусов | решение не делегируется модели; исполнитель лишь готовит decision-sheet и переносит ответ в артефакты |
 | P2 (харнесс), P3 (профилирование БД) | opus/high + `Explore`/`general-purpose` | выбор инструмента, EXPLAIN-методология, индекс-ревизия — решения |
 | P4 (память/стриминг) | opus/high | архитектурный риск (RAM `complete()`), может потребовать редизайн сборки |
 | P5 (конкуренция), P6 (очереди), P7 (деградация) | opus/high для дизайна сценариев + sonnet/medium для прогонов | дизайн chaos/контеншн-профилей — решение; прогон — механика |
@@ -169,17 +174,20 @@ VLT-MUT меряет **корректность** (мутационный гей
 
 ## 4. Phase Index & Status Board
 
-| Фаза | Название | Гейт | Статус |
+| Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Разведка + RAG-провенанс + этот план | — | 🟢 Done (2026-07-13) |
-| P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) | **гейт P2–P7** | ⚪ Todo |
-| P2 | Нагрузочный харнесс: инструмент (k6) + профили трафика | **гейт P3–P7** | ⚪ Todo |
-| P3 | Профилирование запросов: EXPLAIN горячих путей, ревизия индексов под объёмом | после P2 **и** P8-минимум | ⚪ Todo |
-| P4 | Память и стриминг: бенчмарки ≤5 ГиБ post-фикс L-01 (см. D7/D11 — сам L-01 уже доказан, не гипотеза) | после P2 **и** P8-минимум, после dev-среза L-01 (D11) | ⚪ Todo |
-| P5 | Конкуренция в масштабе: сотни контендеров, advisory-lock, пул, sweeper | после P2 **и** P8-минимум | ⚪ Todo |
-| P6 | Семантика очередей под завалом: relay/retry/DLQ/идемпотентность | после P2 **и** P8-минимум | ⚪ Todo |
-| P7 | Деградация инфраструктуры: S3-отвал, PG-failover, диск-full | после P3–P6 | ⚪ Todo |
-| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) | **гейт P3–P7** (минимальный набор seam'ов — до старта замеров) | ⚪ Todo |
+| P0 | Разведка + RAG-провенанс + этот план | 1/1 | 🟢 Done |
+| P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) · **гейт P2–P8** | 0/5 | 🟡 In progress |
+| P2 | Нагрузочный харнесс: инструмент (k6) + профили трафика · **гейт P3–P7** · после P1 | 0/1 | ⬜ Not started |
+| P3 | Профилирование запросов: EXPLAIN горячих путей, ревизия индексов под объёмом · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
+| P4 | Память и стриминг: бенчмарки ≤5 ГиБ post-фикс L-01 (D7/D11 — сам L-01 уже доказан, не гипотеза) · после P2, P8-минимума и dev-среза L-01 | 0/1 | ⬜ Not started |
+| P5 | Конкуренция в масштабе: сотни контендеров, advisory-lock, пул, sweeper · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
+| P6 | Семантика очередей под завалом: relay/retry/DLQ/идемпотентность · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
+| P7 | Деградация инфраструктуры: S3-отвал, PG-failover, диск-full · после P3–P6 | 0/1 | ⬜ Not started |
+| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) · **гейт P3–P7** по минимальному набору seam'ов | 0/1 | ⬜ Not started |
+
+Детализация фаз — в `phases/Pn.md` (P1 развёрнута на 5 items; P2–P8 — скелеты с блупринтами P0,
+разворачиваются `/task:plan-design VLT-LOAD Pn`).
 
 Порядок: **P1 → P2 → P8-минимум → {P3, P4, P5, P6 параллельно} → P7**. P8 — не «параллельна и подпирает»,
 а гейт: план сам фиксирует (D9), что без метрик P3–P7 не имеют опоры для вердикта («SLO нарушен» нечем
@@ -193,265 +201,36 @@ P8-минимума. Поставлена восьмой по нумерации
 
 | ID | Решение | Основание |
 |:--|:--|:--|
-| D1 | **VLT-LOAD — отдельный план, второй в `ACTIVE.md`.** Ось нагрузки ортогональна оси корректности (VLT-MUT); не фаза и не замена. | §1.1 |
-| D2 | **Инструмент нагрузки — k6** (дефолт). Locust — резерв для Python/boto3-SigV4-гимнастики. Gatling отклонён: слаб на multi-GB стриминге и resumable-протоколах. | RAG-1 (`findings/P0` — omeronal/ranorex/testguild 2026) |
-| D3 | **Стриминг тела в k6 — через `xk6-fasthttp` (кастомный бинарник), НЕ стоковый k6.** Core-k6 грузит файл целиком в RAM (`open()`/`SharedArray`) → OOM генератора на 5 ГиБ × сотни VU. Экспериментальный streams-API — JS-уровень, не HTTP-тело. Для tus допустим и chunk-на-уровне-сценария. | RAG-2 (grafana/k6 #2976/#2974, extension-registry) |
-| D4 | **Метрики k6 — `xk6-output-prometheus-remote`**, в тот же кастомный бинарник; распределённо — **k6 Operator** (образ с бинарником в `TestRun.spec.image`). | RAG-3 |
-| D5 | **Профилирование БД:** `pg_stat_statements` (reset per run) + `EXPLAIN(ANALYZE,BUFFERS,VERBOSE)` + **HypoPG** для гипотез-индексов; lock-контеншн — `pg_blocking_pids()`-запрос + `log_lock_waits`+`deadlock_timeout=1s`; пул — PgBouncer transaction-mode. | RAG-4 (oneuptime/yonk/monpg/vela 2026) |
-| D6 | **Для деревьев проверить порог CTE-vs-ltree.** Recursive-CTE держим (cycle-guard + `withMaxDepth(64)` уже есть), но на глубоких/широких деревьях замерить, где `candidateNodeIds()` (N-CTE per grant) и `MoveNodeAction` (O(subtree) в PHP) ломают SLO; ltree/materialized-path — кандидат-долг, если CTE не тянет. | §1.2 + RAG-4 |
-| D7 | **`S3MultipartHandler::complete()` (весь файл в RAM) — это НЕ гипотеза P4, это доказанный Blocker-кандидат уже сейчас (D-LOAD-5a).** Механизм прямой и проверяется арифметикой, не прогоном: `complete()` конкатенирует все парты в одну PHP-строку (`packages/drive/src/Uploads/S3MultipartHandler.php:152-188`), `max_chunk_bytes` (64 MiB) ограничивает ОДИН парт, а не сумму (`readPartWithinLimit()` :230-247) — клиент, объявивший честную 5-ГиБ multipart-загрузку через публичный API, кладёт FPM-воркер по памяти без всякой конкуренции. Это вектор исчерпания памяти, доступный любому пользователю с правом на загрузку, а не только сценарий деградации под нагрузкой. Заведено в §7 как L-01 (Blocker-кандидат, статус «подтверждено», НЕ «подтвердить»). P4 не доказывает эту находку — P4 меряет УЖЕ переписанную стриминговую сборку post-фикс (после того как срез откроется по D11). | §1.2 (S3MultipartHandler.php:152-188), D-LOAD-5a |
-| D8 | **Unbounded-scan'ы — первоклассные цели P5/P6.** `SweepUploadsCommand` `->get()`, GC `->cursor()` без batch-cap, `WebhookRetryDispatcher::claimDue()` без limit, `OutboxRelay::subscribedEndpoints` O(endpoints)-в-PHP — измерить деградацию на «грязных» объёмах, завести долг на батчинг/чекпоинты. | §1.2 |
-| D9 | **Наблюдаемость строим с нуля (P8), и P8 — ГЕЙТ для P3–P7, не параллельная фаза.** OpenTelemetry PHP SDK → OTLP Collector → Prometheus/Tempo; метрики очереди/GC/sweep/upload/collab и тайминги горячих путей — seam'ы, которых в пакете нет. Без базового набора метрик прогоны P3–P7 не имеют опоры для вердикта («SLO нарушен» нечем измерить) — P8 обязана поставить минимальный набор seam'ов ДО того, как P3–P7 фиксируют результат, а не просто «стартовать сразу за P2» на своих рельсах. | §1.2 + RAG-5 (наблюдаемость=absent) |
-| D10 | **Замер — на production-подобии и «грязных» состояниях** (D-LOAD-2/3): тот же Postgres-минор, PgBouncer-режим, реальный S3/MinIO-throttle, предзаполнение (млн сессий/блобов, глубокое дерево). | RAG-4 методология |
-| D11 | **Фикс горячего пути (dev-срез по L-01/L-02/L-06 и т.п.) открывается только после того, как VLT-MUT закрыл `vaulter-drive` до Score ≥ 95.** Факт на сегодня (VLT-MUT P0.2 baseline, холодный кэш): `S3MultipartHandler.php` — **38** выживших мутантов, `SweepUploadsCommand.php` — **17**, `MoveNodeAction.php` — **4** (`plans/VLT-MUT/findings/P0.2-drive-escaped.txt`). Рефакторинг под тестами, которые не ловят инверсию условия или пропажу элемента массива, не доказывает, что переписанное поведение корректно — только то, что оно не упало. Порядок: VLT-MUT P2 (`vaulter-drive` → ≥95) закрывается **до** любого dev-среза из §7 по drive-файлам. | D-LOAD-5b, `plans/VLT-MUT/plan.md` P2, `findings/P0.2-baseline-drive.md` |
+| D1 | **VLT-LOAD — отдельный план, второй в `ACTIVE.md`.** Ось нагрузки ортогональна оси корректности (VLT-MUT); не фаза и не замена. | §1.1 · RAG:— (внутреннее решение об осях планов, внешних фактов не несёт) |
+| D2 | **Инструмент нагрузки — k6** (дефолт). Locust — резерв для Python/boto3-SigV4-гимнастики. Gatling отклонён: слаб на multi-GB стриминге и resumable-протоколах. | **RAG:✅ 2026-07-13** — RAG-1 (`findings/P0-rag-load-tooling.md`: omeronal/ranorex/testguild 2026). Alternatives: Locust — резерв (Python/boto3-SigV4); Gatling отклонён. |
+| D3 | **Стриминг тела в k6 — через `xk6-fasthttp` (кастомный бинарник), НЕ стоковый k6.** Core-k6 грузит файл целиком в RAM (`open()`/`SharedArray`) → OOM генератора на 5 ГиБ × сотни VU. Экспериментальный streams-API — JS-уровень, не HTTP-тело. Для tus допустим и chunk-на-уровне-сценария. | **RAG:✅ 2026-07-13** — RAG-2 (grafana/k6 issues #2976/#2974, extension-registry) |
+| D4 | **Метрики k6 — `xk6-output-prometheus-remote`**, в тот же кастомный бинарник; распределённо — **k6 Operator** (образ с бинарником в `TestRun.spec.image`). | **RAG:✅ 2026-07-13** — RAG-3 |
+| D5 | **Профилирование БД:** `pg_stat_statements` (reset per run) + `EXPLAIN(ANALYZE,BUFFERS,VERBOSE)` + **HypoPG** для гипотез-индексов; lock-контеншн — `pg_blocking_pids()`-запрос + `log_lock_waits`+`deadlock_timeout=1s`; пул — PgBouncer transaction-mode. | **RAG:✅ 2026-07-13** — RAG-4 (oneuptime/yonk/monpg/vela 2026) |
+| D6 | **Для деревьев проверить порог CTE-vs-ltree.** Recursive-CTE держим (cycle-guard + `withMaxDepth(64)` уже есть), но на глубоких/широких деревьях замерить, где `candidateNodeIds()` (N-CTE per grant) и `MoveNodeAction` (O(subtree) в PHP) ломают SLO; ltree/materialized-path — кандидат-долг, если CTE не тянет. | §1.2 + **RAG:✅ 2026-07-13** — RAG-4 («для read-hot иерархий ltree/materialized-path обгоняют CTE: traversal → один index range scan») |
+| D7 | **`S3MultipartHandler::complete()` (весь файл в RAM) — это НЕ гипотеза P4, это доказанный Blocker-кандидат уже сейчас (D-LOAD-5a).** Механизм прямой и проверяется арифметикой, не прогоном: `complete()` конкатенирует все парты в одну PHP-строку (`packages/drive/src/Uploads/S3MultipartHandler.php:152-188`), `max_chunk_bytes` (64 MiB) ограничивает ОДИН парт, а не сумму (`readPartWithinLimit()` :230-247) — клиент, объявивший честную 5-ГиБ multipart-загрузку через публичный API, кладёт FPM-воркер по памяти без всякой конкуренции. Это вектор исчерпания памяти, доступный любому пользователю с правом на загрузку, а не только сценарий деградации под нагрузкой. Заведено в §7 как L-01 (Blocker-кандидат, статус «подтверждено», НЕ «подтвердить»). P4 не доказывает эту находку — P4 меряет УЖЕ переписанную стриминговую сборку post-фикс (после того как срез откроется по D11). | §1.2 (S3MultipartHandler.php:152-188), D-LOAD-5a · **RAG:—** — вердикт выведен чтением кода и арифметикой (внешний источник не требуется и не был бы доказательством) |
+| D8 | **Unbounded-scan'ы — первоклассные цели P5/P6.** `SweepUploadsCommand` `->get()`, GC `->cursor()` без batch-cap, `WebhookRetryDispatcher::claimDue()` без limit, `OutboxRelay::subscribedEndpoints` O(endpoints)-в-PHP — измерить деградацию на «грязных» объёмах, завести долг на батчинг/чекпоинты. | §1.2 · **RAG:—** — факты из кода (якоря `file:line`), внешней верификации не требуют |
+| D9 | **Наблюдаемость строим с нуля (P8), и P8 — ГЕЙТ для P3–P7, не параллельная фаза.** OpenTelemetry PHP SDK → OTLP Collector → Prometheus/Tempo; метрики очереди/GC/sweep/upload/collab и тайминги горячих путей — seam'ы, которых в пакете нет. Без базового набора метрик прогоны P3–P7 не имеют опоры для вердикта («SLO нарушен» нечем измерить) — P8 обязана поставить минимальный набор seam'ов ДО того, как P3–P7 фиксируют результат, а не просто «стартовать сразу за P2» на своих рельсах. **Уточнено P1 (D16):** сам список P8-минимума выводится не в P8, а в item'е P1.4 — из колонки «Prometheus-метрика» таблицы `slo-gates.md`. | §1.2 + **RAG:✅ 2026-07-13** — RAG-5 (OTel PHP SDK → Collector → Prometheus/Tempo; метрики очереди) |
+| D10 | **Замер — на production-подобии и «грязных» состояниях** (D-LOAD-2/3): тот же Postgres-минор, PgBouncer-режим, реальный S3/MinIO-throttle, предзаполнение (млн сессий/блобов, глубокое дерево). | **RAG:✅ 2026-07-13** — RAG-4 (методология: production-подобный ворклоад, свип 0.5×…20–50× до насыщения) |
+| D11 | **Фикс горячего пути (dev-срез по L-01/L-02/L-06 и т.п.) открывается только после того, как VLT-MUT закрыл `vaulter-drive` до Score ≥ 95.** Факт на сегодня (VLT-MUT P0.2 baseline, холодный кэш): `S3MultipartHandler.php` — **38** выживших мутантов, `SweepUploadsCommand.php` — **17**, `MoveNodeAction.php` — **4** (`plans/VLT-MUT/findings/P0.2-drive-escaped.txt`). Рефакторинг под тестами, которые не ловят инверсию условия или пропажу элемента массива, не доказывает, что переписанное поведение корректно — только то, что оно не упало. Порядок: VLT-MUT P2 (`vaulter-drive` → ≥95) закрывается **до** любого dev-среза из §7 по drive-файлам. | D-LOAD-5b, `plans/VLT-MUT/plan.md` P2, `plans/VLT-MUT/findings/P0.2-baseline-drive.md` · **RAG:—** — числа выживших мутантов из собственного baseline-прогона репо |
+| D12 | **SLO — tiered: три эталонных профиля развёртывания S/M/L**, а не один. Vaulter — пакет, а не приложение: прод-потребителя с известной нагрузкой нет (интеграция с FlexCRM — host-задача, подтверждено памятью проекта). Хост при внедрении выбирает тир; SLO пакета остаются переносимыми. Тиры фиксирует item P1.1, числа — P1.3. | Решение владельца 2026-07-14 · **RAG:—** (не внешний факт). Alternatives: (а) один эталонный профиль — отвергнуто: при внедрении в другой хост числа пришлось бы изобретать заново; (б) вывести из FlexCRM — отвергнуто: данных нет, фаза бы заблокировалась на чужой стороне. |
+| D13 | **Эталонный «железный конверт» — docker-стенд в `load/`, и «железо» задаётся `cpuset`-пиннингом, а не `--cpus`-квотой.** CFS-квота при исчерпании бюджета паркует процесс до конца периода → пилообразные всплески латентности, перцентили невоспроизводимы. Память — `mem_limit` == `memswap_limit` (swap off); `shared_buffers`/`work_mem` PG — от cgroup-лимита, не от RAM хоста. | Решение владельца 2026-07-14 (docker-стенд) + **RAG:✅ 2026-07-14** (`findings/P1-rag-slo-ci-gate.md` RAG-7: docs.docker resource_constraints — квота→throttling, cpuset→гладкая латентность). Alternatives: облачный стенд — отвергнуто владельцем: не воспроизводим в CI, шум соседей, платно. |
+| D14 | **SLO машинно-проверяемы (CI-гейт на PR), и гейт — ДВУХКЛАССОВЫЙ.** Класс A (шумоустойчивый, абсолютный, блокирующий): error-rate, checks-rate, throughput при фиксированной конкуренции, потолок пиковой памяти, счётчики unbounded-scan. Класс B (латентность p95/p99): абсолютный порог — только широкий guardrail (~150 % цели), острый гейт — **относительная регрессия к baseline** (медиана из N=3, CV-guard). Один класс на всё → флапающий гейт, который отключат. | Решение владельца 2026-07-14 (SLO = CI-гейт) + **RAG:✅ 2026-07-14** (RAG-6: «you generally should not gate on absolute latencies from noisy shared GitHub Actions runners»; baseline — версионированный артефакт; медиана-из-3; `checks` сами не валят CI; `abortOnFail`+`delayAbortEval`). |
+| D15 | **Латентный класс B стартует как advisory, а не блокирующий** — в репо нет dedicated perf-раннера (`.github/workflows/`: 26× `runs-on: ubuntu-latest`, self-hosted нет), и SUT крутится на том же общем раннере, что и генератор. Блокирующим класс B становится при появлении perf-раннера ЛИБО при доказанном CV < 10 % по 5 прогонам (меряется в P2). Авторитетные латентные числа снимаются на контролируемом lab-box. Вопрос владельцу — `open-questions.md` Q1. | **RAG:✅ 2026-07-14** (RAG-6: смягчающая развилка «SUT в контролируемом окружении, раннер только генерирует» у vaulter НЕ работает — оба на одном раннере). Alternatives: (а) гейтить абсолютный p95 всё равно — отвергнуто: флап → `continue-on-error` через месяц, декоративный гейт; (б) ждать perf-раннера и не делать гейт вовсе — отвергнуто: класс A шумоустойчив и ловит катастрофу уже сейчас. |
+| D16 | **Каждый SLO несёт ID (`SLO-nn`) и машинное выражение порога** (k6-метрика + тег + threshold) **и имя Prometheus-метрики.** Следствие: список **P8-минимума выводится в P1.4** из этой таблицы, а не изобретается фазой P8 — иначе P8 инструментирует то, что ей удобно, и вердикт «SLO нарушен» опять не на чем построить (ровно противоречие, которое закрывал D9). | **RAG:✅ 2026-07-14** (RAG-6: тегированные пороги `http_req_duration{scenario:x}`, exit code 99, `checks: ['rate>0.99']` обязателен, `abortOnFail`+`delayAbortEval`). |
+| D17 (кандидат — ждёт владельца, Q3) | **Тир S не помещается в `ubuntu-latest` ⇒ CI гоняет усечённый профиль `S0`, а не тир S.** Бенч-стенд S = 7 ядер (SUT 4 + генератор 2 + резерв хоста 1) и ~9,3 ГиБ; раннер даёт 4 vCPU / 16 ГиБ / ~14 ГиБ диска на общем хосте — непересекающиеся cpuset'ы app/PG/MinIO/генератора (инвариант E-4) физически не строятся. Числа тира S **не ужимались** под возможности CI (это была бы подмена предмета замера): вводится отдельный профиль **S0** — без cpuset, объёмы ≈ 1/50 от S, максимальный файл 256 МиБ (5-ГиБ фикстура + её копия в MinIO не помещаются на диск раннера), **только класс A**. S0 — не обещание развёртывания, а шумоустойчивый сторож. Смыкается с D15/Q1: с появлением perf-раннера S0 не нужен. | `reference-env.md` §4.1 (P1.1) · **RAG:✅ 2026-07-14** (RAG-6: латентность с shared-раннера недостоверна; RAG-7: cpuset-конверт требует свободных ядер) · **решение владельца — `open-questions.md` Q3** |
 
 ---
 
-## 6. Phases (детализация)
-
-Каждая фаза: **Цель · Артефакты · DoD · Риск · Опора в коде/RAG · Порядок**. Артефакты складываются в
-`plans/VLT-LOAD/` (спеки/отчёты) и в `load/` репо (харнесс/скрипты — тест-инфра, вне пакетного `src/`).
-
-### P1 — Целевые числа: явные SLO 🔴 гейт всего
-
-**Цель.** Превратить «держит нагрузку» в проверяемые обязательства. Без этого остальные фазы меряют шум.
-
-**Артефакты.**
-- `plans/VLT-LOAD/slo.md` — таблица SLO по классам операций. Обязательный минимум колонок:
-  операция · целевой RPS/конкуренция · размерный профиль · p50/p95/p99 latency-бюджет · error-budget.
-- Явно зафиксировать (числа — предложение проектной фазы, утверждает владелец):
-  - **Upload (tus):** N параллельных активных сессий (напр. 200/500/1000), размерное распределение
-    (p50=5 MiB, p95=500 MiB, max=5 GiB), p95 на инициацию/PATCH/complete.
-  - **Download:** конкуррентных стримов (помним: 1 PHP-воркер на весь стрим, D15) → это прямо задаёт
-    потолок FPM-воркеров; p95 TTFB и sustained-throughput на файл.
-  - **Дерево:** глубина (до 64 — `DEFAULT_MAX_DEPTH`) × ширина (детей на узел), p95 на children/subtree/
-    breadcrumb/move; профиль many-grant-актора (число anchor'ов → N-CTE).
-  - **Активность/аудит:** write-RPS в `v_activity` (write-hottest), приемлемый лаг фида.
-  - **Очередь/webhook:** delivery-RPS, p95 queue-time, устойчивый throughput без роста backlog.
-  - **Collab:** одновременных сессий/комнат, comment-broadcast RPS.
-
-**DoD.** `slo.md` заполнен по всем классам; каждый SLO имеет число и источник (бизнес-требование или
-явно «инженерная гипотеза, уточнить»); владелец подтвердил порядок величин. Ни одного «TBD» без метки.
-
-**Риск.** SLO из воздуха → оптимизируем не то. Митигация: числа — гипотезы с явной пометкой до
-подтверждения владельцем; свип (0.5×…20×) вокруг гипотезы в P2 покажет, где реальный обрыв.
-
-**Опора.** §1.2 (потолок download-воркеров, N-CTE, глубина 64), RAG-5 (форма SLO очереди).
-
-**Порядок.** Первая. Гейт для P2–P7.
-
----
-
-### P2 — Нагрузочный харнесс: инструмент + профили трафика 🔴 гейт P3–P7
-
-**Цель.** Собрать воспроизводимый генератор нагрузки под tus/S3/tree/queue-сценарии.
-
-**Артефакты.**
-- `plans/VLT-LOAD/harness.md` — решение по инструменту (D2: k6) + сборка кастомного бинарника
-  (D3: `xk6-fasthttp` + D4: `xk6-output-prometheus-remote`) + как гоняем (локально / k6 Operator k8s).
-- `load/` (тест-инфра, вне пакета): k6-скрипты сценариев —
-  - `tus-upload.js` — POST create → PATCH offset+chunk (стрим с диска через fasthttp / chunk-на-сценарии)
-    → resume-ветка (HEAD offset, докачка) → инъекция обрыва на середине.
-  - `s3-multipart.js` — CreateMultipartUpload → UploadPart×N → Complete/Abort (SigV4 в скрипте).
-  - `download.js` — конкуррентные стримы (нагрузка на FPM-воркеры).
-  - `tree.js` — children/subtree/breadcrumb/move на предзаполненном дереве.
-  - `mixed.js` — реалистичный микс + think-time + error-injection.
-- Профили трафика: baseline (1×), ramp, spike-бёрст, soak (длинный), stress (до обрыва).
-- `load/seed/` — команды предзаполнения БД/стораджа до целевых объёмов (D10).
-
-**DoD.** Кастомный k6-бинарник собран и стримит 5-ГиБ тело **без OOM генератора** (доказать замером
-RSS процесса k6); каждый сценарий гоняется и пишет метрики в Prometheus; seed воспроизводит целевой
-объём; профили параметризованы (VU/duration/rps из env). Прогон 1× baseline зелёный.
-
-**Риск.** Стоковый k6 → OOM на multi-GB (RAG-2). Митигация: D3 (fasthttp/chunk), проверка RSS в DoD.
-Второй риск: SigV4/tus руками → баги харнесса маскируют/выдумывают проблемы. Митигация: контрактный
-smoke каждого сценария против реального эндпоинта до нагрузки.
-
-**Опора.** RAG-1/2/3 (`findings/P0`), §1.2 (tus/S3 семантика: offset, part replace, complete).
-
-**Порядок.** Вторая. Гейт для P3–P7.
-
----
-
-### P3 — Профилирование запросов: EXPLAIN + ревизия индексов под объёмом
-
-**Цель.** Найти полные сканы, N+1 и промахи индексов на горячих путях при **реальных** объёмах.
-
-**Артефакты.**
-- `plans/VLT-LOAD/db-profile.md` — по каждому горячему пути: топ из `pg_stat_statements` (total/mean/
-  stddev time), `EXPLAIN(ANALYZE,BUFFERS,VERBOSE)`-план, вердикт (index-fast / seq-scan / N-CTE),
-  предлагаемый фикс, HypoPG-проверка гипотезы-индекса.
-- Ревизия индексов `v_nodes`/`v_blobs`/`v_upload_*`/`v_activity` под объёмом: подтвердить, что тюнинг
-  `2026_07_11_000001_optimize_hot_path_indexes.php` держится на млн-строках; найти недостающие.
-- Список N+1 (напр. `subscribedEndpoints` в PHP-фильтре — D8) с якорями.
-
-**DoD.** Каждый горячий путь из P1 имеет EXPLAIN-план на предзаполненной БД; каждый seq-scan/N-CTE/N+1
-либо оправдан, либо заведён долгом (§6-долг) с HypoPG-подтверждённым индексом-кандидатом;
-`pg_stat_statements` top-20 разобран.
-
-**Риск.** EXPLAIN на пустой БД врёт (планировщик выбирает seq-scan на малых таблицах). Митигация: D10
-(предзаполнение), `ANALYZE` перед замером, реалистичная статистика.
-
-**Опора.** §1.2 (candidateNodeIds N-CTE, MoveNodeAction O(subtree)), §1.3 (индексы), RAG-4 (методология,
-HypoPG, CTE-vs-ltree).
-
-**Порядок.** После P2. Параллельна P4/P5/P6.
-
----
-
-### P4 — Память и стриминг: бенчмарки ≤5 ГиБ
-
-**Цель.** Доказать, где линейное становится квадратичным / где тянем файл в RAM. **L-01
-(`S3MultipartHandler::complete()` — весь файл в RAM) в эту цель НЕ входит: он уже доказан арифметикой
-(D7/D-LOAD-5a), не прогоном, и уже Blocker-кандидат в §7 со статусом «подтверждено».** P4 не открывает
-эту находку заново — P4 меряет РЕЗУЛЬТАТ фикса (после того как dev-срез по L-01 закрыт под D11), и ищет
-остальные пути линейное→квадратичное (tus-PATCH, S3-putPart, CAS-stage, download).
-
-**Артефакты.**
-- `plans/VLT-LOAD/memory-profile.md` — RSS/peak-memory FPM-воркера по путям: tus-PATCH, S3-putPart,
-  **S3-complete — пост-фикс, стриминговая сборка**, CAS-stage, download — на 5 MiB / 500 MiB / 5 GiB.
-- Регрессионное подтверждение: пост-фикс `complete()` НЕ показывает линейный рост RSS с размером файла
-  (иначе фикс не закрыл L-01 — возврат в §7).
-
-**DoD.** Есть измеренная кривая память-vs-размер по каждому пути; пост-фикс `complete()` держит
-константный (или логарифмический от `max_chunk_bytes`) потолок RSS независимо от размера файла;
-`max_chunk_bytes`-защита проверена системно (по сумме, не только по одному парту) — если пост-фикс
-всё ещё копит сумму без потолка, это новая находка §7, не закрытие L-01.
-
-**Риск.** Замер памяти PHP-FPM нетривиален (пулы, opcache). Митигация: `memory_get_peak_usage(true)` +
-внешний RSS процесса воркера; изолированный воркер на прогон.
-
-**Опора.** §1.2 (S3MultipartHandler.php:152-188, readPart, streamFor php://temp; download 256 KiB),
-D7, D11, D-LOAD-5a.
-
-**Порядок.** После P2, P8-минимума, **и после закрытия dev-среза L-01** (который сам ждёт VLT-MUT
-`vaulter-drive` ≥95 по D11). Параллельна P3/P5/P6.
-
----
-
-### P5 — Конкуренция в масштабе: сотни контендеров
-
-**Цель.** Не 2 процесса как в `tests/Concurrency`, а сотни: контеншн advisory-lock, дедлоки, исчерпание
-пула, sweeper на миллионе сессий.
-
-**Артефакты.**
-- `plans/VLT-LOAD/concurrency-report.md`:
-  - Advisory-lock под нагрузкой: доля 409 (NOWAIT false) на per-session lock при N контендерах на одну
-    сессию и на разные; коллизии int4-ключа CAS-лока (`BlobLock` hashtext) при storm дедупа.
-  - Пул соединений: поведение при исчерпании (PgBouncer transaction-mode), очередь ожидания, «too many
-    clients», таймауты `pg_advisory_xact_lock`.
-  - Дедлоки: `log_lock_waits` + `pg_stat_database.deadlocks` под reparent/dedup-storm.
-  - **Sweeper на грязной БД:** поведение `SweepUploadsCommand ->get()` на 1 млн просроченных сессий —
-    время, память, блокировка live-PATCH (D8).
-  - Дерево-конкуренция: параллельные move/reparent (сейчас 0 покрытия).
-
-**DoD.** Каждый лок-путь имеет замер контеншена при целевом N; sweeper прогнан на 1 млн сессий с
-зафиксированным временем/RSS и вердиктом (нужен ли батчинг/chunk — долг); исчерпание пула
-воспроизведено и описано (graceful queue vs обрыв); дедлок-счётчик под storm снят.
-
-**Риск.** Воспроизвести N>сотни контендеров на одну сессию сложно и может быть нереалистично.
-Митигация: два профиля — «много на одну» (worst-case лока) и «много на разные» (реалистичный throughput).
-
-**Опора.** §1.2 (UploadSessionStoreRepository:80-114, BlobLock:35-49, SweepUploadsCommand:37,
-tests/Concurrency = 2 процесса), RAG-4 (pg_blocking_pids, PgBouncer, deadlock monitoring).
-
-**Порядок.** После P2. Параллельна P3/P4/P6.
-
----
-
-### P6 — Семантика очередей под завалом
-
-**Цель.** Ретраи, backoff, DLQ, идемпотентность, единственный владелец ретрая — под 5–10× пик.
-
-**Артефакты.**
-- `plans/VLT-LOAD/queue-report.md`:
-  - Relay под завалом: `OutboxRelay::process(limit=100)` throughput; **`WebhookRetryDispatcher::claimDue()`
-    без limit** — размер lock-set и время транзакции на большом backlog (D8).
-  - `OutboxRelay::subscribedEndpoints()` O(endpoints)-в-PHP — деградация с ростом числа endpoint'ов (D8).
-  - Идемпотентность: доказать, что повторный `DeliverWebhook`/relay-tick не дублирует доставку
-    (event_id UNIQUE, terminal no-op); поведение при overlapping-тиках (visibility-timeout re-arm).
-  - Backoff/DLQ: кривая `Config::webhookBackoff(attempt)`, паркинг в `dead`, auto-disable endpoint'а.
-  - Единственный владелец ретрая: подтвердить, что при параллельных `relay-outbox`+`retry-webhooks` нет
-    двойного fire (claim-window re-arm).
-
-**DoD.** Throughput relay при 5–10× измерен; `claimDue` без limit доказан как риск на backlog (долг на
-limit/chunk); идемпотентность доказана прогоном с намеренными дублями; backoff/DLQ-переходы наблюдаемы;
-overlapping-тики не двоят доставку.
-
-**Риск.** Нет `$timeout` у `DeliverWebhook` → зависший HTTP держит воркер (bounded только
-`Config::webhookTimeout`). Митигация: включить в замер worker-occupancy при медленном/зависшем endpoint'е.
-
-**Опора.** §1.2 (DeliverWebhook:45, OutboxRelay:57-79/100-110, WebhookRetryDispatcher:59-73), RAG-5
-(DLQ/backoff/idempotency, per-queue SLO).
-
-**Порядок.** После P2. Параллельна P3/P4/P5.
-
----
-
-### P7 — Деградация инфраструктуры (chaos)
-
-**Цель.** S3 отвалился на середине multipart; Postgres ушёл в failover; диск кончился.
-
-**Артефакты.**
-- `plans/VLT-LOAD/chaos-report.md` — по сценарию: инъекция · ожидаемое поведение · факт · вердикт:
-  - **S3 5xx/latency/недоступность** на середине multipart-upload и на CAS-promote: ретраи, чистка
-    staged-temp, попадание в терминал, живёт ли resume; поведение sweeper при недоступном S3 (Abort).
-  - **PG failover:** оборванные транзакции с advisory-lock (лок снимается на разрыве сессии —
-    проверить, что не остаётся «повисших» сессий); переигрывание in-flight commit; PgBouncer
-    reconnection.
-  - **Диск-full** на staged-temp (`storage/app/tmp`): классификация ошибки (disk vs business),
-    восстановление после освобождения, отсутствие corrupted partial-state.
-  - Восстановление: после снятия сбоя — корректны ли повторы, идемпотентность, объём DLQ.
-
-**DoD.** Каждый сценарий прогнан с инъекцией и откатом; для каждого зафиксировано: держит ли
-idempotency, куда падает (DLQ/terminal/resume), даёт ли observability root-cause; повисшие ресурсы
-(сессии/локи/staged-temp) после сбоя — либо нет, либо заведён долг.
-
-**Риск.** Chaos на реальном S3/PG рискован; нужна изолированная среда. Митигация: MinIO с fault-injection
-+ toxiproxy для latency/partition; PG failover на локальном кластере, не на shared.
-
-**Опора.** §1.2 (reclaim/abort пути, staged discard, GC serializable-retry), RAG-5 (chaos-методология:
-S3/disk/network).
-
-**Порядок.** После P3–P6 (нужны их боттлнеки, чтобы знать, что деградирует первым).
-
----
-
-### P8 — Наблюдаемость: метрики + трейсы (seam'ы с нуля)
-
-**Цель.** Узнавать о нагрузке из метрик, а не от пользователей. Сегодня наблюдаемости в пакете нет.
-
-**Артефакты.**
-- `plans/VLT-LOAD/observability-spec.md` — что инструментируем и какими seam'ами:
-  - Метрики (Prometheus через OTel Collector): `upload_bytes_total`, `upload_session_active`(gauge),
-    `patch_conflict_total`(409), `blob_dedup_hit_total`, `gc_swept_total`/`gc_duration_seconds`,
-    `sweep_expired_total`/`sweep_skipped_total`, `outbox_backlog`(gauge), `webhook_delivery_seconds`
-    (hist), `webhook_dlq_total`, `tree_query_seconds`(hist), `collab_session_active`(gauge).
-  - Трейсы (OTel PHP SDK → OTLP Collector → Tempo/Jaeger): HTTP→Controller→Action→repo; спаны на
-    PATCH/putPart/complete/commit/GC/sweep/relay; атрибуты upload_id/node_id/tenant/attempt.
-  - Health: `/up` liveness + readiness (БД/S3/очередь) — spatie/laravel-health кандидат
-    (skill `laravel-testing:health-checks`).
-- Спека seam'ов в пакетном `src/` (это **единственный код-выход VLT-LOAD**, отдельными dev-срезами):
-  где вешаются таймеры/счётчики без хард-зависимости на конкретный backend (контракт-шов, как AzGuard).
-
-**DoD (двухступенчатый — гейт срабатывает на P8-минимуме, не на полном закрытии фазы).**
-- **P8-минимум (гейт P3–P7):** таймеры/счётчики латентности на горячих путях каждого класса SLO из
-  P1 (upload/download/tree/activity/queue/collab) + `queue_backlog_size`/`gc_duration_seconds`/
-  `sweep_*_total` seam'ы на unbounded-scan'ы (§7) — этого достаточно, чтобы P3–P7 могли зафиксировать
-  вердикт «SLO нарушен/держится» по цифрам, а не на глаз. Health-`/up` — часть минимума (иначе харнесс
-  P2 не отличит «упало» от «недоступно»).
-  Без этого набора P3–P7 не стартуют замер (см. §4 статус-борд — P8 гейт, не «параллельна»).
-- **Полное закрытие фазы:** остаток спеки (трейсы, редкие метрики) — после того как P3–P7 показали
-  приоритет; дополняется, не блокирует уже идущие фазы.
-
-**Риск.** OTel PHP + FPM overhead под нагрузкой сам искажает замер. Митигация: sampling, замер
-overhead'а инструментации отдельным прогоном (with/without).
-
-**Опора.** §1.2 (наблюдаемость=absent, unbounded-scan'ы), RAG-5 (OTel→Collector→Prometheus/Tempo, метрики
-очереди), skill `architect:observability-design`, `laravel-testing:health-checks`, D9.
-
-**Порядок.** Стартует сразу после P2. **P8-минимум обязан быть готов до старта P3–P7** (гейт — D9,
-§4). Полное закрытие фазы — последним, после того как P3–P7 показали приоритеты инструментации.
+## 6. Update Log
+
+Append-only. «Что» ≤ 2 строк; детали закрытых items — в `phases/Pn.md` (Completion Notes).
+
+| Дата | Кто | Что |
+|:--|:--|:--|
+| 2026-07-13 | opus/high (`/task:design`) | P0 закрыт: рекогносцировка кодовой базы + RAG-провенанс инструментов (`findings/P0-rag-load-tooling.md`) + мастер-план VLT-LOAD (D1–D11). Плану выделена вторая строка в `plans/ACTIVE.md` (ось нагрузки ⊥ оси корректности VLT-MUT). |
+| 2026-07-14 | opus/high (`/task:plan-design VLT-LOAD P1`) | P1 спроектирована: 5 items (`phases/P1.md`), DoR пройден. Новые решения D12–D16 (tiered SLO; docker-конверт на cpuset; двухклассовый CI-гейт; класс B advisory; SLO-ID ⇒ P8-минимум из P1.4). RAG — `findings/P1-rag-slo-ci-gate.md`. |
+| 2026-07-14 | opus/high (`/task:plan-design VLT-LOAD P1`) | Раскладка приведена к протоколу 2.0: блупринты фаз уехали в `phases/Pn.md` (P2–P8 — скелеты), заведены `phases/P0.md`, `handoff.md`, `open-questions.md`; §6 стал Update Log, доска — в канон. |
+| 2026-07-14 | opus/high (`/task:plan-exec VLT-LOAD P1.1`) | P1.1 закрыт (🟠): `reference-env.md` — тиры S/M/L (cpuset-конверт + объёмы `v_*`) + профиль S0; конфликт «S не влезает в `ubuntu-latest`» → D17-кандидат + Q3 — детали см. phases/P1.md P1.1 Completion Notes. |
 
 ---
 
