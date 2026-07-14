@@ -177,7 +177,7 @@ VLT-MUT меряет **корректность** (мутационный гей
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Разведка + RAG-провенанс + этот план | 1/1 | 🟢 Done |
-| P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) · **гейт P2–P8** | 2/5 | 🟡 In progress |
+| P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) · **гейт P2–P8** | 3/5 | 🟡 In progress |
 | P2 | Нагрузочный харнесс: инструмент (k6) + профили трафика · **гейт P3–P7** · после P1 | 0/1 | ⬜ Not started |
 | P3 | Профилирование запросов: EXPLAIN горячих путей, ревизия индексов под объёмом · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ post-фикс L-01 (D7/D11 — сам L-01 уже доказан, не гипотеза) · после P2, P8-минимума и dev-среза L-01 | 0/1 | ⬜ Not started |
@@ -233,6 +233,7 @@ Append-only. «Что» ≤ 2 строк; детали закрытых items �
 | 2026-07-14 | opus/high (`/task:plan-exec VLT-LOAD P1.1`) | P1.1 закрыт (🟠): `reference-env.md` — тиры S/M/L (cpuset-конверт + объёмы `v_*`) + профиль S0; конфликт «S не влезает в `ubuntu-latest`» → D17-кандидат + Q3 — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P1.2`) | P1.2 закрыт (🟢): `operations-catalog.md` — 47 OP-nn (56 маршрутов обойдено, 38 в каталоге, 18 исключены с причиной) + связка с L-01…L-06/L-08 — детали см. phases/P1.md P1.2 Completion Notes. |
 | 2026-07-14 | opus/high (`/task:plan-exec VLT-LOAD P1.3`) | P1.3 закрыт (🟢): `slo.md` — 81 строка `SLO-nn` (27 групп × S/M/L), полное покрытие 47 OP; бюджет FPM-пула, error-budget (409/429 — не ошибки), §5 «не выполняется сегодня» (SLO-46…48 / L-01) — детали см. phases/P1.md P1.3 Completion Notes. |
+| 2026-07-14 | opus/high (`/task:plan-exec VLT-LOAD P1.4`) | P1.4 закрыт (🟢): `slo-gates.md` — 97 гейтов на 81 SLO (A блокирующий / B advisory), две плоскости оценки (k6 + perf-assert; D18-кандидат), P8-минимум 37 метрик — детали см. phases/P1.md P1.4 Completion Notes. |
 
 ---
 
