@@ -10,6 +10,8 @@ use Illuminate\Support\ServiceProvider;
 use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Load\Console\ActivityWriterCommand;
+use Vaulter\Load\Console\SeedLoadDatasetCommand;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -88,6 +90,13 @@ final class LoadServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SeedLoadDatasetCommand::class,
+                ActivityWriterCommand::class,
+            ]);
+        }
+
         // No `/up` in the package (that seam is P8) — this is the compose healthcheck
         // target instead (Scope Included P2.2).
         Route::get('/load/health', static fn () => response()->json(['status' => 'ok']));

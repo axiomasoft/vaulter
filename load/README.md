@@ -50,6 +50,39 @@ curl -fsS -X POST -H 'X-Load-Actor: 1' -H 'Content-Type: application/json' \
 Both `/load/storage` and the folder-create call are safe to re-run for the same
 `X-Load-Actor` (idempotent — see `load/app/LoadServiceProvider.php`).
 
+## Seed the volume+dirty-state envelope (P2.3)
+
+```sh
+docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec app sh -c \
+  'TIER=S0 vendor/bin/testbench load:seed --fresh'
+```
+
+Seeds `reference-env.md` §2's tree/blob/upload-session/outbox/webhook/grant/comment/
+share/activity envelope for the tier, "dirty" state included — expired upload
+sessions, orphan blobs (both GC-mark and GC-sweep scopes), a due outbox/webhook-retry
+backlog, a many-grant actor (`X-Load-Actor: 900001` — `NodeReadRepository::
+candidateNodeIds()`, L-06 fan-out). Idempotent by `dataset_id` (a hash of tier +
+profile + the command's own version) unless `--fresh`; the manifest lands at
+`load/seed/out/<dataset_id>.json` (git-ignored — a run artifact, not the stand
+definition) with per-table counts and the id-lists a k6 scenario needs (many-grant
+anchor node ids, the seeded storage/root, both actor ids).
+
+Run the sustained `v_activity` writer ALONGSIDE a k6 scenario (own process, own
+stopping point — never part of `load:seed`):
+
+```sh
+docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec app sh -c \
+  'TIER=S0 vendor/bin/testbench load:activity-write'   # Ctrl-C to stop, or --duration=<seconds>
+```
+
+`load/scripts/{snapshot,restore}.sh` tar/untar the `pg-data`+`minio-data` volumes so a
+repeat prog run does not re-pay seed cost:
+
+```sh
+TIER=S0 ./load/scripts/snapshot.sh   # -> load/S0.pg-data.tar.gz, load/S0.minio-data.tar.gz
+TIER=S0 ./load/scripts/restore.sh    # stops postgres/minio, wipes+restores, restarts
+```
+
 ## Layout
 
 | Path | What |
@@ -62,8 +95,12 @@ Both `/load/storage` and the folder-create call are safe to re-run for the same
 | `docker/prometheus.yml` | self-scrape only; k6's `--out experimental-prometheus-rw` (D24) reaches Prometheus via `--web.enable-remote-write-receiver` (compose `command`, not this file) |
 | `app/LoadServiceProvider.php`, `LoadActingAs.php` | load-stand host — mirrors `packages/core/tests/E2E/E2eServiceProvider.php` |
 | `app/testbench.load.yaml` | testbench config, bind-mounted to `/app/testbench.yaml` |
-| `scripts/{up,down}.sh` | tier-parametrised bring-up/tear-down |
-| `k6/` | scenarios — **P2.4**, empty in P2.2 |
+| `app/Console/SeedLoadDatasetCommand.php` | `load:seed` — P2.3, the tier volume+dirty-state envelope |
+| `app/Console/ActivityWriterCommand.php` | `load:activity-write` — P2.3, sustained `v_activity` tail during a k6 run |
+| `seed/profiles/{S0,S,M,L}.php` | per-tier seed volume knobs — `reference-env.md` §2.1/§2.2/§4.1 (L is spec-only, `load:seed` refuses it) |
+| `seed/out/` | `load:seed` manifests, keyed by `dataset_id` — git-ignored run artifacts |
+| `scripts/{up,down,snapshot,restore}.sh` | tier-parametrised bring-up/tear-down/snapshot/restore |
+| `k6/` | scenarios — **P2.4**, empty in P2.2/P2.3 |
 | `gates/`, `baselines/` | **P2.5**, do not exist yet |
 
 ## Why nginx does not cap request bodies

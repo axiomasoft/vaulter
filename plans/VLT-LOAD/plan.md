@@ -180,7 +180,7 @@ VLT-MUT меряет **корректность** (мутационный гей
 |:--|:--|:--|:--|
 | P0 | Разведка + RAG-провенанс + этот план | 1/1 | 🟢 Done |
 | P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) · **гейт P2–P8** | 4/5 | 🟢 Done |
-| P2 | Нагрузочный харнесс: стоковый k6 + стенд + seed + гейт + CI · **гейт P3–P7** · после P1 | 2/8 | 🟡 In progress |
+| P2 | Нагрузочный харнесс: стоковый k6 + стенд + seed + гейт + CI · **гейт P3–P7** · после P1 | 3/8 | 🟡 In progress |
 | P3 | Профилирование запросов: EXPLAIN горячих путей, ревизия индексов под объёмом · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ post-фикс L-01 (D7/D11 — сам L-01 уже доказан, не гипотеза) · после P2, P8-минимума и dev-среза L-01 | 0/1 | ⬜ Not started |
 | P5 | Конкуренция в масштабе: сотни контендеров, advisory-lock, пул, sweeper · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
@@ -251,6 +251,7 @@ Append-only. «Что» ≤ 2 строк; детали закрытых items �
 | 2026-07-14 | opus/high (`/task:plan-design VLT-LOAD P2`) | P2 спроектирована: 8 items (`phases/P2.md`), DoR пройден. RAG опроверг блупринт — D22 (стоковый k6, supersedes D3), D24 (supersedes D4), D23, D25 (тир S; Q4), D26–D28 — детали см. `findings/P2-rag-k6-harness.md` и §5. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.1`) | P2.1 закрыт (🟢): `harness.md` — инструмент/стенд/фикстуры/executor'ы/контракт метрик/профили, транскрипция D22–D28 без новых чисел — детали см. phases/P2.md P2.1 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.2`) | P2.2 закрыт (🟢): `load/` — compose (7 сервисов, cpuset/mem_limit/memswap_limit-конверт), env-профили S0/S/M, SUT-образ nginx+php-fpm, `LoadServiceProvider`, скрипты, README; провалидировано живыми docker-прогонами (tier S0 и S) — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.3`) | P2.3 закрыт (🟢): `load:seed`/`load:activity-write` — объёмный+«грязный» конверт, профили S0/S/M/L, снапшот/restore; провалидировано живым прогоном tier S0 — детали см. phases/P2.md P2.3 Completion Notes. |
 
 ---
 
