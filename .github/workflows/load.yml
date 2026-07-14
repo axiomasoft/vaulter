@@ -135,12 +135,17 @@ jobs:
           NODES="$(docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env \
             exec -T postgres psql -U vaulter -d vaulter_load -tAc 'SELECT count(*) FROM v_nodes')"
 
-          if [ "${NODES}" != "${NODES_AFTER_SEED}" ]; then
+          # Not an equality check: the mix creates, moves, copies and force-deletes nodes
+          # by design, so the count is SUPPOSED to drift. What must never happen is the
+          # floor dropping out — a `migrate:fresh` under the run leaves it at ~0.
+          FLOOR=$(( NODES_AFTER_SEED / 2 ))
+
+          if [ "${NODES}" -lt "${FLOOR}" ]; then
             echo "::error::v_nodes went ${NODES_AFTER_SEED} → ${NODES} DURING the run — the stand was rebuilt under k6 (app's entrypoint re-runs migrate:fresh). Whatever this run measured, it is not the SLO."
             exit 1
           fi
 
-          echo "Seed intact (v_nodes=${NODES}) — the run measured the seeded stand."
+          echo "Seed intact (v_nodes: ${NODES_AFTER_SEED} → ${NODES}, workload drift) — the run measured the seeded stand."
 
       - name: perf-assert — server plane (class A blocking, class B advisory)
         if: always()
