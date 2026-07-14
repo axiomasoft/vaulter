@@ -53,3 +53,6 @@ _e2e_smoke.mjs
 load/seed/out/
 load/*.tar
 load/*.tar.gz
+# load/scripts/run.sh (P2.4) stages the seed manifest here for the k6 container to read
+# (docker-compose.load.yml only mounts load/k6/, not load/seed/out/) — a run artifact.
+load/k6/dataset.json

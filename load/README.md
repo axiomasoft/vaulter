@@ -18,6 +18,11 @@ TIER=S0 ./load/scripts/down.sh    # drops volumes; KEEP_VOLUMES=1 to keep them
 ```
 
 If port 8080 is already taken on the host: `LOAD_APP_PORT=8180 TIER=S0 ./load/scripts/up.sh`.
+**Export it for the rest of the session** (`export LOAD_APP_PORT=8180`) — every later
+`docker compose` invocation touching this stand (seed, `run.sh`, a manual `exec`) must
+see the SAME value, or compose recomputes the `app` service's `ports:` mapping, forces a
+recreate, and `entrypoint.sh` re-runs `migrate:fresh` — silently wiping the seeded
+dataset (P2.4 finding, hit live during this item's validation).
 
 `up.sh` brings up `postgres pgbouncer minio minio-init prometheus app` — **not** `k6` (no
 scripts exist yet, that's P2.4). Run k6 on demand once they do:
@@ -83,6 +88,35 @@ TIER=S0 ./load/scripts/snapshot.sh   # -> load/S0.pg-data.tar.gz, load/S0.minio-
 TIER=S0 ./load/scripts/restore.sh    # stops postgres/minio, wipes+restores, restarts
 ```
 
+## k6 scenarios (P2.4)
+
+Stock k6 only (D22) — no custom binary. `load/scripts/run.sh` stages the LATEST seed
+manifest (`load/seed/out/vlt-load-*.json`, newest by mtime) into `load/k6/dataset.json`
+first: the `k6` compose service only mounts `load/k6/` (not `load/seed/out/`), and every
+scenario reads the manifest's id-lists off that staged copy via `k6/data.SharedArray`
+(`load/k6/lib/dataset.js`).
+
+```sh
+TIER=S0 ./load/scripts/run.sh smoke                    # contract smoke — every scenario, 1 VU x 1 iteration
+TIER=S0 ./load/scripts/run.sh scenarios/tus-upload.js   # a single scenario, full VUS_*/DURATION run
+TIER=S0 DURATION=2m ./load/scripts/run.sh scenarios/mixed.js
+```
+
+Seed the dataset first (previous section) — a scenario against an unseeded stand has
+nothing to read/write against and every check fails.
+
+| Path | What |
+|:--|:--|
+| `k6/lib/config.js` | tier / base-url / per-group VU counts (`VUS_INTERACTIVE`/`VUS_UPLOAD`/`VUS_DOWNLOAD`, harness.md §4) / think-time / fixture sizes — all env-overridable |
+| `k6/lib/dataset.js` | reads the staged `dataset.json` manifest (storage/root/actor ids, many-grant anchors) |
+| `k6/lib/auth.js` | `X-Load-Actor` header helper |
+| `k6/lib/fixtures.js` | D23 — the shared 8 MiB/64 MiB `ArrayBuffer`s (tus chunk / S3 part), the per-session salt |
+| `k6/lib/metrics.js` | the five custom metrics, names byte-for-byte from `slo-gates.md` §1 |
+| `k6/lib/expected.js` | 409/429 as protocol, not `http_req_failed` (`slo.md` §0.4) |
+| `k6/lib/nodes.js`, `discovery.js` | node-tree HTTP helpers + one-time setup() discovery (a downloadable-file pool, the seeded `documents` folder's node ids, a bootstrap share token) — the manifest carries only a few anchor ids, not a full id-list per kind (Known Deviations) |
+| `k6/scenarios/{tus-upload,s3-multipart,single-shot,download,tree,docs-collab,mixed}.js` | the 7 scenarios (Scope Included, P2.4) |
+| `k6/smoke.js` | contract smoke — every scenario once, DB/storage post-conditions checked from `run.sh`/manually, not inside k6 |
+
 ## Layout
 
 | Path | What |
@@ -100,7 +134,8 @@ TIER=S0 ./load/scripts/restore.sh    # stops postgres/minio, wipes+restores, res
 | `seed/profiles/{S0,S,M,L}.php` | per-tier seed volume knobs — `reference-env.md` §2.1/§2.2/§4.1 (L is spec-only, `load:seed` refuses it) |
 | `seed/out/` | `load:seed` manifests, keyed by `dataset_id` — git-ignored run artifacts |
 | `scripts/{up,down,snapshot,restore}.sh` | tier-parametrised bring-up/tear-down/snapshot/restore |
-| `k6/` | scenarios — **P2.4**, empty in P2.2/P2.3 |
+| `scripts/run.sh` | **P2.4** — stage the seed manifest + run a k6 scenario or the contract smoke |
+| `k6/` | **P2.4** — lib + 7 scenarios + `smoke.js` (see previous section) |
 | `gates/`, `baselines/` | **P2.5**, do not exist yet |
 
 ## Why nginx does not cap request bodies
