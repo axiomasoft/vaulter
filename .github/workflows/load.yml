@@ -299,7 +299,14 @@ jobs:
           merged['metrics'] = median_walk([r['metrics'] for r in runs])
           merged['meta'] = dict(runs[-1]['meta'])
           merged['meta']['runs'] = 3
-          (RESULTS / 'summary.json').write_text(json.dumps(merged, indent=2))
+
+          # P2.7 — k6 wrote summary.json as uid 12345 (0644); the runner user cannot reopen
+          # it for writing, only replace it (the directory is world-writable). Without the
+          # unlink this step died with EACCES and the job silently carried the LAST run's
+          # summary forward as if it were the median.
+          out = RESULTS / 'summary.json'
+          out.unlink(missing_ok=True)
+          out.write_text(json.dumps(merged, indent=2))
           PY
 
       - name: perf-assert — server plane (class A blocking, class B advisory-vs-baseline)
