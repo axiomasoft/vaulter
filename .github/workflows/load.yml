@@ -1,0 +1,40 @@
+name: Load Gate
+
+# VLT-LOAD P2.7 — REGISTRATION STUB. Deliberately inert on `main`.
+#
+# GitHub only makes a workflow dispatchable if a file of that name exists on the DEFAULT
+# branch: it resolves the workflow by name there, then runs the file from the ref you
+# select. The load harness (`load/`, VLT-LOAD P2.2–P2.6) lives on `load/harness` and is
+# not merged yet, so without this stub `gh workflow run load.yml --ref load/harness`
+# answers 404 and item P2.7 (runner CV → δ) cannot be measured at all.
+#
+# It carries NO `pull_request` and NO `schedule` trigger on purpose: `main` has no
+# `load/` directory, so any lane that fired here could only ever fail. It cannot start
+# by itself — a human (or `gh`) has to dispatch it, and a dispatch aimed at `main` gets
+# the no-op below rather than a red stand.
+#
+# The `workflow_dispatch` block below is byte-identical to the real lane's on
+# `load/harness` — dispatch validates inputs, and a divergent input list would reject
+# the call. Keep them in sync, or delete this stub once the harness merges (the real
+# `.github/workflows/load.yml` then lands on `main` and registers itself).
+on:
+  workflow_dispatch:
+    inputs:
+      run:
+        description: 'Which lane to run'
+        type: choice
+        options: [smoke-perf, regression, both]
+        default: smoke-perf
+
+jobs:
+  noop:
+    name: registration stub (the real lane lives on load/harness)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Explain why this did nothing
+        run: |
+          echo "This is the VLT-LOAD registration stub on the default branch."
+          echo "The load harness is not on 'main' yet — dispatch this workflow with"
+          echo "  gh workflow run load.yml --ref load/harness --field run=smoke-perf"
+          echo "to run the real S0 lane from the harness branch."
