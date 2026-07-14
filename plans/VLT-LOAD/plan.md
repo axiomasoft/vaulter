@@ -7,7 +7,7 @@
 | Plan ID | VLT-LOAD |
 | Title | Нагрузочная готовность vaulter: SLO → сценарии → профилирование → память/стриминг → конкуренция → очереди → деградация → наблюдаемость |
 | Version | 0.3.0 |
-| Status | 🟡 In progress (P0 🟢; P1 🟢 Done — 5/5, sign-off получен; **P2 спроектирована — 8 items, готова к exec**) |
+| Status | 🟡 In progress (P0 🟢; P1 🟢 Done — 5/5, sign-off получен; **P2 — 5/8 🟢 + P2.6 🟠 (CI-лейн)**) |
 | Document Type | Executable Master Plan (design-first: до P3 — артефакты и решения, не код) |
 | Authoring Model | opus/high (design-профиль task:design; см. §3 Routing — все фазы этого плана роутятся на opus/high) |
 | Last Updated | 2026-07-14 |
@@ -254,6 +254,7 @@ Append-only. «Что» ≤ 2 строк; детали закрытых items �
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.3`) | P2.3 закрыт (🟢): `load:seed`/`load:activity-write` — объёмный+«грязный» конверт, профили S0/S/M/L, снапшот/restore; провалидировано живым прогоном tier S0 — детали см. phases/P2.md P2.3 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.4`) | P2.4 закрыт (🟢): `load/k6/` — библиотека + 7 сценариев + `smoke.js`, `load/scripts/run.sh` (новый); провалидировано живым прогоном tier S0 (100% checks, DB/MinIO пост-условия) — детали см. phases/P2.md P2.4 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.5`) | P2.5 закрыт (🟢): `load/gates/{thresholds.js,perf-assert.py,coverage.py}` + первый baseline; живой прогон tier S0 (coverage 96/96, exit 0/99) — детали см. phases/P2.md P2.5 Completion Notes. |
+| 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.6`) | P2.6 закрыт (🟠): `load.yml` (smoke-perf/regression/baseline-guard) + `run.sh` gated-профили; гейт живьём подтверждён, но красный по честным S0-числам (не почищено — вне Scope) — детали см. phases/P2.md P2.6 Completion Notes. |
 
 ---
 
