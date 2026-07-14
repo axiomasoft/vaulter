@@ -245,12 +245,26 @@ jobs:
           docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
             'TIER=S0 vendor/bin/testbench load:seed --fresh'
 
+      # P2.7 — the loop used to die on the FIRST k6 exit 99, which skipped the median merge
+      # entirely: the one step that exists to make class B's baseline stable was unreachable
+      # exactly when a run was red — i.e. always, today (class A is red on S0 by calibration).
+      # k6's exit code is captured, all three runs happen, the merge and perf-assert run on
+      # their output, and the job still fails at the end — class A stays blocking.
       - name: k6 regression x3 (median, slo-gates.md §4.3)
+        id: k6
         run: |
+          rc=0
+
           for i in 1 2 3; do
-            TIER=S0 ./load/scripts/run.sh regression
+            TIER=S0 ./load/scripts/run.sh regression || rc=$?
             cp load/results/summary.json "load/results/summary-run${i}.json"
           done
+
+          echo "k6_rc=${rc}" >> "$GITHUB_OUTPUT"
+
+          if [ "${rc}" -ne 0 ]; then
+            echo "::warning::k6 exited ${rc} on at least one of the three runs (class A red). The median merge and perf-assert still run; the job fails at the end."
+          fi
 
       - name: Merge 3 runs into one median summary
         run: |
@@ -308,6 +322,12 @@ jobs:
             tail -n 5 load/results/perf-assert.txt 2>/dev/null || echo 'perf-assert did not produce output'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail the job on a red class A (k6 exit ≠ 0 in any of the three runs)
+        if: always() && steps.k6.outputs.k6_rc != '0'
+        run: |
+          echo "::error::k6 exited ${{ steps.k6.outputs.k6_rc }} — class A is blocking in the regression profile (slo-gates.md §7)."
+          exit 1
 
       - name: Tear down the stand
         if: always()
