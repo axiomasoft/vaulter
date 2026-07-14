@@ -1,0 +1,17 @@
+# VLT-LOAD P2.2 — testbench config for the nginx+php-fpm SUT. Bind-mounted to
+# /app/testbench.yaml (docker-compose.load.yml); found via TESTBENCH_WORKING_PATH=/app
+# (load/docker/php-fpm.conf `env[TESTBENCH_WORKING_PATH]`) — see that file's comment for
+# why a plain php-fpm request needs this (unlike `testbench serve`, which curates it
+# itself). Mirrors e2e/docker/testbench.pgsql.yaml (P2.1 Required Reads #4), swapping the
+# e2e host provider for LoadServiceProvider and adding vaulter-documents (docs-collab
+# scenario, P2.4).
+providers:
+  - Vaulter\VaulterServiceProvider
+  - Vaulter\Media\VaulterMediaServiceProvider
+  - Vaulter\Drive\VaulterDriveServiceProvider
+  - Vaulter\Documents\VaulterDocumentsServiceProvider
+  - Vaulter\Load\LoadServiceProvider
+
+env:
+  - APP_KEY="base64:lRknxO3IznrZODHVPvLNKylvYP19ch+EXZ8dM+i3OlY="
+  - APP_URL="http://localhost:8080"

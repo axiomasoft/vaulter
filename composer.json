@@ -28,12 +28,14 @@
         "larastan/larastan": "^3.0",
         "firebase/php-jwt": "^7.0",
         "spatie/laravel-permission": "^8.0",
-        "laravel/pao": "^1.1"
+        "laravel/pao": "^1.1",
+        "league/flysystem-aws-s3-v3": "^3.0"
     },
     "autoload-dev": {
         "psr-4": {
             "Vaulter\\Tests\\": "packages/core/tests/",
-            "Vaulter\\Database\\Factories\\": "packages/core/database/factories/"
+            "Vaulter\\Database\\Factories\\": "packages/core/database/factories/",
+            "Vaulter\\Load\\": "load/app/"
         }
     },
     "repositories": [

@@ -47,3 +47,9 @@ _e2e_smoke.mjs
 
 # Claude Code: рантайм-телеметрия аналитика (не артефакт репозитория)
 .claude/analyst/
+
+# VLT-LOAD (plans/VLT-LOAD) — run artifacts, not stand definition (seed manifests/
+# snapshots are P2.3, not produced yet — ignored ahead of time so they never land by accident).
+load/seed/out/
+load/*.tar
+load/*.tar.gz

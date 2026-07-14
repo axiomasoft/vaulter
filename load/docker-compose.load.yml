@@ -1,0 +1,209 @@
+# VLT-LOAD P2.2 — load-test stand. Bring up: `TIER=S0 ./load/scripts/up.sh` (README.md).
+#
+# Resource converts are `cpuset`/`mem_limit`/`memswap_limit` ONLY (reference-env.md E-1/E-5):
+# NEVER `cpus:`/`cpu_quota` (CFS-quota parks the process mid-period => sawtooth latency,
+# unreproducible percentiles) and NEVER `deploy.resources.limits` (Swarm-only — a silently
+# inert limit is a convert that doesn't exist). Empty CPUSET_* (S0/M — reference-env.md §4.1,
+# D25) resolves to no `cpuset:` key at all (verified: `docker compose config` with an empty
+# env var drops the field, does not emit `cpuset: ""`).
+name: vaulter-load
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vaulter
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: vaulter_load
+      # E-3: shared_buffers/work_mem etc. are derived from the CONTAINER's cgroup limit
+      # (this tier's .env), never from host RAM — postgres:16-alpine has no auto-tuning,
+      # so every knob below is passed explicitly via `command`.
+    cpuset: "${CPUSET_PG}"
+    mem_limit: "${MEM_PG}"
+    memswap_limit: "${MEMSWAP_PG}"
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE}
+      - -c
+      - work_mem=${PG_WORK_MEM}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM}
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS}
+      - -c
+      - max_parallel_workers_per_gather=${PG_MAX_PARALLEL_WORKERS_PER_GATHER}
+      - -c
+      - random_page_cost=${PG_RANDOM_PAGE_COST}
+      - -c
+      - effective_io_concurrency=${PG_EFFECTIVE_IO_CONCURRENCY}
+      - -c
+      - checkpoint_timeout=${PG_CHECKPOINT_TIMEOUT}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE}
+      - -c
+      - log_lock_waits=on
+      - -c
+      - deadlock_timeout=1s
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      # E-6: fsync/synchronous_commit/full_page_writes stay ON on every tier — see
+      # reference-env.md E-6 (write-hot v_activity/outbox measured with them off is not
+      # the write path that ships).
+      - -c
+      - fsync=on
+      - -c
+      - synchronous_commit=on
+      - -c
+      - full_page_writes=on
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaulter -d vaulter_load"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    environment:
+      # edoburu/pgbouncer reads DATABASE_URL (parsed into DB_HOST/DB_PORT/DB_USER/
+      # DB_PASSWORD/DB_NAME by its own entrypoint) — NOT DATABASE_HOST/DATABASE_* (those
+      # are silently ignored, which fails startup with a cryptic "DB_HOST unset").
+      DATABASE_URL: postgres://vaulter:secret@postgres:5432/vaulter_load
+      LISTEN_PORT: "6432"
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "${PGBOUNCER_DEFAULT_POOL_SIZE}"
+      MAX_CLIENT_CONN: "${PGBOUNCER_MAX_CLIENT_CONN}"
+      RESERVE_POOL_SIZE: "${PGBOUNCER_RESERVE_POOL_SIZE}"
+      RESERVE_POOL_TIMEOUT: "${PGBOUNCER_RESERVE_POOL_TIMEOUT}"
+      AUTH_TYPE: plain
+      ADMIN_USERS: vaulter
+    cpuset: "${CPUSET_PGBOUNCER}"
+    mem_limit: "${MEM_PGBOUNCER}"
+    memswap_limit: "${MEMSWAP_PGBOUNCER}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U vaulter -d vaulter_load"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: vaulter
+      MINIO_ROOT_PASSWORD: vaulter-load-secret
+    cpuset: "${CPUSET_MINIO}"
+    mem_limit: "${MEM_MINIO}"
+    memswap_limit: "${MEMSWAP_MINIO}"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      mc alias set load http://minio:9000 vaulter vaulter-load-secret &&
+      mc mb --ignore-existing load/vaulter-load
+      "
+    restart: "no"
+
+  app:
+    build:
+      context: ..
+      dockerfile: load/docker/Dockerfile.app
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - ./app/testbench.load.yaml:/app/testbench.yaml:ro
+    environment:
+      PM_MAX_CHILDREN: "${PM_MAX_CHILDREN}"
+      DB_CONNECTION: pgsql
+      DB_HOST: pgbouncer
+      DB_PORT: "6432"
+      DB_DATABASE: vaulter_load
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+      # Migrations run direct-to-postgres (bypass the transaction-mode pool — see
+      # load/docker/entrypoint.sh for why).
+      DB_MIGRATE_HOST: postgres
+      DB_MIGRATE_PORT: "5432"
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: vaulter
+      MINIO_ROOT_PASSWORD: vaulter-load-secret
+      MINIO_BUCKET: vaulter-load
+      MINIO_REGION: us-east-1
+      VAULTER_LOAD_ID_STRATEGY: bigint
+    cpuset: "${CPUSET_APP}"
+    mem_limit: "${MEM_APP}"
+    memswap_limit: "${MEMSWAP_APP}"
+    ports:
+      # Override on hosts where 8080 is already taken by another stack, e.g.
+      # `LOAD_APP_PORT=8180 TIER=S0 ./load/scripts/up.sh` — see README.md.
+      - "${LOAD_APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/load/health >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9090/-/ready >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  # Generator. Not started by `up.sh` (no k6 scripts exist yet — those are P2.4); defined
+  # here so the resource convert and depends_on chain (postgres -> app -> k6,
+  # Implementation Rules P2.2) are already correct for P2.4-P2.8 to run
+  # `docker compose -f load/docker-compose.load.yml run --rm k6 <script>` against.
+  k6:
+    image: grafana/k6:0.55.0
+    cpuset: "${CPUSET_K6}"
+    mem_limit: "${MEM_K6}"
+    memswap_limit: "${MEMSWAP_K6}"
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+    volumes:
+      - ./k6:/scripts:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    profiles:
+      - bench
+
+volumes:
+  pg-data:
+  minio-data:
+  prom-data:
