@@ -180,7 +180,7 @@ VLT-MUT меряет **корректность** (мутационный гей
 |:--|:--|:--|:--|
 | P0 | Разведка + RAG-провенанс + этот план | 1/1 | 🟢 Done |
 | P1 | Целевые числа: явные SLO (N tus, ≤5 ГиБ, дерево, p95, RPS) · **гейт P2–P8** | 4/5 | 🟢 Done |
-| P2 | Нагрузочный харнесс: стоковый k6 + стенд + seed + гейт + CI · **гейт P3–P7** · после P1 | 4/8 | 🟡 In progress |
+| P2 | Нагрузочный харнесс: стоковый k6 + стенд + seed + гейт + CI · **гейт P3–P7** · после P1 | 5/8 | 🟡 In progress |
 | P3 | Профилирование запросов: EXPLAIN горячих путей, ревизия индексов под объёмом · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ post-фикс L-01 (D7/D11 — сам L-01 уже доказан, не гипотеза) · после P2, P8-минимума и dev-среза L-01 | 0/1 | ⬜ Not started |
 | P5 | Конкуренция в масштабе: сотни контендеров, advisory-lock, пул, sweeper · после P2 **и** P8-минимума | 0/1 | ⬜ Not started |
@@ -253,6 +253,7 @@ Append-only. «Что» ≤ 2 строк; детали закрытых items �
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.2`) | P2.2 закрыт (🟢): `load/` — compose (7 сервисов, cpuset/mem_limit/memswap_limit-конверт), env-профили S0/S/M, SUT-образ nginx+php-fpm, `LoadServiceProvider`, скрипты, README; провалидировано живыми docker-прогонами (tier S0 и S) — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.3`) | P2.3 закрыт (🟢): `load:seed`/`load:activity-write` — объёмный+«грязный» конверт, профили S0/S/M/L, снапшот/restore; провалидировано живым прогоном tier S0 — детали см. phases/P2.md P2.3 Completion Notes. |
 | 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.4`) | P2.4 закрыт (🟢): `load/k6/` — библиотека + 7 сценариев + `smoke.js`, `load/scripts/run.sh` (новый); провалидировано живым прогоном tier S0 (100% checks, DB/MinIO пост-условия) — детали см. phases/P2.md P2.4 Completion Notes. |
+| 2026-07-14 | sonnet/medium (`/task:plan-exec VLT-LOAD P2.5`) | P2.5 закрыт (🟢): `load/gates/{thresholds.js,perf-assert.py,coverage.py}` + первый baseline; живой прогон tier S0 (coverage 96/96, exit 0/99) — детали см. phases/P2.md P2.5 Completion Notes. |
 
 ---
 

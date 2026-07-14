@@ -117,6 +117,53 @@ nothing to read/write against and every check fails.
 | `k6/scenarios/{tus-upload,s3-multipart,single-shot,download,tree,docs-collab,mixed}.js` | the 7 scenarios (Scope Included, P2.4) |
 | `k6/smoke.js` | contract smoke — every scenario once, DB/storage post-conditions checked from `run.sh`/manually, not inside k6 |
 
+## Gate: thresholds + perf-assert (P2.5)
+
+Two planes (D18, `slo-gates.md` §0.2): k6 sees only the client side, so the gate is
+split into `load/gates/thresholds.js` (k6 `options.thresholds` — error-rate, checks-rate,
+and the streaming class-A rows SLO-40..54 that k6 can actually see: throughput,
+`data_sent`/`data_received`) and `load/gates/perf-assert.py` (everything else: RSS
+ceilings, background unbounded-scan counters, class-B latency-vs-baseline — all read from
+a Prometheus snapshot + `summary.json` + a committed baseline). `load/gates/coverage.py`
+checks that every row of `slo-gates.md` §3 (96 today) has one of the two homes.
+
+```sh
+python3 load/gates/coverage.py
+python3 load/gates/perf-assert.py --summary load/results/summary.json \
+    --baseline load/baselines/smoke-perf-S0.json --profile smoke-perf \
+    --prometheus-url http://127.0.0.1:9090
+```
+
+`load/gates/thresholds.js` is staged into `k6/lib/thresholds.js` by `run.sh` (same
+`load/gates/` volume-mount gap as `dataset.json` — see previous section) and consumed
+via `handleSummary` (`k6/lib/summary.js`) for the `meta` header (`commit`, `profile`,
+`tier`, `env_fingerprint`, `dataset_id`) baseline comparison needs. `run.sh` computes
+`ENV_FINGERPRINT` on the host (hash of the tier `.env` file + pinned image versions +
+`dataset_id`) and passes it in — k6's sandbox has no hashing/crypto.
+
+**Not wired into `smoke.js` on purpose.** The contract smoke is 1 VU × 1 iteration
+(P2.4) — a single sample has no meaningful `med`/`min` distribution, and forcing the
+real class-A thresholds onto it made the FUNCTIONAL contract fail on a healthy run
+(found live while validating this item). The `smoke-perf`/`regression` profiles that DO
+gate on `thresholds.js` are P2.6's job, against a sustained `constant-vus` run (e.g.
+`mixed.js`), not this 1-iteration smoke.
+
+**Today, almost everything is `not-checkable` or `advisory`** — by design (P8 hasn't
+shipped: `coverage.py` prints this explicitly, not silently). `perf-assert.py` still
+exits 0 on a real smoke run because none of that is a *blocking* verdict yet.
+
+**Findings from live validation of this gate (recorded here, not fixed — D-LOAD-5):**
+- `thresholdsFor()`'s streaming-class-A numbers, calibrated per `slo-gates.md` §3.2 for
+  a sustained tier-S/M/L run, do not all hold at S0-smoke scale with tiny files/short
+  durations — `single_shot`'s per-request overhead dominates a 1 MiB transfer, and a
+  short `mixed.js` window can leave `download`'s discovery pool empty (both observed
+  live). Calibrating/measuring this is P2.7 (CV) and P2.8 (DoD baseline on tier S), not
+  this item.
+- A k6 threshold on a metric+tag combination that never received a sample in the run
+  still evaluates (as zero) and can fail — `mixed.js` (P2.6's real consumer) must
+  exercise every op it gates within the run window, or that op's threshold row should
+  not be included for a profile that cannot guarantee it.
+
 ## Layout
 
 | Path | What |
@@ -134,9 +181,13 @@ nothing to read/write against and every check fails.
 | `seed/profiles/{S0,S,M,L}.php` | per-tier seed volume knobs — `reference-env.md` §2.1/§2.2/§4.1 (L is spec-only, `load:seed` refuses it) |
 | `seed/out/` | `load:seed` manifests, keyed by `dataset_id` — git-ignored run artifacts |
 | `scripts/{up,down,snapshot,restore}.sh` | tier-parametrised bring-up/tear-down/snapshot/restore |
-| `scripts/run.sh` | **P2.4** — stage the seed manifest + run a k6 scenario or the contract smoke |
+| `scripts/run.sh` | **P2.4/P2.5** — stage the seed manifest + `gates/thresholds.js` + run a k6 scenario or the contract smoke |
+| `scripts/collect-container-stats.sh` | **P2.5** — cgroup `memory.peak` per stand container (coarse RSS stand-in until P8) |
 | `k6/` | **P2.4** — lib + 7 scenarios + `smoke.js` (see previous section) |
-| `gates/`, `baselines/` | **P2.5**, do not exist yet |
+| `gates/thresholds.js` | **P2.5** — k6 `options.thresholds` builder (client plane, D18) |
+| `gates/perf-assert.py`, `_slo_table.py` | **P2.5** — server plane: PromQL/summary.json verdicts per `slo-gates.md` §3 row |
+| `gates/coverage.py` | **P2.5** — machine check that every §3 row has an assigned plane |
+| `baselines/` | **P2.5** — committed baseline artifacts (`slo-gates.md` §4.1), `.gitkeep` until the first real one lands |
 
 ## Why nginx does not cap request bodies
 

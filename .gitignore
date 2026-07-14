@@ -56,3 +56,16 @@ load/*.tar.gz
 # load/scripts/run.sh (P2.4) stages the seed manifest here for the k6 container to read
 # (docker-compose.load.yml only mounts load/k6/, not load/seed/out/) — a run artifact.
 load/k6/dataset.json
+# load/scripts/run.sh (P2.5) stages the gates/thresholds.js source here for the same
+# reason (k6 container only mounts load/k6/, not load/gates/) — a run artifact, not a
+# second source of truth.
+load/k6/lib/thresholds.js
+# perf-assert.py/collect-container-stats.sh outputs (P2.5) — run artifacts, not spec.
+# Non-recursive: does NOT match load/baselines/*.json (those ARE committed — slo-gates.md
+# §4.1: baseline is a version-reviewed artifact) or load/seed/profiles/*.
+load/*.json
+# k6's writable output mount (docker-compose.load.yml `k6.volumes`) — summary.json etc,
+# always a run artifact.
+load/results/
+# load/gates/*.py bytecode cache — never a repo artifact.
+load/gates/__pycache__/

@@ -197,6 +197,9 @@ services:
       K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
     volumes:
       - ./k6:/scripts:ro
+      # P2.5 — `handleSummary` (load/k6/lib/summary.js) needs somewhere writable to put
+      # summary.json; /scripts is deliberately :ro (scenario code is not a run artifact).
+      - ./results:/results
     depends_on:
       app:
         condition: service_healthy
