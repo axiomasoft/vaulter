@@ -36,6 +36,15 @@ fi
 cp "$MANIFEST" k6/dataset.json
 cp gates/thresholds.js k6/lib/thresholds.js
 
+# P2.7 — `grafana/k6` runs as uid 12345, and `./results:/results` (docker-compose.load.yml)
+# is a bind mount: on a fresh clone the directory does not exist, dockerd creates it as
+# root:root 0755, and `handleSummary` dies with "permission denied" — no summary.json, so
+# the whole gate downstream (perf-assert, baseline, this item's CV) has nothing to read.
+# It never showed on the lab-box, where load/results/ already existed world-writable from
+# the first hand-run. Create it before dockerd can, and make it writable for that uid.
+mkdir -p results
+chmod 0777 results 2>/dev/null || true
+
 # P2.5 — `env_fingerprint` (slo-gates.md §4.1): hash of the cpuset/mem_limit envelope
 # (the whole env-file IS that envelope, `load/env/<tier>.env`) + the pinned image
 # versions (docker-compose.load.yml) + dataset_id. Computed on the HOST (k6's sandbox
