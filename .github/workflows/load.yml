@@ -1,0 +1,244 @@
+name: Load Gate
+
+# VLT-LOAD P2.6 — the harness (P2.1-P2.5) run on a PR/nightly lane, not only a laptop
+# (D14: SLO are machine-checked, a gate nobody runs does not protect `main`). Two jobs:
+#
+#   smoke-perf  — PR + workflow_dispatch. Profile S0 (D17/D21/Q3 — the ONLY profile that
+#                 fits ubuntu-latest's 4 vCPU / ~14 GiB disk; tiers S/M/L run on the
+#                 lab-box only, `slo-gates.md` §7). Class A (error-rate, checks,
+#                 streaming throughput, unbounded-scan counters) is BLOCKING. Class B
+#                 (latency) is advisory everywhere outside `lab` (D15/D20) — it writes
+#                 a report, it never fails this job.
+#   regression  — nightly on `main` (+ workflow_dispatch). Same S0 stand, median-of-3
+#                 runs (slo-gates.md §4.3) so class-B's baseline-vs-current comparison
+#                 is not one noisy sample; updates `load/baselines/*` only through a
+#                 reviewed PR carrying the `perf-rebaseline` label (§4.4 — a silent
+#                 baseline move would make "regression" mean nothing).
+#
+# `baseline-guard` enforces that label: a PR touching `load/baselines/*` without it
+# fails outright, on every PR (cheap — no stand needed).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/core/**'
+      - 'packages/drive/**'
+      - 'packages/media/**'
+      - 'packages/documents/**'
+      - 'packages/filament/**'
+      - 'load/**'
+      - 'plans/VLT-LOAD/slo-gates.md'
+      - 'plans/VLT-LOAD/reference-env.md'
+      - '.github/workflows/load.yml'
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: load-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-perf:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    name: smoke-perf (S0, class A blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TIER: S0
+      LOAD_APP_PORT: 8080
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bring up the S0 stand
+        run: TIER=S0 ./load/scripts/up.sh
+
+      - name: Confirm the SUT is real (not just container-healthy)
+        run: |
+          curl -fsS http://127.0.0.1:8080/load/health
+          curl -fsS -H 'X-Load-Actor: 1' http://127.0.0.1:8080/load/storage
+
+      - name: Seed the S0 volume+dirty envelope
+        run: |
+          docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
+            'TIER=S0 vendor/bin/testbench load:seed --fresh'
+
+      - name: k6 smoke-perf (mixed.js, class-A thresholds, 1 run)
+        run: TIER=S0 ./load/scripts/run.sh smoke-perf
+
+      - name: perf-assert — server plane (class A blocking, class B advisory)
+        if: always()
+        run: |
+          python3 load/gates/perf-assert.py \
+            --summary load/results/summary.json \
+            --baseline load/baselines/smoke-perf-S0.json \
+            --profile smoke-perf \
+            --prometheus-url http://127.0.0.1:9090 \
+          | tee load/results/perf-assert.txt
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### VLT-LOAD smoke-perf (S0)'
+            echo
+            echo "not-checkable rows are server metrics P8 has not shipped yet — a green"
+            echo "run here proves class A on the client-visible SLOs, NOT all 96 rows of"
+            echo "slo-gates.md §3 (Code Guidance, Anti-самообман)."
+            echo
+            echo '```'
+            tail -n 5 load/results/perf-assert.txt 2>/dev/null || echo 'perf-assert did not produce output'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Tear down the stand
+        if: always()
+        run: TIER=S0 KEEP_VOLUMES=0 ./load/scripts/down.sh
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-perf-results
+          path: |
+            load/results/summary.json
+            load/results/perf-assert.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+  regression:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name: regression (nightly, median-3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TIER: S0
+      LOAD_APP_PORT: 8080
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Bring up the S0 stand
+        run: TIER=S0 ./load/scripts/up.sh
+
+      - name: Confirm the SUT is real (not just container-healthy)
+        run: |
+          curl -fsS http://127.0.0.1:8080/load/health
+          curl -fsS -H 'X-Load-Actor: 1' http://127.0.0.1:8080/load/storage
+
+      - name: Seed the S0 volume+dirty envelope
+        run: |
+          docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec -T app sh -c \
+            'TIER=S0 vendor/bin/testbench load:seed --fresh'
+
+      - name: k6 regression x3 (median, slo-gates.md §4.3)
+        run: |
+          for i in 1 2 3; do
+            TIER=S0 ./load/scripts/run.sh regression
+            cp load/results/summary.json "load/results/summary-run${i}.json"
+          done
+
+      - name: Merge 3 runs into one median summary
+        run: |
+          python3 - <<'PY'
+          import json
+          import statistics
+          from pathlib import Path
+
+          RESULTS = Path('load/results')
+          runs = [json.loads((RESULTS / f'summary-run{i}.json').read_text()) for i in (1, 2, 3)]
+
+          def median_walk(nodes):
+              # Recurse into the shared shape of k6's `data.metrics.<name>.values` — a
+              # tree of dicts down to numeric leaves (p(95), med, rate, count, ...).
+              # Any leaf that is not numeric across all 3 runs is left as the LAST
+              # run's value (e.g. `type`/`contains` — k6 metric metadata, not a sample).
+              if not all(isinstance(n, dict) for n in nodes):
+                  return nodes[-1]
+
+              merged = {}
+              for key in nodes[-1]:
+                  values = [n[key] for n in nodes if key in n]
+                  if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in values):
+                      merged[key] = statistics.median(values)
+                  elif all(isinstance(v, dict) for v in values):
+                      merged[key] = median_walk(values)
+                  else:
+                      merged[key] = values[-1]
+              return merged
+
+          merged = dict(runs[-1])
+          merged['metrics'] = median_walk([r['metrics'] for r in runs])
+          merged['meta'] = dict(runs[-1]['meta'])
+          merged['meta']['runs'] = 3
+          (RESULTS / 'summary.json').write_text(json.dumps(merged, indent=2))
+          PY
+
+      - name: perf-assert — server plane (class A blocking, class B advisory-vs-baseline)
+        if: always()
+        run: |
+          python3 load/gates/perf-assert.py \
+            --summary load/results/summary.json \
+            --baseline load/baselines/smoke-perf-S0.json \
+            --profile regression \
+            --prometheus-url http://127.0.0.1:9090 \
+          | tee load/results/perf-assert.txt
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### VLT-LOAD regression (S0, median-3)'
+            echo
+            echo '```'
+            tail -n 5 load/results/perf-assert.txt 2>/dev/null || echo 'perf-assert did not produce output'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Tear down the stand
+        if: always()
+        run: TIER=S0 KEEP_VOLUMES=0 ./load/scripts/down.sh
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: |
+            load/results/summary-run1.json
+            load/results/summary-run2.json
+            load/results/summary-run3.json
+            load/results/summary.json
+            load/results/perf-assert.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+  baseline-guard:
+    if: github.event_name == 'pull_request'
+    name: 'baseline diff requires the perf-rebaseline label'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject a baseline diff without the perf-rebaseline label (slo-gates.md §4.4)
+        env:
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'perf-rebaseline') }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          CHANGED="$(git diff --name-only "${BASE_SHA}"...HEAD -- load/baselines || true)"
+
+          if [ -n "$CHANGED" ]; then
+            echo "Changed baseline file(s):"
+            echo "$CHANGED"
+
+            if [ "$HAS_LABEL" != "true" ]; then
+              echo "::error::load/baselines/* changed without the 'perf-rebaseline' PR label — baseline moves need explicit review (slo-gates.md §4.4)."
+              exit 1
+            fi
+
+            echo "perf-rebaseline label present — baseline diff allowed."
+          fi

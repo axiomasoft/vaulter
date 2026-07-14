@@ -100,6 +100,7 @@ scenario reads the manifest's id-lists off that staged copy via `k6/data.SharedA
 TIER=S0 ./load/scripts/run.sh smoke                    # contract smoke — every scenario, 1 VU x 1 iteration
 TIER=S0 ./load/scripts/run.sh scenarios/tus-upload.js   # a single scenario, full VUS_*/DURATION run
 TIER=S0 DURATION=2m ./load/scripts/run.sh scenarios/mixed.js
+TIER=S0 ./load/scripts/run.sh smoke-perf                # P2.6 — mixed.js gated by thresholds.js, CI's smoke-perf/regression profile
 ```
 
 Seed the dataset first (previous section) — a scenario against an unseeded stand has
@@ -164,6 +165,56 @@ exits 0 on a real smoke run because none of that is a *blocking* verdict yet.
   exercise every op it gates within the run window, or that op's threshold row should
   not be included for a profile that cannot guarantee it.
 
+## CI: how the gate behaves (P2.6)
+
+`.github/workflows/load.yml` — three jobs, `slo-gates.md` §7:
+
+| Job | Trigger | Profile | Class A | Class B |
+|:--|:--|:--|:--|:--|
+| `smoke-perf` | `pull_request` (path-filtered), `workflow_dispatch` | `smoke-perf`, tier **S0** only (D17/D21/Q3 — the only profile `ubuntu-latest` fits) | **blocking** — a threshold breach (k6 exit 99) or a `fail` verdict from `perf-assert.py` fails the job | writes `load/results/summary.json` against the committed baseline; **never fails the job** (D15/D20) |
+| `regression` | `schedule` (nightly on `main`), `workflow_dispatch` | `regression`, tier S0, median of **3** `run.sh regression` runs merged metric-by-metric (`statistics.median`, §4.3) | blocking, same as `smoke-perf` | same advisory comparison, against the same baseline, on the steadier median |
+| `baseline-guard` | every `pull_request` | — | a diff under `load/baselines/*` without the PR label `perf-rebaseline` fails the job outright (§4.4) | — |
+
+`run.sh smoke-perf` / `run.sh regression` (new `LOAD_PROFILE` case in the `TARGET` case
+statement) compose the class-A gate onto `mixed.js` at run time — a stdin-piped k6
+script (`--workdir /scripts` so its relative imports resolve like a real `/scripts/*.js`
+file) that re-exports `mixed.js`'s `setup`/`interactive`/`upload`/`download` under
+`options.thresholds: thresholdsFor(profile, tier)` and a `handleSummary` wired to
+`summaryOutputs`. This composes `mixed.js` (P2.4), `thresholds.js` (P2.5) and
+`summary.js` (P2.5) without editing any of the three — none of them are this item's
+`Files`. `regression`'s 60s-per-run × 3 plus a 110s seed comfortably fits its own
+60-minute budget; `smoke-perf`'s single run targets the tighter **≤ 6 min** class-A
+budget from `slo-gates.md` §7 (Implementation Rules: shorten the run, never drop a
+gated SLO, if it does not fit).
+
+A job's step summary always prints the `perf-assert.py` tail
+(`pass=N fail=N not-checkable=N incomparable=N known-red=N`) — a green `smoke-perf`
+proves class A on the SLOs the client can see today, not all 96 rows of `slo-gates.md`
+§3 (Code Guidance, Anti-самообман; most rows stay `not-checkable` until P8 ships their
+Prometheus metric).
+
+**Known-red today, on purpose:** SLO-46…48 (`S3MultipartHandler::complete()`, L-01) —
+`perf-assert.py` prints `known-red`, not `fail`; this does not block the job (`slo-gates.md`
+§6.4). It starts failing for real the moment the L-01 dev-slice lands (D11).
+
+**Open, not this item's job (recorded, not silently absorbed):**
+- **S0-scale calibration of the streaming class-A numbers is unresolved.** A live
+  60s `run.sh smoke-perf` against a fully re-seeded S0 stand genuinely breaches
+  `single_shot`/`tus_patch`'s `stream_throughput_mibs` floor (calibrated in
+  `thresholds.js` for a sustained tier-S/M/L run against larger files — S0's ≤256 MiB
+  fixture does not reach it) and can push `http_req_failed{class:interactive}` over
+  budget under `pm.max_children=4`. Implementation Rules forbid "adjusting" those
+  numbers here (`slo-gates.md`/`thresholds.js` are P1.4/P2.5 SSOT) — this is
+  `smoke-perf`'s honest state until P2.7 (CV) / P2.8 (DoD baseline on tier S) either
+  recalibrate the S0-inherited numbers or the owner accepts a dedicated S0 row.
+  Until then, `smoke-perf` on this repo's `main` is expected to be **class-A red**, not
+  green — the wiring (thresholds actually gate a sustained run, the job actually fails
+  on a breach, artifacts/summary land either way) is what this item proves, not a
+  clean run at S0 scale.
+- The `regression` job's median-merge (workflow step, not a `load/` script) walks
+  `data.metrics` generically (median per numeric leaf across the 3 runs) — it has not
+  been exercised on GitHub's actual `ubuntu-latest` (P2.7's job, `findings/P2.7-cv-runner.md`).
+
 ## Layout
 
 | Path | What |
@@ -181,13 +232,14 @@ exits 0 on a real smoke run because none of that is a *blocking* verdict yet.
 | `seed/profiles/{S0,S,M,L}.php` | per-tier seed volume knobs — `reference-env.md` §2.1/§2.2/§4.1 (L is spec-only, `load:seed` refuses it) |
 | `seed/out/` | `load:seed` manifests, keyed by `dataset_id` — git-ignored run artifacts |
 | `scripts/{up,down,snapshot,restore}.sh` | tier-parametrised bring-up/tear-down/snapshot/restore |
-| `scripts/run.sh` | **P2.4/P2.5** — stage the seed manifest + `gates/thresholds.js` + run a k6 scenario or the contract smoke |
+| `scripts/run.sh` | **P2.4/P2.5/P2.6** — stage the seed manifest + `gates/thresholds.js` + run a k6 scenario, the contract smoke, or a gated `smoke-perf`/`regression` profile (stdin-piped `mixed.js` + thresholds + `handleSummary`) |
 | `scripts/collect-container-stats.sh` | **P2.5** — cgroup `memory.peak` per stand container (coarse RSS stand-in until P8) |
 | `k6/` | **P2.4** — lib + 7 scenarios + `smoke.js` (see previous section) |
 | `gates/thresholds.js` | **P2.5** — k6 `options.thresholds` builder (client plane, D18) |
 | `gates/perf-assert.py`, `_slo_table.py` | **P2.5** — server plane: PromQL/summary.json verdicts per `slo-gates.md` §3 row |
 | `gates/coverage.py` | **P2.5** — machine check that every §3 row has an assigned plane |
 | `baselines/` | **P2.5** — committed baseline artifacts (`slo-gates.md` §4.1), `.gitkeep` until the first real one lands |
+| `.github/workflows/load.yml` (repo root, not under `load/`) | **P2.6** — `smoke-perf` (PR), `regression` (nightly, median-3), `baseline-guard` (label rule) — see "CI: how the gate behaves" above |
 
 ## Why nginx does not cap request bodies
 
