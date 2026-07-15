@@ -54,3 +54,37 @@ P5 **3/3 🟢** / §6 Update Log P5.3-строка / §7 Contracts Exported → 
 **Посторонний дифф в дереве (НЕ P5, НЕ тронут):** `plans/VLT-LOAD/{handoff.md,phases/P8.md,plan.md}`,
 `plans/VLT-LOAD/findings/P8-rag-otel-health.md`, `scratchpad/` — работа VLT-LOAD, не коммичена P5.3.
 (`.claude/.maind-feature-log.last` — машинный hook-курсор, регенерируется хуком, не P5.3.)
+
+---
+
+## Migration checklist (archive VLT-REL — 2026-07-15)
+
+**PLAN-ARCHIVED: VLT-REL** — `git mv plans/VLT-REL → plans/archive/VLT-REL` (commit `b424f96`).
+
+### root/ → docs (per-file disposition)
+
+Ни один `root/`-артефакт НЕ мигрировал в `docs/` — каждый планово-связан (несёт
+`SUPERSEDED`-пометки D12, RAG-маркеры, кросс-ссылки на фазы/D-лог плана), а не является
+чистой проектной докой. Обоснование по файлам:
+
+| Файл | Тип | Решение | Почему остался в архиве |
+|:--|:--|:--|:--|
+| `root/contracts/public-api-surface.md` | reference | остался в архиве | Человекочитаемый спутник **живого** SSOT — golden snapshot-тестов (`packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + `__snapshots__/`); живой enforcement — сами тесты, не MD. |
+| `root/contracts/AMEND.md` | reference | остался в архиве | Процедура правки замороженной поверхности, на которую указывают diff-сообщения snapshot-тестов; путь-ссылки в 4 тестах обновлены на архивный (ниже). |
+| `root/known-limitations.md` | reference | остался в архиве | Точечный снапшот долга VLT-LOAD (движущаяся цель, P3–P7 открыты); перенос в `docs/` подал бы устаревающий срез как канон. |
+| `root/upgrade-path.md` | reference/how-to | остался в архиве | SemVer-классификация с `SUPERSEDED`-базой номера (D12), планово-связана. |
+| `root/cut-line.md` | explanation | остался в архиве | P1-дизайн-рационал границы тега, `SUPERSEDED` D12 — историческое решение, класс findings/rationale. |
+
+Долгоживущее знание о публичном контракте уже имеет живой дом: golden snapshot-тесты +
+`docs/reference/contracts.md`. `artifacts/`, `findings/` — остаются в архиве (канон §12).
+
+### Ссылки на архивный путь (обновлены, commit — миграционный)
+
+- `plans/ACTIVE.md` — строка VLT-REL снята (VLT-MUT остаётся активным; сброс на `—` не применялся).
+- `plans/VLT-LOAD/plan.md` — единственная ссылка на VLT-REL живёт в **незакоммиченной**
+  работе P8 той сессии (строка `Paused By`/Update Log), не в committed-контенте; путь в
+  рабочем дереве уже указывает на архив, коммит — за сессией VLT-LOAD (в мой миграционный
+  коммит НЕ включён).
+- `packages/{core,drive,azgard,documents}/tests/Arch/PublicApiSnapshotTest.php` — все ссылки
+  `plans/VLT-REL/root/contracts/{public-api-surface,AMEND}.md` (комментарии + runtime-сообщение
+  упавшего теста, стр. ~230/258) → `plans/archive/VLT-REL/...`. Поведение тестов не изменено.

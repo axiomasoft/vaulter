@@ -6,7 +6,7 @@ use Vaulter\Facades\Vaulter;
 
 /**
  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
- * tag. The human-readable SSOT is `plans/VLT-REL/root/contracts/public-api-surface.md`
+ * tag. The human-readable SSOT is `plans/archive/VLT-REL/root/contracts/public-api-surface.md`
  * (P2.1); THIS test is its enforceable counterpart: it reflects the LIVE signatures of
  * every `Vaulter\Contracts\**` interface plus the `Vaulter\Facades\Vaulter` facade,
  * canonicalises them into a stable manifest, and compares against a committed golden.
@@ -36,7 +36,7 @@ use Vaulter\Facades\Vaulter;
  *
  * AMEND (adding surface legally after the tag): regenerate the golden with
  * `UPDATE_SNAPSHOT=1`, add a new `D#`, sync `plan.md` §7 Contracts, and ship a CHANGELOG
- * MINOR — see `plans/VLT-REL/root/contracts/AMEND.md`. Regenerating the golden OUTSIDE
+ * MINOR — see `plans/archive/VLT-REL/root/contracts/AMEND.md`. Regenerating the golden OUTSIDE
  * that procedure (no `D#`) is a `[POSSIBLE-DEFECT]` per `.claude/rules/tests.md`.
  * `UPDATE_SNAPSHOT` is env-gated and is NEVER set by any CI workflow.
  */
@@ -255,7 +255,7 @@ if (!function_exists('vaulterSnapshotAssert')) {
         expect($manifest)->toBe(
             file_get_contents($goldenPath),
             'Public API surface changed. If this is INTENTIONAL and ADDITIVE, follow AMEND '
-            .'(plans/VLT-REL/root/contracts/AMEND.md): regenerate the golden with UPDATE_SNAPSHOT=1, '
+            .'(plans/archive/VLT-REL/root/contracts/AMEND.md): regenerate the golden with UPDATE_SNAPSHOT=1, '
             .'add a D#, sync plan.md §7 Contracts, ship a CHANGELOG MINOR. If it is BREAKING '
             .'(removed/renamed method, narrowed type), that is a SemVer decision — escalate to the owner.',
         );

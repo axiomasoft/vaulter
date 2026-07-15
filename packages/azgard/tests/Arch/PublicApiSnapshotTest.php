@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * VLT-REL P2.2 — executable freeze of vaulter-azgard's public composer surface for the `0.1.0`
- * tag. Counterpart to the P2.1 SSOT (`plans/VLT-REL/root/contracts/public-api-surface.md`):
+ * tag. Counterpart to the P2.1 SSOT (`plans/archive/VLT-REL/root/contracts/public-api-surface.md`):
  * reflects every `Vaulter\\Azgard\\Contracts\**` contract into a canonical manifest and compares it to a
  * committed golden, reddening the build on any unplanned signature change (removed/renamed
  * method, narrowed type, a new contract). Same canonicalisation and AMEND procedure as
@@ -227,7 +227,7 @@ if (!function_exists('vaulterSnapshotAssert')) {
         expect($manifest)->toBe(
             file_get_contents($goldenPath),
             'Public API surface changed. If this is INTENTIONAL and ADDITIVE, follow AMEND '
-            .'(plans/VLT-REL/root/contracts/AMEND.md): regenerate the golden with UPDATE_SNAPSHOT=1, '
+            .'(plans/archive/VLT-REL/root/contracts/AMEND.md): regenerate the golden with UPDATE_SNAPSHOT=1, '
             .'add a D#, sync plan.md §7 Contracts, ship a CHANGELOG MINOR. If it is BREAKING '
             .'(removed/renamed method, narrowed type), that is a SemVer decision — escalate to the owner.',
         );
