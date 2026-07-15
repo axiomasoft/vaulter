@@ -7,10 +7,10 @@
 | Plan ID | VLT-REL |
 | Title | Release-готовность vaulter: замороженная публичная поверхность → minimal-тег → остальное летит параллельной BC-оптимизацией |
 | Version | 0.9.0 |
-| Status | 🟡 In progress |
+| Status | 🟢 Done (все фазы терминальны — P5.3 выпустил `v0.2.0`; следующий шаг — `/task:plan-close archive VLT-REL`) |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег; интеграционный merge P5.2 — scoped-исключение §2, D14) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (**P5.2 закрыт 🟠** `/task:plan-run` — merge-commit `067a4c6` [2 родителя], 293 конфликта резолвлены в azgard-канон [D13], `permissions-azgard` удалён, golden+6 сьютов зелёные, `main` ff-able, ничего не запушено; deviation grep=31≠0 [легитимные rename-доки, 0 live-require]. Ранее: **P5 ре-дизайн под opus/high `/task:plan-design`**: эскалация P5.2 разрешена — owner делегировал выбор канонической линии исполнителю [AskUserQuestion 2026-07-15]. **D13**: каноническая линия тега — ветка релиза `azgard` [246 коммитов + весь release-readiness-контур], НЕ `origin/main` [Option B #43/#44, `permissions-azgard`]; реконсиляция = merge `origin/main` В ветку релиза [#43/#44 сохраняются, force-push запрещён], резолв 51 конфликта в пользу линии релиза, удаление `permissions-azgard`, ff `main`. **D14**: P5 пере-разложена на 3 items — P5.1 🟢 → P5.2 обратимая локальная реконсиляция → P5.3 необратимый push+тег. **P5.1 закрыт 🟢** ранее: снапшот-гейт зелёный, `CHANGELOG→[0.2.0]`, release-notes черновик) |
+| Last Updated | 2026-07-15 (**P5.3 закрыт 🟢 → план терминален** `/task:plan-run`: approve владельца в сессии → ff-push `main` `4aa193d..983c345` [БЕЗ force, #43/#44 сохранены], **первый git-тег `v0.2.0`** [`c508db9`] на `main` HEAD, `gh release` https://github.com/axioma-studio/vaulter/releases/tag/v0.2.0; Packagist deferred [split-run `29409528976` ожидаемо падает — D9]; `v0.1.0` не создан [D12]; следующий шаг `/task:plan-close archive VLT-REL`. Ранее: **P5.2 закрыт 🟠** — merge-commit `067a4c6` [2 родителя], 293 конфликта резолвлены в azgard-канон [D13], `permissions-azgard` удалён, golden+6 сьютов зелёные, `main` ff-able, ничего не запушено; deviation grep=31≠0 [легитимные rename-доки, 0 live-require]. Ранее: **P5 ре-дизайн под opus/high `/task:plan-design`**: эскалация P5.2 разрешена — owner делегировал выбор канонической линии исполнителю [AskUserQuestion 2026-07-15]. **D13**: каноническая линия тега — ветка релиза `azgard` [246 коммитов + весь release-readiness-контур], НЕ `origin/main` [Option B #43/#44, `permissions-azgard`]; реконсиляция = merge `origin/main` В ветку релиза [#43/#44 сохраняются, force-push запрещён], резолв 51 конфликта в пользу линии релиза, удаление `permissions-azgard`, ff `main`. **D14**: P5 пере-разложена на 3 items — P5.1 🟢 → P5.2 обратимая локальная реконсиляция → P5.3 необратимый push+тег. **P5.1 закрыт 🟢** ранее: снапшот-гейт зелёный, `CHANGELOG→[0.2.0]`, release-notes черновик) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -85,19 +85,20 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-08 + F-P2.8-1) | 1/1 | 🟢 Done |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 1/1 | 🟢 Done |
-| P5 | Тег и публикация minimal-релиза (реконсиляция линий → тег) | 1/3 | 🟡 In progress |
+| P5 | Тег и публикация minimal-релиза (реконсиляция линий → тег) | 2/3 | 🟢 Done |
 
 Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
 P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена golden-снапшотом); **P3 закрыт 🟢** (1/1 —
 каталог `known-limitations.md`); **P4 закрыт 🟢** (1/1 — `root/upgrade-path.md`, SemVer-классификация
-известного потока изменений); **P5 🟡 в работе** (1/3 — версия релиза **`v0.2.0`** [D12]; **P5.1 закрыт 🟢**
-[обратимый prep: снапшот-гейт зелёный, CHANGELOG `[Unreleased]`→`[0.2.0]`, release-notes черновик]; **P5.2 ⬜
-обратимая ЛОКАЛЬНАЯ реконсиляция** [D13/D14: `git merge origin/main` в ветку релиза, резолв 51 конфликта в
-пользу `azgard`-линии, удаление `packages/permissions-azgard/`, полная валидация «всё-зелёное» + P2-golden;
-НИЧЕГО не пушится — обратимо]; **P5.3 ⬜ необратимый акт** [push merge→`main` ff + тег `v0.2.0` + `gh release`];
-все три opus/high manual; **Packagist deferred** — D9; тег из `main` — D10; каноническая линия — **D13**
-[ветка релиза `azgard`, НЕ `origin/main`/`permissions-azgard`]; эскалация P5.2 РАЗРЕШЕНА owner-делегированием
-+ D13/D14).
+известного потока изменений); **P5 закрыта 🟢** (все 3 item'а терминальны — счётчик 🟢 2/3, P5.2=🟠; версия релиза **`v0.2.0`** [D12] выпущена; **P5.1 закрыт 🟢**
+[обратимый prep: снапшот-гейт зелёный, CHANGELOG `[Unreleased]`→`[0.2.0]`, release-notes черновик]; **P5.2 закрыт 🟠**
+[локальная реконсиляция: merge-commit `067a4c6`, 293 конфликта → azgard-канон D13, `permissions-azgard` удалён,
+golden+6 сьютов зелёные, `main` ff-able, ничего не запушено]; **P5.3 закрыт 🟢** [approve владельца в сессии → ff-push
+`4aa193d..983c345`→`main` БЕЗ force, аннотированный тег `v0.2.0` (`c508db9`) на `main` HEAD, `gh release`
+https://github.com/axioma-studio/vaulter/releases/tag/v0.2.0]; все три opus/high manual; **Packagist deferred** — D9
+[split-workflow `29409528976` триггернут push'ем тега, ожидаемо падает — prereqs dormant]; тег из `main` — D10;
+каноническая линия — **D13** [ветка релиза `azgard`]. **Первый git-тег в истории пакета.** План терминален целиком →
+`/task:plan-close archive VLT-REL`).
 
 ## 5. Decision Log
 
@@ -138,6 +139,7 @@ P2.1 + исполнимый snapshot-гейт P2.2, поверхность за�
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.2`) | P5.2 ЭСКАЛИРОВАН 🔴 Blocked (неясная архитектура): `origin/main` дивергировал в параллельную re-platform-линию (#43/#44 Option B) — чистого мержа D10 нет, тег НЕ нарезан — детали см. phases/P5.md P5.2 ESCALATION. |
 | 2026-07-15 | opus/high (`/task:plan-design VLT-REL P5.2`) | P5 ре-дизайн: эскалация P5.2 разрешена (owner делегировал выбор). **D13** (канон — ветка релиза `azgard`, merge `origin/main` в неё, force-push запрещён) + **D14** (merge in-plan; P5 → 3 items). P5.2 🔴→⬜, P5.3 ⬜, v0.9.0 — детали см. D13/D14 + phases/P5.md. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.2`) | P5.2 закрыт 🟠 (merge-commit `067a4c6`): merge origin/main в линию релиза, 293 конфликта → azgard-канон (D13), golden+6 сьютов зелёные, `main` ff-able, ничего не запушено; deviation grep=31≠0 — детали см. phases/P5.md P5.2 Completion Notes/Known Deviations. |
+| 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.3`) | P5.3 закрыт 🟢, **фаза P5 закрыта (все 3 терминальны), план терминален**: approve владельца → ff-push `main` (`4aa193d..983c345`, без force), первый git-тег `v0.2.0` (`c508db9`) + `gh release`; Packagist deferred (D9) — детали см. phases/P5.md P5.3 Completion Notes. |
 
 ## 7. Contracts
 
@@ -145,7 +147,7 @@ P2.1 + исполнимый snapshot-гейт P2.2, поверхность за�
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| `root/contracts/public-api-surface.md` (SSOT-снапшот заморозки, деливерабл P2.1) + исполнимый per-package snapshot-гейт (P2.2, `packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + golden; media/filament empty-surface гвард) | v0.2.0 | **frozen** — 26 контрактов + фасад заморожены рефлексией сигнатур (item-коммит `2ded9e4`, P2.2; golden версионно-нейтрален — номер релиза его не меняет); **выходит в релизе `v0.2.0`** (D12, ранее помечалось v0.1.0); изменение поверхности — только через AMEND (`root/contracts/AMEND.md`): регенерация golden + D# + CHANGELOG MINOR | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, попадёт под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4/AMEND) | — (тег не нарезан — публикация P5) |
+| `root/contracts/public-api-surface.md` (SSOT-снапшот заморозки, деливерабл P2.1) + исполнимый per-package snapshot-гейт (P2.2, `packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + golden; media/filament empty-surface гвард) | v0.2.0 | **frozen** — 26 контрактов + фасад заморожены рефлексией сигнатур (item-коммит `2ded9e4`, P2.2; golden версионно-нейтрален — номер релиза его не меняет); **выходит в релизе `v0.2.0`** (D12, ранее помечалось v0.1.0); изменение поверхности — только через AMEND (`root/contracts/AMEND.md`): регенерация golden + D# + CHANGELOG MINOR | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, попадёт под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4/AMEND) | ✅ выпущено — git-тег `v0.2.0` (`c508db9`) + GitHub release нарезаны P5.3 (2026-07-15); экосистема academici может потреблять с тега (Packagist deferred — D9) |
 
 ### Consumed
 
