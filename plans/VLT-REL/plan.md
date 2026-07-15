@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (**P5.1 закрыт 🟢** под opus/high `/task:plan-run`: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` — дрейфа контракта нет; `CHANGELOG [Unreleased]`→`## [0.2.0] — 2026-07-15` [6 composer + строка `@vaulter/vue` OUT, легаси `## [0.1.0]` сохранена, link-refs по **D12**]; `artifacts/release-notes-0.2.0.md` черновик собран release-conductor'ом. Остаётся P5.2 — необратимый тег `v0.2.0` на main + GitHub release, approve владельца) |
+| Last Updated | 2026-07-15 (**P5.2 🔴 Blocked** под opus/high `/task:plan-run`: предусловие D10 «релиз слит в `main`» невыполнимо — `origin/main` дивергировал в параллельную re-platform-линию [merged #43/#44 Option B, `permissions-azgard`] против ветки релиза [`azgard`-rename]: 51 конфликт в 3-way мерже, тег/мерж/push НЕ выполнены. Нужен owner-выбор канонической линии + новый D# и реконсиляция веток ДО повторного P5.2 — детали см. phases/P5.md P5.2 ESCALATION. **P5.1 закрыт 🟢** ранее: снапшот-гейт зелёный, `CHANGELOG→[0.2.0]`, release-notes черновик) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -85,7 +85,7 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-08 + F-P2.8-1) | 1/1 | 🟢 Done |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 1/1 | 🟢 Done |
-| P5 | Тег и публикация minimal-релиза | 1/2 | 🟡 In progress |
+| P5 | Тег и публикация minimal-релиза | 1/2 | 🟡 In progress (P5.2 🔴 Blocked — див. `origin/main`) |
 
 Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
 P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена golden-снапшотом); **P3 закрыт 🟢** (1/1 —
@@ -93,7 +93,11 @@ P2.1 + исполнимый snapshot-гейт P2.2, поверхность за�
 известного потока изменений); **P5 🟡 в работе** (1/2 — версия релиза **`v0.2.0`** [D12, коллизия с легаси
 `[0.1.0]` разрешена owner'ом]; **P5.1 закрыт 🟢** [обратимый prep: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` +
 CHANGELOG `[Unreleased]`→`[0.2.0]` + release-notes черновик]; P5.2 ⬜ необратимый тег `v0.2.0` на main +
-GitHub release; оба opus/high manual, требуют только P2; **Packagist deferred** — D9; тег из `main` — D10).
+GitHub release; оба opus/high manual, требуют только P2; **Packagist deferred** — D9; тег из `main` — D10;
+**P5.2 🔴 Blocked 2026-07-15** — `origin/main` дивергировал в параллельную re-platform-линию [merged #43/#44
+Option B, пакет `permissions-azgard`] против ветки релиза [`azgard`-rename, VLT-CANON P2.1]: 51 конфликтующий
+файл в 3-way мерже, чистого мержа D10 нет → нужно owner-решение о канонической линии + новый D#; детали см.
+phases/P5.md P5.2 ESCALATION).
 
 ## 5. Decision Log
 
@@ -129,6 +133,7 @@ GitHub release; оба opus/high manual, требуют только P2; **Packa
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.1`) | P5.1 ЭСКАЛИРОВАН 🔴 Blocked (public contract/SemVer): version-коллизия — `CHANGELOG.md:259` уже несёт `## [0.1.0] - 2026-06-14` (легаси, git-тег отсутствует), `[Unreleased]`→`[0.1.0]` даёт дубль, Validation grep=1 невыполнима в Scope; cut-line §5 premise «прецедента тег-записи нет» неверен. P2-снапшот-гейт зелёный (дрейфа контракта нет). Нужен D# владельца по судьбе легаси-секции + номеру релиза — детали см. phases/P5.md P5.1 ESCALATION + Completion Notes. |
 | 2026-07-15 | opus/high (`/task:plan-design VLT-REL P5.1`) | P5.1 ре-дизайн по **D12** (version-коллизия решена owner'ом: релиз `v0.2.0`, легаси `[0.1.0]` сохранена); P5.1 🔴→⬜, P5.2 → `v0.2.0` — детали см. D12 + phases/P5.md P5.1. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.1`) | P5.1 закрыт 🟢: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` (дрейфа нет), `CHANGELOG [Unreleased]`→`## [0.2.0]` (6 composer + vue-OUT, легаси `[0.1.0]` сохранена, link-refs по D12), `artifacts/release-notes-0.2.0.md` собран release-conductor'ом — детали см. phases/P5.md P5.1 Completion Notes. |
+| 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.2`) | P5.2 ЭСКАЛИРОВАН 🔴 Blocked (неясная архитектура + многопакетный рефакторинг): `origin/main` (`4aa193d`) дивергировал в параллельную re-platform-линию (merged #43/#44 Option B, `permissions-azgard`) против ветки релиза (`azgard`-rename) — 51 конфликт в 3-way мерже, чистого мержа D10 нет; тег/мерж/push НЕ выполнены (force-push затёр бы merged PR'ы). Нужен owner-выбор канонической линии + D#. Детали см. phases/P5.md P5.2 ESCALATION. |
 
 ## 7. Contracts
 
