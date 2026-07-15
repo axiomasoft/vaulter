@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | VLT-REL |
 | Title | Release-готовность vaulter: замороженная публичная поверхность → minimal-тег → остальное летит параллельной BC-оптимизацией |
-| Version | 0.3.0 |
+| Version | 0.4.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (P2.1 закрыт 🟢 — SSOT публичной поверхности, P2 1/2) |
+| Last Updated | 2026-07-15 (P2.2 закрыт 🟢, **фаза P2 закрыта 2/2** — публичная поверхность заморожена snapshot-гейтом, гейт P3–P5 снят) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -82,13 +82,14 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Cut-line релиза и SemVer-политика | 1/1 | 🟢 Done |
-| P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 1/2 | 🟡 In progress |
+| P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-06) | 0/1 | ⬜ Not started |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 0/1 | ⬜ Not started |
 | P5 | Тег и публикация minimal-релиза | 0/1 | ⬜ Not started |
 
-Детализация фаз — в `phases/Pn.md`: **P1 детализирован** (1 item, закрыт 🟢); **P2 детализирован**
-(2 items, готов к exec); P3–P5 — скелеты, разворачиваются `/task:plan-design VLT-REL Pn`.
+Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
+P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена на v0.1.0); P3–P5 — скелеты,
+разворачиваются `/task:plan-design VLT-REL Pn` (P3/P4 параллельно, обе требуют только P2).
 
 ## 5. Decision Log
 
@@ -110,6 +111,7 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P1.1`) | P1.1 закрыт (🟢), **фаза P1 закрыта (🟢, 1/1)**: `root/cut-line.md` — граница тега 0.1.0 (6 composer IN + vue OUT), версия 0.1.0 + bump-rule major=0, судьба CHANGELOG — детали см. phases/P1.md P1.1 Completion Notes + D2/D3. |
 | 2026-07-15 | opus/high (`/task:plan-design VLT-REL P2`) | P2 детализирован — 2 items (P2.1 SSOT-энумерация, P2.2 per-package snapshot-гейт), v0.3.0, скелет-маркер снят; приняты D4/D5/D6 — детали см. phases/P2.md + D4/D5/D6. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P2.1`) | P2.1 закрыт 🟢: `root/contracts/public-api-surface.md` — SSOT 26 контрактов + фасад + config/ресурсы/биндинги, drift-check clean — детали см. phases/P2.md P2.1 Completion Notes. |
+| 2026-07-15 | opus/high (`/task:plan-run VLT-REL P2.2`) | P2.2 закрыт 🟢, **фаза P2 закрыта 2/2 🟢**: per-package snapshot-гейт морозит 26 контрактов + фасад рефлексией, media/filament empty-surface гвард, `§7 Contracts` → frozen (v0.1.0), гейт P3–P5 снят — детали см. phases/P2.md P2.2 Completion Notes. |
 
 ## 7. Contracts
 
@@ -117,7 +119,7 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| `root/contracts/public-api-surface.md` (снапшот заморозки — появится в P2, деливерабл фазы) | v0.1.0 (planned) | pending — заморозится в P2, сейчас не существует | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, должен попасть под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4) | — |
+| `root/contracts/public-api-surface.md` (SSOT-снапшот заморозки, деливерабл P2.1) + исполнимый per-package snapshot-гейт (P2.2, `packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + golden; media/filament empty-surface гвард) | v0.1.0 | **frozen (v0.1.0)** — 26 контрактов + фасад заморожены рефлексией сигнатур (item-коммит `2ded9e4`); изменение поверхности — только через AMEND (`root/contracts/AMEND.md`): регенерация golden + D# + CHANGELOG MINOR | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, попадёт под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4/AMEND) | — (тег не нарезан — публикация P5) |
 
 ### Consumed
 
