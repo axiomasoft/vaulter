@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | VLT-REL |
 | Title | Release-готовность vaulter: замороженная публичная поверхность → minimal-тег → остальное летит параллельной BC-оптимизацией |
-| Version | 0.2.0 |
+| Version | 0.3.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (P1 детализирован, v0.2.0) |
+| Last Updated | 2026-07-15 (P2.1 закрыт 🟢 — SSOT публичной поверхности, P2 1/2) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -82,13 +82,13 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Cut-line релиза и SemVer-политика | 1/1 | 🟢 Done |
-| P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 0/1 | ⬜ Not started |
+| P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 1/2 | 🟡 In progress |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-06) | 0/1 | ⬜ Not started |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 0/1 | ⬜ Not started |
 | P5 | Тег и публикация minimal-релиза | 0/1 | ⬜ Not started |
 
-Детализация фаз — в `phases/Pn.md`: **P1 детализирован** (1 item, готов к exec); P2–P5 —
-скелеты, разворачиваются `/task:plan-design VLT-REL Pn`.
+Детализация фаз — в `phases/Pn.md`: **P1 детализирован** (1 item, закрыт 🟢); **P2 детализирован**
+(2 items, готов к exec); P3–P5 — скелеты, разворачиваются `/task:plan-design VLT-REL Pn`.
 
 ## 5. Decision Log
 
@@ -97,6 +97,9 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | D1 | 2026-07-15 | Создан план VLT-REL, взят `ACTIVE` (`plans/ACTIVE.md`). **VLT-LOAD получает `Paused By: VLT-REL, 2026-07-15`** — его P3–P7 остаются формально открытыми, VLT-REL не ждёт их закрытия. **VLT-MUT НЕ приостановлен** — остаётся собственным независимым треком; VLT-REL от него зависит по D11-гейту (см. §0 Depends on), но не перехватывает его исполнение. | Экосистема ждёт старта внедрения; полное закрытие VLT-LOAD (P3–P7, гипотезы L-02…L-06 ещё не подтверждены) — горизонт месяцы. Тег текущей стабильной поверхности (`Contracts/`+фасады M0–M4b) разблокирует старт без риска для BC; остаток летит вдогонку backward-compatible (см. P4). RAG:— (внутреннее решение владельца о приоритизации, репо-контекст `plans/VLT-LOAD/plan.md`/`plans/VLT-MUT/plan.md`). |
 | D2 | 2026-07-15 | SemVer-политика стартового тега — **0.x**, не 1.0.0. | Владелец: 0.x — сигнал «готово к внедрению», но без формального BC-обязательства (semver.org: major=0 допускает breaking в minor); фактическая стабильность держится арх-гейтом из P2, а не номером версии. 1.0.0 отклонён как альтернатива: BC-обязательство вступило бы раньше, чем риски L-02…L-06 подтверждены/опровергнуты VLT-LOAD (P3/P5/P6) и `vaulter-drive` закрыт по VLT-MUT (D11) — преждевременный major-контракт на неподтверждённой поверхности. RAG:— (внутреннее версионное решение владельца, не внешний факт; semver.org-правило само по себе стандартно известно, не предмет верификации). |
 | D3 | 2026-07-15 | npm-пакет `@vaulter/vue` (0.0.0) — **ВНЕ git-тега 0.1.0, отдельный npm-трек**. git-тег монорепо покрывает 6 composer-пакетов; `@vaulter/vue` версионируется своим циклом, его TS/API-поверхность НЕ входит в P2-заморозку и P4-upgrade-путь; в `root/cut-line.md` (P1.1) документируется строкой как связанный, поставляемый отдельно канал. | При детализации P1 разведка вскрыла развилку: `CHANGELOG.md [Unreleased]` числит `@vaulter/vue` релизным артефактом, но §0 Meta описывает «монорепо шести Laravel-пакетов» и не включает vue в Related Packages. Выбор — вне git-тега: (1) git-тег монорепо по природе composer/PHP-версионное событие, npm-пакеты версионируются независимо по конвенции; (2) `@vaulter/vue` на 0.0.0 — API ещё не стабилизирован, локстеп в 0.1.0 навесил бы BC-обещание (пусть 0.x) на наименее проверенную поверхность — против «minimal»-этоса плана; (3) P2-гейт остаётся на `.claude/rules/public-api.md` (целится в PHP) — не тащим TS-arch-test; (4) совпадает с §0 Meta. Провенанс развилки — `## Обсуждение` §1. RAG:— (repo-grounded: `packages/vue/package.json` = `@vaulter/vue` 0.0.0, npm; `CHANGELOG.md [Unreleased]`; §0 Meta). Отклонён локстеп 0.1.0 (расширил бы scope P2/P4 на TS-контракт наименее стабильного пакета). |
+| D4 | 2026-07-15 | **P2 разложена на 2 items** (P2.1 энумерация-SSOT → `root/contracts/public-api-surface.md`; P2.2 per-package snapshot-regression гейт + amend-процедура). **Arch-snapshot гейт — in-scope этого плана как «гейт» (§2), НЕ содержательный фикс** — отдельно от dev-срезов L-01…L-06 (D-LOAD-5). | §2 Execution Rules явно скоупит «гейты» наравне с доками в P1–P4; заморозка без enforcement-теста — док без зубов (`cut-line.md` §4 инвариант «breaking ловится P2-гейтом» требует исполнимого гейта). Разложение: SSOT (док) и enforcement (тест) — разные концерны с последовательной зависимостью (P2.2 морозит то, что P2.1 энумерировал). RAG:— (repo-grounded: `plan.md:57-68` §2, `root/cut-line.md:130-132`). |
+| D5 | 2026-07-15 | **Автоматический гейт морозит только сигнатуры интерфейсов-контрактов + фасад**; config-ключи / публикуемые ресурсы / биндинги ServiceProvider энумерируются в SSOT-доке (P2.1) и держатся review-правилом `.claude/rules/public-api.md` + §2 D#-дисциплиной, НЕ рефлексионным тестом. | Рефлексия точна и малошумна на сигнатурах интерфейсов (удаление/rename/сужение типа = breaking детектируется точно, `public-api.md:19`); config-дефолты и публикуемые ресурсы меняются органичнее и морозятся рефлексией шумно/малоценно для 0.x-тега. Альтернатива «морозить всё механически» отклонена: высокий шум → девелоперы привыкают к `UPDATE_SNAPSHOT` без D# → заморозка становится театром (pre-mortem failure-mode #2). RAG:— (repo-grounded: `.claude/rules/public-api.md:18-23`, `root/cut-line.md:61-74`). |
+| D6 | 2026-07-15 | **Per-package snapshot-тесты** (в `packages/<pkg>/tests/Arch/` каждого пакета с контрактами: core/drive/documents/azgard) + golden на пакет, гоняются существующими per-package CI-job'ами; media/filament — empty-surface гвард. | Альтернатива «единый monorepo-снапшот» отклонена: корневой `composer.json` НЕ включает filament/azgard в `require` (`plan.md:15-19` composer.json) → единая suite не автолоадит их классы (autoload-gap). Per-package форма совпадает с существующей инфрой (`packages/*/tests/Arch/ArchTest.php` + per-package `.github/workflows/*.yml` гоняют собственный `composer test`) — новый workflow не нужен. RAG:— (repo-grounded: корневой `composer.json` require, `.github/workflows/drive.yml` working-directory per-package). |
 
 ## 6. Update Log
 
@@ -105,6 +108,8 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | 2026-07-15 | issue-planner/opus | План создан: VLT-REL взял `ACTIVE`, VLT-LOAD получил `Paused By` — детали см. D1/D2 выше. |
 | 2026-07-15 | issue-planner/opus | P1 детализирован (1 item P1.1 — cut-line + версия 0.1.0), скелет-маркер снят; развилка npm-канала vue закрыта D3 (вне git-тега) — детали см. phases/P1.md P1.1 + D3/Обсуждение §1. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P1.1`) | P1.1 закрыт (🟢), **фаза P1 закрыта (🟢, 1/1)**: `root/cut-line.md` — граница тега 0.1.0 (6 composer IN + vue OUT), версия 0.1.0 + bump-rule major=0, судьба CHANGELOG — детали см. phases/P1.md P1.1 Completion Notes + D2/D3. |
+| 2026-07-15 | opus/high (`/task:plan-design VLT-REL P2`) | P2 детализирован — 2 items (P2.1 SSOT-энумерация, P2.2 per-package snapshot-гейт), v0.3.0, скелет-маркер снят; приняты D4/D5/D6 — детали см. phases/P2.md + D4/D5/D6. |
+| 2026-07-15 | opus/high (`/task:plan-run VLT-REL P2.1`) | P2.1 закрыт 🟢: `root/contracts/public-api-surface.md` — SSOT 26 контрактов + фасад + config/ресурсы/биндинги, drift-check clean — детали см. phases/P2.md P2.1 Completion Notes. |
 
 ## 7. Contracts
 
