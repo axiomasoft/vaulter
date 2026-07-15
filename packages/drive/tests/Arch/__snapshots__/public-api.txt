@@ -1,0 +1,5 @@
+Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
+  abort(\Vaulter\Drive\Models\Uploads\UploadSession $session): void
+  initialise(\Vaulter\Drive\Models\Uploads\UploadSession $session): array
+  isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
+  protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol

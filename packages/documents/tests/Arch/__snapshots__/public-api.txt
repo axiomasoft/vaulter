@@ -1,0 +1,9 @@
+Vaulter\Documents\Contracts\Collaboration\HostUserResolver
+  find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
+
+Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver
+  issueSession(\Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Access\Ability $ability, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSessionData
+  type(): \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
+
+Vaulter\Documents\Contracts\Export\ExportFilenameResolver
+  resolve(\Vaulter\Models\Drive\Node $node, string $extension): string

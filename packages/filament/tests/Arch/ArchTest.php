@@ -81,3 +81,29 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
 arch('internal namespaces are not used outside the package (E3.1)')
     ->expect('Vaulter\Filament\Support')
     ->toOnlyBeUsedIn('Vaulter\Filament');
+
+/**
+ * VLT-REL P2.2 — empty-surface guard for the 0.1.0 freeze. This package ships NO public
+ * contract interface (`src/Contracts/**`), so the frozen surface records that emptiness:
+ * an accidentally-added public contract (which would need its own snapshot freeze + a D#
+ * per AMEND) reddens the build instead of slipping into the tag unfrozen. The sibling
+ * packages with real contracts (core/drive/documents/azgard) carry PublicApiSnapshotTest.
+ */
+test('the package exposes no public contract surface (VLT-REL P2.2)', function (): void {
+    $contractsDir = __DIR__.'/../../src/Contracts';
+    $found = [];
+
+    if (is_dir($contractsDir)) {
+        /** @var Iterator<SplFileInfo> $files */
+        $files = new RegexIterator(
+            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($contractsDir, FilesystemIterator::SKIP_DOTS)),
+            '/\.php$/',
+        );
+
+        foreach ($files as $file) {
+            $found[] = $file->getPathname();
+        }
+    }
+
+    expect($found)->toBe([]);
+});
