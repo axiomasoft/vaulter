@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | VLT-REL |
 | Title | Release-готовность vaulter: замороженная публичная поверхность → minimal-тег → остальное летит параллельной BC-оптимизацией |
-| Version | 0.7.0 |
+| Version | 0.8.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (P5.1 ЭСКАЛИРОВАН 🔴 — version-коллизия: `CHANGELOG.md:259` уже несёт `## [0.1.0] - 2026-06-14` [легаси, git-тег отсутствует], `[Unreleased]`→`[0.1.0]` даёт дубль → Validation grep=1 невыполнима; нужен D# по судьбе легаси-секции + номеру релиза. P2-снапшот-гейт при этом зелёный) |
+| Last Updated | 2026-07-15 (P5.1 РЕ-ДИЗАЙН по **D12** — version-коллизия разрешена owner'ом: re-platform-релиз тегируется **`v0.2.0`**, легаси `## [0.1.0] - 2026-06-14` сохранена как историческая never-tagged запись; P5.1 разблокирован 🔴→⬜, Scope/Validation синхронизированы. P2-снапшот-гейт зелёный — дрейфа контракта нет) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -85,14 +85,15 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-08 + F-P2.8-1) | 1/1 | 🟢 Done |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 1/1 | 🟢 Done |
-| P5 | Тег и публикация minimal-релиза | 0/2 | 🔴 Blocked (P5.1 escalated) |
+| P5 | Тег и публикация minimal-релиза | 0/2 | 🟡 In progress |
 
 Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
-P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена на v0.1.0); **P3 закрыт 🟢** (1/1 —
+P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена golden-снапшотом); **P3 закрыт 🟢** (1/1 —
 каталог `known-limitations.md`); **P4 закрыт 🟢** (1/1 — `root/upgrade-path.md`, SemVer-классификация
-известного потока изменений); **P5 детализирована** (0/2 — P5.1 обратимый prep [снапшот-сверка +
-CHANGELOG `[Unreleased]`→`[0.1.0]` + release-notes], P5.2 необратимый тег `v0.1.0` на main + GitHub
-release; оба opus/high manual, требуют только P2; **Packagist deferred** — D9; тег из `main` — D10).
+известного потока изменений); **P5 🟡 в работе** (0/2 — версия релиза **`v0.2.0`** [D12, коллизия с легаси
+`[0.1.0]` разрешена owner'ом]; P5.1 обратимый prep [снапшот-сверка + CHANGELOG `[Unreleased]`→`[0.2.0]` +
+release-notes], P5.2 необратимый тег `v0.2.0` на main + GitHub release; оба opus/high manual, требуют
+только P2; **Packagist deferred** — D9; тег из `main` — D10).
 
 ## 5. Decision Log
 
@@ -108,6 +109,7 @@ release; оба opus/high manual, требуют только P2; **Packagist de
 | D9 | 2026-07-15 | **Публикация 0.1.0 — git-тег + GitHub release СЕЙЧАС; Packagist — DEFERRED follow-up.** Owner-решение: split-инфра не провижена. | `.github/workflows/monorepo-split.yml` на push тега `*` сплитит 6 пакетов в read-only репо `axioma-studio/vaulter-<name>` и гонит тег в Packagist (registered против split-репо), но его one-time prereqs (6 целевых репо + secret `GH_ACCESS_TOKEN` + Packagist-регистрация) воркфлоу НЕ делает — до них падает («authored but dormant», :24). Владелец выбрал резать git-тег сейчас (разблокирует внутреннее внедрение), Packagist отложить: push тега ожидаемо запустит и уронит monorepo-split (read-only, безвреден) — это deferred, не блокер. Провижн 6 репо+secret+Packagist → перезапуск split = отдельный follow-up вне плана. RAG:— (repo-grounded: `monorepo-split.yml:9-28`; owner-решение о приоритизации канала). |
 | D10 | 2026-07-15 | **Тег `v0.1.0` режется из `main` HEAD после мержа релизной ветки** (не из feature-ветки `remediation/audit-vlt`). | Владелец делегировал «как правильно»: канонная практика первого релиза — тег на базовой ветке, чтобы `git tag`/split указывали на main-историю, а не на feature-ветку. P5.2 гейтит прекондицией «релизный коммит P5.1 слит в main» (`git merge-base --is-ancestor`), сам мерж делает владелец, item только верифицирует. Имя тега — `v0.1.0` (с `v`, конвенция gh + §7 Contracts); CHANGELOG-заголовок `[0.1.0]` (без `v`). RAG:— (owner-решение + стандартная git-конвенция тегирования релизов; не внешний факт для верификации). |
 | D6 | 2026-07-15 | **Per-package snapshot-тесты** (в `packages/<pkg>/tests/Arch/` каждого пакета с контрактами: core/drive/documents/azgard) + golden на пакет, гоняются существующими per-package CI-job'ами; media/filament — empty-surface гвард. | Альтернатива «единый monorepo-снапшот» отклонена: корневой `composer.json` НЕ включает filament/azgard в `require` (`plan.md:15-19` composer.json) → единая suite не автолоадит их классы (autoload-gap). Per-package форма совпадает с существующей инфрой (`packages/*/tests/Arch/ArchTest.php` + per-package `.github/workflows/*.yml` гоняют собственный `composer test`) — новый workflow не нужен. RAG:— (repo-grounded: корневой `composer.json` require, `.github/workflows/drive.yml` working-directory per-package). |
+| D12 | 2026-07-15 | **Version-коллизия CHANGELOG разрешена (эскалация P5.1, trigger public contract/SemVer): re-platform-релиз тегируется `v0.2.0`; легаси-секция `## [0.1.0] - 2026-06-14` СОХРАНЯЕТСЯ как историческая never-tagged запись** (owner-выбор, AskUserQuestion 2026-07-15 — вариант «0.2.0 + keep legacy» из трёх: отклонены «0.1.0 + delete legacy» и «0.1.0 + demote legacy»). **Supersedes ЧИСЛОВУЮ часть D2 / cut-line §4** (стартовый номер `0.1.0`→`0.2.0`); класс `0.x` из D2 **сохранён** (0.2.0 — всё ещё 0.x, формального BC-обязательства нет — D2-обоснование стоит). Механика P5.1: `[Unreleased]`→`## [0.2.0] — <дата>`, свежий пустой `## [Unreleased]` сверху, легаси `## [0.1.0]`-секция (тело) НЕ трогается; link-refs: `[Unreleased]`-compare→`v0.2.0...HEAD`, добавить `[0.2.0]:`-release-link, **УДАЛИТЬ висячий** `[0.1.0]: …/releases/tag/v0.1.0` (тег `v0.1.0` не существует и не будет создан — владелец явно принял trade-off: первый в истории git-тег = `v0.2.0`, фантомный `0.1.0` остаётся историческим черновиком). cut-line §4/§5, `root/upgrade-path.md`, `root/contracts/AMEND.md` несут числа от старой базы `0.1.0` — помечены SUPERSEDED-баннером→D12 (их числа иллюстрируют КЛАСС бампа, живая база = `0.2.0`); полный литеральный re-base доков — bookkeeping follow-up до plan-close/archive. | Корень: cut-line §5 premise «git-тег пуст → прецедента формата `[0.1.0]` нет» фактически неверна — тег-записи нет, но `## [0.1.0]`-СЕКЦИЯ (document-centric draft; описанные `Document`/`v_document_*` удалены в `[Unreleased]`) ЕСТЬ (`CHANGELOG.md:259`, link-refs `:342-343`, `git tag \| wc -l`=0). Дубль `## [0.1.0]` сделал бы Validation `grep=1` невыполнимой; разрешение — SemVer-решение владельца, не исполнителя (plan-protocol §10). RAG:— (owner SemVer-решение + repo-grounded: `CHANGELOG.md:259`/`:342-343`, `git tag`=0 на `remediation/audit-vlt`). |
 
 ## 6. Update Log
 
@@ -125,6 +127,7 @@ release; оба opus/high manual, требуют только P2; **Packagist de
 | 2026-07-15 | sonnet/medium (`/task:plan-exec VLT-REL P4.1`) | P4.1 закрыт 🟢, **фаза P4 закрыта 1/1 🟢**: `root/upgrade-path.md` собран — ключ классификации + таблица 11 строк (MetricsRecorder, L-01…L-08, F-P2.8-1, VLT-LOAD P3–P7) + связь с AMEND/`## 7. Contracts`/D11 — детали см. phases/P4.md P4.1 Completion Notes. |
 | 2026-07-15 | issue-planner/opus (`/task:plan-design VLT-REL P5`) | P5 детализирована — 2 items (P5.1 prep: снапшот-сверка + CHANGELOG→[0.1.0] + release-notes; P5.2 тег `v0.1.0` на main + GitHub release), v0.7.0, скелет-маркер снят; приняты D8 (разложение), D9 (Packagist deferred), D10 (тег из main) — детали см. phases/P5.md + D8/D9/D10. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.1`) | P5.1 ЭСКАЛИРОВАН 🔴 Blocked (public contract/SemVer): version-коллизия — `CHANGELOG.md:259` уже несёт `## [0.1.0] - 2026-06-14` (легаси, git-тег отсутствует), `[Unreleased]`→`[0.1.0]` даёт дубль, Validation grep=1 невыполнима в Scope; cut-line §5 premise «прецедента тег-записи нет» неверен. P2-снапшот-гейт зелёный (дрейфа контракта нет). Нужен D# владельца по судьбе легаси-секции + номеру релиза — детали см. phases/P5.md P5.1 ESCALATION + Completion Notes. |
+| 2026-07-15 | opus/high (`/task:plan-design VLT-REL P5.1`) | P5.1 ре-дизайн по **D12** (version-коллизия решена owner'ом: релиз `v0.2.0`, легаси `[0.1.0]` сохранена); P5.1 🔴→⬜, P5.2 → `v0.2.0` — детали см. D12 + phases/P5.md P5.1. |
 
 ## 7. Contracts
 
@@ -132,7 +135,7 @@ release; оба opus/high manual, требуют только P2; **Packagist de
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
-| `root/contracts/public-api-surface.md` (SSOT-снапшот заморозки, деливерабл P2.1) + исполнимый per-package snapshot-гейт (P2.2, `packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + golden; media/filament empty-surface гвард) | v0.1.0 | **frozen (v0.1.0)** — 26 контрактов + фасад заморожены рефлексией сигнатур (item-коммит `2ded9e4`); изменение поверхности — только через AMEND (`root/contracts/AMEND.md`): регенерация golden + D# + CHANGELOG MINOR | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, попадёт под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4/AMEND) | — (тег не нарезан — публикация P5) |
+| `root/contracts/public-api-surface.md` (SSOT-снапшот заморозки, деливерабл P2.1) + исполнимый per-package snapshot-гейт (P2.2, `packages/{core,drive,documents,azgard}/tests/Arch/PublicApiSnapshotTest.php` + golden; media/filament empty-surface гвард) | v0.2.0 | **frozen** — 26 контрактов + фасад заморожены рефлексией сигнатур (item-коммит `2ded9e4`, P2.2; golden версионно-нейтрален — номер релиза его не меняет); **выходит в релизе `v0.2.0`** (D12, ранее помечалось v0.1.0); изменение поверхности — только через AMEND (`root/contracts/AMEND.md`): регенерация golden + D# + CHANGELOG MINOR | экосистема academici (все потребители vaulter) · VLT-LOAD (P8: `MetricsRecorder`-контракт, D31 в `plans/VLT-LOAD/phases/P8.md`, попадёт под тот же снапшот ПОСЛЕ заморозки, MINOR-путь — см. P4/AMEND) | — (тег не нарезан — публикация P5) |
 
 ### Consumed
 
