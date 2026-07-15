@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-15
+
 ### Changed
 - **Mutation testing moved off Infection onto native Pest mutation, with real thresholds
   everywhere** (VLT-CANON Open risk #4 / VLT-REMED D38). Every package lane —
@@ -25,8 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   model gave way to a **Drive** domain — storages and a recursive node tree (folders/files) —
   backed by a content-addressable blob store (CAS). Collaboration became **node-attached** and
   standardised on **Hocuspocus** (Reverb is now for notifications, not collaboration). The
-  release artifacts are the split Composer packages `vaulter-core`, `vaulter-filament`,
-  `vaulter-azgard` and the npm package `@vaulter/vue`.
+  release artifacts are the six split Composer packages `vaulter-core`, `vaulter-media`,
+  `vaulter-drive`, `vaulter-documents`, `vaulter-filament` and `vaulter-azgard`.
+- **`@vaulter/vue` (npm) ships outside this git tag, on its own track** (D3). The monorepo git
+  tag `v0.2.0` is a Composer/PHP versioning event covering the six packages above; the Vue client
+  (`@vaulter/vue`, `0.0.0`) versions on its independent npm cycle and is not part of this
+  release's frozen public surface.
 - **BREAKING (pre-1.0, MAJOR): `NodeGrantCreated`, `NodeGrantRevoked`, `NodeShareCreated` and
   `NodeShareRevoked` are no longer deferred to commit** (security remediation P0.2 / F-P1.7-03).
   All four events dropped `ShouldDispatchAfterCommit` and are now dispatched **synchronously
@@ -339,5 +345,5 @@ with a TypeScript front-end and an optional Filament admin.
   collaboration, comments, sharing, export, error reference, the TypeScript frontend guide, and
   ADRs 0001–0004.
 
-[Unreleased]: https://github.com/axioma-studio/vaulter/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/axioma-studio/vaulter/releases/tag/v0.1.0
+[Unreleased]: https://github.com/axioma-studio/vaulter/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/axioma-studio/vaulter/releases/tag/v0.2.0
