@@ -1,73 +1,80 @@
-# HANDOFF — 2026-07-15 — after P5
+# HANDOFF — 2026-07-15 — after P5.2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high» — P5.2 (обратимая ЛОКАЛЬНАЯ реконсиляция) детализирован и
-разблокирован. Эскалация P5.2 РАЗРЕШЕНА: owner делегировал выбор канонической линии исполнителю → **D13**
-(каноническая линия тега — ветка релиза `azgard`, НЕ `origin/main`; merge `origin/main` В ветку релиза,
-force-push `main` запрещён, `permissions-azgard` удаляется, ff `main`) + **D14** (интеграционный merge in-plan;
-P5 → 3 items). P5.2 обратим (локальный merge, ничего не пушится) → `continue (/clear)`; P5.3 (push+тег) —
-следующим, под явным approve.
+**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high» — P5.3 (**необратимый акт**: push merge→`main` ff + тег `v0.2.0` +
+`gh release`). P5.2 закрыт 🟠: локальная реконсиляция выполнена — merge-commit `067a4c6` (2 родителя:
+`224b73b` линия релиза + `4aa193d` origin/main), 293 конфликта резолвлены в azgard-канон (D13), дерево
+merge == линия релиза по коду + 16 ADD `plans/AUDIT-VLT/**`, `permissions-azgard` удалён, P2-golden + все
+6 сьютов зелёные, `origin/main` теперь предок HEAD (`main` ff-able без force). **Ничего не запушено.** P5.3
+необратим/outward-facing → **явный approve владельца В СЕССИИ перед ЛЮБЫМ push** (не наследуется, Routing §3).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — резолв 51-конфликтного merge с архитектурным выбором стороны (azgard канон) |
+| Thinking | high — необратимый релиз (ff-push main + тег), approve-гейт, запрет force-push |
 | Context | continue (/clear) — ручной item |
-| Суть | Свести `origin/main` в линию релиза локально (merge+резолв+валидация), НИЧЕГО не пушить |
+| Суть | Запушить merge→`main` fast-forward, тег `v0.2.0` на `main`, `gh release` из черновика P5.1 |
 
 ```
-Сначала: /model opus + /effort high. Затем: /task:plan-run VLT-REL P5.2
+Сначала: /model opus + /effort high. Затем: /task:plan-run VLT-REL P5.3
 
-P5.2 — обратимая ЛОКАЛЬНАЯ реконсиляция (opus/high manual, Exec=manual). Прочитай по порядку:
-plans/VLT-REL/plan.md §5 D13 + D14 + D10; plans/VLT-REL/phases/P5.md P5.2 (все 16 полей);
-plans/VLT-REL/root/contracts/AMEND.md (что морожено, запрет UPDATE_SNAPSHOT).
+P5.3 — необратимый акт релиза (opus/high manual, Exec=manual). ⚠ ТРЕБУЕТ ЯВНОГО «да» ВЛАДЕЛЬЦА
+В ЭТОЙ СЕССИИ перед любым push (approve НЕ наследуется). Прочитай по порядку:
+plans/VLT-REL/plan.md §5 D13 (ff push, force ЗАПРЕЩЁН) + D10 + D9 + D12;
+plans/VLT-REL/artifacts/release-notes-0.2.0.md; .github/workflows/monorepo-split.yml (prereq-шапка + trigger).
 
-Суть: git fetch origin main; на ветке remediation/audit-vlt — `git merge origin/main`
-(merge-commit, ~51 конфликт «changed in both»). Резолв КАЖДОГО конфликта в пользу линии
-релиза (azgard-структура, CHANGELOG [0.2.0], exception-namespaces линии релиза); сторона
-origin/main — только если несёт уникальную несуперседнутую субстанцию. `git rm -r
-packages/permissions-azgard` + `.github/workflows/permissions-azgard.yml` (pre-rename дубль
-azgard); грепом убедиться: 0 ссылок `vaulter-permissions-azgard`. Валидация всё-зелёное:
-тест-сьюты всех пакетов + P2 snapshot-гейт БЕЗ UPDATE_SNAPSHOT + `git rev-parse HEAD^2`=4aa193d
-+ `git merge-base --is-ancestor origin/main HEAD` exit 0 + `test ! -d packages/permissions-azgard`.
+Прекондиция (проверить ДО approve): merge-commit P5.2 на HEAD (`git merge-base --is-ancestor
+origin/main HEAD` exit 0), дерево чистое по scope, тега v0.2.0 нет (`git tag --list v0.2.0` пусто),
+packages/permissions-azgard отсутствует. Затем, ПОСЛЕ approve:
+  git push origin remediation/audit-vlt:main   # fast-forward, БЕЗ --force/--force-with-lease
+  git tag -a v0.2.0 -m "vaulter 0.2.0 — minimal release"   # на main HEAD
+  git push origin v0.2.0
+  gh release create v0.2.0 --notes-file plans/VLT-REL/artifacts/release-notes-0.2.0.md
 
-ЗАПРЕТЫ: НИЧЕГО не пушить (push/тег/gh release — это P5.3 под approve). force-push main
-ЗАПРЕЩЁН категорически (D13 — сотрёт merged #43/#44). P2-golden красный → СТОП+эскалация
-public contract/SemVer, item 🔴, golden НЕ регенерировать. merge, НЕ rebase/squash
-(двухродительскую топологию сохранить — иначе main не ff-able).
+ЗАПРЕТЫ: force-push main ЗАПРЕЩЁН категорически (D13 — сотрёт merged #43/#44); push не-ff → СТОП,
+не форсить. Тег ТОЛЬКО на main HEAD, ТОЛЬКО после approve. НЕ создавать v0.1.0 (D12). Packagist
+DEFERRED (D9) — monorepo-split.yml упадёт по push тега (prereqs не провижены), это ожидаемо/безвредно,
+зафиксировать факт, НЕ чинить.
 ```
 
-**Done:** P1 (1/1 🟢). P2 (2/2 🟢 — поверхность заморожена golden-снапшотом). P3 (1/1 🟢 —
-`root/known-limitations.md`). P4 (1/1 🟢 — `root/upgrade-path.md`). **P5.1 🟢 закрыт** (item-коммит
-`835bcfc`): CHANGELOG `[Unreleased]`→`## [0.2.0] — 2026-07-15`, `artifacts/release-notes-0.2.0.md` собран.
-**P5 ре-дизайн** (2026-07-15): эскалация P5.2 разрешена (D13/D14), P5 → 3 items (P5.1 🟢, P5.2 ⬜, P5.3 ⬜).
+**Done:** P1 (1/1 🟢). P2 (2/2 🟢 — поверхность заморожена golden-снапшотом). P3 (1/1 🟢). P4 (1/1 🟢).
+**P5.1 🟢** (item-коммит `835bcfc`): CHANGELOG `[Unreleased]`→`## [0.2.0]`, `artifacts/release-notes-0.2.0.md`.
+**P5.2 🟠 закрыт** (merge-commit `067a4c6`): локальная реконсиляция — merge origin/main в линию релиза,
+293 конфликта → azgard-канон (D13), `permissions-azgard` удалён, golden+6 сьютов зелёные (core 500 · azgard
+21 · media 73 · drive 168 · documents 216 · filament 65, 0 fail), `main` ff-able. Deviation: grep
+`vaulter-permissions-azgard`=31≠0 (легитимные rename-доки/plan-история, 0 live-require — детали ниже).
 
-**Remaining:** P5.2 (локальная реконсиляция, обратимо) → P5.3 (push merge→main ff + тег `v0.2.0` +
-`gh release`, необратимо, под approve). После успешного P5.3 план терминален → `/task:plan-close archive VLT-REL`.
+**Remaining:** P5.3 (**необратимый** push merge→`main` ff + тег `v0.2.0` + `gh release`, под явным approve).
+После успешного P5.3 план терминален целиком → `/task:plan-close archive VLT-REL`.
 
-**Sources of truth:** `plan.md` (Meta v0.9.0, **Last Updated → P5 ре-дизайн** / **D13** каноническая линия /
-**D14** merge in-plan + 3-items / D12 / D10 / D9 / Routing §3 P5.*=opus/high manual / Status Board P5 🟡 1/3 /
-§6 Update Log ре-дизайн-строка / §7 Contracts frozen `v0.2.0`) · `phases/P5.md` (P5.1 🟢; **P5.2 ⬜ реконсиляция**;
-**P5.3 ⬜ тег**) · `CHANGELOG.md` (`## [0.2.0] — 2026-07-15` на ветке релиза; **`origin/main:CHANGELOG` без
-`[0.2.0]` — придёт в резолв merge**) · `artifacts/release-notes-0.2.0.md` · `.github/workflows/monorepo-split.yml`.
+**Sources of truth:** `plan.md` (Meta Last Updated → **P5.2 закрыт 🟠** / Status Board P5 🟡 **2/3** / §6 Update
+Log P5.2-строка / **D13** каноническая линия / **D14** merge in-plan / D12 / D10 / D9 / Routing §3 P5.*=opus/high
+manual / §7 Contracts frozen `v0.2.0`) · `phases/P5.md` (P5.1 🟢; **P5.2 🟠** Completion Notes/Known Deviations;
+**P5.3 ⬜ необратимый тег**) · `CHANGELOG.md` (`## [0.2.0]` пережил merge, grep=1) · `artifacts/release-notes-0.2.0.md`
+· `.github/workflows/monorepo-split.yml` · merge-commit `067a4c6` (2 родителя, HEAD ветки релиза).
 
 **Open risks:**
-- **Дивергенция `origin/main` — РАЗРЕШЕНА как ремонтопригодная (D13):** `origin/main`=`4aa193d` (Option B #43/#44,
-  `permissions-azgard`) vs ветка релиза (`azgard`, 246 коммитов) — 51 конфликт «changed in both». P5.2 сводит их
-  merge'ем в ветку релиза (обе истории сохранены, `main` ff-able без force). Риск P5.2: неполный резолв (дубль
-  пакета `permissions-azgard`/`azgard`) или дрейф P2-golden — оба гейтятся Validation.
-- **force-push `main` ЗАПРЕЩЁН (D13):** push в P5.3 обязан быть fast-forward; не-ff = СТОП (не форсить — сотрёт
-  merged #43/#44).
-- **Тег из main (D10):** тег режется из `main` HEAD ПОСЛЕ ff-push (P5.3); тег на feature-ветке = дефект.
-- **Packagist deferred (D9):** push тега `v0.2.0` (P5.3) запустит и уронит `monorepo-split.yml` (prereqs не
-  провижены) — read-only, безвреден, не блокер.
-- **Фантомный `0.1.0` (D12):** тег `v0.1.0` НЕ создаётся никогда; висячий `[0.1.0]:`-link удалён в P5.1.
+- **P5.3 approve НЕ наследуется:** явное «да» владельца В СЕССИИ P5.3 перед push (ветки И тега), необратимо.
+- **force-push `main` ЗАПРЕЩЁН (D13):** push обязан быть fast-forward (`origin/main` уже предок HEAD после
+  P5.2 → ff гарантирован, если никто не двинул `main`); не-ff = СТОП, НЕ форсить (сотрёт merged #43/#44).
+- **Тег из main (D10):** тег режется из `main` HEAD ПОСЛЕ ff-push; тег на feature-ветке = дефект.
+- **Packagist deferred (D9):** push тега `v0.2.0` запустит и уронит `monorepo-split.yml` (prereqs не
+  провижены) — read-only, безвреден, не блокер; зафиксировать факт в P5.3 Completion Notes.
+- **Deviation P5.2 (grep `vaulter-permissions-azgard`=31, не 0):** 30/31 — легитимные rename-миграционные
+  доки (`UPGRADE.md` consumer-заметка, `CHANGELOG` запись VLT-CANON P2.1) + plan-история (`plans/archive/**`,
+  `docs/plan/**`, собственный decision-log D13) + 1 комментарий `monorepo-split.yml`; +1 в сохранённом
+  `plans/AUDIT-VLT/plan.md`. Живых `require`-ссылок = **0** (интент «нет дубля пакета» выполнен). Правка
+  запрещена §12/Scope-Excluded/анти-подгонка. Владельцу — оценить на approve-гейте P5.3.
+- **Фантомный `0.1.0` (D12):** тег `v0.1.0` НЕ создаётся никогда.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: Packagist-публикация (провижн split-инфры + перезапуск monorepo-split, D9); содержательные фиксы
-  L-01…L-08 — dev-срезы вне плана; литеральный version re-base cut-line/upgrade-path/AMEND (0.1.0→0.2.0).
-- open_questions: — (каноническая линия тега решена D13; реконсиляция — исполнителем в P5.2, самым безопасным
-  способом: merge без force-push).
+- workarounds: (env, vendor/ gitignored) drive-сьют требовал отодвинуть stale `root:root` каталог
+  `packages/drive/vendor/orchestra/testbench-core/laravel/storage/framework/testing/disks/local/` (артефакт
+  прошлого root-прогона 2026-07-13; `rm`/`sudo` недоступны → `mv` в сторону, testbench пересоздал чистый).
+- deferred: Packagist-публикация (провижн split-инфры + перезапуск monorepo-split, D9); содержательные
+  фиксы L-01…L-08 — dev-срезы вне плана; литеральный version re-base cut-line/upgrade-path/AMEND (0.1.0→0.2.0).
+- open_questions: — (каноническая линия решена D13; реконсиляция выполнена merge'ем без force-push).
 
-**Посторонний дифф в дереве (НЕ P5):** `.claude/.maind-feature-log.last`, `plans/VLT-LOAD/{plan.md,handoff.md,
-phases/P8.md}`, `plans/VLT-LOAD/findings/P8-rag-otel-health.md`, `scratchpad/` — работа VLT-LOAD/mAInd, не тронуто.
+**Посторонний дифф в дереве (НЕ P5, НЕ тронут):** `plans/VLT-LOAD/{handoff.md,phases/P8.md,plan.md}`,
+`plans/VLT-LOAD/findings/P8-rag-otel-health.md`, `scratchpad/` — работа VLT-LOAD, не коммичена P5.2.
+(`.claude/.maind-feature-log.last` — машинный hook-курсор, uncommitted-правка сброшена для старта merge
+[пересекалась с changeset origin/main]; регенерируется хуком — см. P5.2 Known Deviations.)
