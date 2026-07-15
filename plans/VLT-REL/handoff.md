@@ -1,63 +1,73 @@
-# HANDOFF — 2026-07-15 — after P5.2
+# HANDOFF — 2026-07-15 — after P5
 
-**Next:** P5.2 🔴 Blocked — необратимый тег `v0.2.0` НЕ нарезан. Предусловие D10 «релизный коммит слит
-в `main`» невыполнимо чистым мержем: **`origin/main` дивергировал в параллельную re-platform-линию**, а
-не отстал от ветки релиза. Требуется **owner-решение** (какая линия канонична) + новый D# + реконсиляция
-веток — это `plan-design` / ручной выбор владельца, не исполнение. НЕ перезапускать P5.2, пока `main` не
-сведён.
+**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high» — P5.2 (обратимая ЛОКАЛЬНАЯ реконсиляция) детализирован и
+разблокирован. Эскалация P5.2 РАЗРЕШЕНА: owner делегировал выбор канонической линии исполнителю → **D13**
+(каноническая линия тега — ветка релиза `azgard`, НЕ `origin/main`; merge `origin/main` В ветку релиза,
+force-push `main` запрещён, `permissions-azgard` удаляется, ff `main`) + **D14** (интеграционный merge in-plan;
+P5 → 3 items). P5.2 обратим (локальный merge, ничего не пушится) → `continue (/clear)`; P5.3 (push+тег) —
+следующим, под явным approve.
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — архитектурный выбор канонической линии релиза + реконсиляция 51-конфликтного мержа |
-| Context | NEW SESSION — шаг-не-item (plan-design читает план с диска заново) |
-| Суть | Зафиксировать D# о канонической линии тега (Option B `origin/main` vs `azgard`-ветка релиза) и порядок сведения веток; затем перезаход P5.2 из согласованного main |
+| Thinking | high — резолв 51-конфликтного merge с архитектурным выбором стороны (azgard канон) |
+| Context | continue (/clear) — ручной item |
+| Суть | Свести `origin/main` в линию релиза локально (merge+резолв+валидация), НИЧЕГО не пушить |
 
 ```
-/task:plan-design VLT-REL P5.2
-Контекст эскалации (phases/P5.md P5.2 ESCALATION-блок): origin/main (4aa193d) — параллельная
-re-platform-линия с merged PR #43 (P2 #5 Option B: extract vaulter-drive+documents) и #44 (kernel
-hardening), пакет permissions-azgard; ветка релиза remediation/audit-vlt (HEAD 8d111e1, релизный
-коммит 835bcfc) — линия с переименованным azgard (VLT-CANON P2.1) + 242 своих коммита. merge-base
-5e65ea8; 3-way мерж = 51 конфликтующий файл; origin/main:CHANGELOG без [0.2.0]. Решить D#: какая
-линия канонична для тега v0.2.0 и как свести ветки (мерж/резолв — работа с архитектурным выбором,
-force-push main запрещён — затрёт merged #43/#44). После сведения main + нового D# — перезаход P5.2.
+Сначала: /model opus + /effort high. Затем: /task:plan-run VLT-REL P5.2
+
+P5.2 — обратимая ЛОКАЛЬНАЯ реконсиляция (opus/high manual, Exec=manual). Прочитай по порядку:
+plans/VLT-REL/plan.md §5 D13 + D14 + D10; plans/VLT-REL/phases/P5.md P5.2 (все 16 полей);
+plans/VLT-REL/root/contracts/AMEND.md (что морожено, запрет UPDATE_SNAPSHOT).
+
+Суть: git fetch origin main; на ветке remediation/audit-vlt — `git merge origin/main`
+(merge-commit, ~51 конфликт «changed in both»). Резолв КАЖДОГО конфликта в пользу линии
+релиза (azgard-структура, CHANGELOG [0.2.0], exception-namespaces линии релиза); сторона
+origin/main — только если несёт уникальную несуперседнутую субстанцию. `git rm -r
+packages/permissions-azgard` + `.github/workflows/permissions-azgard.yml` (pre-rename дубль
+azgard); грепом убедиться: 0 ссылок `vaulter-permissions-azgard`. Валидация всё-зелёное:
+тест-сьюты всех пакетов + P2 snapshot-гейт БЕЗ UPDATE_SNAPSHOT + `git rev-parse HEAD^2`=4aa193d
++ `git merge-base --is-ancestor origin/main HEAD` exit 0 + `test ! -d packages/permissions-azgard`.
+
+ЗАПРЕТЫ: НИЧЕГО не пушить (push/тег/gh release — это P5.3 под approve). force-push main
+ЗАПРЕЩЁН категорически (D13 — сотрёт merged #43/#44). P2-golden красный → СТОП+эскалация
+public contract/SemVer, item 🔴, golden НЕ регенерировать. merge, НЕ rebase/squash
+(двухродительскую топологию сохранить — иначе main не ff-able).
 ```
 
 **Done:** P1 (1/1 🟢). P2 (2/2 🟢 — поверхность заморожена golden-снапшотом). P3 (1/1 🟢 —
 `root/known-limitations.md`). P4 (1/1 🟢 — `root/upgrade-path.md`). **P5.1 🟢 закрыт** (item-коммит
-`835bcfc`): CHANGELOG `[Unreleased]`→`## [0.2.0] — 2026-07-15`, `artifacts/release-notes-0.2.0.md`
-собран. **P5.2 🔴 Blocked** — эскалация (см. Next / Open risks).
+`835bcfc`): CHANGELOG `[Unreleased]`→`## [0.2.0] — 2026-07-15`, `artifacts/release-notes-0.2.0.md` собран.
+**P5 ре-дизайн** (2026-07-15): эскалация P5.2 разрешена (D13/D14), P5 → 3 items (P5.1 🟢, P5.2 ⬜, P5.3 ⬜).
 
-**Remaining:** P5.2 (тег `v0.2.0` + release) — ЗАБЛОКИРОВАН до сведения `main` и нового D#. После
-разблокировки и успешного P5.2 план терминален → `/task:plan-close archive VLT-REL`.
+**Remaining:** P5.2 (локальная реконсиляция, обратимо) → P5.3 (push merge→main ff + тег `v0.2.0` +
+`gh release`, необратимо, под approve). После успешного P5.3 план терминален → `/task:plan-close archive VLT-REL`.
 
-**Sources of truth:** `plan.md` (Meta v0.8.0, **Last Updated → P5.2 🔴 Blocked** / D12 / D9 / D10 /
-Routing §3 P5.*=opus/high manual / Status Board P5 🟡 1/2 «P5.2 🔴 Blocked» / §6 Update Log эскалация-строка /
-§7 Contracts frozen `v0.2.0`) · `phases/P5.md` (P5.1 🟢; **P5.2 🔴 ESCALATION-блок + Completion Notes**) ·
-`CHANGELOG.md` (`## [0.2.0] — 2026-07-15` на ветке релиза; **`origin/main:CHANGELOG` без `[0.2.0]`**) ·
-`artifacts/release-notes-0.2.0.md` · `.github/workflows/monorepo-split.yml` (trigger on push tag).
+**Sources of truth:** `plan.md` (Meta v0.9.0, **Last Updated → P5 ре-дизайн** / **D13** каноническая линия /
+**D14** merge in-plan + 3-items / D12 / D10 / D9 / Routing §3 P5.*=opus/high manual / Status Board P5 🟡 1/3 /
+§6 Update Log ре-дизайн-строка / §7 Contracts frozen `v0.2.0`) · `phases/P5.md` (P5.1 🟢; **P5.2 ⬜ реконсиляция**;
+**P5.3 ⬜ тег**) · `CHANGELOG.md` (`## [0.2.0] — 2026-07-15` на ветке релиза; **`origin/main:CHANGELOG` без
+`[0.2.0]` — придёт в резолв merge**) · `artifacts/release-notes-0.2.0.md` · `.github/workflows/monorepo-split.yml`.
 
 **Open risks:**
-- **🔴 БЛОКЕР P5.2 — дивергенция `origin/main` (архитектурная):** `origin/main`=`4aa193d` несёт 3 коммита,
-  которых НЕТ в ветке релиза — merged **#43** (`32764da` Option B: extract drive+documents), **#44**
-  (`0541d0d` kernel hardening), `4aa193d` (Load Gate CI-стаб); ветка релиза несёт 242 коммита, которых нет
-  в origin/main. merge-base=`5e65ea8`, **51 конфликтующий файл** (`git merge-tree`). Разные структуры пакетов:
-  origin/main = `permissions-azgard`, ветка релиза = `azgard`. Чистого fast-forward-мержа D10 НЕТ. Нужен
-  owner-выбор канонической линии + новый D#; force-push `main` ЗАПРЕЩЁН (затёр бы merged #43/#44).
-- **Тег из main (D10):** после сведения `main` тег режется из его HEAD; тег на feature-ветке = дефект.
-- **Packagist deferred (D9):** push тега `v0.2.0` (когда дойдёт) запустит и уронит `monorepo-split.yml`
-  (one-time prereqs не провижены) — read-only, безвреден, не блокер git-релиза.
+- **Дивергенция `origin/main` — РАЗРЕШЕНА как ремонтопригодная (D13):** `origin/main`=`4aa193d` (Option B #43/#44,
+  `permissions-azgard`) vs ветка релиза (`azgard`, 246 коммитов) — 51 конфликт «changed in both». P5.2 сводит их
+  merge'ем в ветку релиза (обе истории сохранены, `main` ff-able без force). Риск P5.2: неполный резолв (дубль
+  пакета `permissions-azgard`/`azgard`) или дрейф P2-golden — оба гейтятся Validation.
+- **force-push `main` ЗАПРЕЩЁН (D13):** push в P5.3 обязан быть fast-forward; не-ff = СТОП (не форсить — сотрёт
+  merged #43/#44).
+- **Тег из main (D10):** тег режется из `main` HEAD ПОСЛЕ ff-push (P5.3); тег на feature-ветке = дефект.
+- **Packagist deferred (D9):** push тега `v0.2.0` (P5.3) запустит и уронит `monorepo-split.yml` (prereqs не
+  провижены) — read-only, безвреден, не блокер.
 - **Фантомный `0.1.0` (D12):** тег `v0.1.0` НЕ создаётся никогда; висячий `[0.1.0]:`-link удалён в P5.1.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: Packagist-публикация (провижн split-инфры + перезапуск monorepo-split, D9); содержательные
-  фиксы L-01…L-08 — dev-срезы вне плана; литеральный version re-base cut-line/upgrade-path/AMEND (0.1.0→0.2.0).
-- open_questions: **какая линия канонична для тега `v0.2.0` — `origin/main` (Option B #43/#44,
-  `permissions-azgard`) или `remediation/audit-vlt` (`azgard`-rename, 242 коммита)? как свести ветки
-  (порядок мержа, резолв 51 конфликта)?** — решение владельца, фиксируется новым D# (plan-design).
+- deferred: Packagist-публикация (провижн split-инфры + перезапуск monorepo-split, D9); содержательные фиксы
+  L-01…L-08 — dev-срезы вне плана; литеральный version re-base cut-line/upgrade-path/AMEND (0.1.0→0.2.0).
+- open_questions: — (каноническая линия тега решена D13; реконсиляция — исполнителем в P5.2, самым безопасным
+  способом: merge без force-push).
 
-**Посторонний дифф в дереве (НЕ P5):** `.claude/.maind-feature-log.last`, `plans/VLT-LOAD/{plan.md,
-handoff.md,phases/P8.md}`, `plans/VLT-LOAD/findings/P8-rag-otel-health.md`, `scratchpad/` — работа
-VLT-LOAD/mAInd, не тронуто.
+**Посторонний дифф в дереве (НЕ P5):** `.claude/.maind-feature-log.last`, `plans/VLT-LOAD/{plan.md,handoff.md,
+phases/P8.md}`, `plans/VLT-LOAD/findings/P8-rag-otel-health.md`, `scratchpad/` — работа VLT-LOAD/mAInd, не тронуто.
