@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (P5.1 РЕ-ДИЗАЙН по **D12** — version-коллизия разрешена owner'ом: re-platform-релиз тегируется **`v0.2.0`**, легаси `## [0.1.0] - 2026-06-14` сохранена как историческая never-tagged запись; P5.1 разблокирован 🔴→⬜, Scope/Validation синхронизированы. P2-снапшот-гейт зелёный — дрейфа контракта нет) |
+| Last Updated | 2026-07-15 (**P5.1 закрыт 🟢** под opus/high `/task:plan-run`: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` — дрейфа контракта нет; `CHANGELOG [Unreleased]`→`## [0.2.0] — 2026-07-15` [6 composer + строка `@vaulter/vue` OUT, легаси `## [0.1.0]` сохранена, link-refs по **D12**]; `artifacts/release-notes-0.2.0.md` черновик собран release-conductor'ом. Остаётся P5.2 — необратимый тег `v0.2.0` на main + GitHub release, approve владельца) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -85,15 +85,15 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-08 + F-P2.8-1) | 1/1 | 🟢 Done |
 | P4 | Upgrade-путь и BC-классификация будущих фиксов | 1/1 | 🟢 Done |
-| P5 | Тег и публикация minimal-релиза | 0/2 | 🟡 In progress |
+| P5 | Тег и публикация minimal-релиза | 1/2 | 🟡 In progress |
 
 Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
 P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена golden-снапшотом); **P3 закрыт 🟢** (1/1 —
 каталог `known-limitations.md`); **P4 закрыт 🟢** (1/1 — `root/upgrade-path.md`, SemVer-классификация
-известного потока изменений); **P5 🟡 в работе** (0/2 — версия релиза **`v0.2.0`** [D12, коллизия с легаси
-`[0.1.0]` разрешена owner'ом]; P5.1 обратимый prep [снапшот-сверка + CHANGELOG `[Unreleased]`→`[0.2.0]` +
-release-notes], P5.2 необратимый тег `v0.2.0` на main + GitHub release; оба opus/high manual, требуют
-только P2; **Packagist deferred** — D9; тег из `main` — D10).
+известного потока изменений); **P5 🟡 в работе** (1/2 — версия релиза **`v0.2.0`** [D12, коллизия с легаси
+`[0.1.0]` разрешена owner'ом]; **P5.1 закрыт 🟢** [обратимый prep: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` +
+CHANGELOG `[Unreleased]`→`[0.2.0]` + release-notes черновик]; P5.2 ⬜ необратимый тег `v0.2.0` на main +
+GitHub release; оба opus/high manual, требуют только P2; **Packagist deferred** — D9; тег из `main` — D10).
 
 ## 5. Decision Log
 
@@ -128,6 +128,7 @@ release-notes], P5.2 необратимый тег `v0.2.0` на main + GitHub r
 | 2026-07-15 | issue-planner/opus (`/task:plan-design VLT-REL P5`) | P5 детализирована — 2 items (P5.1 prep: снапшот-сверка + CHANGELOG→[0.1.0] + release-notes; P5.2 тег `v0.1.0` на main + GitHub release), v0.7.0, скелет-маркер снят; приняты D8 (разложение), D9 (Packagist deferred), D10 (тег из main) — детали см. phases/P5.md + D8/D9/D10. |
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.1`) | P5.1 ЭСКАЛИРОВАН 🔴 Blocked (public contract/SemVer): version-коллизия — `CHANGELOG.md:259` уже несёт `## [0.1.0] - 2026-06-14` (легаси, git-тег отсутствует), `[Unreleased]`→`[0.1.0]` даёт дубль, Validation grep=1 невыполнима в Scope; cut-line §5 premise «прецедента тег-записи нет» неверен. P2-снапшот-гейт зелёный (дрейфа контракта нет). Нужен D# владельца по судьбе легаси-секции + номеру релиза — детали см. phases/P5.md P5.1 ESCALATION + Completion Notes. |
 | 2026-07-15 | opus/high (`/task:plan-design VLT-REL P5.1`) | P5.1 ре-дизайн по **D12** (version-коллизия решена owner'ом: релиз `v0.2.0`, легаси `[0.1.0]` сохранена); P5.1 🔴→⬜, P5.2 → `v0.2.0` — детали см. D12 + phases/P5.md P5.1. |
+| 2026-07-15 | opus/high (`/task:plan-run VLT-REL P5.1`) | P5.1 закрыт 🟢: снапшот-гейт зелёный без `UPDATE_SNAPSHOT` (дрейфа нет), `CHANGELOG [Unreleased]`→`## [0.2.0]` (6 composer + vue-OUT, легаси `[0.1.0]` сохранена, link-refs по D12), `artifacts/release-notes-0.2.0.md` собран release-conductor'ом — детали см. phases/P5.md P5.1 Completion Notes. |
 
 ## 7. Contracts
 
