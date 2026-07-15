@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | VLT-REL |
 | Title | Release-готовность vaulter: замороженная публичная поверхность → minimal-тег → остальное летит параллельной BC-оптимизацией |
-| Version | 0.5.0 |
+| Version | 0.6.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan (design-first: доки/гейты/тег, кода не пишем) |
 | Authoring Model | opus/high |
-| Last Updated | 2026-07-15 (P3 закрыта 🟢 1/1 — P3.1 собрал `root/known-limitations.md`, каталог L-01…L-08 + F-P2.8-1) |
+| Last Updated | 2026-07-15 (P4 закрыта 🟢 1/1 — `root/upgrade-path.md` собран, SemVer-классификация известного потока изменений) |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Execution Mode | phase-first: P1 (cut-line + SemVer) — гейт P2; P2 (заморозка публичной поверхности) — гейт P3–P5 **и** гейт для любого будущего src-выхода VLT-LOAD (вкл. `MetricsRecorder` из P8, D31 в `plans/VLT-LOAD/phases/P8.md`) |
@@ -84,13 +84,14 @@ VLT-REMED/VLT-CANON (архив) релиз не покрывали — перв
 | P1 | Cut-line релиза и SemVer-политика | 1/1 | 🟢 Done |
 | P2 | Заморозка публичной API-поверхности · **гейт P3–P5** | 2/2 | 🟢 Done |
 | P3 | Условия внедрения по рискованным поверхностям (L-01…L-08 + F-P2.8-1) | 1/1 | 🟢 Done |
-| P4 | Upgrade-путь и BC-классификация будущих фиксов | 0/1 | ⬜ Not started |
+| P4 | Upgrade-путь и BC-классификация будущих фиксов | 1/1 | 🟢 Done |
 | P5 | Тег и публикация minimal-релиза | 0/1 | ⬜ Not started |
 
 Детализация фаз — в `phases/Pn.md`: **P1 закрыт 🟢** (1/1); **P2 закрыт 🟢** (2/2 — SSOT-энумерация
-P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена на v0.1.0); **P3 детализирован** (1 item
-P3.1 — каталог `known-limitations.md`); P4–P5 — скелеты, разворачиваются `/task:plan-design VLT-REL Pn`
-(P3/P4 параллельно, обе требуют только P2).
+P2.1 + исполнимый snapshot-гейт P2.2, поверхность заморожена на v0.1.0); **P3 закрыт 🟢** (1/1 —
+каталог `known-limitations.md`); **P4 закрыт 🟢** (1/1 — `root/upgrade-path.md`, SemVer-классификация
+известного потока изменений); P5 — скелет, разворачивается `/task:plan-design VLT-REL P5`
+(тег+публикация, opus/high manual, требует только P2).
 
 ## 5. Decision Log
 
@@ -116,6 +117,8 @@ P3.1 — каталог `known-limitations.md`); P4–P5 — скелеты, р�
 | 2026-07-15 | opus/high (`/task:plan-run VLT-REL P2.2`) | P2.2 закрыт 🟢, **фаза P2 закрыта 2/2 🟢**: per-package snapshot-гейт морозит 26 контрактов + фасад рефлексией, media/filament empty-surface гвард, `§7 Contracts` → frozen (v0.1.0), гейт P3–P5 снят — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-15 | issue-planner/opus (`/task:plan-design VLT-REL P3`) | P3 детализирован — 1 item P3.1 (каталог `root/known-limitations.md`), v0.5.0, скелет-маркер снят; принят D7 (полный набор L-01…L-08 + F-P2.8-1, якорь L-01 → `Uploads/`) — детали см. phases/P3.md P3.1 + D7. |
 | 2026-07-15 | sonnet/medium (`/task:plan-exec VLT-REL P3.1`) | P3.1 закрыт 🟢, **фаза P3 закрыта 1/1 🟢**: `root/known-limitations.md` собран — L-01…L-08+F-P2.8-1, преамбула, два раздела (доказано/факт · гипотезы), D11-гейт, связь с 0.1.0 — детали см. phases/P3.md P3.1 Completion Notes. |
+| 2026-07-15 | issue-planner/opus (`/task:plan-design VLT-REL P4`) | P4 детализирована — 1 item P4.1 (`root/upgrade-path.md`, SemVer-классификация известного потока: MetricsRecorder P8 · L-01…L-08 · F-P2.8-1), v0.6.0, скелет-маркер снят; новых D# нет (применение ратифицированного правила §4/AMEND/D2) — детали см. phases/P4.md P4.1. |
+| 2026-07-15 | sonnet/medium (`/task:plan-exec VLT-REL P4.1`) | P4.1 закрыт 🟢, **фаза P4 закрыта 1/1 🟢**: `root/upgrade-path.md` собран — ключ классификации + таблица 11 строк (MetricsRecorder, L-01…L-08, F-P2.8-1, VLT-LOAD P3–P7) + связь с AMEND/`## 7. Contracts`/D11 — детали см. phases/P4.md P4.1 Completion Notes. |
 
 ## 7. Contracts
 
