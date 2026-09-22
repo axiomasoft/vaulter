@@ -11,6 +11,7 @@ use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Load\Console\ActivityWriterCommand;
+use Vaulter\Load\Console\PrepareConcurrencyFixturesCommand;
 use Vaulter\Load\Console\SeedLoadDatasetCommand;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -94,6 +95,7 @@ final class LoadServiceProvider extends ServiceProvider
             $this->commands([
                 SeedLoadDatasetCommand::class,
                 ActivityWriterCommand::class,
+                PrepareConcurrencyFixturesCommand::class,
             ]);
         }
 
