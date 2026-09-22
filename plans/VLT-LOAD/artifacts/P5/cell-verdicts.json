@@ -1,0 +1,398 @@
+{
+  "schema": "p5-cell-verdicts/v1",
+  "run_id": "2aeca12f-6180-4595-8466-31397c4ed15d",
+  "cells": [
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.xact-release.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n1",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n1",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n1",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n1",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n1",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n1",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n8",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n32",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n200",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n8",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n32",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n200",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n8",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n32",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n200",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n8",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n32",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n8",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n32",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n200",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n8",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n32",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n200",
+      "evidence": "valid",
+      "slo": "red",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n1",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n8",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n32",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n200",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n1",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n8",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n32",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n200",
+      "evidence": "valid",
+      "slo": "green",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n1",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n8",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n32",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n200",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n1",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n8",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n32",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n200",
+      "evidence": "valid",
+      "slo": "not-a-5pct-budget",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n8",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n32",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n8",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n32",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n200",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n201",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n8",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n32",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n200",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n201",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-timeout.n200",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 3,
+      "http_5xx": 0
+    },
+    {
+      "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-1m.n1",
+      "evidence": "valid",
+      "slo": "not-a-product-slo",
+      "attempts": 1,
+      "http_5xx": 0
+    }
+  ]
+}

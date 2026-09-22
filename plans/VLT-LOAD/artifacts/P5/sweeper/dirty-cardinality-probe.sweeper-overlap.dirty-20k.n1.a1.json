@@ -1,0 +1,9 @@
+{
+  "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1",
+  "attempt": 1,
+  "rows": 20000,
+  "remaining": 20000,
+  "elapsed_seconds": 0.317,
+  "exit_code": 1,
+  "tier_l_claim": false
+}

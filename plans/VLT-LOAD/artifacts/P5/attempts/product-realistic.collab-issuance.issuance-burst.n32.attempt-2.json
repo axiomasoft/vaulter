@@ -1,0 +1,37 @@
+{
+  "attempt": 2,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.collab-issuance.issuance-burst.n32",
+  "http_5xx": 0,
+  "n": 32,
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E82E0678",
+    "monotonic_ns": 480185915829109
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E82E0678",
+    "monotonic_ns": 480183485091846
+  },
+  "run_id": "2aeca12f-6180-4595-8466-31397c4ed15d",
+  "schema": "p5-cell/v1",
+  "shape": "issuance-burst",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 32
+  },
+  "supported_workload": true,
+  "surface": "collab-issuance",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 1.3481971430010162,
+    "pgbouncer_wait_seconds": null
+  }
+}

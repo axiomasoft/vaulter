@@ -1,0 +1,34 @@
+{
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "primitive-control.advisory-primitive.blocking-wait.n8",
+  "http_5xx": 0,
+  "n": 8,
+  "plane": "primitive-control",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E83881B0",
+    "monotonic_ns": 481169375543640
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E83881B0",
+    "monotonic_ns": 481167890349186
+  },
+  "run_id": "2aeca12f-6180-4595-8466-31397c4ed15d",
+  "schema": "p5-cell/v1",
+  "shape": "blocking-wait",
+  "statuses": {
+    "fail": 0,
+    "ok": 8
+  },
+  "supported_workload": true,
+  "surface": "advisory-primitive",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": 0,
+    "http_duration_seconds": null,
+    "pgbouncer_wait_seconds": 0
+  }
+}

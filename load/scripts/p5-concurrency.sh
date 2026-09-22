@@ -21,13 +21,15 @@ PGBOUNCER_SNAPSHOT=$SCRIPT_DIR/p5-pgbouncer-snapshot.sh
 RESULTS_ROOT=$LOAD_ROOT/results/p5
 
 usage() {
-    echo "usage: TIER=S $0 dry-run|run|verify|check-stand [--run-dir DIR|--cell ID]" >&2
+    echo "usage: TIER=S $0 dry-run|run|verify|check-stand [--run-dir DIR|--run-id ID|--cell ID|--matrix]" >&2
     exit 1
 }
 
 COMMAND=
 RUN_DIR=
+RUN_ID=
 CELL=
+MATRIX=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -39,9 +41,17 @@ while [ $# -gt 0 ]; do
             RUN_DIR=$2
             shift 2
             ;;
+        --run-id)
+            RUN_ID=$2
+            shift 2
+            ;;
         --cell)
             CELL=$2
             shift 2
+            ;;
+        --matrix)
+            MATRIX=1
+            shift
             ;;
         *)
             usage
@@ -62,6 +72,19 @@ case "$COMMAND" in
         echo "p5-concurrency dry-run: ok tier=${TIER} docker=no db-write=no"
         ;;
     verify)
+        if [ -n "$RUN_ID" ]; then
+            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P5}
+            manifest_run=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$dest/run-manifest.json")
+            if [ "$manifest_run" != "$RUN_ID" ]; then
+                echo "p5-concurrency verify: run_id mismatch (manifest=${manifest_run})" >&2
+                exit 1
+            fi
+            digest_line=$(python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$dest")
+            digest=${digest_line##*digest=}
+            python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$dest" --prior-digest "$digest"
+            echo "$digest_line"
+            exit 0
+        fi
         [ -n "$RUN_DIR" ] || usage
         python3 "$GATE" verify --run-dir "$RUN_DIR"
         ;;
@@ -79,6 +102,33 @@ case "$COMMAND" in
         echo "p5-concurrency check-stand: ok tier=${TIER}"
         ;;
     run)
+        if [ "$MATRIX" -eq 1 ]; then
+            if [ "$TIER" != "S" ]; then
+                echo "p5-concurrency matrix requires TIER=S" >&2
+                exit 1
+            fi
+            run_id=${RUN_ID:-$(python3 -c 'import uuid; print(uuid.uuid4())')}
+            staging=$(mktemp -d "${TMPDIR:-/tmp}/p5-matrix.XXXXXX")
+            trap 'rm -rf "$staging"' EXIT INT TERM
+            python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" run --run-id "$run_id" --out "$staging"
+            if ! python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$staging"; then
+                echo "p5-concurrency matrix: verify failed, staging kept at ${staging}" >&2
+                trap - EXIT INT TERM
+                exit 1
+            fi
+            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P5}
+            rm -rf "$dest"
+            mkdir -p "$(dirname "$dest")"
+            mv "$staging" "$dest"
+            trap - EXIT INT TERM
+            python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$dest"
+            digest_line=$(python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$dest")
+            digest=${digest_line##*digest=}
+            python3 "$REPO_ROOT/load/gates/p5_live_matrix.py" verify --artifacts "$dest" --prior-digest "$digest"
+            echo "p5-concurrency matrix: ok run_id=${run_id} artifacts=${dest}"
+            echo "$digest_line"
+            exit 0
+        fi
         [ -n "$CELL" ] || CELL=primitive-control.advisory-primitive.try-lock-nowait.n1
         case "$CELL" in
             primitive-control.*)

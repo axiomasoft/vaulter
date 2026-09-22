@@ -1,0 +1,27 @@
+{
+  "git_sha": "7d54e2622e647cece510692fd8fb7eb13fac7f76",
+  "git_dirty": true,
+  "images": {
+    "vaulter-load-postgres-1": "vaulter-load-postgres-profile:16-hypopg-1.4.1 sha256:5f196f3b1342203facb25a787e4a0046c90d94600d511097e5b62e8f9551c255",
+    "vaulter-load-pgbouncer-1": "edoburu/pgbouncer:latest sha256:5e25bffdcb60de22f691800553669bd6b8976bcb549a1293f35de4ecdad38e0a",
+    "vaulter-load-app-1": "vaulter-load-app sha256:3de7bfbe2cc27ab41811139e5f9261d82710dcc05d43c5f4da11edd1ce92ab09"
+  },
+  "pgbouncer": {
+    "cl_waiting": 0,
+    "sv_active": 0,
+    "maxwait": 0,
+    "avg_wait_time": 0,
+    "pool_mode": "transaction",
+    "default_pool_size": 8,
+    "max_client_conn": 200,
+    "query_wait_timeout": 120
+  },
+  "clock": "2026-09-22T20:22:31Z",
+  "run_id": "2aeca12f-6180-4595-8466-31397c4ed15d",
+  "dataset_counts": {
+    "nodes": 1018,
+    "uploads": 31,
+    "blobs": 9,
+    "storages": 1
+  }
+}

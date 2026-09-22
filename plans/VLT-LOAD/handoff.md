@@ -1,30 +1,44 @@
-# HANDOFF — 2026-09-20 — after P8.1
+# HANDOFF — 2026-09-22 — after P5.3
 
-**Next:** audit-design: task:plan-audit VLT-LOAD design
+**Next:** run-items: task:plan-run VLT-LOAD P5.4
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model | frontier |
-| Thinking | xhigh |
-| Capabilities | independent observability contract design review |
+| Batch | P5-profile: P5.3 closed; P5.4 remains |
+| Model | `grok-4.7` (`frontier/high`) |
+| Effort | high |
+| Capabilities | concurrency report from the immutable tier-S run family |
 | Context | continue-root |
-| Суть | Независимый Sol design audit P8.1 после ремонта F1–F4 (D38): reader, Redis run/Lua, exact Files, nonce readiness |
-| Команда | `$ task:plan-audit VLT-LOAD design` |
+| Суть | P5.3 closed 🟢: tier-S matrix, lock/pool samples, 20k×3 and 1m sweeper. Owner scope stopped at P5.3. |
 
 ```session-continuity-decision/v1
-{"evidence": ["batch:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "loaded-inputs:not-reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:journal:P8.1:closed-green"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
+{
+  "outcome": "continue-root",
+  "reason": "authorized-scope-complete",
+  "evidence": [
+    "batch:deab87e797b5ddb6c42aba1d197bcaeab5684469a68929e939c1cbc44630846c",
+    "loaded-inputs:reusable",
+    "cold-start-cost:0",
+    "lifecycle:scope-complete",
+    "checkpoint:7c2afc4f089d9fb043f11e909b3036a4ab66ab76dfd3204f7f0cb9b4f29cf96e"
+  ],
+  "runnable": true,
+  "schema_version": "session-continuity-decision/v1"
+}
 ```
 
-**Done:** P8.1 attempt 3 GREEN. `observability-spec.md` + D38 закрывают RED F1–F4: исполняемый §8 PromQL reader и map; run-scoped Redis + atomic histogram Lua; Files P8.2–P8.7 — точный superset якорей и host wiring (hocuspocus `/stats`, php-fpm status, TIER); nonce-scoped `/ready` + stale-ACK; buckets на blocking thresholds; закрытые `format`/`route`/`command`/`operation`.
+**Provider-native command:**
 
-**Remaining:** независимый `task:plan-audit VLT-LOAD design` → только при GREEN P8.2 → P8.3/P8.4/P8.5 → P8.6 → P8.7 → design/exec P3–P7 → P8.8.
+```text
+task:plan-run VLT-LOAD P5.4
+```
 
-**Sources of truth:** `plans/VLT-LOAD/observability-spec.md` · `plans/VLT-LOAD/decisions/D38-p81-executability.md` · `plans/VLT-LOAD/findings/P8.1-design-review.md` · `plans/VLT-LOAD/phases/P8/P8.2.md`…`P8.7.md` · `plans/VLT-LOAD/slo-gates.md`.
+**Done:** P5.3 published one tier-S run family `2aeca12f-6180-4595-8466-31397c4ed15d`. All 56 cells have valid evidence. Verify digest `fb6343c5504b3f95aabe1db12260643877fcef2d41cead8ef225523621f1efdf` is byte-stable. SLO counts: 12 green, 19 red, 8 same-resource outside the 5% budget, 17 not a product SLO. HTTP 5xx is not counted as success.
 
-**Open risks:** P8.2 остаётся заблокирован до нового независимого GREEN `findings/P8.1-design-review.md`; Cursor routing catalog по-прежнему не знает `cursor-grok-4.6-high` (attestation).
+**Remaining:** P5.4 writes the concurrency report from this run family. Do not treat a RED SLO cell as missing evidence.
+
+**Sources of truth:** `plans/VLT-LOAD/artifacts/P5/run-manifest.json` · `plans/VLT-LOAD/artifacts/P5/cell-verdicts.json` · `plans/VLT-LOAD/artifacts/P5/matrix.json` · `load/gates/p5_live_matrix.py`.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: route evidence = provider-attestation после отказа catalog selector; product code не менялся.
-- deferred: реализация P8.2–P8.8 не начинать до GREEN re-audit.
-- open_questions: —
+- Product-realistic RED cells are mostly HTTP 429 from the per-actor upload limiter and collab/token failures. They stay valid evidence for P5.4.
+- `pool-timeout` holders occupy PgBouncer servers with `pg_sleep` and do not share one advisory lock; the first attempt timed out and was replaced by one recorded attempt in the same run family.
