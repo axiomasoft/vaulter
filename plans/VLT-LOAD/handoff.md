@@ -1,24 +1,24 @@
-# HANDOFF — 2026-09-23 — after P6.4
+# HANDOFF — 2026-09-23 — after P7.1
 
-**Next:** exec-items: task:plan-exec VLT-LOAD P7.1
+**Next:** exec-items: task:plan-exec VLT-LOAD P7.2
 
 | Параметр | Значение |
 |:--|:--|
 | Batch | P7-harness |
 | Model | implementation/high |
 | Effort | high |
-| Capabilities | chaos lane, phase ledger, evidence validator |
+| Capabilities | isolated injectors, chaos topology, fidelity-labelled matrix |
 | Context | continue-root |
-| Суть | P6 closed 🟢. D42 starts the P7 harness with P7.1 code, then P7.2, before the P7.3 lab. |
+| Суть | P7.1 closed 🟢. D42 continues the P7 harness with P7.2 injectors/matrix before the P7.3 lab. |
 
 ```session-continuity-decision/v1
 {
   "evidence": [
-    "batch:651cea46e1d3236a03105e074761db8479ef21c8c106e243c444eefb42e0ca61",
+    "batch:52778bd835a52fb24be7b22985ed6b175c2a9e0f409cf58fc393b4f0cfe76d64",
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:2e958bf133b61bf67e8824b98b4b446b90fa2e6a30b5abe6e33841806c8e764a"
+    "checkpoint:49a754b7bbec77d0f018f8ec5a17f8403f9c3c6466b0ef018ea4cf6d7ad069ee"
   ],
   "outcome": "continue-root",
   "reason": "authorized-scope-complete",
@@ -30,18 +30,18 @@
 **Provider-native command:**
 
 ```text
-task:plan-exec VLT-LOAD P7.1
+task:plan-exec VLT-LOAD P7.2
 ```
 
-**Done:** P6.4 published `queue-report.md` and `findings/P6-queue-semantics.md` for run `59dfb7e1-bd32-4c87-ab6f-eb8f409607af`, verify digest `d48c8ffd07fb11847cff3a5f80d4c56cfe9b2e3459ed78ce251ab9a9b66f3766`. Matrix 46/46 valid. Product SLO red on sticky `failed_jobs=2`. L-04 and L-05 remain open. Phase P6 closed 🟢.
+**Done:** P7.1 built the run-scoped chaos lane: 51-cell dry-run matrix, baseline/armed/fault/revert/recovery/reconcile ledger, barrier and injector event schema, DB/MinIO/temp/readiness/Prometheus collectors, checksum reconciler, negative fixtures, and signal-safe emergency revert. unittest 14 passed. No `packages/*` edits.
 
-**Remaining:** P7.1 chaos lane/ledger/validator, then P7.2 injectors/matrix, then unattended P7.3 lab and P7.4 report. P8.8–P8.10 wait for P7.4.
+**Remaining:** P7.2 injectors/topology/matrix, then unattended P7.3 lab and P7.4 report. P8.8–P8.10 wait for P7.4.
 
-**Sources of truth:** `plans/VLT-LOAD/queue-report.md` · `plans/VLT-LOAD/findings/P6-queue-semantics.md` · `plans/VLT-LOAD/phases/P6/P6.closed.md` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md` · `plans/VLT-LOAD/phases/P7/P7.1.md`.
+**Sources of truth:** `plans/VLT-LOAD/phases/P7/P7.1.md` · `load/scripts/p7-chaos.sh` · `load/gates/p7_chaos.py` · `load/gates/fixtures/p7/` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md`.
 
 **Open risks:** L-04 unbounded `claimDue()` lock-set; L-05 O(endpoints) `subscribedEndpoints()`; L-P6-01 sticky `failed_jobs=2`; L-P6-02 product `dispatch_uuids=0`; L-P6-03 leftover-endpoint fan-out; L-P6-04 unrecovered bursts / 100-row volume / Prom `vaulter-sut` down.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: P7.1 Inputs/Required Reads now name the P2 seed/compose/upload paths that the bundle resolver needs; the previous prose tokens were unresolvable.
-- deferred: L-04/L-05 and L-P6-01…04 stay measurement debt; no `packages/*` fix in P6.
-- open_questions: Laravel `failed_jobs=2` class/payload still unidentified; product queue-wait unevaluated until dispatcher UUIDs share the worker context file.
+- workarounds: P7.1 injector implementation is a typed stub (`p7.1-lane-stub`); live Toxiproxy/S3-proxy/PG/ENOSPC injectors stay in P7.2. P7.2 Inputs now name resolvable compose/seed/env paths so the successor bundle can materialize.
+- deferred: authoritative tier-S fault family remains P7.3; no RTO/RPO invented.
+- open_questions: —

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: 42e1f5e47f30ded7c80c9caa063530b5c03b180fd7effd31026131858ae702c3
+inputs_sha256: 1fcd3d45dcc9704918f7c29f9764c9031a51fd99fdbdad44a92975b6d8963e4b
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ | 4/4 | 🟢 Done |
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
 | P6 | Семантика очередей под завалом | 4/4 | 🟢 Done |
-| P7 | Деградация инфраструктуры (chaos) | 0/4 | ⬜ Not started |
+| P7 | Деградация инфраструктуры (chaos) | 1/4 | 🟡 In progress |
 | P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 7/11 | 🟡 In progress |
 
 ## Phase P0
@@ -102,7 +102,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P7.1 | Chaos lane, phase ledger и evidence validator | ⬜ Not started | — |
+| P7.1 | Chaos lane, phase ledger и evidence validator | 🟢 Done | 2026-09-23 |
 | P7.2 | Isolated injectors, fixtures и degradation matrix | ⬜ Not started | — |
 | P7.3 | Авторитетный tier-S fault/recovery run | ⬜ Not started | — |
 | P7.4 | Chaos report, recovery verdict и bounded debt | ⬜ Not started | — |
@@ -255,6 +255,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-run · closed-green · P6.4 queue report for run 59dfb7e1-bd32-4c87-ab6f-eb8f409607af: 46/46 valid, digest d48c8ffd07fb11847cff3a5f80d4c56cfe9b2e3459ed78ce251ab9a9b66f3766; L-04 open, L-05 open; SLO-58/61/64 not met.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-close · closed-green · P6 direct-close after P6.1–P6.4 GREEN. Report run 59dfb7e1-bd32-4c87-ab6f-eb8f409607af. |
+| 2026-09-23 | grok-4.6/high | plan-exec · in-progress · — |
+| 2026-09-23 | grok-4.6/high | plan-exec · closed-green · P7.1 chaos lane: 51-cell dry-run, phase ledger, collectors, checksum reconciler. unittest 14, interrupt revert green.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
