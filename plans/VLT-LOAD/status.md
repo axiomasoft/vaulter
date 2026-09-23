@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: bc20f506dd99fc2de635881d43798db2d373e9fd31f6698f9beb5ff3a65fc091
+inputs_sha256: ed1f8c6f1947e63d9f1f51db466c76390045c380edac552640756a561e8cd201
 generated_by: task plan-views status
 -->
 
@@ -29,7 +29,7 @@ generated_by: task plan-views status
 | P3 | Профилирование запросов: PostgreSQL plans, индексы и N+1 под объёмом | 2/4 | 🟠 Done with deviations |
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ | 4/4 | 🟢 Done |
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
-| P6 | Семантика очередей под завалом | 0/4 | ⬜ Not started |
+| P6 | Семантика очередей под завалом | 1/4 | 🟡 In progress |
 | P7 | Деградация инфраструктуры (chaos) | 0/4 | ⬜ Not started |
 | P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 7/11 | 🟡 In progress |
 
@@ -93,7 +93,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P6.1 | Queue lane, lifecycle ledger и evidence validator | ⬜ Not started | — |
+| P6.1 | Queue lane, lifecycle ledger и evidence validator | 🟢 Done | 2026-09-23 |
 | P6.2 | Controlled sink, queue fixtures и semantic matrix | ⬜ Not started | — |
 | P6.3 | Авторитетный tier-S backlog/retry run | ⬜ Not started | — |
 | P6.4 | Queue report, L-04/L-05 verdict и bounded debt | ⬜ Not started | — |
@@ -243,6 +243,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.7/high | plan-run · in-progress · — |
 | 2026-09-23 | grok-4.7/high | plan-run · closed-green · P5.4 concurrency report for run 2aeca12f-6180-4595-8466-31397c4ed15d: 56/56 valid, digest fb6343c5504b3f95aabe1db12260643877fcef2d41cead8ef225523621f1efdf; L-02 open, L-06 open, L-07 unconfirmed. |
 | 2026-09-23 | grok-4.7/high | plan-close · closed-green · P5 direct-close after P5.1–P5.4 GREEN. Report run 2aeca12f-6180-4595-8466-31397c4ed15d. |
+| 2026-09-23 | grok-4.7/high | plan-exec · in-progress · — |
+| 2026-09-23 | grok-4.7/high | plan-exec · closed-green · P6.1 queue lane: 46-cell dry-run, lifecycle ledger, Redis LLEN/ZCARD validator. unittest 12, pest 4, check-stand green.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
