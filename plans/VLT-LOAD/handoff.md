@@ -1,47 +1,39 @@
-# HANDOFF — 2026-09-23 — after P8.10
+# HANDOFF — 2026-09-23 — after P8
 
-**Next:** manual: frontier/high
+**Next:** terminal: план закрыт
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model class | frontier |
-| Effort | high |
-| Capabilities | host OTel adapter, sampling overhead proof |
+| Batch | n/a |
+| Model class | n/a |
+| Effort | n/a |
+| Capabilities | — |
 | Context | continue-root |
-| Суть | P8.10 closed 🟢 D41 no-op. Prove nonempty tracing host/adapter/overhead against the P8.8 manifest digest. |
+| Суть | Исполнимых пунктов плана больше нет. |
 
-```session-continuity-decision/v1
-{
-  "evidence": [
-    "batch:346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea",
-    "loaded-inputs:reusable",
-    "cold-start-cost:0",
-    "lifecycle:scope-complete",
-    "checkpoint:67454b5f40eaf9241e59243f2e98ebc3079589d7ac55a0e799cb2774d9e142bf"
-  ],
-  "outcome": "continue-root",
-  "reason": "authorized-scope-complete",
-  "runnable": true,
-  "schema_version": "session-continuity-decision/v1"
-}
-```
+**Done:** P8.11 закрыт GREEN по journal и digest-bound state. Проверены P8.8 manifest
+`346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea` и P8.11 proof
+verify `4732c995e7a74ff9722ee8d9972e82e65f1cf7ce6091efb90b8edceb5dfbe585`. После
+лексического исправления P8.6 заново пройдены 8 health-тестов (18 assertions), его terminal
+evidence привязано к текущему spec digest. P8 закрыт отдельной terminal-записью и свежим
+`phases/P8/P8.closed.md`; phase candidate fingerprint
+`1f090d8acc73cf468d288cf5a358be3c4820d9407da8aec3a48fc8be1ad9f1cd` построен из
+текущих item specs, terminal evidence и product tree.
 
-**Provider-native command:**
+**Remaining:** исполнимых пунктов VLT-LOAD нет; общий статус плана — 🟠 Done with deviations.
 
-```bash
-agent --workspace /home/vostrikov/projects/packages/vaulter --model grok-4.6 --force --sandbox disabled --trust --approve-mcps 'task:plan-run VLT-LOAD P8.11'
-```
+**Sources of truth:** `plans/VLT-LOAD/plan.md` · `plans/VLT-LOAD/journal.jsonl` ·
+`plans/VLT-LOAD/status.md` · `plans/VLT-LOAD/phases/P8/P8.closed.md` ·
+`plans/VLT-LOAD/phases/P8/P8.11.state.md` · `plans/VLT-LOAD/findings/P8.11-tracing-closure.md` ·
+`plans/VLT-LOAD/artifacts/P8/tracing-targets.json` ·
+`plans/VLT-LOAD/artifacts/P8/tracing-proof.json` ·
+`plans/VLT-LOAD/artifacts/P8/tracing-overhead.json`.
 
-**Done:** P8.9 tracing seam for `webhook.pipeline` + `upload.sweep`. P8.10 D41 no-op: `vaulter_blob_dedup_hit_total` and `vaulter_webhook_dlq_total` both `not-added` (`P5:L-07:unconfirmed`, `P6:dead-control`). Consumed P8.8 manifest `346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea`.
-
-**Remaining:** P8.11 (host tracing proof / overhead on nonempty-candidates). Not admitted here: Inputs still contain unresolvable prose `selected package tests`, so `task:plan-run VLT-LOAD P8.11` is not a valid Next until that entry is path-bound.
-
-**Sources of truth:** `plans/VLT-LOAD/phases/P8/P8.10.md` · `plans/VLT-LOAD/phases/P8/P8.10.state.md` · `plans/VLT-LOAD/findings/P8.10-deferred-metrics.md` · `plans/VLT-LOAD/artifacts/P8/tracing-targets.json` · `plans/VLT-LOAD/observability-spec.md` §20.6 · `plans/VLT-LOAD/phases/P8/P8.11.md`.
-
-**Open risks:** Product RED on SLO-64 (`claimDue` lock-set) and SLO-70 (`SweepUploadsCommand` remaining 20000) stays product RED. L-P7-01 harness GET not product HTTP; L-P7-02 empty snapshot + `webhook_outbox`; L-P3-02/L-P3-05 inferred CTE≠`candidateNodeIds`; L-07 unconfirmed; P6 `failed_jobs` is not package DLQ.
+**Open risks:** Product RED по SLO-64 (`claimDue` lock-set) и SLO-70
+(`SweepUploadsCommand` remaining 20000) остаётся отдельным долгом. P8.11 overhead carrier —
+host CLI in-process selected-span workload; он не является новым tier-S k6 прогоном.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: P8.10 consumed the P8.8 manifest digest as ordinary producer evidence, not a second `producer-readiness/v1` edge. Semantic Next is `manual: frontier/high` because P8.11 bundle Inputs are not path-resolvable.
-- deferred: both deferred metric families remain `not-added`; no SLO added.
+- workarounds: —
+- deferred: обе условные семьи метрик P8.10 остаются `not-added` по D41; новые SLO не вводились.
 - open_questions: —

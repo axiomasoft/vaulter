@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: 0e94cc1953e85f65c2ff1791a95d356c3aa92d3093ea8584d6778fc710b5cff0
+inputs_sha256: b2be688662dac681eaa282a52959b6fa9049a0e361323c6d52fd057a1ac4bb4a
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 0.4.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-09-23 |
 
 ## 4. Phase Index & Status Board
@@ -31,7 +31,7 @@ generated_by: task plan-views status
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
 | P6 | Семантика очередей под завалом | 4/4 | 🟢 Done |
 | P7 | Деградация инфраструктуры (chaos) | 4/4 | 🟢 Done |
-| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 10/11 | 🟡 In progress |
+| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 11/11 | 🟢 Done |
 
 ## Phase P0
 
@@ -116,12 +116,12 @@ generated_by: task plan-views status
 | P8.3 | Seam'ы §5.1 — HTTP и горячие пути (12 metric families) | 🟢 Done | 2026-09-20 |
 | P8.4 | Seam'ы §5.2 — стриминг и память (10 metric families, сердце P8-минимума) | 🟢 Done | 2026-09-21 |
 | P8.5 | Seam'ы §5.3 — фон/очереди/unbounded-scan (28 metric families) | 🟢 Done | 2026-09-21 |
-| P8.6 | Health в load SUT: `/up` liveness + `/ready` DB/S3/queue | 🟢 Done | 2026-09-21 |
+| P8.6 | Health в load SUT: `/up` liveness + `/ready` DB/S3/queue | 🟢 Done | 2026-09-23 |
 | P8.7 | Live gate P8-minimum и overhead instrumentation | 🟢 Done | 2026-09-21 |
 | P8.8 | Выбор tracing targets и conditional deferred metrics | 🟢 Done | 2026-09-23 |
 | P8.9 | Optional tracing seam и selected package spans | 🟢 Done | 2026-09-23 |
 | P8.10 | Conditional deferred metrics | 🟢 Done | 2026-09-23 |
-| P8.11 | Tracing propagation, no-op и overhead proof | ⬜ Not started | — |
+| P8.11 | Tracing propagation, no-op и overhead proof | 🟢 Done | 2026-09-23 |
 
 ## 6. Update Log
 
@@ -273,6 +273,12 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-exec · closed-green · P8.9 nonempty-candidates webhook.pipeline+upload.sweep; consumed manifest 346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea. write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-exec · in-progress · — |
 | 2026-09-23 | grok-4.6/high | plan-exec · closed-green · P8.10 D41 no-op: both deferred families not-added; consumed P8.8 manifest 346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | grok-4.7/high | plan-run · in-progress · — |
+| 2026-09-23 | grok-4.7/high | plan-run · closed-green · P8.11 nonempty host proof; manifest 346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea; verify 4732c995e7a74ff9722ee8d9972e82e65f1cf7ce6091efb90b8edceb5dfbe585. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | codex/gpt-6 | plan-close · in-progress · Carrier-only lexical repair of P8.6 path declarations; health validation rerun. |
+| 2026-09-23 | codex/gpt-6 | plan-close · closed-green · P8.6 carrier-only rebind: GET /up and /ready declarations no longer parse as absolute paths; health Pest 8/8, 18 assertions. Product code unchanged. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | codex/gpt-6 | plan-close · in-progress · P8 direct-close candidate rebuilt from current specs, terminal item evidence and product tree. |
+| 2026-09-23 | codex/gpt-6 | plan-close · closed-green · P8 direct-close: 11/11 items GREEN; P8.6 digest rebound; P8.11 proof verify 4732c995e7a74ff9722ee8d9972e82e65f1cf7ce6091efb90b8edceb5dfbe585; product RED remains separately tracked. |
 
 ## Correction Routing
 
