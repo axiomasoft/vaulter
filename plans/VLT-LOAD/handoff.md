@@ -1,27 +1,27 @@
-# HANDOFF — 2026-09-23 — after P6.2
+# HANDOFF — 2026-09-23 — after P6.4
 
-**Next:** exec-items: task:plan-run VLT-LOAD P6.3
+**Next:** exec-items: task:plan-exec VLT-LOAD P7.1
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | P6-profile: P6.2 closed; P6.3 is ready |
-| Model | frontier/high |
+| Batch | P7-harness |
+| Model | implementation/high |
 | Effort | high |
-| Capabilities | immutable tier-S queue run, sink evidence, overlap and cardinality probes |
+| Capabilities | chaos lane, phase ledger, evidence validator |
 | Context | continue-root |
-| Суть | P6.2 closed 🟢. Owner scope stopped at P6.2. Next is P6.3 under grok-4.7/high. |
+| Суть | P6 closed 🟢. D42 starts the P7 harness with P7.1 code, then P7.2, before the P7.3 lab. |
 
 ```session-continuity-decision/v1
 {
-  "outcome": "continue-root",
-  "reason": "authorized-scope-complete",
   "evidence": [
-    "batch:dc6193c9f996e6e45b7f2d553b8423f070b1d8332b6f7fe7ba34c3493c0eed2f",
+    "batch:651cea46e1d3236a03105e074761db8479ef21c8c106e243c444eefb42e0ca61",
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:33852a03396881d31f4df739203ace5a82bd33ec39bbe8bd2adcb702901dd63a"
+    "checkpoint:2e958bf133b61bf67e8824b98b4b446b90fa2e6a30b5abe6e33841806c8e764a"
   ],
+  "outcome": "continue-root",
+  "reason": "authorized-scope-complete",
   "runnable": true,
   "schema_version": "session-continuity-decision/v1"
 }
@@ -30,16 +30,18 @@
 **Provider-native command:**
 
 ```text
-task:plan-run VLT-LOAD P6.3
+task:plan-exec VLT-LOAD P7.1
 ```
 
-**Done:** P6.2 adds a stand-only webhook sink (2xx, 500, delay, bounded hang), a sink-restricted outbound guard, deterministic queue fixtures with exact cleanup, and a semantic matrix over the 46 P6.1 cells. S0 posts one 2xx, one 500, one 2-relay/2-retry barrier and one concurrent duplicate, then checks delivery, job and sink counts.
+**Done:** P6.4 published `queue-report.md` and `findings/P6-queue-semantics.md` for run `59dfb7e1-bd32-4c87-ab6f-eb8f409607af`, verify digest `d48c8ffd07fb11847cff3a5f80d4c56cfe9b2e3459ed78ce251ab9a9b66f3766`. Matrix 46/46 valid. Product SLO red on sticky `failed_jobs=2`. L-04 and L-05 remain open. Phase P6 closed 🟢.
 
-**Remaining:** P6.3–P6.4 stay manual. P7 stays closed until P6.4.
+**Remaining:** P7.1 chaos lane/ledger/validator, then P7.2 injectors/matrix, then unattended P7.3 lab and P7.4 report. P8.8–P8.10 wait for P7.4.
 
-**Sources of truth:** `load/webhook-sink/router.php` · `load/app/Webhooks/LoadSinkOutboundUrlGuard.php` · `load/app/Console/PrepareQueueFixturesCommand.php` · `load/scripts/p6-queue-cases.sh` · `load/gates/p6_cases.py` · `plans/VLT-LOAD/phases/P6/P6.2.md`.
+**Sources of truth:** `plans/VLT-LOAD/queue-report.md` · `plans/VLT-LOAD/findings/P6-queue-semantics.md` · `plans/VLT-LOAD/phases/P6/P6.closed.md` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md` · `plans/VLT-LOAD/phases/P7/P7.1.md`.
+
+**Open risks:** L-04 unbounded `claimDue()` lock-set; L-05 O(endpoints) `subscribedEndpoints()`; L-P6-01 sticky `failed_jobs=2`; L-P6-02 product `dispatch_uuids=0`; L-P6-03 leftover-endpoint fan-out; L-P6-04 unrecovered bursts / 100-row volume / Prom `vaulter-sut` down.
 
 **Workarounds/Deferred/Open questions:**
-- Product worker command stays `queue:work redis --queue=load-health,default --tries=1`. Product cells still declare 2 workers for the tier-S run.
-- A `timeout >= retry_after` control is mechanism-only on queue `load-timeout-control` and is not a product SLO.
-- Authoritative execution remains P6.3. Cardinality probes declare 200/1000 endpoints and 50k/500k due rows without seeding them in P6.2.
+- workarounds: P7.1 Inputs/Required Reads now name the P2 seed/compose/upload paths that the bundle resolver needs; the previous prose tokens were unresolvable.
+- deferred: L-04/L-05 and L-P6-01…04 stay measurement debt; no `packages/*` fix in P6.
+- open_questions: Laravel `failed_jobs=2` class/payload still unidentified; product queue-wait unevaluated until dispatcher UUIDs share the worker context file.
