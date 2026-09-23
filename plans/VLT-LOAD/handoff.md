@@ -1,15 +1,15 @@
-# HANDOFF — 2026-09-22 — after P5.3
+# HANDOFF — 2026-09-23 — after P5.4
 
-**Next:** run-items: task:plan-run VLT-LOAD P5.4
+**Next:** run-items: task:plan-exec VLT-LOAD P6.1
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | P5-profile: P5.3 closed; P5.4 remains |
-| Model | `grok-4.7` (`frontier/high`) |
+| Batch | P6-harness: P5 closed; P6.1 is ready |
+| Model | implementation/high |
 | Effort | high |
-| Capabilities | concurrency report from the immutable tier-S run family |
+| Capabilities | queue lane, lifecycle ledger, evidence validator |
 | Context | continue-root |
-| Суть | P5.3 closed 🟢: tier-S matrix, lock/pool samples, 20k×3 and 1m sweeper. Owner scope stopped at P5.3. |
+| Суть | P5.4 closed 🟢 and P5 phase closure is written. Owner scope stopped at P5.4. |
 
 ```session-continuity-decision/v1
 {
@@ -20,7 +20,7 @@
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:7c2afc4f089d9fb043f11e909b3036a4ab66ab76dfd3204f7f0cb9b4f29cf96e"
+    "checkpoint:61788ad849ecaa0465a33171c298b76fc062ec9fd90c4ee06ff46afccad18713"
   ],
   "runnable": true,
   "schema_version": "session-continuity-decision/v1"
@@ -30,15 +30,16 @@
 **Provider-native command:**
 
 ```text
-task:plan-run VLT-LOAD P5.4
+task:plan-exec VLT-LOAD P6.1
 ```
 
-**Done:** P5.3 published one tier-S run family `2aeca12f-6180-4595-8466-31397c4ed15d`. All 56 cells have valid evidence. Verify digest `fb6343c5504b3f95aabe1db12260643877fcef2d41cead8ef225523621f1efdf` is byte-stable. SLO counts: 12 green, 19 red, 8 same-resource outside the 5% budget, 17 not a product SLO. HTTP 5xx is not counted as success.
+**Done:** P5.4 published `concurrency-report.md` and `findings/P5-concurrency.md` for run `2aeca12f-6180-4595-8466-31397c4ed15d`. Verify digest `fb6343c5504b3f95aabe1db12260643877fcef2d41cead8ef225523621f1efdf` still matches `artifacts/P5/`. L-02 stays open, L-06 stays open, L-07 is unconfirmed. Four measurement debts are L-P5-01 through L-P5-04. No `packages/*` edits.
 
-**Remaining:** P5.4 writes the concurrency report from this run family. Do not treat a RED SLO cell as missing evidence.
+**Remaining:** P6.1 builds the queue lane and validator. P7 stays closed until P6.4 as well as this P5.4 evidence.
 
-**Sources of truth:** `plans/VLT-LOAD/artifacts/P5/run-manifest.json` · `plans/VLT-LOAD/artifacts/P5/cell-verdicts.json` · `plans/VLT-LOAD/artifacts/P5/matrix.json` · `load/gates/p5_live_matrix.py`.
+**Sources of truth:** `plans/VLT-LOAD/concurrency-report.md` · `plans/VLT-LOAD/findings/P5-concurrency.md` · `plans/VLT-LOAD/phases/P5/P5.closed.md` · `plans/VLT-LOAD/artifacts/P5/cell-verdicts.json`.
 
 **Workarounds/Deferred/Open questions:**
-- Product-realistic RED cells are mostly HTTP 429 from the per-actor upload limiter and collab/token failures. They stay valid evidence for P5.4.
-- `pool-timeout` holders occupy PgBouncer servers with `pg_sleep` and do not share one advisory lock; the first attempt timed out and was replaced by one recorded attempt in the same run family.
+- Product RED cells are HTTP 429 or collab `other`, with valid evidence. They are not missing runs.
+- Sweeper 20k and 1m exited 1 with zero rows drained. SLO-70 is not met, and the 1m probe is not a tier-L claim.
+- Pool `cl_waiting` / `maxwait` / `avg_wait_time` samples are 0. `granted: true` on an empty `pg_locks` list is a collector default.
