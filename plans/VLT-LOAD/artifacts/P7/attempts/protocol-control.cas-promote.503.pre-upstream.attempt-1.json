@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "protocol-control.cas-promote.503.pre-upstream",
+  "checksum": "97bbdf368362f0e6c3c8702d9a532fbdde874a34bbe529ee02145e6c00dd96f0",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "protocol-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6776565781,
+  "t_detect_ns": 3463164112,
+  "t_restore_ns": 3313401669
+}

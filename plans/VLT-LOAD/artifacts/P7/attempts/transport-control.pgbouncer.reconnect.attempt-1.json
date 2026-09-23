@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.pgbouncer.reconnect",
+  "checksum": "9b73e1604d082faa9983843d58a640021f81fafdd9d4f25e4a566a4f9341bf57",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 7254958356,
+  "t_detect_ns": 3697406952,
+  "t_restore_ns": 3557551404
+}

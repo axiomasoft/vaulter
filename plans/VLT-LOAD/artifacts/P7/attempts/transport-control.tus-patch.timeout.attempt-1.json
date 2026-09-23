@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "down",
+  "cell_id": "transport-control.tus-patch.timeout",
+  "checksum": "25922b29c9a7ac186974c38886536ecf9e34fd6f9c8ed3adc8ff637850523f78",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "timeout",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6858905847,
+  "t_detect_ns": 3517222804,
+  "t_restore_ns": 3341683043
+}

@@ -6,6 +6,8 @@
 #   TIER=S ./load/scripts/p7-chaos.sh verify --run-dir load/gates/fixtures/p7/complete
 #   TIER=S ./load/scripts/p7-chaos.sh revert --run-dir DIR
 #   TIER=S ./load/scripts/p7-chaos.sh interrupt-fixture --out DIR
+#   TIER=S ./load/scripts/p7-chaos.sh run --matrix
+#   TIER=S ./load/scripts/p7-chaos.sh verify --run-id <id>
 #   P7_PUBLISH=1 TIER=S ./load/scripts/p7-chaos.sh run --run-dir DIR
 set -eu
 
@@ -18,7 +20,7 @@ GATE=$REPO_ROOT/load/gates/p7_chaos.py
 SNAPSHOT=$SCRIPT_DIR/p7-chaos-snapshot.sh
 
 usage() {
-    echo "usage: TIER=S $0 dry-run|run|revert|verify|interrupt-fixture [--run-dir DIR|--run-id ID|--out DIR]" >&2
+    echo "usage: TIER=S $0 dry-run|run|revert|verify|interrupt-fixture [--run-dir DIR|--run-id ID|--out DIR|--matrix]" >&2
     exit 1
 }
 
@@ -38,6 +40,7 @@ COMMAND=
 RUN_DIR=
 RUN_ID=
 OUT_DIR=
+MATRIX=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -56,6 +59,10 @@ while [ $# -gt 0 ]; do
         --out)
             OUT_DIR=$2
             shift 2
+            ;;
+        --matrix)
+            MATRIX=1
+            shift
             ;;
         *)
             usage
@@ -84,7 +91,10 @@ case "$COMMAND" in
                 echo "p7-chaos verify: run_id mismatch (manifest=${manifest_run})" >&2
                 exit 1
             fi
-            python3 "$GATE" verify --run-dir "$dest"
+            digest_line=$(python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" verify --artifacts "$dest")
+            digest=${digest_line##*digest=}
+            python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" verify --artifacts "$dest" --prior-digest "$digest"
+            echo "$digest_line"
             exit 0
         fi
         [ -n "$RUN_DIR" ] || usage
@@ -107,6 +117,37 @@ case "$COMMAND" in
         emergency_revert "$OUT_DIR"
         ;;
     run)
+        if [ "$MATRIX" -eq 1 ]; then
+            if [ "$TIER" != "S" ]; then
+                echo "p7-chaos matrix requires TIER=S" >&2
+                exit 1
+            fi
+            run_id=${RUN_ID:-$(python3 -c 'import uuid; print(uuid.uuid4())')}
+            staging=$(mktemp -d "${TMPDIR:-/tmp}/p7-matrix.XXXXXX")
+            trap 'emergency_revert "$staging"; rm -rf "$staging"' EXIT INT TERM
+            set +e
+            python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" run --run-id "$run_id" --out "$staging"
+            run_code=$?
+            set -e
+            if [ "$run_code" -ne 0 ]; then
+                echo "p7-chaos matrix: run failed, staging kept at ${staging}" >&2
+                trap - EXIT INT TERM
+                exit "$run_code"
+            fi
+            if ! python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" verify --artifacts "$staging"; then
+                echo "p7-chaos matrix: verify failed, staging kept at ${staging}" >&2
+                trap - EXIT INT TERM
+                exit 1
+            fi
+            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7}
+            rm -rf "$dest"
+            mkdir -p "$(dirname "$dest")"
+            mv "$staging" "$dest"
+            trap - EXIT INT TERM
+            python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" verify --artifacts "$dest"
+            echo "p7-chaos run: published ${dest} run_id=${run_id}"
+            exit 0
+        fi
         if [ -z "$RUN_DIR" ] || [ "${P7_PUBLISH:-0}" != 1 ]; then
             echo "p7-chaos run: authoritative tier-S family is P7.3; set P7_PUBLISH=1 and --run-dir to publish already verified evidence. This command does not start Docker or write the database or object store." >&2
             exit 1

@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "primary-transition.outbox-mutation.promote",
+  "checksum": "b8cfce9cedcd293c9347dfd5c0d59baf8d4f7deba804c113366c3f3aa73c469f",
+  "durable_state": "committed",
+  "evidence": "valid",
+  "http_outcome": "accepted",
+  "injector": "pg-failover",
+  "plane": "primary-transition",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 16982446473,
+  "t_detect_ns": 5827910833,
+  "t_restore_ns": 11154535640
+}

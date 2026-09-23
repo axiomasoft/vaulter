@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "protocol-control.tus-patch.503.pre-upstream",
+  "checksum": "5cba61164519ba9b2131450cae4fcf631f4dbab6f54df911b32ad9659c9d12fb",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "protocol-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6779282797,
+  "t_detect_ns": 3384202345,
+  "t_restore_ns": 3395080452
+}

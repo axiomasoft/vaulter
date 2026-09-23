@@ -1,0 +1,149 @@
+# VLT-LOAD P7.2 — chaos overlay (use WITH docker-compose.load.yml).
+# Traffic for tested cells goes through declared proxies; a direct minio/postgres
+# bypass fails preflight. Promotion uses a separate two-node PG lab, not a kill
+# of the product-realistic postgres service.
+name: vaulter-load
+
+services:
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.11.0
+    command: ["-host", "0.0.0.0", "-config", "/config/toxiproxy.json"]
+    volumes:
+      - ./chaos/toxiproxy.json:/config/toxiproxy.json:ro
+    expose:
+      - "8474"
+      - "19001"
+      - "16432"
+    depends_on:
+      minio:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/toxiproxy-cli", "l"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  s3-fault-proxy:
+    image: vaulter-load-app:latest
+    working_dir: /chaos
+    entrypoint: ["python3", "/chaos/s3-fault-proxy.py"]
+    volumes:
+      - ./chaos/s3-fault-proxy.py:/chaos/s3-fault-proxy.py:ro
+    command:
+      - --listen
+      - 0.0.0.0:19000
+      - --upstream
+      - http://toxiproxy:19001
+      - --control
+      - 0.0.0.0:19099
+    expose:
+      - "19000"
+      - "19099"
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+
+  app:
+    environment:
+      MINIO_ENDPOINT: http://s3-fault-proxy:19000
+      DB_HOST: toxiproxy
+      DB_PORT: "16432"
+      TMPDIR: /var/tmp/vaulter-chaos
+      CHAOS_TMPFS_ROOT: /var/tmp/vaulter-chaos
+      LOAD_CHAOS_PROXIED: "1"
+    tmpfs:
+      - /var/tmp/vaulter-chaos:size=8m,mode=1777
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+      s3-fault-proxy:
+        condition: service_started
+
+  queue-worker:
+    environment:
+      MINIO_ENDPOINT: http://s3-fault-proxy:19000
+      DB_HOST: toxiproxy
+      DB_PORT: "16432"
+      TMPDIR: /var/tmp/vaulter-chaos
+      CHAOS_TMPFS_ROOT: /var/tmp/vaulter-chaos
+      LOAD_CHAOS_PROXIED: "1"
+    tmpfs:
+      - /var/tmp/vaulter-chaos:size=8m,mode=1777
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+      s3-fault-proxy:
+        condition: service_started
+
+  postgres-primary:
+    profiles: [chaos-ha]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vaulter
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: vaulter_chaos
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=8
+      - -c
+      - max_replication_slots=8
+      - -c
+      - hot_standby=on
+      - -c
+      - wal_keep_size=64MB
+    volumes:
+      - ./chaos/postgres/init-primary.sh:/docker-entrypoint-initdb.d/10-repl.sh:ro
+      - pg-chaos-primary:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaulter -d vaulter_chaos"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  postgres-standby:
+    profiles: [chaos-ha]
+    image: postgres:16-alpine
+    environment:
+      PRIMARY_HOST: postgres-primary
+      PRIMARY_PORT: "5432"
+    volumes:
+      - ./chaos/postgres/standby-entrypoint.sh:/standby-entrypoint.sh:ro
+      - pg-chaos-standby:/var/lib/postgresql/data
+    entrypoint: ["/bin/sh", "/standby-entrypoint.sh"]
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaulter -d vaulter_chaos"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  pgbouncer-ha:
+    profiles: [chaos-ha]
+    image: edoburu/pgbouncer:latest
+    environment:
+      DATABASE_URL: postgres://vaulter:secret@postgres-primary:5432/vaulter_chaos
+      LISTEN_PORT: "6432"
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "4"
+      MAX_CLIENT_CONN: "50"
+      AUTH_TYPE: plain
+      ADMIN_USERS: vaulter
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U vaulter -d vaulter_chaos"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pg-chaos-primary:
+  pg-chaos-standby:

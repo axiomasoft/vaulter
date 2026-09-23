@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: 1fcd3d45dcc9704918f7c29f9764c9031a51fd99fdbdad44a92975b6d8963e4b
+inputs_sha256: f27d087beafea67efc2af00251e2080b246ad24f39dca91e315aa277cd6c3166
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ | 4/4 | 🟢 Done |
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
 | P6 | Семантика очередей под завалом | 4/4 | 🟢 Done |
-| P7 | Деградация инфраструктуры (chaos) | 1/4 | 🟡 In progress |
+| P7 | Деградация инфраструктуры (chaos) | 3/4 | 🟡 In progress |
 | P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 7/11 | 🟡 In progress |
 
 ## Phase P0
@@ -103,8 +103,8 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P7.1 | Chaos lane, phase ledger и evidence validator | 🟢 Done | 2026-09-23 |
-| P7.2 | Isolated injectors, fixtures и degradation matrix | ⬜ Not started | — |
-| P7.3 | Авторитетный tier-S fault/recovery run | ⬜ Not started | — |
+| P7.2 | Isolated injectors, fixtures и degradation matrix | 🟢 Done | 2026-09-23 |
+| P7.3 | Авторитетный tier-S fault/recovery run | 🟢 Done | 2026-09-23 |
 | P7.4 | Chaos report, recovery verdict и bounded debt | ⬜ Not started | — |
 
 ## Phase P8
@@ -258,6 +258,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-exec · in-progress · — |
 | 2026-09-23 | grok-4.6/high | plan-exec · closed-green · P7.1 chaos lane: 51-cell dry-run, phase ledger, collectors, checksum reconciler. unittest 14, interrupt revert green.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | grok-4.6/high | plan-exec · in-progress · — |
+| 2026-09-23 | grok-4.6/high | plan-exec · closed-green · P7.2 isolated injectors: chaos overlay, S3 503 proxy, PG16 fence/promote, dedicated tmpfs ENOSPC, fixtures. unittest 7, S0 four cells reverted, promotion rehearsal one writable primary, Pest 19 assertions.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | grok-4.7/high | plan-run · in-progress · — |
+| 2026-09-23 | grok-4.7/high | plan-run · closed-green · Tier-S fault/recovery matrix published with byte-stable verify. |
 
 ## Owner Gates
 

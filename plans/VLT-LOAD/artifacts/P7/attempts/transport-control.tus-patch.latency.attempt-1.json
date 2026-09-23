@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.tus-patch.latency",
+  "checksum": "f34e6a6b0cdc33dde6449621a7e10bacbd1385a1698937215902cc5e625fd717",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 7231899819,
+  "t_detect_ns": 3509856180,
+  "t_restore_ns": 3722043639
+}

@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.s3-put-part.latency",
+  "checksum": "cf9d48c855be34d29be6dd62c710e04c087e593c8a9a6891afcbb64783b79d7a",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 7052436153,
+  "t_detect_ns": 3342119606,
+  "t_restore_ns": 3710316547
+}

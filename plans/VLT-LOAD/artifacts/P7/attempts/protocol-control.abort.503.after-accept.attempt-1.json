@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "protocol-control.abort.503.after-accept",
+  "checksum": "40ee57eb209e2cb9df1df9b493c0c17b162d38beaaf5be6bfd43f5bf9aa9d643",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "protocol-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6688385648,
+  "t_detect_ns": 3376971137,
+  "t_restore_ns": 3311414511
+}

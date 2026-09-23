@@ -275,7 +275,7 @@ def _identity(row: dict, manifest: dict, known_cells: dict, where: str) -> None:
     _forbidden(row, where)
     _require(row.get('run_id') == manifest['run_id'], f'cross-run event in {where}')
     _require(row.get('cell_id') in known_cells, f'unknown cell in {where}')
-    _require(row.get('attempt') == 1, f'attempt must be 1 in {where}')
+    _require(_int(row.get('attempt')) and row['attempt'] >= 1, f'attempt in {where}')
     _require(_int(row.get('monotonic_ns')) and row['monotonic_ns'] >= 0, f'monotonic_ns in {where}')
     wall = row.get('wall_time')
     _require(isinstance(wall, str) and WALL_TIME.match(wall) is not None, f'wall_time in {where}')
@@ -291,11 +291,11 @@ def _identity(row: dict, manifest: dict, known_cells: dict, where: str) -> None:
 
 
 def _check_phases(rows: list[dict]) -> None:
-    by_cell: dict[str, list[dict]] = {}
+    by_cell: dict[tuple[str, int], list[dict]] = {}
     for row in rows:
         _require(row.get('schema') == 'p7-ledger/v1', 'ledger schema')
-        by_cell.setdefault(row['cell_id'], []).append(row)
-    for cell_id, events in by_cell.items():
+        by_cell.setdefault((row['cell_id'], row['attempt']), []).append(row)
+    for (cell_id, _attempt), events in by_cell.items():
         ordered = sorted(events, key=lambda item: item['monotonic_ns'])
         last = -1
         seen = []

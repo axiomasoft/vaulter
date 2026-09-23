@@ -1,0 +1,15 @@
+{
+  "attempt": 3,
+  "availability": "degraded",
+  "cell_id": "product-realistic.upload-patch.connection-loss",
+  "checksum": "1987bf5f6f2c177ca7a438bf1cea76c441ae0045dcb1a4cfd81f7a4395cc7104",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6868785626,
+  "t_detect_ns": 3371596338,
+  "t_restore_ns": 3497189288
+}

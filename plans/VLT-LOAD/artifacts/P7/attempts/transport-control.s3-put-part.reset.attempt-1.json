@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "down",
+  "cell_id": "transport-control.s3-put-part.reset",
+  "checksum": "030d037bfe2302d0bc901e6ad3259f174b66b227c17c82c0a71e14f0bcc6da40",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "timeout",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 7093912638,
+  "t_detect_ns": 3508705112,
+  "t_restore_ns": 3585207526
+}

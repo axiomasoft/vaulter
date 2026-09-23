@@ -1,24 +1,24 @@
-# HANDOFF — 2026-09-23 — after P7.1
+# HANDOFF — 2026-09-23 — after P7.3
 
-**Next:** exec-items: task:plan-exec VLT-LOAD P7.2
+**Next:** manual: frontier/high — P7.4 (§3 Routing: Exec = manual; `task:plan-exec` обязан отказать)
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | P7-harness |
-| Model | implementation/high |
+| Batch | P7-profile |
+| Model | frontier/high |
 | Effort | high |
-| Capabilities | isolated injectors, chaos topology, fidelity-labelled matrix |
+| Capabilities | unattended tier-S fault/recovery run, checksums, typed cell verdicts |
 | Context | continue-root |
-| Суть | P7.1 closed 🟢. D42 continues the P7 harness with P7.2 injectors/matrix before the P7.3 lab. |
+| Суть | P7.3 closed 🟢. D42 next is the P7.4 chaos report from the published tier-S artifacts. |
 
 ```session-continuity-decision/v1
 {
   "evidence": [
-    "batch:52778bd835a52fb24be7b22985ed6b175c2a9e0f409cf58fc393b4f0cfe76d64",
+    "batch:e8c79cd9f81a4eb40cd6c5957d1113e669474f901919ee287a94bee5e720f1bc",
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:49a754b7bbec77d0f018f8ec5a17f8403f9c3c6466b0ef018ea4cf6d7ad069ee"
+    "checkpoint:1ab02c60bc71e87482747ec7218872220bd237226c1fcf46f67e0d51bebb01cd"
   ],
   "outcome": "continue-root",
   "reason": "authorized-scope-complete",
@@ -30,18 +30,20 @@
 **Provider-native command:**
 
 ```text
-task:plan-exec VLT-LOAD P7.2
+P7.4 — chaos report from the published P7.3 tier-S run. Exec = manual (frontier/high).
+Read plans/VLT-LOAD/artifacts/P7 and write chaos-report.md plus findings/P7-degradation.md.
+Do not rerun the matrix or edit packages/*.
 ```
 
-**Done:** P7.1 built the run-scoped chaos lane: 51-cell dry-run matrix, baseline/armed/fault/revert/recovery/reconcile ledger, barrier and injector event schema, DB/MinIO/temp/readiness/Prometheus collectors, checksum reconciler, negative fixtures, and signal-safe emergency revert. unittest 14 passed. No `packages/*` edits.
+**Done:** P7.3 published one tier-S fault/recovery family, run `7b255888-43bb-4071-b106-45f70a7f475c`, 51 cells valid (product-realistic ×3, other planes ×1). Verify digest `b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62` matched on the second pass. Integrity checksums matched and ungranted locks were 0. The S3 fault proxy now starts as Python so it does not run the app entrypoint.
 
-**Remaining:** P7.2 injectors/topology/matrix, then unattended P7.3 lab and P7.4 report. P8.8–P8.10 wait for P7.4.
+**Remaining:** P7.4 chaos report. P8.8–P8.10 wait for P7.4.
 
-**Sources of truth:** `plans/VLT-LOAD/phases/P7/P7.1.md` · `load/scripts/p7-chaos.sh` · `load/gates/p7_chaos.py` · `load/gates/fixtures/p7/` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md`.
+**Sources of truth:** `plans/VLT-LOAD/phases/P7/P7.3.md` · `plans/VLT-LOAD/artifacts/P7/` · `load/gates/p7_live_matrix.py` · `load/scripts/p7-chaos.sh` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md`.
 
 **Open risks:** L-04 unbounded `claimDue()` lock-set; L-05 O(endpoints) `subscribedEndpoints()`; L-P6-01 sticky `failed_jobs=2`; L-P6-02 product `dispatch_uuids=0`; L-P6-03 leftover-endpoint fan-out; L-P6-04 unrecovered bursts / 100-row volume / Prom `vaulter-sut` down.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: P7.1 injector implementation is a typed stub (`p7.1-lane-stub`); live Toxiproxy/S3-proxy/PG/ENOSPC injectors stay in P7.2. P7.2 Inputs now name resolvable compose/seed/env paths so the successor bundle can materialize.
-- deferred: authoritative tier-S fault family remains P7.3; no RTO/RPO invented.
+- workarounds: S0 S3/TCP/backend injectors run locally (no Toxiproxy container); ENOSPC uses dedicated alpine tmpfs + dd after Hub python image pull failed; backend revert retargets `replacement_port`; standby data dir chmod 0700 before postgres.
+- deferred: no RTO/RPO invented; true AWS multipart UploadId out of scope; P7.4 writes the report from these artifacts.
 - open_questions: —

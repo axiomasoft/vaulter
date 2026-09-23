@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "product-realistic.lock-holder.disconnect",
+  "checksum": "f0dbbb28b7e0f78dcda880039182effa532140d0afd4bd374fce8d5a0b30f025",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6861761578,
+  "t_detect_ns": 3377168913,
+  "t_restore_ns": 3484592665
+}

@@ -1,0 +1,15 @@
+{
+  "attempt": 2,
+  "availability": "degraded",
+  "cell_id": "product-realistic.cas-promote.503",
+  "checksum": "9c8f745b70d6699f34f52ea4182dec429fc38cb2ecda0dacc4da9aa0fd9bad96",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6839534975,
+  "t_detect_ns": 3521625753,
+  "t_restore_ns": 3317909222
+}

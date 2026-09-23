@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.outbox-mutation.down",
+  "checksum": "eae441c670dcb3b6cc666f77c2d87c9a7d076d16c8ccf9a54bc165690680a8c2",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6994152168,
+  "t_detect_ns": 3467998311,
+  "t_restore_ns": 3526153857
+}
