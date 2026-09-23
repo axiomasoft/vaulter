@@ -1,15 +1,15 @@
-# HANDOFF — 2026-09-23 — after P8.8
+# HANDOFF — 2026-09-23 — after P8.10
 
-**Next:** exec-items: task:plan-exec VLT-LOAD P8.9
+**Next:** manual: frontier/high
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | P8-tracing |
-| Model class | implementation |
+| Batch | solo |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | producer-readiness/v1, selected-span-only TraceRecorder |
+| Capabilities | host OTel adapter, sampling overhead proof |
 | Context | continue-root |
-| Суть | P8.8 closed 🟢. Implement only webhook.pipeline + upload.sweep; deferred metrics stay not-added. |
+| Суть | P8.10 closed 🟢 D41 no-op. Prove nonempty tracing host/adapter/overhead against the P8.8 manifest digest. |
 
 ```session-continuity-decision/v1
 {
@@ -18,7 +18,7 @@
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:c1dd747b4ba39e900521622dfaab8e9f7e35cdfdfd6cbb84542dd1752bf646f1"
+    "checkpoint:67454b5f40eaf9241e59243f2e98ebc3079589d7ac55a0e799cb2774d9e142bf"
   ],
   "outcome": "continue-root",
   "reason": "authorized-scope-complete",
@@ -30,18 +30,18 @@
 **Provider-native command:**
 
 ```bash
-agent --workspace /home/vostrikov/projects/packages/vaulter --model composer-2.5 --force --sandbox disabled --trust --approve-mcps 'task:plan-exec VLT-LOAD P8.9'
+agent --workspace /home/vostrikov/projects/packages/vaulter --model grok-4.6 --force --sandbox disabled --trust --approve-mcps 'task:plan-run VLT-LOAD P8.11'
 ```
 
-**Done:** P8.8 selected `webhook.pipeline` then `upload.sweep` (max 6; both deferred metrics false/`not-added`). Manifest `346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea`; `producer-readiness/v1` consumer=P8.9 mode=`nonempty-candidates` digest `ff691e4432357e707cfa2ab199e5f57791f86cb8b8987ffa9c286543c4f71885`. §20 not rewritten. 12 unittest + verify×2 byte-stable.
+**Done:** P8.9 tracing seam for `webhook.pipeline` + `upload.sweep`. P8.10 D41 no-op: `vaulter_blob_dedup_hit_total` and `vaulter_webhook_dlq_total` both `not-added` (`P5:L-07:unconfirmed`, `P6:dead-control`). Consumed P8.8 manifest `346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea`.
 
-**Remaining:** P8.9–P8.10 (selected spans + conditional deferred metrics), then P8.11.
+**Remaining:** P8.11 (host tracing proof / overhead on nonempty-candidates). Not admitted here: Inputs still contain unresolvable prose `selected package tests`, so `task:plan-run VLT-LOAD P8.11` is not a valid Next until that entry is path-bound.
 
-**Sources of truth:** `plans/VLT-LOAD/phases/P8/P8.8.md` · `plans/VLT-LOAD/phases/P8/P8.8.state.md` · `plans/VLT-LOAD/artifacts/P8/tracing-targets.json` · `plans/VLT-LOAD/findings/P8.8-target-selection.md` · `plans/VLT-LOAD/observability-spec.md` §20 · `plans/VLT-LOAD/phases/P8/P8.9.md`.
+**Sources of truth:** `plans/VLT-LOAD/phases/P8/P8.10.md` · `plans/VLT-LOAD/phases/P8/P8.10.state.md` · `plans/VLT-LOAD/findings/P8.10-deferred-metrics.md` · `plans/VLT-LOAD/artifacts/P8/tracing-targets.json` · `plans/VLT-LOAD/observability-spec.md` §20.6 · `plans/VLT-LOAD/phases/P8/P8.11.md`.
 
 **Open risks:** Product RED on SLO-64 (`claimDue` lock-set) and SLO-70 (`SweepUploadsCommand` remaining 20000) stays product RED. L-P7-01 harness GET not product HTTP; L-P7-02 empty snapshot + `webhook_outbox`; L-P3-02/L-P3-05 inferred CTE≠`candidateNodeIds`; L-07 unconfirmed; P6 `failed_jobs` is not package DLQ.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: reducer consumes structured `p8-trace-evidence/v1` JSON, not markdown NLP.
-- deferred: `blob_dedup_hit_total` and `webhook_dlq_total` both `not-added`; no `packages/*` edits; unselected allowlist IDs stay out of P8.9 source.
+- workarounds: P8.10 consumed the P8.8 manifest digest as ordinary producer evidence, not a second `producer-readiness/v1` edge. Semantic Next is `manual: frontier/high` because P8.11 bundle Inputs are not path-resolvable.
+- deferred: both deferred metric families remain `not-added`; no SLO added.
 - open_questions: —
