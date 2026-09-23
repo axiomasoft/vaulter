@@ -1,0 +1,118 @@
+{
+  "deferred_metrics": {
+    "blob_dedup_hit_total": false,
+    "webhook_dlq_total": false
+  },
+  "evidence_schema": "p8-trace-evidence/v1",
+  "excluded": [
+    {
+      "reason": "inferred: 154.5 ms recursive CTE is observed; mapping to NodeReadRepository::candidateNodeIds is inferred and the dedicated code-anchor is rejected",
+      "target_id": "tree.read"
+    },
+    {
+      "reason": "limitation: P5 disjoint/overlapping moves at N<=200 are 2xx with deadlock delta 0; no CTE-anchor series; L-06 stays with P3 L-P3-05",
+      "target_id": "tree.move"
+    },
+    {
+      "reason": "limitation: tus_final_patch/5g allocator and RSS GREEN; not a hotspot",
+      "target_id": "upload.tus"
+    },
+    {
+      "reason": "limitation: L-01 closed GREEN on 5 GiB complete; closed debt is not a current hotspot",
+      "target_id": "upload.s3"
+    },
+    {
+      "reason": "limitation: download/5g PHP peak 2 MiB GREEN; no download-stream debt",
+      "target_id": "download.stream"
+    },
+    {
+      "reason": "limitation: cgroup file-cache pressure is on Sha256ContentStore::stage(), not BlobStore/BlobStoreRepository commit",
+      "target_id": "cas.commit"
+    },
+    {
+      "reason": "limitation: P5/P7 did not invoke BlobGarbageCollector; P7 has no CAS orphan walk",
+      "target_id": "cas.gc"
+    },
+    {
+      "reason": "limitation: collab issuance class=other; HTTP status not persisted; report limitation cannot select a target",
+      "target_id": "collaboration.session"
+    },
+    {
+      "reason": "limitation: P6 measured outbox/webhook only; PersistYjsSnapshotAction was not a cell",
+      "target_id": "collaboration.snapshot"
+    }
+  ],
+  "max_targets": 6,
+  "mode": "nonempty-candidates",
+  "observability_spec_sha256": "41e3c8d5464d7aedbcc266b3f5648c5ac5019bb80e9dd20b32543b0548cfe742",
+  "producer_readiness": {
+    "candidate_count": 2,
+    "candidate_paths_sha256": "2415aec376b36379c5c98a784096d0cc26bfacadd0d966ff747f85a1ff5b26a6",
+    "command": "python3 load/gates/p8_trace_targets.py verify --manifest plans/VLT-LOAD/artifacts/P8/tracing-targets.json",
+    "consumer_item": "P8.9",
+    "exclusions": [
+      "tree.read",
+      "tree.move",
+      "upload.tus",
+      "upload.s3",
+      "download.stream",
+      "cas.commit",
+      "cas.gc",
+      "collaboration.session",
+      "collaboration.snapshot"
+    ],
+    "mode": "nonempty-candidates",
+    "predicate": "observability-spec.md §20.2 closed score tuple; allowlisted observed hotspot/debt only",
+    "producer_item": "P8.8",
+    "roots": [
+      "plans/VLT-LOAD/artifacts/P8/tracing-targets.json"
+    ],
+    "schema_version": "producer-readiness/v1",
+    "source_commit": "a6df36b231c1ad11032467a0080f444a4bde527e"
+  },
+  "report_digests": {
+    "chaos-report.md": "fc1ec176513dcbe7fbf4d5d50c96f65c3dfa651421ffff65f7f38265b6e00bd8",
+    "concurrency-report.md": "284ff16dc6b2bb51b3636c1c64f49355ae10d4a462a40af4757a16fef1f61a0b",
+    "db-profile.md": "6ee7c350ef535a69a4682eae77e059112d8ac9791dbc0195c5611889aa4d61a8",
+    "memory-profile.md": "37bc20aec65ba9e7caaad7c26b7cb53330b640a38a1fc628c55f873b7a8a0f61",
+    "queue-report.md": "2e958bf133b61bf67e8824b98b4b446b90fa2e6a30b5abe6e33841806c8e764a"
+  },
+  "schema_version": "tracing-targets/v1",
+  "section_20_sha256": "8da7d59da6fa6450290011cd0829fbd70d423cbef2b220790e424c32619d00de",
+  "selected": [
+    {
+      "authoritative_evidence_id": "P6:L-04:volume-retry-5k",
+      "finding_id": "L-04",
+      "producer": "P6",
+      "score": {
+        "impact_ppm": 1000000,
+        "integrity_rank": 1,
+        "severity_rank": 2,
+        "slo_rank": 1
+      },
+      "source": [
+        "OutboxRelay",
+        "WebhookRetryDispatcher",
+        "DeliverWebhook"
+      ],
+      "span_chain": "command/job root → relay/retry/delivery child",
+      "target_id": "webhook.pipeline"
+    },
+    {
+      "authoritative_evidence_id": "P5:L-02:dirty-20k.n1.a1",
+      "finding_id": "L-P5-03",
+      "producer": "P5",
+      "score": {
+        "impact_ppm": 0,
+        "integrity_rank": 1,
+        "severity_rank": 2,
+        "slo_rank": 1
+      },
+      "source": [
+        "SweepUploadsCommand"
+      ],
+      "span_chain": "command root → vaulter.action.upload.sweep",
+      "target_id": "upload.sweep"
+    }
+  ]
+}

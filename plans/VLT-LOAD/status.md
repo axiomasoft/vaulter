@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: 0e6dffe226602e41719ddf45583cbddaee74aa8a2d82d23a02902e842c8559a4
+inputs_sha256: fee5b3b49477fc3a5905a8ea904ff27cc4efc1b82e9a5e237df1c074e0ad1c33
 generated_by: task plan-views status
 -->
 
@@ -31,7 +31,7 @@ generated_by: task plan-views status
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
 | P6 | Семантика очередей под завалом | 4/4 | 🟢 Done |
 | P7 | Деградация инфраструктуры (chaos) | 4/4 | 🟢 Done |
-| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 7/11 | 🟡 In progress |
+| P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 8/11 | 🟡 In progress |
 
 ## Phase P0
 
@@ -118,7 +118,7 @@ generated_by: task plan-views status
 | P8.5 | Seam'ы §5.3 — фон/очереди/unbounded-scan (28 metric families) | 🟢 Done | 2026-09-21 |
 | P8.6 | Health в load SUT: `/up` liveness + `/ready` DB/S3/queue | 🟢 Done | 2026-09-21 |
 | P8.7 | Live gate P8-minimum и overhead instrumentation | 🟢 Done | 2026-09-21 |
-| P8.8 | Выбор tracing targets и conditional deferred metrics | ⬜ Not started | — |
+| P8.8 | Выбор tracing targets и conditional deferred metrics | 🟢 Done | 2026-09-23 |
 | P8.9 | Optional tracing seam и selected package spans | ⬜ Not started | — |
 | P8.10 | Conditional deferred metrics | ⬜ Not started | — |
 | P8.11 | Tracing propagation, no-op и overhead proof | ⬜ Not started | — |
@@ -267,6 +267,14 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-run · closed-green · P7.4 chaos report for run 7b255888-43bb-4071-b106-45f70a7f475c: 51/51 valid, digest b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62; L-P7-01..05 open; product HTTP paths unevaluated.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.6/high | plan-close · closed-green · P7 direct-close after P7.1–P7.4 GREEN. Report run 7b255888-43bb-4071-b106-45f70a7f475c. |
+| 2026-09-23 | grok-4.6/high | plan-run · in-progress · — |
+| 2026-09-23 | grok-4.6/high | plan-run · closed-green · P8.8 selected webhook.pipeline + upload.sweep; deferred metrics both false. manifest 346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea. write-site: pre_mutation: allow · pre_final: allow |
+
+## Correction Routing
+
+| Тип | Origin | Outcome | Target / resume |
+|:--|:--|:--|:--|
+| producer | P8.8 | nonempty-candidates | P8.9 |
 
 ## Owner Gates
 

@@ -1,24 +1,24 @@
-# HANDOFF — 2026-09-23 — after P7.4
+# HANDOFF — 2026-09-23 — after P8.8
 
-**Next:** manual: frontier/high — P8.8 (§3 Routing: Exec = manual; `task:plan-exec` обязан отказать)
+**Next:** exec-items: task:plan-exec VLT-LOAD P8.9
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | solo |
-| Model | frontier/high |
+| Batch | P8-tracing |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | P3–P7 report digest join, frozen tracing allowlist reducer, producer-readiness/v1 |
+| Capabilities | producer-readiness/v1, selected-span-only TraceRecorder |
 | Context | continue-root |
-| Суть | P7.4 closed 🟢. D42 next is P8.8 tracing-target selection from the five reports. |
+| Суть | P8.8 closed 🟢. Implement only webhook.pipeline + upload.sweep; deferred metrics stay not-added. |
 
 ```session-continuity-decision/v1
 {
   "evidence": [
-    "batch:507682c248b1ae2bbae8c5063cc19a87820af8d51b5573053f0126fc6e6867c8",
+    "batch:346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea",
     "loaded-inputs:reusable",
     "cold-start-cost:0",
     "lifecycle:scope-complete",
-    "checkpoint:5cc5a29de08c7b6ebf3603f765415880b5494d43bc79ac2a5f749f48a6361035"
+    "checkpoint:c1dd747b4ba39e900521622dfaab8e9f7e35cdfdfd6cbb84542dd1752bf646f1"
   ],
   "outcome": "continue-root",
   "reason": "authorized-scope-complete",
@@ -29,22 +29,19 @@
 
 **Provider-native command:**
 
-```text
-P8.8 — tracing targets and conditional deferred metrics from frozen observability-spec.md §20.
-Exec = manual (frontier/high). Read the five P3–P7 reports and emit tracing-targets.json,
-findings/P8.8-target-selection.md, and producer-readiness/v1. Empty D41 no-op is valid.
-Do not edit packages/* or rewrite observability-spec.md.
+```bash
+agent --workspace /home/vostrikov/projects/packages/vaulter --model composer-2.5 --force --sandbox disabled --trust --approve-mcps 'task:plan-exec VLT-LOAD P8.9'
 ```
 
-**Done:** P7.4 synthesized `chaos-report.md` and `findings/P7-degradation.md` from run `7b255888-43bb-4071-b106-45f70a7f475c` (51/51 valid, digest `b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62`). Integrity before==after; ungranted locks 0. L-P7-01..05 open. P7 phase closed 🟢. Product HTTP paths unevaluated.
+**Done:** P8.8 selected `webhook.pipeline` then `upload.sweep` (max 6; both deferred metrics false/`not-added`). Manifest `346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea`; `producer-readiness/v1` consumer=P8.9 mode=`nonempty-candidates` digest `ff691e4432357e707cfa2ab199e5f57791f86cb8b8987ffa9c286543c4f71885`. §20 not rewritten. 12 unittest + verify×2 byte-stable.
 
-**Remaining:** P8.8 target selection and producer-readiness/v1. Then P8.9–P8.10, then P8.11.
+**Remaining:** P8.9–P8.10 (selected spans + conditional deferred metrics), then P8.11.
 
-**Sources of truth:** `plans/VLT-LOAD/phases/P7/P7.4.md` · `plans/VLT-LOAD/chaos-report.md` · `plans/VLT-LOAD/findings/P7-degradation.md` · `plans/VLT-LOAD/phases/P8/P8.8.md` · `plans/VLT-LOAD/observability-spec.md` · `plans/VLT-LOAD/decisions/D42-code-stretch-then-unattended-lab.md`.
+**Sources of truth:** `plans/VLT-LOAD/phases/P8/P8.8.md` · `plans/VLT-LOAD/phases/P8/P8.8.state.md` · `plans/VLT-LOAD/artifacts/P8/tracing-targets.json` · `plans/VLT-LOAD/findings/P8.8-target-selection.md` · `plans/VLT-LOAD/observability-spec.md` §20 · `plans/VLT-LOAD/phases/P8/P8.9.md`.
 
-**Open risks:** L-P7-01 harness GET not product HTTP; L-P7-02 empty snapshot + `webhook_outbox`; L-P7-03 primary hardcoded; L-P7-04 ENOSPC `dd`; L-P7-05 `/ready` never 200 and Prom `vaulter-sut=0`; L-04 unbounded `claimDue()` lock-set; L-05 O(endpoints) `subscribedEndpoints()`; L-P6-01 sticky `failed_jobs=2`; L-P6-02 product `dispatch_uuids=0`; L-P6-03 leftover-endpoint fan-out; L-P6-04 unrecovered bursts / Prom `vaulter-sut` down.
+**Open risks:** Product RED on SLO-64 (`claimDue` lock-set) and SLO-70 (`SweepUploadsCommand` remaining 20000) stays product RED. L-P7-01 harness GET not product HTTP; L-P7-02 empty snapshot + `webhook_outbox`; L-P3-02/L-P3-05 inferred CTE≠`candidateNodeIds`; L-07 unconfirmed; P6 `failed_jobs` is not package DLQ.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: P7.4 did not rerun the matrix; synthesis used published P7.3 artifacts only.
-- deferred: no RTO/RPO invented; MinIO/Toxiproxy not treated as AWS; no `packages/*` edits; P8.8 may list the scrape/readiness gap only and must not select tracing targets from labelled GET probes.
+- workarounds: reducer consumes structured `p8-trace-evidence/v1` JSON, not markdown NLP.
+- deferred: `blob_dedup_hit_total` and `webhook_dlq_total` both `not-added`; no `packages/*` edits; unselected allowlist IDs stay out of P8.9 source.
 - open_questions: —
