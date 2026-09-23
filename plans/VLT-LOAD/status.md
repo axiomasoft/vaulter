@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-23
-inputs_sha256: f27d087beafea67efc2af00251e2080b246ad24f39dca91e315aa277cd6c3166
+inputs_sha256: 0e6dffe226602e41719ddf45583cbddaee74aa8a2d82d23a02902e842c8559a4
 generated_by: task plan-views status
 -->
 
@@ -30,7 +30,7 @@ generated_by: task plan-views status
 | P4 | Память и стриминг: бенчмарки ≤5 ГиБ | 4/4 | 🟢 Done |
 | P5 | Конкуренция в масштабе: сотни контендеров | 4/4 | 🟢 Done |
 | P6 | Семантика очередей под завалом | 4/4 | 🟢 Done |
-| P7 | Деградация инфраструктуры (chaos) | 3/4 | 🟡 In progress |
+| P7 | Деградация инфраструктуры (chaos) | 4/4 | 🟢 Done |
 | P8 | Наблюдаемость: метрики + трейсы (seam'ы с нуля) (гейт P3–P7 по минимуму) | 7/11 | 🟡 In progress |
 
 ## Phase P0
@@ -105,7 +105,7 @@ generated_by: task plan-views status
 | P7.1 | Chaos lane, phase ledger и evidence validator | 🟢 Done | 2026-09-23 |
 | P7.2 | Isolated injectors, fixtures и degradation matrix | 🟢 Done | 2026-09-23 |
 | P7.3 | Авторитетный tier-S fault/recovery run | 🟢 Done | 2026-09-23 |
-| P7.4 | Chaos report, recovery verdict и bounded debt | ⬜ Not started | — |
+| P7.4 | Chaos report, recovery verdict и bounded debt | 🟢 Done | 2026-09-23 |
 
 ## Phase P8
 
@@ -263,6 +263,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-23 | grok-4.7/high | plan-run · in-progress · — |
 | 2026-09-23 | grok-4.7/high | plan-run · closed-green · Tier-S fault/recovery matrix published with byte-stable verify. |
+| 2026-09-23 | grok-4.6/high | plan-run · in-progress · — |
+| 2026-09-23 | grok-4.6/high | plan-run · closed-green · P7.4 chaos report for run 7b255888-43bb-4071-b106-45f70a7f475c: 51/51 valid, digest b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62; L-P7-01..05 open; product HTTP paths unevaluated.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-23 | grok-4.6/high | plan-close · closed-green · P7 direct-close after P7.1–P7.4 GREEN. Report run 7b255888-43bb-4071-b106-45f70a7f475c. |
 
 ## Owner Gates
 
