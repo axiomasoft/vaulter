@@ -1,0 +1,12 @@
+run_id=core-sqlite
+stamp=20260924T124859Z
+workdir=/home/vostrikov/projects/packages/vaulter
+pwd=/home/vostrikov/projects/packages/vaulter
+driver=sqlite
+db_connection=sqlite
+db_database=:memory:
+db_host=
+db_port=
+php=PHP 8.4.25 (cli) (built: Aug 28 2026 06:55:33) (NTS)
+pcov=pcov
+command=script -qefc php8.4 pest --mutate --path=packages/core/src --covered-only --clear-cache

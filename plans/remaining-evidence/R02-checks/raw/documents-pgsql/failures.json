@@ -1,0 +1,21 @@
+{
+  "package": "documents",
+  "driver": "pgsql",
+  "initial_suite": "RED",
+  "passed": 215,
+  "failed": 2,
+  "failures": [
+    {
+      "test": "Tests\\Document\\CollaborationFeatureGateTest",
+      "exception": "QueryException",
+      "detail": "relation \"v_node_document_versions\" does not exist"
+    },
+    {
+      "test": "Tests\\Schema\\NodeCommentSchemaTest > it persists a comment",
+      "exception": "assertion",
+      "detail": "JSONB object key order differs from SQLite expectation (to before from)"
+    }
+  ],
+  "mutation": "not started; Pest aborts mutation when the baseline suite is red",
+  "disposition": "unevaluated"
+}
