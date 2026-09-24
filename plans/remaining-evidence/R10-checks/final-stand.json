@@ -1,0 +1,36 @@
+{
+  "outbox": {
+    "exit": 0,
+    "count": 0,
+    "stderr": ""
+  },
+  "endpoints": {
+    "exit": 0,
+    "count": 0,
+    "stderr": ""
+  },
+  "deliveries": {
+    "exit": 0,
+    "count": 0,
+    "stderr": ""
+  },
+  "failed_jobs": {
+    "exit": 0,
+    "count": 0,
+    "stderr": ""
+  },
+  "redis_default": {
+    "pending": 0,
+    "delayed": 0,
+    "reserved": 0
+  },
+  "redis_load-health": {
+    "pending": 0,
+    "delayed": 0,
+    "reserved": 0
+  },
+  "sut_health": {
+    "status": 200,
+    "body": "{\"status\":\"ok\"}"
+  }
+}

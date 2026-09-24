@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -92,21 +93,23 @@ final class OutboxRelay
     }
 
     /**
-     * The active endpoints whose subscription list contains this event. events is a
-     * JSON array, so subscription is matched in PHP to stay portable across drivers.
+     * Read only matching active endpoint IDs in key order and bounded pages. Laravel
+     * compiles the JSON membership predicate for each supported database driver.
      *
-     * @return Collection<int, WebhookEndpoint>
+     * @return LazyCollection<int, WebhookEndpoint>
      */
-    private function subscribedEndpoints(string $event): Collection
+    private function subscribedEndpoints(string $event): LazyCollection
     {
         /** @var class-string<WebhookEndpoint> $endpointClass */
         $endpointClass = Config::webhookEndpointModel();
 
+        $key = (new $endpointClass)->getKeyName();
+
         return $endpointClass::query()
             ->active()
-            ->get()
-            ->filter(static fn (WebhookEndpoint $endpoint): bool => in_array($event, $endpoint->events, true))
-            ->values();
+            ->whereJsonContains('events', $event)
+            ->select($key)
+            ->lazyById(100);
     }
 
     private function createDelivery(Outbox $message, WebhookEndpoint $endpoint): WebhookDelivery
