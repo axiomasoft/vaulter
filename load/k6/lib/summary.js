@@ -30,7 +30,11 @@ function meta(profile, runs) {
  *   path -> string), so a scenario can spread this straight into its own `handleSummary`.
  */
 export function summaryOutputs(data, opts = {}) {
-  const enriched = { ...data, meta: meta(opts.profile, opts.runs) };
+  const runMeta = meta(opts.profile, opts.runs);
+  if (opts.expectedClassBKeys) {
+    runMeta.expected_class_b_keys = opts.expectedClassBKeys;
+  }
+  const enriched = { ...data, meta: runMeta };
 
   return {
     // /results is a dedicated writable mount (docker-compose.load.yml) — `/scripts`

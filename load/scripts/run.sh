@@ -21,6 +21,10 @@ TIER="${TIER:-S0}"
 ENV_FILE="env/${TIER}.env"
 TARGET="${1:-smoke}"
 
+if [ "$TARGET" = "--p8-matrix" ]; then
+    exec "$(dirname "$0")/p8-metric-matrix.sh"
+fi
+
 if [ ! -f "$ENV_FILE" ]; then
     echo "Unknown TIER=${TIER} — expected one of: $(ls env | sed 's/\.env$//' | tr '\n' ' ')" >&2
     exit 1
@@ -57,7 +61,7 @@ GIT_COMMIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 case "$TARGET" in
     smoke) SCRIPT=smoke.js ;;
-    smoke-perf|regression)
+    smoke-perf|regression|lab)
         # P2.6 — real thresholds.js binding, deferred from P2.5 (README "Not wired into
         # smoke.js on purpose"): a sustained `constant-vus` scenario (mixed.js) is the
         # only one with a meaningful med/min distribution for the class-A streaming
@@ -71,7 +75,13 @@ case "$TARGET" in
         # 60s (vs. the 30s scenario default) — `slo-gates.md` §7's "≤ 6 мин" is the job
         # budget (checkout+seed+run+assert), not the k6 run alone; a sustained-run
         # threshold needs more than one sample per streaming metric to mean anything.
-        DURATION="${DURATION:-60s}"
+        # Lab needs a longer declared window for operation-specific class-B trends.
+        # The summary gate still marks sparse trends unevaluated by sample count.
+        if [ "$TARGET" = "lab" ]; then
+            DURATION="${DURATION:-180s}"
+        else
+            DURATION="${DURATION:-60s}"
+        fi
         ;;
     *) SCRIPT="$TARGET" ;;
 esac
@@ -100,10 +110,14 @@ import { summaryOutputs } from './lib/summary.js';
 export const options = {
     ...baseOptions,
     thresholds: thresholdsFor(__ENV.LOAD_PROFILE, TIER),
+    summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'count'],
 };
 
 export function handleSummary(data) {
-    return summaryOutputs(data, { profile: __ENV.LOAD_PROFILE });
+    const expectedClassBKeys = __ENV.LOAD_PROFILE === 'lab'
+        ? Object.keys(thresholdsFor(__ENV.LOAD_PROFILE, TIER)).filter((key) => key.startsWith('http_req_duration{op:'))
+        : [];
+    return summaryOutputs(data, { profile: __ENV.LOAD_PROFILE, expectedClassBKeys });
 }
 
 export { setup, interactive, upload, download };
