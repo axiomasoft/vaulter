@@ -80,8 +80,8 @@ jobs:
   # a KILLED mutant. Every mutant was "killed"; the 100.00 % this lane reported was an artefact.
   # Proof: plans/VLT-MUT/findings/P0.1-parallel-defect.md.
   #
-  # TWO cold runs and one ID-union gate (VLT-MUT D6). media has driver-conditional tests in BOTH directions —
-  # 3 skip on Postgres, 3 skip on SQLite — so neither driver alone covers the package, and
+  # TWO cold runs and one ID-union gate (VLT-MUT D6). media has driver-conditional tests in BOTH directions,
+  # so neither driver alone covers the package and
   # `--covered-only` would leave the other driver's branches ungated. The final score merges
   # Pest cache results by mutation ID: killed by either required driver means killed in the union.
   media-mutation:
