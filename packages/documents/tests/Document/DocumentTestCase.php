@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Tests\Document;
 
 use Illuminate\Foundation\Application;
+use Vaulter\Documents\Tests\Concerns\PreparesDocumentVersionSchema;
 use Vaulter\Documents\Tests\TestCase;
 
 /**
@@ -15,6 +16,8 @@ use Vaulter\Documents\Tests\TestCase;
  */
 abstract class DocumentTestCase extends TestCase
 {
+    use PreparesDocumentVersionSchema;
+
     /**
      * @param Application $app
      */

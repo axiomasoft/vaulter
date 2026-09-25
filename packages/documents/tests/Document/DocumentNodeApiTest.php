@@ -97,3 +97,72 @@ it('rejects a content write on a non-document node', function (): void {
         'content' => ['type' => 'doc', 'content' => []],
     ])->assertStatus(500); // NotADocumentNodeException (no domain HTTP handler in test app)
 });
+
+it('rejects invalid document-create boundaries without persisting a node', function (): void {
+    $storage = documentStorage();
+    $url = 'api/vaulter/storages/'.$storage->getKey().'/documents';
+
+    $cases = [
+        'missing name' => [[], 'name'],
+        'non-string name' => [['name' => ['Spec']], 'name'],
+        'unknown format' => [['name' => 'Spec', 'format' => 'pdf'], 'format'],
+        'non-string mime' => [['name' => 'Spec', 'mime' => ['text/plain']], 'mime'],
+        'non-editable mime' => [['name' => 'Spec', 'mime' => 'application/pdf'], 'mime'],
+        'non-array content' => [['name' => 'Spec', 'content' => 'plain text'], 'content'],
+        'non-document rich-text root' => [['name' => 'Spec', 'content' => ['type' => 'paragraph']], 'content.type'],
+    ];
+
+    foreach ($cases as $case => [$payload, $field]) {
+        $this->postJson($url, $payload)
+            ->assertUnprocessable("{$case} should fail validation")
+            ->assertJsonValidationErrors($field);
+    }
+});
+
+it('rejects invalid autosave boundaries without changing the current version', function (): void {
+    $storage = documentStorage();
+    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+        'name' => 'Spec',
+        'content' => ['type' => 'doc', 'content' => []],
+    ])->assertCreated()->json('data.id');
+    $url = 'api/vaulter/nodes/'.$nodeId.'/content';
+
+    $cases = [
+        'missing content' => [[], 'content'],
+        'non-array content' => [['content' => 'plain text'], 'content'],
+        'non-document rich-text root' => [['content' => ['type' => 'paragraph']], 'content.type'],
+        'non-string Yjs state' => [['content' => ['type' => 'doc'], 'yjs_state' => []], 'yjs_state'],
+    ];
+
+    foreach ($cases as $case => [$payload, $field]) {
+        $this->patchJson($url, $payload)
+            ->assertUnprocessable("{$case} should fail validation")
+            ->assertJsonValidationErrors($field);
+    }
+
+    $this->getJson($url)
+        ->assertOk()
+        ->assertJsonPath('data.version_no', 1);
+});
+
+it('enforces named-version label and boolean boundaries', function (): void {
+    $storage = documentStorage();
+    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+        'name' => 'Spec',
+        'content' => ['type' => 'doc', 'content' => []],
+    ])->assertCreated()->json('data.id');
+    $url = 'api/vaulter/nodes/'.$nodeId.'/document-versions';
+
+    $this->postJson($url, [])->assertUnprocessable()->assertJsonValidationErrors('label');
+    $this->postJson($url, ['label' => str_repeat('x', 256)])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('label');
+    $this->postJson($url, ['label' => 'Review', 'keep_forever' => 'sometimes'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('keep_forever');
+
+    $this->postJson($url, ['label' => str_repeat('x', 255), 'keep_forever' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.snapshot_label', str_repeat('x', 255))
+        ->assertJsonPath('data.keep_forever', true);
+});

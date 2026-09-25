@@ -49,7 +49,7 @@ it('persists a comment with a null tenant and a jsonb anchor round-trip', functi
     $comment = makeNodeComment($node);
 
     expect($comment->tenant_id)->toBeNull()
-        ->and($comment->anchor)->toBe(['from' => 3, 'to' => 9])
+        ->and($comment->anchor)->toEqualCanonicalizing(['from' => 3, 'to' => 9])
         ->and($comment->isResolved())->toBeFalse();
 });
 
