@@ -1,0 +1,23 @@
+	Command being timed: "sh -c APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=55432 DB_DATABASE=vaulter_r18_media_test DB_USERNAME=vaulter DB_PASSWORD=secret PCOV_ENABLED=1 XDEBUG_MODE=off php8.4 vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=0"
+	User time (seconds): 185.65
+	System time (seconds): 34.93
+	Percent of CPU this job got: 18%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 19:51.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 116824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 163
+	Minor (reclaiming a frame) page faults: 7089374
+	Voluntary context switches: 2327803
+	Involuntary context switches: 15578
+	Swaps: 0
+	File system inputs: 29520
+	File system outputs: 107080
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
