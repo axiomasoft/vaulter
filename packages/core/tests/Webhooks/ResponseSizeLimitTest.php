@@ -18,6 +18,7 @@ it('refuses a declared response body above the limit, F-P1.7-06', function (): v
 
 it('allows a small, absent or non-numeric declared body, F-P1.7-06', function (): void {
     ResponseSizeLimit::assertContentLengthWithinLimit('100', 65536);
+    ResponseSizeLimit::assertContentLengthWithinLimit('65536', 65536);
     ResponseSizeLimit::assertContentLengthWithinLimit(null, 65536);
     ResponseSizeLimit::assertContentLengthWithinLimit('not-a-number', 65536);
 
@@ -25,4 +26,9 @@ it('allows a small, absent or non-numeric declared body, F-P1.7-06', function ()
     ResponseSizeLimit::assertContentLengthWithinLimit((string) (1024 * 1024), 0);
 
     expect(true)->toBeTrue();
+});
+
+it('enforces the smallest positive ceiling, F-P1.7-06', function (): void {
+    expect(fn () => ResponseSizeLimit::assertContentLengthWithinLimit('2', 1))
+        ->toThrow(WebhookResponseTooLargeException::class);
 });

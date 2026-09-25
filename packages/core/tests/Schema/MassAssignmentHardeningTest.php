@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -117,9 +118,14 @@ it('never mass-assigns signing_secret on WebhookEndpoint via fill() or create() 
 
     // 'events' is included so signing_secret is the ONLY column the guard drops —
     // isolating the NOT NULL failure to the attribute this test pins.
-    expect(fn () => WebhookEndpoint::query()->create([
-        'url' => 'https://hooks.test/receive-2',
-        'events' => ['node.created'],
-        'signing_secret' => 'ATTACKER-CHOSEN-SECRET-2',
-    ]))->toThrow(QueryException::class);
+    // PostgreSQL marks the current transaction failed after a constraint error.
+    // Let Laravel observe the exception inside a nested transaction so it rolls
+    // back to the savepoint before Pest catches the expected QueryException.
+    expect(fn () => DB::transaction(
+        fn (): WebhookEndpoint => WebhookEndpoint::query()->create([
+            'url' => 'https://hooks.test/receive-2',
+            'events' => ['node.created'],
+            'signing_secret' => 'ATTACKER-CHOSEN-SECRET-2',
+        ]),
+    ))->toThrow(QueryException::class);
 });
