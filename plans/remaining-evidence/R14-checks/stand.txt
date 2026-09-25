@@ -1,0 +1,1 @@
+image=vaulter-load-app image_id=sha256:d8714c578c47299f4a07604fe2cd8bb31e4fa47d46343dc281d7cfb48f16c166 memory=2147483648 cpuset=0,2
