@@ -1,0 +1,12 @@
+run_id=R19-filament-sqlite-cold-20260926T164526Z
+stamp=20260926T164526Z
+commit=70ea33bad674ff4b098ac2494de0f9d606ec1040
+workdir=/home/vostrikov/projects/packages/vaulter/packages/filament
+driver=sqlite
+db_database=:memory:
+php=PHP 8.4.26 (cli) (built: Sep 24 2026 17:15:37) (NTS)
+pcov=pcov
+plugin=v4.0.1\td9b32b60b2385e1688a68cc227594738ec26d96c
+composer_lock_sha256=a3b127b8002060e34d52eddbe507386821dfbf9de21535b27b65d2b625af8768
+source_rollup_sha256=ca5e7692d7888932a98d80561386bf48454d24410b3c91db54caa9c495076ad6
+command=/usr/bin/php8.4 -d xdebug.mode=off vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95

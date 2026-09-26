@@ -1,0 +1,81 @@
+{
+  "package": "filament",
+  "driver": "sqlite",
+  "stamp": "20260926T164526Z",
+  "exit_code": 0,
+  "parallel": false,
+  "min_flag": 95,
+  "initial_tests": {
+    "failed": null,
+    "skipped": "1",
+    "passed": "75"
+  },
+  "mutations": {
+    "tested_killed": 170,
+    "timeout": 0,
+    "untested_escaped": 8,
+    "uncovered": 0,
+    "pending": 0,
+    "total_from_summary": 178
+  },
+  "score_percent_reported": 95.51,
+  "score_percent_recomputed": 95.51,
+  "duration_seconds_reported": 100.96,
+  "escaped": [
+    {
+      "path": "src/Resources/NodeGrantResource.php",
+      "line": 258,
+      "mutator": "EmptyStringToNotEmpty",
+      "id": "9195292f5046a697"
+    },
+    {
+      "path": "src/Resources/NodeGrantResource.php",
+      "line": 314,
+      "mutator": "RemoveEarlyReturn",
+      "id": "e22376b0699b9bcf"
+    },
+    {
+      "path": "src/Resources/NodeGrantResource.php",
+      "line": 349,
+      "mutator": "RemoveStringCast",
+      "id": "328332f25cea08c2"
+    },
+    {
+      "path": "src/Resources/NodeGrantResource.php",
+      "line": 351,
+      "mutator": "RemoveIntegerCast",
+      "id": "223dc87412df7de7"
+    },
+    {
+      "path": "src/Resources/NodeShareResource.php",
+      "line": 270,
+      "mutator": "EmptyStringToNotEmpty",
+      "id": "769e5d0a7453ce88"
+    },
+    {
+      "path": "src/Resources/NodeShareResource.php",
+      "line": 278,
+      "mutator": "IncrementInteger",
+      "id": "b448c5a7fb6f2cdf"
+    },
+    {
+      "path": "src/Resources/NodeShareResource.php",
+      "line": 282,
+      "mutator": "EmptyStringToNotEmpty",
+      "id": "305c0cc07820b10b"
+    },
+    {
+      "path": "src/Resources/NodeShareResource.php",
+      "line": 355,
+      "mutator": "RemoveEarlyReturn",
+      "id": "e7532a411c60c34a"
+    }
+  ],
+  "uncovered_rows": [],
+  "cache_result_counts": {
+    "tested": 170,
+    "untested": 8
+  },
+  "cache_result_ids": 178,
+  "log": "/home/vostrikov/projects/packages/vaulter/plans/remaining-evidence/R19-checks/sqlite-cold-70ea33b/pest.log"
+}

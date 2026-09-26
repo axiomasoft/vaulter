@@ -92,8 +92,8 @@ jobs:
       # SQLite — единственный драйвер: драйвер-условных тестов у filament нет (VLT-MUT D6).
       #
       # R19 pins the final target at 95 after adding behavioral contracts for the 2026-09-24 cold
-      # baseline's real escaped mutants. The current-source cold score is intentionally measured in
-      # the later exclusive campaign; this code-stage change does not claim that measurement.
+      # baseline's real escaped mutants. A cold sequential SQLite run on the final package source
+      # killed 170/178 mutants (95.51%); see plans/remaining-evidence/R19.md.
       - name: Mutation testing
         working-directory: packages/filament
         run: vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95
