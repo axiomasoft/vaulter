@@ -12,8 +12,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -170,9 +172,9 @@ def digest_tree(root: Path) -> str:
     return hasher.hexdigest()
 
 
-def http_json(method: str, path: str, body: bytes | None = None, headers: dict | None = None) -> tuple[int, dict | str]:
+def http_json(method: str, path: str, body: bytes | None = None, headers: dict | None = None) -> tuple[int, dict | str, str | None]:
     request = urllib.request.Request(APP_URL + path, data=body, method=method)
-    request.add_header('X-Load-Actor', '1')
+    request.add_header('X-Load-Actor', str((headers or {}).get('X-Load-Actor', '1')))
     request.add_header('Accept', 'application/json')
     for key, value in (headers or {}).items():
         request.add_header(key, value)
@@ -180,14 +182,16 @@ def http_json(method: str, path: str, body: bytes | None = None, headers: dict |
         with urllib.request.urlopen(request, timeout=30) as response:
             raw = response.read()
             status = response.status
+            retry_after = response.headers.get('Retry-After')
     except urllib.error.HTTPError as exc:
         raw = exc.read()
         status = exc.code
+        retry_after = exc.headers.get('Retry-After')
     try:
         parsed = json.loads(raw.decode('utf-8')) if raw else {}
     except (UnicodeError, json.JSONDecodeError):
         parsed = raw.decode('utf-8', 'replace')[:500]
-    return status, parsed
+    return status, parsed, retry_after
 
 
 def counts() -> dict[str, int]:
@@ -309,6 +313,10 @@ def preflight(out: Path, run_id: str) -> dict:
         raise gate.EvidenceInvalid(f'compose ps failed: {health.stderr.strip()[:300]}')
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip()
     dirty = subprocess.run(['git', 'diff', '--quiet'], cwd=REPO, check=False).returncode != 0
+    source = hashlib.sha256()
+    for path in (LOAD / 'gates' / 'p5_live_matrix.py', LOAD / 'k6' / 'scenarios' / 'concurrency-live.js'):
+        source.update(str(path.relative_to(REPO)).encode())
+        source.update(path.read_bytes())
     images = {}
     for name in ('vaulter-load-postgres-1', 'vaulter-load-pgbouncer-1', 'vaulter-load-app-1'):
         inspected = subprocess.run(
@@ -320,6 +328,7 @@ def preflight(out: Path, run_id: str) -> dict:
     fingerprint = {
         'git_sha': sha,
         'git_dirty': dirty,
+        'source_digest': source.hexdigest(),
         'images': images,
         'pgbouncer': pool,
         'clock': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -336,7 +345,7 @@ def preflight(out: Path, run_id: str) -> dict:
 
 def ensure_document() -> str:
     name = f'p5-collab-{time.time_ns()}'
-    status, payload = http_json(
+    status, payload, _ = http_json(
         'POST',
         '/api/vaulter/storages/1/documents',
         json.dumps({'name': name, 'content': {'type': 'doc', 'content': []}}).encode(),
@@ -392,18 +401,27 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
     elif cell['plane'] == 'primitive-control':
         actor = run_primitive(cell)
     else:
-        actor = run_k6(cell, attempt, document_id, tree, out)
-    sample_pg = postgres_snapshot()
-    sample_pool = pgbouncer_snapshot()
+        actor = run_k6(cell, attempt, run_id, document_id, tree, out)
+    during = actor.get('during_samples') or []
+    chosen = max(
+        during,
+        key=lambda item: (
+            any(lock.get('granted') is False for lock in item['postgres'].get('locks', [])),
+            item['pgbouncer']['cl_waiting'],
+            len(item['postgres'].get('locks', [])),
+        ),
+    ) if during else None
+    sample_pg = chosen['postgres'] if chosen else postgres_snapshot()
+    sample_pool = chosen['pgbouncer'] if chosen else pgbouncer_snapshot()
     post_deadlocks = int(psql('SELECT deadlocks FROM pg_stat_database WHERE datname = current_database();').strip())
     post_cursor = log_cursor()
     sample_ns = clock()
     post_ns = sample_ns
     (out / 'postgres' / f"{cell['cell_id']}.a{attempt}.json").write_text(
-        json.dumps(sample_pg) + '\n', encoding='utf-8',
+        json.dumps({'samples': [{'monotonic_ns': item['monotonic_ns'], **item['postgres']} for item in during]} if during else sample_pg) + '\n', encoding='utf-8',
     )
     (out / 'pgbouncer' / f"{cell['cell_id']}.a{attempt}.json").write_text(
-        json.dumps({'pre': pre_pool, 'during': sample_pool}, sort_keys=True) + '\n', encoding='utf-8',
+        json.dumps({'pre': pre_pool, 'during': [{'monotonic_ns': item['monotonic_ns'], **item['pgbouncer']} for item in during] if during else [sample_pool]}, sort_keys=True) + '\n', encoding='utf-8',
     )
     waits = {
         'db_lock_wait_seconds': actor.get('db_lock_wait_seconds'),
@@ -429,6 +447,9 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
         'post': {'deadlocks': post_deadlocks, 'log_cursor': post_cursor, 'monotonic_ns': post_ns},
         'waits': waits,
         'statuses': actor.get('statuses', {}),
+        'http_responses': actor.get('http_responses', []),
+        'actor_ids': actor.get('actor_ids', []),
+        'during_sample_count': len(during),
         'http_5xx': actor.get('http_5xx', 0),
     }
     if cell['shape'] == 'try-lock-nowait':
@@ -468,22 +489,12 @@ def observations_for(row, sample_pg, sample_pool, actor, sample_ns) -> list[dict
         rows.append(item)
 
     add('barrier', {'barrier_skew_ns': skew_ns, 'pid': None}, 'orchestrator')
-    locks = sample_pg.get('locks') or []
-    first_lock = locks[0] if locks else {}
-    add('pg_locks', {'pid': first_lock.get('pid'), 'granted': first_lock.get('granted', True)})
-    activity = sample_pg.get('activity') or []
-    first_activity = activity[0] if activity else {}
-    add('pg_stat_activity', {
-        'pid': first_activity.get('pid'),
-        'wait_event_type': first_activity.get('wait_event_type'),
-    })
-    blockers = sample_pg.get('blockers') or []
-    blocker = blockers[0] if blockers else {'pid': None, 'blocker_pids': []}
-    pids = [pid for pid in (blocker.get('blocker_pids') or []) if isinstance(pid, int) and pid > 0]
-    waiter = blocker.get('pid')
-    if waiter in pids:
-        pids = [pid for pid in pids if pid != waiter]
-    add('pg_blocking_pids', {'pid': waiter, 'blocker_pids': pids})
+    locks = sample_pg.get('locks', [])
+    add('pg_locks', {'pid': None, 'locks': locks})
+    activity = sample_pg.get('activity', [])
+    add('pg_stat_activity', {'pid': None, 'activity': activity})
+    blockers = sample_pg.get('blockers', [])
+    add('pg_blocking_pids', {'pid': None, 'blockers': blockers, 'blocker_pids': [pid for item in blockers for pid in item.get('blocker_pids', [])]})
     add('pgbouncer_pools', {
         'pid': None,
         'cl_waiting': sample_pool['cl_waiting'],
@@ -522,6 +533,23 @@ def run_checked(argv: list[str], timeout: int) -> subprocess.CompletedProcess[st
     return subprocess.CompletedProcess(argv, process.returncode or 0, stdout, stderr)
 
 
+def capture_during(action) -> tuple[subprocess.CompletedProcess, list[dict]]:
+    samples = []
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(action)
+        while not future.done():
+            pg = postgres_snapshot()
+            pool = pgbouncer_snapshot()
+            # A collector that finishes after the actor is only a post sample.
+            if not future.done():
+                samples.append({'monotonic_ns': time.monotonic_ns(), 'postgres': pg, 'pgbouncer': pool})
+            time.sleep(0.05)
+        completed = future.result()
+    if not samples:
+        raise gate.EvidenceInvalid('no completed lock/pool sample during actor process')
+    return completed, samples
+
+
 def run_primitive(cell: dict) -> dict:
     release_control_locks()
     n = cell['n']
@@ -548,11 +576,11 @@ while [ "$i" -lt {n} ]; do
 done
 wait
 '''
-    completed = run_checked(
+    completed, during = capture_during(lambda: run_checked(
         ['docker', 'compose', '-f', str(COMPOSE_FILE), '--env-file', str(ENV_FILE),
          'exec', '-T', '-e', 'PGPASSWORD=secret', 'postgres', 'sh', '-c', script],
         180,
-    )
+    ))
     if completed.returncode != 0:
         raise gate.EvidenceInvalid(f'primitive actors failed: {completed.stderr.strip()[:300]}')
     summary = psql(f"SELECT count(*) FROM generate_series(0,{n - 1});").strip()
@@ -581,8 +609,9 @@ wait
         'refused_count': refused,
         'backend_pids': [],
         'http_duration_seconds': None,
-        'pgbouncer_wait_seconds': 0,
-        'db_lock_wait_seconds': 0,
+        'during_samples': during,
+        'pgbouncer_wait_seconds': max(item['pgbouncer']['maxwait'] for item in during),
+        'db_lock_wait_seconds': None,
         'barrier_skew_seconds': 0,
         'statuses': {'ok': lines.count('ok'), 'fail': lines.count('fail')},
         'http_5xx': 0,
@@ -615,11 +644,11 @@ wait
 '''
     started = time.monotonic()
     try:
-        completed = run_checked(
+        completed, during = capture_during(lambda: run_checked(
             ['docker', 'compose', '-f', str(COMPOSE_FILE), '--env-file', str(ENV_FILE),
              'exec', '-T', '-e', 'PGPASSWORD=secret', 'postgres', 'sh', '-c', script],
             180,
-        )
+        ))
     finally:
         release_control_locks()
     elapsed = time.monotonic() - started
@@ -628,7 +657,8 @@ wait
     return {
         'backend_pids': [],
         'http_duration_seconds': None,
-        'pgbouncer_wait_seconds': elapsed,
+        'during_samples': during,
+        'pgbouncer_wait_seconds': max(item['pgbouncer']['maxwait'] for item in during),
         'db_lock_wait_seconds': None,
         'barrier_skew_seconds': 0,
         'statuses': {'elapsed_seconds': round(elapsed, 3)},
@@ -636,13 +666,39 @@ wait
     }
 
 
-def run_k6(cell, attempt, document_id, tree, out) -> dict:
+def actor_base(run_id: str, cell: dict, attempt: int) -> int:
+    run_slot = int(hashlib.sha256(run_id.encode()).hexdigest()[:4], 16) % 1000
+    cell_slot = next(i for i, item in enumerate(gate.catalog()) if item['cell_id'] == cell['cell_id'])
+    return 1_000_000 + run_slot * 100_000 + cell_slot * 1_000 + attempt * 250
+
+
+def grant_actors(base: int, n: int) -> None:
+    # Copy the seed owner's root grant: distinct actors retain shared-resource access.
+    sql = (
+        "WITH root AS (SELECT root_node_id FROM v_storages WHERE id = 1), "
+        "source AS (SELECT g.* FROM v_node_grants g JOIN root ON root.root_node_id = g.node_id "
+        "WHERE g.subject_id = 1 AND g.level = 'owner' LIMIT 1) "
+        "INSERT INTO v_node_grants (node_id, subject_type, subject_id, level, permissions, effect, scope, created_at, updated_at) "
+        "SELECT source.node_id, source.subject_type, actor_id, source.level, source.permissions, "
+        "source.effect, source.scope, now(), now() FROM source "
+        f"CROSS JOIN generate_series({base}, {base + n}) AS actor_id ON CONFLICT DO NOTHING RETURNING subject_id;"
+    )
+    inserted = [line.strip() for line in psql(sql).splitlines() if line.strip().isdigit()]
+    if len(inserted) != n + 1:
+        raise gate.EvidenceInvalid(f'actor grant seed inserted {len(inserted)} of {n + 1}')
+
+
+def run_k6(cell, attempt, run_id, document_id, tree, out) -> dict:
     summary = LOAD / 'results' / f"p5-{cell['cell_id']}-a{attempt}.json"
     summary.parent.mkdir(parents=True, exist_ok=True)
+    summary.unlink(missing_ok=True)
+    base = actor_base(run_id, cell, attempt)
+    grant_actors(base, cell['n'])
     env = {
         'P5_SURFACE': cell['surface'],
         'P5_SHAPE': cell['shape'],
         'P5_N': str(cell['n']),
+        'P5_ACTOR_BASE': str(base),
         'P5_DOCUMENT_ID': document_id,
         'P5_NODE_IDS': tree['nodes'],
         'P5_MOVE_TARGET': tree['parent'],
@@ -651,20 +707,24 @@ def run_k6(cell, attempt, document_id, tree, out) -> dict:
         'P5_MAX_DURATION': '90s',
     }
     if cell['shape'] in {'same-resource', 'live-patch-overlap'}:
-        upload_id, setup_status = create_shared_upload(cell)
+        upload_id, setup_response = create_shared_upload(cell, base + cell['n'])
+        setup_status = setup_response['status']
         if upload_id is None:
             return {
                 'backend_pids': [],
+                'actor_ids': [],
+                'during_samples': [],
+                'http_responses': [setup_response],
                 'http_duration_seconds': 0,
                 'pgbouncer_wait_seconds': None,
                 'db_lock_wait_seconds': None,
                 'barrier_skew_seconds': 0,
                 'statuses': {
                     '2xx': 0,
-                    '409': 0,
+                    '409': 1 if setup_status == 409 else 0,
                     '429': 1 if setup_status == 429 else 0,
                     '5xx': 1 if setup_status >= 500 else 0,
-                    'other': 0 if setup_status in {429} or setup_status >= 500 else 1,
+                    'other': 0 if setup_status in {409, 429} or setup_status >= 500 else 1,
                 },
                 'http_5xx': 1 if setup_status >= 500 else 0,
             }
@@ -675,8 +735,14 @@ def run_k6(cell, attempt, document_id, tree, out) -> dict:
         argv.extend(['-e', f'{key}={value}'])
     argv.extend(['k6', 'run', '--out', 'experimental-prometheus-rw', '/scripts/scenarios/concurrency-live.js'])
     started = time.monotonic()
-    completed = subprocess.run(argv, cwd=LOAD, text=True, capture_output=True, timeout=150, check=False)
+    completed, during = capture_during(lambda: subprocess.run(
+        argv, cwd=LOAD, text=True, capture_output=True, timeout=150, check=False,
+    ))
     elapsed = time.monotonic() - started
+    (out / 'k6' / f"{cell['cell_id']}.a{attempt}.stdout.log").write_text(completed.stdout, encoding='utf-8')
+    (out / 'k6' / f"{cell['cell_id']}.a{attempt}.stderr.log").write_text(completed.stderr, encoding='utf-8')
+    if completed.returncode != 0:
+        raise gate.EvidenceInvalid(f'k6 exited {completed.returncode}: {completed.stderr.strip()[:300]}')
     if not summary.exists():
         raise gate.EvidenceInvalid(f'k6 summary missing: {completed.stderr.strip()[:300]}')
     target = out / 'k6' / summary.name
@@ -689,9 +755,15 @@ def run_k6(cell, attempt, document_id, tree, out) -> dict:
         values = metric.get('values') or {}
         return int(values.get('count') or 0)
 
+    responses = response_evidence(completed.stdout + '\n' + completed.stderr, metrics, base, cell['n'])
+    if cell['shape'] in {'same-resource', 'live-patch-overlap'}:
+        responses.insert(0, setup_response)
     http_5xx = count('p5_status_5xx')
     return {
         'backend_pids': [],
+        'actor_ids': list(range(base, base + cell['n'])),
+        'during_samples': during,
+        'http_responses': responses,
         'http_duration_seconds': elapsed,
         'pgbouncer_wait_seconds': None,
         'db_lock_wait_seconds': None,
@@ -707,18 +779,46 @@ def run_k6(cell, attempt, document_id, tree, out) -> dict:
     }
 
 
-def create_shared_upload(cell: dict) -> tuple[str | None, int]:
+def response_evidence(log: str, metrics: dict, base: int, n: int) -> list[dict]:
+    responses = []
+    totals = {name: 0 for name in ('2xx', '409', '429', '5xx', 'other')}
+    for match in re.finditer(r'P5_HTTP[|](\d+)[|]([a-z-]+)[|](\d+)[|]([^|\r\n]*)[|]END', log):
+        actor_id, phase, status, retry_after = match.groups()
+        actor_id, status = int(actor_id), int(status)
+        if actor_id not in range(base, base + n) or phase not in {'create', 'operation'}:
+            raise gate.EvidenceInvalid('HTTP response has an unexpected actor or phase')
+        category = '2xx' if 200 <= status < 300 else str(status) if status in {409, 429} else '5xx' if status >= 500 else 'other'
+        totals[category] += 1
+        responses.append({'actor_id': actor_id, 'phase': phase, 'status': status, 'retry_after': retry_after or None})
+    if not responses:
+        raise gate.EvidenceInvalid('no captured product HTTP responses')
+    for category, total in totals.items():
+        measured = int(((metrics.get('p5_status_' + category) or {}).get('values') or {}).get('count') or 0)
+        if measured != total:
+            raise gate.EvidenceInvalid(f'HTTP {category} capture {total} != metric count {measured}')
+    return responses
+
+
+def create_shared_upload(cell: dict, setup_actor: int) -> tuple[str | None, dict]:
     body = json.dumps({'name': f"p5-shared-{cell['shape']}-{time.time_ns()}.bin", 'total_size_bytes': 4}).encode()
-    headers = {'Content-Type': 'application/json', 'Tus-Resumable': '1.0.0'}
-    status, payload = http_json('POST', '/api/vaulter/storages/1/resumable-uploads', body, headers)
-    if status == 429:
-        # The setup request shares the actor's per-minute budget. Wait out one
-        # window so the cell's own actors are the measured burst.
-        time.sleep(60)
-        status, payload = http_json('POST', '/api/vaulter/storages/1/resumable-uploads', body, headers)
+    headers = {'Content-Type': 'application/json', 'Tus-Resumable': '1.0.0', 'X-Load-Actor': str(setup_actor)}
+    status, payload, retry_after = http_json('POST', '/api/vaulter/storages/1/resumable-uploads', body, headers)
+    evidence = {'actor_id': setup_actor, 'phase': 'setup', 'status': status, 'retry_after': retry_after}
     if status != 201 or not isinstance(payload, dict):
-        return None, status
-    return str(payload['data']['upload_id']), status
+        return None, evidence
+    upload_id = str(payload['data']['upload_id'])
+    # System-minted sessions (created_by NULL) use the real storage ability gate.
+    # Otherwise every distinct VU is rejected before the session lock is reached.
+    import uuid
+    upload_id = str(uuid.UUID(upload_id))
+    changed = psql(
+        f"UPDATE v_upload_sessions SET created_by = NULL WHERE upload_id = '{upload_id}' "
+        f"AND created_by = {setup_actor} RETURNING upload_id;"
+    ).splitlines()
+    if upload_id not in changed:
+        raise gate.EvidenceInvalid('shared upload ownership fixture was not prepared')
+    evidence['ownership_fixture'] = 'system-minted-created_by-null'
+    return upload_id, evidence
 
 
 def run_sweeper(cell, attempt, out) -> dict:
@@ -770,11 +870,16 @@ def verdict_for(cell: dict, rows: list[dict]) -> dict:
     success = sum(int((row.get('statuses') or {}).get('2xx') or 0) for row in rows)
     if http_5xx:
         slo = 'red'
+    elif cell['shape'] == 'int4-collision':
+        slo = 'unevaluated'  # A status-only run cannot establish a CAS key collision.
     elif cell['shape'] == 'same-resource':
         slo = 'not-a-5pct-budget'
     elif cell['plane'] in {'primitive-control', 'dirty-cardinality-probe'}:
         slo = 'not-a-product-slo'
-    elif cell['plane'] == 'product-realistic' and success == 0:
+    elif cell['plane'] == 'product-realistic' and (success == 0 or not any(
+        response['phase'] == 'operation' and 200 <= response['status'] < 300
+        for row in rows for response in row.get('http_responses', [])
+    )):
         slo = 'red'
     else:
         slo = 'green'
@@ -784,6 +889,7 @@ def verdict_for(cell: dict, rows: list[dict]) -> dict:
         'slo': slo,
         'attempts': len(rows),
         'http_5xx': http_5xx,
+        'collision_verdict': 'unconfirmed' if cell['shape'] == 'int4-collision' else None,
     }
 
 

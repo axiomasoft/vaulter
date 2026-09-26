@@ -9,7 +9,7 @@ const API = `${(__ENV.BASE_URL || 'http://app:8080').replace(/\/+$/, '')}/api/va
 const SURFACE = __ENV.P5_SURFACE || '';
 const SHAPE = __ENV.P5_SHAPE || '';
 const N = Number(__ENV.P5_N || '1');
-const ACTOR = __ENV.P5_ACTOR || '1';
+const ACTOR_BASE = Number(__ENV.P5_ACTOR_BASE || '1');
 const STORAGE = __ENV.P5_STORAGE_ID || '1';
 const SHARED_UPLOAD = __ENV.P5_UPLOAD_ID || '';
 const DOCUMENT = __ENV.P5_DOCUMENT_ID || '';
@@ -38,12 +38,16 @@ export const options = {
 
 function headers(extra) {
   return Object.assign({
-    'X-Load-Actor': ACTOR,
+    'X-Load-Actor': String(ACTOR_BASE + exec.vu.idInTest - 1),
     'Content-Type': 'application/json',
   }, extra || {});
 }
 
-function tally(status) {
+function tally(response, phase) {
+  const status = response.status;
+  const actor = ACTOR_BASE + exec.vu.idInTest - 1;
+  const retryAfter = response.headers['Retry-After'] || '';
+  console.log(`P5_HTTP|${actor}|${phase}|${status}|${retryAfter}|END`);
   if (status >= 200 && status < 300) {
     c2xx.add(1);
   } else if (status === 409) {
@@ -63,7 +67,7 @@ function createUpload(name, bytes) {
     JSON.stringify({ name, total_size_bytes: bytes }),
     { headers: headers({ 'Tus-Resumable': '1.0.0' }), timeout: '30s' },
   );
-  tally(created.status);
+  tally(created, 'create');
   if (created.status !== 201) {
     return null;
   }
@@ -79,7 +83,7 @@ function patchTus(uploadId, payload) {
     }),
     timeout: '30s',
   });
-  tally(response.status);
+  tally(response, 'operation');
   return response;
 }
 
@@ -89,7 +93,7 @@ function putPart(uploadId, payload) {
     payload,
     { headers: headers({ 'Content-Type': 'application/octet-stream' }), timeout: '30s' },
   );
-  tally(response.status);
+  tally(response, 'operation');
   return response;
 }
 
@@ -98,7 +102,7 @@ function completeUpload(uploadId) {
     headers: headers(),
     timeout: '30s',
   });
-  tally(response.status);
+  tally(response, 'operation');
   return response;
 }
 
@@ -135,15 +139,14 @@ export function run() {
       ? (NODE_LIST[0] || '')
       : (NODE_LIST[(vu - 1) % Math.max(NODE_LIST.length, 1)] || '');
     if (!nodeId || !MOVE_TARGET) {
-      cOther.add(1);
-      return;
+      throw new Error('P5 subtree fixture is missing');
     }
     const response = http.post(
       `${API}/nodes/${nodeId}/move`,
       JSON.stringify({ parent_id: Number(MOVE_TARGET) }),
       { headers: headers(), timeout: '30s' },
     );
-    tally(response.status);
+    tally(response, 'operation');
     return;
   }
 
@@ -152,7 +155,7 @@ export function run() {
       headers: headers(),
       timeout: '30s',
     });
-    tally(response.status);
+    tally(response, 'operation');
   }
 }
 
