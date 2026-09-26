@@ -1,0 +1,954 @@
+{
+  "disposition": "behavioral test targets only; current-source killed/escaped outcomes unevaluated; no mutation campaign",
+  "source": "plans/remaining-evidence/R02-checks/raw/drive-pgsql/summary.json",
+  "groups": [
+    {
+      "behavior": "trash/restore/force-delete outbox",
+      "test": "tests/Feature/MutationContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 183,
+          "mutator": "RemoveMethodCall",
+          "id": "17154cfd6a2720a6"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 189,
+          "mutator": "RemoveArrayItem",
+          "id": "00bd36120cb238d4"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 190,
+          "mutator": "RemoveArrayItem",
+          "id": "03cf44b4057c7b0e"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 191,
+          "mutator": "RemoveArrayItem",
+          "id": "8fe65713c9c59809"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 199,
+          "mutator": "RemoveMethodCall",
+          "id": "119f7af7b1974ebb"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 205,
+          "mutator": "RemoveArrayItem",
+          "id": "1b9652d5065e3227"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 206,
+          "mutator": "RemoveArrayItem",
+          "id": "ec846d01930a9fcd"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 207,
+          "mutator": "RemoveArrayItem",
+          "id": "11c944193f49b4c7"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 208,
+          "mutator": "RemoveArrayItem",
+          "id": "ecf4d0eab951cca8"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 222,
+          "mutator": "RemoveMethodCall",
+          "id": "261485a066f5b012"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 224,
+          "mutator": "UnwrapArrayMap",
+          "id": "769288c5915dacc8"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 224,
+          "mutator": "ConcatRemoveLeft",
+          "id": "3408cea250de74cc"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 224,
+          "mutator": "ConcatRemoveRight",
+          "id": "4f2ad92a87b68d50"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 224,
+          "mutator": "ConcatSwitchSides",
+          "id": "f34529d71d332a29"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 224,
+          "mutator": "UnwrapMd5",
+          "id": "469179ed93621f68"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 228,
+          "mutator": "RemoveArrayItem",
+          "id": "e07c38e56cc4e612"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 229,
+          "mutator": "UnwrapArrayMap",
+          "id": "a56520e9f498da7a"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 229,
+          "mutator": "RemoveArrayItem",
+          "id": "5979479ea603bc23"
+        },
+        {
+          "path": "src/Webhooks/RecordsDriveOutbox.php",
+          "line": 230,
+          "mutator": "RemoveArrayItem",
+          "id": "d0d77c1ac359cbe9"
+        }
+      ]
+    },
+    {
+      "behavior": "trash/restore/force-delete activity",
+      "test": "tests/Feature/MutationContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 170,
+          "mutator": "RemoveArrayItem",
+          "id": "8d77ec0cdf887062"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 177,
+          "mutator": "RemoveMethodCall",
+          "id": "f1182cc238678fa3"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 182,
+          "mutator": "RemoveArrayItem",
+          "id": "c15969ad675fc1df"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 183,
+          "mutator": "RemoveArrayItem",
+          "id": "121f5b8546565f62"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 195,
+          "mutator": "RemoveMethodCall",
+          "id": "4242c828b8405e81"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 200,
+          "mutator": "UnwrapArrayMap",
+          "id": "d4ee33fe33339e96"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 200,
+          "mutator": "RemoveArrayItem",
+          "id": "349e7168c9bddda3"
+        },
+        {
+          "path": "src/Activity/RecordsDriveActivity.php",
+          "line": 201,
+          "mutator": "RemoveArrayItem",
+          "id": "d65c2ef6be555637"
+        }
+      ]
+    },
+    {
+      "behavior": "tus resume headers",
+      "test": "tests/Feature/TusResponseContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 97,
+          "mutator": "RemoveArrayItem",
+          "id": "5ed52f492067fa93"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 108,
+          "mutator": "RemoveMethodCall",
+          "id": "000b86cf2f159721"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 117,
+          "mutator": "RemoveArrayItem",
+          "id": "6c382da5cae5c55b"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 118,
+          "mutator": "RemoveStringCast",
+          "id": "09c5493cd694a67c"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 119,
+          "mutator": "RemoveArrayItem",
+          "id": "f8eaf6658a8c1708"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 122,
+          "mutator": "IfNegated",
+          "id": "6948df7126fd0471"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 122,
+          "mutator": "NotIdenticalToIdentical",
+          "id": "466e5eb61f1ae038"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 123,
+          "mutator": "RemoveStringCast",
+          "id": "a6b1aadcdd5302ae"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 136,
+          "mutator": "RemoveMethodCall",
+          "id": "c0d03c562df5494b"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 154,
+          "mutator": "RemoveArrayItem",
+          "id": "c6f29e2b012d5168"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 155,
+          "mutator": "RemoveStringCast",
+          "id": "27f1de8ec04fb7b9"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 172,
+          "mutator": "RemoveArrayItem",
+          "id": "e071517ad9437d0d"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 173,
+          "mutator": "RemoveStringCast",
+          "id": "f911d097e49e4748"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 173,
+          "mutator": "RemoveArrayItem",
+          "id": "f5a5c0fb9da4a5be"
+        }
+      ]
+    },
+    {
+      "behavior": "tus discovery boundary",
+      "test": "tests/Feature/TusResponseContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 213,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "dfcfadf5f2f2ea68"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 213,
+          "mutator": "DecrementInteger",
+          "id": "72bcbe4354a32343"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 213,
+          "mutator": "IncrementInteger",
+          "id": "79742c736e3e9c6c"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 214,
+          "mutator": "RemoveStringCast",
+          "id": "1de8acb68126e219"
+        }
+      ]
+    },
+    {
+      "behavior": "declared chunk ceiling",
+      "test": "tests/Feature/TusResponseContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "RemoveIntegerCast",
+          "id": "d46dc0452c761895"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "SmallerOrEqualToSmaller",
+          "id": "0a60b41786a18b61"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "SmallerOrEqualToSmaller",
+          "id": "adf3b98e1ef6a308"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "BooleanOrToBooleanAnd",
+          "id": "f5a973a1fd685ed4"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "BooleanOrToBooleanAnd",
+          "id": "7570fff604ce7bb0"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "DecrementInteger",
+          "id": "b2d4a61c621d69b4"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 390,
+          "mutator": "IncrementInteger",
+          "id": "b5437dc137350113"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 395,
+          "mutator": "RemoveArrayItem",
+          "id": "be8fd970699f9324"
+        }
+      ]
+    },
+    {
+      "behavior": "metadata continue",
+      "test": "tests/Feature/TusResponseContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 433,
+          "mutator": "ContinueToBreak",
+          "id": "3a5284970f9f9f29"
+        },
+        {
+          "path": "src/Http/Controllers/Uploads/TusUploadController.php",
+          "line": 436,
+          "mutator": "RemoveStringCast",
+          "id": "ba54e47e2c40679f"
+        }
+      ]
+    },
+    {
+      "behavior": "staged prefix and range",
+      "test": "tests/Uploads/StagedUploadBoundaryTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 138,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "f4d4832a4f95369c"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 138,
+          "mutator": "DecrementInteger",
+          "id": "fdee81ac116ed017"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 138,
+          "mutator": "IncrementInteger",
+          "id": "745b0f49b19315df"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 145,
+          "mutator": "RemoveFunctionCall",
+          "id": "c72f365bf1bcdba1"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 153,
+          "mutator": "RemoveFunctionCall",
+          "id": "782f2e3751a37071"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 156,
+          "mutator": "RemoveFunctionCall",
+          "id": "56db12b477e45f33"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 159,
+          "mutator": "DecrementInteger",
+          "id": "85829219823060c9"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 159,
+          "mutator": "IncrementInteger",
+          "id": "7489dac015de02e4"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 178,
+          "mutator": "FalseToTrue",
+          "id": "1ab64a2dfffa2a24"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 184,
+          "mutator": "DecrementInteger",
+          "id": "e76137df73f6ee97"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 192,
+          "mutator": "PlusToMinus",
+          "id": "3e1e0f638deb8a05"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 192,
+          "mutator": "BooleanOrToBooleanAnd",
+          "id": "5178902a88ea18b8"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 203,
+          "mutator": "IfNegated",
+          "id": "9f5352083c31e98b"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 203,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "84847e1709e523eb"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 203,
+          "mutator": "GreaterToSmallerOrEqual",
+          "id": "077288a947ae1e68"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 203,
+          "mutator": "DecrementInteger",
+          "id": "58e7ec0788f91e90"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 203,
+          "mutator": "IncrementInteger",
+          "id": "e59b6278d21b3103"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 204,
+          "mutator": "RemoveMethodCall",
+          "id": "457886cd58c0780a"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 209,
+          "mutator": "RemoveFunctionCall",
+          "id": "e799f1f1965e85eb"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 225,
+          "mutator": "WhileAlwaysFalse",
+          "id": "30f3cc28bfa2e273"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 225,
+          "mutator": "GreaterToSmallerOrEqual",
+          "id": "4ae48e714aff193f"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 225,
+          "mutator": "RemoveNot",
+          "id": "22eaabcd5802ea4b"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 225,
+          "mutator": "IncrementInteger",
+          "id": "2749159e51538032"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 226,
+          "mutator": "MinToMax",
+          "id": "edb06ffe494a8771"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "IfNegated",
+          "id": "2d28801a6b274537"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "IdenticalToNotIdentical",
+          "id": "2f219fc4285563cb"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "IdenticalToNotIdentical",
+          "id": "a06974974b80e09f"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "BooleanOrToBooleanAnd",
+          "id": "9754d856da0b8fda"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "FalseToTrue",
+          "id": "ae3926bfbc6a7156"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 228,
+          "mutator": "EmptyStringToNotEmpty",
+          "id": "268de74cfcac0358"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 232,
+          "mutator": "MinusEqualToPlusEqual",
+          "id": "b32f5a4880e94bf3"
+        }
+      ]
+    },
+    {
+      "behavior": "statable/non-statable ceiling",
+      "test": "tests/Uploads/StagedUploadBoundaryTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 254,
+          "mutator": "IncrementInteger",
+          "id": "ea95ff59dfbbd6d0"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 258,
+          "mutator": "TernaryNegated",
+          "id": "cc8e40bce297b281"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 258,
+          "mutator": "FalseToTrue",
+          "id": "6ca4fdf6b8d01c20"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 259,
+          "mutator": "RemoveIntegerCast",
+          "id": "935b47335ee4d022"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 259,
+          "mutator": "TernaryNegated",
+          "id": "28fedf2773f4c031"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 259,
+          "mutator": "DecrementInteger",
+          "id": "406c04d1df7588ad"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 259,
+          "mutator": "IncrementInteger",
+          "id": "c1f3fe2b862af5b3"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 261,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "3f2b3981c705372e"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 262,
+          "mutator": "RemoveMethodCall",
+          "id": "6b593ec34a99a297"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 282,
+          "mutator": "IncrementInteger",
+          "id": "4e6766fce66c48da"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 288,
+          "mutator": "IncrementInteger",
+          "id": "9f0d97c8fe364fe3"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 290,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "bde721abd5b0e8f6"
+        },
+        {
+          "path": "src/Support/Uploads/StagedUpload.php",
+          "line": 290,
+          "mutator": "FalseToTrue",
+          "id": "f44ee848b2637fea"
+        }
+      ]
+    },
+    {
+      "behavior": "copy attributes/size/edges",
+      "test": "tests/Drive/CopyMutationContractsTest.php",
+      "r02_targets": [
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 67,
+          "mutator": "DecrementInteger",
+          "id": "ff05ef6a8d4c5588"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 67,
+          "mutator": "IncrementInteger",
+          "id": "bd7c62eee2e87815"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 70,
+          "mutator": "IfNegated",
+          "id": "f4e3e06ab62bd4ea"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 70,
+          "mutator": "GreaterToGreaterOrEqual",
+          "id": "0b2b28453a25be0b"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 70,
+          "mutator": "GreaterToSmallerOrEqual",
+          "id": "5c9e2cf5ea359b86"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 70,
+          "mutator": "DecrementInteger",
+          "id": "b21f523a1f27c6ee"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 70,
+          "mutator": "IncrementInteger",
+          "id": "4ba6740ebffcb14a"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 71,
+          "mutator": "RemoveMethodCall",
+          "id": "a91c45a946d5f682"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 74,
+          "mutator": "RemoveFunctionCall",
+          "id": "281023db9f79edc1"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 91,
+          "mutator": "RemoveArrayItem",
+          "id": "ceab027280ca1021"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 92,
+          "mutator": "RemoveArrayItem",
+          "id": "c7594fb02c8c02a4"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 93,
+          "mutator": "CoalesceRemoveLeft",
+          "id": "6629e31c343f2129"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 93,
+          "mutator": "DecrementInteger",
+          "id": "b6b4fb296d4084e9"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 93,
+          "mutator": "IncrementInteger",
+          "id": "b8031394547a39ec"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 93,
+          "mutator": "RemoveArrayItem",
+          "id": "e734370d12a10a47"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 94,
+          "mutator": "CoalesceRemoveLeft",
+          "id": "61d4e825dc29c919"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 94,
+          "mutator": "FalseToTrue",
+          "id": "d6f482a29a9beead"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 94,
+          "mutator": "RemoveArrayItem",
+          "id": "3d9a9f6a7b14471a"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 95,
+          "mutator": "CoalesceRemoveLeft",
+          "id": "a6163712581b6c78"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 95,
+          "mutator": "TrueToFalse",
+          "id": "d2ba849d85555eda"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 95,
+          "mutator": "RemoveArrayItem",
+          "id": "b594a2711ec8b8e1"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 96,
+          "mutator": "RemoveArrayItem",
+          "id": "d9b6766328ab5303"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 97,
+          "mutator": "RemoveArrayItem",
+          "id": "22b3083d0102d198"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 98,
+          "mutator": "RemoveArrayItem",
+          "id": "3ba3aec50a9350fb"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 103,
+          "mutator": "PlusEqualToMinusEqual",
+          "id": "20d26fd25136c8c3"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 103,
+          "mutator": "CoalesceRemoveLeft",
+          "id": "a3d67dc212980c8f"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 103,
+          "mutator": "DecrementInteger",
+          "id": "ede7f1af203f9e37"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 103,
+          "mutator": "IncrementInteger",
+          "id": "1933139d890483ef"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 125,
+          "mutator": "InstanceOfToTrue",
+          "id": "a3b50640f79ef613"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 132,
+          "mutator": "InstanceOfToTrue",
+          "id": "8d1da07df70611ff"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 138,
+          "mutator": "RemoveArrayItem",
+          "id": "4d2c6ff8fe4eff81"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 139,
+          "mutator": "RemoveArrayItem",
+          "id": "21dc9d900f0a8d61"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 140,
+          "mutator": "DecrementInteger",
+          "id": "0f4fb3fa5934a14d"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 140,
+          "mutator": "IncrementInteger",
+          "id": "9b6da87cbd12ab8a"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 140,
+          "mutator": "RemoveArrayItem",
+          "id": "2d225c4df26f66c7"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 145,
+          "mutator": "DecrementInteger",
+          "id": "d60fa61abfdcfa96"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 145,
+          "mutator": "IncrementInteger",
+          "id": "78e6d9204bc59e92"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 146,
+          "mutator": "RemoveArrayItem",
+          "id": "61961147cfd510f3"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 149,
+          "mutator": "RemoveArrayItem",
+          "id": "5b05bc48802ffb8f"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 151,
+          "mutator": "RemoveArrayItem",
+          "id": "125b1731e5224c08"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 152,
+          "mutator": "RemoveArrayItem",
+          "id": "06b78deca6d8d7ca"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 153,
+          "mutator": "RemoveArrayItem",
+          "id": "8386063dfa6da833"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 162,
+          "mutator": "RemoveMethodCall",
+          "id": "8ce7942dfb867343"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 169,
+          "mutator": "RemoveMethodCall",
+          "id": "eab413e5f6174186"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 170,
+          "mutator": "RemoveArrayItem",
+          "id": "1ff114289936a16d"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 171,
+          "mutator": "RemoveArrayItem",
+          "id": "c413080715243a92"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 181,
+          "mutator": "RemoveArrayItem",
+          "id": "8d9043f8c66082e5"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 182,
+          "mutator": "RemoveArrayItem",
+          "id": "631715e81444aae5"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 183,
+          "mutator": "RemoveArrayItem",
+          "id": "0b3fdf8f1e3e9bb4"
+        },
+        {
+          "path": "src/Actions/CopyNodeAction.php",
+          "line": 184,
+          "mutator": "RemoveArrayItem",
+          "id": "09b5eccb9c4f97d9"
+        }
+      ]
+    }
+  ]
+}

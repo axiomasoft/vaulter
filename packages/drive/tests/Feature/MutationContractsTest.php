@@ -215,3 +215,73 @@ it('preserves file upload and version payloads with their actual byte counts', f
         'size_bytes' => 14,
     ]);
 });
+
+it('preserves trash and restore payloads including actor and destination', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $parent = $drive->createFolder('Parent');
+    $node = $drive->createFolder('Child', $parent);
+
+    $drive->trash($node, actorId: 17);
+    $trashed = Outbox::query()->where('event', WebhookEvent::NodeTrashed->value)->sole();
+    expect($trashed->panel)->toBe($node->panel)
+        ->and($trashed->topic)->toBe((string) $node->getKey())
+        ->and($trashed->payload)->toEqual([
+            'event_id' => $trashed->event_id,
+            'actor_id' => '17',
+            'node_id' => (string) $node->getKey(),
+            'storage_id' => (string) $node->storage_id,
+            'name' => 'Child',
+        ]);
+    $activity = Activity::query()->where('verb', ActivityVerb::NodeTrashed->value)->sole();
+    expect($activity->actor_id)->toEqual(17)
+        ->and($activity->target_id)->toEqual($node->getKey())
+        ->and($activity->context)->toEqual(['name' => 'Child']);
+
+    $drive->restore($node->refresh(), actorId: 17);
+    $restored = Outbox::query()->where('event', WebhookEvent::NodeRestored->value)->sole();
+    expect($restored->panel)->toBe($node->panel)
+        ->and($restored->topic)->toBe((string) $node->getKey())
+        ->and($restored->payload)->toEqual([
+            'event_id' => $restored->event_id,
+            'actor_id' => '17',
+            'node_id' => (string) $node->getKey(),
+            'storage_id' => (string) $node->storage_id,
+            'parent_id' => (string) $parent->getKey(),
+            'name' => 'Child',
+        ]);
+    $activity = Activity::query()->where('verb', ActivityVerb::NodeRestored->value)->sole();
+    expect($activity->actor_id)->toEqual(17)
+        ->and($activity->target_id)->toEqual($node->getKey())
+        ->and($activity->context)->toEqual([
+            'name' => 'Child',
+            'parent_id' => (string) $parent->getKey(),
+        ]);
+});
+
+it('records every force-deleted subtree id and the exact freed bytes', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $folder = $drive->createFolder('Deleted');
+    $file = $drive->upload(DriveTestHelpers::streamFor('bytes'), into: $folder, originalName: 'f.bin');
+    $ids = [(string) $folder->getKey(), (string) $file->getKey()];
+
+    $drive->forceDelete($folder, actorId: 17);
+
+    $outbox = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole();
+    $payload = $outbox->payload;
+    expect($payload['node_ids'])->toEqualCanonicalizing($ids);
+    unset($payload['node_ids']);
+    expect($outbox->panel)->toBe('default')
+        ->and($outbox->topic)->toBe((string) $drive->storage()->getKey())
+        ->and($payload)->toEqual([
+            'event_id' => $outbox->event_id,
+            'actor_id' => '17',
+            'storage_id' => (string) $drive->storage()->getKey(),
+            'freed_bytes' => 5,
+        ]);
+    $activity = Activity::query()->where('verb', ActivityVerb::NodeForceDeleted->value)->sole();
+    expect($activity->actor_id)->toEqual(17)
+        ->and($activity->storage_id)->toEqual($drive->storage()->getKey())
+        ->and($activity->context['node_ids'])->toEqualCanonicalizing($ids)
+        ->and(array_keys($activity->context))->toEqualCanonicalizing(['node_ids', 'freed_bytes'])
+        ->and($activity->context['freed_bytes'])->toBe(5);
+});
