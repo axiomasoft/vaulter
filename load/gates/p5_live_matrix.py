@@ -247,6 +247,8 @@ def run_matrix(out: Path, run_id: str) -> None:
             try:
                 row, extra = execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, out)
             except (gate.EvidenceInvalid, subprocess.TimeoutExpired, OSError) as exc:
+                if isinstance(exc, SweeperCaptureTimeout):
+                    raise
                 rejected = {
                     'cell_id': cell['cell_id'],
                     'attempt': attempt,
@@ -314,7 +316,7 @@ def preflight(out: Path, run_id: str) -> dict:
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip()
     dirty = subprocess.run(['git', 'diff', '--quiet'], cwd=REPO, check=False).returncode != 0
     source = hashlib.sha256()
-    for path in (LOAD / 'gates' / 'p5_live_matrix.py', LOAD / 'k6' / 'scenarios' / 'concurrency-live.js'):
+    for path in (LOAD / 'gates' / 'p5_live_matrix.py', LOAD / 'k6' / 'scenarios' / 'concurrency-live.js', LOAD / 'scripts' / 'p5-php-peak.php'):
         source.update(str(path.relative_to(REPO)).encode())
         source.update(path.read_bytes())
     images = {}
@@ -397,7 +399,7 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
     pre_cursor = log_cursor()
     pre_pool = pgbouncer_snapshot()
     if cell['plane'] == 'dirty-cardinality-probe':
-        actor = run_sweeper(cell, attempt, out)
+        actor = run_sweeper(cell, attempt, out, run_id=run_id)
     elif cell['plane'] == 'primitive-control':
         actor = run_primitive(cell)
     else:
@@ -821,7 +823,35 @@ def create_shared_upload(cell: dict, setup_actor: int) -> tuple[str | None, dict
     return upload_id, evidence
 
 
-def run_sweeper(cell, attempt, out) -> dict:
+class SweeperCaptureTimeout(gate.EvidenceInvalid):
+    """The remote sweep may still run; stop before reseeding the shared DB."""
+
+
+def sweep_candidates() -> int:
+    return int(psql(
+        "SELECT count(*) FROM v_upload_sessions WHERE target_name LIKE 'p5-dirty-%' "
+        "AND status IN ('initiated', 'uploading', 'assembled') AND expires_at <= now();"
+    ).strip())
+
+
+def sweep_batch_metric() -> dict | None:
+    try:
+        with urllib.request.urlopen(APP_URL + '/metrics', timeout=10) as response:
+            lines = response.read().decode('utf-8').splitlines()
+    except (urllib.error.URLError, TimeoutError, UnicodeError):
+        return None
+    values = {}
+    raw = []
+    for line in lines:
+        if line.startswith('vaulter_sweep_batch_rows_'):
+            raw.append(line)
+        match = re.fullmatch(r'vaulter_sweep_batch_rows_(sum|count)\s+([0-9.eE+-]+)', line)
+        if match:
+            values[match.group(1)] = float(match.group(2))
+    return {**values, 'raw': raw} if 'count' in values and 'sum' in values else None
+
+
+def run_sweeper(cell, attempt, out, *, run_id: str | None = None) -> dict:
     rows = 20_000 if cell['shape'] == 'dirty-20k' else 1_000_000
     psql("DELETE FROM v_upload_sessions WHERE target_name LIKE 'p5-dirty-%';")
     psql(
@@ -830,29 +860,75 @@ def run_sweeper(cell, attempt, out) -> dict:
         f"FROM generate_series(1, {rows});",
         timeout=600,
     )
-    seeded = int(psql("SELECT count(*) FROM v_upload_sessions WHERE target_name LIKE 'p5-dirty-%';").strip())
+    seeded = sweep_candidates()
     if seeded != rows:
         raise gate.EvidenceInvalid(f'dirty seed {seeded} != {rows}')
+    metric_before = sweep_batch_metric()
+    command = ['exec', '-T', 'app', 'php', '-d', 'auto_prepend_file=/app/load/scripts/p5-php-peak.php',
+               'vendor/bin/testbench', 'artisan', 'vaulter:sweep-uploads', '--no-interaction']
     started = time.monotonic()
-    completed = compose(
-        'exec', '-T', 'app', 'php', 'vendor/bin/testbench', 'artisan', 'vaulter:sweep-uploads', '--no-interaction',
-        timeout=900,
-    )
+    timed_out = False
+    try:
+        completed = compose(*command, timeout=900)
+        stdout, stderr, exit_code = completed.stdout, completed.stderr, completed.returncode
+    except subprocess.TimeoutExpired as exc:
+        # A docker-client timeout is not the product command's exit status.
+        timed_out = True
+        def decoded(value):
+            return value.decode('utf-8', 'replace') if isinstance(value, bytes) else value or ''
+        stdout, stderr, exit_code = decoded(exc.stdout), decoded(exc.stderr), None
     elapsed = time.monotonic() - started
-    remaining = int(psql("SELECT count(*) FROM v_upload_sessions WHERE target_name LIKE 'p5-dirty-%';").strip())
+    peak_match = re.search(r'^P5_PHP_PEAK_BYTES=(\d+)\s*$', stderr, flags=re.MULTILINE)
     report = {
+        'run_id': run_id,
         'cell_id': cell['cell_id'],
         'attempt': attempt,
-        'rows': rows,
-        'remaining': remaining,
+        'command': command,
+        'seeded_rows': seeded,
+        'candidate_rows': seeded,
+        'processed_rows': None,
+        'remaining_rows': None,
         'elapsed_seconds': round(elapsed, 3),
-        'exit_code': completed.returncode,
+        'exit_code': exit_code,
+        'timed_out': timed_out,
+        'command_failed': timed_out or exit_code != 0,
+        'stdout': stdout,
+        'stderr': stderr,
+        'php_peak_bytes': int(peak_match.group(1)) if peak_match else None,
+        'php_peak_kind': 'memory_get_peak_usage(true), not process RSS',
+        'vaulter_sweep_batch_rows': None,
+        'batch_metric_before': metric_before,
+        'batch_metric_after': None,
+        'progress_capture_error': None,
         'tier_l_claim': False,
     }
-    (out / 'sweeper' / f"{cell['cell_id']}.a{attempt}.json").write_text(
-        json.dumps(report, indent=2) + '\n', encoding='utf-8',
-    )
-    report['command_failed'] = completed.returncode != 0
+    target = out / 'sweeper' / f"{cell['cell_id']}.a{attempt}.json"
+    # Save command output first: a failed post-command DB probe must not erase it.
+    def persist():
+        target.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    persist()
+    if not timed_out:
+        try:
+            remaining = sweep_candidates()
+            report['remaining_rows'] = remaining
+            report['processed_rows'] = seeded - remaining
+        except (gate.EvidenceInvalid, subprocess.TimeoutExpired, OSError, ValueError) as exc:
+            report['progress_capture_error'] = str(exc)
+        metric_after = sweep_batch_metric()
+        report['batch_metric_after'] = metric_after
+        if metric_before is not None and metric_after is not None:
+            count_delta = metric_after['count'] - metric_before['count']
+            sum_delta = metric_after['sum'] - metric_before['sum']
+            if count_delta >= 0 and sum_delta >= 0:
+                report['vaulter_sweep_batch_rows'] = {'count_delta': count_delta, 'sum_delta': sum_delta}
+            else:
+                report['batch_metric_error'] = 'counter reset; delta unevaluated'
+    else:
+        report['progress_capture_error'] = 'docker exec timed out; remote command termination unconfirmed'
+    persist()
+    if timed_out:
+        # Stop the exclusive run; do not seed another attempt over a possibly live command.
+        raise SweeperCaptureTimeout(f'sweeper capture timed out; remote command state unknown; evidence saved to {target}')
     return {
         'backend_pids': [],
         'http_duration_seconds': None,
