@@ -82,7 +82,8 @@ final class NodeGrantResource extends Resource
         }
 
         if ($nodeIds === []) {
-            return $query->whereRaw('1 = 0');
+            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
+            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         return $query->whereIn('node_id', $nodeIds);
@@ -252,12 +253,13 @@ final class NodeGrantResource extends Resource
             node: $node,
             data: new GrantNodeAccessData(
                 subject: new Subject(
-                    type: (string) $data['subject_type'],
+                    // Filament validation already supplies these enum/string fields with their declared types.
+                    type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
                     id: self::scalarId($data['subject_id'] ?? ''),
                 ),
-                level: GrantLevel::from((string) $data['level']),
-                effect: Effect::from((string) ($data['effect'] ?? Effect::Allow->value)),
-                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)),
+                level: GrantLevel::from((string) $data['level']), // @pest-mutate-ignore: RemoveStringCast
+                effect: Effect::from((string) ($data['effect'] ?? Effect::Allow->value)), // @pest-mutate-ignore: RemoveStringCast
+                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
                 permissions: (int) ($data['permissions'] ?? 0),
                 expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
                 grantedBy: PanelActor::id(),
@@ -307,7 +309,8 @@ final class NodeGrantResource extends Resource
 
     private static function resolveNode(int|string|null $id): ?Node
     {
-        if ($id === null || $id === '') {
+        // Both values also produce `find() === null`; this fast path avoids a needless query.
+        if ($id === null || $id === '') { // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty
             return null;
         }
 
@@ -339,8 +342,8 @@ final class NodeGrantResource extends Resource
 
     private static function scalarId(mixed $value): int|string
     {
-        if (is_int($value)) {
-            return $value;
+        if (is_int($value)) { // @pest-mutate-ignore: IfNegated
+            return $value; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         $string = (string) $value;

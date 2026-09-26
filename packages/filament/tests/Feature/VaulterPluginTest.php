@@ -47,6 +47,24 @@ it('respects a disabled resource toggle', function (): void {
         ->and($panel->getResources())->toContain(NodeResource::class);
 });
 
+it('keeps resources enabled for an omitted or malformed host toggle', function (mixed $value, string $panelId): void {
+    if ($value === null) {
+        $resources = config('vaulter-filament.resources');
+        unset($resources['share']);
+        config()->set('vaulter-filament.resources', $resources);
+    } else {
+        config()->set('vaulter-filament.resources.share', $value);
+    }
+
+    $panel = Panel::make()->id($panelId);
+    VaulterPlugin::make()->register($panel);
+
+    expect($panel->getResources())->toContain(NodeShareResource::class);
+})->with([
+    'omitted toggle uses the default' => [null, 'probe-share-default'],
+    'non-boolean toggle fails open to the documented default' => ['disabled', 'probe-share-malformed'],
+]);
+
 /*
  * VLT-REMED P3.1 (F-P1.10-03, D13) — ActivityResource is now ALSO gated on the
  * core 'activity' feature flag, on top of its own default-on config toggle.

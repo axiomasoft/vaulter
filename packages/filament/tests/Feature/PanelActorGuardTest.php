@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Facades\Filament;
+use Illuminate\Auth\GenericUser;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
@@ -42,4 +43,11 @@ it('resolves the same identity as the default guard when the panel uses no expli
     $this->actingAs($defaultUser);
 
     expect(PanelActor::id())->toBe($defaultUser->getKey());
+});
+
+it('rejects an authenticated identity that cannot be authorized', function (): void {
+    auth()->guard()->setUser(new GenericUser(['id' => 99]));
+
+    expect(PanelActor::current())->toBeNull()
+        ->and(PanelActor::id())->toBeNull();
 });

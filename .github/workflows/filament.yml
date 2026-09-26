@@ -91,14 +91,12 @@ jobs:
       #
       # SQLite — единственный драйвер: драйвер-условных тестов у filament нет (VLT-MUT D6).
       #
-      # --min — ratchet ВВЕРХ (D4/D35): цель 95, поднимается каждой фазой, НИКОГДА не опускается.
-      # 54 = floor(59.26) − 5 по честному замеру 2026-07-13 (последовательно, pcov/PHP 8.4, холодный
-      # кэш): Score 59.26 % — 112 убито, 77 выжило из 189 мутантов. Число мутантов совпало с прежним,
-      # Score — нет: их «убивал» сломанный флаг, а не тесты. 91 % выживших — в NodeShareResource (45)
-      # и NodeGrantResource (25), т.е. в формах выдачи прав. Добивание — фаза P6 плана VLT-MUT.
+      # R19 pins the final target at 95 after adding behavioral contracts for the 2026-09-24 cold
+      # baseline's real escaped mutants. The current-source cold score is intentionally measured in
+      # the later exclusive campaign; this code-stage change does not claim that measurement.
       - name: Mutation testing
         working-directory: packages/filament
-        run: vendor/bin/pest --mutate --path=src --covered-only --min=54
+        run: vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
