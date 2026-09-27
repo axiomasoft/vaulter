@@ -1,0 +1,46 @@
+{
+  "attempt": 1,
+  "cell_id": "dirty-cardinality-probe.due-rows.n50000.attempt1",
+  "count": 50000,
+  "detail": {
+    "redis": {
+      "default": {
+        "delayed": 0,
+        "pending": 1000,
+        "reserved": 0
+      },
+      "load-health": {
+        "delayed": 0,
+        "pending": 0,
+        "reserved": 0
+      }
+    },
+    "retried": {
+      "elapsed_ns": 353652346,
+      "exit": 0,
+      "ok": true,
+      "peak_bytes": 40370176,
+      "retried": 1000,
+      "rss_peak_bytes": 59473920,
+      "status": 0
+    },
+    "seeded": {
+      "endpoint_id": "2189",
+      "exit": 0,
+      "inserted": 50000,
+      "ok": true,
+      "rss_peak_bytes": 64819200
+    }
+  },
+  "duration_seconds": 4.713,
+  "evidence": "valid",
+  "plane": "dirty-cardinality-probe",
+  "run_id": "bc199ced-5b0f-4e77-b5ca-1a73055c0bfa",
+  "slo": "not-a-product-slo",
+  "snapshot_restored": true,
+  "tier_ml_slo": false,
+  "worker_pids": [
+    388672,
+    393706
+  ]
+}

@@ -30,9 +30,34 @@ docs/.vitepress/dist/
 *.bak
 .claude/settings.local.json.bak
 
+# Machine-local SKM vendor (marketplace + CORE symlink); воспроизводится sync-скриптом
+/.agents/
+/.swissknifeman/
+
 # AI tooling — machine-specific (абсолютные пути / локальный кэш). Портируемая карта
 # MCP-структуры — .mcp.json.example (плейсхолдеры <ABS_PATH_TO_PROJECT>), он коммитится.
 .mcp.json
+
+# Локальные состояния агентов и одноразовые лабораторные материалы.
+/.codex/
+/.cursor/
+/packages/*/.cursor/
+/scratchpad/
+/plans/VLT-LOAD/.plan-cache/
+/plans/VLT-LOAD/artifacts/*.tmp.*/
+# Full P6 ledgers are retained as compressed RNN archives; extracted ledgers are local only.
+/plans/VLT-LOAD/artifacts/P6-R09/*-prior-ledgers/
+/plans/VLT-LOAD/artifacts/P6-R09/*/queue/lifecycle.jsonl
+/plans/VLT-LOAD/artifacts/P6-R09/*/sink/ledger.jsonl
+/plans/VLT-LOAD/artifacts/P6-R10/*/queue/lifecycle.jsonl
+/plans/VLT-LOAD/artifacts/P6-R10/*/sink/ledger.jsonl
+/load/seed/out/
+/load/chaos/__pycache__/
+/plans/remaining-evidence/R18-checks/*cache*/
+/plans/remaining-evidence/R19-checks/**/pest-mutate-cache/
+/packages/core/core
+/_create_project_drive_drive_tables.php
+/2026_09_24_135041_create_project_drive_drive_tables.php
 .serena/
 .claude/settings.local.json
 

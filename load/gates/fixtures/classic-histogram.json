@@ -1,0 +1,36 @@
+{
+  "name": "classic histogram quantile and le ratio",
+  "histogram": {
+    "buckets": {
+      "0.1": 20,
+      "0.5": 97,
+      "+Inf": 100
+    },
+    "count": 100,
+    "sum": 21.4
+  },
+  "record": {
+    "predicates": [
+      {
+        "expression_class": "histogram_quantile",
+        "promql": "histogram_quantile(0.95, sum by (le) (increase(example_duration_seconds_bucket[60s])))",
+        "comparator": "<",
+        "threshold": 1,
+        "count_promql": "sum(increase(example_duration_seconds_count[60s]))"
+      },
+      {
+        "expression_class": "histogram_le_ratio",
+        "promql": "sum(increase(example_duration_seconds_bucket{le=\"0.5\"}[60s])) / sum(increase(example_duration_seconds_count[60s]))",
+        "comparator": ">=",
+        "threshold": 0.95,
+        "count_promql": "sum(increase(example_duration_seconds_count[60s]))"
+      }
+    ]
+  },
+  "responses": {
+    "sum(increase(example_duration_seconds_count[60s]))": 100,
+    "histogram_quantile(0.95, sum by (le) (increase(example_duration_seconds_bucket[60s])))": 0.42,
+    "sum(increase(example_duration_seconds_bucket{le=\"0.5\"}[60s])) / sum(increase(example_duration_seconds_count[60s]))": 0.97
+  },
+  "expected": "pass"
+}

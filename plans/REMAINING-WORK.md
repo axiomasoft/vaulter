@@ -1,272 +1,191 @@
-# Remaining work — canonical execution map after VLT-LOAD P8
+# Remaining work — canonical execution map
 
-**Updated:** 2026-09-24
-**Scope:** unfinished proof, product and mutation work already evidenced by the existing plans. This is a portfolio route, not a new Task executable plan and not an amendment to terminal journal/state.
-**Current launch:** B04 / R03→R04 below. B01–B03 are evidenced (R10, R09/R10 audit if present, R02). See section 7 for owner-selected batches, models and full CLI commands. Owner deferred final VLT-LOAD close/archive.
+**Updated:** 2026-09-27 after B07. **Scope:** the remaining product, evidence, mutation and owner work evidenced by VLT-LOAD and the archived plans. This file routes work; it does not amend journals, raw runs, SLO thresholds or historical verdicts.
 
-## 1. Source precedence and plan inventory
+**Where execution stopped:** B07 failed and did **not** admit B08. B07 found two Major defects in the prepared R05 P5 capture/verdict path and confirmed that R04/R05/R06/R08 measurements and the current cold R07 >=95 proof are absent. The next launch is therefore **B05-R: correct R05 for B07-01/02**. Do not rerun R02, R18, R19, R14, B02, or the already prepared code slices merely because they appear below.
 
-Read the adopted [SLO contract](VLT-LOAD/slo.md) and [gate contract](VLT-LOAD/slo-gates.md), then the relevant phase finding/report and immutable raw artifacts. The [journal](VLT-LOAD/journal.jsonl), generated [status](VLT-LOAD/status.md) and P8 receipt establish lifecycle, while the reports establish product verdicts. Terminal GREEN execution is not product GREEN. The old `VLT-LOAD/plan.md` Meta `Paused By: D41` is a historical launch restriction, contradicted by later terminal journal/status; it is not a current admission gate. Do not change stable plan, generated views or append-only history merely to make portfolio routing look current.
+**Current launch:** `R05` is a load-harness implementation slice, owned by GPT-6 Sol. It must correct both B07 findings, write `remaining-evidence/R05.md`, update this map, and stop. It does not run a live cell. R06 is the next *exclusive measurement* only after that correction is recorded.
 
-| Carrier | Current disposition | Action |
+## 1. Evidence rules and fixed facts
+
+Read the applicable finding, SLO contract, gate contract, raw run and evidence carrier before a row. The latest conclusion for an audit replaces an older conclusion in that audit; it does not rewrite a product verdict outside its stated scope.
+
+- VLT-LOAD is terminal `Done with deviations`; its P8 receipt is lifecycle evidence, not a product-wide GREEN. Do not execute its old `Pn.m` items. AUDIT-VLT and VLT-HSEAM are archived/superseded; their live Layout-v2 previews are quarantined and are not launch queues.
+- B02's last section closes **B02-01/02 in its scoped runtime/verifier scope**. It does not create a new full P6 runtime or an all-SLO PASS. R09's stored P6 evidence remains the authority for the measured SLO-58/64 GREEN and SLO-61 RED; the historical failed-job identities remain unrecoverable.
+- B07 is the latest audit of R02–R08: it failed. B08 has no admission. B07-01 and B07-02 are open R05 implementation defects; B07-03–05 are missing-evidence gates, not newly proved product defects.
+- R14 is a completed measurement, not an unfinished measurement: CAS integrity/memory and GC delete/RSS were GREEN; **GC scan throughput and the 1,000-row batch cap were RED**. That result creates R21/R22/R23 below. Do not call R14 unperformed.
+- R18 (media mutation 95.33% PG+SQLite union) and R19 (filament mutation 95.51% SQLite) are complete on their frozen sources. A media source change in R21 invalidates R18 only for that changed media source and routes to R22; it does not erase the recorded result.
+- P4 L-01's measured streaming bytes/memory result remains historical evidence. Its separate D11 mutation claim is unproved because it used `--parallel`; R02 and the package-specific mutation rows, not a rerun of L-01, route that defect.
+- No smoke, S0 probe, one-row cardinality diagnostic, terminal task receipt, passing unit suite, offline control, or test-only overlay is an authoritative tier-S/M/L product result. A completed measurement may be RED; record that result and follow its route.
+- Mutation proof uses a cold cache, the declared database drivers, real skip/timeout denominator and no `--parallel`. The target is >=95; no configured minimum may be lowered to make a gate pass.
+
+## 2. Obligation ledger
+
+Every unresolved finding has one next route. `Complete` means the stated scope is evidenced; it never implies a wider claim. `Measurement` rows reserve the shared stand exclusively. A source digest/run ID and raw-artifact link are mandatory in the carrier.
+
+| Source / finding | Current state | R | Executor | Next concrete action | Closure criterion / evidence |
+|:--|:--|:--|:--|:--|:--|
+| L-04 core retry | implementation and bounded R09 retry proof complete | R01 | complete | preserve [R01](remaining-evidence/R01.md) and R09 | no relaunch; R26 only supplies any later full-P6 re-verdict |
+| P4 L-01 streaming / D11 | streaming measurement retained; `--parallel` mutation conclusion invalid | R02, R07, R16, R17, R22 | routed | preserve streaming raw evidence; use package-specific cold routes | no aggregate/parallel mutation claim; each package's >=95 criterion controls |
+| F-P2.8-1/2/3; SLO-40/43/49/52 | code prepared; historical tier-S throughput RED remains unattributed | R03 | GPT-6 Sol | exclusive full-window class-A/B run and attribution | immutable full window, materialized tagged metrics, adequate samples; retain or route any RED |
+| L-P3-01, L-P3-03 | code verified; old trace empty and 6 plans rejected | R04 | GPT-6 Sol | exclusive P3 capture | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
+| L-P3-04/L-05 endpoint scan | scoped R10 evidence complete; M/L and 24-hour claims unevaluated | R26 | GPT-6 Sol | include in current P6 full matrix only if its source remains applicable | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
+| L-P5-01/02/04; **B07-01** | R05 code defect: live-patch overlap launches no sweeper | R05 | GPT-6 Sol | make the named live-patch surface run a real concurrent sweep/PATCH with session identity, overlap and final-state capture | negative controls reject no-sweep/no-overlap; affected live cells and Astra re-review prove the path |
+| L-P5-01/02/04; **B07-02** | R05 code defect: declared N is not checked against observed actor participation | R05 | GPT-6 Sol | record observed actor IDs and completed/aborted iterations; reject missing actors and setup-only success | negative controls for a missing actor/incomplete iteration; affected cells and Astra re-review |
+| B07-03 P5 portion | no valid R05 live evidence | R05 | Grok 4.7 | after R05 code correction, exclusively run affected P5 cells | raw per-actor/status/Retry-After/lock/pool/overlap evidence; 429-only remains unconfirmed |
+| L-P5-03, L-02; B07-04 | capture code exists; dirty-20k cause unknown; SLO-70 historical RED | R06 | Grok 4.7 | exclusively reproduce disposable dirty-20k with stderr, exit, PHP peak and batch/progress rows | measured failure classification; no guessed drive fix |
+| drive L-02, SLO-70/72 | waiting for R06 cause; no R08 carrier | R08 | GPT-6 Sol then Grok 4.7 | implement the smallest `packages/drive` fix justified by R06; then exclusive tier-S rerun | focused/package evidence plus SLO-70 result (GREEN or RED); current cold R07 >=95 before accepting final drive source |
+| drive D11 / VLT-MUT P2; B07-05 | tests prepared; cold current-source PG score absent; workflow still min 43 | R07 | GPT-5.6 Sol | after R08 freezes drive source, exclusive cold sequential PG mutation and a demonstrated 95 gate failure path | >=95 with real denominator and no `--parallel`; otherwise add tests and rerun R07 |
+| P6 L-P6-01…04; **B02-01/02** | scoped B02 audit closed; R09 raw/verifier evidence preserved; not a new full-P6 acceptance | R09 | complete | preserve [R09](remaining-evidence/R09.md) and [B02](remaining-evidence/B02-audit.md) | no re-execution without a source-changing reason |
+| P6 concurrent duplicate: 2 dispatch / 2 HTTP | product residual, explicitly unproved exactly-once | R24 | GPT-6 Sol | `packages/core` reproduce and correct duplicate delivery semantics with concurrent behavior tests | a source digest, regression test and independent audit; then R26 product run has no duplicate residual or records RED |
+| P6 recovery RED, sticky historical failed jobs, SLO-61 RED | current P6 product failures; original two historical job classes unrecoverable | R25 | GPT-6 Sol | classify each current recovery RED cell against real queue/sink semantics; correct only load-harness defects in `load/`, and open a new package-scoped R if product behavior is at fault | carrier maps every red cell to harness defect, package R, or retained RED; never invent historical job identities |
+| P6 current full verdict; SLO-58…64 and endpoint M/L | pending after R24/R25; R09's SLO-61 stays RED until superseded by this run | R26 | Grok 4.7 | exclusive frozen-source complete P6 matrix | immutable verified run, SLO table by tier, duplicate/recovery and failed-job deltas; RED remains routed, M/L absent is unevaluated |
+| P7 L-P7-01…05 | R11 code prepared; green `/ready` baseline and live metrics absent | R11 | GPT-6 Sol | exclusively prove baseline readiness/metrics using real named operations and seeded joins | baseline evidence plus actual fault paths; code preparation alone does not close it |
+| P7 authoritative recovery | waiting | R12 | Grok 4.7 | after R11, R08 and any R24/R25-relevant changes, run full tier-S P7 matrix | immutable run, real first/retry attempts, DB<->object joins, per-cell verdicts |
+| L-06; L-P3-02/05/06/07 | unmeasured 1,000-anchor/tree profile | R13 | Grok 4.7 | exclusive scale measurement after B07 passes and R04/R05 evidence is valid | 1,000-anchor series, actual SQL/CTE/tree timings; separate package fix decision if needed |
+| L-03, L-P4-01; SLO-76…78 | R14 measured: CAS/GC parts GREEN; GC scan throughput + batch cap RED | R21 | GPT-6 Sol | `packages/media` implement bounded GC scan/batch behavior for the observed RED | package tests prove cap/progress; no SLO claim from code checks |
+| R21 source change / media D11 | R18 complete only for pre-R21 source | R22 | GPT-5.6 Sol | exclusive cold PG+SQLite mutation-ID union on R21 source | >=95 and enforced regression-failing gate; otherwise return to R21 |
+| R14 RED cells after R21 | rerun required; R14 historical result remains | R23 | Grok 4.7 | exclusive GC/CAS measurement on R21 source | scan throughput and batch cap measured against unchanged SLO; retain GREEN/RED by metric |
+| L-07 | unconfirmed; old P5 was 429-only | R15 | Grok 4.7 | after valid R05 evidence, run true advisory-key collision with independent actors | confirmed, disproved, or explicitly unconfirmed from raw lock/HTTP evidence |
+| core D11 / VLT-MUT P0.2/P1.1/P3 | R16 code prepared and suites green; cold union missing | R16 | GPT-5.6 Sol | exclusive cold sequential PG+SQLite ID-union campaign | >=95 with workflow failure control; otherwise return to R16 test work |
+| documents D11 / VLT-MUT P0.2/P1.1/P4 | R17 code prepared and PG suite green; cold PG missing | R17 | GPT-5.6 Sol | exclusive cold sequential PG campaign | >=95 with workflow failure control; otherwise return to R17 test work |
+| media D11 / VLT-MUT P5 | R18 complete at 95.33% on frozen pre-R21 source | R22 if R21 changes source | GPT-5.6 Sol | do not rerun unless R21 changes media source | R18 remains closure evidence until then |
+| filament D11 / VLT-MUT P6 | R19 complete at 95.51% | complete | — | no rerun | [R19](remaining-evidence/R19.md) |
+| L-08 scheduler; archived release/CI residuals | external/current-state questions, not code evidence | R20 | Grok 4.6 | read current deployment/CI/release state and prepare owner handoff | current fact table plus explicit owner decisions; no publish, billing or archive mutation |
+
+## 3. Work states and dependencies
+
+`implemented` and `code prepared` are not measurement completion. The following state list is the source of truth for launch admission.
+
+| R | State now | Must happen before it can close / unlock |
 |:--|:--|:--|
-| VLT-LOAD | terminal 🟠 Done with deviations; P8 11/11 GREEN; closure/archive postponed by owner | no plan-exec Pn.m; use separate dev/evidence slices below |
-| AUDIT-VLT | archived completed audit; live Layout-v2 copy is a migration preview with 0/30 status and stale P0.1 command | no rerun; quarantine preview routing until migration reconciles it with archive |
-| VLT-HSEAM | superseded by VLT-CANON P3.3 / ADR-0018; live Layout-v2 copy is a migration preview | no P0.1 execution; quarantine preview routing |
-| VLT-REMED, VLT-CANON, VLT-REL | archived terminal histories | preserve; reassess specific old release/mutation claims in R20 |
-| VLT-MUT | moved under archive while its own plan still says In progress; no current journal/status/handoff for continuation | do not launch archive P0.2 directly; use the recovery route in section 3 |
-| ROADMAP.md | optional future features, explicitly not scheduled | outside this completion queue |
+| R01 | complete implementation; historical R01 run rejected; R09 supplies the accepted scoped retry evidence | no relaunch |
+| R02 | complete baseline inventory | no relaunch |
+| R03 | code prepared; measurement pending | full-window R03 measurement |
+| R04 | code verified; measurement pending | R04 capture; B07 re-audit needs valid R04 evidence |
+| R05 | **implementation correction required** for B07-01/02; measurement pending | R05 code correction -> R05 live cells -> B07 re-audit |
+| R06 | capture code complete; measurement pending | exclusive dirty-20k classification -> R08 |
+| R07 | test code prepared; cold PG >=95 pending | R08 final source -> cold R07 |
+| R08 | waiting | R06 cause -> R08 code/checks -> tier-S run -> R07 requalification |
+| R09 | B02-01/02 scoped audit closed; historical product verdicts retained | no relaunch; feeds R24–R26 |
+| R10 | scoped endpoint implementation/evidence complete | M/L/24-hour claims route through R26/R20, not R10 rerun |
+| R11 | code prepared; live baseline pending | R05-valid fixtures and R08 path -> R11 baseline |
+| R12 | waiting | R11, R08, R24/R25-relevant changes and B14 audit |
+| R13 | waiting | valid R04/R05 + passing B07 |
+| R14 | measured, mixed; two RED cells | R21 -> R22 -> R23; do not relaunch old R14 |
+| R15 | waiting | valid R05 evidence |
+| R16/R17 | code prepared; cold proof pending | exclusive campaigns; failures return to the same R |
+| R18/R19 | complete | R18 only requalifies through R22 if R21 changes media |
+| R20 | waiting | evidence/reconciliation; it cannot accept product risk |
+| R21 | new, waiting | implement media GC correction -> R22 |
+| R22 | new, waiting | R21 source -> cold media requalification -> R23 |
+| R23 | new, waiting | R21/R22 source and exclusive stand -> measured media disposition |
+| R24 | new, waiting | core duplicate repair -> R26 |
+| R25 | new, waiting | P6 recovery classification -> package R if required -> R26 |
+| R26 | new, waiting | R24/R25 and frozen source -> current P6 matrix |
 
-The old VLT-MUT P0.1 reproduces a false 100% score when pest-plugin-mutate v4.0.1 receives `--parallel`. Current core/documents workflows still contain that flag; drive/media/filament workflows removed it but have intermediate limits. The P4 L-01 carrier repeated `--parallel` at v4.0.1, so its claim that D11 ≥95 is proved conflicts with the adopted mutation method. The P4 streaming run still proves its measured bytes and memory result. Keep these two claims separate.
+## 4. Ordered launch route
 
-## 2. Rules for every slice
+The shared stand is exclusive for mutation, load, chaos, DB reset and cold-cache work. Code tasks may prepare one package or `load/`; they do not run a heavy measurement. Every command is one R only. Terra's sole role was editing this map; it does not replace any executor below.
 
-- One package or the load harness per implementation slice; a cross-package gate is decomposed into package-specific work. Do not overwrite unrelated dirty files.
-- Preserve approved SLO numerators, denominators, tiers, ceilings and error budgets. No stand fingerprint, S0 smoke run, single-row cardinality probe or tier-M/L-labelled diagnostic stands in for an authoritative tier-S/M/L product run.
-- A finding can close as proved fixed, disproved with new evidence, or explicitly deferred with the actual RED/unevaluated verdict. Do not infer GREEN from a terminal Task item, clean unit tests, a collector repair, or a changed threshold.
-- For mutation, remove the false `--parallel` path and measure on a cold cache with the required DB-driver coverage; do not lower a currently configured minimum to make CI green. Target ≥95 remains. A workflow below 95 is a partial guard, not release proof.
-- Run focused tests first, then the affected package/harness gates and an independent concurrency/API review when relevant. Keep raw run identity, environment fingerprint, source digest and exact verifier outcome. If an authoritative stand is unavailable, record not remeasured.
+Use this exact bounded launcher for every listed row, replacing `RNN` once only:
 
-## 3. Ordered slices and dependencies
+```text
+task:dev plans/REMAINING-WORK.md RNN
+```
 
-The IDs below are stable portfolio work IDs, not VLT-LOAD Pn.m. `task:dev` can take this file plus one ID as input; it must execute only that ID. R01 has a dedicated detailed brief. Work in separate commits. "ready" means its input artifacts exist; it does not claim product GREEN or start work. R02, R03, R06 and the measurement-only R14 are independent of R01; downstream rows wait for their stated gates. After each slice, update its State, evidence link, commit and remaining product verdict in this map before launching a dependent row.
+### Code route (no live tier-S, chaos, mutation or load campaign)
 
-| ID | State | Scope and finding source | Needs | Exit evidence / disposition |
-|:--|:--|:--|:--|:--|
-| **R01** | implementation verified; tier-S SLO-64 measured GREEN via R09 | core retry claim L-04, P6.4; [result](remaining-evidence/R01.md), [accepted rerun](remaining-evidence/R09.md) | none; drive D11 does not cover this core file per P6 finding | bounded claim/overlap/rollback checked; original tier-S attempt remains rejected; R09 accepted rerun supplies full 5k drain and SLO-64 proof |
-| **R02** | measured; [evidence](remaining-evidence/R02.md) | mutation proof recovery: old VLT-MUT P0/P1, P4 L-01 contradiction | none | inventory recorded; cold sequential scores: filament 59.26, media union 67.44, drive 48.90, core SQLite 63.25; documents PG and core PG unevaluated (red suites); P4 D11 100%/25.77s with `--parallel` is unproved |
-| **R03** | code verified; live proof deferred; [evidence](remaining-evidence/R03.md) | load class A/B gate: F-P2.8-1, F-P2.8-2, F-P2.8-3 | P2.7/P2.8 reports | OP-tagged lab submetrics, dense sample audit and no premature abort implemented; historical tier-S throughput RED retained; new full-window S0/lab results unevaluated |
-| **R04** | waiting | load P3 evidence L-P3-01, L-P3-03 | R03 for reusable summary, P3 raw run | DML EXPLAIN binding matrix and nonempty flushed SQL trace; reissued tier-S DB report |
-| **R05** | code verified; live proof unevaluated; [evidence](remaining-evidence/R05.md); commit `01abb38` | load P5 evidence L-P5-01, L-P5-02, L-P5-04 and L-07 control | R03, P5 raw run | per-VU actors; actual collab status; real lock/pool samples; product collision verdict or explicit unconfirmed |
-| **R06** | capture code committed; live proof and dirty-20k cause unevaluated; [evidence](remaining-evidence/R06.md) | load P5 sweeper diagnostics L-P5-03 / L-02 | P5 raw run | stderr/exit/PHP peak/batch rows captured for dirty-20k; cause identified, not guessed |
-| **R07** | B06 test code verified; 217 PG passed / 2 risky; cold PG ≥95 pending/unevaluated; [evidence](remaining-evidence/R07.md) | drive mutation ≥95; old VLT-MUT P2 | R02 honest drive baseline (48.90%; D11 unproved); R08 blocked: R06 dirty-20k cause unevaluated | cold PG score ≥95 without `--parallel`, suitable test coverage, regression-failing gate |
-| **R08** | waiting | drive sweeper product L-02 | R06 cause and R07 D11 | bounded behavior if indicated by cause; race/retry tests and new tier-S SLO-70 run |
-| **R09** | rerun verified; SLO-61 RED; [evidence](remaining-evidence/R09.md) | load P6 evidence L-P6-01, L-P6-02, L-P6-03, L-P6-04 | R01 product change is committed; P6 raw and rejected R01 run available | 118 valid attempts; SLO-58/64 measured GREEN, SLO-61 RED; full 10k/5k drain, UUID/fan-out joins and live scrape; original two failed-job classes unrecoverable after R01 deletion; concurrent duplicate emits 2 HTTP; worktree changes preserved, no mixed commit |
-| **R10** | implementation verified; tier-S rerun accepted; [result](remaining-evidence/R10.md); commit `de65b56` | core endpoint scan L-05 / L-P3-04 | R09 reliable fan-out fixture, accepted | SQL event filter with bounded 100-row keyset pages; SQLite/PG fan-out and overlap tests; 118 valid tier-S attempts, SLO-58/64 GREEN and SLO-61 RED; M/L SLO-59/60 and 24-hour budget unevaluated; 1-row 200/1000 probes diagnostic only; concurrent duplicate 2 HTTP remains |
-| **R11** | waiting | load P7 fidelity L-P7-01, L-P7-02, L-P7-03, L-P7-04, L-P7-05 | R05/R09 reusable fixtures, R08 for final sweeper path | real named HTTP/Artisan mutations, seeded package tables, measured promote, real ENOSPC retry, green baseline /ready and /metrics |
-| **R12** | waiting | tier-S P7 rerun and recovery verdict | R11, relevant product fixes R01/R08/R10 | immutable run with actual fault paths and DB↔object joins; distinct first/retry attempts; no unsupported HA claim |
-| **R13** | waiting | load-only L-06 evidence + L-P3-02, L-P3-05, L-P3-06, L-P3-07 | R04/R05 | 1000-anchor CTE series and actual SQL plan; record any separate core/drive fix decision; drive edits need R07 |
-| **R14** | measured; mixed disposition; [evidence](remaining-evidence/R14.md) | load-only L-03 GC and L-P4-01 CAS pressure measurement | measurement independent; R02 media baseline before any later behavior edit | CAS integrity/memory GREEN; GC delete/RSS GREEN, scan throughput and 1000-row batch cap RED; separate media behavior fix required |
-| **R15** | waiting | load-only L-07 CAS collision and remaining P5 product cells | R05 correct actors/limiter, R14 if media changes | actual product collision/serialization proof or unconfirmed; no status inferred from 429-only cells |
-| **R16** | code prepared; PG+SQLite suites green; cold union pending; [evidence](remaining-evidence/R16.md); commit `2877998` | core mutation ≥95; old VLT-MUT P0.2/P1.1/P3 | R02 core PG+SQLite union; PG suite repaired | remove false parallel gate; cold union ≥95, regression-failing workflow |
-| **R17** | code prepared; PG suite green; cold PG ≥95 pending; [evidence](remaining-evidence/R17.md); commit `3b7c3dd` | documents mutation ≥95; old VLT-MUT P0.2/P1.1/P4 | R02 documents PG baseline; suite repaired | remove false parallel gate; cold PG ≥95, regression-failing workflow |
-| **R18** | complete; cold union 95.33%; [evidence](remaining-evidence/R18.md); commits `6a391cf`, `5a5384d` | media mutation ≥95; old VLT-MUT P5 | R02 media PG+SQLite union baseline (67.44%); R14 disposition recorded | 429 killed / 21 escaped / 450 IDs; both cold driver jobs and regression-failing 95% workflow gate proven |
-| **R19** | ready | filament mutation ≥95; old VLT-MUT P6 | R02 filament SQLite baseline (59.26%) | cold SQLite ≥95 and regression-failing workflow |
-| **R20** | waiting | final mutation, SLO, archived-risk and release/host readiness; old VLT-MUT P7 | R03–R19 as applicable | reconciled SLO table with GREEN/RED/unevaluated per tier, L-08 host scheduler contract, archived residuals and release/coverage/required-check status reverified; owner accepts any remaining deviations |
+1. **B05-R / R05 — GPT-6 Sol.** Read B07-01/02, repair only `load/` capture/verdict logic, add offline controls, save R05 carrier and map state. If an overlap or actor control fails, remain in R05.
 
-### R01 — historical implementation launch (proof now supplied by R09)
+   ```text
+   task:dev plans/REMAINING-WORK.md R05
+   ```
 
-Use [the detailed L-04 brief](VLT-LOAD/brief/2026-09-23-l04-core-retry.md):
+2. **B06-R / R08 — GPT-6 Sol, only after R06 has a measured cause.** Implement only the causal drive fix. If R06 identifies no product defect, record that and do not manufacture R08 code.
 
-~~~text
-$ task:dev plans/VLT-LOAD/brief/2026-09-23-l04-core-retry.md
-~~~
+   ```text
+   task:dev plans/REMAINING-WORK.md R08
+   ```
 
-### R02 / R07 / R16–R19 — mutation lane
+3. **B18 / R21 — GPT-6 Sol.** Repair the two R14 media RED metrics in `packages/media` with package tests. It is a new scoped implementation, not an R14 rerun.
 
-The archived VLT-MUT plan supplies method and old escaped lists, not current execution authority. R02 first checks both the worktree and the archived findings, records current source/workflow digests, and reruns cold sequential baselines on PG/SQLite according to the documented skip matrix: drive and documents PG; core and media union; filament SQLite. Per-package work then writes behavioral tests, avoids unreasoned mutation ignores and proves a deliberate regression fails the workflow. The existing minima 43/54/66/63 are intermediate guards; core/documents 95 with `--parallel` are untrustworthy. Do not relabel a 100% parallel score as proof. R07 is the drive D11 unlock for R08 and drive part of R13. R16–R19 finish the other four packages as separate implementation slices. R20 revisits VLT-REMED/VLT-CANON/release-readiness claims. Workflow or package changes are separate scoped slices.
+   ```text
+   task:dev plans/REMAINING-WORK.md R21
+   ```
 
-### R03–R06 — establish interpretable baselines
+4. **B19 / R24, then R25 — GPT-6 Sol.** First correct the core duplicate-delivery residual; then classify every P6 recovery RED without rewriting old raw evidence. A package defect discovered by R25 gets its own next free R before R26.
 
-F-P2.8-1 records real tier-S throughput below SLO-40/43/49/52, while F-P2.8-3 records missing class-B per-scenario metrics; fixing tags/threshold materialization must not hide the throughput RED. F-P2.8-2 needs enough samples before a sparse TTFB/broadcast p95 can support a CV gate. R03 must attribute the tier-S throughput RED to a measured stand or package bottleneck; any behavior fix is a later single-package task with its own rerun. Until then R20 carries RED or an owner-accepted deviation. P3 needs batch INSERT/UPSERT bindings and SQL trace; it cannot assert no N+1 while the trace is empty. P5 needs distinct authenticated actors and actual status/lock/pool evidence; 429-only cells cannot prove L-07. R06 captures the failed sweeper command before any drive fix is chosen.
+   ```text
+   task:dev plans/REMAINING-WORK.md R24
+   task:dev plans/REMAINING-WORK.md R25
+   ```
 
-### R09–R12 — queue and chaos proof
+R11 may receive no additional code work until valid R05 fixtures and the R08 path exist. R16/R17 have prepared code and wait for their exclusive cold runs; R18/R19 are not code launches.
 
-P6 has 36 machine-RED product cells with sticky `failed_jobs=2`, zero dispatch UUIDs, leftover endpoints, a 100-row tick presented near a 10k volume seed, and a missing SUT scrape. R09 repairs these proof sources, then reruns the declared matrix. R10 addresses the independent core endpoint scan. P7 recorded 51 valid rows but used GET instead of the named product operations, sampled empty/wrong tables, hardcoded promote outcomes, repeated the same ENOSPC action for retry, and never had a green readiness baseline. R11 fixes the harness; R12 is a new authoritative product rerun. Neither changes P7's historical terminal receipt.
+### Exclusive measurement route
 
-### R13–R15 — conditional scale findings
+Run these in the stated dependency order, each with an unused run ID, source/stand digest, cleanup/readback, exact command and raw evidence. A RED result completes its measurement row but follows the return edge shown here.
 
-L-06 has one 13,067-row recursive CTE at 154.5 ms and no 1000-anchor series. L-03 is an unbounded-cursor/checkpoint hypothesis, not a measured tier-L failure; SLO-76…78 stay unchanged. L-P4-01 is repeated page-cache pressure with GREEN serial integrity; measure latency/concurrency before changing media. L-07 is unconfirmed because P5 saw only 429s. Planner-rejected HypoPG indexes and possible duplicate indexes are investigation outputs, not DDL authorization.
+1. **B05-M / R06 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R06`; inputs R06 capture code and P5 dirty artifacts; reproduce dirty-20k. Success is a classified cause, not a GREEN. Cause -> R08; inconclusive run -> improve R06 capture and repeat R06.
+2. **B05-M / R05 live cells — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R05`; inputs corrected R05 and historical P5 artifacts; run overlap, actor, status, lock and pool cells. Valid evidence -> B07-R; failed controls -> R05.
+3. **R03 then R04 — GPT-6 Sol:** `task:dev plans/REMAINING-WORK.md R03`, then `task:dev plans/REMAINING-WORK.md R04`; full-window throughput then P3 trace/plan evidence. Missing trace/early abort -> the respective R. Both valid plus R05 evidence -> B07-R.
+4. **B07-R — GPT-6 Astra:** exact prompt: `Проведи B07-R по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B07-audit.md; не меняй код, raw evidence или статусы R.` GREEN admission -> B08; any finding -> its named R, never an automatic fix.
+5. **B08 / R13 then R15 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R13`, then `task:dev plans/REMAINING-WORK.md R15`; only after B07 admits and R04/R05 are valid. R13 RED may create a separate core/drive fix; R15 must retain `unconfirmed` if collision is not observed.
+6. **Mutation campaign — GPT-5.6 Sol:** run `task:dev plans/REMAINING-WORK.md R16`, `R17`, and (after R08) `R07` as separate cold jobs. Each miss returns to that package R. Run `task:dev plans/REMAINING-WORK.md R22` after R21 before treating media mutation as current-source proof. R18/R19 are evidence inputs, not jobs.
+7. **B18-M / R23 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R23` after R21/R22; remeasure only the R14 GC/CAS matrix. RED returns to R21; GREEN does not alter old R14 raw evidence.
+8. **B20 / R26 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R26` after R24/R25 and any R25 package repair; run the frozen-source full P6 matrix. SLO-61 may remain RED; that is a result routed to R20/owner, never silently GREEN.
+9. **B13-M / R11 then B14 — GPT-6 Sol / GPT-6 Astra:** `task:dev plans/REMAINING-WORK.md R11`, then audit prompt `Проведи B14 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B14-audit.md.` Prove P7 live baseline first; audit findings return to their R.
+10. **B15 / R12 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R12` only after B14 has no finding that invalidates the run. Any recovery RED goes to the concrete package/harness R identified in the carrier before another R12 run.
+11. **B16 / R20 then B17 — Grok 4.6 / GPT-6 Astra:** `task:dev plans/REMAINING-WORK.md R20`, then prompt `Проведи B17 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B17-audit.md.` Neither batch accepts risk, publishes, changes deployment, or closes VLT-LOAD.
 
-### R20 — what completion means
+## 5. Batch routing and audit boundaries
 
-Publish a current matrix for each approved SLO and tier, retaining `not-checkable`/`unevaluated` where no valid run exists. The available tier-S stand does not prove M/L. Re-run package tests and the relevant load gates after product changes; reconcile trace/metric coverage with the current code. Confirm the documented host responsibility to schedule relay, retry, sweep and GC ([commands reference](../docs/reference/commands.md)); absence of package-owned cron is L-08, not a reason to claim host jobs ran. Check current CI coverage and required checks afresh: old VLT-REMED/VLT-MUT release-readiness and GitHub plan statements are dated historical evidence. Final close/archive of VLT-LOAD and disposition of RED or unevaluated results remain an explicit owner decision.
+| Batch | State | Scope / admission | Executor |
+|:--|:--|:--|:--|
+| B01–B04, B06, B09–B12 | completed code/evidence stages | retain their carriers; no repeat queue | recorded executor |
+| B02 | latest scoped audit closed | B02-01/02 only; does not promote P6/SLO | GPT-6 Astra |
+| B05-R / B05-M | active | R05 correction -> R06 and R05 measurements | GPT-6 Sol / Grok 4.7 |
+| B07-R | waiting | valid R03/R04/R05/R06/R08 evidence and cold R07 >=95 | GPT-6 Astra |
+| B08 | blocked | B07-R admission plus valid R04/R05 | Grok 4.7 |
+| B13-M / B14 / B15 | waiting | R11 baseline; B14 validates mutation/P7 before R12 | GPT-6 Sol / Astra / Grok 4.7 |
+| B16 / B17 | waiting | completed applicable evidence; owner decisions remain external | Grok 4.6 / GPT-6 Astra |
+| B18–B20 | new | R21/R22/R23 media route; R24/R25/R26 P6 route | Sol / GPT-5.6 Sol / Grok 4.7 |
 
-## 4. Work cards
+Auditors save only their audit report. The implementation or measurement owner must then perform a separate map-sync step: read that report, update the affected R state and ledger row, and name the next admitted launch. An audit never marks its own findings fixed.
 
-Each card is a single bounded task input. Completion writes `plans/remaining-evidence/RNN.md` with source revision, source/run IDs, exact commands and exit codes, raw-artifact links, changed paths/commit, observed verdict, limitations and next unlocked ID. It also updates the State cell above. A missing or failing check is recorded as such. The carrier reports work; it does not replace immutable load artifacts.
+## 6. Archived and owner-only obligations
 
-### R02 — mutation proof inventory
+These are deliberately not reopened as code work. R20 must report their current factual state and give the owner the indicated decision; it must not make the decision.
 
-Read the archived VLT-MUT P0.1/P0.2 findings, current five workflow files, five package lockfiles and P4 L-01 mutation JSON. Record the exact current source revisions and run cold, sequential DB-correct baseline measurements: drive/documents on PG, core/media as a union of PG and SQLite mutation IDs, filament on SQLite. Count tested/killed/escaped/timeouts/skips and preserve raw logs. If the full baseline is not runnable, state which package is unevaluated; no 100% from `--parallel` is accepted. Reconcile the P4 D11 claim explicitly; do not edit old journal/state.
-
-### R03 — class A/B and tier-S throughput diagnosis
-
-Read P2.7/P2.8, `slo-gates.md` and current `load/gates/thresholds.js`. Make declared per-scenario class-B metrics materialize with matching tags; preserve S0 advisory and lab policy. Give sparse TTFB/broadcast trends enough samples or retain them as unevaluated. Prove the declared window actually runs without a premature abort from an unrelated red threshold. Reproduce and attribute the tier-S SLO-40/43/49/52 throughput RED; no ceiling changes or unmeasured “calibration.” A package/stand behavior fix, if evidence points to one, is a new package-scoped row before R20.
-
-### R04 — P3 DB proof
-
-Read P3 report, L-P3-01/03 and the rejected EXPLAIN artifacts. Capture representative batch INSERT/UPSERT bindings, actual ANALYZE plans and a nonempty flushed query trace with command IDs. Recompute top-20 coverage and N+1 multiplicity from raw trace. The output may still report a bad query or an inconclusive plan; it cannot report “no N+1” from zero rows. DDL changes require a separate measured decision.
-
-### R05 — P5 concurrency proof
-
-Read P5 report and L-P5-01/02/04. Give each virtual user a distinct authenticated actor while keeping the intended same-resource contention. Persist actual HTTP status/Retry-After for collab issuance and setup. Sample PG locks and PgBouncer pools during the held window; empty samples are explicit empty arrays, not a success inference. Rerun the affected product cells; 429-only cells cannot establish lock collision or a 409 budget. Maintain source fingerprint and the existing SLO/error budgets.
-
-### R06 — sweeper failure class
-
-Read P5 dirty-20k/1m artifacts and L-P5-03. Make the failing command expose stderr, exit status, PHP peak, candidate/processed/remaining rows and `vaulter_sweep_batch_rows` where emitted. Reproduce the tier-S dirty-20k case on disposable data and classify the failure from its output. This task changes only the load capture path. It cannot claim a batching fix or SLO-70 GREEN.
-
-### R07 — drive mutation gate
-
-Use R02's drive baseline and the old escaped-mutation list as test targets. Add behavioral tests for surviving mutants in `packages/drive`, run on PG without `--parallel` and a cold cache, reach measured ≥95, retain the real skipped/timeout denominator and show a deliberate regression fails the workflow. Keep the required minimum at or above its current value; raise to 95 when supported. A smaller score does not unlock R08.
-
-### R08 — drive sweeper behavior
-
-Read R06 failure cause, R07 gate, `SweepUploadsCommand` and its concurrency tests. Implement the smallest bounded behavior change justified by the cause, including stable progress under >1000 due sessions, retries and overlapping ticks. Preserve terminal state semantics and no duplicate destructive action. Run focused and package checks, then a new authoritative tier-S SLO-70 run with throughput, tick p95, batch cap, RSS and remaining count. If no valid live run is available, report unremeasured RED.
-
-### R09 — P6 queue evidence
-
-Read P6 report, L-P6-01/02/03/04 and R01 outcome. Identify the two sticky failed jobs by payload/class and count per-cell deltas; join enqueue/processing UUIDs across dispatcher and worker. Reset leftover endpoints, stamp sink rows with the correct run ID, separate duplicate-control windows, drain the actual 10k seed through repeated ticks and keep the SUT scrape live. Rerun the declared tier-S matrix and recompute SLO-58/61, fan-out and queue-time. A clean fixture cannot erase observed product RED without new evidence.
-
-### R10 — core endpoint fan-out
-
-Read R09's clean fan-out fixture, P3 L-P3-04 and P6 L-05. Change only `packages/core` subscription enumeration with event filtering, dispatch ordering, duplicate protection and bounded memory preserved. Add cardinality and concurrent relay tests. Remeasure an authoritative tier-S fan-out/drain profile; 1-row 200/1000 endpoint diagnostics cannot prove SLO-59/60.
-
-### R11 — P7 harness fidelity
-
-Read P7 finding/report and all five L-P7 rows. Drive the named authenticated tus/S3/CAS/outbox/sweeper operations after injector ACK. Seed run-prefixed package rows and join DB↔object state in both directions. Measure post-fence/promote mutations rather than writing accepted/committed literals. Exercise the real short/failed ENOSPC write and a distinct retry after remount. Require a green baseline `/ready` and live `/metrics` before attributing recovery. Focused harness tests cover each failure mode.
-
-### R12 — P7 authoritative rerun
-
-After R11 and relevant product changes, run the full declared tier-S matrix with immutable run/source/stand identity and verifier. Check cell-to-operation equality, nonempty entity joins, cleanup of partial/orphan objects, distinct first/retry attempts, measured detection/restoration and readiness baseline. Publish per-cell product verdicts, preserving RED/unevaluated rows. No host/AWS HA guarantee follows from a local proxy control.
-
-### R13 — tree/DB scale evidence
-
-Read P3/P5 L-06 and L-P3-02/05/06/07. Capture a true 1000-anchor grant profile, recursive CTE count, actual SQL and tree operation times on a tier-matched dataset. Recheck planner-rejected HypoPG proposals and suspected duplicate indexes against this cardinality and write-path costs. Output a separate core or drive fix decision only if evidence supports it; a drive edit needs R07. No DDL is included here.
-
-### R14 — GC and CAS pressure measurement
-
-Read SLO-76…78, L-03 and L-P4-01. Capture bounded/checkpoint metrics, RSS, row/object throughput and remaining backlog for a tier-S GC run; keep M/L unclaimed without their profiles. Repeat 5-GiB CAS stage under controlled serial/concurrent pressure, recording duration, major faults and cgroup events with integrity. Distinguish page-cache reclaim from PHP heap growth. Only a measured adverse outcome can launch a separate `packages/media` behavior change, which needs its honest mutation gate.
-
-### R15 — CAS collision control
-
-Read P5 L-07 and R05's actor/limiter correction. Construct distinct keys that actually collide under the product advisory-key function, not merely a primitive lock ID; capture lock identity, HTTP outcome and unrelated-key delay. Repeat with independent actors. Close L-07 as confirmed, disproved or still unconfirmed from product evidence. Do not turn 429-only responses into a green collision verdict.
-
-### R16–R19 — remaining package mutation gates
-
-Each ID owns one package plus its workflow: R16 core (PG+SQLite union), R17 documents (PG), R18 media (PG+SQLite union), R19 filament (SQLite). Use R02's current cold baseline; write behavior tests for real escaped mutants, justify any cosmetic ignore, keep driver-specific skip counts, and reach a cold ≥95 score without `--parallel`. Verify each CI job can fail on a deliberate regression. Record separate commits and carriers; no aggregate 100% claim from a broken subprocess.
-
-### R20 — final reconciliation and owner handoff
-
-Check each R row's carrier and source digest, then publish a current SLO-by-tier matrix with GREEN/RED/unevaluated, report all remaining deviations and verify L-08 host scheduling on the actual deployment. Recheck current CI coverage, mutation jobs, required-check protection, archived plan residuals and Packagist split prerequisites. Preserve the v0.2.0 history and do not publish or change billing. Present concrete remaining owner decisions, including any RED or untestable M/L target, before final VLT-LOAD close/archive.
-
-## 5. Archived residuals requiring an explicit disposition
-
-These are historical open risks from archived plans. They do not silently reopen those plans or override the R01–R20 work order.
-
-| Source | Historical remainder | Current route |
+| Source | Current disposition | Owner decision required |
 |:--|:--|:--|
-| VLT-REMED handoff | suite coverage 78.6% below 80% and release-readiness RED in July | R20 remeasure current CI at its approved threshold; add focused tests or retain RED with owner disposition |
-| VLT-CANON handoff / VLT-MUT Q1–Q2 | required checks unavailable under the recorded org/private-repo setup; core mutation job only push/dispatch | R20 verify current GitHub settings and PR triggers; owner handles any billing or policy decision; do not call advisory jobs enforcing |
-| VLT-REL handoff D9 | Packagist split repositories, secret and registration were deferred; tag v0.2.0 exists but split run failed | R20 record current status; provisioning, publication and rerun require explicit owner authorization |
-| VLT-CANON ADR-0018 | mixed `format` value-space without backfill | preserve accepted limitation; a data migration needs its own product decision and evidence |
-| VLT-CANON handoff | ru contracts reference drift, documented nonreactive `registerEngineComponent`, azgard README/workflow mismatch | bounded docs or product follow-ups after higher-severity proof; do not claim they block R01 |
-| VLT-REL handoff D12 | historical release docs carry superseded 0.1.0 examples | optional bookkeeping in archived material; do not fabricate a v0.1.0 tag |
-| ROADMAP.md | engine-aware Filament UI and other deferred features | unscheduled; validate present code/ADR seam before any future owner launch |
+| VLT-REMED handoff: 78.6% < 80% release-readiness | historical RED; current value must be rechecked in R20 | fund/authorize a coverage improvement or explicitly accept the current residual |
+| VLT-CANON handoff: private/free GitHub cannot enforce required checks | external constraint, not a repository fix | choose GitHub Team/Pro or make the repository public, or accept non-enforcement |
+| VLT-REL D9: split repos, token and Packagist registration absent | release tag exists; publication is deferred | provision split/Packagist and explicitly authorize publication/retry, or keep deferred |
+| VLT-CANON ADR-0018 mixed `format` values | explicitly accepted limitation | no action unless owner opens a separately scoped migration decision |
+| VLT-CANON docs/reactivity/README drift and VLT-REL D12 examples | bounded historical documentation debt | choose a separate docs task if desired; it is outside product proof completion |
+| L-08 host scheduler | host ownership is documented, host execution is not proved | provide deployment evidence or explicitly accept the absence of host-scheduler proof |
+| remaining product RED/unevaluated SLOs, including SLO-61 | no one may accept them through R20/B17 | after R26/R12 current evidence, accept each named deviation or authorize its repair |
 
-Final R20 reports which rows were fixed, remain accepted limitations, require external owner action, or are stale after remeasurement. It does not publish, pay for a service or rewrite release history.
+## 7. Evidence and map-update contract
 
-## 6. Launch syntax for later IDs
+After every implementation or measurement slice, its executor must immediately:
 
-For a single row after its `Needs` column is satisfied, use the exact ID and this file as a bounded task input:
+1. write or extend only its `plans/remaining-evidence/RNN.md` carrier with revision, exact commands/exits, run ID, source/stand digest, raw links, observed GREEN/RED/unevaluated verdict and limitations;
+2. update this map's ledger and state table with what closed, what remains, new R IDs needed by a newly identified package defect, and the single next admitted launch;
+3. preserve raw evidence, SLO thresholds and historical verdicts. A correction never overwrites a rejected or RED artifact.
 
-~~~text
-$ task:dev plans/REMAINING-WORK.md RNN — выполнить только RNN, сохранить его Needs и Exit evidence
-~~~
+For an audit, the auditor writes only `Bxx-audit.md`; the subsequent map-sync is performed by the responsible executor. For a failed verification, return to the named corrective R in this map. Do not leave a generic `blocked` status when a code, measurement, re-audit, or owner-decision route is known.
 
-Replace both `RNN` tokens with the chosen ID. Each task must report the source run and changed package or harness. If new evidence disproves a candidate fix, update this map's row before starting a different behavior change.
+## 8. Completion criteria
 
-## 7. Owner execution batches and model routing
+Vaulter is ready for an owner close decision only when the following are evidenced, not merely discussed:
 
-**Owner routing, 2026-09-24:** use GPT-5.6 Sol, GPT-6 Sol, GPT-6 Astra for audits, Grok 4.6 and Grok 4.7. These explicit assignments override the installed Task adapter's default model routing for these launches only. They are workload assignments, not benchmark claims. No batch below has been executed by adding this schedule.
-
-### Execution contract
-
-- Start with `pwd` and inspect existing dirty/untracked paths. R01, R09, R10 and R02 are already evidenced; do not restart them. B04 / R03→R04 is the next implementation launch.
-- B IDs are scheduling wrappers, **not** Task phase IDs or multi-ID `task:dev` arguments. The launcher reads the batch row, then applies `$ task:dev plans/REMAINING-WORK.md RNN` separately to each listed R, in order. Preserve the one-package-or-harness slice rule, per-R evidence carriers, checks and scoped commits; never absorb unrelated work into a commit. A batch shares context, not a combined completion verdict.
-- Launch the numbered commands **one at a time**, checking the relevant `Needs` and prior audit findings before each dependent slice. A CLI exit code or completed conversation is not a gate. A valid RED product measurement can complete an evidence task; it cannot satisfy a required GREEN gate such as R07 ≥95 or R11 baseline readiness. If a prerequisite is absent, record the exact blocker and stop that dependent slice.
-- Use the shared stand exclusively: no simultaneous load, chaos, mutation, database-reset or cache-cold runs, including across otherwise independent packages. No parallel editing agents in this worktree. Batches are sequential; do not turn the command list into an unconditional shell loop.
-- In B08, each measurement has its own run ID, environment/source fingerprint and cleanup. R13/R14 do not authorize package behavior or DDL changes. New measured fixes need separate scoped rows and their gates; remeasure any later evidence invalidated by those fixes.
-- B09–B12 keep mutation work in four separate package contexts. Recheck the R07 drive gate after R08 changes; recheck any other mutation proof whose source changed after its recorded run. Do this before B14 accepts the final source set. Do not replace an old result or claim that a pre-change score applies to new code.
-- Astra audit batches inspect the actual scoped diff and raw evidence independently. They may write only `plans/remaining-evidence/Bxx-audit.md`; no implementation, status rewrites or automatic fixes. Record audited source digests, checks actually performed, severity with concrete impact, unresolved findings and disposition. The responsible implementation model resolves findings in the original R scope; obtain an Astra re-review before dependent work if a finding invalidates its prerequisite. Audits may inspect evidence without rerunning load; any requested rerun uses the same exclusive stand.
-- R09's SLO-61 RED, concurrent duplicate delivery, recovery RED and unrecoverable historical failed-job identities remain explicit residuals. R10 does not silently acquire a separate duplicate-delivery fix. B16/B17 must carry these forward unless a separately evidenced disposition supersedes them.
-- B16 can prepare a complete R20 owner handoff while deployment access or owner decisions remain outstanding; it must retain that incomplete disposition. B17 does not authorize publication, billing, final VLT-LOAD close/archive or acceptance of RED/M/L unknowns.
-
-### Batch queue
-
-| Batch | Ordered scope | Model | Admission / dependency | Intended result |
-|:--|:--|:--|:--|:--|
-| **B01** | R10 | `gpt-6-sol` | R09 accepted fixture | Core endpoint enumeration, bounded fan-out and tier-S proof. |
-| **B02** | audit R09/R10 | `gpt-6-astra` | B01 | Independent core concurrency/evidence audit; preserve SLO-61 RED and concurrent duplicate residual. |
-| **B03** | R02 | `grok-4.6` | none | Inventory plus cold sequential baselines for all five packages; no product changes. |
-| **B04** | R03 → R04 | `gpt-6-sol` | R03 inputs; R04 only after R03 reusable summary | One load/DB context: class A/B evidence, throughput diagnosis, then SQL/trace proof. |
-| **B05** | R05 → R06 | `gpt-6-sol` | R03; existing P5 artifacts | One P5 context: actors/lock/pool evidence, then sweeper failure capture. |
-| **B06** | R07 → R08 | `gpt-6-sol` | R02 drive baseline; R06 cause; R08 only after R07 ≥95 | One drive context: honest mutation unlock, then measured sweeper behavior and rerun. |
-| **B07** | audit R02–R08 | `gpt-6-astra` | B03–B06 | Audit baseline validity, load controls, drive concurrency and SLO-70 evidence. |
-| **B08** | R13 → R14 → R15 | `grok-4.7` | R04/R05; B07 findings resolved where relevant | Sequential load-only measurement campaign: tree/DB, GC/CAS pressure, actual collision control. |
-| **B09** | R16 | `gpt-5.6-sol` | R02 core baseline; R10 and relevant B02 findings resolved | Core final cold PG+SQLite union mutation gate. |
-| **B10** | R17 | `gpt-5.6-sol` | R02 documents baseline | Documents cold PG mutation gate. |
-| **B11** | R18 | `gpt-5.6-sol` | R02 media baseline; R14 disposition | Media cold PG+SQLite union mutation gate. |
-| **B12** | R19 | `gpt-5.6-sol` | R02 filament baseline | Filament cold SQLite mutation gate. |
-| **B13** | R11 | `gpt-6-sol` | R05/R09 fixtures; R08 final sweeper path; R10 settled | P7 harness fidelity, operation/state joins, ENOSPC retry and baseline readiness. |
-| **B14** | audit R11 + mutation gates | `gpt-6-astra` | B08–B13 | Pre-chaos audit: injector semantics, cleanup/retry, R07 and R16–R19 gates on current sources. |
-| **B15** | R12 | `gpt-6-sol` | R11; R01/R08/R10; B14 has no unresolved findings invalidating the run | Full authoritative tier-S chaos matrix on a frozen source/stand snapshot. |
-| **B16** | R20 | `grok-4.6` | R03–R19 evidence/dispositions as applicable | Reconcile source digests, SLO tiers, CI and host/release residuals; retain external unknowns. |
-| **B17** | audit R12/R20 + final map | `gpt-6-astra` | B15/B16 | Final independent evidence audit and owner handoff; no release or archive action. |
-
-### Full CLI launch commands
-
-Run from any directory; each command explicitly selects this workspace. Prompts use single quotes so the shell passes literal `$ task:dev`. CLI option syntax was checked against installed help: Codex uses `-m`, Cursor uses **`cursor agent --model`** (`cursor -m` is the IDE merge option). Local Cursor configuration contains `grok-4.6` and `grok-4.7`; online availability could not be verified because `cursor agent --list-models` failed with `getaddrinfo EAI_AGAIN api2.cursor.sh`. GPT-6 Sol is the owner's explicit requested ID; the local Codex cache lists GPT-5.6 Sol/Astra but does not establish GPT-6 Sol account availability. If the backend rejects an ID, resolve availability before launch; do not silently substitute a different model.
-
-~~~bash
-# B01 — R10
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B01 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B02 — audit R09/R10
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-astra -c 'model_reasoning_effort="high"' 'Проведи аудит B02 по разделу 7 plans/REMAINING-WORK.md. Сохрани только отчет аудита; код и статусы R не изменяй.'
-
-# B03 — R02
-cursor agent --workspace /home/vostrikov/projects/packages/vaulter --model grok-4.6 'Выполни B03 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B04 — R03 → R04
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B04 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B05 — R05 → R06
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B05 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B06 — R07 → R08
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B06 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B07 — audit R02–R08
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-astra -c 'model_reasoning_effort="high"' 'Проведи аудит B07 по разделу 7 plans/REMAINING-WORK.md. Сохрани только отчет аудита; код и статусы R не изменяй.'
-
-# B08 — R13 → R14 → R15
-cursor agent --workspace /home/vostrikov/projects/packages/vaulter --model grok-4.7 'Выполни B08 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B09 — R16
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-5.6-sol -c 'model_reasoning_effort="high"' 'Выполни B09 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B10 — R17
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-5.6-sol -c 'model_reasoning_effort="high"' 'Выполни B10 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B11 — R18
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-5.6-sol -c 'model_reasoning_effort="high"' 'Выполни B11 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B12 — R19
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-5.6-sol -c 'model_reasoning_effort="high"' 'Выполни B12 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B13 — R11
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B13 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B14 — audit R11 + mutation gates
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-astra -c 'model_reasoning_effort="high"' 'Проведи аудит B14 по разделу 7 plans/REMAINING-WORK.md. Сохрани только отчет аудита; код и статусы R не изменяй.'
-
-# B15 — R12
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="high"' 'Выполни B15 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B16 — R20
-cursor agent --workspace /home/vostrikov/projects/packages/vaulter --model grok-4.6 'Выполни B16 по разделу 7 plans/REMAINING-WORK.md. Применяй $ task:dev отдельно к каждому R в указанном порядке.'
-
-# B17 — audit R12/R20 + final map
-codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-astra -c 'model_reasoning_effort="high"' 'Проведи аудит B17 по разделу 7 plans/REMAINING-WORK.md. Сохрани только отчет аудита; код и статусы R не изменяй.'
-~~~
+- every ledger row is complete, explicitly retained RED/unevaluated with an owner disposition, or an accepted archival limitation;
+- B07 and B14/B17 have no unresolved finding that invalidates a dependent run;
+- current-source mutation proof is >=95 for drive, core, documents and media under the declared drivers; R18/R19 remain valid for their sources;
+- the R21 media fix and R23 measurement resolve or explicitly retain the R14 throughput/batch-cap RED;
+- R26 contains the current P6 matrix and explicitly reports duplicate delivery, recovery, failed-job deltas and SLO-61; R12 contains the current P7 recovery matrix;
+- R20 publishes the current SLO-by-tier table, current CI/release/host facts and the owner-decision list. M/L or 24-hour gaps remain `unevaluated` unless actually measured;
+- the owner, not an executor or audit, decides whether any remaining RED, unevaluated target, deployment constraint, required-check limitation, or deferred publication is acceptable and whether to close/archive VLT-LOAD.

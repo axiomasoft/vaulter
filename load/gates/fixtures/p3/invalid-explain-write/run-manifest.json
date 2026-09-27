@@ -1,0 +1,29 @@
+{
+  "dataset_id": "vlt-load-fixture",
+  "disposable_db": false,
+  "env_fingerprint": "abc123def4567890",
+  "extensions": {
+    "hypopg": "1.4.1",
+    "pg_stat_statements": "1.10"
+  },
+  "pg_stat_statements": {
+    "max": 10000,
+    "track": "all"
+  },
+  "pg_stat_statements_info": {
+    "dealloc_after": 0,
+    "dealloc_before": 0,
+    "dealloc_delta": 0
+  },
+  "run_id": "fixture-run",
+  "schema_version": "p3-profile/v1",
+  "tier": "S0",
+  "terminal": {
+    "marker": "p3-run-complete",
+    "verified_at": "2026-09-21T00:00:00Z"
+  },
+  "track_io_timing": {
+    "enabled": false,
+    "pg_test_timing_us": null
+  }
+}

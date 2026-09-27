@@ -1,13 +1,13 @@
 # Roadmap — future ideas (not scheduled)
 
 This is a parking lot for features that are **architecturally scoped but deliberately not
-built** in the current release track. Everything here was either explicitly deferred by the
-maintainer or flagged "optional" in the working plan (`docs/plan/00-master-plan.md`). None of
-it blocks a `v0.1.0` release — the goal right now is a **minimal, stable, working core +
-drive + documents + media + filament** stack.
+scheduled**. Everything here was either explicitly deferred by the maintainer or flagged
+"optional" in the historical working plan (`docs/plan/00-master-plan.md`). It is outside
+the current evidence and remediation queue in [plans/REMAINING-WORK.md](plans/REMAINING-WORK.md);
+a future owner decision is needed to schedule an idea.
 
-Each entry names its extension seam (so building it later needs zero core changes) and its
-source reference in the working plan, so reviving an item doesn't require re-deriving context.
+Each entry records the extension seam and historical source. Check both against current code
+and ADRs before reviving an item; the older seam description is not execution approval.
 
 ## Content ingestion & editing
 

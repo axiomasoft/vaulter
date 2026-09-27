@@ -1,0 +1,73 @@
+{
+  "attempt": 1,
+  "backlog_slope": null,
+  "burst_seconds": 1,
+  "business_dead": 0,
+  "business_failed": 0,
+  "cell_id": "product-realistic.relay.i200.f0.slow-under-timeout",
+  "dispatch_uuids": 0,
+  "duplicate_http": 0,
+  "duration_seconds": 1.994,
+  "events_sent": 200,
+  "evidence": "valid",
+  "failed_jobs": 0,
+  "failed_jobs_after": [],
+  "failed_jobs_before": [],
+  "failed_jobs_delta": [],
+  "fanout": "0",
+  "fanout_http_per_event": 0.0,
+  "http_receives": 0,
+  "ingress_per_s": 200,
+  "jobs_per_second": 0.0,
+  "lifecycle": {
+    "invalid_uuids": [],
+    "process_p95_seconds": null,
+    "process_samples": 0,
+    "processed": 0,
+    "processing": 0,
+    "queue_wait_p95_seconds": null,
+    "queue_wait_samples": 0,
+    "queue_wait_source": "JobQueueing before Redis push (upper bound includes enqueue IO)",
+    "queued": 0,
+    "uuids": []
+  },
+  "observed_through_ns": 227768584369351,
+  "plane": "product-realistic",
+  "recovered": true,
+  "recovery_seconds": 1.37,
+  "recovery_verdict": "recovered",
+  "redis_after": {
+    "default": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "redis_before": {
+    "default": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "run_id": "bc199ced-5b0f-4e77-b5ca-1a73055c0bfa",
+  "sink": "slow-under-timeout",
+  "sink_end_line": 69220,
+  "sink_start_line": 69220,
+  "slo": "unevaluated",
+  "started_at": "2026-09-26T19:41:21Z",
+  "worker_pids": [
+    388672,
+    393706
+  ]
+}

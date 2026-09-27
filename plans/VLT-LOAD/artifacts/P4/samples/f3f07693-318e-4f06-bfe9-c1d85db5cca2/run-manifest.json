@@ -1,0 +1,48 @@
+{
+  "byte_accounting": {
+    "client_bytes_received": 524288000,
+    "content_length_bytes": 524288000,
+    "http_status": 200,
+    "probe_object_sha256": "b21fb5bb390a2970dbb63780421485fc5d9e4a5353f663086fb7b02ffdd48e86",
+    "server_object_sha256": "b21fb5bb390a2970dbb63780421485fc5d9e4a5353f663086fb7b02ffdd48e86"
+  },
+  "case_id": "cas_stage_probe/500m",
+  "cgroup_mode": "v2",
+  "env_fingerprint": "ed9b6f225dcf6c86",
+  "fixture_id": "p4-matrix-8f383737-500m",
+  "fpm": {
+    "max_children": 1,
+    "pm": "static",
+    "pool": "memory"
+  },
+  "matrix": {
+    "attempt_id": "f3f07693-318e-4f06-bfe9-c1d85db5cca2",
+    "cell_id": "cas_stage_probe/500m",
+    "path_id": "cas_stage_probe",
+    "repetition": 1,
+    "size_bytes": 524288000,
+    "size_id": "500m",
+    "transfer_bytes": 524288000
+  },
+  "php_peak_bytes": 33554432,
+  "preflight": {
+    "cgroup_v2": true,
+    "smaps_rollup": true,
+    "worker_pid_unique": true
+  },
+  "prometheus_capture": {
+    "family": "vaulter_request_peak_memory_bytes",
+    "value_bytes": 33554432
+  },
+  "run_id": "8f383737-406e-42b9-addd-3ecf4ef6fc2b",
+  "schema_version": "p4-memory/v1",
+  "terminal": {
+    "marker": "p4-run-complete",
+    "verified_at": "2026-09-22T13:20:45Z"
+  },
+  "tier": "S",
+  "worker_pid_identity": {
+    "pid": 1,
+    "starttime_ticks": 45455520
+  }
+}

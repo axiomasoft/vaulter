@@ -8,22 +8,6 @@
             "command": "bash /home/vostrikov/projects/packages/vaulter/.claude/maind-memory.sh"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /home/vostrikov/projects/packages/vaulter/.claude/maind-health.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/agent-router/session-policy.py"
-          }
-        ]
       }
     ],
     "SessionEnd": [
@@ -31,25 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash /home/vostrikov/projects/packages/vaulter/.claude/maind-feature-log.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "python3 ~/.claude/hooks/run-report/run-report.py"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/agent-router/router.py"
           }
         ]
       }

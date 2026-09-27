@@ -72,7 +72,7 @@ COLLECTORS = (
     'prometheus',
 )
 AMBIGUOUS = ('ambiguous', 'unresolved')
-RESOLVED = ('matched', 'rejected-persisted')
+RESOLVED = ('matched', 'matched-absent', 'rejected-persisted', 'not-applicable')
 
 
 class EvidenceInvalid(Exception):
@@ -347,13 +347,23 @@ def _check_fault_ids(ledger: list[dict], injectors: list[dict]) -> None:
 
 def _check_objects(rows: list[dict], manifest: dict) -> None:
     for row in rows:
-        _require(row.get('schema') == 'p7-object/v1', 'object schema')
+        _require(row.get('schema') in {'p7-object/v1', 'p7-object/v2'}, 'object schema')
         _require(row.get('run_id') == manifest['run_id'], 'cross-run object')
         key = row.get('key')
         _require(isinstance(key, str) and key, 'object key')
-        _require(manifest['run_id'] in key, 'cross-run object')
+        if row.get('schema') == 'p7-object/v1':
+            _require(manifest['run_id'] in key, 'cross-run object')
+        else:
+            run_marker = row.get('run_marker')
+            _require(
+                isinstance(run_marker, str) and manifest['run_id'] in run_marker,
+                'cross-run object marker',
+            )
+        exists = row.get('exists', True)
+        _require(isinstance(exists, bool), 'object exists')
         checksum = row.get('checksum')
-        _require(isinstance(checksum, str) and CHECKSUM.match(checksum) is not None, 'absent checksum')
+        if exists or checksum is not None:
+            _require(isinstance(checksum, str) and CHECKSUM.match(checksum) is not None, 'absent checksum')
         _require(_int(row.get('size')) and row['size'] >= 0, 'object size')
         _require('body' not in row, 'redacted field body in objects')
 
@@ -386,14 +396,18 @@ def _check_readiness(rows: list[dict]) -> dict[str, list[dict]]:
         _require(row.get('schema') == 'p7-readiness/v1', 'readiness schema')
         _require(isinstance(row.get('up_ok'), bool), 'readiness /up')
         _require(isinstance(row.get('ready_ok'), bool), 'readiness /ready')
+        if row.get('schema') == 'p7-readiness/v1' and 'metrics_ok' in row:
+            _require(isinstance(row.get('metrics_ok'), bool), 'readiness /metrics')
+        if row.get('phase') == 'baseline' and 'metrics_ok' in row:
+            _require(row['up_ok'] and row['ready_ok'] and row['metrics_ok'], 'baseline is not green')
         _require(row.get('source') in {'up', 'ready', 'dependency-probe'}, 'readiness source')
         by_cell.setdefault(row['cell_id'], []).append(row)
     return by_cell
 
 
-def _check_attempts(rows: list[dict]) -> None:
+def _check_attempts(rows: list[dict], known: dict[str, dict]) -> None:
     for row in rows:
-        _require(row.get('schema') == 'p7-attempt/v1', 'attempt schema')
+        _require(row.get('schema') in {'p7-attempt/v1', 'p7-attempt/v2'}, 'attempt schema')
         _require(row.get('http_outcome') in {'accepted', 'rejected', 'error', 'timeout', None}
                  or _int(row.get('http_outcome')), 'http outcome')
         _require(row.get('availability') in {'up', 'down', 'degraded'}, 'availability')
@@ -401,6 +415,39 @@ def _check_attempts(rows: list[dict]) -> None:
             'absent', 'pending', 'committed', 'rejected', 'ambiguous',
         }, 'durable state')
         _require('rto_verdict' not in row or row['rto_verdict'] is False, 'rto verdict')
+        if row.get('schema') == 'p7-attempt/v2':
+            expected = known[row['cell_id']]
+            _require(row.get('operation') == expected['operation'], 'named product operation')
+            results = row.get('product_results')
+            _require(isinstance(results, list) and results, 'missing product result')
+            request_ids = []
+            for result in results:
+                _require(isinstance(result, dict), 'product result')
+                _require(result.get('operation') in {expected['operation'], 'tus-patch', 's3-put-part'},
+                         'product operation mismatch')
+                _require(_int(result.get('status')), 'product status')
+                _require(result.get('transport') in {'http', 'artisan'}, 'product transport')
+                request_id = result.get('request_id')
+                _require(isinstance(request_id, str) and request_id, 'product request id')
+                request_ids.append(request_id)
+            if expected['plane'] == 'storage-control':
+                first = results[0]
+                first_failed = first['status'] == 0 or first['status'] >= 400
+                if _int(first.get('requested_bytes')) and _int(first.get('written_bytes')):
+                    first_failed = first_failed or first['written_bytes'] < first['requested_bytes']
+                _require(first_failed, 'ENOSPC first write did not fail or short-write')
+                if expected['operation'] in {'cas-stage', 'write'}:
+                    _require(_int(first.get('requested_bytes')), 'ENOSPC requested bytes')
+                    _require(_int(first.get('written_bytes')), 'ENOSPC written bytes')
+                    _require(first['written_bytes'] < first['requested_bytes'], 'ENOSPC write was not short')
+            if expected['fault'] == 'enospc-then-retry':
+                _require(len(results) == 2, 'missing ENOSPC retry')
+                _require(len(set(request_ids)) == 2, 'ENOSPC retry reused first request')
+                retry = results[1]
+                _require(200 <= retry['status'] < 300, 'ENOSPC retry did not succeed')
+                _require(_int(retry.get('requested_bytes')), 'ENOSPC retry requested bytes')
+                _require(_int(retry.get('written_bytes')), 'ENOSPC retry written bytes')
+                _require(retry['written_bytes'] == retry['requested_bytes'], 'ENOSPC retry was short')
 
 
 def _check_reconcile(rows: list[dict], readiness: dict[str, list[dict]],
@@ -412,7 +459,7 @@ def _check_reconcile(rows: list[dict], readiness: dict[str, list[dict]],
         _require(join in ('db-to-object', 'object-to-db'), 'reconcile join')
         status = row.get('status')
         _require(status in (*RESOLVED, *AMBIGUOUS, 'missing-object', 'missing-row',
-                            'checksum-mismatch'), 'reconcile status')
+                            'checksum-mismatch', 'orphan-object'), 'reconcile status')
         identity = row.get('durable_identity')
         if status in AMBIGUOUS:
             raise EvidenceInvalid('unresolved ambiguity')
@@ -426,7 +473,8 @@ def _check_reconcile(rows: list[dict], readiness: dict[str, list[dict]],
     for cell_id in recovered_cells:
         probes = [
             row for row in readiness.get(cell_id, [])
-            if row.get('ready_ok') is True or row.get('up_ok') is True
+            if row.get('ready_ok') is True and row.get('up_ok') is True
+            and row.get('metrics_ok', True) is True
         ]
         _require(probes, 'recovered without dependency probe')
         matches = [row for row in by_cell.get(cell_id, []) if row.get('status') in RESOLVED]
@@ -500,11 +548,13 @@ def verify_run_dir(run_dir: Path) -> None:
     _check_database(streams['database.jsonl'])
     _check_temp(streams['temp.jsonl'])
     readiness = _check_readiness(streams['readiness.jsonl'])
-    _check_attempts(streams['attempts.jsonl'])
+    _check_attempts(streams['attempts.jsonl'], known)
     _check_reconcile(streams['reconcile.jsonl'], readiness, streams['ledger.jsonl'])
     for row in streams['prometheus.jsonl']:
-        _require(row.get('schema') == 'p7-prometheus/v1', 'prometheus schema')
+        _require(row.get('schema') in {'p7-prometheus/v1', 'p7-prometheus/v2'}, 'prometheus schema')
         _require(isinstance(row.get('path'), str) and row['path'], 'prometheus path')
+        if row.get('schema') == 'p7-prometheus/v2':
+            _require(row.get('job') == 'vaulter-sut', 'prometheus SUT job')
     terminal = _load_json(terminal_path)
     _require(terminal.get('schema') == 'p7-run-terminal/v1', 'missing terminal marker')
     _require(terminal.get('run_id') == manifest['run_id'], 'cross-run event in terminal')

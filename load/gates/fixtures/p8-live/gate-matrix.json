@@ -1,0 +1,778 @@
+{
+  "class_a": 42,
+  "invalid": [],
+  "items": [
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-01",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-02",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-03",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-04",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-05",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-06",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-07",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-08",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-09",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-10",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-11",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-12",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-13",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-14",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-15",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-16",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-17",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-18",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-19",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-20",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-21",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-22",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-23",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-24",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-25",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-26",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-27",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-28",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-29",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-30",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-31",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-32",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-33",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-34",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-35",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-36",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-37",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-38",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-39",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-40",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-40",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-41",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-41",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-42",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-42",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-43",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-43",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-44",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-44",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-45",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-45",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-46",
+      "source": "promql",
+      "status": "known-red"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-46",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-47",
+      "source": "promql",
+      "status": "known-red"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-47",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-48",
+      "source": "promql",
+      "status": "known-red"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-48",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-49",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-49",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-50",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-50",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-51",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-51",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-52",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-52",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-53",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-53",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "k6",
+      "id": "SLO-54",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "B",
+      "detail": "k6",
+      "id": "SLO-54",
+      "source": "k6",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-55",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-56",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-57",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-58",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-59",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-60",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-61",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-62",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-63",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-64",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-65",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-66",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-67",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-68",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-69",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-70",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-71",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-72",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-73",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-74",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-75",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-76",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-77",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-78",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-79",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-80",
+      "source": "promql",
+      "status": "pass"
+    },
+    {
+      "applicable": false,
+      "class": "A",
+      "detail": "ok",
+      "id": "SLO-81",
+      "source": "promql",
+      "status": "pass"
+    }
+  ],
+  "profile": "smoke-perf",
+  "rows": 96,
+  "tier": "S0",
+  "verdict": "green"
+}

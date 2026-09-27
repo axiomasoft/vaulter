@@ -1,0 +1,11 @@
+{
+  "dataset_id": "vlt-load-fixture",
+  "env_fingerprint": "abc123",
+  "image_versions": "postgres:16-alpine",
+  "metrics_enabled": true,
+  "profile": "smoke-perf",
+  "prometheus_job": "vaulter-sut",
+  "rejected_attempts": [],
+  "run_id_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "tier": "S0"
+}

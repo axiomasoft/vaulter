@@ -1,0 +1,26 @@
+# P8.7 host fallback when Docker Hub IPv6 cannot pull minio/mc or pgbouncer.
+# minio/minio already ships `mc`; postgres:16-alpine is local. App talks to
+# postgres:5432 directly so the dummy pgbouncer never sits on the query path.
+services:
+  minio-init:
+    image: redis:7-alpine
+    entrypoint: ["sh", "-c", "exit 0"]
+    depends_on:
+      minio:
+        condition: service_healthy
+  pgbouncer:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+  app:
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+  queue-worker:
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"

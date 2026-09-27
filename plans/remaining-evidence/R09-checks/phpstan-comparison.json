@@ -1,0 +1,38 @@
+{
+  "before": {
+    "command": [
+      "docker",
+      "exec",
+      "vaulter-load-app-1",
+      "php",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G",
+      "--error-format=json",
+      "/tmp/r09-static-baseline/Console/QueueProbeCommand.php",
+      "/tmp/r09-static-baseline/Listeners/RecordQueueLifecycle.php",
+      "/tmp/r09-static-baseline/LoadServiceProvider.php"
+    ],
+    "exit": 1,
+    "errors": 60
+  },
+  "after": {
+    "command": [
+      "docker",
+      "exec",
+      "vaulter-load-app-1",
+      "php",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G",
+      "--error-format=json",
+      "load/app/Console/QueueProbeCommand.php",
+      "load/app/Listeners/RecordQueueLifecycle.php",
+      "load/app/LoadServiceProvider.php"
+    ],
+    "exit": 1,
+    "errors": 60
+  }
+}

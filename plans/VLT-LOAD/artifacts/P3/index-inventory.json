@@ -1,0 +1,815 @@
+{
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "families": [
+    {
+      "family": "v_nodes",
+      "indexes": [
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 950272,
+          "index_name": "v_nodes_current_version_id_index",
+          "indexdef": "CREATE INDEX v_nodes_current_version_id_index ON public.v_nodes USING btree (current_version_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 950272,
+          "index_name": "v_nodes_file_id_index",
+          "indexdef": "CREATE INDEX v_nodes_file_id_index ON public.v_nodes USING btree (file_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 278528,
+          "index_name": "v_nodes_kind_index",
+          "indexdef": "CREATE INDEX v_nodes_kind_index ON public.v_nodes USING btree (kind)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 286720,
+          "index_name": "v_nodes_mime_type_index",
+          "indexdef": "CREATE INDEX v_nodes_mime_type_index ON public.v_nodes USING btree (mime_type)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 294912,
+          "index_name": "v_nodes_panel_index",
+          "indexdef": "CREATE INDEX v_nodes_panel_index ON public.v_nodes USING btree (panel)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 2963142,
+          "idx_tup_fetch": 305056652,
+          "idx_tup_read": 305190531,
+          "index_bytes": 385024,
+          "index_name": "v_nodes_parent_id_index",
+          "indexdef": "CREATE INDEX v_nodes_parent_id_index ON public.v_nodes USING btree (parent_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 123068,
+          "idx_tup_fetch": 113307,
+          "idx_tup_read": 114800,
+          "index_bytes": 917504,
+          "index_name": "v_nodes_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_nodes_pkey ON public.v_nodes USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 294912,
+          "index_name": "v_nodes_shortcut_target_id_index",
+          "indexdef": "CREATE INDEX v_nodes_shortcut_target_id_index ON public.v_nodes USING btree (shortcut_target_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 212,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 34,
+          "index_bytes": 1843200,
+          "index_name": "v_nodes_sibling_uniq",
+          "indexdef": "CREATE UNIQUE INDEX v_nodes_sibling_uniq ON public.v_nodes USING btree (parent_id, lower((name)::text)) WHERE ((deleted_at IS NULL) AND (trashed_at IS NULL))",
+          "is_primary": false,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 1,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 294912,
+          "index_name": "v_nodes_storage_id_index",
+          "indexdef": "CREATE INDEX v_nodes_storage_id_index ON public.v_nodes USING btree (storage_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 278528,
+          "index_name": "v_nodes_storage_id_kind_trashed_at_index",
+          "indexdef": "CREATE INDEX v_nodes_storage_id_kind_trashed_at_index ON public.v_nodes USING btree (storage_id, kind, trashed_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 121,
+          "idx_tup_fetch": 11685,
+          "idx_tup_read": 12091,
+          "index_bytes": 393216,
+          "index_name": "v_nodes_storage_id_parent_id_position_index",
+          "indexdef": "CREATE INDEX v_nodes_storage_id_parent_id_position_index ON public.v_nodes USING btree (storage_id, parent_id, \"position\")",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 294912,
+          "index_name": "v_nodes_tenant_id_index",
+          "indexdef": "CREATE INDEX v_nodes_tenant_id_index ON public.v_nodes USING btree (tenant_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 294912,
+          "index_name": "v_nodes_trashed_from_parent_id_index",
+          "indexdef": "CREATE INDEX v_nodes_trashed_from_parent_id_index ON public.v_nodes USING btree (trashed_from_parent_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_nodes",
+          "family": "v_nodes",
+          "idx_scan": 70,
+          "idx_tup_fetch": 3,
+          "idx_tup_read": 105,
+          "index_bytes": 16384,
+          "index_name": "v_nodes_trashed_idx",
+          "indexdef": "CREATE INDEX v_nodes_trashed_idx ON public.v_nodes USING btree (trashed_at) WHERE (trashed_at IS NOT NULL)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_blobs",
+      "indexes": [
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 48,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 4472832,
+          "index_name": "v_blobs_dedup_uniq",
+          "indexdef": "CREATE UNIQUE INDEX v_blobs_dedup_uniq ON public.v_blobs USING btree (tenant_id, sha256)",
+          "is_primary": false,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 221184,
+          "index_name": "v_blobs_encryption_key_id_index",
+          "indexdef": "CREATE INDEX v_blobs_encryption_key_id_index ON public.v_blobs USING btree (encryption_key_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 540672,
+          "index_name": "v_blobs_gc_idx",
+          "indexdef": "CREATE INDEX v_blobs_gc_idx ON public.v_blobs USING btree (status, ref_count, delete_after_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 55848,
+          "idx_tup_fetch": 55698,
+          "idx_tup_read": 55698,
+          "index_bytes": 688128,
+          "index_name": "v_blobs_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_blobs_pkey ON public.v_blobs USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 1171456,
+          "index_name": "v_blobs_size_bytes_index",
+          "indexdef": "CREATE INDEX v_blobs_size_bytes_index ON public.v_blobs USING btree (size_bytes)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 221184,
+          "index_name": "v_blobs_storage_id_index",
+          "indexdef": "CREATE INDEX v_blobs_storage_id_index ON public.v_blobs USING btree (storage_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 4481024,
+          "index_name": "v_blobs_storage_key_uniq",
+          "indexdef": "CREATE UNIQUE INDEX v_blobs_storage_key_uniq ON public.v_blobs USING btree (storage_key)",
+          "is_primary": false,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_blobs",
+          "family": "v_blobs",
+          "idx_scan": 400,
+          "idx_tup_fetch": 79800,
+          "idx_tup_read": 79800,
+          "index_bytes": 221184,
+          "index_name": "v_blobs_tenant_id_index",
+          "indexdef": "CREATE INDEX v_blobs_tenant_id_index ON public.v_blobs USING btree (tenant_id)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_upload_sessions",
+      "indexes": [
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 65536,
+          "index_name": "v_upload_sessions_assembled_blob_id_index",
+          "indexdef": "CREATE INDEX v_upload_sessions_assembled_blob_id_index ON public.v_upload_sessions USING btree (assembled_blob_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 57344,
+          "index_name": "v_upload_sessions_node_id_index",
+          "indexdef": "CREATE INDEX v_upload_sessions_node_id_index ON public.v_upload_sessions USING btree (node_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 11818,
+          "idx_tup_fetch": 11818,
+          "idx_tup_read": 12076,
+          "index_bytes": 147456,
+          "index_name": "v_upload_sessions_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_upload_sessions_pkey ON public.v_upload_sessions USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 57344,
+          "index_name": "v_upload_sessions_storage_id_index",
+          "indexdef": "CREATE INDEX v_upload_sessions_storage_id_index ON public.v_upload_sessions USING btree (storage_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 57344,
+          "index_name": "v_upload_sessions_storage_idx",
+          "indexdef": "CREATE INDEX v_upload_sessions_storage_idx ON public.v_upload_sessions USING btree (storage_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 114688,
+          "index_name": "v_upload_sessions_sweeper_idx",
+          "indexdef": "CREATE INDEX v_upload_sessions_sweeper_idx ON public.v_upload_sessions USING btree (status, expires_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 65536,
+          "index_name": "v_upload_sessions_target_parent_id_index",
+          "indexdef": "CREATE INDEX v_upload_sessions_target_parent_id_index ON public.v_upload_sessions USING btree (target_parent_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 57344,
+          "index_name": "v_upload_sessions_tenant_id_index",
+          "indexdef": "CREATE INDEX v_upload_sessions_tenant_id_index ON public.v_upload_sessions USING btree (tenant_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_sessions",
+          "family": "v_upload_sessions",
+          "idx_scan": 125,
+          "idx_tup_fetch": 125,
+          "idx_tup_read": 187,
+          "index_bytes": 245760,
+          "index_name": "v_upload_sessions_upload_id_uniq",
+          "indexdef": "CREATE UNIQUE INDEX v_upload_sessions_upload_id_uniq ON public.v_upload_sessions USING btree (upload_id)",
+          "is_primary": false,
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "family": "v_upload_parts",
+      "indexes": [
+        {
+          "base_table": "v_upload_parts",
+          "family": "v_upload_parts",
+          "idx_scan": 86,
+          "idx_tup_fetch": 43,
+          "idx_tup_read": 43,
+          "index_bytes": 368640,
+          "index_name": "v_upload_parts_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_upload_parts_pkey ON public.v_upload_parts USING btree (upload_session_id, part_no)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_upload_parts",
+          "family": "v_upload_parts",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 90112,
+          "index_name": "v_upload_parts_temp_blob_id_index",
+          "indexdef": "CREATE INDEX v_upload_parts_temp_blob_id_index ON public.v_upload_parts USING btree (temp_blob_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_upload_parts",
+          "family": "v_upload_parts",
+          "idx_scan": 57,
+          "idx_tup_fetch": 127,
+          "idx_tup_read": 127,
+          "index_bytes": 163840,
+          "index_name": "v_upload_parts_upload_session_id_index",
+          "indexdef": "CREATE INDEX v_upload_parts_upload_session_id_index ON public.v_upload_parts USING btree (upload_session_id)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_file_versions",
+      "indexes": [
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 204800,
+          "index_name": "v_file_versions_blob_id_index",
+          "indexdef": "CREATE INDEX v_file_versions_blob_id_index ON public.v_file_versions USING btree (blob_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 3399680,
+          "index_name": "v_file_versions_content_sha256_index",
+          "indexdef": "CREATE INDEX v_file_versions_content_sha256_index ON public.v_file_versions USING btree (content_sha256)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 1,
+          "idx_tup_fetch": 27828,
+          "idx_tup_read": 27828,
+          "index_bytes": 606208,
+          "index_name": "v_file_versions_file_id_index",
+          "indexdef": "CREATE INDEX v_file_versions_file_id_index ON public.v_file_versions USING btree (file_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 966656,
+          "index_name": "v_file_versions_file_id_status_index",
+          "indexdef": "CREATE INDEX v_file_versions_file_id_status_index ON public.v_file_versions USING btree (file_id, status)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 196608,
+          "index_name": "v_file_versions_manifest_blob_id_index",
+          "indexdef": "CREATE INDEX v_file_versions_manifest_blob_id_index ON public.v_file_versions USING btree (manifest_blob_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 892928,
+          "index_name": "v_file_versions_no_uniq",
+          "indexdef": "CREATE UNIQUE INDEX v_file_versions_no_uniq ON public.v_file_versions USING btree (file_id, version_no)",
+          "is_primary": false,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 28454,
+          "idx_tup_fetch": 28454,
+          "idx_tup_read": 28454,
+          "index_bytes": 647168,
+          "index_name": "v_file_versions_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_file_versions_pkey ON public.v_file_versions USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 196608,
+          "index_name": "v_file_versions_status_index",
+          "indexdef": "CREATE INDEX v_file_versions_status_index ON public.v_file_versions USING btree (status)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_file_versions",
+          "family": "v_file_versions",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 196608,
+          "index_name": "v_file_versions_tenant_id_index",
+          "indexdef": "CREATE INDEX v_file_versions_tenant_id_index ON public.v_file_versions USING btree (tenant_id)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_activity",
+      "indexes": [
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 17711104,
+          "index_name": "v_activity_actor_idx",
+          "indexdef": "CREATE INDEX v_activity_actor_idx ON public.v_activity USING btree (actor_type, actor_id, created_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 15228928,
+          "index_name": "v_activity_context_gin",
+          "indexdef": "CREATE INDEX v_activity_context_gin ON public.v_activity USING gin (context jsonb_path_ops)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 26,
+          "idx_tup_fetch": 1596,
+          "idx_tup_read": 1596,
+          "index_bytes": 5373952,
+          "index_name": "v_activity_created_idx",
+          "indexdef": "CREATE INDEX v_activity_created_idx ON public.v_activity USING btree (created_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 4603904,
+          "index_name": "v_activity_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_activity_pkey ON public.v_activity USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 1335296,
+          "index_name": "v_activity_storage_id_index",
+          "indexdef": "CREATE INDEX v_activity_storage_id_index ON public.v_activity USING btree (storage_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 8667136,
+          "index_name": "v_activity_storage_idx",
+          "indexdef": "CREATE INDEX v_activity_storage_idx ON public.v_activity USING btree (storage_id, created_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 2408448,
+          "index_name": "v_activity_target_id_index",
+          "indexdef": "CREATE INDEX v_activity_target_id_index ON public.v_activity USING btree (target_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 18055168,
+          "index_name": "v_activity_target_idx",
+          "indexdef": "CREATE INDEX v_activity_target_idx ON public.v_activity USING btree (target_type, target_id, created_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 1335296,
+          "index_name": "v_activity_tenant_id_index",
+          "indexdef": "CREATE INDEX v_activity_tenant_id_index ON public.v_activity USING btree (tenant_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 10715136,
+          "index_name": "v_activity_verb_idx",
+          "indexdef": "CREATE INDEX v_activity_verb_idx ON public.v_activity USING btree (verb, created_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_activity",
+          "family": "v_activity",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 1351680,
+          "index_name": "v_activity_verb_index",
+          "indexdef": "CREATE INDEX v_activity_verb_index ON public.v_activity USING btree (verb)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_outbox",
+      "indexes": [
+        {
+          "base_table": "v_outbox",
+          "family": "v_outbox",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 32768,
+          "index_name": "v_outbox_drain_idx",
+          "indexdef": "CREATE INDEX v_outbox_drain_idx ON public.v_outbox USING btree (status, available_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_outbox",
+          "family": "v_outbox",
+          "idx_scan": 315,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 57344,
+          "index_name": "v_outbox_event_id_unique",
+          "indexdef": "CREATE UNIQUE INDEX v_outbox_event_id_unique ON public.v_outbox USING btree (event_id)",
+          "is_primary": false,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_outbox",
+          "family": "v_outbox",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_outbox_panel_index",
+          "indexdef": "CREATE INDEX v_outbox_panel_index ON public.v_outbox USING btree (panel)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_outbox",
+          "family": "v_outbox",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 32768,
+          "index_name": "v_outbox_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_outbox_pkey ON public.v_outbox USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_outbox",
+          "family": "v_outbox",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_outbox_prune_idx",
+          "indexdef": "CREATE INDEX v_outbox_prune_idx ON public.v_outbox USING btree (status, dispatched_at)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    },
+    {
+      "family": "v_webhook_deliveries",
+      "indexes": [
+        {
+          "base_table": "v_webhook_deliveries",
+          "family": "v_webhook_deliveries",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_webhook_deliveries_endpoint_id_index",
+          "indexdef": "CREATE INDEX v_webhook_deliveries_endpoint_id_index ON public.v_webhook_deliveries USING btree (endpoint_id)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_webhook_deliveries",
+          "family": "v_webhook_deliveries",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_webhook_deliveries_pkey",
+          "indexdef": "CREATE UNIQUE INDEX v_webhook_deliveries_pkey ON public.v_webhook_deliveries USING btree (id)",
+          "is_primary": true,
+          "is_unique": true
+        },
+        {
+          "base_table": "v_webhook_deliveries",
+          "family": "v_webhook_deliveries",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_webhook_deliveries_prune_idx",
+          "indexdef": "CREATE INDEX v_webhook_deliveries_prune_idx ON public.v_webhook_deliveries USING btree (status, updated_at)",
+          "is_primary": false,
+          "is_unique": false
+        },
+        {
+          "base_table": "v_webhook_deliveries",
+          "family": "v_webhook_deliveries",
+          "idx_scan": 0,
+          "idx_tup_fetch": 0,
+          "idx_tup_read": 0,
+          "index_bytes": 16384,
+          "index_name": "v_webhook_deliveries_retry_idx",
+          "indexdef": "CREATE INDEX v_webhook_deliveries_retry_idx ON public.v_webhook_deliveries USING btree (status, next_retry_at)",
+          "is_primary": false,
+          "is_unique": false
+        }
+      ]
+    }
+  ],
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-index-inventory/v1"
+}

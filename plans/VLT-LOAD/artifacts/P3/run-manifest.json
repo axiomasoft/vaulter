@@ -1,0 +1,40 @@
+{
+  "cache_declaration": "shared-buffer-cold-like_after_postgres_restart_page_cache_warm",
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "disposable_db": true,
+  "env_fingerprint": "b6f01b8a6600c3d5",
+  "extensions": {
+    "hypopg": "1.4.1",
+    "pg_stat_statements": "1.10"
+  },
+  "git_commit_sha": "5cd93bcd27c6a2cabd9ad533c60366c355cda006",
+  "p87_preflight_run_id": "2e5e55e0e06f7130165c166821521838d6a77b111c8d6d7bc5c1e8fba8284675",
+  "pg_stat_statements": {
+    "max": 10000,
+    "track": "all"
+  },
+  "pg_stat_statements_info": {
+    "dealloc_after": 0,
+    "dealloc_before": 0,
+    "dealloc_delta": 0,
+    "stats_reset": "2026-09-22T04:02:36.707314+00:00"
+  },
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-profile/v1",
+  "terminal": {
+    "marker": "p3-run-complete",
+    "verified_at": "2026-09-22T04:06:21Z"
+  },
+  "tier": "S",
+  "track_io_timing": {
+    "enabled": false,
+    "pg_test_timing_us": null
+  },
+  "workload": {
+    "cache_declaration": "shared-buffer-cold-like_after_postgres_restart_page_cache_warm",
+    "duration": "60s",
+    "preflight": "P8.7 artifacts verify",
+    "profile": "mixed",
+    "warmup": "post-seed-analyze"
+  }
+}

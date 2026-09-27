@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Cas\BlobStatus;
@@ -27,6 +28,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareContext;
+use Vaulter\Support\LoadTier;
 
 /**
  * The PUBLIC, token-resolved surface for bearer share-links (§2.7 / M2c) — the
@@ -53,6 +55,7 @@ final class PublicShareController extends Controller
         private readonly StorageReadRepository $storages,
         private readonly NodeShareStoreRepository $shares,
         private readonly StorageDriver $driver,
+        private readonly MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -101,6 +104,8 @@ final class PublicShareController extends Controller
      */
     public function download(Request $request): StreamedResponse
     {
+        $startedAt = hrtime(true);
+
         $context = ResolveShareToken::context($request);
 
         $this->requireBit($context, Ability::Download);
@@ -123,7 +128,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
-        return $this->stream($node, $this->versions->head($node), $storage);
+        return $this->stream($node, $this->versions->head($node), $storage, startedAt: $startedAt);
     }
 
     /**
@@ -168,7 +173,7 @@ final class PublicShareController extends Controller
         )->values();
     }
 
-    private function stream(Node $node, ?FileVersion $version, Storage $storage): StreamedResponse
+    private function stream(Node $node, ?FileVersion $version, Storage $storage, int $startedAt): StreamedResponse
     {
         if (!$version instanceof FileVersion) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
@@ -185,18 +190,26 @@ final class PublicShareController extends Controller
         $filename = $version->original_name !== '' ? $version->original_name : $node->name;
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';
 
-        return $this->streamFromDisk(blob: $blob, filename: $filename, contentType: $contentType);
+        return $this->streamFromDisk(
+            blob: $blob,
+            filename: $filename,
+            contentType: $contentType,
+            startedAt: $startedAt,
+        );
     }
 
-    private function streamFromDisk(Blob $blob, string $filename, string $contentType): StreamedResponse
+    private function streamFromDisk(Blob $blob, string $filename, string $contentType, int $startedAt): StreamedResponse
     {
         return response()->streamDownload(
-            function () use ($blob): void {
+            function () use ($blob, $startedAt): void {
                 $handle = $this->driver->get(key: $blob->storage_key, disk: $blob->disk);
 
                 if (!is_resource($handle)) {
                     abort(404);
                 }
+
+                $ttfbRecorded = false;
+                $tier = LoadTier::label();
 
                 while (!feof($handle)) {
                     $chunk = fread($handle, 1024 * 256);
@@ -205,7 +218,22 @@ final class PublicShareController extends Controller
                         break;
                     }
 
+                    $this->metrics->counter(
+                        name: 'vaulter_download_bytes_total',
+                        amount: strlen($chunk),
+                        labels: ['source' => 'share'],
+                    );
+
                     echo $chunk;
+
+                    if (!$ttfbRecorded) {
+                        $this->metrics->histogram(
+                            name: 'vaulter_download_ttfb_seconds',
+                            value: (hrtime(true) - $startedAt) / 1_000_000_000,
+                            labels: ['tier' => $tier],
+                        );
+                        $ttfbRecorded = true;
+                    }
                 }
 
                 fclose($handle);

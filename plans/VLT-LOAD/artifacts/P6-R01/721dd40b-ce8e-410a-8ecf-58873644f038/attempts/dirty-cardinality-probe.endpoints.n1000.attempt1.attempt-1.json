@@ -1,0 +1,29 @@
+{
+  "attempt": 1,
+  "cell_id": "dirty-cardinality-probe.endpoints.n1000.attempt1",
+  "count": 1000,
+  "detail": {
+    "relayed": {
+      "elapsed_ns": 33163004,
+      "exit": 0,
+      "ok": true,
+      "relayed": 1
+    },
+    "seeded": {
+      "endpoints": 1000,
+      "exit": 0,
+      "ok": true
+    }
+  },
+  "duration_seconds": 9.927,
+  "evidence": "valid",
+  "plane": "dirty-cardinality-probe",
+  "run_id": "721dd40b-ce8e-410a-8ecf-58873644f038",
+  "slo": "not-a-product-slo",
+  "snapshot_restored": true,
+  "tier_ml_slo": false,
+  "worker_pids": [
+    4040673,
+    4046400
+  ]
+}

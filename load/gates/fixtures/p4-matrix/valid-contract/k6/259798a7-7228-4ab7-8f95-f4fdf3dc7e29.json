@@ -1,0 +1,10 @@
+{
+  "attempt_id": "259798a7-7228-4ab7-8f95-f4fdf3dc7e29",
+  "cell_id": "download/500m",
+  "dry_run": false,
+  "prometheus_rw": {
+    "job": "vaulter-sut",
+    "linked": true
+  },
+  "repetition": 1
+}

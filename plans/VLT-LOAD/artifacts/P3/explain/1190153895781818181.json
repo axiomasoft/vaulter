@@ -1,0 +1,30 @@
+{
+  "code_anchors": [],
+  "command": "insert into \"v_activity\" (\"tenant_id\", \"storage_id\", \"actor_type\", \"actor_id\", \"verb\", \"target_type\", \"target_id\", \"context\", \"ip\", \"user_agent\", \"request_id\", \"created_at\") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning \"id\"",
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "disposable_db": true,
+  "execute_args": [
+    "1::bigint",
+    "1::bigint",
+    "'load-actor'::text",
+    "900001::bigint",
+    "'viewed'::text",
+    "'vaulter-node'::text",
+    "1::bigint",
+    "'{}'::jsonb",
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "NOW()"
+  ],
+  "op_ids": [],
+  "parameter_class": "top20",
+  "plan": null,
+  "query_fingerprint": "1190153895781818181",
+  "rejection_reason": "PSQL: psql:<stdin>:1: ERROR:  parameter $9 of type bigint cannot be coerced to the expected type inet\nLINE 1: ...xt, 'vaulter-node'::text, 1::bigint, '{}'::jsonb, 1::bigint,...\n                                                             ^\nHINT:  You will need to rewrite or cast the expression.",
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-explain-plan/v1",
+  "settings_fingerprint": "b6583d8ab3b85206",
+  "status": "rejected",
+  "summary": {}
+}

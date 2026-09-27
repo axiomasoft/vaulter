@@ -1,0 +1,13 @@
+{
+  "attempt": 1,
+  "cell_id": "state-machine-control.retry.dead.force-due",
+  "evidence": "valid",
+  "plane": "state-machine-control",
+  "run_id": "3df3b9e1-32b8-4e15-8b8f-c4efffe28f52",
+  "slo": "not-a-product-slo",
+  "status": "dead",
+  "worker_pids": [
+    4040673,
+    1784595
+  ]
+}

@@ -1,0 +1,48 @@
+--- before/load/app/Console/QueueProbeCommand.php
++++ after/load/app/Console/QueueProbeCommand.php
+@@ -6,10 +6,12 @@
+ 
+ use Illuminate\Console\Command;
+ use Illuminate\Support\Facades\Bus;
++use Illuminate\Support\Facades\Artisan;
+ use Illuminate\Support\Facades\DB;
+ use Illuminate\Support\Str;
+ use RuntimeException;
+ use Throwable;
++use Symfony\Component\Console\Output\BufferedOutput;
+ use Vaulter\Jobs\Webhooks\DeliverWebhook;
+ use Vaulter\Models\Webhooks\Outbox;
+ use Vaulter\Models\Webhooks\WebhookDelivery;
+@@ -51,7 +53,7 @@
+                 'outbox' => $this->outbox(),
+                 'due' => $this->due(),
+                 'relay' => $this->relay($relay),
+-                'retry' => $this->retry($retries),
++                'retry' => $this->retry(),
+                 'force-due' => $this->forceDue(),
+                 'duplicate' => $this->duplicate(),
+                 'barrier' => $this->barrier($relay, $retries),
+@@ -286,14 +288,21 @@
+     /**
+      * @return array<string, int>
+      */
+-    private function retry(WebhookRetryDispatcher $retries): array
++    private function retry(): array
+     {
+         $started = hrtime(true);
+         $count = 0;
+         $status = 0;
+ 
+         try {
+-            $count = $retries->redispatchDue();
++            // Run the product command through the console kernel so CommandFinished
++            // records its memory seam. Keep its text separate from the probe JSON.
++            $output = new BufferedOutput;
++            $status = Artisan::call('vaulter:retry-webhooks', [], $output);
++            if ($status !== self::SUCCESS || preg_match('/Re-dispatched (\d+) due webhook delivery\(ies\)\./', $output->fetch(), $matches) !== 1) {
++                throw new RuntimeException('Retry command failed or did not report its dispatch count.');
++            }
++            $count = (int) $matches[1];
+         } catch (Throwable $exception) {
+             fwrite(STDERR, $exception->getMessage()."\n");
+             $status = 1;

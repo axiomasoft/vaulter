@@ -8,14 +8,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\Uploads\StagedUpload;
+use Vaulter\Support\AssembleSizeBucket;
 use Vaulter\Support\Config;
+use Vaulter\Support\LoadTier;
 
 /**
  * The S3-style multipart handler (§2.8 / D16 / M3a). When the session's disk is an
@@ -44,6 +47,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private StorageDriver $driver,
         private UploadPartStoreRepository $parts,
         private UploadSessionStoreRepository $sessions,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -91,6 +95,36 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     public function putPart(UploadSession $session, int $partNo, int $byteOffset, mixed $chunk): array
     {
+        try {
+            return $this->metrics->timing(
+                name: 'vaulter_upload_chunk_duration_seconds',
+                operation: fn (): array => $this->putPartChunk(
+                    session: $session,
+                    partNo: $partNo,
+                    byteOffset: $byteOffset,
+                    chunk: $chunk,
+                ),
+                labels: [
+                    'protocol' => 's3',
+                    'tier' => LoadTier::label(),
+                ],
+            );
+        } catch (UploadConflictException $exception) {
+            $this->metrics->counter(
+                name: 'vaulter_upload_conflict_total',
+                labels: ['protocol' => 's3'],
+            );
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  resource                                     $chunk
+     * @return array{part_no: int, size: int, etag: string}
+     */
+    private function putPartChunk(UploadSession $session, int $partNo, int $byteOffset, mixed $chunk): array
+    {
         $bytes = $this->readPartWithinLimit($chunk);
 
         return DB::transaction(function () use ($session, $partNo, $byteOffset, $bytes): array {
@@ -135,9 +169,17 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
                 receivedBytes: $this->recordedSize($locked),
             );
 
+            $size = strlen($bytes);
+
+            $this->metrics->counter(
+                name: 'vaulter_upload_bytes_total',
+                amount: $size,
+                labels: ['protocol' => 's3'],
+            );
+
             return [
                 'part_no' => $partNo,
-                'size' => strlen($bytes),
+                'size' => $size,
                 'etag' => $etag,
             ];
         });
@@ -159,28 +201,78 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
             ]);
         }
 
-        $assembled = '';
+        $assembleStarted = hrtime(true);
+        $assembled = fopen('php://temp/maxmemory:2097152', 'w+b');
 
-        foreach ($parts as $part) {
-            $assembled .= $this->readPart($session, $part);
+        if ($assembled === false) {
+            throw new RuntimeException('Unable to open the multipart assembly stream.');
         }
 
-        // Integrity gate (F-P1.4-03): with a known declared total, the assembled
-        // object MUST match it exactly. Stitching a subset of the parts (a client
-        // that completes after uploading fewer bytes than declared) would otherwise
-        // commit a TRUNCATED file as whole — the server, not the client, decides the
-        // object is complete (U6.7/U5.4). Rejected BEFORE the staged temp is written,
-        // so nothing downstream ever sees the short object.
-        $total = $session->total_size_bytes;
-        $assembledSize = strlen($assembled);
+        try {
+            $assembledSize = 0;
 
-        if ($total !== null && $assembledSize !== $total) {
-            throw ValidationException::withMessages([
-                'parts' => "Cannot complete upload session {$session->upload_id}: assembled {$assembledSize} bytes but {$total} were declared.",
-            ]);
+            foreach ($parts as $part) {
+                $partStream = $this->driver->get(
+                    $this->partKey($session, $part->part_no),
+                    $this->staged->diskName($session),
+                );
+
+                if (!is_resource($partStream)) {
+                    throw ValidationException::withMessages([
+                        'parts' => "Upload part {$part->part_no} is missing for session {$session->upload_id}.",
+                    ]);
+                }
+
+                try {
+                    $copied = stream_copy_to_stream($partStream, $assembled);
+                } finally {
+                    fclose($partStream);
+                }
+
+                if ($copied === false || $copied !== $part->size_bytes) {
+                    throw ValidationException::withMessages([
+                        'parts' => "Upload part {$part->part_no} size does not match its recorded bytes.",
+                    ]);
+                }
+
+                $assembledSize += $copied;
+            }
+
+            $assembleDuration = (hrtime(true) - $assembleStarted) / 1_000_000_000;
+
+            // Integrity gate (F-P1.4-03): with a known declared total, the assembled
+            // object MUST match it exactly. Stitching a subset of the parts (a client
+            // that completes after uploading fewer bytes than declared) would otherwise
+            // commit a TRUNCATED file as whole — the server, not the client, decides the
+            // object is complete (U6.7/U5.4). Rejected BEFORE the staged temp is written,
+            // so nothing downstream ever sees the short object.
+            $total = $session->total_size_bytes;
+
+            if ($total !== null && $assembledSize !== $total) {
+                throw ValidationException::withMessages([
+                    'parts' => "Cannot complete upload session {$session->upload_id}: assembled {$assembledSize} bytes but {$total} were declared.",
+                ]);
+            }
+
+            $sizeBucket = AssembleSizeBucket::forBytes($assembledSize);
+
+            $this->metrics->counter(
+                name: 'vaulter_assemble_bytes_total',
+                amount: $assembledSize,
+                labels: ['size_bucket' => $sizeBucket],
+            );
+
+            $this->metrics->histogram(
+                name: 'vaulter_assemble_duration_seconds',
+                value: $assembleDuration,
+                labels: ['size_bucket' => $sizeBucket],
+            );
+
+            rewind($assembled);
+            $size = $this->staged->writeStream(session: $session, stream: $assembled);
+        } finally {
+            fclose($assembled);
         }
-
-        $size = $this->staged->write(session: $session, bytes: $assembled);
 
         $this->sessions->advanceReceived(session: $session, receivedBytes: $size);
 
@@ -244,23 +336,6 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         }
 
         return $bytes;
-    }
-
-    private function readPart(UploadSession $session, UploadPart $part): string
-    {
-        $stream = $this->driver->get($this->partKey($session, $part->part_no), $this->staged->diskName($session));
-
-        if (!is_resource($stream)) {
-            return '';
-        }
-
-        try {
-            $bytes = stream_get_contents($stream);
-
-            return $bytes === false ? '' : $bytes;
-        } finally {
-            fclose($stream);
-        }
     }
 
     /**

@@ -7,6 +7,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobQueueing;
 use Vaulter\Load\Listeners\RecordQueueLifecycle;
 
 /**
@@ -182,4 +183,35 @@ it('swallows listener failures so the job outcome is unchanged', function (): vo
     expect(file_get_contents($path))->toBe('');
 
     @unlink($path);
+});
+
+it('records implicit default queue and joins dispatcher and worker through a context file', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'p6-context-ledger-');
+    $context = tempnam(sys_get_temp_dir(), 'p6-context-');
+    config(['queue.connections.redis.queue' => 'default']);
+    file_put_contents($context, json_encode([
+        'path' => $path, 'run_id' => 'r09', 'cell_id' => 'cell',
+        'attempt' => 2, 'fingerprint' => str_repeat('b', 64),
+    ], JSON_THROW_ON_ERROR));
+    putenv('LOAD_QUEUE_CONTEXT='.$context);
+    $_ENV['LOAD_QUEUE_CONTEXT'] = $context;
+    try {
+        $payload = ['uuid' => 'shared-uuid', 'displayName' => 'Vaulter\\Jobs\\Webhooks\\DeliverWebhook'];
+        $listener = new RecordQueueLifecycle;
+        $listener->handleQueueing(new JobQueueing('redis', null, 'Job', json_encode($payload), null));
+        $listener->handleProcessing(new JobProcessing('redis', ledgerJob($payload)));
+        $listener->handleQueued(new JobQueued('redis', null, 'shared-uuid', 'Job', json_encode($payload), null));
+        $rows = readLedger($path);
+        expect($rows)->toHaveCount(3)
+            ->and(array_column($rows, 'source'))->toBe(['queueing', 'processing', 'queued'])
+            ->and(array_column($rows, 'uuid'))->toBe(['shared-uuid', 'shared-uuid', 'shared-uuid'])
+            ->and(array_column($rows, 'run_id'))->toBe(['r09', 'r09', 'r09'])
+            ->and(array_column($rows, 'attempt'))->toBe([2, 2, 2])
+            ->and(array_column($rows, 'queue'))->toBe(['default', 'default', 'default']);
+    } finally {
+        putenv('LOAD_QUEUE_CONTEXT');
+        unset($_ENV['LOAD_QUEUE_CONTEXT']);
+        unlink($path);
+        unlink($context);
+    }
 });

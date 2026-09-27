@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
@@ -20,6 +21,7 @@ use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
+use Vaulter\Support\LoadTier;
 
 /**
  * Read-side queries over the v_nodes adjacency tree (§2.2 / H.4). Tree reads use
@@ -61,6 +63,7 @@ final class NodeReadRepository
         private readonly AccessResolver $access,
         private readonly HostRoleDriverManager $drivers,
         private readonly GrantReadRepository $grants,
+        private readonly MetricsRecorder $metrics,
     ) {}
 
     public function find(int|string $id): ?Node
@@ -88,12 +91,19 @@ final class NodeReadRepository
      */
     public function children(Storage $storage, ?Node $parent): Builder
     {
-        return $this->query()
-            ->treeOf($storage->id)
-            ->whereNull('trashed_at')
-            ->where('parent_id', $parent?->id)
-            ->orderBy('position')
-            ->orderBy('name');
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: fn (): Builder => $this->query()
+                ->treeOf($storage->id)
+                ->whereNull('trashed_at')
+                ->where('parent_id', $parent?->id)
+                ->orderBy('position')
+                ->orderBy('name'),
+            labels: [
+                'query_kind' => 'children',
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**
@@ -124,15 +134,24 @@ final class NodeReadRepository
      */
     public function subtree(Node $node, ?int $maxDepth = null): Collection
     {
-        $model = Config::nodeModel();
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($node, $maxDepth): Collection {
+                $model = Config::nodeModel();
 
-        /** @var Collection<int, Node> $result */
-        $result = $model::withMaxDepth(
-            $maxDepth ?? self::DEFAULT_MAX_DEPTH,
-            static fn (): Collection => $node->descendantsAndSelf()->get(),
+                /** @var Collection<int, Node> $result */
+                $result = $model::withMaxDepth(
+                    $maxDepth ?? self::DEFAULT_MAX_DEPTH,
+                    static fn (): Collection => $node->descendantsAndSelf()->get(),
+                );
+
+                return $result;
+            },
+            labels: [
+                'query_kind' => 'subtree',
+                'tier' => LoadTier::label(),
+            ],
         );
-
-        return $result;
     }
 
     /**
@@ -165,18 +184,27 @@ final class NodeReadRepository
      */
     public function breadcrumb(Node $node): Collection
     {
-        $model = Config::nodeModel();
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($node): Collection {
+                $model = Config::nodeModel();
 
-        /** @var Collection<int, Node> $crumbs */
-        $crumbs = $model::withMaxDepth(
-            self::DEFAULT_MAX_DEPTH,
-            static fn (): Collection => $node->ancestorsAndSelf()->get(),
+                /** @var Collection<int, Node> $crumbs */
+                $crumbs = $model::withMaxDepth(
+                    self::DEFAULT_MAX_DEPTH,
+                    static fn (): Collection => $node->ancestorsAndSelf()->get(),
+                );
+
+                /** @var Collection<int, Node> $ordered */
+                $ordered = $crumbs->reverse()->values();
+
+                return $ordered;
+            },
+            labels: [
+                'query_kind' => 'breadcrumb',
+                'tier' => LoadTier::label(),
+            ],
         );
-
-        /** @var Collection<int, Node> $ordered */
-        $ordered = $crumbs->reverse()->values();
-
-        return $ordered;
     }
 
     /**
@@ -198,14 +226,23 @@ final class NodeReadRepository
      */
     public function search(Storage $storage, string $term): Builder
     {
-        $escaped = addcslashes(mb_strtolower($term), '%_\\');
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($storage, $term): Builder {
+                $escaped = addcslashes(mb_strtolower($term), '%_\\');
 
-        return $this->query()
-            ->treeOf($storage->id)
-            ->whereNull('trashed_at')
-            ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
-            ->orderBy('name')
-            ->orderBy('id');
+                return $this->query()
+                    ->treeOf($storage->id)
+                    ->whereNull('trashed_at')
+                    ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
+                    ->orderBy('name')
+                    ->orderBy('id');
+            },
+            labels: [
+                'query_kind' => 'search',
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**
@@ -514,6 +551,12 @@ final class NodeReadRepository
         $ids = [];
 
         foreach ($anchors as $anchor) {
+            $this->metrics->histogram(
+                name: 'vaulter_tree_cte_anchors',
+                value: 1,
+                labels: ['tier' => LoadTier::label()],
+            );
+
             /** @var list<int|string> $descendantKeys */
             $descendantKeys = $model::withMaxDepth(
                 self::DEFAULT_MAX_DEPTH,

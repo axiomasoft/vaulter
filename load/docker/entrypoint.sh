@@ -13,8 +13,14 @@ envsubst '${PM_MAX_CHILDREN}' \
 
 cd /app
 
-DB_HOST="${DB_MIGRATE_HOST:-postgres}" DB_PORT="${DB_MIGRATE_PORT:-5432}" \
-    vendor/bin/testbench migrate:fresh --force
+if [ "${LOAD_SKIP_MIGRATIONS:-0}" != "1" ]; then
+    DB_HOST="${DB_MIGRATE_HOST:-postgres}" DB_PORT="${DB_MIGRATE_PORT:-5432}" \
+        vendor/bin/testbench migrate:fresh --force
+fi
+
+if [ "$#" -gt 0 ]; then
+    exec "$@"
+fi
 
 # `user = root` in the pool (chosen so the bind-mounted, host-uid-owned repo under /app
 # stays writable without a uid dance — this is throwaway bench tooling, not prod) needs

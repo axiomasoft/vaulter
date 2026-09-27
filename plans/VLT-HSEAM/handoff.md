@@ -1,33 +1,9 @@
-# HANDOFF — 2026-07-10 — after P0.0
+# HANDOFF — Layout-v2 migration preview
 
-**Next:**
+**Next:** no executable item in this live preview.
 
-| Параметр | Значение |
-|:--|:--|
-| Model | opus |
-| Thinking | high |
-| Context | fresh session |
-| Суть | Закрыть Q1/Q2 (D9/D10) с owner'ом и запустить P0.1 |
+The generated live status says 0/5 Not started and its old P0.1 command came from migration source. VLT-CANON P3.3 and accepted ADR-0018 superseded this work; launching P0.1 would repeat a decided public API migration. Preserve the migration source, inventory and journal, and reconcile the preview/supersession discrepancy before any new Task execution.
 
-````
-/task:plan-exec VLT-HSEAM P0.1 — перед стартом зафиксировать в plans/VLT-HSEAM/plan.md решения D9 (Q1: движок реестра в core — вариант A/B) и D10 (Q2: yjs_state — оставить/переименовать) по §7 Обсуждение; approve owner получен, если эта команда запущена им.
-````
-
-**Done:** Design-фаза целиком: рекон швов (findings/P0-recon-core-seams.md), RAG по 3 фронтам
-(editor-модели, Laravel-реестры, capability-таксономия — findings/P0-rag-*.md), ADR
-(root/adr-file-handler-seam.md), план P0 из 5 items с D1–D8.
-
-**Remaining:** Owner-решения Q1/Q2 (§7 plan.md) → D9/D10; исполнение P0.1–P0.5. ACTIVE
-остаётся VLT-REMED — VLT-HSEAM ждёт очереди или явного решения owner'а.
-
-**Sources of truth:** plans/VLT-HSEAM/plan.md · phases/P0.md · root/adr-file-handler-seam.md ·
-findings/P0-*.md (4 файла).
-
-**Open risks:** P0.3/P0.4 стоят на [NEEDS CLARIFICATION] до D9/D10; параллельный VLT-REMED
-может тронуть те же файлы (PanelTablesBuilder, контракты) — перед стартом P0 сверить дифф
-remediation-ветки.
-
-**Workarounds:** —
-**Deferred:** capability-оси lossyEdit/convert/createNew (D8 — до появления потребителя);
-AbstractFileHandler — решается по факту в P0.5.
-**Open questions:** Q1 (движок в core), Q2 (yjs_state) — plan.md §7.
+**Current portfolio route:** [REMAINING-WORK.md](../REMAINING-WORK.md).
+**Sources:** plan.md · status.md · artifacts/migration-source-v1/manifest.json · ../archive/VLT-CANON/handoff.md · ../../docs/adr/0018-editor-engine-canon.md.
+**Open risk:** live preview status is not a current product backlog or execution admission.

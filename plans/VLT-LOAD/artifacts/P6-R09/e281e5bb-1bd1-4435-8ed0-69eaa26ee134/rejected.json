@@ -1,0 +1,5 @@
+{
+  "reason": "JobQueued observed after worker processing (132758ns); pre-push timestamp required",
+  "uuid": "cf9a8fae-89c1-4ba2-a71a-2f10fda0923b",
+  "disposition": "interrupted; not authoritative"
+}

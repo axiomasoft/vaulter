@@ -11,6 +11,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
+use Illuminate\Queue\Events\JobQueueing;
 use Throwable;
 
 /**
@@ -24,6 +25,20 @@ final class RecordQueueLifecycle
 {
     private const int LINE_CAP = 2048;
 
+    public function handleQueueing(JobQueueing $event): void
+    {
+        $this->guard(function () use ($event): void {
+            $this->append(
+                source: 'queueing',
+                outcome: 'enqueue-started',
+                queue: $this->queueName($event->queue, config('queue.connections.'.$event->connectionName.'.queue')),
+                payload: $this->decodePayload($event->payload()),
+                job: $event->job,
+                fallbackId: null,
+            );
+        });
+    }
+
     public function handleQueued(JobQueued $event): void
     {
         $this->guard(function () use ($event): void {
@@ -31,7 +46,7 @@ final class RecordQueueLifecycle
             $this->append(
                 source: 'queued',
                 outcome: 'queued',
-                queue: $this->queueName($event->queue, null),
+                queue: $this->queueName($event->queue, config('queue.connections.'.$event->connectionName.'.queue')),
                 payload: $payload,
                 job: $event->job,
                 fallbackId: $event->id,
@@ -203,6 +218,12 @@ final class RecordQueueLifecycle
      */
     private function context(): ?array
     {
+        $file = $this->env('LOAD_QUEUE_CONTEXT');
+
+        if ($file !== '') {
+            return $this->contextFromFile($file);
+        }
+
         $path = $this->env('LOAD_QUEUE_LEDGER');
         $runId = $this->env('LOAD_RUN_ID');
         $cellId = $this->env('LOAD_CELL_ID');
@@ -218,6 +239,42 @@ final class RecordQueueLifecycle
             'run_id' => $runId,
             'cell_id' => $cellId,
             'attempt' => (int) $attempt,
+            'fingerprint' => $fingerprint,
+        ];
+    }
+
+    /**
+     * @return array{path: string, run_id: string, cell_id: string, attempt: int, fingerprint: string}|null
+     */
+    private function contextFromFile(string $path): ?array
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        $ledger = $decoded['path'] ?? null;
+        $runId = $decoded['run_id'] ?? null;
+        $cellId = $decoded['cell_id'] ?? null;
+        $attempt = $decoded['attempt'] ?? null;
+        $fingerprint = $decoded['fingerprint'] ?? null;
+
+        if (!is_string($ledger) || $ledger === '' || !is_string($runId) || $runId === ''
+            || !is_string($cellId) || $cellId === '' || !is_string($fingerprint) || $fingerprint === ''
+            || !is_int($attempt) || $attempt < 1) {
+            return null;
+        }
+
+        return [
+            'path' => $ledger,
+            'run_id' => $runId,
+            'cell_id' => $cellId,
+            'attempt' => $attempt,
             'fingerprint' => $fingerprint,
         ];
     }

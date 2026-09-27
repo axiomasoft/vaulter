@@ -2,13 +2,13 @@
 
 **Статус:** normative design contract для P8.2–P8.7
 
-**Решения:** `PLAN1.D35`, `PLAN1.D36`, `PLAN1.D37`, `PLAN1.D38`; аддитивность — `PLAN1.D31`
+**Решения:** `PLAN1.D35`, `PLAN1.D36`, `PLAN1.D37`, `PLAN1.D38`, `PLAN1.D39`; аддитивность — `PLAN1.D31`
 
 **Источник реестра:** `plans/VLT-LOAD/slo-gates.md` §5.1–§5.3
 
 Эта спецификация фиксирует публичный seam, полный реестр P8-minimum, точки измерения и health-boundary.
-Она не разрешает реализацию P8.2: сначала нужен независимый GREEN design review в
-`plans/VLT-LOAD/findings/P8.1-design-review.md`.
+P8.2 **можно начинать** по D39: `findings/P8.1-design-review.md` — исторический RED, не start-gate;
+completion note — `findings/P8.1-design-complete.md`.
 
 ## 1. Публичный контракт и DI
 
@@ -88,7 +88,7 @@ symbol; `future` — точный планируемый path/symbol. Owning ite
 эмиссию. Consumer везде — metrics backend и соответствующий SLO gate; в последней колонке уточнён способ
 получения сигнала.
 
-### 3.1 Паритет с §5.1 — 12 families
+### 5.1 Паритет — 12 families
 
 | SSOT | Family | Type | Labels | Owner | Anchor / symbol | Owning item | Acquisition / consumer |
 |:--|:--|:--|:--|:--|:--|:--|:--|
@@ -105,7 +105,7 @@ symbol; `future` — точный планируемый path/symbol. Owning ite
 | 5.1 | `vaulter_broadcast_queue_wait_seconds` | histogram | — | host | future `load/app/Listeners/RecordBroadcastQueueWait.php::handle` | P8.3 | Enqueue timestamp to Laravel job start for queued broadcast; SLO-34…36 |
 | 5.1 | `vaulter_upload_session_active` | gauge | `protocol` | host | future `load/app/Observability/LoadStateMetrics.php::observeUploadSessions` | P8.3 | Absolute open-session DB count grouped by protocol; SLO-37…39 |
 
-### 3.2 Паритет с §5.2 — 10 families
+### 5.2 Паритет — 10 families
 
 | SSOT | Family | Type | Labels | Owner | Anchor / symbol | Owning item | Acquisition / consumer |
 |:--|:--|:--|:--|:--|:--|:--|:--|
@@ -120,7 +120,7 @@ symbol; `future` — точный планируемый path/symbol. Owning ite
 | 5.2 | `vaulter_download_ttfb_seconds` | histogram | `tier` | package | current `packages/drive/src/Http/Controllers/DownloadController.php:112::streamFromDisk`; `packages/core/src/Http/Controllers/Sharing/PublicShareController.php:191::streamFromDisk` | P8.4 | Request acceptance to **first PHP write/flush** (server first-write). Client TTFB remains k6 `ttfb_ms`; SLO-52…54 |
 | 5.2 | `vaulter_throttled_total` | counter | `route` | host | future `load/app/Listeners/RecordThrottledResponse.php::handle` | P8.4 | Count 429 response using named-route vocabulary; §0.4 error budget |
 
-### 3.3 Паритет с §5.3 — 28 families
+### 5.3 Паритет — 28 families
 
 | SSOT | Family | Type | Labels | Owner | Anchor / symbol | Owning item | Acquisition / consumer |
 |:--|:--|:--|:--|:--|:--|:--|:--|
@@ -299,8 +299,9 @@ gauge 0) so scrape shows the family before the first trigger.
 ### 7.3 Atomic histogram observation
 
 Одно observation обновляет **все** cumulative buckets с `le >= value`, `+Inf`, `_count` и `_sum` одним
-Redis `EVAL` Lua script (`load/app/Observability/lua/histogram_observe.lua`). KEYS несут hash-tag
-`{run_id}`. Инвариант после script: `_bucket{le="+Inf"} == _count` для каждого labelset.
+Redis `EVAL` Lua script (`load/app/Observability/lua/histogram_observe.lua`) по **одному HASH**
+на series (см. §15). Hash-tag `{run_id}` нужен, если script когда-либо тронет второй ключ;
+для histogram observation KEYS = 1. Инвариант после script: `HGET le:+Inf == HGET _count`.
 
 Запрещено: per-bucket `HINCRBY` из PHP без Lua; scrape, который видит `+Inf != _count`.
 
@@ -368,7 +369,7 @@ histogram base — невалидны. Class-A duration/cap **не** испол�
 |:--|:--|:--|
 | `http_s` | `vaulter_http_request_duration_seconds`, `vaulter_tree_query_duration_seconds`, `vaulter_activity_feed_duration_seconds`, `vaulter_export_duration_seconds`, `vaulter_collab_snapshot_duration_seconds`, `vaulter_broadcast_queue_wait_seconds`, `vaulter_upload_chunk_duration_seconds`, `vaulter_download_ttfb_seconds`, `vaulter_webhook_queue_wait_seconds`, `vaulter_webhook_delivery_duration_seconds` | 0.005, 0.01, 0.025, 0.05, 0.1, 0.12, 0.15, 0.18, 0.225, 0.25, 0.3, 0.375, 0.45, 0.5, 0.525, 0.6, 0.75, 0.9, 1, 1.2, 1.5, 1.8, 2, 2.25, 2.5, 3, 3.75, 4.5, 5, 6, 9, 10, 30, 45, 90 |
 | `stage_s` | `vaulter_outbox_stage_duration_seconds` | 0.005, 0.008, 0.01, 0.012, 0.025, 0.05, 0.1, 0.25, 0.5, 1 |
-| `batch_s` | `vaulter_assemble_duration_seconds`, `vaulter_outbox_relay_duration_seconds`, `vaulter_webhook_retry_tick_seconds`, `vaulter_sweep_tick_seconds`, `vaulter_gc_duration_seconds`, `vaulter_purge_duration_seconds`, `vaulter_prune_duration_seconds`, `vaulter_reconcile_duration_seconds` | 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 5, 10, 15, 30, 60, 90, 120, 300, 600, 1800, 3600, 7200, 14400 |
+| `batch_s` | `vaulter_assemble_duration_seconds`, `vaulter_outbox_relay_duration_seconds`, `vaulter_webhook_retry_tick_seconds`, `vaulter_sweep_tick_seconds`, `vaulter_gc_duration_seconds`, `vaulter_purge_duration_seconds`, `vaulter_prune_duration_seconds`, `vaulter_reconcile_duration_seconds` | 0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 5, 10, 15, 30, 60, 90, 120, 300, 600, 1800, 3600, 7200, 14400, 21600 |
 | `lock_s` | `vaulter_pg_lock_wait_seconds` | 0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10 |
 | `rows` | `vaulter_tree_cte_anchors`, `vaulter_subtree_nodes_touched`, `vaulter_webhook_retry_lockset_rows`, `vaulter_sweep_batch_rows`, `vaulter_gc_batch_rows`, `vaulter_purge_batch_nodes` | 1, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000 |
 
@@ -454,7 +455,7 @@ uses the artisan signatures above.
 | Class | How triggered | Families |
 |:--|:--|:--|
 | HTTP happy-path | k6 scenario tagged with OP; server maps §9.1 | HTTP/tree/activity/export/collab-issue/upload/chunk/assemble/download counters+histograms on success |
-| Collaboration rooms | k6 `docs-collab.js` **opens WebSocket** to compose `hocuspocus` after token; collector scrapes hub `/stats` | `vaulter_collab_room_active` |
+| Collaboration rooms | `load/scripts/p8-collab-join.mjs` holds Yjs docs; collector scrapes hub `/stats` | `vaulter_collab_room_active` |
 | Background | `php artisan` sweep/gc/purge/prune/relay/retry/reconcile against seeded dirty DB | all `sweep_*`, `gc_*`, `purge_*`, `prune_*`, `outbox_*`, `webhook_*` except failure-only |
 | Error/conflict | concurrent PATCH, 429, failed job, lock wait | `upload_conflict_total`, `throttled_total`, `failed_jobs_total`, `webhook_*{outcome=failure\|timeout}`, `vaulter_pg_lock_wait_seconds` |
 | Host gauges | collector tick during the same run | `*_active`, `outbox_backlog`, peak-memory gauges |
@@ -491,8 +492,297 @@ series as required by §3. «66 checkable» uses §8/§12, not invalid §3 draft
    - run-max gauge;
    - compound (AND of histogram_le_ratio + gauge_max + counter_rate).
 
-66/66 checkable means: every row that today is `not-checkable` for missing/invalid PromQL becomes
-evaluated (pass/fail/known-red/advisory) by this reader. k6-only class-B rows stay on the k6 plane.
+66/66 checkable in P8.7 historically counted not-checkable rows. Normative flip (D39):
+**42 class-A rows** become PromQL-evaluated via §16. Class-B rows stay on the k6 plane even
+when the Prometheus column names a family. k6-only class-B is not a second PromQL obligation.
+
+## 15. Histogram Lua (normative script)
+
+Series key (one HASH):
+
+```
+vaulter:metrics:{<run_id>}:series:<name>:<canonical_labels>
+```
+
+HASH fields: `le:<bound>` for each bucket including `le:+Inf`, plus `_sum`, `_count`.
+Exposition maps `le:0.01` → sample `{le="0.01"}`. Canonical bound strings are exactly the
+§8.2 literals (`0.01` not `0.010`; `+Inf` exactly).
+
+`load/app/Observability/lua/histogram_observe.lua`:
+
+```lua
+-- KEYS[1] = series HASH
+-- ARGV[1] = observation (finite number)
+-- ARGV[2..] = ordered bucket labels, last MUST be +Inf
+local key = KEYS[1]
+local value = tonumber(ARGV[1])
+if not value or value ~= value or value == math.huge or value == -math.huge then
+  return redis.error_reply("ERR observation must be finite")
+end
+if value < 0 then
+  return redis.error_reply("ERR observation must be >= 0")
+end
+local matched = 0
+for i = 2, #ARGV do
+  local bucket = ARGV[i]
+  if bucket == "+Inf" or value <= tonumber(bucket) then
+    redis.call("HINCRBY", key, "le:" .. bucket, 1)
+    matched = matched + 1
+  end
+end
+if matched == 0 then
+  return redis.error_reply("ERR no matching bucket; include +Inf")
+end
+redis.call("HINCRBYFLOAT", key, "_sum", value)
+local count = redis.call("HINCRBY", key, "_count", 1)
+local inf = redis.call("HGET", key, "le:+Inf")
+if tostring(inf) ~= tostring(count) then
+  return redis.error_reply("ERR +Inf ~= _count")
+end
+return count
+```
+
+PHP adapter: `EVAL` or `SCRIPT LOAD` + `EVALSHA` with NOSCRIPT retry. Backend error → drop
+emission, no partial write. Gauge MAX:
+
+```lua
+-- KEYS[1] gauge HASH or STRING; ARGV[1] new absolute
+local cur = tonumber(redis.call("GET", KEYS[1]) or "0")
+local new = tonumber(ARGV[1])
+if new > cur then redis.call("SET", KEYS[1], new) end
+return redis.call("GET", KEYS[1])
+```
+
+Nonce probe (string key, Redis 7): `GETDEL vaulter:queue-ready:{nonce}`.
+
+## 16. Class-A `promql_map` (42 rows)
+
+Reader substitutes `[run]` from `summary.json` duration (minimum 60s). If
+`increase(<name>_count[run]) == 0` for a histogram predicate → `not-evaluated`.
+`le` strings match §8.2. Memory thresholds are bytes. `PM_MAX_CHILDREN` from the tier env.
+
+Compound = AND of listed predicates; k6 throughput/data_sent remains thresholds.js.
+
+| slo_id | expression_class | promql (normative) | comparator | threshold |
+|:--|:--|:--|:--|:--|
+| SLO-40 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="tus_patch",tier="S"}[run])` | `<` | 67108864 |
+| SLO-41 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="tus_patch",tier="M"}[run])` | `<` | 67108864 |
+| SLO-42 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="tus_patch",tier="L"}[run])` | `<` | 67108864 |
+| SLO-43 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_putpart",tier="S"}[run])` | `<` | 167772160 |
+| SLO-44 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_putpart",tier="M"}[run])` | `<` | 167772160 |
+| SLO-45 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_putpart",tier="L"}[run])` | `<` | 167772160 |
+| SLO-46 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_complete",tier="S"}[run])` | `<` | 167772160 |
+| SLO-47 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_complete",tier="M"}[run])` | `<` | 167772160 |
+| SLO-48 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="s3_complete",tier="L"}[run])` | `<` | 167772160 |
+| SLO-49 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="single_shot",tier="S"}[run])` | `<` | 67108864 |
+| SLO-50 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="single_shot",tier="M"}[run])` | `<` | 67108864 |
+| SLO-51 | gauge_max | `max_over_time(vaulter_request_peak_memory_bytes{operation="single_shot",tier="L"}[run])` | `<` | 67108864 |
+| SLO-52 | compound | `max_over_time(vaulter_request_peak_memory_bytes{operation="download",tier="S"}[run]) < 16777216` AND `max_over_time(vaulter_download_stream_active[run]) <= PM_MAX_CHILDREN` | — | — |
+| SLO-53 | compound | same RSS `< 16777216` for `tier="M"` AND stream_active `<= PM_MAX_CHILDREN` | — | — |
+| SLO-54 | compound | stream_active `<= PM_MAX_CHILDREN` (lab RSS `< 16777216` if collected) | — | — |
+| SLO-55 | histogram_le_ratio | `increase(vaulter_outbox_stage_duration_seconds_bucket{le="0.01"}[run]) / increase(vaulter_outbox_stage_duration_seconds_count[run])` | `>=` | 0.95 |
+| SLO-56 | histogram_le_ratio | same family `le="0.008"` | `>=` | 0.95 |
+| SLO-57 | histogram_le_ratio | same family `le="0.012"` | `>=` | 0.95 |
+| SLO-58 | compound | relay `le="1.5"` ratio `>=0.95` AND `delta(vaulter_outbox_backlog[run]) <= 0` AND `rate(vaulter_outbox_relayed_total[5m]) > 200` | — | — |
+| SLO-59 | compound | relay `le="1"` ratio `>=0.95` AND backlog delta `<=0` AND `rate(relayed[5m]) > 800` | — | — |
+| SLO-60 | compound | relay `le="1"` ratio `>=0.95` AND backlog delta `<=0` AND `rate(relayed[5m]) > 2000` | — | — |
+| SLO-61 | compound | queue_wait `le="5"` ratio `>=0.95` AND delivery `le="2"` ratio `>=0.95` AND `rate(vaulter_webhook_delivered_total[5m]) > 50` | — | — |
+| SLO-62 | compound | queue_wait `le="3"` ratio `>=0.95` AND delivery `le="2"` AND `rate > 200` | — | — |
+| SLO-63 | compound | queue_wait `le="2"` AND delivery `le="2"` AND `rate > 600` | — | — |
+| SLO-64 | compound | retry_tick `le="2"` ratio `>=0.95` AND lockset `histogram_le_all` `le="1000"` AND `max_over_time(vaulter_command_peak_memory_bytes{command="vaulter:retry-webhooks"}[run]) < 268435456` | — | — |
+| SLO-65 | compound | tick `le="1.5"` AND lockset `le="1000"` all AND RSS `< 268435456` | — | — |
+| SLO-66 | compound | same as SLO-65 | — | — |
+| SLO-67 | compound | prune `histogram_le_all` `le="60"` AND lock_wait `histogram_le_all` `le="1"` | — | — |
+| SLO-68 | compound | prune `le="60"` all AND lock_wait `le="1"` all | — | — |
+| SLO-69 | compound | prune `le="120"` all AND lock_wait `le="1"` all | — | — |
+| SLO-70 | compound | sweep_tick `le="5"` ratio `>=0.95` AND sweep_batch `le="1000"` all AND command RSS `{command="vaulter:sweep-uploads"} < 268435456` | — | — |
+| SLO-71 | compound | tick `le="10"` ratio AND batch `le="5000"` all AND RSS `< 268435456` | — | — |
+| SLO-72 | compound | tick `le="15"` ratio AND batch `le="10000"` all AND RSS `< 268435456` | — | — |
+| SLO-73 | compound | purge `le="60"` all AND purge_batch `le="1000"` all | — | — |
+| SLO-74 | compound | purge `le="90"` all AND batch `le="5000"` all | — | — |
+| SLO-75 | compound | purge `le="120"` all AND batch `le="10000"` all | — | — |
+| SLO-76 | compound | gc `le="300"` all AND gc_batch `le="1000"` all AND `rate(vaulter_gc_rows_scanned_total[1m]) > 2000` AND `rate(vaulter_gc_objects_deleted_total[1m]) > 100` AND RSS `{command="vaulter:gc-blobs"} < 268435456` | — | — |
+| SLO-77 | compound | gc `le="1800"` all AND batch `le="5000"` AND scan `> 5000` AND del `> 200` AND RSS `< 268435456` | — | — |
+| SLO-78 | compound | gc `le="21600"` all AND batch `le="10000"` AND scan `> 10000` AND del `> 400` AND RSS `< 268435456` | — | — |
+| SLO-79 | compound | reconcile `le="1800"` all AND `rate(vaulter_reconcile_objects_total[1m]) > 1000` AND RSS `{command="vaulter:reconcile-blobs"} < 536870912` | — | — |
+| SLO-80 | compound | reconcile `le="7200"` all AND rate `> 2000` AND RSS `< 536870912` | — | — |
+| SLO-81 | compound | reconcile `le="14400"` all AND rate `> 4000` AND RSS `< 536870912` | — | — |
+
+SLO-46..48 class-A RSS remain `known-red` until D11 (parser `KNOWN_RED_IDS`). Reader still
+**evaluates** the PromQL and prints `known-red`, never a silent pass.
+
+`http_s` already contains `le=3` (SLO-62). `batch_s` contains `21600` (SLO-78).
+
+Rate window: if run duration `< 5m`, use `[run]` instead of `[5m]`/`[1m]` (never a window longer than the run).
+
+## 17. Exact load-stand deltas (copy into compose/Docker/nginx)
+
+### 17.1 `load/docker-compose.load.yml` (additions; do not remove postgres/minio/app)
+
+`app.environment` add:
+
+```
+TIER: "${TIER}"
+LOAD_RUN_ID: "${LOAD_RUN_ID:-}"
+QUEUE_CONNECTION: redis
+CACHE_STORE: redis
+REDIS_HOST: redis
+REDIS_PORT: "6379"
+REDIS_CLIENT: phpredis
+VAULTER_COLLAB_SECRET: "vlt-load-dev-collab-secret-not-for-production"
+```
+
+New services:
+
+```yaml
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  queue-worker:
+    build:
+      context: ..
+      dockerfile: load/docker/Dockerfile.app
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - ./app/testbench.load.yaml:/app/testbench.yaml:ro
+    environment:
+      TIER: "${TIER}"
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      DB_CONNECTION: pgsql
+      DB_HOST: pgbouncer
+      DB_PORT: "6432"
+      DB_DATABASE: vaulter_load
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+      TESTBENCH_WORKING_PATH: /app
+    command: ["php", "vendor/bin/testbench", "queue:work", "redis", "--queue=load-health,default", "--sleep=1", "--tries=1"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+
+  hocuspocus:
+    build:
+      context: ../hocuspocus-server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      VAULTER_BACKEND_URL: http://app:8080
+      VAULTER_API_PREFIX: api/vaulter
+      VAULTER_COLLAB_WEBHOOK_SECRET: vlt-load-dev-collab-secret-not-for-production
+      VAULTER_COLLAB_ALLOWED_ORIGINS: "*"
+      VAULTER_COLLAB_PORT: "1234"
+      VAULTER_COLLAB_HEALTH_PORT: "1235"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+```
+
+`app.depends_on` add `redis: service_healthy`. P8.6 compose healthcheck on `app` becomes
+`wget …/up` after `/up` exists; until then keep `/load/health`.
+
+### 17.2 `load/docker/Dockerfile.app`
+
+Keep `pdo_pgsql`/`mbstring`. Add:
+
+```
+&& apk add --no-cache $PHPIZE_DEPS \
+&& pecl install redis \
+&& docker-php-ext-enable redis \
+&& apk del $PHPIZE_DEPS
+```
+
+### 17.3 `load/docker/php-fpm.conf` (pool `[www]`)
+
+```
+pm.status_path = /fpm-status
+pm.status_listen = 127.0.0.1:9001
+```
+
+### 17.4 `load/docker/nginx.conf`
+
+In the existing php location add `fastcgi_param REQUEST_URI $request_uri;` (original URI
+survives `try_files` → `/index.php`). Add a **loopback-only** server:
+
+```
+server {
+    listen 127.0.0.1:8081;
+    location = /fpm-status {
+        include fastcgi_params;
+        fastcgi_pass 127.0.0.1:9001;
+        fastcgi_param SCRIPT_FILENAME "";
+        fastcgi_param SCRIPT_NAME /fpm-status;
+        fastcgi_param REQUEST_URI /fpm-status;
+        fastcgi_param QUERY_STRING $args;
+        fastcgi_pass_request_body off;
+        fastcgi_param CONTENT_LENGTH "";
+    }
+}
+```
+
+Collector (same network namespace as php-fpm/nginx, i.e. the `app` container) curls
+`http://127.0.0.1:8081/fpm-status?json&full`. Do not publish 8081 on the host. Do not
+put `/fpm-status` on public `:8080`.
+
+### 17.5 `load/docker/prometheus.yml`
+
+```
+  - job_name: vaulter-sut
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['app:8080']
+    scrape_interval: 5s
+```
+
+Default `/metrics` dumps the **open** `LOAD_RUN_ID` (no query required for scrape).
+
+### 17.6 Hocuspocus `/stats`
+
+On the existing health HTTP server (port 1235), `GET /stats`:
+
+```json
+{"rooms": 0, "connections": 0}
+```
+
+`rooms = server.getDocuments().length`, `connections = server.getConnectionsCount()`.
+No document names in the payload (cardinality / PII).
+
+### 17.7 `load/scripts/p8-collab-join.mjs`
+
+Node 22 script using `@hocuspocus/provider` (dependency already in `hocuspocus-server/`
+or added under `load/`). For each seeded document: POST collab token, open provider,
+hold until SIGTERM/`--duration`. P8.7 matrix starts this **before** scrape. HTTP-only
+`docs-collab.js` remains for OP-28…; it does not satisfy `collab_room_active`.
+
+## 18. Reader edge rules
+
+- Histogram predicate with `_count` increase 0 → `not-evaluated` (not pass, not fail).
+- Prometheus unreachable → `not-checkable`.
+- Missing family on scrape → `not-checkable` (zero-series must exist after run-open).
+- SLO-46..48 A → evaluated then labelled `known-red` until D11.
+- Class B → k6 `summary.json` only.
+
+## 19. Start authorization
+
+Owner 2026-09-20 waived a third independent design audit as the P8.2 start gate (D39).
+P8.2 executes §1 only. Independent audit may still run later; it is optional.
+
 
 ## 13. Host signal sources (F3)
 
@@ -500,8 +790,8 @@ evaluated (pass/fail/known-red/advisory) by this reader. k6-only class-B rows st
 |:--|:--|:--|:--|
 | `tier` | compose `app.environment.TIER=${TIER}` → `AssignLoadTier` | `load/docker-compose.load.yml`, `load/app/Http/Middleware/AssignLoadTier.php`, `load/scripts/up.sh` (already exports TIER) | Values §9 |
 | `operation` | §9.1 path map | `load/app/Http/Middleware/RecordVaulterRequestMetrics.php` **or** package middleware `packages/core/src/Http/Middleware/RecordVaulterRequestMetrics.php` | Package middleware reads context, not env |
-| `collab_room_active` | Hocuspocus hub `GET /stats` → `{rooms: <int>}` | `hocuspocus-server/src/index.js` (add `/stats`; `/health` today has no count); `load/docker-compose.load.yml` service `hocuspocus` build `hocuspocus-server/Dockerfile`; `load/app/Observability/CollaborationRoomMetrics.php`; `load/k6/scenarios/docs-collab.js` (WS connect after token) | Do not emit 0 as a substitute when hub/clients are absent |
-| `download_stream_active` | php-fpm status `full` | `load/docker/php-fpm.conf` (`pm.status_path=/fpm-status`); `load/docker/nginx.conf` (internal `/fpm-status`, deny public); `load/app/Observability/DownloadStreamMetrics.php` | Count workers whose last request URI matches §9.1 download paths. Ceiling `pm.max_children` |
+| `collab_room_active` | Hocuspocus hub `GET /stats` on **health port** → `{rooms,connections}` where `rooms = server.getDocuments().length` | `hocuspocus-server/src/index.js`; `load/docker-compose.load.yml` service `hocuspocus`; `load/app/Observability/CollaborationRoomMetrics.php`; `load/scripts/p8-collab-join.mjs` | HTTP collab token ≠ room. Silent 0 forbidden if hub/join script absent |
+| `download_stream_active` | php-fpm `GET /fpm-status?json&full` via `pm.status_listen` | `load/docker/php-fpm.conf`; `load/docker/nginx.conf` (loopback `:8081`, not public `:8080`); `load/app/Observability/DownloadStreamMetrics.php` | Count `processes[]` `state=Running` whose `request uri` matches §9.1 download paths. Ceiling `pm.max_children`. Status **must not** share the saturated `www` pool |
 | `upload_session_active` / `outbox_backlog` | SQL count | `load/app/Observability/LoadStateMetrics.php` | Absolute snapshots, `SET` |
 | `vaulter_broadcast_queue_wait_seconds` | enqueue timestamp → job start | `load/app/Listeners/RecordBroadcastQueueWait.php` | Host listener |
 | `vaulter_throttled_total` | 429 + §9 `route` | `load/app/Listeners/RecordThrottledResponse.php` | |
@@ -518,11 +808,11 @@ evaluated (pass/fail/known-red/advisory) by this reader. k6-only class-B rows st
 ### P8.3
 
 Package: `packages/core/src/Http/Middleware/RecordVaulterRequestMetrics.php`; `packages/core/src/Repositories/Drive/NodeReadRepository.php`; `packages/drive/src/Actions/MoveNodeAction.php`; `packages/core/src/Http/Controllers/Activity/ActivityController.php`; `packages/core/src/Activity/ActivityRecorder.php`; `packages/documents/src/Export/NodeExportService.php`; `packages/documents/src/Collaboration/CollaborationSessionService.php`; `packages/documents/src/Actions/Collaboration/PersistYjsSnapshotAction.php`.
-Host: `load/app/Http/Middleware/AssignLoadTier.php`; `load/app/Observability/CollaborationRoomMetrics.php`; `load/app/Observability/LoadStateMetrics.php`; `load/app/Listeners/RecordBroadcastQueueWait.php`; `load/app/LoadServiceProvider.php`; `load/docker-compose.load.yml`; `load/k6/scenarios/docs-collab.js`; `hocuspocus-server/src/index.js`; `hocuspocus-server/Dockerfile`. Fake tests in the touched packages.
+Host: `load/app/Http/Middleware/AssignLoadTier.php`; `load/app/Observability/CollaborationRoomMetrics.php`; `load/app/Observability/LoadStateMetrics.php`; `load/app/Listeners/RecordBroadcastQueueWait.php`; `load/app/LoadServiceProvider.php`; `load/docker-compose.load.yml`; `load/scripts/p8-collab-join.mjs`; `hocuspocus-server/src/index.js`; `hocuspocus-server/Dockerfile`. Fake tests in the touched packages.
 
 ### P8.4
 
-`load/app/Http/Middleware/RecordRequestPeakMemory.php`; `load/app/Observability/DownloadStreamMetrics.php`; `load/app/Listeners/RecordThrottledResponse.php`; `packages/drive/src/Uploads/TusUploadHandler.php`; `packages/drive/src/Uploads/S3MultipartHandler.php`; `packages/drive/src/Actions/UploadFileAction.php`; `packages/drive/src/Http/Controllers/DownloadController.php`; `packages/core/src/Http/Controllers/Sharing/PublicShareController.php`; `load/docker/php-fpm.conf`; `load/docker/nginx.conf`. Fake tests in drive/core.
+`load/app/Http/Middleware/RecordRequestPeakMemory.php`; `load/app/Observability/DownloadStreamMetrics.php`; `load/app/Listeners/RecordThrottledResponse.php`; `packages/drive/src/Uploads/TusUploadHandler.php`; `packages/drive/src/Uploads/S3MultipartHandler.php`; `packages/drive/src/Actions/UploadFileAction.php`; `packages/drive/src/Http/Controllers/DownloadController.php`; `packages/core/src/Http/Controllers/Sharing/PublicShareController.php`; `load/docker/php-fpm.conf` (`pm.status_path`, `pm.status_listen`); `load/docker/nginx.conf` (loopback `:8081` `/fpm-status`, `REQUEST_URI $request_uri` on php). Fake tests in drive/core.
 
 ### P8.5
 
@@ -534,4 +824,150 @@ Host: `load/app/Http/Middleware/AssignLoadTier.php`; `load/app/Observability/Col
 
 ### P8.7
 
-`plans/VLT-LOAD/findings/P8.7-gate-closure.md`; `load/app/Observability/LoadExpositionRecorder.php`; `load/app/Observability/RedisMetricsRegistry.php`; `load/app/Observability/lua/histogram_observe.lua`; `load/app/Http/Controllers/MetricsController.php`; `load/routes/metrics.php`; `load/app/LoadServiceProvider.php`; `load/docker/prometheus.yml`; `load/docker-compose.load.yml`; `load/gates/perf-assert.py`; `load/gates/_slo_table.py`; `load/gates/promql_map.py`; `load/gates/fixtures/`; `load/scripts/p8-metric-matrix.sh`; `load/scripts/run.sh`; tests of Lua invariant, run isolation, exposition, PromQL fixtures.
+`plans/VLT-LOAD/findings/P8.7-gate-closure.md`; `load/app/Observability/LoadExpositionRecorder.php`; `load/app/Observability/RedisMetricsRegistry.php`; `load/app/Observability/lua/histogram_observe.lua`; `load/app/Http/Controllers/MetricsController.php`; `load/routes/metrics.php`; `load/app/LoadServiceProvider.php`; `load/docker/prometheus.yml`; `load/docker-compose.load.yml`; `load/gates/perf-assert.py`; `load/gates/_slo_table.py`; `load/gates/promql_map.py`; `load/gates/fixtures/`; `load/scripts/p8-metric-matrix.sh`; `load/scripts/p8-collab-join.mjs`; `load/scripts/run.sh`; tests of Lua invariant, run isolation, exposition, PromQL fixtures.
+
+## 20. P8.8–P8.11 tracing and deferred-metric contract (`PLAN1.D41`)
+
+Этот раздел замораживает выбор и semantics до чтения итоговых значений P3–P7. Он не добавляет SLO
+и не обещает host deployment Collector/Tempo/Jaeger.
+
+### 20.1 Ownership и optional boundary
+
+| Layer | Owner | Contract |
+|:--|:--|:--|
+| `TraceRecorder`, Null, Fake, package span calls | package (P8.9) | SDK-neutral public API; ни одного OTel type/import в reusable packages |
+| incoming W3C extraction, HTTP SERVER span, provider/sampler/processors | host (P8.11 load proof) | active context передаётся package recorder; отсутствие SDK/adapter → Null |
+| exporter, `forceFlush`, `shutdown` | host (P8.11 load proof) | injected exporter; failure/timeout diagnostic-only, business result неизменен |
+| target selection/readiness | harness/plan (P8.8) | validated manifest from P3–P7 evidence; ≤6 targets or D41 no-op |
+| Collector/Tempo/Jaeger deployment/retention | consuming host | вне VLT-LOAD; ни compose-service, ни production promise здесь нет |
+
+Package contract принимает closed span name, bounded attributes и callback; callback result/exception
+сохраняются byte-for-byte. Null вызывает callback напрямую и не читает clock/context, не сериализует
+и не делает I/O. Host adapter может использовать OpenTelemetry API/SDK, но package `composer.json`
+не получает hard dependency. `load/` ставит SDK только как dev proof surface.
+
+Публичная PHP-сигнатура frozen до реализации:
+
+```php
+public function span(string $name, callable $operation, array $attributes = []): mixed;
+```
+
+PHPDoc сохраняет generic result callback и задаёт `array<string, scalar>` для attributes. Публичных
+`startSpan`/`endSpan`, OTel context/span типов или mutable handle нет. Adapter сам читает active
+context; Null напрямую возвращает результат callback либо пробрасывает его exception.
+
+### 20.2 Frozen target allowlist
+
+P8.8 выбирает максимум шесть target IDs только из таблицы. Target выбирается при valid observed
+hotspot/debt evidence в указанном producer report; limitation/inference/evidence-invalid не выбирает.
+
+| Target ID | Producer | Closed span chain / exact source allowlist |
+|:--|:--|:--|
+| `tree.read` | P3/P5 | active HTTP SERVER → `vaulter.repository.tree.read`; source: `NodeReadRepository` |
+| `tree.move` | P5/P7 | active HTTP SERVER → `vaulter.action.tree.move`; source: `MoveNodeAction` |
+| `upload.tus` | P4/P5/P7 | active HTTP SERVER → `vaulter.action.upload.tus`; source: `TusUploadHandler` |
+| `upload.s3` | P4/P5/P7 | active HTTP SERVER → `vaulter.action.upload.s3`; source: `S3MultipartHandler` |
+| `download.stream` | P4/P7 | `vaulter.controller.download` → existing stream closure; source: `DownloadController`, `PublicShareController` |
+| `cas.commit` | P4/P5/P7 | caller → `vaulter.repository.cas.commit` → `vaulter.action.cas.commit`; source: `BlobStoreRepository`, `BlobStore` |
+| `cas.gc` | P5/P7 | command root → `vaulter.action.cas.gc`; source: `BlobGarbageCollector` |
+| `upload.sweep` | P5/P7 | command root → `vaulter.action.upload.sweep`; source: `SweepUploadsCommand` |
+| `webhook.pipeline` | P3/P6/P7 | command/job root → relay/retry/delivery child; source: `OutboxRelay`, `WebhookRetryDispatcher`, `DeliverWebhook` |
+| `collaboration.session` | P5/P7 | active HTTP SERVER → `vaulter.action.collaboration.session`; source: `CollaborationSessionService` |
+| `collaboration.snapshot` | P6/P7 | job/root → `vaulter.action.collaboration.snapshot`; source: `PersistYjsSnapshotAction` |
+
+Reducer формирует ровно одну score-row на eligible target. Сначала среди всех valid observed raw
+evidence target'а выбирается authoritative row по максимальному кортежу ниже; при полном равенстве
+побеждает лексикографически меньший evidence id. Затем targets сортируются по первым четырём полям
+убывающе, по `target_id` возрастающе; первые шесть выбираются.
+
+| Поле score | Closed rule |
+|:--|:--|
+| `integrity_rank` | `2` = подтверждённое нарушение integrity/safety invariant; `1` = availability/data-lifecycle blocker без corruption; `0` = остальное |
+| `slo_rank` | `1` только для valid product RED против уже accepted SLO; иначе `0` |
+| `severity_rank` | `3=blocker`, `2=major`, `1=minor`, `0=observation`; значение берётся из evidence-linked finding |
+| `impact_ppm` | `floor(1_000_000 × observed_duration_or_wait_ns / observation_window_ns)`; для non-time evidence `0` |
+
+Ненулевой `impact_ppm` требует одну raw duration/wait value, единицу, положительное immutable window
+и exact run/cell id; суммирование разных windows/reports запрещено. Missing/ambiguous unit, window,
+severity или evidence validity делает candidate invalid, а не нулевым. Validator имеет cross-report
+tie fixture и доказывает byte-identical ordering до чтения live values.
+
+Не существующий слой не создаётся ради красивой цепочки. Для HTTP host SERVER span — parent; package
+controller/action/repository spans — INTERNAL children в реальном call order. Если host active span
+отсутствует, первый selected package span становится INTERNAL root. Для command/job selected entry
+создаёт root, если active context отсутствует. P8.9 не сериализует context в DB/queue и не обещает
+distributed async parentage; такое расширение требует отдельного owner decision.
+
+### 20.3 Propagation, names и attributes
+
+Host extraction использует W3C `traceparent`/`tracestate`; invalid headers создают новый SERVER root.
+Package не читает headers. Span name — только literal из §20.2. Допустимые application attributes:
+
+| Key | Closed values |
+|:--|:--|
+| `vaulter.target` | target IDs §20.2 |
+| `vaulter.layer` | `controller`, `action`, `repository`, `command`, `job` |
+| `vaulter.outcome` | `success`, `conflict`, `validation`, `dependency_timeout`, `dependency_error`, `internal_error`, `cancelled` |
+| `vaulter.protocol` | `tus`, `s3`, `single` |
+| `vaulter.size_bucket` | словарь §9 |
+| `vaulter.tier` | `S0`, `S`, `M`, `L` |
+| `vaulter.correlation_slot` | optional `slot-000`…`slot-255`, только lab run |
+
+Raw `upload_id`, `node_id`, blob/event/delivery IDs, UUID, user, tenant, email, token, filename,
+object key, URL/query, SQL/bindings, exception class/message/stack и произвольный текст запрещены.
+Application values не копируются в standard-looking attributes. Native OTel trace/span IDs не
+дублируются application attributes.
+
+Корреляция по entity по умолчанию отсутствует. Если lab validator требует её, harness генерирует
+неперсистируемый 256-bit run secret и вычисляет `HMAC-SHA256(secret, kind || 0x00 || raw-id) mod 256`;
+в span попадает только один из 256 `slot-NNN`. Secret и mapping не пишутся ни в artifact, ни в log,
+уничтожаются при finalize; collision допустим и подчёркивает, что slot не является identity и не
+позволяет восстановить исходный идентификатор.
+
+### 20.4 Status/error semantics
+
+- Callback result и exception не меняются instrumentation.
+- Uncaught exception, вышедший из selected span, ставит span status `ERROR` и только bounded
+  `vaulter.outcome`; exception event/body/stack не записываются.
+- Ожидаемые 409 conflict, validation rejection и handled retry outcome не становятся ERROR; status
+  остаётся `UNSET`, outcome несёт bounded значение.
+- HTTP SERVER status принадлежит host adapter и следует фактическому final HTTP status; package child
+  не дублирует HTTP attributes.
+- Cancelled/timeout различаются только когда это доказано существующим typed product outcome; текст
+  exception не используется для классификации.
+
+### 20.5 Sampling, overhead, flush и shutdown
+
+Sampling host-owned и frozen: disabled=`0`, default enabled=`parentbased_traceidratio(0.01)`, lab
+proof additionally=`1.0`. Remote sampled parent сохраняется; remote unsampled parent не повышается.
+Package не делает собственное sampling и всегда вызывает только recorder seam. Tail sampling вне scope.
+
+P8.11 сравнивает disabled и 0.01 на одном tier-S dataset/image/cpuset fingerprint; 1.0 — stress-
+характеристика, не production default. Acceptance использует уже принятый class-B δ=10% и fixed
+memory ceilings, не новый post-result SLO. Сравниваются p95 выбранных операций, request/command peak,
+FPM/container memory и export drops; mismatch fingerprint делает evidence-invalid.
+
+Каждый request/job/command terminal hook вызывает bounded `forceFlush`. Long-running worker flushes
+после каждого job, FPM request — после response termination, console — после command termination.
+Process termination вызывает `shutdown` не более одного раза. Flush/shutdown timeout или exporter
+failure дают rate-limited diagnostic и drop, но не меняют transaction, response, retry или exit code.
+
+### 20.6 Deferred metric conditions
+
+| Family | Type/labels | Add only if |
+|:--|:--|:--|
+| `vaulter_blob_dedup_hit_total` | counter / no labels | P5 valid evidence показывает, что measured dedup-hit incidence нужна для интерпретации L-07; emission только на locked find-or-create `created=false` |
+| `vaulter_webhook_dlq_total` | counter / no labels | P6 valid evidence принимает terminal-dead measurement obligation; emission только на transition into `dead`, не на terminal no-op |
+
+False condition означает `not-added`, не нулевую зарегистрированную family. Обе false — валидный D41
+no-op. Эти counters не получают SLO после просмотра результатов и не меняют P8-minimum parity 50/50.
+
+### 20.7 Terminal proof
+
+P8.8 terminal evidence несёт один digest-bound `producer-readiness/v1` только для P8.9 и записывает
+digest immutable manifest как ordinary producer evidence для P8.10/P8.11. P8.9 доказывает package
+no-SDK/no-op и selected nesting. P8.10 доказывает exact condition parity. При nonempty manifest P8.11
+доказывает real host context, attributes, status, exporter lifecycle и overhead. При empty manifest
+P8.11 не создаёт tracing API/adapter/SDK/config и доказывает их отсутствие плюс zero exports. GREEN
+execution evidence означает выполненный branch contract; измеренный product RED хранится отдельно.
+Missing/mismatched evidence оставляет owning item open и не материализует downstream bundle.

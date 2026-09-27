@@ -1,0 +1,66 @@
+[
+  {
+    "command": [
+      "python3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "load/gates",
+      "-p",
+      "test_p6*.py"
+    ],
+    "environment": {},
+    "exit": 0,
+    "stdout": "",
+    "stderr": "p6-queue-cases: integrity defects: extra_delivery_rows, missing_queue_jobs, sink_recorded_body\n...................................\n----------------------------------------------------------------------\nRan 35 tests in 0.072s\n\nOK\n"
+  },
+  {
+    "command": [
+      "./vendor/bin/pest",
+      "load/tests/Feature/QueueRetryMemorySeamTest.php",
+      "load/tests/Feature/QueueProbeEndpointTest.php",
+      "load/tests/Feature/QueueLifecycleLedgerTest.php",
+      "load/tests/Feature/QueueSinkLedgerTest.php",
+      "--compact",
+      "--do-not-cache-result"
+    ],
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:",
+      "CACHE_STORE": "array",
+      "SESSION_DRIVER": "array",
+      "QUEUE_CONNECTION": "sync"
+    },
+    "exit": 0,
+    "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":8,\"passed\":8,\"assertions\":43,\"duration_ms\":192,\"raw\":[\"{\\\"retried\\\":0,\\\"elapsed_ns\\\":3666580,\\\"peak_bytes\\\":44564480,\\\"status\\\":0}\",\"{\\\"endpoints\\\":1}\",\"{\\\"delivery_id\\\":\\\"1\\\",\\\"attempts\\\":4,\\\"backoff_seconds\\\":1800,\\\"max_attempts\\\":5,\\\"disable_after\\\":10}\",\"{\\\"delivery_id\\\":\\\"2\\\",\\\"attempts\\\":4,\\\"backoff_seconds\\\":1800,\\\"max_attempts\\\":5,\\\"disable_after\\\":10}\"]}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "php",
+      "-l",
+      "load/app/Console/QueueProbeCommand.php"
+    ],
+    "environment": {},
+    "exit": 0,
+    "stdout": "No syntax errors detected in load/app/Console/QueueProbeCommand.php\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "load",
+      "plans/remaining-evidence/R09.md"
+    ],
+    "environment": {},
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

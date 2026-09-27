@@ -1,0 +1,1 @@
+{"result": [{"metric": {"__name__": "up", "instance": "app:8080", "job": "vaulter-sut"}, "value": [1790456639.147, "1"]}], "time": 1790456639.1586845}

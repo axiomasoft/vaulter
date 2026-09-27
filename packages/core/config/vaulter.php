@@ -8,6 +8,7 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;
+use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -708,7 +709,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-    'middleware' => ['api'],
+    'middleware' => [
+        'api',
+        RecordVaulterRequestMetrics::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -877,6 +881,23 @@ return [
                 'secret' => env('VAULTER_COLLAB_SECRET'),
                 'token_ttl' => 3600,
             ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Observability (VLT-LOAD P8 / D35)
+    |--------------------------------------------------------------------------
+    | MetricsRecorder seam: disabled by default (Null). When enabled, `recorder`
+    | must be an FQCN implementing Vaulter\Contracts\Observability\MetricsRecorder
+    | (typically a host/load adapter). Invalid or missing class falls back to Null.
+    */
+    'observability' => [
+        'enabled' => env('VAULTER_OBSERVABILITY_ENABLED', false),
+        'recorder' => env('VAULTER_OBSERVABILITY_RECORDER'),
+        'tracing' => [
+            'enabled' => env('VAULTER_TRACING_ENABLED', false),
+            'recorder' => env('VAULTER_TRACING_RECORDER'),
         ],
     ],
 ];

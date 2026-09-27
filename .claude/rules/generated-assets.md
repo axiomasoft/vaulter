@@ -6,7 +6,7 @@ paths:
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: _common@0.4.1
+Pack: _common@0.5.0
 Template: rules/generated-assets.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: —

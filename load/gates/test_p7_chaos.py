@@ -312,6 +312,88 @@ class P7ChaosGateTest(unittest.TestCase):
         with self.assertRaisesRegex(gate.EvidenceInvalid, 'unresolved ambiguity'):
             gate.verify_run_dir(FIXTURES / 'ambiguous-outcome')
 
+    def test_r11_rejects_a_reused_enospc_retry(self) -> None:
+        cell_id = 'storage-control.cas-stage.enospc-then-retry'
+        known = {cell['cell_id']: cell for cell in gate.catalog()}
+        row = {
+            'schema': 'p7-attempt/v2',
+            'cell_id': cell_id,
+            'operation': 'cas-stage',
+            'http_outcome': 'error',
+            'availability': 'degraded',
+            'durable_state': 'rejected',
+            'product_results': [
+                {
+                    'operation': 'cas-stage', 'status': 500, 'transport': 'artisan',
+                    'request_id': 'same', 'requested_bytes': 4096, 'written_bytes': 0,
+                },
+                {
+                    'operation': 'cas-stage', 'status': 200, 'transport': 'artisan',
+                    'request_id': 'same', 'requested_bytes': 4096, 'written_bytes': 4096,
+                },
+            ],
+        }
+
+        with self.assertRaisesRegex(gate.EvidenceInvalid, 'reused first request'):
+            gate._check_attempts([row], known)
+
+    def test_r11_accepts_distinct_first_and_retry_operations(self) -> None:
+        cell_id = 'storage-control.cas-stage.enospc-then-retry'
+        known = {cell['cell_id']: cell for cell in gate.catalog()}
+        row = {
+            'schema': 'p7-attempt/v2',
+            'cell_id': cell_id,
+            'operation': 'cas-stage',
+            'http_outcome': 'accepted',
+            'availability': 'up',
+            'durable_state': 'committed',
+            'product_results': [
+                {
+                    'operation': 'cas-stage', 'status': 500, 'transport': 'artisan',
+                    'request_id': 'first', 'requested_bytes': 4096, 'written_bytes': 0,
+                },
+                {
+                    'operation': 'cas-stage', 'status': 200, 'transport': 'artisan',
+                    'request_id': 'retry', 'requested_bytes': 4096, 'written_bytes': 4096,
+                },
+            ],
+        }
+
+        gate._check_attempts([row], known)
+
+        row['product_results'][1]['written_bytes'] = 2048
+        with self.assertRaisesRegex(gate.EvidenceInvalid, 'retry was short'):
+            gate._check_attempts([row], known)
+
+    def test_r11_rejects_a_non_green_live_baseline(self) -> None:
+        row = {
+            **_common('dependency-probe', 1500, 'baseline'),
+            'schema': 'p7-readiness/v1',
+            'up_ok': True,
+            'ready_ok': True,
+            'metrics_ok': False,
+        }
+
+        with self.assertRaisesRegex(gate.EvidenceInvalid, 'baseline is not green'):
+            gate._check_readiness([row])
+
+    def test_r11_accepts_an_opaque_product_key_with_a_full_run_marker(self) -> None:
+        row = {
+            'schema': 'p7-object/v2',
+            'run_id': RUN,
+            'key': 'tmp/uploads/server-generated-uuid.parts/1',
+            'run_marker': f'p7-{RUN}-cell-attempt',
+            'exists': True,
+            'checksum': OBJECT_CHECKSUM,
+            'size': 16,
+        }
+
+        gate._check_objects([row], {'run_id': RUN})
+
+        row['run_marker'] = 'p7-other-run-cell-attempt'
+        with self.assertRaisesRegex(gate.EvidenceInvalid, 'cross-run object marker'):
+            gate._check_objects([row], {'run_id': RUN})
+
     def test_snapshot_syntax_and_missing_live_sample(self) -> None:
         proc = subprocess.run([str(SNAPSHOT), 'syntax'], check=False, capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)

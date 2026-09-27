@@ -1,0 +1,1 @@
+{"run_id":"fixture-run","command_id":"http:tree_list","connection":"pgsql","sql_template_hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","duration_ms":1.0,"ordinal":1,"in_transaction":false,"bindings":["secret"]}

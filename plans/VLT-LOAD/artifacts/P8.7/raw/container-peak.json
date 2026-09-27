@@ -1,0 +1,5 @@
+{
+  "tier": "S",
+  "app": { "memory_peak_bytes": 104951808 },
+  "postgres": { "memory_peak_bytes": 899690496 }
+}

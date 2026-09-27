@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
@@ -18,6 +19,7 @@ use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\LoadTier;
 use Vaulter\VaulterManager;
 
 /**
@@ -48,6 +50,7 @@ final class NodeExportService
         private readonly VaulterManager $manager,
         private readonly DocumentFileDescriptorFactory $descriptors,
         private readonly ExportFilenameResolver $filenames,
+        private readonly MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -61,14 +64,23 @@ final class NodeExportService
             throw NotADocumentNodeException::forNode($node->getKey());
         }
 
-        $exporter = $this->manager->exporter($format);
-        $content = $this->contentOf($node);
+        return $this->metrics->timing(
+            name: 'vaulter_export_duration_seconds',
+            operation: function () use ($node, $format): DocumentExport {
+                $exporter = $this->manager->exporter($format);
+                $content = $this->contentOf($node);
 
-        return new DocumentExport(
-            format: $exporter->format(),
-            content: $exporter->export($content),
-            mimeType: $exporter->mimeType(),
-            filename: $this->filenames->resolve($node, $exporter->extension()),
+                return new DocumentExport(
+                    format: $exporter->format(),
+                    content: $exporter->export($content),
+                    mimeType: $exporter->mimeType(),
+                    filename: $this->filenames->resolve($node, $exporter->extension()),
+                );
+            },
+            labels: [
+                'format' => $format,
+                'tier' => LoadTier::label(),
+            ],
         );
     }
 

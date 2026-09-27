@@ -1,13 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknife.schema.json",
-  "_comment": "connect-канал (bucket-granular). P6.3: явный список закрепляет ревизию бакетов (снят legacy general/oss-dev — заменены плагином core) и защищает от дрейфа назад при повторном skiller connect. php-package (embeddable doc management для Laravel): PHP-пакет без фронтенда.",
-  "buckets": [
-    "architect",
-    "devops",
+  "_comment": "Компактный marketplace-профиль PHP-пакета по образцу CoreX. Плагины атомарны; не добавляй архитектурные и системные бакеты без измеренного повода.",
+  "plugins": [
+    "core",
     "laravel-testing",
+    "oss-dev",
     "php",
     "php-packages",
     "quality",
-    "system"
-  ]
+    "task"
+  ],
+  "providers": {
+    "selection": {
+      "claude-code": {
+        "enabled": true
+      },
+      "codex": {
+        "enabled": true
+      },
+      "cursor": {
+        "enabled": true
+      }
+    },
+    "contract_version": "1.0.0"
+  }
 }

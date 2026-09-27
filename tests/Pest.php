@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
 use Vaulter\Tests\BrokenPanelBootTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
+use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 use Vaulter\Tests\SpatieTestCase;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
@@ -18,6 +20,21 @@ $core = dirname(__DIR__).'/packages/core/tests';
 // Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
+uses(TestCase::class)->in(
+    $core.'/Observability/Binding',
+    $core.'/Observability/Tracing',
+);
+
+uses(TestCase::class, RefreshDatabase::class)->in(
+    $core.'/Observability/P83',
+    $core.'/Observability/P84',
+    $core.'/Observability/P85',
+);
+
+uses(P83DocumentsTestCase::class, RefreshDatabase::class)->in(
+    $core.'/ObservabilityDocuments',
+);
+
 uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Access',
     $core.'/Activity',
@@ -78,4 +95,10 @@ uses(UlidStrategyTestCase::class, RefreshDatabase::class)->in(
 
 uses(Uuid7StrategyTestCase::class, RefreshDatabase::class)->in(
     $core.'/IdStrategy/Uuid7',
+);
+
+uses(LoadTestCase::class)->in(
+    dirname(__DIR__).'/load/tests/Health',
+    dirname(__DIR__).'/load/tests/Observability',
+    dirname(__DIR__).'/load/tests/Feature',
 );

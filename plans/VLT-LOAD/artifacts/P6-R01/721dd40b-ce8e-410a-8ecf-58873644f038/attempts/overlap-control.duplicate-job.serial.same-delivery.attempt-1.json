@@ -1,0 +1,21 @@
+{
+  "attempt": 1,
+  "cell_id": "overlap-control.duplicate-job.serial.same-delivery",
+  "delivery_id": "72640",
+  "dispatches": 2,
+  "evidence": "valid",
+  "http_receives": 1,
+  "plane": "overlap-control",
+  "queue_uuids": [
+    "59c0ac2a-d214-4ab1-bde8-4b432d6f8d36",
+    "428ed2d0-4a62-4138-b630-77ef69cbad32",
+    "eb2d9591-66b9-45a2-b765-95b2e2f05c19",
+    "fe2c9545-f070-4823-be69-9149e86011b5"
+  ],
+  "run_id": "721dd40b-ce8e-410a-8ecf-58873644f038",
+  "slo": "not-a-product-slo",
+  "worker_pids": [
+    4040673,
+    4046400
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "SLO-01": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-02": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-03": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-04": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-05": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-06": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-07": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-08": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-09": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-10": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-11": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-12": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-13": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-14": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-15": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-16": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-17": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-18": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-19": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-20": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-21": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-22": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-23": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-24": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-25": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-26": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-27": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-28": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-29": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-30": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-31": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-32": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-33": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-34": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-35": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-36": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-37": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-38": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-39": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-40": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-41": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-42": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-43": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-44": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-45": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-46": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-47": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-48": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-49": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-50": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-51": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-52": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-53": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-54": {
+    "detail": "not-checkable (metric/tag combination not recorded in summary.json)",
+    "status": "not-checkable"
+  },
+  "SLO-55": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-56": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-57": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-58": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-59": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-60": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-61": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-62": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-63": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-64": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-65": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-66": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-67": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-68": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-69": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-70": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-71": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-72": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-73": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-74": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-75": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-76": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-77": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-78": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-79": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-80": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  },
+  "SLO-81": {
+    "detail": "section 3.3",
+    "status": "not-applicable"
+  }
+}

@@ -1,96 +1,7 @@
 {
   "version": 1,
   "hint_template": "[intent-router] bias (non-authoritative): top={name} score={score}{runners}",
-  "commands": [
-    {
-      "name": "/task:design",
-      "weight": 1,
-      "keywords": [
-        "спроектир",
-        "проектир",
-        "дизайн",
-        "архитектур",
-        "design",
-        "architecture",
-        "adr",
-        "распланируй",
-        "продумай",
-        "схему",
-        "модель данных",
-        "concept"
-      ]
-    },
-    {
-      "name": "/task:dev",
-      "weight": 1,
-      "keywords": [
-        "сделай",
-        "добавь",
-        "реализуй",
-        "построй",
-        "напиши",
-        "внедри",
-        "build",
-        "implement",
-        "feature",
-        "фича",
-        "эндпоинт",
-        "endpoint",
-        "команду",
-        "миграци",
-        "интеграци"
-      ]
-    },
-    {
-      "name": "/task:research",
-      "weight": 1,
-      "keywords": [
-        "исследуй",
-        "research",
-        "сравни",
-        "compare",
-        "разузнай",
-        "investigate",
-        "актуально",
-        "best practice",
-        "варианты",
-        "какой лучше",
-        "изучи"
-      ]
-    },
-    {
-      "name": "/task:review",
-      "weight": 1,
-      "keywords": [
-        "ревью",
-        "отревьюй",
-        "review",
-        "audit",
-        "аудит",
-        "diff",
-        "pr",
-        "проверь код",
-        "code review",
-        "посмотри дифф"
-      ]
-    },
-    {
-      "name": "/task:fix",
-      "weight": 1,
-      "keywords": [
-        "почини",
-        "fix",
-        "баг",
-        "bug",
-        "опечатк",
-        "typo",
-        "поправь",
-        "мелкая правка",
-        "small fix",
-        "сломал"
-      ]
-    }
-  ],
+  "commands": [],
   "agents": [
     {
       "name": "@vaulter-api-surface",
@@ -98,14 +9,14 @@
       "keywords": [
         "agent",
         "read-only",
-        "reconnaissance",
+        "recon",
         "vaulter",
         "package",
         "public",
         "surface",
         "diff",
-        "methods",
-        "contracts",
+        "методы",
+        "контракты",
         "facades",
         "config"
       ]
@@ -122,10 +33,10 @@
         "уважением",
         "времени",
         "контрибьютора",
-        "severity-градация",
-        "находок",
-        "проверка",
-        "формата"
+        "severity",
+        "влияние",
+        "public",
+        "api"
       ]
     },
     {
@@ -137,13 +48,13 @@
         "потоке",
         "vaulter",
         "накопились",
-        "новые",
         "issues",
         "надо",
         "затриажить",
-        "классифицировать",
-        "bug",
-        "feature"
+        "классификация",
+        "метки",
+        "приоритет",
+        "example"
       ]
     },
     {
@@ -156,12 +67,12 @@
         "крупная",
         "многодоменная",
         "слоя",
-        "домена",
         "нужно",
         "разбить",
         "делегировать",
         "ролям",
-        "пака"
+        "пака",
+        "delegate-only"
       ]
     },
     {
@@ -173,13 +84,13 @@
         "выпустить",
         "релиз",
         "vaulter",
-        "определить",
-        "версию",
+        "версия",
         "semver",
-        "собрать",
         "changelog",
-        "мерженных",
-        "заранее"
+        "объявление",
+        "breaking-изменений",
+        "example",
+        "user"
       ]
     },
     {
@@ -190,14 +101,14 @@
         "код",
         "laravel-пакета",
         "vaulter",
-        "только",
         "написан",
         "изменён",
         "нужен",
         "read-only",
         "ревью",
-        "свежим",
-        "контекстом"
+        "semver",
+        "serviceprovider",
+        "publishables"
       ]
     },
     {
@@ -212,10 +123,10 @@
         "vaulter",
         "package",
         "change",
-        "isolated",
-        "context",
-        "secrets",
-        "code"
+        "секреты",
+        "слабый",
+        "хэш",
+        "токенов"
       ]
     },
     {
@@ -225,15 +136,15 @@
         "agent",
         "нужно",
         "реализовать",
-        "одну",
         "фичу",
         "laravel-пакета",
         "vaulter",
-        "контракт",
         "contracts",
         "реализация",
-        "регистрация",
-        "serviceprovider"
+        "serviceprovider",
+        "publishables",
+        "фасад",
+        "example"
       ]
     },
     {
@@ -249,9 +160,9 @@
         "vaulter",
         "новая",
         "подсистема",
-        "контрактов",
-        "компонентов",
-        "нужен"
+        "контракта",
+        "нужен",
+        "короткий"
       ]
     },
     {
@@ -265,11 +176,11 @@
         "test",
         "suite",
         "filter",
-        "isolated",
-        "context",
-        "return",
-        "only",
-        "compact"
+        "isolated-контексте",
+        "только",
+        "компактный",
+        "pass",
+        "fail-итог"
       ]
     },
     {
@@ -281,13 +192,13 @@
         "фичи",
         "laravel-пакета",
         "vaulter",
-        "уже",
         "готов",
         "нужно",
         "написать",
         "тесты",
         "pest",
-        "orchestra"
+        "testbench",
+        "зелёного"
       ]
     }
   ],
@@ -296,36 +207,34 @@
       "name": "skill:ecosystem-mcp",
       "weight": 1,
       "keywords": [
-        "mcp-инструменты",
-        "доступны",
-        "этом",
-        "проекте",
-        "agent-memory",
-        "общая",
-        "память",
-        "контекст",
-        "экосистемы",
-        "serena",
-        "граф",
-        "кода"
+        "recall",
+        "ecosystem",
+        "decisions",
+        "choose",
+        "memory",
+        "code-graph",
+        "mcp",
+        "tools",
+        "diagnose",
+        "missing",
+        "project",
+        "connections"
       ]
     },
     {
       "name": "skill:ecosystem-setup",
       "weight": 1,
       "keywords": [
-        "настраивать",
-        "перенастраивать",
-        "этот",
-        "проект",
-        "экосистемы",
-        "academici",
-        "дерево",
-        "решений",
-        "тулинга",
-        "скиллы",
-        "плагины",
-        "память"
+        "changing",
+        "project",
+        "skills",
+        "plugins",
+        "memory",
+        "scopes",
+        "roles",
+        "environment",
+        "connections",
+        "ecosystem"
       ]
     }
   ]

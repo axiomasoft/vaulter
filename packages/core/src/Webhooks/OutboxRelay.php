@@ -8,10 +8,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Observability\TracingAttributes;
+use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
@@ -31,6 +35,11 @@ use Vaulter\Support\Identity;
  */
 final class OutboxRelay
 {
+    public function __construct(
+        private readonly MetricsRecorder $metrics,
+        private readonly TraceRecorder $tracer,
+    ) {}
+
     /**
      * Drain up to $limit due pending outbox rows into per-endpoint webhook
      * deliveries and dispatch their delivery jobs. Returns the number of outbox rows
@@ -38,13 +47,23 @@ final class OutboxRelay
      */
     public function process(int $limit = 100): int
     {
-        $messages = $this->claimPending(limit: $limit);
+        return $this->tracer->span(
+            name: TracingSpanNames::WEBHOOK_RELAY,
+            operation: fn (): int => $this->metrics->timing(
+                name: 'vaulter_outbox_relay_duration_seconds',
+                operation: function () use ($limit): int {
+                    $messages = $this->claimPending(limit: $limit);
 
-        foreach ($messages as $message) {
-            $this->fanOut(message: $message);
-        }
+                    foreach ($messages as $message) {
+                        $this->fanOut(message: $message);
+                        $this->metrics->counter(name: 'vaulter_outbox_relayed_total');
+                    }
 
-        return $messages->count();
+                    return $messages->count();
+                },
+            ),
+            attributes: TracingAttributes::forTarget(targetId: 'webhook.pipeline', layer: 'action'),
+        );
     }
 
     /**
@@ -85,11 +104,16 @@ final class OutboxRelay
      */
     private function fanOut(Outbox $message): void
     {
+        $scanned = 0;
+
         foreach ($this->subscribedEndpoints(event: $message->event) as $endpoint) {
+            $scanned++;
             $delivery = $this->createDelivery(message: $message, endpoint: $endpoint);
 
             Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
         }
+
+        $this->metrics->counter(name: 'vaulter_outbox_endpoints_scanned_total', amount: $scanned);
     }
 
     /**

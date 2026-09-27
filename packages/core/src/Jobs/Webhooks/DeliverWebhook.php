@@ -6,15 +6,20 @@ namespace Vaulter\Jobs\Webhooks;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Observability\TracingAttributes;
+use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
 use Vaulter\Webhooks\ResponseSizeLimit;
@@ -54,37 +59,87 @@ final class DeliverWebhook implements ShouldQueue
 
     public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard): void
     {
-        $delivery = $this->resolveDelivery();
+        $metrics = app(MetricsRecorder::class);
+        $tracer = app(TraceRecorder::class);
 
-        if ($delivery === null || $this->isTerminal(delivery: $delivery)) {
-            return;
-        }
+        $tracer->span(
+            name: TracingSpanNames::WEBHOOK_DELIVERY,
+            operation: function () use ($metrics, $signer, $urlGuard): void {
+                $delivery = $this->resolveDelivery();
 
-        $endpoint = $delivery->endpoint;
+                if ($delivery === null || $this->isTerminal(delivery: $delivery)) {
+                    return;
+                }
 
-        if (!$endpoint instanceof WebhookEndpoint) {
-            return;
-        }
+                $endpoint = $delivery->endpoint;
 
-        try {
-            $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
-        } catch (Throwable $exception) {
-            $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $exception->getMessage());
+                if (!$endpoint instanceof WebhookEndpoint) {
+                    return;
+                }
 
-            return;
-        }
+                $started = hrtime(true);
+                $outcome = 'failure';
 
-        if ($response->successful()) {
-            $this->recordSuccess(delivery: $delivery, endpoint: $endpoint);
+                try {
+                    $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
+                } catch (Throwable $exception) {
+                    $outcome = $exception instanceof ConnectionException ? 'timeout' : 'failure';
+                    $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $exception->getMessage());
+                    $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
 
-            return;
-        }
+                    return;
+                }
 
-        $this->recordFailure(
-            delivery: $delivery,
-            endpoint: $endpoint,
-            error: "HTTP {$response->status()}",
+                if ($response->successful()) {
+                    $this->recordSuccess(delivery: $delivery, endpoint: $endpoint);
+                    $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: 'success');
+
+                    return;
+                }
+
+                $this->recordFailure(
+                    delivery: $delivery,
+                    endpoint: $endpoint,
+                    error: "HTTP {$response->status()}",
+                );
+
+                $delivery->refresh();
+                $outcome = $delivery->status === 'dead' ? 'failure' : 'retry';
+                $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
+            },
+            attributes: TracingAttributes::forTarget(targetId: 'webhook.pipeline', layer: 'job'),
         );
+    }
+
+    private function recordWebhookMetrics(
+        MetricsRecorder $metrics,
+        int $started,
+        WebhookDelivery $delivery,
+        string $outcome,
+    ): void {
+        $duration = (hrtime(true) - $started) / 1_000_000_000;
+        $enqueuedAt = $delivery->created_at?->getTimestamp();
+
+        if ($enqueuedAt !== null) {
+            $metrics->histogram(
+                name: 'vaulter_webhook_queue_wait_seconds',
+                value: max(0, microtime(true) - (float) $enqueuedAt),
+                labels: ['outcome' => $outcome],
+            );
+        }
+
+        $metrics->histogram(
+            name: 'vaulter_webhook_delivery_duration_seconds',
+            value: $duration,
+            labels: ['outcome' => $outcome],
+        );
+
+        if (in_array($outcome, ['success', 'failure'], true)) {
+            $metrics->counter(
+                name: 'vaulter_webhook_delivered_total',
+                labels: ['outcome' => $outcome],
+            );
+        }
     }
 
     /**

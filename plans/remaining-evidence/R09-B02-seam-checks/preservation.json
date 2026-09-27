@@ -1,0 +1,60 @@
+{
+  "baseline": "task-start SHA-256 snapshot of load, packages, plans/remaining-evidence and plans/VLT-LOAD; excludes nested .git and __pycache__",
+  "preexisting_files_checked": 110953,
+  "changed_preexisting_files": [
+    "load/app/Console/QueueProbeCommand.php",
+    "load/gates/p6_evidence.py",
+    "load/gates/p6_live_matrix.py",
+    "load/gates/test_p6_evidence.py",
+    "plans/remaining-evidence/R09.md"
+  ],
+  "changes_outside_allowed_scope": [],
+  "protected_files": {
+    "plans/remaining-evidence/B02-audit.md": {
+      "before": "7e3a0489b90b9140b70ecb3640c5bc8923b446d19fd89faa94f3c00f3953bb24",
+      "after": "7e3a0489b90b9140b70ecb3640c5bc8923b446d19fd89faa94f3c00f3953bb24"
+    },
+    "plans/VLT-LOAD/slo.md": {
+      "before": "db967a4b1cea5eeeafba244fffb08ee6e75ac12eb0ecfd02bab11e9a90ac162b",
+      "after": "db967a4b1cea5eeeafba244fffb08ee6e75ac12eb0ecfd02bab11e9a90ac162b"
+    },
+    "plans/VLT-LOAD/slo-gates.md": {
+      "before": "9e67c6b42275c827ab5a69589b38c5fb0038662f31d199aab3baa66bfd552fa9",
+      "after": "9e67c6b42275c827ab5a69589b38c5fb0038662f31d199aab3baa66bfd552fa9"
+    }
+  },
+  "package_files_checked": 90434,
+  "package_changes": [],
+  "new_package_files": [],
+  "old_artifact_files_checked": 1944,
+  "old_artifact_changes": [],
+  "seed_capture_files_restored": true,
+  "changed_source_hashes": {
+    "load/app/Console/QueueProbeCommand.php": {
+      "before": "94ddd4980f2a3a3a08cf1fc1ad46a822baa21bcab1ed1a42cc6d3bd4027e215b",
+      "after": "ee93d5596155008011cca5706651cd454d358d74ef600d86e5daf0f9f27e7953"
+    },
+    "load/gates/p6_evidence.py": {
+      "before": "f7ad25558b673ace5c82db2aefc435d198ba212f68e34cb45acc793971122981",
+      "after": "e58014c932bd82cd5bb6ea87f7308d1cfcf03de1942e087a31b2bcbd4de913cf"
+    },
+    "load/gates/p6_live_matrix.py": {
+      "before": "95c6e0aeaad8d7b1ec726b7b3c8d4af65b8b72106cdd3aad5ccdf5e972657f3a",
+      "after": "f9f61a4e8aa8b01a5886c0f07950d30258c473f1d6861d7cd9d2e2b25007b2f6"
+    },
+    "load/gates/test_p6_evidence.py": {
+      "before": "bdf6b3c1d759d6bc40197591a0fa4bef16218e44228f2269f249895084202461",
+      "after": "83d65c94be77f089e221641e31070a70e0861f2beb9281123dde748cf597788f"
+    },
+    "plans/remaining-evidence/R09.md": {
+      "before": "21c3e92becfaca79797b427ef057a2d6c02f9d8c6f39bef0e1a4bf4c25e0d37d",
+      "after": "0a71b547a250b7c6f116a78a7e1dc43a78459c6accd464258fee6e752b5949d8"
+    }
+  },
+  "root_R_status_carrier": {
+    "path": "plans/REMAINING-WORK.md",
+    "writes_issued": false,
+    "task_start_hash": "not captured",
+    "current_sha256": "ebdf8735ef7a7069d6652ba1c86f23070f2c0ca3e55eefe9aa4e146ba33ca440"
+  }
+}

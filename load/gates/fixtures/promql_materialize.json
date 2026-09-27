@@ -1,0 +1,8 @@
+{
+  "summary": {
+    "state": {
+      "testRunDurationMs": 120000
+    }
+  },
+  "expected_run_window": "120s"
+}

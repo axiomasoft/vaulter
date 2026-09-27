@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "-u",
+    "-"
+  ],
+  "run_input": {
+    "run_id": "3df3b9e1-32b8-4e15-8b8f-c4efffe28f52",
+    "out": "plans/VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52"
+  },
+  "runner_exit": 0,
+  "verifier_exit": 0,
+  "shell_command": "python3 -u - > /tmp/r09-matrix.log 2>&1",
+  "stdin": "import sys,json,traceback\nfrom pathlib import Path\nsys.path.insert(0,'load/gates');import p6_live_matrix as p\nr=json.loads(Path('/tmp/r09-run.json').read_text());print(r,flush=True)\ntry:\n p.run_matrix(Path(r['out']),r['run_id'])\n print('RUN_EXIT=0',flush=True)\n print('VERIFY_DIGEST='+p.verify_artifacts(Path(r['out'])),flush=True)\nexcept BaseException:\n traceback.print_exc();print('RUN_OR_VERIFY_EXIT=1',flush=True);raise\n"
+}

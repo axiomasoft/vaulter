@@ -1,0 +1,11 @@
+{
+  "SLO-58": "green",
+  "SLO-61": "red",
+  "SLO-64": "green",
+  "delivery_limiting_cell": "product-realistic.relay.i200.f1.slow-under-timeout",
+  "delivery_limiting_attempt": 1,
+  "delivery_min_jobs_per_second": 16.464970774676875,
+  "daily_error_budget": "unevaluated: this run is shorter than 24 hours",
+  "retry_memory_measure": "OS process peak RSS from /usr/bin/time; PHP peak recorded separately",
+  "tier_M_L": "unevaluated"
+}

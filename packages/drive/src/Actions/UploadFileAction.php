@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Actions;
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Events\FileUploaded;
 use Vaulter\Drive\Events\NodeVersionCommitted;
@@ -21,6 +22,7 @@ use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Support\LoadTier;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit
@@ -49,11 +51,23 @@ final readonly class UploadFileAction
         private NodeStoreRepository $nodeStore,
         private NodeReadRepository $nodeRead,
         private StorageStoreRepository $storageStore,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function execute(UploadFileData $data): Node
     {
+        return $this->metrics->timing(
+            name: 'vaulter_upload_chunk_duration_seconds',
+            operation: fn (): Node => $this->executeUpload($data),
+            labels: [
+                'protocol' => 'single',
+                'tier' => LoadTier::label(),
+            ],
+        );
+    }
 
+    private function executeUpload(UploadFileData $data): Node
+    {
         $probedSize = $this->probeSize($data->stream);
         $previousSize = $this->previousHeadSize($data);
 
@@ -76,6 +90,12 @@ final readonly class UploadFileAction
             );
 
             $size = $blob->size_bytes;
+
+            $this->metrics->counter(
+                name: 'vaulter_upload_bytes_total',
+                amount: $size,
+                labels: ['protocol' => 'single'],
+            );
 
             $node = $data->isNewVersion()
                 ? $this->commitNewVersion(data: $data, blob: $blob, size: $size)

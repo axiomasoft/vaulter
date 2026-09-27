@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Actions\ForceDeleteNodeAction;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -47,6 +48,7 @@ final class PurgeTrashCommand extends Command
         NodeReadRepository $nodes,
         NodeStoreRepository $store,
         ForceDeleteNodeAction $forceDelete,
+        MetricsRecorder $metrics,
     ): int {
         $retentionDays = $this->retentionDays();
         $threshold = Carbon::now()->subDays($retentionDays);
@@ -59,41 +61,57 @@ final class PurgeTrashCommand extends Command
         ));
 
         $purgedRoots = 0;
+        $purgedNodeCount = 0;
 
-        // Materialise the candidates first: the transaction below mutates rows,
-        // which would shift a live cursor mid-iteration.
-        $candidates = $nodes->trashedBefore($threshold)->get();
+        $metrics->timing(
+            name: 'vaulter_purge_duration_seconds',
+            operation: function () use ($nodes, $store, $forceDelete, $metrics, $threshold, &$purgedRoots, &$purgedNodeCount): void {
+                // Materialise the candidates first: the transaction below mutates rows,
+                // which would shift a live cursor mid-iteration.
+                $candidates = $nodes->trashedBefore($threshold)->get();
 
-        foreach ($candidates as $node) {
-            $purged = DB::transaction(function () use ($node, $threshold, $nodes, $forceDelete, $store): bool {
-                // Re-verify + row-lock under the SAME transaction that performs the
-                // physical delete (TOCTOU guard, P2.2 review fix): the candidate
-                // above may be stale by the time this transaction actually runs. A
-                // concurrent restore clears trashed_at, so the recheck returns null
-                // and this subtree is skipped instead of being purged out from
-                // under a user who just restored it.
-                $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
+                foreach ($candidates as $node) {
+                    $purged = DB::transaction(function () use ($node, $threshold, $nodes, $forceDelete, $store, $metrics): int {
+                        // Re-verify + row-lock under the SAME transaction that performs the
+                        // physical delete (TOCTOU guard, P2.2 review fix): the candidate
+                        // above may be stale by the time this transaction actually runs. A
+                        // concurrent restore clears trashed_at, so the recheck returns null
+                        // and this subtree is skipped instead of being purged out from
+                        // under a user who just restored it.
+                        $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
 
-                if ($locked === null) {
-                    return false;
+                        if ($locked === null) {
+                            return 0;
+                        }
+
+                        // The subtree ids MUST be resolved from the freshly-locked node
+                        // (not the pre-transaction one) and BEFORE ForceDeleteNodeAction
+                        // runs — it soft-deletes the rows, and
+                        // NodeReadRepository::subtree() applies the SoftDeletes scope, so a
+                        // post-force-delete read would see nothing.
+                        $subtreeIds = $nodes->subtree($locked)->modelKeys();
+
+                        $metrics->histogram(
+                            name: 'vaulter_purge_batch_nodes',
+                            value: count($subtreeIds),
+                        );
+
+                        $forceDelete->execute(node: $locked);
+                        $store->purgeSubtree(collect($subtreeIds));
+
+                        return count($subtreeIds);
+                    });
+
+                    if ($purged > 0) {
+                        $purgedRoots++;
+                        $purgedNodeCount += $purged;
+                    }
                 }
+            },
+        );
 
-                // The subtree ids MUST be resolved from the freshly-locked node
-                // (not the pre-transaction one) and BEFORE ForceDeleteNodeAction
-                // runs — it soft-deletes the rows, and
-                // NodeReadRepository::subtree() applies the SoftDeletes scope, so a
-                // post-force-delete read would see nothing.
-                $subtreeIds = $nodes->subtree($locked)->modelKeys();
-
-                $forceDelete->execute(node: $locked);
-                $store->purgeSubtree(collect($subtreeIds));
-
-                return true;
-            });
-
-            if ($purged) {
-                $purgedRoots++;
-            }
+        if ($purgedNodeCount > 0) {
+            $metrics->counter(name: 'vaulter_purge_nodes_total', amount: $purgedNodeCount);
         }
 
         $this->info(sprintf('Purged %d trashed subtree%s.', $purgedRoots, $purgedRoots === 1 ? '' : 's'));

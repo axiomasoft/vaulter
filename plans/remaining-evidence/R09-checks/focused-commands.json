@@ -1,0 +1,42 @@
+[
+  {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "load/gates",
+      "-p",
+      "test_p6*.py"
+    ],
+    "exit": 0,
+    "tests": 31
+  },
+  {
+    "command": [
+      "docker",
+      "exec",
+      "-e",
+      "APP_ENV=testing",
+      "-e",
+      "DB_CONNECTION=sqlite",
+      "-e",
+      "DB_DATABASE=:memory:",
+      "-e",
+      "CACHE_STORE=array",
+      "-e",
+      "QUEUE_CONNECTION=sync",
+      "vaulter-load-app-1",
+      "php",
+      "vendor/bin/pest",
+      "load/tests/Feature/QueueLifecycleLedgerTest.php",
+      "load/tests/Feature/QueueProbeEndpointTest.php",
+      "load/tests/Feature/QueueSinkLedgerTest.php",
+      "--compact"
+    ],
+    "exit": 0,
+    "tests": 7,
+    "assertions": 38
+  }
+]

@@ -1,6 +1,6 @@
 # HANDOFF — 2026-09-23 — after P8
 
-**Next:** terminal: план закрыт
+**Next:** terminal: исполнение завершено; окончательное закрытие/архивация отложены владельцем
 
 | Параметр | Значение |
 |:--|:--|
@@ -30,8 +30,17 @@ evidence привязано к текущему spec digest. P8 закрыт о�
 `plans/VLT-LOAD/artifacts/P8/tracing-overhead.json`.
 
 **Open risks:** Product RED по SLO-64 (`claimDue` lock-set) и SLO-70
-(`SweepUploadsCommand` remaining 20000) остаётся отдельным долгом. P8.11 overhead carrier —
-host CLI in-process selected-span workload; он не является новым tier-S k6 прогоном.
+(`SweepUploadsCommand` remaining 20000), P2 tier-S throughput RED, открытые P3/P5/P6
+measurement debts и P7 product fault paths без авторитетного доказательства остаются
+отдельными срезами. Полный маршрут и зависимости: `plans/REMAINING-WORK.md` R01–R20.
+P8.11 overhead carrier — host CLI in-process selected-span workload; он не является
+новым tier-S k6 прогоном.
+
+**Mutation proof conflict:** P4 L-01 carrier заявил D11 ≥95 по `pest-plugin-mutate` v4.0.1
+с `--parallel`, тогда как архивный VLT-MUT воспроизвёл ложный Score 100% при этой
+комбинации. Для нового drive hot-path fix требуется холодная последовательная перепроверка;
+нынешний carrier не является надёжным доказательством гейта. Это не меняет P8 terminal receipt
+и не превращает архивный VLT-MUT в исполнимый план.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —

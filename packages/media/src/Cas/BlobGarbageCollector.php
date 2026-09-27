@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
@@ -47,6 +48,7 @@ final readonly class BlobGarbageCollector
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
         private FileVersionBlobStoreRepository $edges,
+        private MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -77,26 +79,39 @@ final readonly class BlobGarbageCollector
     {
         $tombstoned = 0;
         $skipped = 0;
+        $scanned = 0;
 
-        foreach ($this->candidates(static fn (Builder $q): Builder => $q->garbageCollectable()) as $candidate) {
-            $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($graceHours): bool {
-                // Re-read under the lock; the cheap scan may be stale.
-                if ($blob->status !== BlobStatus::Committed) {
-                    return false;
+        $this->metrics->timing(
+            name: 'vaulter_gc_duration_seconds',
+            labels: ['phase' => 'mark'],
+            operation: function () use ($graceHours, &$tombstoned, &$skipped, &$scanned): void {
+                foreach ($this->candidates(static fn (Builder $q): Builder => $q->garbageCollectable()) as $candidate) {
+                    $scanned++;
+                    $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($graceHours): bool {
+                        // Re-read under the lock; the cheap scan may be stale.
+                        if ($blob->status !== BlobStatus::Committed) {
+                            return false;
+                        }
+
+                        // The liveness re-check that makes online GC safe: an edge created
+                        // after the scan (but before the lock) keeps the blob alive.
+                        if ($this->edges->hasLiveEdge($blob)) {
+                            return false;
+                        }
+
+                        $this->blobs->tombstone(blob: $blob, graceHours: $graceHours);
+
+                        return true;
+                    });
+
+                    $acted ? $tombstoned++ : $skipped++;
                 }
+            },
+        );
 
-                // The liveness re-check that makes online GC safe: an edge created
-                // after the scan (but before the lock) keeps the blob alive.
-                if ($this->edges->hasLiveEdge($blob)) {
-                    return false;
-                }
-
-                $this->blobs->tombstone(blob: $blob, graceHours: $graceHours);
-
-                return true;
-            });
-
-            $acted ? $tombstoned++ : $skipped++;
+        if ($scanned > 0) {
+            $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $scanned);
+            $this->metrics->counter(name: 'vaulter_gc_rows_scanned_total', amount: $scanned);
         }
 
         return ['tombstoned' => $tombstoned, 'skipped' => $skipped];
@@ -111,38 +126,52 @@ final readonly class BlobGarbageCollector
     {
         $swept = 0;
         $skipped = 0;
+        $scanned = 0;
 
-        foreach ($this->candidates(static fn (Builder $q): Builder => $q->sweepable()) as $candidate) {
-            $deleted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob): bool {
-                // (the body runs inside a SERIALIZABLE transaction on PG — see
-                // serializable()/lockedTransaction(): the isolation level is set as
-                // the FIRST statement inside the transaction, before the lock.)
-                // A resurrection between scan and lock flips it back to committed —
-                // never delete then.
-                if ($blob->status !== BlobStatus::Tombstoned) {
-                    return false;
+        $this->metrics->timing(
+            name: 'vaulter_gc_duration_seconds',
+            labels: ['phase' => 'sweep'],
+            operation: function () use (&$swept, &$skipped, &$scanned): void {
+                foreach ($this->candidates(static fn (Builder $q): Builder => $q->sweepable()) as $candidate) {
+                    $scanned++;
+                    $deleted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob): bool {
+                        // (the body runs inside a SERIALIZABLE transaction on PG — see
+                        // serializable()/lockedTransaction(): the isolation level is set as
+                        // the FIRST statement inside the transaction, before the lock.)
+                        // A resurrection between scan and lock flips it back to committed —
+                        // never delete then.
+                        if ($blob->status !== BlobStatus::Tombstoned) {
+                            return false;
+                        }
+
+                        if ($this->edges->hasLiveEdge($blob)) {
+                            return false;
+                        }
+
+                        if ($blob->delete_after_at === null || $blob->delete_after_at->isFuture()) {
+                            return false;
+                        }
+
+                        // Claim it, delete the scope-qualified object, finalise the
+                        // idempotent tombstone. A missing object is fine — markDeleted is
+                        // idempotent.
+                        $this->blobs->markDeleting($blob);
+                        $this->content->delete($blob->storage_key, $blob->disk);
+                        $this->blobs->markDeleted($blob);
+
+                        return true;
+                    }, serializable: true));
+
+                    $deleted ? $swept++ : $skipped++;
                 }
+            },
+        );
 
-                if ($this->edges->hasLiveEdge($blob)) {
-                    return false;
-                }
-
-                if ($blob->delete_after_at === null || $blob->delete_after_at->isFuture()) {
-                    return false;
-                }
-
-                // Claim it, delete the scope-qualified object, finalise the
-                // idempotent tombstone. A missing object is fine — markDeleted is
-                // idempotent.
-                $this->blobs->markDeleting($blob);
-                $this->content->delete($blob->storage_key, $blob->disk);
-                $this->blobs->markDeleted($blob);
-
-                return true;
-            }, serializable: true));
-
-            $deleted ? $swept++ : $skipped++;
+        if ($scanned > 0) {
+            $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $scanned);
         }
+
+        $this->metrics->counter(name: 'vaulter_gc_objects_deleted_total', amount: $swept);
 
         return ['swept' => $swept, 'skipped' => $skipped];
     }

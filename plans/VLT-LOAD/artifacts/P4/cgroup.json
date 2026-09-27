@@ -1,0 +1,1355 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "819f56b7-4e60-435f-ae13-cc89a92735a1",
+      "cell_id": "tus_final_patch/5m",
+      "pss_anon": 2147,
+      "pss_file": 841,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 81137664,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 105496576,
+        "stat": {
+          "anon": 33849344,
+          "file": 44445696,
+          "kernel": 2338816,
+          "kernel_stack": 131072,
+          "pagetables": 823296,
+          "shmem": 39084032,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "4a058472-81ac-464b-98eb-e1e9e1872f0d",
+      "cell_id": "tus_final_patch/5m",
+      "pss_anon": 2149,
+      "pss_file": 843,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 76447744,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 98283520,
+        "stat": {
+          "anon": 34889728,
+          "file": 39043072,
+          "kernel": 2244608,
+          "kernel_stack": 131072,
+          "pagetables": 868352,
+          "shmem": 38928384,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e77ce3b8-d541-4571-9548-480319996b0f",
+      "cell_id": "tus_final_patch/5m",
+      "pss_anon": 2149,
+      "pss_file": 837,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 76656640,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 101814272,
+        "stat": {
+          "anon": 34897920,
+          "file": 39038976,
+          "kernel": 2347008,
+          "kernel_stack": 131072,
+          "pagetables": 970752,
+          "shmem": 38928384,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "bb701b75-3051-4c38-9199-5c8a5d78eb44",
+      "cell_id": "s3_putpart/5m",
+      "pss_anon": 2147,
+      "pss_file": 843,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 72019968,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 102277120,
+        "stat": {
+          "anon": 31866880,
+          "file": 37724160,
+          "kernel": 2211840,
+          "kernel_stack": 131072,
+          "pagetables": 856064,
+          "shmem": 37593088,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "28953697-4aba-4f71-a922-c116ed6d5616",
+      "cell_id": "s3_putpart/5m",
+      "pss_anon": 2145,
+      "pss_file": 837,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 71905280,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 103206912,
+        "stat": {
+          "anon": 31870976,
+          "file": 37707776,
+          "kernel": 2170880,
+          "kernel_stack": 131072,
+          "pagetables": 815104,
+          "shmem": 37593088,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e23d024a-7fd3-4ce1-b272-ec29276ce7e6",
+      "cell_id": "s3_putpart/5m",
+      "pss_anon": 2149,
+      "pss_file": 843,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 72114176,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 102395904,
+        "stat": {
+          "anon": 31879168,
+          "file": 37707776,
+          "kernel": 2191360,
+          "kernel_stack": 131072,
+          "pagetables": 835584,
+          "shmem": 37593088,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "380532df-1fcf-4f30-ad73-ed7c0a14ab0e",
+      "cell_id": "s3_complete_postfix/5m",
+      "pss_anon": 2148,
+      "pss_file": 817,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 75522048,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 103383040,
+        "stat": {
+          "anon": 33849344,
+          "file": 39227392,
+          "kernel": 2199552,
+          "kernel_stack": 131072,
+          "pagetables": 839680,
+          "shmem": 39108608,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "c20dbfd4-846d-4b3a-9b05-8fc679b60004",
+      "cell_id": "s3_complete_postfix/5m",
+      "pss_anon": 2146,
+      "pss_file": 841,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 76529664,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 102641664,
+        "stat": {
+          "anon": 34861056,
+          "file": 39071744,
+          "kernel": 2195456,
+          "kernel_stack": 131072,
+          "pagetables": 819200,
+          "shmem": 38957056,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "7ef01cfb-712d-49a7-9e63-95df87ede720",
+      "cell_id": "s3_complete_postfix/5m",
+      "pss_anon": 2146,
+      "pss_file": 832,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 76558336,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 103096320,
+        "stat": {
+          "anon": 34861056,
+          "file": 39067648,
+          "kernel": 2236416,
+          "kernel_stack": 131072,
+          "pagetables": 856064,
+          "shmem": 38957056,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "66446814-4696-4684-acfa-650bce8e323c",
+      "cell_id": "cas_stage_probe/5m",
+      "pss_anon": 88,
+      "pss_file": 574,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 23937024,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 60420096,
+        "stat": {
+          "anon": 19034112,
+          "file": 2629632,
+          "kernel": 1929216,
+          "kernel_stack": 131072,
+          "pagetables": 700416,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "a91750a0-ce8a-49ce-94ff-1711480f5ddf",
+      "cell_id": "cas_stage_probe/5m",
+      "pss_anon": 88,
+      "pss_file": 569,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 24018944,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 60542976,
+        "stat": {
+          "anon": 18952192,
+          "file": 2629632,
+          "kernel": 1941504,
+          "kernel_stack": 131072,
+          "pagetables": 720896,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "60f47fed-50ad-4564-b50f-68027b092bd4",
+      "cell_id": "cas_stage_probe/5m",
+      "pss_anon": 92,
+      "pss_file": 589,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 24113152,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 60588032,
+        "stat": {
+          "anon": 19034112,
+          "file": 2629632,
+          "kernel": 1933312,
+          "kernel_stack": 131072,
+          "pagetables": 704512,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "98a9a580-b204-4cc3-8821-188b041c9a47",
+      "cell_id": "download/5m",
+      "pss_anon": 2150,
+      "pss_file": 853,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 72368128,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 91586560,
+        "stat": {
+          "anon": 32907264,
+          "file": 36933632,
+          "kernel": 2191360,
+          "kernel_stack": 131072,
+          "pagetables": 839680,
+          "shmem": 36786176,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "b072588e-072b-4ac4-bb28-9f80686a4ea9",
+      "cell_id": "download/5m",
+      "pss_anon": 2150,
+      "pss_file": 840,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 72245248,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 91357184,
+        "stat": {
+          "anon": 32882688,
+          "file": 36917248,
+          "kernel": 2187264,
+          "kernel_stack": 131072,
+          "pagetables": 831488,
+          "shmem": 36802560,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "500e341a-7793-4ba8-af0b-47dee406dd15",
+      "cell_id": "download/5m",
+      "pss_anon": 2146,
+      "pss_file": 837,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 72245248,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 91287552,
+        "stat": {
+          "anon": 32903168,
+          "file": 36900864,
+          "kernel": 2211840,
+          "kernel_stack": 131072,
+          "pagetables": 843776,
+          "shmem": 36786176,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "21c8a6ff-8821-4bf7-8864-0290f0d99ced",
+      "cell_id": "tus_final_patch/500m",
+      "pss_anon": 2099,
+      "pss_file": 1312,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 559931392,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 628264960,
+        "stat": {
+          "anon": 19017728,
+          "file": 531931136,
+          "kernel": 8658944,
+          "kernel_stack": 131072,
+          "pagetables": 729088,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "2f6bbad8-25cd-49d9-ae92-fc191314fa12",
+      "cell_id": "tus_final_patch/500m",
+      "pss_anon": 2099,
+      "pss_file": 1340,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 506945536,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 540049408,
+        "stat": {
+          "anon": 19025920,
+          "file": 482267136,
+          "kernel": 5591040,
+          "kernel_stack": 131072,
+          "pagetables": 684032,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e7aac78c-d63f-40da-857f-d253b2415dea",
+      "cell_id": "tus_final_patch/500m",
+      "pss_anon": 2100,
+      "pss_file": 1350,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 27574272,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 95850496,
+        "stat": {
+          "anon": 19017728,
+          "file": 6049792,
+          "kernel": 1978368,
+          "kernel_stack": 131072,
+          "pagetables": 716800,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e51e2386-3cc9-4961-9bb0-94ea30ca1ec8",
+      "cell_id": "s3_putpart/500m",
+      "pss_anon": 2099,
+      "pss_file": 1342,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 508121088,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 536047616,
+        "stat": {
+          "anon": 19013632,
+          "file": 482918400,
+          "kernel": 5709824,
+          "kernel_stack": 131072,
+          "pagetables": 692224,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "25ebcea3-f464-44a1-a18f-4b1da3a4f8f8",
+      "cell_id": "s3_putpart/500m",
+      "pss_anon": 2099,
+      "pss_file": 1322,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 511864832,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 540078080,
+        "stat": {
+          "anon": 19021824,
+          "file": 486952960,
+          "kernel": 5726208,
+          "kernel_stack": 131072,
+          "pagetables": 708608,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "ae536365-84b9-4e12-8b49-4fb73a8fcfa8",
+      "cell_id": "s3_putpart/500m",
+      "pss_anon": 2097,
+      "pss_file": 1343,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 495558656,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 524693504,
+        "stat": {
+          "anon": 19009536,
+          "file": 470593536,
+          "kernel": 5632000,
+          "kernel_stack": 131072,
+          "pagetables": 692224,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "2d8c130d-8bc6-42e4-b76d-79122f6acec4",
+      "cell_id": "s3_complete_postfix/500m",
+      "pss_anon": 2099,
+      "pss_file": 1300,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 507928576,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 755007488,
+        "stat": {
+          "anon": 19013632,
+          "file": 483139584,
+          "kernel": 5488640,
+          "kernel_stack": 131072,
+          "pagetables": 716800,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "09ee6110-52e9-47ff-b008-d805983eb7e7",
+      "cell_id": "s3_complete_postfix/500m",
+      "pss_anon": 2101,
+      "pss_file": 1347,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 511635456,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 761802752,
+        "stat": {
+          "anon": 19025920,
+          "file": 486834176,
+          "kernel": 5484544,
+          "kernel_stack": 131072,
+          "pagetables": 696320,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "8c69f856-d5d2-4eb9-b265-a36e0127c485",
+      "cell_id": "s3_complete_postfix/500m",
+      "pss_anon": 2099,
+      "pss_file": 1338,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 508170240,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 757100544,
+        "stat": {
+          "anon": 19030016,
+          "file": 483106816,
+          "kernel": 5763072,
+          "kernel_stack": 131072,
+          "pagetables": 753664,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "f3f07693-318e-4f06-bfe9-c1d85db5cca2",
+      "cell_id": "cas_stage_probe/500m",
+      "pss_anon": 92,
+      "pss_file": 602,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 504139776,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 986804224,
+        "stat": {
+          "anon": 19050496,
+          "file": 479313920,
+          "kernel": 5619712,
+          "kernel_stack": 131072,
+          "pagetables": 765952,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "7e706e15-3d15-4506-b882-66517fa5b6ed",
+      "cell_id": "cas_stage_probe/500m",
+      "pss_anon": 92,
+      "pss_file": 602,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 30023680,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 601546752,
+        "stat": {
+          "anon": 19038208,
+          "file": 8638464,
+          "kernel": 2015232,
+          "kernel_stack": 131072,
+          "pagetables": 790528,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "a47dfa2f-d2f4-4693-9488-83bc76b128a8",
+      "cell_id": "cas_stage_probe/500m",
+      "pss_anon": 88,
+      "pss_file": 586,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 69337088,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 590024704,
+        "stat": {
+          "anon": 19046400,
+          "file": 47915008,
+          "kernel": 2220032,
+          "kernel_stack": 131072,
+          "pagetables": 720896,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "64fe2d41-f4cc-4736-83f6-13bb0a11b434",
+      "cell_id": "download/500m",
+      "pss_anon": 2099,
+      "pss_file": 1299,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 508067840,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1234370560,
+        "stat": {
+          "anon": 19030016,
+          "file": 482947072,
+          "kernel": 5718016,
+          "kernel_stack": 131072,
+          "pagetables": 749568,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "3ad8ec90-94b5-4cb4-ab39-cf06d096beb1",
+      "cell_id": "download/500m",
+      "pss_anon": 2099,
+      "pss_file": 1326,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 504672256,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1165770752,
+        "stat": {
+          "anon": 19021824,
+          "file": 479428608,
+          "kernel": 5697536,
+          "kernel_stack": 131072,
+          "pagetables": 684032,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "24930ad3-c97f-40c7-b51b-fbd77633d349",
+      "cell_id": "download/500m",
+      "pss_anon": 2101,
+      "pss_file": 1276,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 521744384,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1363910656,
+        "stat": {
+          "anon": 19021824,
+          "file": 496578560,
+          "kernel": 5713920,
+          "kernel_stack": 131072,
+          "pagetables": 692224,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "122d1edc-2d3b-4e03-a767-bfe151ba693c",
+      "cell_id": "tus_final_patch/5g",
+      "pss_anon": 2099,
+      "pss_file": 1306,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 1307136000,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 7003,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147487744,
+        "stat": {
+          "anon": 19025920,
+          "file": 1268486144,
+          "kernel": 19374080,
+          "kernel_stack": 131072,
+          "pagetables": 708608,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "9960f4f4-342b-4673-a739-bf4b7ef13106",
+      "cell_id": "tus_final_patch/5g",
+      "pss_anon": 2105,
+      "pss_file": 1318,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 573714432,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1265684480,
+        "stat": {
+          "anon": 19042304,
+          "file": 547524608,
+          "kernel": 6995968,
+          "kernel_stack": 131072,
+          "pagetables": 704512,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e2fbf5e4-eb79-4118-adbb-24bce16eeb51",
+      "cell_id": "tus_final_patch/5g",
+      "pss_anon": 2103,
+      "pss_file": 1302,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 1726521344,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1760301056,
+        "stat": {
+          "anon": 19038208,
+          "file": 1689706496,
+          "kernel": 17518592,
+          "kernel_stack": 131072,
+          "pagetables": 806912,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "ef3ac339-c2fe-40f8-a86e-01bb699655e1",
+      "cell_id": "s3_putpart/5g",
+      "pss_anon": 2102,
+      "pss_file": 1268,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 1599512576,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1822547968,
+        "stat": {
+          "anon": 19025920,
+          "file": 1563406336,
+          "kernel": 16691200,
+          "kernel_stack": 131072,
+          "pagetables": 753664,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "d7f6c1b1-c7e6-4320-968e-7ee9ca6e0fee",
+      "cell_id": "s3_putpart/5g",
+      "pss_anon": 2101,
+      "pss_file": 1276,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 1520586752,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1594044416,
+        "stat": {
+          "anon": 19021824,
+          "file": 1484795904,
+          "kernel": 16388096,
+          "kernel_stack": 131072,
+          "pagetables": 737280,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "545ee436-072d-4dc3-8e94-a866a67011c0",
+      "cell_id": "s3_putpart/5g",
+      "pss_anon": 2102,
+      "pss_file": 1280,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 1539342336,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 1618817024,
+        "stat": {
+          "anon": 19021824,
+          "file": 1503793152,
+          "kernel": 16027648,
+          "kernel_stack": 131072,
+          "pagetables": 864256,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "6e4539ac-65e2-4dd8-a4f8-f2a10fcc6066",
+      "cell_id": "s3_complete_postfix/5g",
+      "pss_anon": 2099,
+      "pss_file": 1257,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 2123866112,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 11797,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19038208,
+          "file": 2083622912,
+          "kernel": 20791296,
+          "kernel_stack": 131072,
+          "pagetables": 724992,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "7d9b442f-ce9f-4d09-b62e-b2f52dccd371",
+      "cell_id": "s3_complete_postfix/5g",
+      "pss_anon": 2100,
+      "pss_file": 1315,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 2037129216,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 282,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19030016,
+          "file": 1998950400,
+          "kernel": 18898944,
+          "kernel_stack": 131072,
+          "pagetables": 671744,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "e861e8bb-84c6-4442-9c2d-3867900ccb00",
+      "cell_id": "s3_complete_postfix/5g",
+      "pss_anon": 2100,
+      "pss_file": 1296,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 2094784512,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 6946,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19017728,
+          "file": 2055270400,
+          "kernel": 20275200,
+          "kernel_stack": 131072,
+          "pagetables": 688128,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "84590d30-41d3-4088-b911-da547ff852d1",
+      "cell_id": "cas_stage_probe/5g",
+      "pss_anon": 88,
+      "pss_file": 548,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 2124279808,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 12392,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19042304,
+          "file": 2083680256,
+          "kernel": 21147648,
+          "kernel_stack": 131072,
+          "pagetables": 716800,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "18fca2d5-3c76-480f-95e9-a76171192ae1",
+      "cell_id": "cas_stage_probe/5g",
+      "pss_anon": 88,
+      "pss_file": 413,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 2135277568,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 9619,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19042304,
+          "file": 2094362624,
+          "kernel": 21426176,
+          "kernel_stack": 131072,
+          "pagetables": 700416,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "8caee723-11eb-420b-9b83-d7b567a48971",
+      "cell_id": "cas_stage_probe/5g",
+      "pss_anon": 92,
+      "pss_file": 407,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 2135441408,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 11881,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2147483648,
+        "stat": {
+          "anon": 19050496,
+          "file": 2094694400,
+          "kernel": 21381120,
+          "kernel_stack": 131072,
+          "pagetables": 712704,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "d1a5b9be-2ec9-4ff4-b760-1705f1af841e",
+      "cell_id": "download/5g",
+      "pss_anon": 2105,
+      "pss_file": 1047,
+      "repetition": 1,
+      "terminal_cgroup": {
+        "current": 2127257600,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 86657,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2172985344,
+        "stat": {
+          "anon": 19042304,
+          "file": 2087022592,
+          "kernel": 20819968,
+          "kernel_stack": 131072,
+          "pagetables": 684032,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "675e7f18-dc40-44e6-96f5-fafd9b1a17d1",
+      "cell_id": "download/5g",
+      "pss_anon": 2101,
+      "pss_file": 507,
+      "repetition": 2,
+      "terminal_cgroup": {
+        "current": 2127405056,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 94153,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2180554752,
+        "stat": {
+          "anon": 19025920,
+          "file": 2087026688,
+          "kernel": 20955136,
+          "kernel_stack": 131072,
+          "pagetables": 798720,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    },
+    {
+      "attempt_id": "b092b8d3-de48-440e-afce-475ed67be140",
+      "cell_id": "download/5g",
+      "pss_anon": 2103,
+      "pss_file": 1330,
+      "repetition": 3,
+      "terminal_cgroup": {
+        "current": 2122743808,
+        "events": {
+          "high": 0,
+          "low": 0,
+          "max": 103331,
+          "oom": 0,
+          "oom_group_kill": 0,
+          "oom_kill": 0,
+          "sock_throttled": 0
+        },
+        "path": "/sys/fs/cgroup",
+        "peak": 2179543040,
+        "stat": {
+          "anon": 19038208,
+          "file": 2081906688,
+          "kernel": 21475328,
+          "kernel_stack": 131072,
+          "pagetables": 696320,
+          "shmem": 2547712,
+          "sock": 0
+        }
+      }
+    }
+  ],
+  "schema_version": "p4-memory-matrix/v1"
+}

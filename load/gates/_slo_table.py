@@ -25,6 +25,8 @@ SECTIONS = {
 # gate un-mergeable for a finding this plan explicitly defers to a dev-slice, D11) — a
 # third verdict, `known-red`, is what §6.4 asks for ("вердикт known-red, а не || true").
 KNOWN_RED_IDS = {'SLO-46', 'SLO-47', 'SLO-48'}
+EXPECTED_ROW_COUNT = 96
+EXPECTED_CLASS_A_ROWS = 42
 
 # §7: profile `lab` blocks BOTH classes (D20's second escape hatch). A row's own Гейт
 # column reflects behaviour on `ubuntu-latest` (smoke-perf/regression) — a plain
@@ -111,7 +113,25 @@ def parse_rows(md_path):
                     'gate_raw': gate,
                 })
 
+    validate_rows(rows)
+
     return rows
+
+
+def validate_rows(rows):
+    """Fail closed when the Markdown SSOT drifts from the P8.7 reader contract."""
+    if len(rows) != EXPECTED_ROW_COUNT:
+        raise ValueError(f'expected {EXPECTED_ROW_COUNT} SLO rows, found {len(rows)}')
+
+    ids_and_classes = [(row['id'], row['class']) for row in rows]
+    if len(ids_and_classes) != len(set(ids_and_classes)):
+        raise ValueError('duplicate SLO id/class row in slo-gates.md section 3')
+
+    class_a = [row for row in rows if row['class'] == 'A']
+    if len(class_a) != EXPECTED_CLASS_A_ROWS:
+        raise ValueError(
+            f'expected {EXPECTED_CLASS_A_ROWS} Class-A rows, found {len(class_a)}'
+        )
 
 
 def prometheus_metric_names(prom_metric_cell):

@@ -6,6 +6,7 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 use Vaulter\Support\Config;
@@ -37,8 +38,11 @@ final class PruneWebhooksCommand extends Command
 
     protected $description = 'Delete settled outbox rows and terminal webhook deliveries past the retention window.';
 
-    public function handle(OutboxStoreRepository $outbox, WebhookDeliveryStoreRepository $deliveries): int
-    {
+    public function handle(
+        OutboxStoreRepository $outbox,
+        WebhookDeliveryStoreRepository $deliveries,
+        MetricsRecorder $metrics,
+    ): int {
         if (!Config::featureEnabled('reliability')) {
             $this->components->info('Reliability feature is off — nothing to prune.');
 
@@ -58,8 +62,21 @@ final class PruneWebhooksCommand extends Command
             );
         }
 
-        $prunedOutbox = $outbox->pruneDispatchedBefore(threshold: $threshold);
-        $prunedDeliveries = $deliveries->pruneTerminalBefore(threshold: $threshold);
+        $prunedOutbox = 0;
+        $prunedDeliveries = 0;
+
+        $metrics->timing(
+            name: 'vaulter_prune_duration_seconds',
+            operation: function () use ($outbox, $deliveries, $threshold, &$prunedOutbox, &$prunedDeliveries): void {
+                $prunedOutbox = $outbox->pruneDispatchedBefore(threshold: $threshold);
+                $prunedDeliveries = $deliveries->pruneTerminalBefore(threshold: $threshold);
+            },
+        );
+
+        $metrics->counter(
+            name: 'vaulter_prune_rows_total',
+            amount: $prunedOutbox + $prunedDeliveries,
+        );
 
         $this->components->info(sprintf(
             'Pruned %d dispatched outbox row%s and %d terminal deliver%s older than %s (retention %d day%s).',

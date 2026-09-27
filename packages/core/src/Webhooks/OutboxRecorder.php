@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -36,6 +37,10 @@ use Vaulter\Support\Identity;
  */
 class OutboxRecorder
 {
+    public function __construct(
+        private readonly MetricsRecorder $metrics,
+    ) {}
+
     public function recordGrantCreated(NodeGrantCreated $event): ?Outbox
     {
         $node = $event->grant->node;
@@ -143,28 +148,33 @@ class OutboxRecorder
             return null;
         }
 
-        // The actor id rides inside the payload so consumers see who caused the event
-        // without a separate column on the wire.
-        $payload['event_id'] = $key;
-        $payload['actor_id'] = Identity::key($actorId);
+        return $this->metrics->timing(
+            name: 'vaulter_outbox_stage_duration_seconds',
+            operation: function () use ($outboxClass, $key, $panel, $topic, $event, $payload, $actorId): Outbox {
+                // The actor id rides inside the payload so consumers see who caused the event
+                // without a separate column on the wire.
+                $payload['event_id'] = $key;
+                $payload['actor_id'] = Identity::key($actorId);
 
-        // forceFill (P1.4/F-P1.8-02): Outbox is intentionally fully guarded — this
-        // is the outbox's own trusted staging seam, never raw request input.
-        /** @var Outbox $outbox */
-        $outbox = new $outboxClass;
-        $outbox->forceFill([
-            'event_id' => $key,
-            'panel' => $panel,
-            'topic' => $topic,
-            'event' => $event->value,
-            'payload' => $payload,
-            'available_at' => now(),
-            'status' => 'pending',
-            'attempts' => 0,
-        ]);
-        $outbox->save();
+                // forceFill (P1.4/F-P1.8-02): Outbox is intentionally fully guarded — this
+                // is the outbox's own trusted staging seam, never raw request input.
+                /** @var Outbox $outbox */
+                $outbox = new $outboxClass;
+                $outbox->forceFill([
+                    'event_id' => $key,
+                    'panel' => $panel,
+                    'topic' => $topic,
+                    'event' => $event->value,
+                    'payload' => $payload,
+                    'available_at' => now(),
+                    'status' => 'pending',
+                    'attempts' => 0,
+                ]);
+                $outbox->save();
 
-        return $outbox;
+                return $outbox;
+            },
+        );
     }
 
     /**

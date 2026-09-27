@@ -1,3 +1,39 @@
+# Vaulter — контекст для агентов
+
+Монорепо Laravel-пакетов (MIT): файловый Drive, документы (TipTap/Yjs), CAS-медиа,
+интеграция AzGuard, клиент `@vaulter/vue`, опционально Filament. Публикуется split-пакетами
+`axioma-studio/vaulter-*`.
+
+## Границы работы
+
+- Код и тесты — только в затронутом `packages/<name>/`; не трогай соседние пакеты и чужие правки.
+- Ядро — `packages/core` (`Vaulter\`); feature flags и opt-in поведение — `config/vaulter.php`.
+- Активный исполняемый план нагрузки/observability — `plans/VLT-LOAD/`; load-стенд — `load/`.
+
+## Пакеты (кратко)
+
+| Пакет | Назначение |
+| --- | --- |
+| `core` | Контракты, guards, shared kernel |
+| `drive` | Папки/файлы, uploads (Tus/S3) |
+| `documents` | Редактор, версии, комментарии, collab (opt-in) |
+| `media` | Content-addressed storage |
+| `azgard` | PermissionResolver для AzGuard |
+| `vue` | TypeScript/Vue 3 UI |
+| `filament` | Admin (Laravel 13, optional) |
+
+## Качество
+
+- Per-package Pest: `packages/<pkg>/tests/`; стиль — существующие тесты пакета.
+- Pint / PHPStan — команды пакета или корневой harness; пропуск или падение ≠ успех.
+- Правила провайдеров, публичного API и миграций — `.claude/rules/` (path-scoped).
+
+## Скиллы и контекст
+
+- Marketplace-профиль — `.swissknife.json` (компактный набор как CoreX: `core`, `php`, `php-packages`, `quality`, `task`, …).
+- Не дублируй marketplace скиллами «на всякий случай»; подгружай скилл только по триггеру задачи.
+- Локальный Cursor/Codex vendor-path `.agents/skills/` — **только CORE** (7 symlink + `ecosystem-*`), не полный `php-package` vendor. При раздувании: `bash scripts/sync-agent-skills.sh`.
+
 <!-- maind:healthcheck hash=d597b39af21f (managed by maind — не редактировать вручную) -->
 ## ⚠ ПРИОРИТЕТ №1 — связь с mAInd (общая память + граф)
 

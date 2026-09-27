@@ -8,7 +8,7 @@
 | Short ID | PLAN1 |
 | Title | Нагрузочная готовность vaulter: SLO → сценарии → профилирование → память/стриминг → конкуренция → очереди → деградация → наблюдаемость |
 | Document Type | Executable Master Plan (design-first: до P3 — артефакты и решения, не код) |
-| Authoring Model | Grok 6.4 для design/measurement решений; Composer 2.5 для bounded implementation; Sol для независимого review (см. §3 и `plans/RUNBOOK.md`) |
+| Authoring Model | Owner route с 2026-09-22: `grok-4.7`/high — основной исполнитель design, implementation и manual lab-runs; `gpt-5.6-sol`/high — только независимый финальный audit P8.11 или escalation по правилам §3; `composer-2.5` — только явно выделенная механическая работа с малым контекстом. Исторический provenance не переписывается. |
 | Repository | /home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter) |
 | Related Packages | vaulter-core, vaulter-drive, vaulter-documents, vaulter-media, vaulter-filament |
 | Стек | PHP 8.4, Laravel 12/13-contracts, Postgres 16, Flysystem+S3, tus/S3-multipart, staudenmeir HasRecursiveRelationships, Laravel queues, Reverb/Hocuspocus |
@@ -18,7 +18,7 @@
 | Home | repo:plans/VLT-LOAD |
 | Depends on | **Проектирование** — независимо от VLT-MUT (VLT-REMED/VLT-CANON в архиве). **Исполнение фиксов** (dev-срезы горячих путей, D-LOAD-5) — зависит от VLT-MUT по файлу: срез не открывается, пока VLT-MUT не закрыл `vaulter-drive` до Score ≥ 95 (см. D11). |
 | Branch | `remediation/audit-vlt` (design-фаза — коммитим только артефакты plans/; код фаз — по решению владельца) |
-| Paused By | —; VLT-REL завершён и архивирован. D34 удалил ложные placeholder-items P3.1–P7.1; текущий runnable — P8.1. |
+| Paused By | D41: execution запрещён до GREEN полного `task:plan-audit VLT-LOAD design`; затем P8.4–P8.6 требуют digest-bound reconciliation, P8.7 — live operator gate. P4 дополнительно ждёт L-01 post-fix carrier по D11. |
 | Layout | v2 |
 <!-- migration-version: 0.4.0 -->
 
@@ -146,15 +146,32 @@ VLT-MUT меряет **корректность** (мутационный гей
 - Внешние факты (версии/возможности инструментов) — только через RAG-провенанс (`findings/P0-rag-*`),
   не по памяти. Новый факт → сперва запись в findings, потом в план.
 - `git push`/PR/релиз — только по явной просьбе владельца.
+- **D41 — integrated repair → один audit → exec (owner 2026-09-20).** Эта сессия завершает дизайн
+  P3–P7/P8.8–P8.11 и lifecycle repair P8.4–P8.7. Отдельного design-pass P8.8 нет. Затем выполняется
+  ровно один полный **`task:plan-audit VLT-LOAD design`**; `plan-exec`/`plan-run` запрещены до его
+  принятого GREEN carrier. Carrier: `decisions/D41-integrated-repair-then-audit.md`.
+- **D42 — код без стенда, затем один необслуживаемый lab (owner 2026-09-23).** Остаток идёт отрезками: отчёт сразу после артефактов, затем харнесс, и только потом следующий lab. Контракты замеров не ужимаются. P7.1 стартует от terminal evidence P6.3; отчёт P6.4 обязателен до P7.3. P8.8–P8.10 ждут P7.4. P7.3 и P8.11 не делят стенд и не сливаются в один прогон. Carrier: `decisions/D42-code-stretch-then-unattended-lab.md`.
+- **D-LOAD-7 — terminal evidence не равно product verdict.** Measurement item может закрыться GREEN,
+  если весь объявленный run/evidence contract выполнен и валиден, даже когда измеренный SLO/product
+  verdict RED. RED продукта сохраняется в machine verdict/report и owning debt; evidence-invalid
+  оставляет item незавершённым и возвращает точный owning continuation.
+- **D-LOAD-6 — successor всегда с launch-block.** После закрытия item rolling `handoff.md` обязан
+  нести полный launch-block (`plan-protocol` → `snippets/launch-block-template.md`): semantic `**Next:**`,
+  таблица `Batch` · `Model class` · `Effort` · `Capabilities` · `Context` · `Суть`, затем fenced
+  **Provider-native command** с явным селектором модели (не только class). Исполнитель по пункту — §5
+  `plans/RUNBOOK.md`; class/effort/exec — §3 Routing этой таблицы. Строка `| Команда |` в таблице —
+  legacy; для новых закрытий не использовать. Агент, рекомендующий следующий запуск в чате, обязан
+  повторить те же три поля: **модель**, **effort**, **полная команда** (IDE/slash и, отдельно, CLI для
+  Cursor — см. `packages/task/docs/reference/provider-model-roles.md` § Cursor launch contract).
 
 ---
 - **Переходное правило Layout v2 (до P6):** закрытие пункта фиксируется записью в `journal.jsonl`, находкой или решением при необходимости и регенерацией видов; поля исхода в файле ТЗ запрещены и ловятся линтером.
 
 ## 3. Routing
 
-P0–P2 ниже сохраняют исторический routing уже завершённой работы. Актуальные назначения открытых
-пунктов — Grok 6.4 / Composer 2.5 / Sol; полная межплановая матрица и порядок находятся в
-`plans/RUNBOOK.md`.
+Строки уже завершённых пунктов ниже сохраняют исторический routing. Для всех оставшихся пунктов
+VLT-LOAD конкретный provider/model задаёт owner policy ниже; она имеет приоритет над общей
+provider-картой `plans/RUNBOOK.md`, не меняя class/effort/exec/review этой таблицы.
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
@@ -167,14 +184,48 @@ P0–P2 ниже сохраняют исторический routing уже за
 | P2-historical | P2.1–P2.6 | implementation/medium | plan-exec | none | required: историческая adjacent-цепочка харнесса сохранена без перемаршрутизации |
 | solo | P2.7 | frontier/high | manual | none | required: исторический route решения по δ |
 | solo | P2.8 | implementation/medium | plan-exec | none | required: исторический route DoD-прогона |
+| P8-reconcile | P8.4–P8.6 | implementation/high | plan-exec | full | recommended: один post-audit reconciliation reruns declared validation and emits digest-bound terminal evidence; P8.3 remains independently GREEN |
+| solo | P8.7 | frontier/high | manual | full | required: operator-run на одном stand/run family закрывает live scrape, matrix, perf-assert и on/off overhead до P3 |
+| solo | P3.1 | implementation/high | plan-exec | light | recommended: после GREEN P8.7 bounded harness/tooling с privacy и destructive-EXPLAIN guards требует package-level self-check до lab run |
+| P3-profile | P3.2–P3.4 | frontier/high | manual | full | recommended: один tier-S dataset/run context связывает workload, actual plans и synthesis; индексные/N+1 verdicts требуют независимой проверки evidence links до будущих dev-срезов |
+| P4-harness | P4.1–P4.2 | implementation/high | plan-exec | light | recommended: sampler, validator и path fixtures делят single-worker compose/context; package src запрещён, negative memory fixtures проверяются до дорогого lab run |
+| P4-profile | P4.3–P4.4 | frontier/high | manual | full | recommended: одна immutable tier-S run family связывает 45 cases и synthesis; 5 GiB L-01 verdict и allocator/process/cgroup attribution требуют независимой проверки evidence links |
+| P5-harness | P5.1–P5.2 | implementation/high | plan-exec | full | recommended: orchestration, collision/dirty fixtures и typed product-vs-control matrix делят barrier/schema context; integrity и destructive-snapshot guards требуют независимой проверки до lab run |
+| P5-profile | P5.3–P5.4 | frontier/high | manual | full | recommended: одна immutable tier-S run family связывает lock/pool/sweeper evidence и synthesis; L-02/L-06/L-07 attribution требует независимой проверки raw links |
+| P6-harness | P6.1–P6.2 | implementation/high | plan-exec | full | recommended: queue lifecycle ledger, controlled sink, fixtures и semantic matrix делят Redis/worker/DB context; duplicate-POST и sink isolation guards требуют независимой проверки до lab run |
+| P6-profile | P6.3–P6.4 | frontier/high | manual | full | recommended: одна immutable tier-S run family связывает relay/queue/retry/sink evidence и synthesis; L-04/L-05 и concurrent multiplicity требуют независимой проверки raw links |
+| P7-harness | P7.1–P7.2 | implementation/high | plan-exec | full | recommended: phase ledger, reversible injectors, isolated topology и fidelity-labelled matrix делят один safety/evidence contract; fencing, scope guards и emergency revert требуют независимой проверки до lab run |
+| P7-profile | P7.3–P7.4 | frontier/high | manual | full | recommended: одна immutable tier-S run family связывает S3/TCP/PG/ENOSPC fault windows и synthesis; corruption, ambiguous commit и recovery attribution требуют независимой проверки raw links |
 | solo | P8.1 | frontier/high | manual | full | recommended: публичный SemVer-контракт, кардинальность и health-semantics; после исполнения обязателен независимый Sol `audit-design` до P8.2 |
 | solo | P8.2 | implementation/high | plan-exec | full | recommended: реализация public seam только по GREEN P8.1 design review |
 | solo | P8.3 | implementation/high | plan-exec | light | recommended: аддитивная инструментация 12 метрик §5.1 в трёх пакетах |
-| solo | P8.4 | implementation/high | plan-exec | full | recommended: streaming/memory hot paths и L-01 требуют независимой проверки аддитивности |
-| solo | P8.5 | implementation/high | plan-exec | light | recommended: аддитивная инструментация 28 фоновых метрик по замороженному маппингу |
-| solo | P8.6 | implementation/high | plan-exec | light | recommended: SUT-level liveness/readiness с обязательными negative dependency tests |
-| solo | P8.7 | frontier/high | manual | full | recommended: вердикт по 50 метрикам, 66 gate-строкам и overhead — жёсткий гейт перед P3–P7 |
-| solo | P8.8 | frontier/high | manual | full | recommended: deferred tracing/метрики после данных P3–P7; mixed scope требует нового atomic design |
+| solo | P8.8 | frontier/high | manual | full | required: после P3–P7 выбрать bounded tracing targets и conditional metrics из замороженной allowlist; выпустить producer-readiness/v1, включая допустимый D41 no-op |
+| P8-tracing | P8.9–P8.10 | implementation/high | plan-exec | full | recommended: tracing seam/spans и conditional deferred metrics разделены, но переиспользуют один target manifest и package test context |
+| solo | P8.11 | frontier/high | manual | full | required: no-SDK/no-op, parent-child propagation, status/error, flush и fixed sampling overhead proof на одном fingerprint |
+
+### 3.1 Provider/model policy для оставшейся работы (owner, 2026-09-22)
+
+`grok-4.7` с effort `high` — основной исполнитель всех оставшихся item целиком. Класс
+`implementation` или `frontier` в канонической routing-таблице описывает сложность и режим работы,
+а не автоматически выбирает SOL или Composer.
+
+| Пункты | Исполнение | Независимая проверка |
+|:--|:--|:--|
+| P5.1–P5.4 | `grok-4.7` / high | Grok по объявленному `Review`; SOL не требуется |
+| P6.1–P6.4 | `grok-4.7` / high | Grok по объявленному `Review`; SOL не требуется |
+| P7.1–P7.4 | `grok-4.7` / high | Grok по объявленному `Review`; SOL не требуется |
+| P8.8–P8.10 | `grok-4.7` / high | Grok по объявленному `Review`; SOL не требуется |
+| P8.11 | `grok-4.7` / high | `gpt-5.6-sol` / high только для финального read-only audit готового результата |
+
+`gpt-5.6-sol` вне P8.11 разрешён только как escalation, если один bounded запуск Grok дошёл до
+заданного item-бюджета и зафиксировал тот же cross-phase/high-risk blocker, либо если evidence
+противоречат друг другу. Повторять долгий Grok-run до эскалации не требуется. В этих случаях SOL
+выполняет bounded read-only audit; реализация возвращается Grok с конкретными findings.
+
+`composer-2.5` разрешён только для отдельно выделенной механической подзадачи: регенерация views,
+форматирование, перенос уже принятого текста или однотипная правка без архитектурного решения,
+интерпретации evidence и широкого контекста. Ни один оставшийся P5–P8 item целиком на Composer не
+маршрутизируется. Поэтому следующий запуск всегда однозначен: P5.1 — `grok-4.7`, effort `high`.
 
 ---
 

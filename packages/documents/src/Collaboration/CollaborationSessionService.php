@@ -6,11 +6,13 @@ namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -30,6 +32,7 @@ final readonly class CollaborationSessionService
     public function __construct(
         private AccessResolver $access,
         private NodeCollaborationDriverManager $drivers,
+        private MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -45,11 +48,21 @@ final readonly class CollaborationSessionService
 
         $ability = $this->grantedAbility($actor, $node);
 
-        return $this->drivers->driver()->issueSession(
+        $session = $this->drivers->driver()->issueSession(
             node: $node,
             ability: $ability,
             actorId: Identity::key($actor->getAuthIdentifier()) ?? Identity::stringify($actor->getAuthIdentifier()),
         );
+
+        $this->metrics->counter(
+            name: 'vaulter_collab_session_issued_total',
+            labels: [
+                'driver' => Config::collaborationDriverName(),
+                'ability' => $ability->value,
+            ],
+        );
+
+        return $session;
     }
 
     /**

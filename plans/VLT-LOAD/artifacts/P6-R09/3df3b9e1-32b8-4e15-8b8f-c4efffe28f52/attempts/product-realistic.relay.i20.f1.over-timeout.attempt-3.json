@@ -1,0 +1,94 @@
+{
+  "attempt": 3,
+  "backlog_slope": null,
+  "burst_seconds": 1,
+  "business_dead": 0,
+  "business_failed": 8,
+  "cell_id": "product-realistic.relay.i20.f1.over-timeout",
+  "dispatch_uuids": 20,
+  "duplicate_http": 0,
+  "duration_seconds": 22.158,
+  "events_sent": 20,
+  "evidence": "valid",
+  "failed_jobs": 0,
+  "failed_jobs_after": [],
+  "failed_jobs_before": [],
+  "failed_jobs_delta": [],
+  "fanout": "1",
+  "fanout_http_per_event": 0.1,
+  "http_receives": 2,
+  "ingress_per_s": 20,
+  "jobs_per_second": 0.36104341547071034,
+  "lifecycle": {
+    "invalid_uuids": [],
+    "process_p95_seconds": 5.020270505,
+    "process_samples": 8,
+    "processed": 8,
+    "processing": 10,
+    "queue_wait_p95_seconds": 20.468453425,
+    "queue_wait_samples": 10,
+    "queue_wait_source": "JobQueueing before Redis push (upper bound includes enqueue IO)",
+    "queued": 20,
+    "uuids": [
+      "0993be24-3d10-49ff-9eca-701ed9ae572e",
+      "17bc4b0a-8a7a-449e-b499-f3316f6a30db",
+      "249135fd-4d4f-435f-b164-f2d6292419f4",
+      "2692eb1d-41a7-4de9-a51a-a9af71a8d975",
+      "2c7a455b-0ab4-4eef-8009-9b68c404fcd0",
+      "3d260dfe-fb92-4459-a4d1-b8a47ee95b95",
+      "49303672-0610-4e08-8e98-76a342ea583c",
+      "56b245ad-cf51-40d9-aefa-a668f0a744aa",
+      "5e736641-a835-4f39-a084-add470829efb",
+      "6460f637-e7a1-41db-948f-4eeb506ffa06",
+      "69266494-80fe-4874-bfd6-beb486ce97c4",
+      "6971c18c-2ef8-4e72-91cd-ccacf49aa750",
+      "76e3904b-51bc-4fea-93e2-faf946213cee",
+      "7ed00c33-b8be-47ae-9c35-c08a51308131",
+      "91e12cf0-00b1-4597-a2e7-9d6328b5f141",
+      "b049297e-f9d7-4a50-859a-1098214d17e4",
+      "b4af0626-84f5-4f27-8926-5cc4410005b9",
+      "bb39aa80-badc-4809-85fa-f39a09b3ac1a",
+      "cb5c4beb-6b5e-4289-9539-20fd591011ee",
+      "ec63c20c-c650-4a68-8632-ca38c4ab28af"
+    ]
+  },
+  "observed_through_ns": 570925918571422,
+  "plane": "product-realistic",
+  "recovered": false,
+  "recovery_seconds": 21.559,
+  "recovery_verdict": "recovered-timeout",
+  "redis_after": {
+    "default": {
+      "delayed": 0,
+      "pending": 10,
+      "reserved": 2
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "redis_before": {
+    "default": {
+      "delayed": 0,
+      "pending": 20,
+      "reserved": 2
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "run_id": "3df3b9e1-32b8-4e15-8b8f-c4efffe28f52",
+  "sink": "over-timeout",
+  "sink_end_line": 51182,
+  "sink_start_line": 51180,
+  "slo": "red",
+  "started_at": "2026-09-23T21:39:44Z",
+  "worker_pids": [
+    4040673,
+    1784595
+  ]
+}

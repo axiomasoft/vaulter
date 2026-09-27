@@ -215,14 +215,234 @@ Prometheus metric).
   `data.metrics` generically (median per numeric leaf across the 3 runs) — it has not
   been exercised on GitHub's actual `ubuntu-latest` (P2.7's job, `findings/P2.7-cv-runner.md`).
 
+## P3 profiling lane (P3.1)
+
+Reproducible PostgreSQL profiling for the load stand: HypoPG `1.4.1` in the `postgres`
+service image, `pg_stat_statements` with `track=all`, SQL preflight/reset/capture, a
+privacy-safe Laravel `DB::listen` trace (`LOAD_DB_TRACE=1`, default off), and a bounded
+evidence validator.
+
+```sh
+chmod +x load/scripts/p3-profile.sh
+TIER=S0 ./load/scripts/p3-profile.sh prepare --dry-run
+TIER=S0 ./load/scripts/p3-profile.sh prepare          # build image, CREATE EXTENSION, preflight
+python3 -m unittest load/gates/test_p3_profile.py
+```
+
+Opt-in application trace during a workload (requires `LOAD_RUN_ID`; writes JSONL to
+`LOAD_DB_TRACE_PATH`):
+
+```sh
+LOAD_DB_TRACE=1 LOAD_RUN_ID=<uuid> LOAD_DB_TRACE_PATH=/tmp/query-trace.jsonl \
+  docker compose -f load/docker-compose.load.yml --env-file load/env/S0.env exec app \
+  php vendor/bin/testbench load:seed
+```
+
+Admin SQL runs **direct-to-postgres** (`postgres:5432`); application workload stays on
+PgBouncer (`pgbouncer:6432`). Run directories under `load/results/p3/<run_id>/` are
+published only after `p3-profile.sh verify` / `python3 load/gates/p3_profile.py verify`.
+
+## P3.2 controlled workload (tier S)
+
+Authoritative profiling capture: P8.7 preflight, disposable re-seed, `ANALYZE`, shared-buffer-cold-like
+postgres restart, warm + ranked workload window (`scenarios/mixed.js`, not SLO thresholds), `pg_stat_statements`
+top-20, cluster `pg_stat_io` delta, OP coverage matrix, publish to `plans/VLT-LOAD/artifacts/P3/`.
+
+```sh
+python3 load/gates/p3_workload.py preflight
+TIER=S P3_DURATION=120s ./load/scripts/p3-profile.sh capture
+python3 load/gates/p3_workload.py verify-artifacts --artifact-dir plans/VLT-LOAD/artifacts/P3
+```
+
+Requires local load stand (Docker), GREEN `plans/VLT-LOAD/artifacts/P8.7/`, and `load:seed` profile
+(`--tier=S0` volume on tier-S hardware matches P2.8/P3 lab envelope).
+
+## P3.3 actual EXPLAIN, index review, HypoPG (tier S corpus)
+
+Runs on the published `plans/VLT-LOAD/artifacts/P3/` P3.2 bundle (same `run_id` / `dataset_id`).
+Captures `EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS, WAL, FORMAT JSON)` via `PREPARE`/`EXECUTE`
+with representative bindings, builds hot-family index inventory/review, and bounded HypoPG planner
+candidates (plain `EXPLAIN` only — no `ANALYZE` on hypothetical indexes).
+
+```sh
+TIER=S ./load/scripts/p3-explain-capture.sh
+python3 -m unittest load/gates/test_p3_explain.py load/gates/test_p3_profile.py
+```
+
+Outputs (committed under `plans/VLT-LOAD/artifacts/P3/`): `explain/*.json`,
+`index-inventory.json`, `index-review.json`, `hypopg-candidates.json`. DML plans use
+`BEGIN … ROLLBACK` on the disposable load DB only.
+
+## P4 memory lane (P4.1)
+
+Isolated single-worker FPM lane with PID-safe `/proc` + cgroup v2 sampling and a schema
+validator for PHP peak, process PSS (`smaps_rollup`), and cgroup breakdown. Real path matrix
+fixtures land in P4.2; P4.3 owns the tier-S live run.
+
+```sh
+chmod +x load/scripts/p4-memory.sh load/scripts/p4-memory-sampler.py
+docker compose -f load/docker-compose.load.yml -f load/docker-compose.memory.yml \
+  --env-file load/env/S0.env config
+python3 -m unittest load/gates/test_p4_memory.py
+TIER=S0 ./load/scripts/p4-memory.sh dry-run
+TIER=S0 ./load/scripts/p4-memory.sh run --case lane_selftest   # optional lab self-test
+TIER=S0 ./load/scripts/p4-memory.sh verify --run-dir load/results/p4/<run_id>
+```
+
+Run directories under `load/results/p4/<run_id>/` (`run-manifest.json`, `samples.jsonl`,
+optional `case-manifest.json`) publish only after `p4-memory.sh verify` or
+`python3 load/gates/p4_memory.py verify --run-dir …`.
+
+## P4.2 path fixtures and 15-cell matrix
+
+Bounded on-disk fixtures (streaming PHP writes, no multi-GiB strings), a 5×3 public-path
+case manifest, k6 `memory-paths.js` (`responseType:none` on download), and load-only
+Artisan probes for CAS `stage()` and server/object checksum.
+
+```sh
+chmod +x load/scripts/p4-memory-cases.sh
+./load/scripts/p4-memory-cases.sh list          # 15 cells, ceilings 64/160/160/64/16 MiB
+./load/scripts/p4-memory-cases.sh manifest      # machine-readable matrix JSON
+./load/scripts/p4-memory-cases.sh static-scan   # no whole-file read helpers in P4.2 commands
+./load/scripts/p4-memory-cases.sh contract-check  # pest + p4_memory unittest (+ k6 inspect when k6 is on PATH)
+
+# Inside the memory app container (after stand up + migrate):
+docker compose -f load/docker-compose.load.yml -f load/docker-compose.memory.yml \
+  --env-file load/env/S0.env exec app sh -c \
+  'vendor/bin/testbench load:memory-fixtures prepare --fixture-id=p4-contract-5m \
+    --run-prefix=p4-contract --size=5MiB --with-api-state'
+docker compose -f load/docker-compose.load.yml -f load/docker-compose.memory.yml \
+  --env-file load/env/S0.env exec app sh -c \
+  'vendor/bin/testbench load:memory-probe-cas-stage --fixture-id=p4-contract-5m --run-prefix=p4-contract'
+
+# k6 single cell (manifest JSON from load:memory-fixtures show):
+docker compose -f load/docker-compose.load.yml --profile bench run --rm k6 \
+  run -e MEMORY_CELL=tus_final_patch/5m -e MEMORY_FIXTURE_MANIFEST="$(cat …)" \
+  /scripts/scenarios/memory-paths.js
+```
+
+500 MiB and 5 GiB matrix cells stay **dry-run in k6 manifests** until `P4_MATRIX_LIVE=1`; the
+S0 contract lane exercises all five paths at **5 MiB** only.
+
+## P4.3 tier-S memory matrix (authoritative run)
+
+P8.7 preflight must be GREEN (`plans/VLT-LOAD/artifacts/P8.7`). The matrix publishes immutable
+carriers under `plans/VLT-LOAD/artifacts/P4/` (`run-manifest.json`, `cases.json`, `samples/`,
+`php-peaks.json`, `cgroup.json`, `k6/`, `cell-verdicts.json`): 15 cells (5 paths × 3 sizes),
+3 repetitions each (45 attempts), size order **5 MiB → 500 MiB → 5 GiB**, fresh `app` container
+per attempt.
+
+```sh
+python3 load/gates/p8_live_gate.py verify --artifacts plans/VLT-LOAD/artifacts/P8.7
+python3 -m unittest load/gates/test_p4_memory_matrix.py
+chmod +x load/scripts/p4-memory.sh load/scripts/p4-memory-matrix-run.sh
+
+# Live matrix (default; real k6/CLI paths; needs ≥2×5 GiB free disk for full 45):
+TIER=S ./load/scripts/p4-memory.sh run --matrix
+TIER=S ./load/scripts/p4-memory.sh verify --run-id "$(jq -r .run_id plans/VLT-LOAD/artifacts/P4/run-manifest.json)"
+
+# Rebuild only after Dockerfile/build-context changes; normal runs reuse the existing app image:
+P4_MATRIX_REBUILD=1 TIER=S ./load/scripts/p4-memory.sh run --matrix
+
+# Optional S3 I/O timeout override; the 900s default accommodates measured 5 GiB transfers:
+LOAD_S3_IO_TIMEOUT=900 TIER=S ./load/scripts/p4-memory.sh run --matrix
+
+# Contract-only (synthetic gate fixtures, no live I/O):
+P4_MATRIX_CONTRACT=1 TIER=S ./load/scripts/p4-memory.sh run --matrix
+
+# Smoke one cell (e.g. before full matrix):
+P4_MATRIX_SMOKE_CELL=tus_final_patch/5m P4_MATRIX_MAX_ATTEMPTS=1 TIER=S0 \
+  ./load/scripts/p4-memory-matrix-run.sh --live --run-id "$(uuidgen)" --out /tmp/p4-matrix-smoke
+```
+
+`python3 load/gates/p4_memory_matrix.py verify-matrix --artifacts plans/VLT-LOAD/artifacts/P4`
+confirms 45 valid attempts, exact byte sizes, repetitions, per-attempt `p4_memory.verify_run_dir`,
+secret scan, and byte-stable re-verify (`verify --run-id` runs verify-matrix twice).
+
+| Path | Artisan / k6 | Ceiling (MiB) |
+|:--|:--|--:|
+| `tus_final_patch` | k6 final PATCH after CLI pre-upload | 64 |
+| `s3_putpart` | k6 single bounded 64 MiB part | 160 |
+| `s3_complete_postfix` | parts pre-staged; k6 `complete` on fresh worker (P4.3) | 160 |
+| `cas_stage_probe` | `load:memory-probe-cas-stage` (CLI, not FPM) | 64 |
+| `download` | k6 `OP-08` + separate `load:memory-fixtures probe-object` checksum | 16 |
+
+## P5 concurrency lane (P5.1)
+
+The lane separates product HTTP time, PostgreSQL lock wait, and PgBouncer queue
+wait. Planes are closed: `product-realistic`, `product-worst-case`,
+`primitive-control`, `dirty-cardinality-probe`. Saturation `N=1/8/32/200` follows
+tier S `default_pool_size=8` and `max_client_conn=200`. `N=201` is a client-boundary
+control, not a supported workload. Product fixtures are P5.2; this lane does not
+publish a live matrix.
+
+```bash
+chmod +x load/scripts/p5-concurrency.sh load/scripts/p5-postgres-snapshot.sh load/scripts/p5-pgbouncer-snapshot.sh
+TIER=S ./load/scripts/p5-concurrency.sh dry-run
+TIER=S ./load/scripts/p5-concurrency.sh check-stand
+TIER=S ./load/scripts/p5-concurrency.sh verify --run-dir load/gates/fixtures/p5/complete
+sh -n load/scripts/p5-concurrency.sh load/scripts/p5-postgres-snapshot.sh load/scripts/p5-pgbouncer-snapshot.sh
+python3 -m unittest load/gates/test_p5_concurrency.py
+```
+
+`dry-run` prints the axes and performs no Docker or database write. `check-stand`
+reads `docker compose config` for PostgreSQL 16 lock logging and PgBouncer
+transaction pooling, then checks `SHOW POOLS` / `SHOW STATS` / `SHOW CONFIG`.
+Primitive SQL uses `pg_advisory_xact_lock` / `pg_try_advisory_xact_lock` and
+`ROLLBACK` on a disposable database (`P5_SQL_LIVE=1` and `P5_SQL_DATABASE` other
+than `vaulter_load`). Snapshots keep `pg_blocking_pids()` as the blocker source;
+a `pg_locks` self-join is diagnostic only. A missing sample stays
+`evidence-invalid` and is never stored as zero. Artifacts are published only
+after `verify`.
+
+## P5 product fixtures (P5.2)
+
+`load:concurrency-fixtures` writes a disposable snapshot keyed by `fixture_id`:
+small same/different tus and S3 session ids, a normal CAS pair, and a searched
+int4 `hashtext(scope|sha256)` collision (distinct sha256, equal int4, fail after
+250k candidates). Tree plans are 1k nodes and restore per repetition. Dirty
+profiles record 20k and 1m rows without seeding them; the 1m profile is not a
+tier-L claim. Cleanup deletes that fixture id or one run-prefix directory.
+
+The case matrix follows the P5.1 catalog. Same-resource 409s are protocol
+results (one progress owner plus conflicts) and are not scored against the
+≤5 % budget. Different-resource 409s stay inside that budget. Direct SQL is
+not labeled as an OP or SLO. HTTP 5xx is never success. k6 live cells wait on
+`P5_BARRIER_URL`; contract mode runs one n=1 cell per surface and skips the
+1m seed.
+
+```bash
+chmod +x load/scripts/p5-concurrency-cases.sh
+./load/scripts/p5-concurrency-cases.sh static-validate
+./load/scripts/p5-concurrency-cases.sh inspect
+./load/scripts/p5-concurrency-cases.sh contract
+vendor/bin/pest load/tests/Feature/ConcurrencyFixturesTest.php
+```
+
 ## Layout
 
 | Path | What |
 |:--|:--|
 | `docker-compose.load.yml` | postgres / pgbouncer / minio(+init) / app / prometheus / k6 |
+| `docker-compose.memory.yml` | P4.1 overlay — `PM_MAX_CHILDREN=1`, memory FPM pools, FPM-status healthcheck |
 | `env/{S0,S,M}.env` | tier numbers — `plans/VLT-LOAD/reference-env.md` §1/§4.1, cpuset translated to this lab-box's physical core ids (`lscpu -e=CPU,CORE,MAXMHZ`) |
 | `docker/Dockerfile.app` | nginx + php-fpm, ONE image; app code is bind-mounted, not COPYed |
 | `docker/{nginx.conf,php-fpm.conf,php.ini}` | SUT runtime config — `php-fpm.conf` is a template, `pm.max_children` substituted at container start from the tier's `PM_MAX_CHILDREN` |
+| `docker/php-fpm.memory.conf` | P4.1 memory lane pool template (`memory` + `memory_status`) |
+| `scripts/p4-memory.sh`, `scripts/p4-memory-sampler.py` | P4.1 lane CLI + read-only sampler |
+| `scripts/p5-concurrency.sh`, `scripts/p5-postgres-snapshot.sh`, `scripts/p5-pgbouncer-snapshot.sh` | P5.1 barrier lane and raw PG/PgBouncer collectors |
+| `scripts/p6-queue.sh`, `scripts/p6-queue-snapshot.sh`, `gates/p6_queue.py` | P6.1 queue lane, Redis LLEN/ZCARD sampler, evidence validator |
+| `webhook-sink/router.php`, `scripts/p6-queue-cases.sh`, `gates/p6_cases.py` | P6.2 controlled sink, semantic matrix, S0 contract |
+| `scripts/p7-chaos.sh`, `scripts/p7-chaos-snapshot.sh`, `gates/p7_chaos.py` | P7.1 chaos lane, phase ledger, collectors, evidence validator |
+| `docker-compose.chaos.yml`, `chaos/` | P7.2 overlay: pinned Toxiproxy, S3 503 proxy, PG16 HA lab, dedicated tmpfs |
+| `scripts/p7-injectors.sh`, `gates/p7_injectors.py` | P7.2 injector matrix, S0 contract, isolation guards |
+| `app/Console/PrepareChaosFixturesCommand.php` | P7.2 disposable upload/CAS/outbox fixtures |
+| `app/Console/PrepareQueueFixturesCommand.php`, `app/Webhooks/LoadSinkOutboundUrlGuard.php` | P6.2 disposable queue fixtures and sink-only outbound guard |
+| `gates/p5_concurrency.py`, `gates/test_p5_concurrency.py`, `gates/fixtures/p5/` | P5.1 evidence schema, negative fixtures, validator |
+| `scripts/p5-concurrency-cases.sh`, `k6/scenarios/concurrency.js`, `k6/lib/concurrency-cases.js` | P5.2 case matrix, contract k6 scenario, barrier mapping |
+| `gates/p5_cases.py`, `gates/test_p5_cases.py` | P5.2 expected-409 classification and catalog parity |
+| `app/Console/PrepareConcurrencyFixturesCommand.php` | P5.2 disposable fixtures, collision search, integrity checks |
+| `gates/p4_memory.py`, `gates/test_p4_memory.py` | P4.1 evidence validator + fixtures |
 | `docker/entrypoint.sh` | renders the FPM pool, migrates direct-to-postgres (bypasses PgBouncer — DDL/prepared-statement reuse under transaction pooling is a known caveat), then runs php-fpm + nginx |
 | `docker/prometheus.yml` | self-scrape only; k6's `--out experimental-prometheus-rw` (D24) reaches Prometheus via `--web.enable-remote-write-receiver` (compose `command`, not this file) |
 | `app/LoadServiceProvider.php`, `LoadActingAs.php` | load-stand host — mirrors `packages/core/tests/E2E/E2eServiceProvider.php` |
@@ -240,6 +460,133 @@ Prometheus metric).
 | `gates/coverage.py` | **P2.5** — machine check that every §3 row has an assigned plane |
 | `baselines/` | **P2.5** — committed baseline artifacts (`slo-gates.md` §4.1), `.gitkeep` until the first real one lands |
 | `.github/workflows/load.yml` (repo root, not under `load/`) | **P2.6** — `smoke-perf` (PR), `regression` (nightly, median-3), `baseline-guard` (label rule) — see "CI: how the gate behaves" above |
+
+## P6 queue lane (P6.1)
+
+The lane keeps outbox rows/s, jobs/s, Redis pending/delayed/reserved depth, worker
+occupancy and HTTP receives as separate fields. Planes are closed:
+`product-realistic`, `overlap-control`, `state-machine-control`,
+`dirty-cardinality-probe`. Only `product-realistic` claims SLO-58, SLO-61 and
+SLO-64. Tier S product cells are 2 workers, a 50 ms sink, outbox 10k, 20
+endpoints, 5k due retries, ingress 20/100/200 and fan-out 0/1/all across sink
+profiles 2xx, 500, slow-under-timeout and over-timeout. Overlap, forced
+backoff/dead/disable and the 200/1000 endpoint plus 50k/500k due probes do not
+claim throughput. P6.2 adds the controlled sink, fixtures and semantic matrix.
+The authoritative tier-S run remains P6.3.
+
+Redis pending depth is `LLEN` of `queues:{name}` (`pendingSize()`). Delayed and
+reserved depth are `ZCARD` of the `:delayed` and `:reserved` sets. `RedisQueue::size()`
+is not a pending sample. A missed probe is evidence-invalid and is not stored
+as zero. The lifecycle listener records uuid, class, attempt and outcome and
+does not unserialize the job command. Listener I/O failures do not change the
+job result. Artifacts are published only after `verify`.
+
+```bash
+chmod +x load/scripts/p6-queue.sh load/scripts/p6-queue-snapshot.sh
+TIER=S ./load/scripts/p6-queue.sh dry-run
+TIER=S ./load/scripts/p6-queue.sh check-stand
+TIER=S ./load/scripts/p6-queue.sh verify --run-dir load/gates/fixtures/p6/complete
+sh -n load/scripts/p6-queue.sh load/scripts/p6-queue-snapshot.sh
+python3 -m unittest load/gates/test_p6_queue.py
+vendor/bin/pest load/tests/Feature/QueueLifecycleLedgerTest.php
+```
+
+`dry-run` prints the 46-cell matrix and does not start Docker or write the
+database. `run` without `P6_PUBLISH=1` refuses to start workers. The current
+worker route stays `queue:work redis --queue=load-health,default --sleep=1
+--tries=1` with `retry_after` 90.
+
+## P6 sink, fixtures and semantic matrix (P6.2)
+
+The sink listens only on the stand network (`webhook-sink:8090`, no published
+host port). Profiles are `2xx`, `500`, `delay` (under the 5 s webhook timeout)
+and `hang`. `hang` sleeps until `LOAD_SINK_HANG_SECONDS` and never past 30 s.
+The ledger records `event_id`, profile, status, start, end and ordinal. It does
+not record the signature or the body. `LoadSinkOutboundUrlGuard` refuses every
+URL that is not that sink, so the stand cannot POST to the public internet.
+
+Fixtures are deterministic per run prefix and fixture id. Cleanup deletes that
+id or the whole snapshot and nothing outside the fixture root. Tier S declares
+10k outbox rows, 20 endpoints and 5k due retries, ingress 1×/5×/10×
+(20/100/200) and subscription density 0/1/all. Endpoint probes 200/1000 and due
+probes 50k/500k are not seeded and are not tier M/L SLOs; each one requires a
+snapshot restore first. Fan-out is `deliveries/jobs`, not the endpoint count.
+Backoff, dead and disable controls record the configured backoff delta before
+any explicit clock move. That clock is not an elapsed-time SLO. Concurrent
+duplicate jobs share one delivery id and use distinct queue UUIDs. A serial
+terminal no-op is not concurrent exactly-once proof. A `timeout >= retry_after`
+control is mechanism-only on queue `load-timeout-control` and is not the
+product worker.
+
+```bash
+chmod +x load/scripts/p6-queue-cases.sh
+./load/scripts/p6-queue-cases.sh static-validate
+./load/scripts/p6-queue-cases.sh s0
+python3 -m unittest load/gates/test_p6_cases.py
+vendor/bin/pest load/tests/Feature/QueueFixturesTest.php
+```
+
+`static-validate` checks every plane × case axis. `s0` runs one 2xx POST, one
+500 POST, one synchronized 2-relay/2-retry barrier and one concurrent duplicate
+against the local sink, then checks for missing or extra sink receives.
+
+## P7 chaos lane (P7.1)
+
+The lane records a run-scoped phase ledger
+(`baseline` → `armed` → `fault` → `revert` → `recovery` → `reconcile`)
+and keeps dependency availability, HTTP outcome and durable product state as
+separate fields. Planes are closed: `product-realistic`, `transport-control`,
+`protocol-control`, `primary-transition`, `storage-control`. `armed` requires an
+observed barrier. `recovered` requires a successful `/up`/`/ready` probe plus a
+product reconcile. Missing revert, terminal marker or checksum is
+evidence-invalid. Timing (`T_detect`, `T_restore`, `T_converge`) is published
+without an RTO verdict. Object records store key, checksum and size only.
+
+Injectors and isolated topology belong to P7.2. The authoritative tier-S family
+is P7.3. Cleanup is exact run scope: no wildcard bucket, database or volume
+deletion. `SIGINT`/`SIGTERM` run emergency revert.
+
+```bash
+chmod +x load/scripts/p7-chaos.sh load/scripts/p7-chaos-snapshot.sh
+TIER=S ./load/scripts/p7-chaos.sh dry-run
+TIER=S ./load/scripts/p7-chaos.sh verify --run-dir load/gates/fixtures/p7/complete
+TIER=S ./load/scripts/p7-chaos.sh revert --run-dir load/gates/fixtures/p7/complete
+sh -n load/scripts/p7-chaos.sh load/scripts/p7-chaos-snapshot.sh
+python3 -m unittest load/gates/test_p7_chaos.py
+```
+
+`dry-run` prints the 51-cell matrix and does not start Docker or write the
+database or object store. `run` without `P7_PUBLISH=1` refuses to start a live
+fault window. `interrupt-fixture` arms a marker and proves revert on `SIGINT`.
+
+## P7 injectors and matrix (P7.2)
+
+Isolated topology lives in `docker-compose.chaos.yml` plus `load/chaos/`.
+Toxiproxy is pinned to `ghcr.io/shopify/toxiproxy:2.11.0` and only proves TCP
+latency/timeout/reset/down. S3 HTTP 503 is a load-only reverse proxy that
+returns 503 before upstream and is never called a real S3 outage. PostgreSQL
+promotion uses a two-node PG 16 lab with fencing, then PgBouncer repoint; a
+session kill is not failover. ENOSPC is a dedicated app tmpfs at
+`/var/tmp/vaulter-chaos`. Current multipart cleanup is Flysystem
+`tmp/uploads/<id>.parts/*` keys, not AWS `UploadId`. Direct MinIO/Postgres
+bypass fails preflight. Fixture cleanup is run-prefix scoped.
+
+```bash
+chmod +x load/scripts/p7-injectors.sh load/chaos/pg-failover.sh
+TIER=S docker compose -f load/docker-compose.load.yml -f load/docker-compose.chaos.yml \
+  --env-file load/env/S.env --profile chaos-ha config
+python3 -m unittest load/gates/test_p7_injectors.py
+./load/scripts/p7-injectors.sh static-validate
+./load/scripts/p7-injectors.sh compose-config
+./load/scripts/p7-injectors.sh guards
+./load/scripts/p7-injectors.sh s0
+./load/scripts/p7-injectors.sh promotion-rehearsal
+vendor/bin/pest load/tests/Feature/ChaosFixturesTest.php
+```
+
+`s0` runs one 503, one TCP reset, one backend termination and one ENOSPC cell,
+each with verified revert. `promotion-rehearsal` proves one writable primary
+and PgBouncer reconnect, then restores only the isolated HA volumes.
 
 ## Why nginx does not cap request bodies
 

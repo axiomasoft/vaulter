@@ -105,6 +105,15 @@ Vaulter\Contracts\IdStrategy
   newId(): int|null|string
   reference(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
 
+Vaulter\Contracts\Observability\MetricsRecorder
+  counter(string $name, float|int $amount = 1, array $labels = []): void
+  gauge(string $name, float|int $value, array $labels = []): void
+  histogram(string $name, float|int $value, array $labels = []): void
+  timing(string $name, callable $operation, array $labels = []): mixed
+
+Vaulter\Contracts\Observability\TraceRecorder
+  span(string $name, callable $operation, array $attributes = []): mixed
+
 Vaulter\Contracts\Sharing\ShareTokenGenerator
   generate(): string
 

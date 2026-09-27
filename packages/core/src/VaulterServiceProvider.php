@@ -6,10 +6,12 @@ namespace Vaulter;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -25,6 +27,8 @@ use Vaulter\Console\RetryWebhooksCommand;
 use Vaulter\Contracts\Access\HostRoleDriver;
 use Vaulter\Contracts\Handlers\HandlerRegistry;
 use Vaulter\Contracts\Handlers\NodeHandlerResolver as NodeHandlerResolverContract;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
@@ -34,6 +38,8 @@ use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Engines\NodeHandlerResolver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Observability\NullMetricsRecorder;
+use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Panels\PanelRegistry;
 use Vaulter\Policies\NodePolicy;
 use Vaulter\Policies\WebhookEndpointPolicy;
@@ -174,6 +180,95 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // leaf node — unconditionally bound, so Drive-only serialisation gets a real
         // preview/download descriptor instead of degrading to null (P0.4/D10).
         $this->app->bind(NodeHandlerResolverContract::class, NodeHandlerResolver::class);
+
+        $this->app->singleton(
+            MetricsRecorder::class,
+            static function (Application $app): MetricsRecorder {
+                /** @var array{enabled?: bool, recorder?: string|null} $settings */
+                $settings = $app->make('config')->get('vaulter.observability', []);
+
+                if (!($settings['enabled'] ?? false)) {
+                    return new NullMetricsRecorder;
+                }
+
+                $class = $settings['recorder'] ?? null;
+
+                if (!is_string($class) || $class === '' || !class_exists($class)) {
+                    self::logInvalidObservabilityRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);
+
+                    return new NullMetricsRecorder;
+                }
+
+                if (!is_a($class, MetricsRecorder::class, true)) {
+                    self::logInvalidObservabilityRecorder(reason: 'does_not_implement_contract', class: $class);
+
+                    return new NullMetricsRecorder;
+                }
+
+                $recorder = $app->make($class);
+
+                if (!$recorder instanceof MetricsRecorder) {
+                    self::logInvalidObservabilityRecorder(reason: 'container_returned_unexpected_type', class: $class);
+
+                    return new NullMetricsRecorder;
+                }
+
+                return $recorder;
+            },
+        );
+
+        $this->app->singleton(
+            TraceRecorder::class,
+            static function (Application $app): TraceRecorder {
+                /** @var array{tracing?: array{enabled?: bool, recorder?: string|null}} $settings */
+                $settings = $app->make('config')->get('vaulter.observability', []);
+                $tracing = $settings['tracing'] ?? [];
+
+                if (!($tracing['enabled'] ?? false)) {
+                    return new NullTraceRecorder;
+                }
+
+                $class = $tracing['recorder'] ?? null;
+
+                if (!is_string($class) || $class === '' || !class_exists($class)) {
+                    self::logInvalidTraceRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);
+
+                    return new NullTraceRecorder;
+                }
+
+                if (!is_a($class, TraceRecorder::class, true)) {
+                    self::logInvalidTraceRecorder(reason: 'does_not_implement_contract', class: $class);
+
+                    return new NullTraceRecorder;
+                }
+
+                $recorder = $app->make($class);
+
+                if (!$recorder instanceof TraceRecorder) {
+                    self::logInvalidTraceRecorder(reason: 'container_returned_unexpected_type', class: $class);
+
+                    return new NullTraceRecorder;
+                }
+
+                return $recorder;
+            },
+        );
+    }
+
+    private static function logInvalidObservabilityRecorder(string $reason, ?string $class): void
+    {
+        Log::warning('Vaulter observability recorder misconfigured; using NullMetricsRecorder.', [
+            'reason' => $reason,
+            'recorder' => $class,
+        ]);
+    }
+
+    private static function logInvalidTraceRecorder(string $reason, ?string $class): void
+    {
+        Log::warning('Vaulter tracing recorder misconfigured; using NullTraceRecorder.', [
+            'reason' => $reason,
+            'recorder' => $class,
+        ]);
     }
 
     public function packageBooted(): void

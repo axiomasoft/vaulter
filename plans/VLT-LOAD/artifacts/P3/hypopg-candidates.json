@@ -1,0 +1,286 @@
+{
+  "candidates": [
+    {
+      "baseline_plan": [
+        {
+          "Plan": {
+            "Async Capable": false,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 1,
+            "Plan Width": 0,
+            "Plans": [
+              {
+                "Async Capable": false,
+                "Node Type": "Result",
+                "One-Time Filter": "false",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 0,
+                "Plan Width": 0,
+                "Startup Cost": 0.0,
+                "Total Cost": 0.0
+              }
+            ],
+            "Startup Cost": 0.0,
+            "Total Cost": 0.0
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "baseline_total_cost": 0.0,
+      "candidate_id": "nodes_parent_storage_btree",
+      "candidate_plan": [
+        {
+          "Plan": {
+            "Async Capable": false,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 1,
+            "Plan Width": 0,
+            "Plans": [
+              {
+                "Async Capable": false,
+                "Node Type": "Result",
+                "One-Time Filter": "false",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 0,
+                "Plan Width": 0,
+                "Startup Cost": 0.0,
+                "Total Cost": 0.0
+              }
+            ],
+            "Startup Cost": 0.0,
+            "Total Cost": 0.0
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "candidate_total_cost": 0.0,
+      "covered_op_ids": [
+        "OP-12",
+        "OP-13",
+        "OP-14",
+        "OP-15",
+        "OP-20"
+      ],
+      "ddl": "SELECT hypopg_create_index('CREATE INDEX ON public.v_nodes (storage_id, parent_id) WHERE deleted_at IS NULL AND trashed_at IS NULL')",
+      "families": [
+        "v_nodes"
+      ],
+      "hypopg_reset": true,
+      "maintenance_risk": {
+        "write_hot_penalty": "medium"
+      },
+      "probe_sql": "EXPLAIN (FORMAT JSON, SETTINGS) SELECT id FROM v_nodes WHERE storage_id = $1 AND parent_id = $2 AND deleted_at IS NULL AND trashed_at IS NULL LIMIT 100",
+      "session_id": "392c7fde9cdb3076",
+      "verdict": "planner-rejected"
+    },
+    {
+      "baseline_plan": [
+        {
+          "Plan": {
+            "Async Capable": false,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 1,
+            "Plan Width": 16,
+            "Plans": [
+              {
+                "Async Capable": false,
+                "Node Type": "Sort",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 1,
+                "Plan Width": 16,
+                "Plans": [
+                  {
+                    "Alias": "v_activity",
+                    "Async Capable": false,
+                    "Index Cond": "(storage_id = '12'::bigint)",
+                    "Index Name": "v_activity_storage_id_index",
+                    "Node Type": "Index Scan",
+                    "Parallel Aware": false,
+                    "Parent Relationship": "Outer",
+                    "Plan Rows": 1,
+                    "Plan Width": 16,
+                    "Relation Name": "v_activity",
+                    "Scan Direction": "Forward",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 1.41
+                  }
+                ],
+                "Sort Key": [
+                  "created_at DESC"
+                ],
+                "Startup Cost": 1.42,
+                "Total Cost": 1.43
+              }
+            ],
+            "Startup Cost": 1.42,
+            "Total Cost": 1.43
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "baseline_total_cost": 1.43,
+      "candidate_id": "activity_storage_created_btree",
+      "candidate_plan": [
+        {
+          "Plan": {
+            "Async Capable": false,
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Plan Rows": 1,
+            "Plan Width": 16,
+            "Plans": [
+              {
+                "Async Capable": false,
+                "Node Type": "Sort",
+                "Parallel Aware": false,
+                "Parent Relationship": "Outer",
+                "Plan Rows": 1,
+                "Plan Width": 16,
+                "Plans": [
+                  {
+                    "Alias": "v_activity",
+                    "Async Capable": false,
+                    "Index Cond": "(storage_id = '12'::bigint)",
+                    "Index Name": "v_activity_storage_id_index",
+                    "Node Type": "Index Scan",
+                    "Parallel Aware": false,
+                    "Parent Relationship": "Outer",
+                    "Plan Rows": 1,
+                    "Plan Width": 16,
+                    "Relation Name": "v_activity",
+                    "Scan Direction": "Forward",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 1.41
+                  }
+                ],
+                "Sort Key": [
+                  "created_at DESC"
+                ],
+                "Startup Cost": 1.42,
+                "Total Cost": 1.43
+              }
+            ],
+            "Startup Cost": 1.42,
+            "Total Cost": 1.43
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "candidate_total_cost": 1.43,
+      "covered_op_ids": [
+        "OP-25",
+        "OP-26"
+      ],
+      "ddl": "SELECT hypopg_create_index('CREATE INDEX ON public.v_activity (storage_id, created_at DESC)')",
+      "families": [
+        "v_activity"
+      ],
+      "hypopg_reset": true,
+      "maintenance_risk": {
+        "write_hot_penalty": "high"
+      },
+      "probe_sql": "EXPLAIN (FORMAT JSON, SETTINGS) SELECT id FROM v_activity WHERE storage_id = $1 ORDER BY created_at DESC LIMIT 50",
+      "session_id": "392c7fde9cdb3076",
+      "verdict": "superseded-by-existing"
+    },
+    {
+      "baseline_plan": [
+        {
+          "Plan": {
+            "Alias": "v_webhook_endpoints",
+            "Async Capable": false,
+            "Filter": "is_active",
+            "Node Type": "Seq Scan",
+            "Parallel Aware": false,
+            "Plan Rows": 5,
+            "Plan Width": 8,
+            "Relation Name": "v_webhook_endpoints",
+            "Startup Cost": 0.0,
+            "Total Cost": 1.05
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "baseline_total_cost": 1.05,
+      "candidate_id": "webhook_endpoints_active_btree",
+      "candidate_plan": [
+        {
+          "Plan": {
+            "Alias": "v_webhook_endpoints",
+            "Async Capable": false,
+            "Filter": "is_active",
+            "Node Type": "Seq Scan",
+            "Parallel Aware": false,
+            "Plan Rows": 5,
+            "Plan Width": 8,
+            "Relation Name": "v_webhook_endpoints",
+            "Startup Cost": 0.0,
+            "Total Cost": 1.05
+          },
+          "Settings": {
+            "effective_cache_size": "3GB",
+            "effective_io_concurrency": "200",
+            "max_parallel_workers_per_gather": "0",
+            "random_page_cost": "1.1",
+            "work_mem": "16MB"
+          }
+        }
+      ],
+      "candidate_total_cost": 1.05,
+      "covered_op_ids": [
+        "OP-40"
+      ],
+      "ddl": "SELECT hypopg_create_index('CREATE INDEX ON public.v_webhook_endpoints (is_active) WHERE is_active = true')",
+      "families": [
+        "v_outbox"
+      ],
+      "hypopg_reset": true,
+      "maintenance_risk": {
+        "write_hot_penalty": "low"
+      },
+      "probe_sql": "EXPLAIN (FORMAT JSON, SETTINGS) SELECT id FROM v_webhook_endpoints WHERE is_active = true",
+      "session_id": "392c7fde9cdb3076",
+      "verdict": "planner-rejected"
+    }
+  ],
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-hypopg-candidates/v1",
+  "session_id": "392c7fde9cdb3076"
+}

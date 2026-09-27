@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions;
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\MoveNodeData;
 use Vaulter\Drive\Events\NodeMoved;
 use Vaulter\Drive\Exceptions\CrossStorageMoveException;
@@ -30,6 +31,7 @@ final readonly class MoveNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function execute(MoveNodeData $data): Node
@@ -93,6 +95,12 @@ final readonly class MoveNodeAction
         }
 
         $descendantIds = $this->nodes->subtree($node)->modelKeys();
+
+        $this->metrics->histogram(
+            name: 'vaulter_subtree_nodes_touched',
+            value: count($descendantIds),
+            labels: ['operation' => 'subtree_mutate'],
+        );
 
         if (in_array($into->id, $descendantIds, strict: false)) {
             throw CycleException::forMove(nodeId: $node->id, intoId: $into->id);

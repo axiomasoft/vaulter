@@ -106,10 +106,47 @@ function sink_status(string $profile): int
     };
 }
 
-function sink_apply_profile(string $profile): void
+function sink_request_delay_ms(array $query, string $profile): int
+{
+    if ($profile !== 'delay') {
+        return 0;
+    }
+
+    $override = $query['delay_ms'] ?? null;
+    if (is_string($override) && is_numeric($override)) {
+        return max(0, min((int) $override, 4000));
+    }
+
+    return sink_delay_ms();
+}
+
+/**
+ * Path and query win. A JSON object may contribute only its event_id string.
+ * The rest of the body is discarded and never written.
+ */
+function sink_event_id_from_request(string $path, array $query): string
+{
+    $explicit = sink_event_id($path, $query);
+    $stream = fopen('php://input', 'rb');
+    $body = $stream === false ? '' : (string) stream_get_contents($stream);
+    if (is_resource($stream)) {
+        fclose($stream);
+    }
+
+    if ($explicit !== '') {
+        return $explicit;
+    }
+
+    $decoded = json_decode($body, true);
+    $candidate = is_array($decoded) ? ($decoded['event_id'] ?? null) : null;
+
+    return is_string($candidate) ? $candidate : '';
+}
+
+function sink_apply_profile(string $profile, int $delayMs): void
 {
     if ($profile === 'delay') {
-        usleep(sink_delay_ms() * 1000);
+        usleep($delayMs * 1000);
 
         return;
     }
@@ -154,18 +191,25 @@ function sink_record(string $ledger, string $profile, int $status, string $event
             return;
         }
 
-        $size = filesize($ledger);
+        // Read only the last row: rescanning a growing ledger distorted large drains.
+        $size = fstat($handle)['size'];
         $ordinal = 1;
-        if ($size !== false && $size > 0) {
-            rewind($handle);
-            $existing = stream_get_contents($handle);
-            $ordinal = ($existing === false || $existing === '') ? 1 : substr_count($existing, "\n") + 1;
+        if ($size > 0) {
+            fseek($handle, max(0, $size - 4096));
+            $tail = trim((string) stream_get_contents($handle));
+            $lines = explode("\n", $tail);
+            $last = json_decode(end($lines), true);
+            if (!is_array($last) || !is_int($last['ordinal'] ?? null)) {
+                throw new JsonException('Invalid sink ledger tail.');
+            }
+            $ordinal = $last['ordinal'] + 1;
         }
 
         $row = [
             'run_id' => is_string($query['run_id'] ?? null) ? $query['run_id'] : '',
             'cell_id' => is_string($query['cell_id'] ?? null) ? $query['cell_id'] : '',
             'event_id' => $eventId,
+            'slot' => is_string($query['slot'] ?? null) ? $query['slot'] : '',
             'profile' => $profile,
             'status' => $status,
             'start' => sink_wall($started),
@@ -180,20 +224,6 @@ function sink_record(string $ledger, string $profile, int $status, string $event
         flock($handle, LOCK_UN);
         fclose($handle);
     }
-}
-
-function sink_discard_body(): void
-{
-    $stream = fopen('php://input', 'rb');
-    if ($stream === false) {
-        return;
-    }
-
-    while (!feof($stream)) {
-        fread($stream, 8192);
-    }
-
-    fclose($stream);
 }
 
 function sink_dispatch(): void
@@ -228,15 +258,15 @@ function sink_dispatch(): void
         return;
     }
 
-    sink_discard_body();
-    $started = microtime(true);
-    sink_apply_profile($profile);
-    $status = sink_status($profile);
     $query = [];
     parse_str((string) (parse_url($uri, PHP_URL_QUERY) ?: ''), $query);
+    $eventId = sink_event_id_from_request($path, $query);
+    $started = microtime(true);
+    sink_apply_profile($profile, sink_request_delay_ms($query, $profile));
+    $status = sink_status($profile);
     $ledger = getenv('LOAD_SINK_LEDGER');
     $ledgerPath = is_string($ledger) && $ledger !== '' ? $ledger : sys_get_temp_dir().'/vaulter-sink-ledger.jsonl';
-    sink_record($ledgerPath, $profile, $status, sink_event_id($path, $query), $query, $started);
+    sink_record($ledgerPath, $profile, $status, $eventId, $query, $started);
 
     http_response_code($status);
     header('Content-Type: text/plain');

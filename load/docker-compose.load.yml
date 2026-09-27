@@ -10,7 +10,10 @@ name: vaulter-load
 
 services:
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres-profile
+    image: vaulter-load-postgres-profile:16-hypopg-1.4.1
     environment:
       POSTGRES_USER: vaulter
       POSTGRES_PASSWORD: secret
@@ -49,6 +52,10 @@ services:
       - deadlock_timeout=1s
       - -c
       - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - pg_stat_statements.max=10000
       # E-6: fsync/synchronous_commit/full_page_writes stay ON on every tier — see
       # reference-env.md E-6 (write-hot v_activity/outbox measured with them off is not
       # the write path that ships).
@@ -118,7 +125,8 @@ services:
     entrypoint: >
       sh -c "
       mc alias set load http://minio:9000 vaulter vaulter-load-secret &&
-      mc mb --ignore-existing load/vaulter-load
+      mc mb --ignore-existing load/vaulter-load &&
+      printf ok | mc pipe load/vaulter-load/.vaulter-health-sentinel
       "
     restart: "no"
 
@@ -131,6 +139,17 @@ services:
       - ..:/app
       - ./app/testbench.load.yaml:/app/testbench.yaml:ro
     environment:
+      TIER: "${TIER}"
+      LOAD_RUN_ID: "${LOAD_RUN_ID:-}"
+      LOAD_DB_TRACE: "${LOAD_DB_TRACE:-false}"
+      LOAD_DB_TRACE_PATH: "${LOAD_DB_TRACE_PATH:-}"
+      LOAD_CELL_ID: "${LOAD_CELL_ID:-}"
+      LOAD_ATTEMPT: "${LOAD_ATTEMPT:-}"
+      LOAD_QUEUE_LEDGER: "${LOAD_QUEUE_LEDGER:-}"
+      LOAD_QUEUE_FINGERPRINT: "${LOAD_QUEUE_FINGERPRINT:-}"
+      LOAD_SINK_HOSTS: "webhook-sink,127.0.0.1,localhost"
+      LOAD_SINK_PORT: "8090"
+      VAULTER_LOAD_METRICS_ENABLED: "${VAULTER_LOAD_METRICS_ENABLED:-true}"
       PM_MAX_CHILDREN: "${PM_MAX_CHILDREN}"
       DB_CONNECTION: pgsql
       DB_HOST: pgbouncer
@@ -148,6 +167,14 @@ services:
       MINIO_BUCKET: vaulter-load
       MINIO_REGION: us-east-1
       VAULTER_LOAD_ID_STRATEGY: bigint
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_CLIENT: phpredis
+      VAULTER_COLLAB_SECRET: "${VAULTER_COLLAB_SECRET:-vlt-load-dev-collab-secret-not-for-production}"
+      TESTBENCH_WORKING_PATH: /app
+      VAULTER_OBSERVABILITY_ENABLED: "true"
     cpuset: "${CPUSET_APP}"
     mem_limit: "${MEM_APP}"
     memswap_limit: "${MEMSWAP_APP}"
@@ -162,11 +189,110 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/load/health >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/up >/dev/null 2>&1 || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 60
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  queue-worker:
+    build:
+      context: ..
+      dockerfile: load/docker/Dockerfile.app
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - ./app/testbench.load.yaml:/app/testbench.yaml:ro
+    environment:
+      TIER: "${TIER}"
+      LOAD_RUN_ID: "${LOAD_RUN_ID:-}"
+      LOAD_DB_TRACE: "${LOAD_DB_TRACE:-false}"
+      LOAD_DB_TRACE_PATH: "${LOAD_DB_TRACE_PATH:-}"
+      LOAD_CELL_ID: "${LOAD_CELL_ID:-}"
+      LOAD_ATTEMPT: "${LOAD_ATTEMPT:-}"
+      LOAD_QUEUE_LEDGER: "${LOAD_QUEUE_LEDGER:-}"
+      LOAD_QUEUE_FINGERPRINT: "${LOAD_QUEUE_FINGERPRINT:-}"
+      LOAD_QUEUE_CONTEXT: "${LOAD_QUEUE_CONTEXT:-/app/load/seed/out/p6-queue-context.json}"
+      LOAD_SINK_HOSTS: "webhook-sink,127.0.0.1,localhost"
+      LOAD_SINK_PORT: "8090"
+      VAULTER_LOAD_METRICS_ENABLED: "${VAULTER_LOAD_METRICS_ENABLED:-true}"
+      PM_MAX_CHILDREN: "1"
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_CLIENT: phpredis
+      DB_CONNECTION: pgsql
+      DB_HOST: pgbouncer
+      DB_PORT: "6432"
+      DB_DATABASE: vaulter_load
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: vaulter
+      MINIO_ROOT_PASSWORD: vaulter-load-secret
+      MINIO_BUCKET: vaulter-load
+      MINIO_REGION: us-east-1
+      VAULTER_LOAD_ID_STRATEGY: bigint
+      TESTBENCH_WORKING_PATH: /app
+    command: ['php', 'vendor/bin/testbench', 'queue:work', 'redis', '--queue=load-health,default', '--sleep=1', '--tries=1']
+    depends_on:
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+      webhook-sink:
+        condition: service_started
+
+  webhook-sink:
+    build:
+      context: ..
+      dockerfile: load/docker/Dockerfile.app
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      LOAD_SINK_LEDGER: /app/load/seed/out/sink-ledger.jsonl
+      LOAD_SINK_HANG_SECONDS: "8"
+      LOAD_SINK_DELAY_MS: "50"
+      LOAD_SINK_PORT: "8090"
+    entrypoint: ["php", "-S", "0.0.0.0:8090", "-t", "/app/load/webhook-sink", "/app/load/webhook-sink/router.php"]
+    expose:
+      - "8090"
+
+  hocuspocus:
+    build:
+      context: ../hocuspocus-server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      VAULTER_COLLAB_PORT: '1234'
+      VAULTER_COLLAB_HEALTH_PORT: '1235'
+      VAULTER_BACKEND_URL: http://app:8080
+      VAULTER_API_PREFIX: api/vaulter
+      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_SECRET:-vlt-load-dev-collab-secret-not-for-production}
+      VAULTER_COLLAB_ALLOWED_ORIGINS: '*'
+    ports:
+      - '1235:1235'
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   prometheus:
     image: prom/prometheus:latest

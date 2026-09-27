@@ -1,0 +1,47 @@
+{
+  "byte_accounting": {
+    "client_bytes_received": 5242880,
+    "content_length_bytes": 5242880,
+    "http_status": 200,
+    "probe_object_sha256": "73b0104fc74a56129bab0a0d0bcf3f859a65afd4edbd7c4b905d65c18acc2175",
+    "server_object_sha256": "73b0104fc74a56129bab0a0d0bcf3f859a65afd4edbd7c4b905d65c18acc2175"
+  },
+  "case_id": "tus_final_patch/5m",
+  "cgroup_mode": "v2",
+  "env_fingerprint": "deadbeefcafebabe",
+  "fixture_id": "p4-matrix-00000000-5m",
+  "fpm": {
+    "max_children": 1,
+    "pm": "static",
+    "pool": "memory"
+  },
+  "matrix": {
+    "attempt_id": "27742c6b-e1dd-4f45-9feb-f27dce07941c",
+    "cell_id": "tus_final_patch/5m",
+    "path_id": "tus_final_patch",
+    "repetition": 3,
+    "size_bytes": 5242880,
+    "size_id": "5m"
+  },
+  "php_peak_bytes": 1310720,
+  "preflight": {
+    "cgroup_v2": true,
+    "smaps_rollup": true,
+    "worker_pid_unique": true
+  },
+  "prometheus_capture": {
+    "family": "vaulter_request_peak_memory_bytes",
+    "value_bytes": 1310720
+  },
+  "run_id": "00000000-0000-4000-8000-00000000p403",
+  "schema_version": "p4-memory/v1",
+  "terminal": {
+    "marker": "p4-run-complete",
+    "verified_at": "2026-09-22T06:00:34Z"
+  },
+  "tier": "S",
+  "worker_pid_identity": {
+    "pid": 42,
+    "starttime_ticks": 123456
+  }
+}

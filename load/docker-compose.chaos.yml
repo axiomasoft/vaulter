@@ -48,8 +48,11 @@ services:
   app:
     environment:
       MINIO_ENDPOINT: http://s3-fault-proxy:19000
-      DB_HOST: toxiproxy
-      DB_PORT: "16432"
+      DB_HOST: ${P7_APP_DB_HOST:-toxiproxy}
+      DB_PORT: ${P7_APP_DB_PORT:-16432}
+      DB_DATABASE: ${P7_APP_DB_DATABASE:-vaulter_load}
+      P7_APP_HA_ROUTED: ${P7_APP_HA_ROUTED:-0}
+      LOAD_SKIP_MIGRATIONS: ${P7_APP_SKIP_MIGRATIONS:-0}
       TMPDIR: /var/tmp/vaulter-chaos
       CHAOS_TMPFS_ROOT: /var/tmp/vaulter-chaos
       LOAD_CHAOS_PROXIED: "1"

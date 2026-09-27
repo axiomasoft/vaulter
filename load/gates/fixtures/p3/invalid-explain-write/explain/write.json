@@ -1,0 +1,6 @@
+{
+  "command": "UPDATE v_nodes SET name = 'x'",
+  "disposable_db": false,
+  "plan": [],
+  "query_hash": "write-probe"
+}

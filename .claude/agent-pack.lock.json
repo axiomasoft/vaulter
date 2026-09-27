@@ -122,7 +122,7 @@
           "src": "workflows/dev-loop.js",
           "target": ".claude/workflows/vaulter-dev-loop.js",
           "kind": "template",
-          "base_sha256": "5f739b126c1fab5f3cf5382ce9a05f86e3b18e4b710cc5b8c83a1feb099823a9",
+          "base_sha256": "5d20bc1b9e4504db5053e52567e65fe75cdc127ebb10b97e61a435d0739288da",
           "local_modified": false,
           "user_owned": false
         },
@@ -130,7 +130,7 @@
           "src": "hooks/review-gate.sh",
           "target": ".claude/hooks/review-gate.sh",
           "kind": "verbatim",
-          "base_sha256": "22a744687970eff3122e3c2dea8869f89031dc62dc956dfd7f96c98b83b41a20",
+          "base_sha256": "da41fb302623d4bbf4b8eafb0c7e953de2c8fafd0123408d83c4a87ef49bbd01",
           "local_modified": false,
           "user_owned": false
         },
@@ -139,7 +139,7 @@
           "target": ".claude/review-gate.env.ini",
           "kind": "template",
           "base_sha256": "406013e231d6c318f50aedd9639a070f0d98b9ac4c36120cc6d56047a1baf918",
-          "local_modified": false,
+          "local_modified": true,
           "user_owned": true
         },
         {
@@ -195,14 +195,14 @@
           "target": ".claude/rules/vaulter-reviewer-overrides.md",
           "kind": "template",
           "base_sha256": "523a089f80de6a5fec169d87652f2bc776b75169fd522d58ec63a6a05c766958",
-          "local_modified": false,
+          "local_modified": true,
           "user_owned": true
         }
       ],
       "removed_optional": []
     },
     "_common": {
-      "version": "0.4.1",
+      "version": "0.5.0",
       "source": "harness:configs/claude-code/agent-packs/_common",
       "answers": {
         "PACK_PREFIX": "vaulter",
@@ -213,7 +213,7 @@
           "src": "agents/orchestrator.md",
           "target": ".claude/agents/vaulter-orchestrator.md",
           "kind": "template",
-          "base_sha256": "09bfe7b6bb53fbbb652c9d34500d04d299b91ea8ab84dc02482caa570b6dfb1d",
+          "base_sha256": "7edf54ff387b2b0264c40e4f977e8336ef73cb68127b515c7c6fab1c2e50bd17",
           "local_modified": false,
           "user_owned": false
         },
@@ -221,7 +221,7 @@
           "src": "rules/generated-assets.md",
           "target": ".claude/rules/generated-assets.md",
           "kind": "verbatim",
-          "base_sha256": "71d61af8bb3e897870f17921997dc3b1e824ee8e69b5752f330bbd3f08f5e201",
+          "base_sha256": "02a9217f324349f244bd2eba23b4b625a5e1c6521ffd3eb2a658aff42b97f57b",
           "local_modified": false,
           "user_owned": false
         }

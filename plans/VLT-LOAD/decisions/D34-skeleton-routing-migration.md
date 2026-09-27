@@ -1,11 +1,11 @@
 ---
 id: D34
 date: 2026-09-20
-status: accepted
+status: superseded
 item: P8.1
 items: [P3.1, P4.1, P5.1, P6.1, P7.1, P8.1]
 supersedes: []
-superseded_by: null
+superseded_by: D41
 ---
 # D34 — Skeleton reservations are not runnable items
 

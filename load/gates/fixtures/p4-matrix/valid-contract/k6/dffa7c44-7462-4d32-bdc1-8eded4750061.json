@@ -1,0 +1,10 @@
+{
+  "attempt_id": "dffa7c44-7462-4d32-bdc1-8eded4750061",
+  "cell_id": "tus_final_patch/5g",
+  "dry_run": false,
+  "prometheus_rw": {
+    "job": "vaulter-sut",
+    "linked": true
+  },
+  "repetition": 2
+}

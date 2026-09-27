@@ -3,9 +3,15 @@
 # via the `--web.enable-remote-write-receiver` CLI flag (docker-compose.load.yml command),
 # not a config-file option — this file only adds the self-scrape every prometheus.yml needs.
 global:
-  scrape_interval: 15s
+  scrape_interval: 5s
 
 scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: ['localhost:9090']
+
+  - job_name: vaulter-sut
+    metrics_path: /metrics
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['app:8080']

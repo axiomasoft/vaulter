@@ -1,0 +1,51 @@
+{
+  "attempt": 1,
+  "backlog_slope": null,
+  "burst_seconds": 1,
+  "business_dead": 0,
+  "business_failed": 0,
+  "cell_id": "product-realistic.relay.i200.f0.slow-under-timeout",
+  "dispatch_uuids": 0,
+  "duration_seconds": 1.938,
+  "events_sent": 4,
+  "evidence": "valid",
+  "failed_jobs": 2,
+  "fanout": "0",
+  "http_receives": 1,
+  "ingress_per_s": 200,
+  "plane": "product-realistic",
+  "recovered": true,
+  "recovery_seconds": 1.353,
+  "redis_after": {
+    "default": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "redis_before": {
+    "default": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    },
+    "load-health": {
+      "delayed": 0,
+      "pending": 0,
+      "reserved": 0
+    }
+  },
+  "run_id": "721dd40b-ce8e-410a-8ecf-58873644f038",
+  "sink": "slow-under-timeout",
+  "slo": "red",
+  "started_at": "2026-09-23T18:24:43Z",
+  "worker_pids": [
+    4040673,
+    4046400
+  ]
+}
