@@ -1,10 +1,10 @@
 # Remaining work — canonical execution map
 
-**Updated:** 2026-09-27 after B07. **Scope:** the remaining product, evidence, mutation and owner work evidenced by VLT-LOAD and the archived plans. This file routes work; it does not amend journals, raw runs, SLO thresholds or historical verdicts.
+**Updated:** 2026-09-27 after R05 B07-01/02 code correction. **Scope:** the remaining product, evidence, mutation and owner work evidenced by VLT-LOAD and the archived plans. This file routes work; it does not amend journals, raw runs, SLO thresholds or historical verdicts.
 
-**Where execution stopped:** B07 failed and did **not** admit B08. B07 found two Major defects in the prepared R05 P5 capture/verdict path and confirmed that R04/R05/R06/R08 measurements and the current cold R07 >=95 proof are absent. The next launch is therefore **B05-R: correct R05 for B07-01/02**. Do not rerun R02, R18, R19, R14, B02, or the already prepared code slices merely because they appear below.
+**Where execution stopped:** B07 failed and did **not** admit B08. B07 found two Major defects in the prepared R05 P5 capture/verdict path and confirmed that R04/R05/R06/R08 measurements and the current cold R07 >=95 proof are absent. R05 B07-01/02 code correction is now recorded with offline controls; live proof and independent B07 re-audit remain pending. The next launch is **B05-M / R06: exclusive dirty-20k classification**. Do not rerun R02, R18, R19, R14, B02, or the already prepared code slices merely because they appear below.
 
-**Current launch:** `R05` is a load-harness implementation slice, owned by GPT-6 Sol. It must correct both B07 findings, write `remaining-evidence/R05.md`, update this map, and stop. It does not run a live cell. R06 is the next *exclusive measurement* only after that correction is recorded.
+**Current launch:** `R05` code lane is complete: corrected capture/verdict and offline controls are recorded in [R05](remaining-evidence/R05.md). No live cell ran, and B07-01/02 are not audit-closed. The single next admitted launch is `task:dev plans/REMAINING-WORK.md R06` for exclusive dirty-20k classification; corrected R05 live cells follow in the measurement route.
 
 ## 1. Evidence rules and fixed facts
 
@@ -30,8 +30,8 @@ Every unresolved finding has one next route. `Complete` means the stated scope i
 | F-P2.8-1/2/3; SLO-40/43/49/52 | code prepared; historical tier-S throughput RED remains unattributed | R03 | GPT-6 Sol | exclusive full-window class-A/B run and attribution | immutable full window, materialized tagged metrics, adequate samples; retain or route any RED |
 | L-P3-01, L-P3-03 | code verified; old trace empty and 6 plans rejected | R04 | GPT-6 Sol | exclusive P3 capture | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
 | L-P3-04/L-05 endpoint scan | scoped R10 evidence complete; M/L and 24-hour claims unevaluated | R26 | GPT-6 Sol | include in current P6 full matrix only if its source remains applicable | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
-| L-P5-01/02/04; **B07-01** | R05 code defect: live-patch overlap launches no sweeper | R05 | GPT-6 Sol | make the named live-patch surface run a real concurrent sweep/PATCH with session identity, overlap and final-state capture | negative controls reject no-sweep/no-overlap; affected live cells and Astra re-review prove the path |
-| L-P5-01/02/04; **B07-02** | R05 code defect: declared N is not checked against observed actor participation | R05 | GPT-6 Sol | record observed actor IDs and completed/aborted iterations; reject missing actors and setup-only success | negative controls for a missing actor/incomplete iteration; affected cells and Astra re-review |
+| L-P5-01/02/04; **B07-01** | R05 code corrected offline; live overlap proof and re-audit pending | R05 | GPT-6 Sol | measure corrected concurrent sweep/PATCH path with target-session refusal, held window and final state | negative controls reject no-sweep/no-overlap; affected live cells and Astra re-review prove the path |
+| L-P5-01/02/04; **B07-02** | R05 participation correction verified offline; live proof and re-audit pending | R05 | GPT-6 Sol | measure corrected observed actor/iteration capture; offline missing-actor, incomplete-iteration and setup-only controls passed | negative controls for a missing actor/incomplete iteration; affected cells and Astra re-review |
 | B07-03 P5 portion | no valid R05 live evidence | R05 | Grok 4.7 | after R05 code correction, exclusively run affected P5 cells | raw per-actor/status/Retry-After/lock/pool/overlap evidence; 429-only remains unconfirmed |
 | L-P5-03, L-02; B07-04 | capture code exists; dirty-20k cause unknown; SLO-70 historical RED | R06 | Grok 4.7 | exclusively reproduce disposable dirty-20k with stderr, exit, PHP peak and batch/progress rows | measured failure classification; no guessed drive fix |
 | drive L-02, SLO-70/72 | waiting for R06 cause; no R08 carrier | R08 | GPT-6 Sol then Grok 4.7 | implement the smallest `packages/drive` fix justified by R06; then exclusive tier-S rerun | focused/package evidence plus SLO-70 result (GREEN or RED); current cold R07 >=95 before accepting final drive source |
@@ -63,7 +63,7 @@ Every unresolved finding has one next route. `Complete` means the stated scope i
 | R02 | complete baseline inventory | no relaunch |
 | R03 | code prepared; measurement pending | full-window R03 measurement |
 | R04 | code verified; measurement pending | R04 capture; B07 re-audit needs valid R04 evidence |
-| R05 | **implementation correction required** for B07-01/02; measurement pending | R05 code correction -> R05 live cells -> B07 re-audit |
+| R05 | B07-01/02 code correction verified offline; measurement/re-audit pending | R05 live cells -> B07 re-audit (code correction recorded) |
 | R06 | capture code complete; measurement pending | exclusive dirty-20k classification -> R08 |
 | R07 | test code prepared; cold PG >=95 pending | R08 final source -> cold R07 |
 | R08 | waiting | R06 cause -> R08 code/checks -> tier-S run -> R07 requalification |
@@ -145,7 +145,7 @@ Run these in the stated dependency order, each with an unused run ID, source/sta
 |:--|:--|:--|:--|
 | B01–B04, B06, B09–B12 | completed code/evidence stages | retain their carriers; no repeat queue | recorded executor |
 | B02 | latest scoped audit closed | B02-01/02 only; does not promote P6/SLO | GPT-6 Astra |
-| B05-R / B05-M | active | R05 correction -> R06 and R05 measurements | GPT-6 Sol / Grok 4.7 |
+| B05-R / B05-M | R05 code lane complete; measurements pending | next R06 classification -> corrected R05 live cells | GPT-6 Sol / Grok 4.7 |
 | B07-R | waiting | valid R03/R04/R05/R06/R08 evidence and cold R07 >=95 | GPT-6 Astra |
 | B08 | blocked | B07-R admission plus valid R04/R05 | Grok 4.7 |
 | B13-M / B14 / B15 | waiting | R11 baseline; B14 validates mutation/P7 before R12 | GPT-6 Sol / Astra / Grok 4.7 |

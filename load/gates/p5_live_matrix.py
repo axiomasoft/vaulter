@@ -296,6 +296,7 @@ def run_matrix(out: Path, run_id: str) -> None:
     }, indent=2) + '\n', encoding='utf-8')
     (out / 'run-manifest.json').write_text(json.dumps({
         'schema': 'p5-run/v1',
+        'capture_contract': 'r05-b07/v2',
         'run_id': run_id,
         'tier': 'S',
         'fingerprint': fingerprint,
@@ -316,7 +317,7 @@ def preflight(out: Path, run_id: str) -> dict:
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip()
     dirty = subprocess.run(['git', 'diff', '--quiet'], cwd=REPO, check=False).returncode != 0
     source = hashlib.sha256()
-    for path in (LOAD / 'gates' / 'p5_live_matrix.py', LOAD / 'k6' / 'scenarios' / 'concurrency-live.js', LOAD / 'scripts' / 'p5-php-peak.php'):
+    for path in (LOAD / 'gates' / 'p5_live_matrix.py', LOAD / 'gates' / 'p5_concurrency.py', LOAD / 'k6' / 'scenarios' / 'concurrency-live.js', LOAD / 'scripts' / 'p5-php-peak.php', LOAD / 'app' / 'P5PatchWindow.php', LOAD / 'app' / 'LoadServiceProvider.php'):
         source.update(str(path.relative_to(REPO)).encode())
         source.update(path.read_bytes())
     images = {}
@@ -451,6 +452,8 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
         'statuses': actor.get('statuses', {}),
         'http_responses': actor.get('http_responses', []),
         'actor_ids': actor.get('actor_ids', []),
+        'participation': actor.get('participation'),
+        'overlap': actor.get('overlap'),
         'during_sample_count': len(during),
         'http_5xx': actor.get('http_5xx', 0),
     }
@@ -460,6 +463,10 @@ def execute_cell(cell, attempt, run_id, fingerprint, document_id, tree, clock, o
             'attempt_count': cell['n'],
             'refused_count': actor['refused_count'],
         }
+    if cell['plane'] == 'product-realistic':
+        validate_participation(row, cell['n'])
+        if cell['shape'] == 'live-patch-overlap':
+            validate_overlap(row)
     observations = observations_for(row, sample_pg, sample_pool, actor, sample_ns)
     last = max(item['monotonic_ns'] for item in observations)
     if last <= pre_ns:
@@ -737,9 +744,13 @@ def run_k6(cell, attempt, run_id, document_id, tree, out) -> dict:
         argv.extend(['-e', f'{key}={value}'])
     argv.extend(['k6', 'run', '--out', 'experimental-prometheus-rw', '/scripts/scenarios/concurrency-live.js'])
     started = time.monotonic()
-    completed, during = capture_during(lambda: subprocess.run(
-        argv, cwd=LOAD, text=True, capture_output=True, timeout=150, check=False,
-    ))
+    overlap = None
+    def invoke():
+        return subprocess.run(argv, cwd=LOAD, text=True, capture_output=True, timeout=150, check=False)
+    if cell['shape'] == 'live-patch-overlap':
+        completed, during, overlap = run_patch_overlap(invoke, upload_id, out, cell, attempt, base)
+    else:
+        completed, during = capture_during(invoke)
     elapsed = time.monotonic() - started
     (out / 'k6' / f"{cell['cell_id']}.a{attempt}.stdout.log").write_text(completed.stdout, encoding='utf-8')
     (out / 'k6' / f"{cell['cell_id']}.a{attempt}.stderr.log").write_text(completed.stderr, encoding='utf-8')
@@ -763,7 +774,9 @@ def run_k6(cell, attempt, run_id, document_id, tree, out) -> dict:
     http_5xx = count('p5_status_5xx')
     return {
         'backend_pids': [],
-        'actor_ids': list(range(base, base + cell['n'])),
+        'actor_ids': sorted({r['actor_id'] for r in responses if r['phase'] != 'setup'}),
+        'participation': iteration_evidence(completed.stdout + '\n' + completed.stderr, metrics, base, cell['n'], responses),
+        'overlap': overlap,
         'during_samples': during,
         'http_responses': responses,
         'http_duration_seconds': elapsed,
@@ -801,8 +814,94 @@ def response_evidence(log: str, metrics: dict, base: int, n: int) -> list[dict]:
     return responses
 
 
+def iteration_evidence(log, metrics, base, n, responses):
+    events = {phase: [] for phase in ('started', 'completed', 'aborted')}
+    for actor, phase in re.findall(r'P5_ITER[|](\d+)[|](started|completed|aborted)[|]END', log):
+        events[phase].append(int(actor))
+    expected = list(range(base, base + n))
+    observed = sorted({r['actor_id'] for r in responses if r['phase'] != 'setup'})
+    iterations = int(((metrics.get('iterations') or {}).get('values') or {}).get('count') or 0)
+    result = {'expected_actor_ids': expected, 'observed_actor_ids': observed,
+              **events, 'iterations': iterations}
+    validate_participation({'http_responses': responses, 'actor_ids': observed,
+                            'participation': result}, n)
+    return result
+
+
+validate_participation = gate.validate_participation
+validate_overlap = gate.validate_overlap
+
+
+def run_patch_overlap(invoke, upload_id, out, cell, attempt, base):
+    prefix = '/tmp/p5-overlap-' + upload_id
+    evidence = {'upload_id': upload_id}
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(capture_during, invoke)
+        try:
+            deadline = time.monotonic() + 40
+            while True:
+                marker = compose('exec', '-T', 'app', 'cat', prefix + '.held')
+                if marker.returncode == 0:
+                    evidence.update(json.loads(marker.stdout))
+                    evidence['held_ns'] = time.monotonic_ns()
+                    break
+                if future.done() or time.monotonic() >= deadline:
+                    raise gate.EvidenceInvalid('PATCH never entered held window')
+                time.sleep(0.05)
+            # Make this exact session a candidate only AFTER the real PATCH owns the lock.
+            evidence['sweepable'] = psql(
+                f"UPDATE v_upload_sessions SET expires_at = now() - interval '1 day' "
+                f"WHERE upload_id = '{upload_id}' AND status IN ('initiated','uploading','assembled') RETURNING upload_id;"
+            ).strip() == upload_id
+            evidence['lock_observed'] = psql(
+                f"SELECT count(*) FROM pg_locks WHERE pid = {int(evidence['backend_pid'])} "
+                "AND locktype = 'advisory' AND granted;"
+            ).strip() == '1'
+            evidence['sweep_start_ns'] = time.monotonic_ns()
+            sweep = compose('exec', '-T', '-e', 'P5_SWEEP_TARGET=' + upload_id, 'app', 'php', 'vendor/bin/testbench', 'artisan',
+                            'vaulter:sweep-uploads', '--no-interaction', timeout=30)
+            evidence['lock_after_sweep'] = psql(
+                f"SELECT count(*) FROM pg_locks WHERE pid = {int(evidence['backend_pid'])} "
+                "AND locktype = 'advisory' AND granted;"
+            ).strip() == '1'
+            evidence['target_refused'] = f'P5_SWEEP_TARGET|{upload_id}|refused|END' in sweep.stderr
+            evidence.update(sweep_exit=sweep.returncode, sweep_stdout=sweep.stdout,
+                            sweep_stderr=sweep.stderr, sweep_end_ns=time.monotonic_ns())
+        finally:
+            release = compose('exec', '-T', 'app', 'touch', prefix + '.release')
+            evidence['release_ns'] = time.monotonic_ns()
+            (out / 'sweeper' / f"{cell['cell_id']}.a{attempt}.json").write_text(json.dumps(evidence) + '\n')
+            if release.returncode != 0:
+                raise gate.EvidenceInvalid('PATCH release failed')
+        completed, during = future.result()
+    evidence['final_state'] = json.loads(psql(
+        "SELECT row_to_json(s) FROM (SELECT upload_id,status,received_bytes FROM v_upload_sessions "
+        f"WHERE upload_id = '{upload_id}') s;"
+    ).strip())
+    psql(f"UPDATE v_upload_sessions SET expires_at = now() + interval '1 day' WHERE upload_id = '{upload_id}';")
+    evidence['retry_fixture'] = 'restore-ttl-after-final-state-capture'
+    # A same-offset, same-body retry checks staged bytes through the real rangeMatches path.
+    winner = actor_base_for_retry(completed.stdout + '\n' + completed.stderr)
+    if winner is None:
+        evidence['retry_response'] = {'status': 0, 'skipped': 'no-successful-operation'}
+    else:
+        status, _, retry_after = http_json('PATCH', '/api/vaulter/resumable-uploads/' + upload_id,
+            bytes([0x70, 0x35, (winner - base + 1) & 0xff, 0x0a]),
+            {'Content-Type': 'application/offset+octet-stream', 'Tus-Resumable': '1.0.0',
+             'Upload-Offset': '0', 'X-Load-Actor': str(winner)})
+        evidence['retry_response'] = {'actor_id': winner, 'status': status, 'retry_after': retry_after}
+    (out / 'sweeper' / f"{cell['cell_id']}.a{attempt}.json").write_text(json.dumps(evidence) + '\n')
+    validate_overlap({'overlap': evidence})
+    return completed, during, evidence
+
+
+def actor_base_for_retry(log):
+    match = re.search(r'P5_HTTP[|](\d+)[|]operation[|]2\d\d', log)
+    return int(match.group(1)) if match else None
+
+
 def create_shared_upload(cell: dict, setup_actor: int) -> tuple[str | None, dict]:
-    body = json.dumps({'name': f"p5-shared-{cell['shape']}-{time.time_ns()}.bin", 'total_size_bytes': 4}).encode()
+    body = json.dumps({'name': f"p5-shared-{cell['shape']}-{time.time_ns()}.bin", 'total_size_bytes': 8 if cell['shape'] == 'live-patch-overlap' else 4}).encode()
     headers = {'Content-Type': 'application/json', 'Tus-Resumable': '1.0.0', 'X-Load-Actor': str(setup_actor)}
     status, payload, retry_after = http_json('POST', '/api/vaulter/storages/1/resumable-uploads', body, headers)
     evidence = {'actor_id': setup_actor, 'phase': 'setup', 'status': status, 'retry_after': retry_after}
@@ -943,6 +1042,11 @@ def run_sweeper(cell, attempt, out, *, run_id: str | None = None) -> dict:
 def verdict_for(cell: dict, rows: list[dict]) -> dict:
     http_5xx = sum(int(row.get('http_5xx') or 0) for row in rows)
     evidence = 'valid'
+    if cell['plane'] == 'product-realistic':
+        for row in rows:
+            validate_participation(row, cell['n'])
+            if cell['shape'] == 'live-patch-overlap':
+                validate_overlap(row)
     success = sum(int((row.get('statuses') or {}).get('2xx') or 0) for row in rows)
     if http_5xx:
         slo = 'red'
@@ -956,6 +1060,12 @@ def verdict_for(cell: dict, rows: list[dict]) -> dict:
         response['phase'] == 'operation' and 200 <= response['status'] < 300
         for row in rows for response in row.get('http_responses', [])
     )):
+        slo = 'red'
+    elif cell['shape'] == 'live-patch-overlap' and any(
+        row['overlap']['final_state'].get('status') in {'expired', 'aborted'}
+        or row['overlap']['final_state'].get('received_bytes') != 4
+        or not 200 <= row['overlap']['retry_response']['status'] < 300 for row in rows
+    ):
         slo = 'red'
     else:
         slo = 'green'
@@ -986,6 +1096,8 @@ def verify_artifacts(root: Path, *, prior_digest: str | None = None) -> str:
     root = Path(root)
     manifest = json.loads((root / 'run-manifest.json').read_text(encoding='utf-8'))
     run_id = manifest['run_id']
+    if manifest.get('capture_contract') != 'r05-b07/v2' and run_id != '2aeca12f-6180-4595-8466-31397c4ed15d':
+        raise gate.EvidenceInvalid('current run missing R05 capture contract')
     gate.verify_run_dir(root)
     verdicts = json.loads((root / 'cell-verdicts.json').read_text(encoding='utf-8'))
     by_id = {row['cell_id']: row for row in verdicts['cells']}
@@ -1006,6 +1118,10 @@ def verify_artifacts(root: Path, *, prior_digest: str | None = None) -> str:
             evidence = root / 'attempts' / f"{cell['cell_id']}.attempt-{attempt}.json"
             if not evidence.is_file():
                 raise gate.EvidenceInvalid(f'missing attempt file {evidence.name}')
+        if manifest.get('capture_contract') == 'r05-b07/v2':
+            attempts = [json.loads((root / 'attempts' / f"{cell['cell_id']}.attempt-{a}.json").read_text()) for a in range(1, expected + 1)]
+            if verdict_for(cell, attempts) != row:
+                raise gate.EvidenceInvalid('stored verdict differs from observed attempt evidence')
         if row['http_5xx'] and row['slo'] not in {'red', 'not-a-product-slo'}:
             raise gate.EvidenceInvalid('5xx counted as success')
     if 200 not in seen_n or 201 not in seen_n:

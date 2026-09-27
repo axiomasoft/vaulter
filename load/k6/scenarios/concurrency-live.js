@@ -80,6 +80,7 @@ function patchTus(uploadId, payload) {
       'Content-Type': 'application/offset+octet-stream',
       'Tus-Resumable': '1.0.0',
       'Upload-Offset': '0',
+      'X-P5-Overlap': SHAPE === 'live-patch-overlap' ? SHARED_UPLOAD : '',
     }),
     timeout: '30s',
   });
@@ -113,7 +114,7 @@ function payload() {
   return new Uint8Array(encoding.b64decode(BODY));
 }
 
-export function run() {
+function operation() {
   const vu = exec.vu.idInTest;
   const bytes = payload();
 
@@ -156,6 +157,18 @@ export function run() {
       timeout: '30s',
     });
     tally(response, 'operation');
+  }
+}
+
+export function run() {
+  const actor = ACTOR_BASE + exec.vu.idInTest - 1;
+  console.log(`P5_ITER|${actor}|started|END`);
+  try {
+    operation();
+    console.log(`P5_ITER|${actor}|completed|END`);
+  } catch (error) {
+    console.log(`P5_ITER|${actor}|aborted|END`);
+    throw error;
   }
 }
 

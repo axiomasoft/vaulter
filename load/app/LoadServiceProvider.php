@@ -255,6 +255,7 @@ final class LoadServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        P5PatchWindow::register();
         config(['vaulter.webhooks.delivery.url_guard' => LoadSinkOutboundUrlGuard::class]);
         $this->app->bind(OutboundUrlGuard::class, LoadSinkOutboundUrlGuard::class);
 

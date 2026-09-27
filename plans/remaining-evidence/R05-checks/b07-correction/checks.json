@@ -1,0 +1,66 @@
+[
+  {
+    "command": [
+      "python3",
+      "-B",
+      "-m",
+      "unittest",
+      "load/gates/test_r05_capture.py",
+      "load/gates/test_r05_r06_capture.py",
+      "load/gates/test_r06_capture.py",
+      "load/gates/test_p5_cases.py"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-1.log"
+  },
+  {
+    "command": [
+      "php",
+      "-l",
+      "load/app/P5PatchWindow.php"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-2.log"
+  },
+  {
+    "command": [
+      "php",
+      "-l",
+      "load/app/LoadServiceProvider.php"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-3.log"
+  },
+  {
+    "command": [
+      "node",
+      "--check",
+      "load/k6/scenarios/concurrency-live.js"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-4.log"
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "load/gates/p5_live_matrix.py",
+      "verify",
+      "--artifacts",
+      "plans/VLT-LOAD/artifacts/P5",
+      "--prior-digest",
+      "fb6343c5504b3f95aabe1db12260643877fcef2d41cead8ef225523621f1efdf"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-5.log"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "raw": "plans/remaining-evidence/R05-checks/b07-correction/check-6.log"
+  }
+]

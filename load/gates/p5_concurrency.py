@@ -280,6 +280,35 @@ def _check_pool(row: dict) -> None:
         _fail('missing PgBouncer field avg_wait_time')
 
 
+def validate_participation(row, n):
+    p = row.get('participation') or {}
+    expected = p.get('expected_actor_ids', [])
+    responses = row.get('http_responses', [])
+    observed = sorted({r.get('actor_id') for r in responses if r.get('phase') != 'setup' and r.get('actor_id') is not None})
+    if (len(expected) != n or len(set(expected)) != n or observed != sorted(expected)
+        or row.get('actor_ids') != observed or p.get('observed_actor_ids') != observed
+        or sorted(p.get('started', [])) != sorted(expected)
+        or sorted(p.get('completed', [])) != sorted(expected)
+        or p.get('aborted') != [] or p.get('iterations') != n):
+        raise EvidenceInvalid('declared N does not match observed completed actors')
+    for actor in expected:
+        actor_rows = [r for r in responses if r.get('actor_id') == actor]
+        if not any(r.get('phase') == 'operation' for r in actor_rows) and not any(
+            r.get('phase') == 'create' and r.get('status') != 201 for r in actor_rows
+        ):
+            raise EvidenceInvalid('actor completed without operation or explicit create failure')
+
+
+def validate_overlap(row):
+    o = row.get('overlap') or {}
+    if (not o.get('upload_id') or not o.get('backend_pid') or o.get('sweep_exit') != 0
+        or not o.get('target_refused') or not o.get('sweepable') or not o.get('lock_observed') or not o.get('lock_after_sweep')
+        or not (o.get('held_ns', 0) < o.get('sweep_start_ns', 0)
+                < o.get('sweep_end_ns', 0) < o.get('release_ns', 0))
+        or not o.get('final_state') or not o.get('retry_response')):
+        raise EvidenceInvalid('missing concurrent sweep/PATCH evidence')
+
+
 def verify_run_dir(path: Path) -> None:
     path = Path(path)
     manifest = _load_json(path / 'run-manifest.json')
@@ -316,6 +345,10 @@ def verify_run_dir(path: Path) -> None:
         admitted = any(item['cell_id'] == cid for item in catalog())
         if not admitted:
             _fail(f'cell {cid} is outside the admitted catalog')
+        if manifest.get('capture_contract') == 'r05-b07/v2' and cell['plane'] == 'product-realistic':
+            validate_participation(cell, n)
+            if cell['shape'] == 'live-patch-overlap':
+                validate_overlap(cell)
         for side_name in ('pre', 'post'):
             side = cell.get(side_name)
             if not isinstance(side, dict):

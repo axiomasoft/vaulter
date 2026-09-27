@@ -4,6 +4,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -75,16 +76,57 @@ class R05CaptureTest(unittest.TestCase):
         self.assertEqual(evidence['retry_after'], '60')
         query.assert_not_called()
 
-    def test_429_only_collision_and_create_only_progress_do_not_turn_green(self):
+    def test_missing_actor_and_setup_only_are_rejected_by_verdict(self):
         for cell in p5.gate.catalog():
-            if cell['shape'] == 'int4-collision':
-                result = p5.verdict_for(cell, [{'statuses': {'429': 1}}])
-                self.assertEqual(result['collision_verdict'], 'unconfirmed')
-                self.assertEqual(result['slo'], 'unevaluated')
-            elif cell['plane'] == 'product-realistic':
-                result = p5.verdict_for(cell, [{'statuses': {'2xx': 1, '429': 1},
-                    'http_responses': [{'phase': 'create', 'status': 201}, {'phase': 'operation', 'status': 429}]}])
-                self.assertEqual(result['slo'], 'red')
+            if cell['plane'] == 'product-realistic':
+                with self.subTest(cell=cell['cell_id']), self.assertRaises(p5.gate.EvidenceInvalid):
+                    p5.verdict_for(cell, [{'statuses': {'2xx': 1},
+                        'http_responses': [{'actor_id': 101, 'phase': 'setup', 'status': 201}]}])
+
+    def test_complete_iterations_join_actual_responses_and_metrics(self):
+        responses = [{'actor_id': a, 'phase': 'operation', 'status': 200} for a in (101, 102)]
+        log = '\n'.join(f'P5_ITER|{a}|{phase}|END' for a in (101, 102) for phase in ('started', 'completed'))
+        metrics = {'iterations': {'values': {'count': 2}}}
+        p = p5.iteration_evidence(log, metrics, 101, 2, responses)
+        self.assertEqual(p['observed_actor_ids'], [101, 102])
+        for bad in (log.replace('P5_ITER|102|completed|END', ''), log.replace('102', '101'),
+                    log.replace('completed', 'aborted')):
+            with self.assertRaises(p5.gate.EvidenceInvalid):
+                p5.iteration_evidence(bad, metrics, 101, 2, responses)
+        with self.assertRaises(p5.gate.EvidenceInvalid):
+            p5.iteration_evidence(log, metrics, 101, 2, responses[:1])
+
+    def test_no_sweep_and_no_overlap_controls(self):
+        overlap = {'upload_id': 'u', 'backend_pid': 1, 'sweep_exit': 0,
+            'target_refused': True, 'sweepable': True, 'lock_observed': True, 'lock_after_sweep': True,
+            'held_ns': 1, 'sweep_start_ns': 2, 'sweep_end_ns': 3, 'release_ns': 4,
+            'final_state': {'received_bytes': 4}, 'retry_response': {'status': 204}}
+        p5.validate_overlap({'overlap': overlap})
+        for field, value in [('target_refused', False), ('sweep_exit', None), ('release_ns', 2), ('lock_after_sweep', False)]:
+            with self.assertRaises(p5.gate.EvidenceInvalid):
+                p5.validate_overlap({'overlap': {**overlap, field: value}})
+
+    def test_real_overlap_orchestrator_runs_sweep_and_releases_patch(self):
+        upload = 'b523d6aa-7d19-4188-b3e1-bc54859f2c42'
+        completed = subprocess.CompletedProcess([], 0, 'P5_HTTP|101|operation|204||END', '')
+        def command(*args, **kwargs):
+            if 'cat' in args:
+                return subprocess.CompletedProcess([], 0, json.dumps({'upload_id': upload, 'backend_pid': 7}), '')
+            return subprocess.CompletedProcess([], 0, 'Swept 0 stale upload sessions (1 skipped)', f'P5_SWEEP_TARGET|{upload}|refused|END')
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(p5, 'capture_during', return_value=(completed, [])), \
+             patch.object(p5, 'compose', side_effect=command) as compose, \
+             patch.object(p5, 'psql', side_effect=[upload, '1', '1', json.dumps({'upload_id':upload,'status':'uploading','received_bytes':4}), '']), \
+             patch.object(p5, 'http_json', return_value=(204, {}, None)) as retry:
+            root = Path(tmp)
+            (root / 'sweeper').mkdir()
+            _, _, overlap = p5.run_patch_overlap(lambda: completed, upload, root,
+                {'cell_id':'overlap'}, 1, 101)
+            self.assertEqual(overlap['sweep_exit'], 0)
+            self.assertTrue(any('vaulter:sweep-uploads' in c.args for c in compose.call_args_list))
+            self.assertTrue(any('touch' in c.args for c in compose.call_args_list))
+            self.assertEqual(retry.call_args.args[2], bytes([0x70, 0x35, 1, 0x0a]))
+            self.assertTrue((root / 'sweeper' / 'overlap.a1.json').is_file())
 
     def test_all_k6_paths_capture_response_objects_and_per_vu_actors(self):
         # Execute the actual k6 module against host mocks, including error statuses.
