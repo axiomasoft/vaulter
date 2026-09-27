@@ -1,160 +1,117 @@
-# Remaining work — canonical execution map
+# Remaining Work — единый исполнительный лист
 
-**Updated:** 2026-09-27 after R05 B07-01/02 code correction. **Scope:** the remaining product, evidence, mutation and owner work evidenced by VLT-LOAD and the archived plans. This file routes work; it does not amend journals, raw runs, SLO thresholds or historical verdicts.
+**Единственный актуальный документ для работы — этот файл.** Здесь порядок, статусы, остаток, результаты и следующая команда. Старые `remaining-evidence/`, VLT-LOAD и архивные планы — доказательства/история; их launch/next-блоки не задают текущую очередь. Дублирующие START-HERE, ACTIVE и RUNBOOK удалены. Для обычных шагов новые status/handoff/carrier-файлы не создавать.
 
-**Where execution stopped:** B07 failed and did **not** admit B08. B07 found two Major defects in the prepared R05 P5 capture/verdict path and confirmed that R04/R05/R06/R08 measurements and the current cold R07 >=95 proof are absent. R05 B07-01/02 code correction is now recorded with offline controls; live proof and independent B07 re-audit remain pending. The next launch is **B05-M / R06: exclusive dirty-20k classification**. Do not rerun R02, R18, R19, R14, B02, or the already prepared code slices merely because they appear below.
+**Обновлено:** 2026-09-27. Последняя завершённая работа: **R05, исправление кода B07-01/02**, commit `d042695`; 30 offline tests passed. Live R05 ещё не выполнен.
 
-**Current launch:** `R05` code lane is complete: corrected capture/verdict and offline controls are recorded in [R05](remaining-evidence/R05.md). No live cell ran, and B07-01/02 are not audit-closed. The single next admitted launch is `task:dev plans/REMAINING-WORK.md R06` for exclusive dirty-20k classification; corrected R05 live cells follow in the measurement route.
+**Остаток:** 27 запланированных шагов: **20 запусков работ/измерений + 3 аудита + 3 обновления по аудиту + 1 решение владельца**. 9 строк выполнено. Ещё 1 условная строка для repairs по результатам R24/R25; она не входит в 27, пока конкретная работа не установлена. Это число шагов, не процент готовности продукта и не оценка времени.
 
-## 1. Evidence rules and fixed facts
+Новые задачи нельзя добавлять молча: для каждой вставки нужны finding, причина, scope и изменение счётчика «было → стало». Повтор неуспешного шага остаётся в той же строке с последним результатом и причиной повтора. Если новый дефект не обнаружен, очередь не расширять.
+
+**Следующая команда — только R06:**
+
+```text
+task:dev plans/REMAINING-WORK.md R06
+```
+
+R08 ждёт измеренной причины из R06. Переходить сразу от исправления R05 к R08 нельзя. Номера R — идентификаторы задач, а не порядок запуска. **Порядок запуска задаёт только таблица ниже, сверху вниз.** Отдельных очередей «код» и «измерения» больше нет; справочник findings ниже не является очередью.
+
+Статусы: **ГОТОВО** — выполнен именно указанный шаг; **СЛЕДУЮЩИЙ** — единственный разрешённый сейчас запуск; **ОЖИДАЕТ** — шаг ещё не выполнен; **УСЛОВНО** — нужен только при указанном результате предыдущего шага. ГОТОВО у измерения с RED означает, что измерение выполнено, а дефект остаётся в своём corrective route. ГОТОВО у кода не означает, что live-доказательство получено.
+
+## Исполнительная таблица
+
+В каждой строке один запуск и один результат. После запуска исполнитель отмечает эту строку ГОТОВО, добавляет ссылку/commit и переводит первую допустимую следующую строку в СЛЕДУЮЩИЙ. Не пропускать незавершённые зависимости. Если проверка выявила дефект, вставить corrective строку перед зависимым шагом; до исправления не двигать указатель дальше. Никакая строка ниже не разрешает автоматический запуск следующей задачи в том же запросе.
+
+| Шаг | Статус | Работа / фаза | Исполнитель | Команда или действие | Результат / условие перехода |
+|:--|:--|:--|:--|:--|:--|
+| 01 | ГОТОВО | R01 — scoped retry implementation/proof | — | Не запускать повторно | [R01](remaining-evidence/R01.md), accepted bounded proof в R09; старый R01 run rejected |
+| 02 | ГОТОВО | R02 — baseline inventory | — | Не запускать повторно | [R02](remaining-evidence/R02.md); cold baseline, не текущий >=95 proof |
+| 03 | ГОТОВО | R09 и B02 — scoped runtime/verifier | — | Не запускать повторно | [R09](remaining-evidence/R09.md), [B02](remaining-evidence/B02-audit.md); SLO-61 RED сохранён |
+| 04 | ГОТОВО | R10 — scoped endpoint evidence | — | Не запускать повторно | [R10](remaining-evidence/R10.md); M/L/24-hour остаются unevaluated |
+| 05 | ГОТОВО | R14 — GC/CAS измерение | — | Не запускать старый R14 повторно | [R14](remaining-evidence/R14.md); throughput и batch cap RED → шаги R21/R22/R23 |
+| 06 | ГОТОВО | R18 — media mutation до R21 | — | Не запускать повторно | [R18](remaining-evidence/R18.md); 95.33% PG+SQLite; новый media source проверяется в R22 |
+| 07 | ГОТОВО | R19 — filament mutation | — | Не запускать повторно | [R19](remaining-evidence/R19.md); 95.51% SQLite |
+| 08 | ГОТОВО | B07 — предыдущий аудит | — | Сохранить результат | [B07](remaining-evidence/B07-audit.md): FAILED, B08 не допущен; это выполненный аудит с открытыми findings |
+| 09 | ГОТОВО | R05 — исправление кода B07-01/02 | GPT-6 Sol | Не повторять code lane | [R05](remaining-evidence/R05.md), `d042695`; 30 offline tests, live pending |
+| **10** | **СЛЕДУЮЩИЙ** | **R06 — dirty-20k измерение причины** | **Grok 4.7** | `task:dev plans/REMAINING-WORK.md R06` | Capture-код уже готов. Сохранить stderr/exit/PHP peak/progress и классифицировать причину. Неубедительный результат → corrective R06 перед шагом 11 |
+| 11 | ОЖИДАЕТ | R08 — причинное исправление drive / disposition | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R08` | Только после R06. Если product defect не установлен, записать обоснованный no-fix disposition; код не придумывать |
+| 12 | ОЖИДАЕТ | R08 — tier-S измерение | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R08` | После шага 11, frozen source; измеренный SLO-70 GREEN/RED и race/retry. RED сохранить и маршрутизировать, не выдавать за acceptance |
+| 13 | ОЖИДАЕТ | R07 — cold drive mutation и gate | GPT-5.6 Sol | `task:dev plans/REMAINING-WORK.md R07` | Тесты подготовлены. Финальный R08 source, sequential PG, >=95 и regression-failing 95 gate; иначе corrective R07 |
+| 14 | ОЖИДАЕТ | R05 — affected live P5 cells | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R05` | Код шага 09 готов; проверить реальные actors/iterations/status/Retry-After/locks/pool/overlap/final state. Failed controls → corrective R05 |
+| 15 | ОЖИДАЕТ | R03 — full-window throughput | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R03` | Код готов; полный class-A/B window, attribution SLO-40/43/49/52. Historical RED не переписывать |
+| 16 | ОЖИДАЕТ | R04 — P3 trace/ANALYZE capture | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R04` | Код готов; непустой flushed trace, bindings, actual ANALYZE, top-20/N+1 |
+| 17 | ОЖИДАЕТ | B07-R — независимый переаудит | GPT-6 Astra | Проведи B07-R по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B07-audit.md; не меняй код, raw evidence или статусы R. | Нужны R03/R04/R05/R06/R08 evidence и cold R07 >=95. Finding → его corrective R, без допуска B08 |
+| 18 | ОЖИДАЕТ | B07-R — синхронизация листа | Ответственный исполнитель | Прочитать B07-audit.md и обновить только затронутые статусы/маршруты этого листа | Только явный допуск B07-R открывает шаги 19–20; аудитор сам свои findings не закрывает |
+| 19 | ОЖИДАЕТ | R13 — 1,000-anchor/tree measurement | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R13` | После допуска B07-R; реальные SQL/CTE/tree timings; product defect → отдельный package R |
+| 20 | ОЖИДАЕТ | R15 — реальная advisory collision | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R15` | После valid R05 и допуска B07-R; confirmed/disproved/unconfirmed, 429-only не доказывает collision |
+| 21 | ОЖИДАЕТ | R16 — cold core mutation | GPT-5.6 Sol | `task:dev plans/REMAINING-WORK.md R16` | Код/тесты готовы; sequential PG+SQLite ID union >=95 и failing gate; иначе corrective R16 |
+| 22 | ОЖИДАЕТ | R17 — cold documents mutation | GPT-5.6 Sol | `task:dev plans/REMAINING-WORK.md R17` | Код/тесты готовы; sequential PG >=95 и failing gate; иначе corrective R17 |
+| 23 | ОЖИДАЕТ | R21 — media GC исправление | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R21` | Исправить наблюдаемые R14 throughput/batch-cap defects, package tests cap/progress; без SLO claim |
+| 24 | ОЖИДАЕТ | R22 — cold media requalification | GPT-5.6 Sol | `task:dev plans/REMAINING-WORK.md R22` | R21 frozen source; PG+SQLite union >=95 и failing gate; иначе corrective R21/R22 |
+| 25 | ОЖИДАЕТ | R23 — GC/CAS повторное измерение | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R23` | После R21/R22; прежние пороги; RED → corrective R21, historical R14 неизменён |
+| 26 | ОЖИДАЕТ | R24 — core duplicate delivery | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R24` | Concurrent regression, repair и independent audit; новый core source требует актуализации затронутого mutation proof перед acceptance |
+| 27 | ОЖИДАЕТ | R25 — P6 recovery RED classification | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R25` | Каждая RED cell → harness correction, новый package R или retained RED; historical failed-job identities не выдумывать |
+| 28 | УСЛОВНО | Новые repairs/requalification из R24/R25 | По назначенному scope | Вставить отдельные строки с новым R либо актуализацией затронутого mutation R | Выполнить необходимые repairs и current-source proof до R26; не оставлять неназванный blocker |
+| 29 | ОЖИДАЕТ | R26 — frozen-source full P6 matrix | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R26` | После R24/R25 и необходимых repairs; duplicate/recovery/failed-job deltas, tier SLO table. SLO-61 RED или M/L unevaluated сохранить явно |
+| 30 | ОЖИДАЕТ | R11 — P7 live baseline | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R11` | Код готов; valid R05, R08 и relevant R24/R25 paths; `/ready`, реальные named operations/metrics/seeded joins |
+| 31 | ОЖИДАЕТ | B14 — P7/mutation аудит | GPT-6 Astra | Проведи B14 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B14-audit.md. | R11 baseline и применимые current-source mutation proofs; findings → corrective rows перед R12 |
+| 32 | ОЖИДАЕТ | B14 — синхронизация листа | Ответственный исполнитель | Прочитать B14-audit.md и обновить этот лист | Допуск R12 только без findings, инвалидирующих run |
+| 33 | ОЖИДАЕТ | R12 — full tier-S P7 recovery matrix | Grok 4.7 | `task:dev plans/REMAINING-WORK.md R12` | После B14; immutable run, first/retry, DB↔object joins, per-cell verdicts; recovery RED → concrete corrective R |
+| 34 | ОЖИДАЕТ | R20 — текущие факты и owner handoff | Grok 4.6 | `task:dev plans/REMAINING-WORK.md R20` | Current SLO-by-tier, CI/release/scheduler facts и список решений владельца; не принимать риск и не публиковать |
+| 35 | ОЖИДАЕТ | B17 — итоговый аудит handoff | GPT-6 Astra | Проведи B17 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B17-audit.md. | Findings → named corrective rows; аудит не закрывает VLT-LOAD |
+| 36 | ОЖИДАЕТ | B17 — синхронизация листа | Ответственный исполнитель | Прочитать B17-audit.md и обновить этот лист | Полный актуальный список завершённого, RED/unevaluated и решений владельца |
+| 37 | ОЖИДАЕТ | Решение владельца | Владелец | Рассмотреть R20/B17 и каждую оставшуюся deviation | Только владелец принимает риск, решает публикацию/deployment и close/archive VLT-LOAD |
+
+Общий стенд эксклюзивен для load, mutation, chaos, DB reset и cold-cache работы. Для каждого измерения нужны новый run ID, source/stand digest, exact commands/exits, raw evidence и cleanup/readback. Исправление и измерение с одинаковым R — разные строки; повторный `task:dev ... R05` после шага 09 означает именно live-фазу шага 14, а не повтор готового кода. Исполнитель выбирает первую незавершённую строку указанного R только при выполненных зависимостях; номер R не позволяет перескочить очередь.
+
+## Справочник: правила доказательств
 
 Read the applicable finding, SLO contract, gate contract, raw run and evidence carrier before a row. The latest conclusion for an audit replaces an older conclusion in that audit; it does not rewrite a product verdict outside its stated scope.
 
 - VLT-LOAD is terminal `Done with deviations`; its P8 receipt is lifecycle evidence, not a product-wide GREEN. Do not execute its old `Pn.m` items. AUDIT-VLT and VLT-HSEAM are archived/superseded; their live Layout-v2 previews are quarantined and are not launch queues.
 - B02's last section closes **B02-01/02 in its scoped runtime/verifier scope**. It does not create a new full P6 runtime or an all-SLO PASS. R09's stored P6 evidence remains the authority for the measured SLO-58/64 GREEN and SLO-61 RED; the historical failed-job identities remain unrecoverable.
-- B07 is the latest audit of R02–R08: it failed. B08 has no admission. B07-01 and B07-02 are open R05 implementation defects; B07-03–05 are missing-evidence gates, not newly proved product defects.
+- B07 is the latest audit of R02–R08: it failed. B08 has no admission. B07-01 and B07-02 remain audit-open; their code corrections are recorded in step 09, live proof/re-audit pending; B07-03–05 are missing-evidence gates, not newly proved product defects.
 - R14 is a completed measurement, not an unfinished measurement: CAS integrity/memory and GC delete/RSS were GREEN; **GC scan throughput and the 1,000-row batch cap were RED**. That result creates R21/R22/R23 below. Do not call R14 unperformed.
 - R18 (media mutation 95.33% PG+SQLite union) and R19 (filament mutation 95.51% SQLite) are complete on their frozen sources. A media source change in R21 invalidates R18 only for that changed media source and routes to R22; it does not erase the recorded result.
 - P4 L-01's measured streaming bytes/memory result remains historical evidence. Its separate D11 mutation claim is unproved because it used `--parallel`; R02 and the package-specific mutation rows, not a rerun of L-01, route that defect.
 - No smoke, S0 probe, one-row cardinality diagnostic, terminal task receipt, passing unit suite, offline control, or test-only overlay is an authoritative tier-S/M/L product result. A completed measurement may be RED; record that result and follow its route.
 - Mutation proof uses a cold cache, the declared database drivers, real skip/timeout denominator and no `--parallel`. The target is >=95; no configured minimum may be lowered to make a gate pass.
 
-## 2. Obligation ledger
+## Справочник: findings и критерии закрытия (не очередь)
 
-Every unresolved finding has one next route. `Complete` means the stated scope is evidenced; it never implies a wider claim. `Measurement` rows reserve the shared stand exclusively. A source digest/run ID and raw-artifact link are mandatory in the carrier.
+Соответствие findings задачам и критерии доказательства. Статусы и действия берутся только из исполнительной таблицы выше.
 
-| Source / finding | Current state | R | Executor | Next concrete action | Closure criterion / evidence |
-|:--|:--|:--|:--|:--|:--|
-| L-04 core retry | implementation and bounded R09 retry proof complete | R01 | complete | preserve [R01](remaining-evidence/R01.md) and R09 | no relaunch; R26 only supplies any later full-P6 re-verdict |
-| P4 L-01 streaming / D11 | streaming measurement retained; `--parallel` mutation conclusion invalid | R02, R07, R16, R17, R22 | routed | preserve streaming raw evidence; use package-specific cold routes | no aggregate/parallel mutation claim; each package's >=95 criterion controls |
-| F-P2.8-1/2/3; SLO-40/43/49/52 | code prepared; historical tier-S throughput RED remains unattributed | R03 | GPT-6 Sol | exclusive full-window class-A/B run and attribution | immutable full window, materialized tagged metrics, adequate samples; retain or route any RED |
-| L-P3-01, L-P3-03 | code verified; old trace empty and 6 plans rejected | R04 | GPT-6 Sol | exclusive P3 capture | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
-| L-P3-04/L-05 endpoint scan | scoped R10 evidence complete; M/L and 24-hour claims unevaluated | R26 | GPT-6 Sol | include in current P6 full matrix only if its source remains applicable | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
-| L-P5-01/02/04; **B07-01** | R05 code corrected offline; live overlap proof and re-audit pending | R05 | GPT-6 Sol | measure corrected concurrent sweep/PATCH path with target-session refusal, held window and final state | negative controls reject no-sweep/no-overlap; affected live cells and Astra re-review prove the path |
-| L-P5-01/02/04; **B07-02** | R05 participation correction verified offline; live proof and re-audit pending | R05 | GPT-6 Sol | measure corrected observed actor/iteration capture; offline missing-actor, incomplete-iteration and setup-only controls passed | negative controls for a missing actor/incomplete iteration; affected cells and Astra re-review |
-| B07-03 P5 portion | no valid R05 live evidence | R05 | Grok 4.7 | after R05 code correction, exclusively run affected P5 cells | raw per-actor/status/Retry-After/lock/pool/overlap evidence; 429-only remains unconfirmed |
-| L-P5-03, L-02; B07-04 | capture code exists; dirty-20k cause unknown; SLO-70 historical RED | R06 | Grok 4.7 | exclusively reproduce disposable dirty-20k with stderr, exit, PHP peak and batch/progress rows | measured failure classification; no guessed drive fix |
-| drive L-02, SLO-70/72 | waiting for R06 cause; no R08 carrier | R08 | GPT-6 Sol then Grok 4.7 | implement the smallest `packages/drive` fix justified by R06; then exclusive tier-S rerun | focused/package evidence plus SLO-70 result (GREEN or RED); current cold R07 >=95 before accepting final drive source |
-| drive D11 / VLT-MUT P2; B07-05 | tests prepared; cold current-source PG score absent; workflow still min 43 | R07 | GPT-5.6 Sol | after R08 freezes drive source, exclusive cold sequential PG mutation and a demonstrated 95 gate failure path | >=95 with real denominator and no `--parallel`; otherwise add tests and rerun R07 |
-| P6 L-P6-01…04; **B02-01/02** | scoped B02 audit closed; R09 raw/verifier evidence preserved; not a new full-P6 acceptance | R09 | complete | preserve [R09](remaining-evidence/R09.md) and [B02](remaining-evidence/B02-audit.md) | no re-execution without a source-changing reason |
-| P6 concurrent duplicate: 2 dispatch / 2 HTTP | product residual, explicitly unproved exactly-once | R24 | GPT-6 Sol | `packages/core` reproduce and correct duplicate delivery semantics with concurrent behavior tests | a source digest, regression test and independent audit; then R26 product run has no duplicate residual or records RED |
-| P6 recovery RED, sticky historical failed jobs, SLO-61 RED | current P6 product failures; original two historical job classes unrecoverable | R25 | GPT-6 Sol | classify each current recovery RED cell against real queue/sink semantics; correct only load-harness defects in `load/`, and open a new package-scoped R if product behavior is at fault | carrier maps every red cell to harness defect, package R, or retained RED; never invent historical job identities |
-| P6 current full verdict; SLO-58…64 and endpoint M/L | pending after R24/R25; R09's SLO-61 stays RED until superseded by this run | R26 | Grok 4.7 | exclusive frozen-source complete P6 matrix | immutable verified run, SLO table by tier, duplicate/recovery and failed-job deltas; RED remains routed, M/L absent is unevaluated |
-| P7 L-P7-01…05 | R11 code prepared; green `/ready` baseline and live metrics absent | R11 | GPT-6 Sol | exclusively prove baseline readiness/metrics using real named operations and seeded joins | baseline evidence plus actual fault paths; code preparation alone does not close it |
-| P7 authoritative recovery | waiting | R12 | Grok 4.7 | after R11, R08 and any R24/R25-relevant changes, run full tier-S P7 matrix | immutable run, real first/retry attempts, DB<->object joins, per-cell verdicts |
-| L-06; L-P3-02/05/06/07 | unmeasured 1,000-anchor/tree profile | R13 | Grok 4.7 | exclusive scale measurement after B07 passes and R04/R05 evidence is valid | 1,000-anchor series, actual SQL/CTE/tree timings; separate package fix decision if needed |
-| L-03, L-P4-01; SLO-76…78 | R14 measured: CAS/GC parts GREEN; GC scan throughput + batch cap RED | R21 | GPT-6 Sol | `packages/media` implement bounded GC scan/batch behavior for the observed RED | package tests prove cap/progress; no SLO claim from code checks |
-| R21 source change / media D11 | R18 complete only for pre-R21 source | R22 | GPT-5.6 Sol | exclusive cold PG+SQLite mutation-ID union on R21 source | >=95 and enforced regression-failing gate; otherwise return to R21 |
-| R14 RED cells after R21 | rerun required; R14 historical result remains | R23 | Grok 4.7 | exclusive GC/CAS measurement on R21 source | scan throughput and batch cap measured against unchanged SLO; retain GREEN/RED by metric |
-| L-07 | unconfirmed; old P5 was 429-only | R15 | Grok 4.7 | after valid R05 evidence, run true advisory-key collision with independent actors | confirmed, disproved, or explicitly unconfirmed from raw lock/HTTP evidence |
-| core D11 / VLT-MUT P0.2/P1.1/P3 | R16 code prepared and suites green; cold union missing | R16 | GPT-5.6 Sol | exclusive cold sequential PG+SQLite ID-union campaign | >=95 with workflow failure control; otherwise return to R16 test work |
-| documents D11 / VLT-MUT P0.2/P1.1/P4 | R17 code prepared and PG suite green; cold PG missing | R17 | GPT-5.6 Sol | exclusive cold sequential PG campaign | >=95 with workflow failure control; otherwise return to R17 test work |
-| media D11 / VLT-MUT P5 | R18 complete at 95.33% on frozen pre-R21 source | R22 if R21 changes source | GPT-5.6 Sol | do not rerun unless R21 changes media source | R18 remains closure evidence until then |
-| filament D11 / VLT-MUT P6 | R19 complete at 95.51% | complete | — | no rerun | [R19](remaining-evidence/R19.md) |
-| L-08 scheduler; archived release/CI residuals | external/current-state questions, not code evidence | R20 | Grok 4.6 | read current deployment/CI/release state and prepare owner handoff | current fact table plus explicit owner decisions; no publish, billing or archive mutation |
-
-## 3. Work states and dependencies
-
-`implemented` and `code prepared` are not measurement completion. The following state list is the source of truth for launch admission.
-
-| R | State now | Must happen before it can close / unlock |
+| Finding | R | Критерий / evidence |
 |:--|:--|:--|
-| R01 | complete implementation; historical R01 run rejected; R09 supplies the accepted scoped retry evidence | no relaunch |
-| R02 | complete baseline inventory | no relaunch |
-| R03 | code prepared; measurement pending | full-window R03 measurement |
-| R04 | code verified; measurement pending | R04 capture; B07 re-audit needs valid R04 evidence |
-| R05 | B07-01/02 code correction verified offline; measurement/re-audit pending | R05 live cells -> B07 re-audit (code correction recorded) |
-| R06 | capture code complete; measurement pending | exclusive dirty-20k classification -> R08 |
-| R07 | test code prepared; cold PG >=95 pending | R08 final source -> cold R07 |
-| R08 | waiting | R06 cause -> R08 code/checks -> tier-S run -> R07 requalification |
-| R09 | B02-01/02 scoped audit closed; historical product verdicts retained | no relaunch; feeds R24–R26 |
-| R10 | scoped endpoint implementation/evidence complete | M/L/24-hour claims route through R26/R20, not R10 rerun |
-| R11 | code prepared; live baseline pending | R05-valid fixtures and R08 path -> R11 baseline |
-| R12 | waiting | R11, R08, R24/R25-relevant changes and B14 audit |
-| R13 | waiting | valid R04/R05 + passing B07 |
-| R14 | measured, mixed; two RED cells | R21 -> R22 -> R23; do not relaunch old R14 |
-| R15 | waiting | valid R05 evidence |
-| R16/R17 | code prepared; cold proof pending | exclusive campaigns; failures return to the same R |
-| R18/R19 | complete | R18 only requalifies through R22 if R21 changes media |
-| R20 | waiting | evidence/reconciliation; it cannot accept product risk |
-| R21 | new, waiting | implement media GC correction -> R22 |
-| R22 | new, waiting | R21 source -> cold media requalification -> R23 |
-| R23 | new, waiting | R21/R22 source and exclusive stand -> measured media disposition |
-| R24 | new, waiting | core duplicate repair -> R26 |
-| R25 | new, waiting | P6 recovery classification -> package R if required -> R26 |
-| R26 | new, waiting | R24/R25 and frozen source -> current P6 matrix |
+| L-04 core retry | R01 | no relaunch; R26 only supplies any later full-P6 re-verdict |
+| P4 L-01 streaming / D11 | R02, R07, R16, R17, R22 | no aggregate/parallel mutation claim; each package's >=95 criterion controls |
+| F-P2.8-1/2/3; SLO-40/43/49/52 | R03 | immutable full window, materialized tagged metrics, adequate samples; retain or route any RED |
+| L-P3-01, L-P3-03 | R04 | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
+| L-P3-04/L-05 endpoint scan | R26 | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
+| L-P5-01/02/04; **B07-01** | R05 | negative controls reject no-sweep/no-overlap; affected live cells and Astra re-review prove the path |
+| L-P5-01/02/04; **B07-02** | R05 | negative controls for a missing actor/incomplete iteration; affected cells and Astra re-review |
+| B07-03 P5 portion | R05 | raw per-actor/status/Retry-After/lock/pool/overlap evidence; 429-only remains unconfirmed |
+| L-P5-03, L-02; B07-04 | R06 | measured failure classification; no guessed drive fix |
+| drive L-02, SLO-70/72 | R08 | focused/package evidence plus SLO-70 result (GREEN or RED); current cold R07 >=95 before accepting final drive source |
+| drive D11 / VLT-MUT P2; B07-05 | R07 | >=95 with real denominator and no `--parallel`; otherwise add tests and rerun R07 |
+| P6 L-P6-01…04; **B02-01/02** | R09 | no re-execution without a source-changing reason |
+| P6 concurrent duplicate: 2 dispatch / 2 HTTP | R24 | a source digest, regression test and independent audit; then R26 product run has no duplicate residual or records RED |
+| P6 recovery RED, sticky historical failed jobs, SLO-61 RED | R25 | carrier maps every red cell to harness defect, package R, or retained RED; never invent historical job identities |
+| P6 current full verdict; SLO-58…64 and endpoint M/L | R26 | immutable verified run, SLO table by tier, duplicate/recovery and failed-job deltas; RED remains routed, M/L absent is unevaluated |
+| P7 L-P7-01…05 | R11 | baseline evidence plus actual fault paths; code preparation alone does not close it |
+| P7 authoritative recovery | R12 | immutable run, real first/retry attempts, DB<->object joins, per-cell verdicts |
+| L-06; L-P3-02/05/06/07 | R13 | 1,000-anchor series, actual SQL/CTE/tree timings; separate package fix decision if needed |
+| L-03, L-P4-01; SLO-76…78 | R21 | package tests prove cap/progress; no SLO claim from code checks |
+| R21 source change / media D11 | R22 | >=95 and enforced regression-failing gate; otherwise return to R21 |
+| R14 RED cells after R21 | R23 | scan throughput and batch cap measured against unchanged SLO; retain GREEN/RED by metric |
+| L-07 | R15 | confirmed, disproved, or explicitly unconfirmed from raw lock/HTTP evidence |
+| core D11 / VLT-MUT P0.2/P1.1/P3 | R16 | >=95 with workflow failure control; otherwise return to R16 test work |
+| documents D11 / VLT-MUT P0.2/P1.1/P4 | R17 | >=95 with workflow failure control; otherwise return to R17 test work |
+| media D11 / VLT-MUT P5 | R22 if R21 changes source | R18 remains closure evidence until then |
+| filament D11 / VLT-MUT P6 | complete | [R19](remaining-evidence/R19.md) |
+| L-08 scheduler; archived release/CI residuals | R20 | current fact table plus explicit owner decisions; no publish, billing or archive mutation |
 
-## 4. Ordered launch route
-
-The shared stand is exclusive for mutation, load, chaos, DB reset and cold-cache work. Code tasks may prepare one package or `load/`; they do not run a heavy measurement. Every command is one R only. Terra's sole role was editing this map; it does not replace any executor below.
-
-Use this exact bounded launcher for every listed row, replacing `RNN` once only:
-
-```text
-task:dev plans/REMAINING-WORK.md RNN
-```
-
-### Code route (no live tier-S, chaos, mutation or load campaign)
-
-1. **B05-R / R05 — GPT-6 Sol.** Read B07-01/02, repair only `load/` capture/verdict logic, add offline controls, save R05 carrier and map state. If an overlap or actor control fails, remain in R05.
-
-   ```text
-   task:dev plans/REMAINING-WORK.md R05
-   ```
-
-2. **B06-R / R08 — GPT-6 Sol, only after R06 has a measured cause.** Implement only the causal drive fix. If R06 identifies no product defect, record that and do not manufacture R08 code.
-
-   ```text
-   task:dev plans/REMAINING-WORK.md R08
-   ```
-
-3. **B18 / R21 — GPT-6 Sol.** Repair the two R14 media RED metrics in `packages/media` with package tests. It is a new scoped implementation, not an R14 rerun.
-
-   ```text
-   task:dev plans/REMAINING-WORK.md R21
-   ```
-
-4. **B19 / R24, then R25 — GPT-6 Sol.** First correct the core duplicate-delivery residual; then classify every P6 recovery RED without rewriting old raw evidence. A package defect discovered by R25 gets its own next free R before R26.
-
-   ```text
-   task:dev plans/REMAINING-WORK.md R24
-   task:dev plans/REMAINING-WORK.md R25
-   ```
-
-R11 may receive no additional code work until valid R05 fixtures and the R08 path exist. R16/R17 have prepared code and wait for their exclusive cold runs; R18/R19 are not code launches.
-
-### Exclusive measurement route
-
-Run these in the stated dependency order, each with an unused run ID, source/stand digest, cleanup/readback, exact command and raw evidence. A RED result completes its measurement row but follows the return edge shown here.
-
-1. **B05-M / R06 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R06`; inputs R06 capture code and P5 dirty artifacts; reproduce dirty-20k. Success is a classified cause, not a GREEN. Cause -> R08; inconclusive run -> improve R06 capture and repeat R06.
-2. **B05-M / R05 live cells — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R05`; inputs corrected R05 and historical P5 artifacts; run overlap, actor, status, lock and pool cells. Valid evidence -> B07-R; failed controls -> R05.
-3. **R03 then R04 — GPT-6 Sol:** `task:dev plans/REMAINING-WORK.md R03`, then `task:dev plans/REMAINING-WORK.md R04`; full-window throughput then P3 trace/plan evidence. Missing trace/early abort -> the respective R. Both valid plus R05 evidence -> B07-R.
-4. **B07-R — GPT-6 Astra:** exact prompt: `Проведи B07-R по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B07-audit.md; не меняй код, raw evidence или статусы R.` GREEN admission -> B08; any finding -> its named R, never an automatic fix.
-5. **B08 / R13 then R15 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R13`, then `task:dev plans/REMAINING-WORK.md R15`; only after B07 admits and R04/R05 are valid. R13 RED may create a separate core/drive fix; R15 must retain `unconfirmed` if collision is not observed.
-6. **Mutation campaign — GPT-5.6 Sol:** run `task:dev plans/REMAINING-WORK.md R16`, `R17`, and (after R08) `R07` as separate cold jobs. Each miss returns to that package R. Run `task:dev plans/REMAINING-WORK.md R22` after R21 before treating media mutation as current-source proof. R18/R19 are evidence inputs, not jobs.
-7. **B18-M / R23 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R23` after R21/R22; remeasure only the R14 GC/CAS matrix. RED returns to R21; GREEN does not alter old R14 raw evidence.
-8. **B20 / R26 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R26` after R24/R25 and any R25 package repair; run the frozen-source full P6 matrix. SLO-61 may remain RED; that is a result routed to R20/owner, never silently GREEN.
-9. **B13-M / R11 then B14 — GPT-6 Sol / GPT-6 Astra:** `task:dev plans/REMAINING-WORK.md R11`, then audit prompt `Проведи B14 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B14-audit.md.` Prove P7 live baseline first; audit findings return to their R.
-10. **B15 / R12 — Grok 4.7:** `task:dev plans/REMAINING-WORK.md R12` only after B14 has no finding that invalidates the run. Any recovery RED goes to the concrete package/harness R identified in the carrier before another R12 run.
-11. **B16 / R20 then B17 — Grok 4.6 / GPT-6 Astra:** `task:dev plans/REMAINING-WORK.md R20`, then prompt `Проведи B17 по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B17-audit.md.` Neither batch accepts risk, publishes, changes deployment, or closes VLT-LOAD.
-
-## 5. Batch routing and audit boundaries
-
-| Batch | State | Scope / admission | Executor |
-|:--|:--|:--|:--|
-| B01–B04, B06, B09–B12 | completed code/evidence stages | retain their carriers; no repeat queue | recorded executor |
-| B02 | latest scoped audit closed | B02-01/02 only; does not promote P6/SLO | GPT-6 Astra |
-| B05-R / B05-M | R05 code lane complete; measurements pending | next R06 classification -> corrected R05 live cells | GPT-6 Sol / Grok 4.7 |
-| B07-R | waiting | valid R03/R04/R05/R06/R08 evidence and cold R07 >=95 | GPT-6 Astra |
-| B08 | blocked | B07-R admission plus valid R04/R05 | Grok 4.7 |
-| B13-M / B14 / B15 | waiting | R11 baseline; B14 validates mutation/P7 before R12 | GPT-6 Sol / Astra / Grok 4.7 |
-| B16 / B17 | waiting | completed applicable evidence; owner decisions remain external | Grok 4.6 / GPT-6 Astra |
-| B18–B20 | new | R21/R22/R23 media route; R24/R25/R26 P6 route | Sol / GPT-5.6 Sol / Grok 4.7 |
-
-Auditors save only their audit report. The implementation or measurement owner must then perform a separate map-sync step: read that report, update the affected R state and ledger row, and name the next admitted launch. An audit never marks its own findings fixed.
-
-## 6. Archived and owner-only obligations
+## Справочник: архивные обязательства и решения владельца
 
 These are deliberately not reopened as code work. R20 must report their current factual state and give the owner the indicated decision; it must not make the decision.
 
@@ -168,17 +125,17 @@ These are deliberately not reopened as code work. R20 must report their current 
 | L-08 host scheduler | host ownership is documented, host execution is not proved | provide deployment evidence or explicitly accept the absence of host-scheduler proof |
 | remaining product RED/unevaluated SLOs, including SLO-61 | no one may accept them through R20/B17 | after R26/R12 current evidence, accept each named deviation or authorize its repair |
 
-## 7. Evidence and map-update contract
+## Правило обновления после каждого шага
 
 After every implementation or measurement slice, its executor must immediately:
 
-1. write or extend only its `plans/remaining-evidence/RNN.md` carrier with revision, exact commands/exits, run ID, source/stand digest, raw links, observed GREEN/RED/unevaluated verdict and limitations;
-2. update this map's ledger and state table with what closed, what remains, new R IDs needed by a newly identified package defect, and the single next admitted launch;
+1. record the result in this file’s executed row: revision/commit, commands/exits, run ID, source/stand digest, raw links, GREEN/RED/unevaluated and limitations; use a short result block below the table when the row is insufficient. Existing `remaining-evidence/RNN.md` files are historical supporting reports, not another current status register. Do not create a new plan, status file, handoff or carrier for ordinary step completion; store bulky raw logs in an artifact directory and link them here;
+2. mark the exact executed row in the execution table ГОТОВО with its result/carrier/commit; update affected findings; insert any concrete corrective/requalification rows; mark exactly one next admitted row СЛЕДУЮЩИЙ replace the command at the top and recalculate the remaining-step counter; never leave completed code and pending measurement in one ambiguous status;
 3. preserve raw evidence, SLO thresholds and historical verdicts. A correction never overwrites a rejected or RED artifact.
 
-For an audit, the auditor writes only `Bxx-audit.md`; the subsequent map-sync is performed by the responsible executor. For a failed verification, return to the named corrective R in this map. Do not leave a generic `blocked` status when a code, measurement, re-audit, or owner-decision route is known.
+For an independent audit, the auditor writes only its `Bxx-audit.md` report (the explicit exception for review separation); the subsequent map-sync is performed by the responsible executor. For a failed verification, return to the named corrective R in this map. Do not leave a generic `blocked` status when a code, measurement, re-audit, or owner-decision route is known.
 
-## 8. Completion criteria
+## Критерии завершения
 
 Vaulter is ready for an owner close decision only when the following are evidenced, not merely discussed:
 
