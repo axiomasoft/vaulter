@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline behavioral controls for R05; no stand or DB writes."""
+import copy
 import importlib.util
 import json
 import subprocess
@@ -90,7 +91,7 @@ class R05CaptureTest(unittest.TestCase):
 
     def test_missing_actor_and_setup_only_are_rejected_by_verdict(self):
         for cell in p5.gate.catalog():
-            if cell['plane'] == 'product-realistic':
+            if cell['plane'] in {'product-realistic', 'product-worst-case'}:
                 with self.subTest(cell=cell['cell_id']), self.assertRaises(p5.gate.EvidenceInvalid):
                     p5.verdict_for(cell, [{'statuses': {'2xx': 1},
                         'http_responses': [{'actor_id': 101, 'phase': 'setup', 'status': 201}]}])
@@ -180,6 +181,115 @@ process.stdout.write(JSON.stringify(results));
             with self.subTest(surface=row['surface'], status=row['status']):
                 self.assertTrue(all(actor == '101' for actor in row['requests']))
                 self.assertIn(f"P5_HTTP|101|operation|{row['status']}|9|END", row['logs'])
+
+
+class R05PersistedParticipationTest(unittest.TestCase):
+    """Read-only regression controls on the admitted 56-cell R05 capture."""
+
+    ROOT = GATES.parents[1] / 'plans/VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe'
+    DIGEST = 'a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.cells = json.loads((cls.ROOT / 'cells.json').read_text())
+        cls.verdicts = json.loads((cls.ROOT / 'cell-verdicts.json').read_text())
+        cls.products = [cell for cell in p5.gate.catalog()
+                        if cell['surface'] == 'subtree-move' and cell['n'] == 200]
+        representatives = {row['cell_id']: row['attempt'] for row in cls.cells}
+        cls.attempts = {cell['cell_id']: json.loads((cls.ROOT / 'attempts' /
+                        f"{cell['cell_id']}.attempt-{representatives[cell['cell_id']]}.json").read_text())
+                        for cell in cls.products}
+
+    def readback(self, cell, row, *, cells=True, attempts=True, verdict=False):
+        """Replace persisted JSON reads in memory; never write the raw run."""
+        original = Path.read_text
+        cid = cell['cell_id']
+        attempt_path = self.ROOT / 'attempts' / f"{cid}.attempt-{row['attempt']}.json"
+
+        def read(path, *args, **kwargs):
+            if cells and path == self.ROOT / 'cells.json':
+                return json.dumps([row if item['cell_id'] == cid else item for item in self.cells])
+            if attempts and path == attempt_path:
+                return json.dumps(row)
+            if verdict and path == self.ROOT / 'cell-verdicts.json':
+                updated = copy.deepcopy(self.verdicts)
+                rows = [row if a == row['attempt'] else json.loads(original(
+                        self.ROOT / 'attempts' / f'{cid}.attempt-{a}.json'))
+                        for a in range(1, p5.repeat_count(cell) + 1)]
+                updated['cells'] = [p5.verdict_for(cell, rows) if item['cell_id'] == cid else item
+                                    for item in updated['cells']]
+                return json.dumps(updated)
+            return original(path, *args, **kwargs)
+
+        return patch.object(Path, 'read_text', read)
+
+    def invalid_rows(self, cell):
+        source = self.attempts[cell['cell_id']]
+        participation = source['participation']
+        actor = source['actor_ids'][0]
+        cases = [
+            ('missing-actor', {'actor_ids': source['actor_ids'][1:],
+                'http_responses': [r for r in source['http_responses'] if r['actor_id'] != actor]}),
+            ('null-participation', {'participation': None}),
+            ('empty-participation', {'participation': {}}),
+            ('incomplete-started', {'participation': {**participation, 'started': participation['started'][:-1]}}),
+            ('incomplete-completed', {'participation': {**participation, 'completed': participation['completed'][:-1]}}),
+            ('incomplete-iterations', {'participation': {**participation, 'iterations': cell['n'] - 1}}),
+            ('aborted-iteration', {'participation': {**participation, 'aborted': [actor]}}),
+            ('setup-only', {'http_responses': [{**r, 'phase': 'setup'} for r in source['http_responses']]}),
+            ('create-without-operation', {'http_responses': [{**r, 'phase': 'create', 'status': 201}
+                                                            for r in source['http_responses']]}),
+            ('original-b07-02', {'actor_ids': [actor], 'participation': None, 'http_5xx': 0,
+                'statuses': {'2xx': 1, '409': 0, '429': 0, '5xx': 0, 'other': 0},
+                'http_responses': [{'actor_id': actor, 'phase': 'operation', 'status': 200, 'retry_after': None}]}),
+        ]
+        for name, changes in cases:
+            row = copy.deepcopy(source)
+            row.update(changes)
+            yield name, row
+        row = copy.deepcopy(source)
+        del row['participation']
+        yield 'missing-participation', row
+
+    def test_structural_rejects_incomplete_product_participation(self):
+        for cell in self.products:
+            for name, row in self.invalid_rows(cell):
+                with self.subTest(cell=cell['cell_id'], control=name), self.readback(cell, row), \
+                     self.assertRaises(p5.gate.EvidenceInvalid):
+                    p5.gate.verify_run_dir(self.ROOT)
+
+    def test_verdict_rejects_incomplete_product_participation(self):
+        for cell in self.products:
+            for name, row in self.invalid_rows(cell):
+                with self.subTest(cell=cell['cell_id'], control=name), self.assertRaises(p5.gate.EvidenceInvalid):
+                    p5.verdict_for(cell, [row])
+
+    def test_full_verifier_rejects_incomplete_cells_and_attempts_independently(self):
+        for cell in self.products:
+            for name, row in self.invalid_rows(cell):
+                for cells, attempts in ((True, False), (False, True), (True, True)):
+                    with self.subTest(cell=cell['cell_id'], control=name, cells=cells, attempts=attempts), \
+                         self.readback(cell, row, cells=cells, attempts=attempts), \
+                         self.assertRaises(p5.gate.EvidenceInvalid):
+                        p5.verify_artifacts(self.ROOT)
+
+    def test_complete_product_planes_and_raw_replay_remain_valid(self):
+        self.assertEqual({cell['plane'] for cell in self.products}, {'product-realistic', 'product-worst-case'})
+        for cell in self.products:
+            self.assertEqual(p5.verdict_for(cell, [self.attempts[cell['cell_id']]])['evidence'], 'valid')
+        self.assertEqual(p5.digest_tree(self.ROOT), self.DIGEST)
+        self.assertEqual(p5.verify_artifacts(self.ROOT, prior_digest=self.DIGEST), self.DIGEST)
+        self.assertEqual(p5.digest_tree(self.ROOT), self.DIGEST)
+
+    def test_explicit_create_failures_remain_observed_outcomes(self):
+        for cell in self.products:
+            row = copy.deepcopy(self.attempts[cell['cell_id']])
+            row['http_responses'] = [{**r, 'phase': 'create', 'status': 403} for r in row['http_responses']]
+            row['statuses'] = {'2xx': 0, '409': 0, '429': 0, '5xx': 0, 'other': cell['n']}
+            with self.subTest(cell=cell['cell_id']), self.readback(cell, row, verdict=True):
+                self.assertEqual(p5.verdict_for(cell, [row])['evidence'], 'valid')
+                p5.gate.verify_run_dir(self.ROOT)
+                self.assertEqual(p5.verify_artifacts(self.ROOT, prior_digest=self.DIGEST), self.DIGEST)
 
 
 if __name__ == '__main__':

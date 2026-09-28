@@ -345,7 +345,7 @@ def verify_run_dir(path: Path) -> None:
         admitted = any(item['cell_id'] == cid for item in catalog())
         if not admitted:
             _fail(f'cell {cid} is outside the admitted catalog')
-        if manifest.get('capture_contract') == 'r05-b07/v2' and cell['plane'] == 'product-realistic':
+        if manifest.get('capture_contract') == 'r05-b07/v2' and cell['plane'] in {'product-realistic', 'product-worst-case'}:
             validate_participation(cell, n)
             if cell['shape'] == 'live-patch-overlap':
                 validate_overlap(cell)

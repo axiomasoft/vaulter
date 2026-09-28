@@ -1053,7 +1053,7 @@ def run_sweeper(cell, attempt, out, *, run_id: str | None = None) -> dict:
 def verdict_for(cell: dict, rows: list[dict]) -> dict:
     http_5xx = sum(int(row.get('http_5xx') or 0) for row in rows)
     evidence = 'valid'
-    if cell['plane'] == 'product-realistic':
+    if cell['plane'] in {'product-realistic', 'product-worst-case'}:
         for row in rows:
             validate_participation(row, cell['n'])
             if cell['shape'] == 'live-patch-overlap':

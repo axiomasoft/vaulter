@@ -1,3 +1,63 @@
+# B07-02 — focused offline re-review после R05-B07-02
+
+Дата: 2026-09-28. Основание: шаг 19a [REMAINING-WORK.md](../REMAINING-WORK.md), явно заказанный corrective/recheck. База primary: `3059c8e`, исходный worktree чистый. Независимый read-only reviewer **GPT-6 Astra** проверил final source/test snapshot, fingerprints ниже. Этот раздел записал primary executor по заключению reviewer; оба прежних отчёта B07-R и B07 ниже сохранены побайтно как история.
+
+**B07-02 CLOSED в bounded persisted participation admission scope.** Оставшихся дефектов в заказанном scope независимый reviewer не выявил. Structural admission `r05-b07/v2` в `p5_concurrency.py` и `verdict_for` в `p5_live_matrix.py` теперь вызывают существующий participation validator для обоих product plane. Устранено воспроизведённое принятие worst-case N=200 с одним actor/HTTP 200 и `participation=None`. Primitive/dirty-cardinality contracts, capture workload, thresholds и исторические verdicts сохранены.
+
+**Это evidence gate closure.** Stored run `adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe` проходит read-only replay всех **56 cells** (23 realistic, 16 worst-case, 15 primitive, 2 dirty); рассчитанные verdicts совпадают с сохранёнными. Historical collab HTTP 403, collision unconfirmed, SLO-70 RED, current-source R03/R04 RED/REJECTED/unevaluated и deferred mutation/live proof gaps не переписаны. Product GREEN, live/B08 admission и новые SLO measurements не выданы. Dispositions остальных findings из B07-R остаются прежними.
+
+## Проверки primary executor
+
+Все Python commands: `PYTHONDONTWRITEBYTECODE=1`, `python3 -B`; focused unittest: `PYTHONPATH=load/gates`. Репозиторные raw files только читались, отрицательные/синтетические inputs заменялись в памяти через `Path.read_text`.
+
+| Команда / проверка | Фактический результат |
+|:--|:--|
+| `python3 -B -m unittest test_r05_capture.R05PersistedParticipationTest.test_verdict_rejects_incomplete_product_participation test_r05_capture.R05PersistedParticipationTest.test_structural_rejects_incomplete_product_participation` до исправления gate | exit 1: 22 ожидаемых worst-case failures; realistic controls уже отклонялись |
+| `python3 -B -m unittest -v test_r05_capture.R05PersistedParticipationTest test_r05_capture.R05CaptureTest.test_missing_actor_and_setup_only_are_rejected_by_verdict test_r05_capture.R05CaptureTest.test_complete_iterations_join_actual_responses_and_metrics test_r05_capture.R05CaptureTest.test_no_sweep_and_no_overlap_controls` на final snapshot | **8 tests, exit 0**; 110 rejection checks в новой regression class |
+| `python3 -B load/gates/p5_live_matrix.py verify --artifacts plans/VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe --prior-digest a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074` | verifier прошёл; raw digest совпал |
+| Direct read-only `verdict_for` для 15 primitive и 2 dirty cells | exit 0: все сохраняют `not-a-product-slo` без participation |
+| `git diff --check` | exit 0 |
+
+Во время подготовки положительного create-failure control один промежуточный запуск дал fixture timestamp mismatch: representative realistic cell содержит attempt 3, а начальный control подставлял attempt 1. Test readback исправлен на representative attempt; это не gate defect и не переписанное raw evidence. Выше указан реально прошедший final snapshot.
+
+## Независимый focused re-review — GPT-6 Astra
+
+Reviewer независимо прочитал diff, контракт finding и raw run; собственный script не использует helper regression class. Точные команды из корня:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=load/gates python3 -B -m unittest -v test_r05_capture.R05PersistedParticipationTest test_r05_capture.R05CaptureTest.test_missing_actor_and_setup_only_are_rejected_by_verdict test_r05_capture.R05CaptureTest.test_complete_iterations_join_actual_responses_and_metrics
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=load/gates python3 -B /tmp/b07_02_independent_recheck.py > /tmp/b07_02_independent_recheck.log
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=load/gates python3 -B load/gates/p5_live_matrix.py verify --artifacts plans/VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe --prior-digest a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074
+git diff --check -- load/gates/p5_concurrency.py load/gates/p5_live_matrix.py load/gates/test_r05_capture.py
+```
+
+Все четыре команды: **exit 0**, unittest **7 tests**. Собственные controls/replay:
+
+- **110 rejection checks:** 11 вариантов × 2 product plane × structural/verdict/full-cell-only/full-attempt-only/full-both. Все отклонены через `EvidenceInvalid`: missing actor; absent/null/empty participation; incomplete started/completed/iteration count; aborted iteration; setup-only; create201 без operation; исходное one-actor воспроизведение B07-02. Полный verifier проверен отдельно при повреждении только representative cell, только attempt и обоих.
+- **18 valid create-failure admissions:** 403/429/503 × 2 product plane × structural/verdict/full. Evidence остаётся valid по действующему capture contract. Прежняя SLO-семантика: realistic red; worst-case subtree 403/429 green, 503 red. Это синтетические controls admission, не новый product GREEN.
+- **4 primitive rejection checks:** HTTP duration и неверный NOWAIT attempt count отклонены structural/full. Все 17 primitive/dirty stored cells сохраняют отдельные контракты без participation.
+- **56/56 stored verdicts** совпали с рассчитанными; CLI replay exit 0. Raw tree SHA-256 до/после совпал у обоих исполнителей.
+
+Disposition независимого reviewer: **CLOSED, findings в заданном B07-02 scope нет**. Целые unrelated suites, PHP/package/PG tests, Docker, DB, HTTP, live/chaos/mutation не запускались. Recheck ограничен этим finding; полного B07 или B14 здесь нет.
+
+## Fingerprints final source/test и сохранности
+
+| Объект | SHA-256 |
+|:--|:--|
+| `load/gates/p5_concurrency.py` | `61eb8435e522762d5d75beaf185f702a15ba9986d4954d04ad901fe57225df6d` |
+| `load/gates/p5_live_matrix.py` | `19eb896ff41e64d42463e39f3463960d7704eb065c3a9127d40043f4059b3f62` |
+| `load/gates/test_r05_capture.py` | `3ad97599c25b512d01ecce9191682c09afaec8dedf8352c7418b2a1c4cd013a0` |
+| Raw run `adcdcdb7…` до/после | `a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074` |
+| Независимый `/tmp/b07_02_independent_recheck.py` | `03bdc35d9a727ad1020a0033ec62ee5116b09702316bfd7bd228df03c3d08e79` |
+| Независимый `/tmp/b07_02_independent_recheck.log` | `50414f9792b8e533e5bd2941686d87e70b7a39b7b1eb4f79d66b69779cdf1bd8` |
+| Прежний полный `B07-audit.md`, сохранённый ниже как suffix | `e833f33bc8e9eb1df6a593f8c52711847c377513767feb0b973522ea16cd150a` |
+
+Script/log reviewer находятся только в `/tmp`; постоянные regression controls — существующий `test_r05_capture.py`. Stored source manifest/digest остаётся историческим и не приравнивается к исправленному source. Новый верхний раздел не меняет байты обоих прежних отчётов.
+
+Primary синхронизирует исполнительный лист в этом же шаге: **19a ГОТОВО**, **32/B14 СЛЕДУЮЩИЙ**; active 7 → 6, done 25 → 26, deferred 12 → 12, conditional 1 → 1. Новые строки не добавлены; следующий аудит здесь не запускается.
+
+---
+
 # B07-R — offline-переаудит доступного R03–R08 scope
 
 Дата: 2026-09-28. Основание: шаг 18 [REMAINING-WORK.md](../REMAINING-WORK.md), решение владельца от 2026-09-28. Проверен чистый worktree при HEAD `a244602`; source/raw fingerprints ниже фиксируют проверенные байты. Для B07-01/02 привлечён один независимый verifier GPT-6 Astra; его воспроизведение повторено основным аудитором.
