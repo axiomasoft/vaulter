@@ -4,21 +4,22 @@
 
 **Обновлено:** 2026-09-28. Владелец отложил тяжёлые cold-mutation прогоны до фиксации API перед версией 1.0. Последний счёт drive остаётся **86.20%** (1549 killed, 0 timeout, 248 escaped / 1797), gate 95 exit 1. Код drive не менялся. Шаг 13 (65.38%) и промежуточные 79.51%, 84.25%, 84.70% и 86.20% не переписаны. До фиксации API эти прогоны и тесты ради мутантов не запускать.
 
-**Последняя завершённая фаза:** шаг 16b — R27, package-core bind-limit corrective. PostgreSQL regression с 65 540 descendants прошла для bigint и ULID; access narrowing, deny и cursor semantics сохранены. [Результат и команды](#r27--результат-шага-16b). Product SLO не переизмерялся, qualified proof шага 16 остаётся **REJECTED**, historical RED/unevaluated сохранены. Следующий разрешённый шаг — **16c / R03**, новый qualified full-window run; R04 допускается только после valid evidence 16c.
+**Последняя завершённая фаза:** шаг 16b — R27, package-core bind-limit corrective. PostgreSQL regression с 65 540 descendants прошла для bigint и ULID; access narrowing, deny и cursor semantics сохранены. [Результат и команды](#r27--результат-шага-16b). Product SLO не переизмерялся, qualified proof шага 16 остаётся **REJECTED**, historical RED/unevaluated сохранены. Live **16c / R03 отложен владельцем** после нового preflight; [результат и условия возобновления](#r03--preflight-шага-16c-2026-09-28-live-отложен-владельцем). R04 по-прежнему ждёт valid evidence 16c.
 
-**Остаток:** 19 активных шагов: **20 → 19** после 16b (ранее **21 → 20** после 16a). Исторические переходы после 15a/15b и 16 сохранены в результатах ниже. Четыре cold-mutation строки (14, 22, 23, 25) по-прежнему не входят. 19 строк выполнено. Ещё 1 условная строка для repairs по результатам R24/R25 не входит в 19, пока конкретная работа не установлена. Это число шагов, не процент готовности продукта и не оценка времени.
+**Остаток:** 18 активных шагов: **19 → 18** после отложения live 16c владельцем (это отложенный, не завершённый шаг; ранее **20 → 19** после 16b и **21 → 20** после 16a). Исторические переходы после 15a/15b и 16 сохранены в результатах ниже. Четыре cold-mutation строки (14, 22, 23, 25) по-прежнему не входят. 19 строк выполнено. Ещё 1 условная строка для repairs по результатам R24/R25 не входит в 18, пока конкретная работа не установлена. Это число шагов, не процент готовности продукта и не оценка времени.
 
 Новые задачи нельзя добавлять молча: для каждой вставки нужны finding, причина, scope и изменение счётчика «было → стало». Повтор неуспешного шага остаётся в той же строке с последним результатом и причиной повтора. Если новый дефект не обнаружен, очередь не расширять.
 
-**Следующая команда — R03, qualified full-window remeasurement (16c):**
+**Следующий шаг — ОЖИДАНИЕ возобновления R03 владельцем и готового lab.** Исполнительная очередь не перескакивает к R04. Команда ниже отложена; сейчас её не запускать.
 
 ```text
+# НЕ раньше: владелец возобновил live R03, lab L-1…L-7 подготовлен
 task:dev plans/REMAINING-WORK.md R03
 ```
 
 Cold mutation (`>=95`, последовательный прогон на часы, тесты ради выживших мутантов) исключена из текущей очереди. Вернуться к ней после фиксации API, перед версией 1.0: к тому моменту имена и контракты перестанут ехать, и набор не придётся писать заново. До этого шаги 14, 22, 23 и 25 не запускать. Номера R — идентификаторы задач, а не порядок запуска. **Порядок запуска задаёт только таблица ниже, сверху вниз.** Отдельных очередей «код» и «измерения» больше нет; справочник findings ниже не является очередью.
 
-Статусы: **ГОТОВО** — выполнен именно указанный шаг; **СЛЕДУЮЩИЙ** — единственный разрешённый сейчас запуск; **ОЖИДАЕТ** — шаг ещё не выполнен; **УСЛОВНО** — нужен только при указанном результате предыдущего шага; **ОТЛОЖЕНО** — исключено из текущей очереди решением владельца и ждёт фиксации API перед 1.0. ГОТОВО у измерения с RED означает, что измерение выполнено, а дефект остаётся в своём corrective route. ГОТОВО у кода не означает, что live-доказательство получено.
+Статусы: **ГОТОВО** — выполнен именно указанный шаг; **СЛЕДУЮЩИЙ** — единственный разрешённый сейчас запуск; **ОЖИДАЕТ** — шаг ещё не выполнен; **УСЛОВНО** — нужен только при указанном результате предыдущего шага; **ОТЛОЖЕНО** — исключено из текущей очереди решением владельца: cold mutation ждёт фиксации API перед 1.0; live 16c/R03 ждёт возобновления и готового lab. ГОТОВО у измерения с RED означает, что измерение выполнено, а дефект остаётся в своём corrective route. ГОТОВО у кода не означает, что live-доказательство получено.
 
 ## Исполнительная таблица
 
@@ -46,7 +47,7 @@ Cold mutation (`>=95`, последовательный прогон на час
 | 16 | ГОТОВО | R03 — full-window throughput / attribution | GPT-6 Sol | Не повторять этот run | Commit `ff0d0d3`; [run 4f565edf](VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/run-manifest.json): S0/S по 180s полностью; k6 exit 99, audits exit 2. Qualified proof **REJECTED**, class B unevaluated; observed throughput RED и причины сохранены. Historical RED не переписан → 16a–16c |
 | 16a | ГОТОВО | R03 — corrective harness H01…H05 | GPT-6 | Не повторять code lane | Исходная revision `52e0e63`; [offline checks/source digest](remaining-evidence/R03-checks/16a-20260928-final/checks.json): 16 Python + 7 JS + 1 PHP, все exit 0. Distinct OP-06/07, accepted-byte/duration tags, primary blob FK, mandatory discovery, nonempty/sample/lab/source admission. Все SLO floors сохранены; live и mutation не запускались → 16b |
 | 16b | ГОТОВО | R27 — package-core PostgreSQL bind-limit corrective | GPT-6 | Не повторять code lane | [Результат и команды](#r27--результат-шага-16b): большие ID sets добавляют 0 bindings; PG regression 65 540 descendants bigint/ULID, HTTP, access/deny/cursors; SQLite core 574 tests, PG Access+Schema 169 passed/4 skipped, PG ULID 5 passed, PHPStan/Pint exit 0. Mutation/live не запускались → 16c |
-| **16c** | **СЛЕДУЮЩИЙ** | R03 — qualified full-window remeasurement | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R03` | После 16a/16b: новый source freeze, S0/S window ≥180s, accepted bytes, distinct OP-06/07, непустые download/docs и ≥100 samples на каждый class-B key при допущенном lab. Текущий S дал 0/15 dense; увеличение duration не устраняет H03/P01. RED → concrete corrective route; только valid evidence допускает R04 |
+| **16c** | **ОТЛОЖЕНО** | R03 — qualified full-window remeasurement | GPT-6 Sol | Не запускать до возобновления владельцем и готового lab | [Новый preflight](#r03--preflight-шага-16c-2026-09-28-live-отложен-владельцем) rejected: L-1/L-3/L-5 и storage admission не готовы; live не начат. R03-H06 (Compose string memory limits) исправлен inline, 18 Python + 7 JS tests exit 0. Владелец отложил live. После возобновления: новый source freeze, S0/S ≥180s, accepted bytes, OP-06/07, непустые download/docs, ≥100 samples/class-B; только valid evidence допускает R04 |
 | 17 | ОЖИДАЕТ | R04 — P3 trace/ANALYZE capture | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R04` | Код готов; непустой flushed trace, bindings, actual ANALYZE, top-20/N+1 |
 | 18 | ОЖИДАЕТ | B07-R — независимый переаудит | GPT-6 Astra | Проведи B07-R по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B07-audit.md; не меняй код, raw evidence или статусы R. | Нужны R03/R04/R05/R06/R08 evidence. Cold R07 >=95 не блокирует: отложен до фиксации API перед 1.0. Finding → его corrective R, без допуска B08 |
 | 19 | ОЖИДАЕТ | B07-R — синхронизация листа | Ответственный исполнитель | Прочитать B07-audit.md и обновить только затронутые статусы/маршруты этого листа | Только явный допуск B07-R открывает шаги 20–21; аудитор сам свои findings не закрывает |
@@ -187,6 +188,20 @@ Evidence admission требует непустые class-A серии, ≥100 sa
 
 PG lane использовал отдельный ephemeral container `vaulter-r27-postgres`, DB `vaulter_r27_test`, tmpfs без persistent volume; image `sha256:de3a4eab8fdfa507ea92aac488b916b08089e515db49b055fe71dfa271ba3a28`. До тестов readiness и имя/пустая public schema проверены. После проверок container остановлен. Общий load stand не использовался. R03 live/16c, R04 и mutation не запускались; это corrective proof, не измерение SLO/throughput. Исторические RED/REJECTED сохранены. Остаток **20 → 19**, единственный NEXT — **16c / R03**.
 
+### R03 — preflight шага 16c (2026-09-28; live отложен владельцем)
+
+Это preflight и исправление обнаруженной ошибки допуска, не full-window measurement и не закрытие 16c. Владелец ответил: **«Сохранить preflight и отложить live R03»**. Остаток активной очереди **19 → 18** только за счёт отложения 16c; 19 выполненных строк не изменились. Новая задача/строка не добавлялась; дальнейшая очередь ждёт R03, R04 не допущен.
+
+[Первый preflight `af3c88b5`](VLT-LOAD/artifacts/R03/af3c88b5-ea6d-42f8-8cb2-f6ec466895c8/run-manifest.json), [Compose resource facts](VLT-LOAD/artifacts/R03/af3c88b5-ea6d-42f8-8cb2-f6ec466895c8/stand-resources.json) и [helper error](VLT-LOAD/artifacts/R03/af3c88b5-ea6d-42f8-8cb2-f6ec466895c8/lab-helper-error.txt) воспроизвели **R03-H06**: `docker compose config --format json` выдаёт `mem_limit`/`memswap_limit` как decimal byte strings (`"2147483648"`), а `r03_lab.observe_host` сравнивал строку с числом и падал с TypeError. Source `0160ce3e38d6d2cd5242732931cfc391aa21afe9`, digest `60b88bef9a0c9d61a3b51100cdbbdd7c52050dfd4344686cbf24eec87501168e`; исходные байты 1618 файлов сохранены в source archive/checksums.
+
+Bounded inline repair в рамках R03: только `load/gates/r03_lab.py` и `test_r03_lab.py`. Memory admission теперь принимает integer/decimal byte string, сравнивает численные байты и отвергает отсутствующие/невалидные значения, bool/float и различающиеся memory/swap limits. Новые регрессии воспроизвели TypeError и ошибочный допуск bool/float (до исправления exit 1), после исправления весь focused Python suite — 18 tests exit 0; JS suite — 7 tests exit 0; runner shell syntax — exit 0. Пороговые значения/SLO и package-код не менялись. Это завершённый inline repair до окна; measurement остаётся невыполненным.
+
+[Повторный preflight `0ff73501`](VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/run-manifest.json), [commands/exits](VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/commands.json), [host facts](VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/host-observations.json), [checksums](VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/sha256.json). Source revision та же, с фактическим inline repair: digest `94f282f338ac7f200ea98486be6e5642dcf6b80cab3d930d2bb0cb962ea869a9`; отдельный архив фиксирует эти байты. Resource-only stand digest `6a81abf7ad983ebf7bd2e46d83189f57bc906d22fbc69e3d4d7cb5d01fe67875`; credentials из compose/inspect не сохранялись.
+
+Host admission не готов: governor `powersave`, `intel_pstate/no_turbo=0`; 19 foreign containers; swap включён, занято ≈5.8 GiB. Load SUT остановлен, поэтому actual cpuset/memory limits пока не подтверждены (L-2/L-5); это не product failure. На NVMe свободно ≈27 GiB, вторичный диск — <1 GiB. Существующий PG volume — 5 377 328 KiB; отдельное PG storage или доказанно помещающийся объявленный tmpfs пока не подготовлены (L-4). Warm/cold declaration и run-bound reset outputs L-6/L-7 отсутствуют. Noninteractive sudo требует пароль. [Конкретный scope подготовки](VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/host-preparation-proposal.json) сохранён как owner-deferred, действия не выполнялись.
+
+Live/load/mutation/chaos не запускались, owner data/volumes не удалялись, foreign containers и настройки хоста не менялись. Preflight raw outputs/source archives/checksums сохранены; historical RED/REJECTED шага 16 не переписаны. Для возобновления нужны явное решение владельца и lab L-1…L-7; затем новый immutable source/stand/dataset freeze и qualified S0/S окна. Сейчас runnable NEXT отсутствует, **16c/R03 отложен**, R04 и зависимые шаги ждут.
+
 ### R05 — результат шага 15
 
 Запись прошедшего прогона, не команда. Повторять этот run и считать его допуском B07-R нельзя: verifier exit 1.
@@ -240,7 +255,7 @@ Dirty-20k в этой матрице, три попытки: exit 0, 20000/20000
 
 Collision int4 остаётся unconfirmed. Закрытие B07-01/02 по-прежнему требует Astra re-review; этот прогон даёт raw evidence, а не допуск B08.
 
-Общий стенд эксклюзивен для load, mutation, chaos, DB reset и cold-cache работы. Для каждого измерения нужны новый run ID, source/stand digest, exact commands/exits, raw evidence и cleanup/readback. Исправление и измерение с одинаковым R — разные строки. R05 шаги 15, 15a и 15b выполнены; после них выполнены R03 16/16a и R27 16b. Текущий следующий запуск — R03 (16c), не повтор R05. Исполнитель выбирает первую незавершённую строку указанного R только при выполненных зависимостях; номер R не позволяет перескочить очередь. Строки со статусом ОТЛОЖЕНО не выбирать.
+Общий стенд эксклюзивен для load, mutation, chaos, DB reset и cold-cache работы. Для каждого измерения нужны новый run ID, source/stand digest, exact commands/exits, raw evidence и cleanup/readback. Исправление и измерение с одинаковым R — разные строки. R05 шаги 15, 15a и 15b выполнены; после них выполнены R03 16/16a и R27 16b. Live R03 (16c) отложен владельцем после нового preflight; очередь ждёт его возобновления и lab admission. Исполнитель выбирает первую незавершённую строку указанного R только при выполненных зависимостях; номер R не позволяет перескочить очередь. Строки со статусом ОТЛОЖЕНО не выбирать.
 
 ## Справочник: правила доказательств
 
@@ -263,7 +278,7 @@ Read the applicable finding, SLO contract, gate contract, raw run and evidence c
 |:--|:--|:--|
 | L-04 core retry | R01 | no relaunch; R26 only supplies any later full-P6 re-verdict |
 | P4 L-01 streaming / D11 | R02, R07, R16, R17, R22 | no aggregate/parallel mutation claim. The >=95 rows are ОТЛОЖЕНО until the API is frozen before 1.0; do not launch them from this cell |
-| F-P2.8-1/2/3; SLO-40/43/49/52 | R03 | 16a harness corrective и 16b R27 готовы; product proof шага 16 REJECTED сохранён. Следующий 16c: immutable full window, materialized tagged metrics, adequate samples/lab admission; retain or route any RED |
+| F-P2.8-1/2/3; SLO-40/43/49/52 | R03 | 16a harness corrective и 16b R27 готовы; product proof шага 16 REJECTED сохранён. 16c отложен владельцем до возобновления и готового lab: immutable full window, materialized tagged metrics, adequate samples/lab admission; retain or route any RED |
 | L-P3-01, L-P3-03 | R04 | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
 | L-P3-04/L-05 endpoint scan | R26 | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
 | L-P5-01/02/04; **B07-01** | R05 | step 15b: all 9 overlap attempts sweep exit 0, `sweepable`, lock held, target refused, final uploading/4, retry 204. Close only after Astra re-review |

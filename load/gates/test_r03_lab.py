@@ -79,6 +79,21 @@ class R03LabTest(unittest.TestCase):
         self.assertFalse(result['L-2']['ok'])
         self.assertFalse(result['L-5']['ok'])
 
+    def test_compose_json_string_memory_limits_are_measured_as_bytes(self):
+        self.stand['services']['k6']['mem_limit'] = '100'
+        self.assertTrue(self.observe()['L-5']['ok'])
+        self.stand['services']['k6']['memswap_limit'] = '100'
+        self.assertTrue(self.observe()['L-5']['ok'])
+        self.stand['services']['k6']['memswap_limit'] = '200'
+        self.assertFalse(self.observe()['L-5']['ok'])
+
+    def test_invalid_generator_limits_reject_without_crashing(self):
+        for value in [None, '', '2g', 'bad', '-1', -1, 0, True, False, 100.0]:
+            with self.subTest(value=value):
+                self.stand['services']['k6']['mem_limit'] = value
+                self.stand['services']['k6']['memswap_limit'] = value
+                self.assertFalse(self.observe()['L-5']['ok'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,32 @@
+{
+  "capture_script": "preflight-capture.py",
+  "created_at": "2026-09-28T16:19:31.604979+00:00",
+  "declared_window_seconds": 180,
+  "kind": "preflight",
+  "live_started": false,
+  "missing_evidence": [
+    "L-3 quiet host/reserved cores",
+    "L-4 separated storage layout",
+    "L-6 declared warm/cold cache",
+    "L-7 reset outputs"
+  ],
+  "owner_decision": {
+    "decision": "defer_live",
+    "instruction": "Сохранить preflight и отложить live R03",
+    "recorded_at": "2026-09-28T16:24:35.209672+00:00"
+  },
+  "phase": "16c",
+  "qualified_product_proof": "unevaluated",
+  "rejected_host_conditions": [
+    "L-2",
+    "L-1",
+    "L-3",
+    "L-5"
+  ],
+  "run_id": "0ff73501-ddff-4906-a01b-3018c0e74c32",
+  "source_digest": "94f282f338ac7f200ea98486be6e5642dcf6b80cab3d930d2bb0cb962ea869a9",
+  "source_files": 1618,
+  "source_revision": "0160ce3e38d6d2cd5242732931cfc391aa21afe9",
+  "stand_digest": "6a81abf7ad983ebf7bd2e46d83189f57bc906d22fbc69e3d4d7cb5d01fe67875",
+  "status": "PREFLIGHT_REJECTED"
+}

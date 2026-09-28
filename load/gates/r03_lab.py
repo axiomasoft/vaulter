@@ -31,6 +31,17 @@ def source_digest(root):
     return digest.hexdigest()
 
 
+def memory_bytes(value):
+    # Compose's JSON resource limits can be decimal byte strings; Docker inspect
+    # uses integers. Reject missing/malformed limits instead of crashing or
+    # treating booleans/floats as a positive, swap-free memory envelope.
+    if type(value) is int:
+        return value
+    if isinstance(value, str) and value.isascii() and value.isdecimal():
+        return int(value)
+    return 0
+
+
 def observe_host(project, stand, sys_root=Path('/sys'), proc_root=Path('/proc'), run=subprocess.run):
     governors = {str(p): p.read_text().strip() for p in
                  (sys_root / 'devices/system/cpu').glob('cpu[0-9]*/cpufreq/scaling_governor')}
@@ -94,7 +105,8 @@ def observe_host(project, stand, sys_root=Path('/sys'), proc_root=Path('/proc'),
             if len(actual) != 1 or actual[0]['HostConfig'].get('CpusetCpus') != cpuset or actual[0]['HostConfig'].get('CpuQuota', 0) not in (None, 0, -1) or actual[0]['HostConfig'].get('NanoCpus', 0):
                 pinning_ok = False
     k6 = services.get('k6') or {}
-    generator_swap_ok = k6.get('mem_limit', 0) > 0 and k6.get('mem_limit') == k6.get('memswap_limit')
+    generator_memory = memory_bytes(k6.get('mem_limit'))
+    generator_swap_ok = generator_memory > 0 and generator_memory == memory_bytes(k6.get('memswap_limit'))
     return {
         'L-2': {'ok': pinning_ok, 'evidence': {'cpu_topology': topology,
                  'declared_cpusets': {key: (services.get(key) or {}).get('cpuset') for key in groups}}},

@@ -1,0 +1,24 @@
+{
+  "capture_script": "preflight-capture.py",
+  "created_at": "2026-09-28T16:18:53.286486+00:00",
+  "declared_window_seconds": 180,
+  "kind": "preflight",
+  "live_started": false,
+  "missing_evidence": [
+    "L-3 quiet host/reserved cores",
+    "L-4 separated storage layout",
+    "L-6 declared warm/cold cache",
+    "L-7 reset outputs"
+  ],
+  "phase": "16c",
+  "qualified_product_proof": "unevaluated",
+  "rejected_host_conditions": [
+    "helper_error"
+  ],
+  "run_id": "af3c88b5-ea6d-42f8-8cb2-f6ec466895c8",
+  "source_digest": "60b88bef9a0c9d61a3b51100cdbbdd7c52050dfd4344686cbf24eec87501168e",
+  "source_files": 1618,
+  "source_revision": "0160ce3e38d6d2cd5242732931cfc391aa21afe9",
+  "stand_digest": "6a81abf7ad983ebf7bd2e46d83189f57bc906d22fbc69e3d4d7cb5d01fe67875",
+  "status": "PREFLIGHT_REJECTED"
+}

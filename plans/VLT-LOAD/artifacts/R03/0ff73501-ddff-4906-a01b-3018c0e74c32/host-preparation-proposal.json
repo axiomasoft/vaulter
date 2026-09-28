@@ -1,0 +1,40 @@
+{
+  "status": "OWNER_DEFERRED",
+  "created_at": "2026-09-28T16:22:34.959783+00:00",
+  "scope_source": "AGENTS.md + plans/REMAINING-WORK.md R03 preflight policy",
+  "foreign_running_containers": [
+    "chatom-p041-validation",
+    "chatom-p02-consumer-postgres",
+    "axioma_data_parity-postgres-1",
+    "vaulter-r02-postgres",
+    "insiders_reverb",
+    "insiders_queue",
+    "insiders_scheduler",
+    "insiders_docs",
+    "insiders_app",
+    "insiders_pgsql",
+    "insiders_redis",
+    "edufy_app",
+    "edufy_redis",
+    "edufy_pgsql",
+    "insiders_vite",
+    "azguard-redis-1",
+    "azguard-postgres-1",
+    "azguard-mysql-1",
+    "corex_pgsql_test"
+  ],
+  "requested_actions": [
+    "temporarily stop only the listed foreign containers; restore the initially running set afterwards",
+    "owner closes other competing desktop/agent/background jobs",
+    "set CPU performance and disable boost/swap; restore the captured original settings afterwards",
+    "reseed only vaulter-load_pg-data and vaulter-load_minio-data after explicit deletion authorization"
+  ],
+  "untouched": [
+    "historical raw evidence",
+    "other projects data/volumes"
+  ],
+  "storage_prerequisite": "L-4 remains unresolved: secondary disk has <1 GiB free; current PG volume is ~5.1 GiB. Need adequately sized separate PG storage, or a proven-fit declared tmpfs, before any qualified lab.",
+  "admin_prerequisite": "noninteractive sudo is unavailable; host setting changes need an authorized administrative method",
+  "executed": false,
+  "owner_decision": "Сохранить preflight и отложить live R03"
+}
