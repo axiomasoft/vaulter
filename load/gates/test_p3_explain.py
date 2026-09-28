@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 GATES = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location('p3_explain', GATES / 'p3_explain.py')
@@ -18,6 +19,17 @@ spec.loader.exec_module(explain)
 
 
 class P3ExplainHelpersTest(unittest.TestCase):
+    def test_capture_and_index_default_to_selected_run_explain_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            artifact_dir = Path(tmp)
+            with patch.object(explain, 'capture_plans') as capture:
+                explain.main(['capture', '--artifact-dir', tmp])
+                self.assertEqual(capture.call_args.kwargs['explain_dir'], artifact_dir / 'explain')
+            with patch.object(explain, 'build_index_inventory', return_value={}), \
+                 patch.object(explain, 'build_index_review', return_value={}) as review:
+                explain.main(['build-index', '--artifact-dir', tmp])
+                self.assertEqual(review.call_args.args[1], artifact_dir / 'explain')
+
     def test_bind_placeholders(self) -> None:
         sql = 'SELECT * FROM v_nodes WHERE parent_id = $1 AND depth < $2'
         bound = explain.bind_placeholders(sql, [12, 50])

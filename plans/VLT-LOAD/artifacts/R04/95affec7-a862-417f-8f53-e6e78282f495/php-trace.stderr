@@ -1,0 +1,1 @@
+> vendor/bin/pest 'load/tests/Observability/QueryTraceRecorderTest.php' '--no-coverage'

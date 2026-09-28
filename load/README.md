@@ -246,12 +246,17 @@ published only after `p3-profile.sh verify` / `python3 load/gates/p3_profile.py 
 
 Authoritative profiling capture: P8.7 preflight, disposable re-seed, `ANALYZE`, shared-buffer-cold-like
 postgres restart, warm + ranked workload window (`scenarios/mixed.js`, not SLO thresholds), `pg_stat_statements`
-top-20, cluster `pg_stat_io` delta, OP coverage matrix, publish to `plans/VLT-LOAD/artifacts/P3/`.
+top-20, cluster `pg_stat_io` delta, OP coverage matrix. Publication validates a complete snapshot
+and creates `plans/VLT-LOAD/artifacts/P3/<run_id>/`; existing destinations are refused.
+Warmup and measured writers run for their respective durations and finish before trace reset or
+publication. Writer, k6 and maintenance command failures reject the capture.
 
 ```sh
 python3 load/gates/p3_workload.py preflight
+export LOAD_RUN_ID="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+export P3_ARTIFACT_DIR="$PWD/plans/VLT-LOAD/artifacts/P3/$LOAD_RUN_ID"
 TIER=S P3_DURATION=120s ./load/scripts/p3-profile.sh capture
-python3 load/gates/p3_workload.py verify-artifacts --artifact-dir plans/VLT-LOAD/artifacts/P3
+python3 load/gates/p3_workload.py verify-artifacts --artifact-dir "$P3_ARTIFACT_DIR"
 ```
 
 Requires local load stand (Docker), GREEN `plans/VLT-LOAD/artifacts/P8.7/`, and `load:seed` profile
@@ -259,19 +264,23 @@ Requires local load stand (Docker), GREEN `plans/VLT-LOAD/artifacts/P8.7/`, and 
 
 ## P3.3 actual EXPLAIN, index review, HypoPG (tier S corpus)
 
-Runs on the published `plans/VLT-LOAD/artifacts/P3/` P3.2 bundle (same `run_id` / `dataset_id`).
+Runs on the fresh published P3.2 bundle selected by `P3_ARTIFACT_DIR` (same `run_id` / `dataset_id`).
 Captures `EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS, WAL, FORMAT JSON)` via `PREPARE`/`EXECUTE`
 with representative bindings, builds hot-family index inventory/review, and bounded HypoPG planner
 candidates (plain `EXPLAIN` only — no `ANALYZE` on hypothetical indexes).
 
 ```sh
-TIER=S ./load/scripts/p3-explain-capture.sh
-python3 -m unittest load/gates/test_p3_explain.py load/gates/test_p3_profile.py
+TIER=S P3_ARTIFACT_DIR="$P3_ARTIFACT_DIR" ./load/scripts/p3-explain-capture.sh
+python3 -B -m unittest discover -s load/gates -p 'test_p3_*.py'
+python3 -B -m unittest discover -s load/gates -p 'test_r04_*.py'
 ```
 
-Outputs (committed under `plans/VLT-LOAD/artifacts/P3/`): `explain/*.json`,
+Outputs (under the selected run directory): `explain/*.json`,
 `index-inventory.json`, `index-review.json`, `hypopg-candidates.json`. DML plans use
 `BEGIN … ROLLBACK` on the disposable load DB only.
+An `ok` plan counts as analyzed only with actual execution metrics and matching run/dataset;
+rejected plans count as attempted and retain their reason. Repeated trace hashes within a single
+invocation are N+1 review candidates, not an automatic product verdict.
 
 ## P4 memory lane (P4.1)
 

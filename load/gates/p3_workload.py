@@ -4,11 +4,17 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
+import os
 import re
+import shutil
 import sys
+import tempfile
 from pathlib import Path
+
+from p3_profile import ProfileError, verify_manifest, verify_trace
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CATALOG = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'operations-catalog.md'
@@ -350,6 +356,12 @@ def verify_artifacts(artifact_dir: Path) -> None:
         if not path.is_file():
             raise WorkloadError('ARTIFACT_MISSING', name)
     manifest = load_json(artifact_dir / 'run-manifest.json')
+    try:
+        verify_manifest(manifest)
+    except ProfileError as exc:
+        raise WorkloadError('MANIFEST_INVALID', str(exc)) from exc
+    if manifest['disposable_db'] is not True:
+        raise WorkloadError('DISPOSABLE_DB', 'P3 workload requires a disposable DB')
     run_id = str(manifest.get('run_id', ''))
     dataset_id = str(manifest.get('dataset_id', ''))
     for name in names[1:]:
@@ -358,11 +370,12 @@ def verify_artifacts(artifact_dir: Path) -> None:
             payload = redact_run_id_blob(blob)
         else:
             payload_obj = load_json(blob)
-            if isinstance(payload_obj, dict):
-                if str(payload_obj.get('run_id', run_id)) != run_id:
-                    raise WorkloadError('RUN_ID_MISMATCH', name)
-                if str(payload_obj.get('dataset_id', dataset_id)) != dataset_id:
-                    raise WorkloadError('DATASET_MISMATCH', name)
+            if not isinstance(payload_obj, dict):
+                raise WorkloadError('ARTIFACT_OBJECT', name)
+            if payload_obj.get('run_id') != run_id:
+                raise WorkloadError('RUN_ID_MISMATCH', name)
+            if payload_obj.get('dataset_id') != dataset_id:
+                raise WorkloadError('DATASET_MISMATCH', name)
             payload = redact_run_id_blob(blob)
         hits = scan_secrets(payload)
         if hits:
@@ -370,6 +383,10 @@ def verify_artifacts(artifact_dir: Path) -> None:
     trace_rows = load_trace_rows(artifact_dir / 'query-trace.jsonl')
     if not trace_rows:
         raise WorkloadError('TRACE_EMPTY', 'query-trace.jsonl has no rows')
+    try:
+        verify_trace(artifact_dir / 'query-trace.jsonl')
+    except ProfileError as exc:
+        raise WorkloadError('TRACE_INVALID', str(exc)) from exc
     if any(row.get('run_id') != run_id or not row.get('invocation_id') for row in trace_rows):
         raise WorkloadError('TRACE_IDENTITY', 'trace rows must match run and invocation')
     if not any(str(row.get('command_id', '')).startswith('http:') for row in trace_rows):
@@ -521,7 +538,6 @@ def finalize_run_dir(run_dir: Path, *, tier: str, env_fingerprint: str, git_sha:
 
 
 def publish_run_dir(run_dir: Path, artifact_dir: Path) -> None:
-    artifact_dir.mkdir(parents=True, exist_ok=True)
     mapping = {
         'run-manifest.json': 'run-manifest.json',
         'dataset-profile.json': 'dataset-profile.json',
@@ -530,12 +546,23 @@ def publish_run_dir(run_dir: Path, artifact_dir: Path) -> None:
         'query-trace.jsonl': 'query-trace.jsonl',
         'operation-coverage.json': 'operation-coverage.json',
     }
-    for src_name, dst_name in mapping.items():
-        src = run_dir / src_name
-        if not src.is_file():
-            raise WorkloadError('PUBLISH_MISSING', src_name)
-        dst = artifact_dir / dst_name
-        dst.write_bytes(src.read_bytes())
+    artifact_dir.parent.mkdir(parents=True, exist_ok=True)
+    # Validate a private snapshot before exposing any files. Serialize publishers
+    # so a competing invocation cannot replace an already accepted run.
+    with tempfile.TemporaryDirectory(prefix='.p3-publish-', dir=artifact_dir.parent) as temporary:
+        snapshot = Path(temporary) / 'artifacts'
+        snapshot.mkdir()
+        for src_name, dst_name in mapping.items():
+            src = run_dir / src_name
+            if not src.is_file():
+                raise WorkloadError('PUBLISH_MISSING', src_name)
+            shutil.copyfile(src, snapshot / dst_name)
+        verify_artifacts(snapshot)
+        with (artifact_dir.parent / '.p3-publish.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if os.path.lexists(artifact_dir):
+                raise WorkloadError('PUBLISH_EXISTS', str(artifact_dir))
+            snapshot.rename(artifact_dir)
 
 
 def cmd_build(args: argparse.Namespace) -> int:
@@ -551,7 +578,11 @@ def cmd_build(args: argparse.Namespace) -> int:
 
 
 def cmd_publish(args: argparse.Namespace) -> int:
-    publish_run_dir(Path(args.run_dir), Path(args.artifact_dir))
+    run_dir = Path(args.run_dir)
+    run_id = str(load_json(run_dir / 'run-manifest.json')['run_id'])
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,127}', run_id):
+        raise WorkloadError('RUN_ID', 'unsafe run ID for publication')
+    publish_run_dir(run_dir, Path(args.artifact_dir) if args.artifact_dir else P3_ARTIFACTS / run_id)
     print('publish: ok')
     return 0
 
@@ -578,9 +609,9 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument('--git-sha', required=True)
     build.add_argument('--p87-run-id', default='')
     build.set_defaults(func=cmd_build)
-    publish = sub.add_parser('publish', help='copy validated run_dir into plans/VLT-LOAD/artifacts/P3')
+    publish = sub.add_parser('publish', help='publish a validated snapshot to a fresh run directory')
     publish.add_argument('--run-dir', required=True)
-    publish.add_argument('--artifact-dir', default=str(P3_ARTIFACTS))
+    publish.add_argument('--artifact-dir')
     publish.set_defaults(func=cmd_publish)
     preflight = sub.add_parser('preflight', help='verify P8.7 artifacts before P3 workload')
     preflight.set_defaults(func=cmd_preflight)

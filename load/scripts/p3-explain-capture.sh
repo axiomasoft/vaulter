@@ -9,7 +9,7 @@ TIER="${TIER:-S}"
 ENV_FILE="$LOAD_ROOT/env/${TIER}.env"
 COMPOSE=(docker compose -f "$LOAD_ROOT/docker-compose.load.yml" --env-file "$ENV_FILE")
 EXPLAIN_PY="$REPO_ROOT/load/gates/p3_explain.py"
-ARTIFACT_DIR="$REPO_ROOT/plans/VLT-LOAD/artifacts/P3"
+ARTIFACT_DIR="${P3_ARTIFACT_DIR:?Set P3_ARTIFACT_DIR to the fresh capture artifact directory}"
 COMPOSE_CMD="${COMPOSE[*]}"
 
 cd "$REPO_ROOT"

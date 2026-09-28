@@ -32,11 +32,24 @@ print(manifest.get("run_id") or manifest.get("run_id_sha256", ""))
 PY
 )"
 RUN_ID="${LOAD_RUN_ID:-$(python3 -c 'import uuid; print(uuid.uuid4())')}"
+python3 - "$RUN_ID" "$P3_DURATION" <<'PY'
+import re, sys
+if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,127}', sys.argv[1]):
+    raise SystemExit('Invalid P3 run ID')
+if not re.fullmatch(r'[1-9][0-9]*[smh]', sys.argv[2]):
+    raise SystemExit('P3_DURATION must be a positive integer with s, m or h suffix')
+PY
 RUN_DIR="${P3_RUN_DIR:-$LOAD_ROOT/results/p3/$RUN_ID}"
+ARTIFACT_DIR="${P3_ARTIFACT_DIR:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P3/$RUN_ID}"
 TRACE_HOST_PATH="$LOAD_ROOT/results/p3/$RUN_ID/query-trace.jsonl"
 TRACE_PATH="/app/load/results/p3/$RUN_ID/query-trace.jsonl"
-mkdir -p "$RUN_DIR"
-mkdir -p "$(dirname "$TRACE_HOST_PATH")"
+[ ! -e "$ARTIFACT_DIR" ] && [ ! -L "$ARTIFACT_DIR" ] || { echo "P3 artifact destination already exists" >&2; exit 1; }
+mkdir -p "$(dirname "$RUN_DIR")"
+mkdir "$RUN_DIR"
+if [ "$RUN_DIR" != "$(dirname "$TRACE_HOST_PATH")" ]; then
+    mkdir -p "$LOAD_ROOT/results/p3"
+    mkdir "$(dirname "$TRACE_HOST_PATH")"
+fi
 chmod 0777 "$(dirname "$TRACE_HOST_PATH")"
 : >"$TRACE_HOST_PATH"
 chmod 0666 "$TRACE_HOST_PATH"
@@ -187,13 +200,26 @@ PY
 
 run_mixed_workload() {
     local duration="$1"
-    "${COMPOSE[@]}" exec -d -T app php vendor/bin/testbench load:activity-write --duration=180 >/dev/null 2>&1 || true
+    local phase="$2"
+    local seconds multiplier=1 writer_pid workload_status=0 writer_status=0
+    case "$duration" in *m) multiplier=60 ;; *h) multiplier=3600 ;; esac
+    seconds=$(( ${duration%?} * multiplier ))
+    # Keep the exec attached so its exit and final trace flush are observed.
+    # Each finite writer is joined before resetting pgss/trace or publishing.
+    "${COMPOSE[@]}" exec -T app php vendor/bin/testbench load:activity-write \
+        --tier="$TIER" --duration="$seconds" --no-interaction >"$RUN_DIR/writer-$phase.log" 2>&1 &
+    writer_pid=$!
     DURATION="$duration" TIER="$TIER" LOAD_RUN_ID="$RUN_ID" \
-        "$LOAD_ROOT/scripts/run.sh" scenarios/mixed.js
+        "$LOAD_ROOT/scripts/run.sh" scenarios/mixed.js || workload_status=$?
+    wait "$writer_pid" || writer_status=$?
+    if [ "$workload_status" -ne 0 ] || [ "$writer_status" -ne 0 ]; then
+        echo "P3 $phase failed: k6=$workload_status writer=$writer_status" >&2
+        return 1
+    fi
 }
 
 # Short warm pass (seed/preflight traffic excluded from ranking by later reset).
-run_mixed_workload 30s
+run_mixed_workload 30s warmup
 
 psql_file "$LOAD_ROOT/sql/p3/reset.sql" >"$RUN_DIR/pgss-reset.txt"
 python3 - "$TRACE_HOST_PATH" <<'PY'
@@ -205,13 +231,12 @@ with pathlib.Path(sys.argv[1]).open('r+') as trace:
     fcntl.flock(trace, fcntl.LOCK_UN)
 PY
 
-run_mixed_workload "$P3_DURATION"
+run_mixed_workload "$P3_DURATION" measured
 touch "$RUN_DIR/workload.ok"
 
-"${COMPOSE[@]}" exec -T app php vendor/bin/testbench artisan vaulter:relay-outbox --no-interaction >/dev/null || true
-"${COMPOSE[@]}" exec -T app php vendor/bin/testbench artisan vaulter:retry-webhooks --no-interaction >/dev/null || true
-"${COMPOSE[@]}" exec -T app php vendor/bin/testbench artisan vaulter:sweep-uploads --no-interaction >/dev/null || true
-"${COMPOSE[@]}" exec -T app php vendor/bin/testbench artisan vaulter:gc-blobs --no-interaction >/dev/null || true
+for command in vaulter:relay-outbox vaulter:retry-webhooks vaulter:sweep-uploads vaulter:gc-blobs; do
+    "${COMPOSE[@]}" exec -T app php vendor/bin/testbench "$command" --no-interaction >"$RUN_DIR/$command.log" 2>&1
+done
 
 if [ ! -s "$TRACE_HOST_PATH" ]; then
     echo "P3 query trace is empty after workload; refusing to publish" >&2
@@ -239,9 +264,6 @@ python3 "$WORKLOAD_PY" build \
     --p87-run-id "$P87_RUN_ID"
 
 python3 "$WORKLOAD_PY" verify-artifacts --artifact-dir "$RUN_DIR"
-python3 "$WORKLOAD_PY" publish --run-dir "$RUN_DIR"
-python3 "$WORKLOAD_PY" verify-artifacts --artifact-dir "$REPO_ROOT/plans/VLT-LOAD/artifacts/P3"
-python3 "$WORKLOAD_PY" verify-artifacts --artifact-dir "$REPO_ROOT/plans/VLT-LOAD/artifacts/P3"
 
 python3 - "$RUN_DIR/run-manifest.json" <<'PY'
 import json, pathlib, sys
@@ -252,6 +274,7 @@ manifest["terminal"]["verified_at"] = datetime.now(timezone.utc).strftime("%Y-%m
 path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 PY
 
-cp "$RUN_DIR/run-manifest.json" "$REPO_ROOT/plans/VLT-LOAD/artifacts/P3/run-manifest.json"
+python3 "$WORKLOAD_PY" publish --run-dir "$RUN_DIR" --artifact-dir "$ARTIFACT_DIR"
+python3 "$WORKLOAD_PY" verify-artifacts --artifact-dir "$ARTIFACT_DIR"
 
-echo "capture: ok run_dir=$RUN_DIR artifacts=$REPO_ROOT/plans/VLT-LOAD/artifacts/P3"
+echo "capture: ok run_dir=$RUN_DIR artifacts=$ARTIFACT_DIR"

@@ -24,6 +24,7 @@ MANIFEST_KEYS = {
     'track_io_timing',
     'terminal',
 }
+WORKLOAD_MANIFEST_KEYS = {'git_commit_sha', 'cache_declaration', 'p87_preflight_run_id', 'workload'}
 TRACE_KEYS = {
     'run_id',
     'command_id',
@@ -77,7 +78,13 @@ def scan_secrets(blob: str) -> list[str]:
 
 
 def verify_manifest(manifest: dict) -> None:
-    reject_unknown_keys(manifest, MANIFEST_KEYS, 'run-manifest')
+    reject_unknown_keys(manifest, MANIFEST_KEYS | WORKLOAD_MANIFEST_KEYS, 'run-manifest')
+    if MANIFEST_KEYS - manifest.keys():
+        raise ProfileError('MANIFEST_FIELDS', 'run-manifest is missing required metadata')
+    if any(not isinstance(manifest[key], str) or not manifest[key] for key in ('run_id', 'dataset_id', 'tier')):
+        raise ProfileError('MANIFEST_IDENTITY', 'run, dataset and tier must be nonempty strings')
+    if type(manifest['disposable_db']) is not bool:
+        raise ProfileError('MANIFEST_DISPOSABLE', 'disposable_db must be boolean')
     if manifest.get('schema_version') != 'p3-profile/v1':
         raise ProfileError('SCHEMA_VERSION', 'run-manifest.schema_version must be p3-profile/v1')
     if not manifest.get('env_fingerprint'):
@@ -99,7 +106,11 @@ def verify_trace(path: Path) -> None:
         raise ProfileError('TRACE_EMPTY', 'query trace has no rows')
     seen_ordinals: set[tuple[str, int]] = set()
     for row in rows:
+        if not isinstance(row, dict):
+            raise ProfileError('TRACE_ROW', 'trace row must be an object')
         reject_unknown_keys(row, TRACE_KEYS, 'query-trace')
+        if TRACE_KEYS - row.keys():
+            raise ProfileError('TRACE_FIELDS', 'trace row is missing required metadata')
         forbidden = FORBIDDEN_TRACE_KEYS.intersection(row)
         if forbidden:
             raise ProfileError('TRACE_PRIVACY', f'forbidden keys in trace: {sorted(forbidden)}')
@@ -107,6 +118,15 @@ def verify_trace(path: Path) -> None:
         if not re.fullmatch(r'[a-f0-9]{16}', invocation):
             raise ProfileError('TRACE_INVOCATION', 'invocation_id must be 16 hex digits')
         ordinal = row.get('ordinal')
+        if type(ordinal) is not int or ordinal < 1:
+            raise ProfileError('TRACE_ORDINAL', 'ordinal must be a positive integer')
+        if type(row['in_transaction']) is not bool:
+            raise ProfileError('TRACE_TRANSACTION', 'in_transaction must be boolean')
+        duration = row['duration_ms']
+        if type(duration) not in (int, float) or not 0 <= duration < float('inf'):
+            raise ProfileError('TRACE_DURATION', 'duration_ms must be finite and nonnegative')
+        if any(not isinstance(row[key], str) or not row[key] for key in ('run_id', 'command_id', 'connection')):
+            raise ProfileError('TRACE_CONTEXT', 'run, command and connection must be nonempty strings')
         identity = (invocation, ordinal)
         if identity in seen_ordinals:
             raise ProfileError('TRACE_DUPLICATE', f'duplicate invocation/ordinal {identity}')

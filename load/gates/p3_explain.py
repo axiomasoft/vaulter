@@ -789,8 +789,24 @@ def verify_plan_file(path: Path, manifest: dict) -> None:
         raise ExplainError('PLAN_SCHEMA', path.name)
     if str(payload.get('run_id')) != str(manifest['run_id']):
         raise ExplainError('RUN_ID', path.name)
+    if payload.get('dataset_id') != manifest['dataset_id']:
+        raise ExplainError('DATASET_ID', path.name)
+    if payload.get('status') not in {'ok', 'rejected'}:
+        raise ExplainError('PLAN_STATUS', path.name)
+    if payload.get('status') == 'rejected' and not payload.get('rejection_reason'):
+        raise ExplainError('PLAN_REJECTION', path.name)
     if payload.get('status') == 'ok' and not payload.get('plan'):
         raise ExplainError('PLAN_EMPTY', path.name)
+    if payload.get('status') == 'ok':
+        plan = payload['plan']
+        root = plan[0] if isinstance(plan, list) and len(plan) == 1 else {}
+        node = root.get('Plan', {}) if isinstance(root, dict) else {}
+        values = []
+        if isinstance(root, dict) and isinstance(node, dict):
+            values = [root.get('Execution Time')]
+            values.extend(node.get(key) for key in ('Actual Rows', 'Actual Loops', 'Actual Total Time'))
+        if len(values) != 4 or any(type(value) not in (int, float) or not 0 <= value < float('inf') for value in values):
+            raise ExplainError('PLAN_ANALYZE', f'{path.name}: actual execution metrics required')
     redacted = dict(payload)
     redacted.pop('run_id', None)
     hits = scan_secrets(redact_uuid_literals(json.dumps(redacted)))
@@ -838,7 +854,7 @@ def verify_artifacts(artifact_dir: Path) -> None:
 
 def cmd_capture(args: argparse.Namespace) -> int:
     artifact_dir = Path(args.artifact_dir)
-    explain_dir = Path(args.explain_dir)
+    explain_dir = Path(args.explain_dir) if args.explain_dir else artifact_dir / 'explain'
     sql_dir = Path(args.sql_dir)
     runner = PsqlRunner(compose_cmd=shlex.split(args.compose_cmd))
     capture_plans(artifact_dir=artifact_dir, explain_dir=explain_dir, runner=runner, sql_dir=sql_dir)
@@ -851,7 +867,8 @@ def cmd_build_index(args: argparse.Namespace) -> int:
     runner = PsqlRunner(compose_cmd=shlex.split(args.compose_cmd))
     inventory = build_index_inventory(artifact_dir, runner, Path(args.sql_dir))
     dump_json(artifact_dir / 'index-inventory.json', inventory)
-    review = build_index_review(artifact_dir, Path(args.explain_dir), inventory)
+    explain_dir = Path(args.explain_dir) if args.explain_dir else artifact_dir / 'explain'
+    review = build_index_review(artifact_dir, explain_dir, inventory)
     dump_json(artifact_dir / 'index-review.json', review)
     print('build-index: ok')
     return 0
@@ -882,12 +899,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest='command', required=True)
     capture = sub.add_parser('capture')
     capture.add_argument('--artifact-dir', default=str(P3_ARTIFACTS))
-    capture.add_argument('--explain-dir', default=str(P3_ARTIFACTS / 'explain'))
+    capture.add_argument('--explain-dir')
     capture.add_argument('--sql-dir', default=str(REPO_ROOT / 'load' / 'sql' / 'p3'))
     capture.set_defaults(func=cmd_capture)
     build = sub.add_parser('build-index')
     build.add_argument('--artifact-dir', default=str(P3_ARTIFACTS))
-    build.add_argument('--explain-dir', default=str(P3_ARTIFACTS / 'explain'))
+    build.add_argument('--explain-dir')
     build.add_argument('--sql-dir', default=str(REPO_ROOT / 'load' / 'sql' / 'p3'))
     build.set_defaults(func=cmd_build_index)
     hyp = sub.add_parser('hypopg')

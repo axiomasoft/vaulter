@@ -8,6 +8,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from p3_explain import ExplainError, verify_plan_file
+from p3_profile import ProfileError, verify_trace
+
 
 class TraceReportError(ValueError):
     pass
@@ -20,6 +23,12 @@ def build_report(artifact_dir: Path) -> dict:
     rows = [json.loads(line) for line in (artifact_dir / 'query-trace.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
     if not rows:
         raise TraceReportError('TRACE_EMPTY: no N+1 verdict from zero rows')
+    try:
+        verify_trace(artifact_dir / 'query-trace.jsonl')
+    except ProfileError as exc:
+        raise TraceReportError(str(exc)) from exc
+    if top20.get('run_id') != run_id or top20.get('dataset_id') != manifest['dataset_id']:
+        raise TraceReportError('TOP20_IDENTITY: run/dataset mismatched')
     if any(row.get('run_id') != run_id or not row.get('invocation_id') for row in rows):
         raise TraceReportError('TRACE_IDENTITY: run_id/invocation_id missing or mismatched')
     if not any(str(row.get('command_id', '')).startswith('http:') for row in rows):
@@ -32,6 +41,10 @@ def build_report(artifact_dir: Path) -> dict:
     for fp in fingerprints:
         path = artifact_dir / 'explain' / f'{fp}.json'
         if path.is_file():
+            try:
+                verify_plan_file(path, manifest)
+            except ExplainError as exc:
+                raise TraceReportError(str(exc)) from exc
             plan = json.loads(path.read_text(encoding='utf-8'))
             if plan.get('run_id') != run_id or str(plan.get('query_fingerprint')) != fp:
                 raise TraceReportError(f'PLAN_IDENTITY: {fp}')

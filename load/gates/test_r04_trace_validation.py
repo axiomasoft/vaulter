@@ -15,6 +15,30 @@ spec.loader.exec_module(profile)
 
 
 class R04TraceValidationTest(unittest.TestCase):
+    def test_incomplete_or_invalid_metadata_cannot_form_trace_evidence(self):
+        row = {
+            'run_id': 'r', 'command_id': 'http:tree_list', 'connection': 'pgsql',
+            'sql_template_hash': 'a' * 64, 'invocation_id': 'b' * 16,
+            'duration_ms': 0.1, 'ordinal': 1, 'in_transaction': False,
+        }
+        mutations = [('ordinal', value) for value in (0, -1, True, 1.5, None, '1', [])]
+        mutations += [('duration_ms', value) for value in (-1, True, float('inf'), float('nan'))]
+        mutations += [('connection', ''), ('command_id', None), ('in_transaction', 1)]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'query-trace.jsonl'
+            for key, value in mutations:
+                with self.subTest(key=key, value=value):
+                    path.write_text(json.dumps({**row, key: value}))
+                    with self.assertRaises(profile.ProfileError):
+                        profile.verify_trace(path)
+            for key in row:
+                with self.subTest(missing=key):
+                    incomplete = dict(row)
+                    incomplete.pop(key)
+                    path.write_text(json.dumps(incomplete))
+                    with self.assertRaises(profile.ProfileError):
+                        profile.verify_trace(path)
+
     def test_empty_trace_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'query-trace.jsonl'
