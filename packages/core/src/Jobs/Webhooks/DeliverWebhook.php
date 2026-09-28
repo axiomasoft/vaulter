@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Jobs\Webhooks;
 
+use Closure;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Queue\InteractsWithQueue;
@@ -44,8 +46,10 @@ use Vaulter\Webhooks\WebhookSigner;
  * self-releases, so a running worker and a scheduled relay can't both re-arm the same
  * failed row (no double-POST, no attempts race).
  *
- * Idempotent on the delivery row: a job for an already-terminal delivery
- * (delivered|dead) is a no-op, so a re-dispatch never double-delivers.
+ * A database lease excludes overlapping jobs for the same delivery. HTTP runs
+ * outside a transaction; completion is fenced by the lease token. A lost worker's
+ * lease expires so the retry sweep can recover it. Remote acceptance followed by
+ * a worker crash still permits a repeated POST (at-least-once).
  */
 final class DeliverWebhook implements ShouldQueue
 {
@@ -77,31 +81,37 @@ final class DeliverWebhook implements ShouldQueue
                     return;
                 }
 
+                if (!$this->claim(delivery: $delivery)) {
+                    return;
+                }
+
                 $started = hrtime(true);
                 $outcome = 'failure';
 
                 try {
                     $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
-                } catch (Throwable $exception) {
-                    $outcome = $exception instanceof ConnectionException ? 'timeout' : 'failure';
-                    $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $exception->getMessage());
-                    $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
+                } catch (Throwable $throwable) {
+                    $outcome = $throwable instanceof ConnectionException ? 'timeout' : 'failure';
+                    if ($this->settle(delivery: $delivery, operation: fn () => $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $throwable->getMessage()))) {
+                        $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
+                    }
 
                     return;
                 }
 
                 if ($response->successful()) {
-                    $this->recordSuccess(delivery: $delivery, endpoint: $endpoint);
-                    $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: 'success');
+                    if ($this->settle(delivery: $delivery, operation: fn () => $this->recordSuccess(delivery: $delivery, endpoint: $endpoint))) {
+                        $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: 'success');
+                    }
 
                     return;
                 }
 
-                $this->recordFailure(
-                    delivery: $delivery,
-                    endpoint: $endpoint,
-                    error: "HTTP {$response->status()}",
-                );
+                if (!$this->settle(delivery: $delivery, operation: fn () => $this->recordFailure(
+                    delivery: $delivery, endpoint: $endpoint, error: 'HTTP '.$response->status(),
+                ))) {
+                    return;
+                }
 
                 $delivery->refresh();
                 $outcome = $delivery->status === 'dead' ? 'failure' : 'retry';
@@ -295,6 +305,51 @@ final class DeliverWebhook implements ShouldQueue
     private function isTerminal(WebhookDelivery $delivery): bool
     {
         return in_array($delivery->status, ['delivered', 'dead'], true);
+    }
+
+    private function claim(WebhookDelivery $delivery): bool
+    {
+        $token = bin2hex(random_bytes(16));
+        // Leave room for DNS/transport setup and settlement beyond the HTTP limit.
+        $until = now()->addSeconds(max(Config::webhookRetryClaimSeconds(), Config::webhookTimeout() + 30));
+
+        $claimed = $delivery->newQuery()
+            ->whereKey($delivery->getKey())
+            ->whereIn('status', ['pending', 'failed'])
+            ->where('attempts', $delivery->attempts)
+            ->where(static fn (Builder $query): Builder => $query->whereNull('claim_until')->orWhere('claim_until', '<=', now()))
+            ->update(['claim_token' => $token, 'claim_until' => $until]);
+
+        if ($claimed !== 1) {
+            return false;
+        }
+
+        $delivery->forceFill(['claim_token' => $token, 'claim_until' => $until]);
+
+        return true;
+    }
+
+    /**
+     * @param Closure(): void $operation
+     */
+    private function settle(WebhookDelivery $delivery, Closure $operation): bool
+    {
+        return $delivery->getConnection()->transaction(function () use ($delivery, $operation): bool {
+            // An atomic conditional write also fences on SQLite, where FOR UPDATE
+            // is unavailable. A superseded worker cannot overwrite its successor.
+            $owned = $delivery->newQuery()->whereKey($delivery->getKey())
+                ->where('claim_token', $delivery->claim_token)
+                ->update(['claim_token' => null, 'claim_until' => null]);
+
+            if ($owned !== 1) {
+                return false;
+            }
+
+            $delivery->forceFill(['claim_token' => null, 'claim_until' => null]);
+            $operation();
+
+            return true;
+        });
     }
 
     private function resolveDelivery(): ?WebhookDelivery

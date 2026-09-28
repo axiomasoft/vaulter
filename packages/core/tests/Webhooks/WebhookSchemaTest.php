@@ -39,7 +39,7 @@ it('creates v_webhook_deliveries with every §2.11 column', function (): void {
 
     expect(Schema::hasColumns($table, [
         'id', 'endpoint_id', 'event', 'payload', 'status', 'attempts',
-        'next_retry_at', 'last_error', 'created_at', 'updated_at',
+        'next_retry_at', 'claim_token', 'claim_until', 'last_error', 'created_at', 'updated_at',
     ]))->toBeTrue();
 });
 

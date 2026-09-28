@@ -5,11 +5,16 @@ declare(strict_types=1);
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Panels\Panel;
+use Vaulter\Schema\PanelTablesBuilder;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
@@ -223,3 +228,131 @@ it('is a no-op when the delivery row no longer exists', function (): void {
 
     Http::assertNothingSent();
 });
+
+it('sends one POST when a duplicate job overlaps the HTTP attempt', function (int $status): void {
+    $endpoint = WebhookTestHelpers::endpoint();
+    $delivery = WebhookTestHelpers::delivery($endpoint);
+    $posts = 0;
+
+    Http::fake(function () use ($delivery, &$posts, $status) {
+        $posts++;
+
+        if ($posts === 1) {
+            runDeliver($delivery);
+        }
+
+        return Http::response('', $status);
+    });
+
+    runDeliver($delivery);
+
+    expect($posts)->toBe(1)
+        ->and($delivery->refresh()->attempts)->toBe(1)
+        ->and($delivery->status)->toBe($status === 200 ? 'delivered' : 'failed');
+})->with([200, 500]);
+
+it('keeps an active attempt out of the retry sweep and recovers an expired worker claim', function (): void {
+    Bus::fake();
+    $endpoint = WebhookTestHelpers::endpoint();
+    $delivery = WebhookTestHelpers::delivery($endpoint, [
+        'claim_token' => str_repeat('a', 32),
+        'claim_until' => now()->addMinute(),
+        'next_retry_at' => now()->subMinute(),
+    ]);
+    Http::fake(['*' => Http::response('', 200)]);
+
+    runDeliver($delivery);
+    expect(app(WebhookRetryDispatcher::class)->redispatchDue())->toBe(0);
+    Http::assertNothingSent();
+
+    $this->travel(61)->seconds();
+    expect(app(WebhookRetryDispatcher::class)->redispatchDue())->toBe(1);
+    runDeliver($delivery);
+
+    expect($delivery->refresh()->status)->toBe('delivered')
+        ->and($delivery->attempts)->toBe(1)
+        ->and($delivery->claim_token)->toBeNull()
+        ->and($delivery->claim_until)->toBeNull();
+    Http::assertSentCount(1);
+});
+
+it('does not let an expired worker overwrite the replacement attempt', function (): void {
+    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 2]);
+    $delivery = WebhookTestHelpers::delivery($endpoint);
+    $posts = 0;
+    Http::fake(function () use ($delivery, &$posts) {
+        $posts++;
+
+        if ($posts === 1) {
+            // Simulate a paused worker resuming after the durable lease expired.
+            $this->travel(120)->seconds();
+            runDeliver($delivery);
+
+            return Http::response('', 500);
+        }
+
+        return Http::response('', 200);
+    });
+
+    runDeliver($delivery);
+
+    expect($posts)->toBe(2)
+        ->and($delivery->refresh()->status)->toBe('delivered')
+        ->and($delivery->attempts)->toBe(1)
+        ->and($delivery->next_retry_at)->toBeNull()
+        ->and($delivery->last_error)->toBeNull()
+        ->and($delivery->claim_token)->toBeNull()
+        ->and($endpoint->refresh()->failure_count)->toBe(0);
+});
+
+it('delivers on the custom model connection without holding a transaction during HTTP', function (): void {
+    config()->set('database.connections.delivery_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+    config()->set('vaulter.connection', 'delivery_other');
+
+    $builder = new PanelTablesBuilder;
+    $panel = (new Panel)->id('default');
+    $builder->createTable(panel: $panel, entity: 'webhook_endpoints');
+    $builder->createTable(panel: $panel, entity: 'webhook_deliveries');
+
+    $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint());
+    Http::fake(function () {
+        expect(DB::connection('delivery_other')->transactionLevel())->toBe(0);
+
+        return Http::response('', 200);
+    });
+
+    try {
+        runDeliver($delivery);
+        expect($delivery->refresh()->status)->toBe('delivered')->and($delivery->claim_token)->toBeNull();
+        Http::assertSentCount(1);
+    } finally {
+        DB::purge('delivery_other');
+    }
+});
+
+it('retains a recoverable claim when custom model settlement throws and rolls back', function (): void {
+    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 3]);
+    $delivery = WebhookTestHelpers::delivery($endpoint);
+    config()->set('vaulter.models.webhook_delivery', FailingSettlementWebhookDelivery::class);
+    Http::fake(['*' => Http::response('', 200)]);
+
+    expect(fn () => runDeliver($delivery))->toThrow(RuntimeException::class, 'settlement failed');
+    expect($delivery->refresh()->status)->toBe('pending')
+        ->and($delivery->attempts)->toBe(0)
+        ->and($delivery->claim_token)->not->toBeNull()
+        ->and($endpoint->refresh()->failure_count)->toBe(3);
+
+    config()->set('vaulter.models.webhook_delivery', WebhookDelivery::class);
+    $this->travel(120)->seconds();
+    runDeliver($delivery);
+    expect($delivery->refresh()->status)->toBe('delivered')->and($delivery->claim_token)->toBeNull();
+});
+
+final class FailingSettlementWebhookDelivery extends WebhookDelivery
+{
+    #[Override]
+    public function save(array $options = []): bool
+    {
+        throw new RuntimeException('settlement failed');
+    }
+}
