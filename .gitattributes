@@ -2,3 +2,6 @@
 plans/remaining-evidence/R07-checks/**/time.txt -text -diff
 # Preserve recorded PostgreSQL dumps without text or whitespace normalization.
 plans/VLT-LOAD/artifacts/**/postgres/pre-dirty.sql -text -diff
+# stdout/stderr are immutable command output, including terminal formatting.
+plans/VLT-LOAD/artifacts/**/*.stdout -text -diff
+plans/VLT-LOAD/artifacts/**/*.stderr -text -diff

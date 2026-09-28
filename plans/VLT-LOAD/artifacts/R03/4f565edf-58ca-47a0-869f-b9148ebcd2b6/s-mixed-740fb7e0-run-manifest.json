@@ -1,0 +1,22 @@
+{
+  "run_id": "740fb7e0-d4b8-4d5e-a29c-99bd88aed5ef",
+  "campaign_id": "4f565edf-58ca-47a0-869f-b9148ebcd2b6",
+  "tier": "S",
+  "declared_duration_seconds": 180,
+  "profile": "lab",
+  "fixture_single_bytes": 5242880,
+  "lab_admitted": false,
+  "environment_limitations": [
+    "governor powersave",
+    "turbo enabled",
+    "host swap enabled",
+    "other owner containers running; no authorization to clear them"
+  ],
+  "env_fingerprint": "9b0810afa5652ea0",
+  "k6_exit": 99,
+  "elapsed_wall_seconds": 207.457965693,
+  "state": "k6-completed",
+  "product_run_started": true,
+  "activity_exit": 0,
+  "activity_wall_seconds": 226.3052945600066
+}

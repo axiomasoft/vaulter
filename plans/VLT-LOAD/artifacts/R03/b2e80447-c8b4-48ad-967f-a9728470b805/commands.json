@@ -1,0 +1,150 @@
+[
+  {
+    "name": "disk",
+    "argv": [
+      "df",
+      "-B1",
+      "/home/vostrikov/projects/packages/vaulter",
+      "/var/lib/docker"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:33.980441+00:00"
+  },
+  {
+    "name": "memory",
+    "argv": [
+      "free",
+      "-b"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:33.981951+00:00"
+  },
+  {
+    "name": "swap",
+    "argv": [
+      "swapon",
+      "--show",
+      "--bytes"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:33.983442+00:00"
+  },
+  {
+    "name": "cpu-topology",
+    "argv": [
+      "lscpu",
+      "-e=CPU,CORE,MAXMHZ"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:33.985827+00:00"
+  },
+  {
+    "name": "containers",
+    "argv": [
+      "docker",
+      "ps",
+      "--format",
+      "{{json .}}"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:33.989586+00:00"
+  },
+  {
+    "name": "stand-containers",
+    "argv": [
+      "docker",
+      "compose",
+      "-f",
+      "load/docker-compose.load.yml",
+      "--env-file",
+      "load/env/S.env",
+      "ps",
+      "-a",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:34.912794+00:00"
+  },
+  {
+    "name": "maind-health",
+    "argv": [
+      "maind",
+      "health",
+      "--cwd",
+      "--json"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:34.967724+00:00"
+  },
+  {
+    "name": "r03-summary-tests",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "load/gates",
+      "-p",
+      "test_r03_summary.py",
+      "-v"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:35.104611+00:00"
+  },
+  {
+    "name": "shell-syntax",
+    "argv": [
+      "sh",
+      "-n",
+      "load/scripts/run.sh"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:35.145812+00:00"
+  },
+  {
+    "name": "prior-summary-audit",
+    "argv": [
+      "python3",
+      "load/gates/r03_summary.py",
+      "--summary",
+      "load/results/summary.json",
+      "--declared-duration",
+      "180s"
+    ],
+    "exit": 2,
+    "started_at": "2026-09-28T12:53:35.146791+00:00"
+  },
+  {
+    "name": "git-status",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit": 0,
+    "started_at": "2026-09-28T12:53:35.166776+00:00"
+  },
+  {
+    "name": "existing-volumes",
+    "argv": [
+      "docker",
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "-v",
+      "vaulter-load_minio-data:/minio:ro",
+      "-v",
+      "vaulter-load_pg-data:/pg:ro",
+      "--entrypoint",
+      "sh",
+      "redis:7-alpine",
+      "-c",
+      "du -sh /minio /pg; ls /minio/vaulter-load"
+    ],
+    "exit": 0,
+    "recorded_at": "2026-09-28T12:54:40.228683+00:00"
+  }
+]

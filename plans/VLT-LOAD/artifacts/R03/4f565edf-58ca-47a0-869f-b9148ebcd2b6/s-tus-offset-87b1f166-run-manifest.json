@@ -1,0 +1,11 @@
+{
+  "run_id": "87b1f166-5b8e-4460-9bbe-550cfb2ef434",
+  "campaign_id": "4f565edf-58ca-47a0-869f-b9148ebcd2b6",
+  "tier": "S",
+  "kind": "bounded staged-append attribution; not SLO proof",
+  "attempts": 3,
+  "session_bytes": 167772160,
+  "chunk_bytes": 8388608,
+  "k6_exit": 0,
+  "elapsed_seconds": 73.31015007699898
+}

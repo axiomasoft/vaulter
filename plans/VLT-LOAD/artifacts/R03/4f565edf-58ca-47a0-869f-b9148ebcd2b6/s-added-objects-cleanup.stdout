@@ -1,0 +1,1 @@
+{"status":"error","error":{"message":"Removal requires --force flag. This operation is *IRREVERSIBLE*. Please review carefully before performing this *DANGEROUS* operation.","cause":{"message":"","error":{}},"type":"fatal"}}
