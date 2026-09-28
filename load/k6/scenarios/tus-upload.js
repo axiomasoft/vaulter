@@ -7,7 +7,7 @@ import { API, TIER, VUS_UPLOAD, DURATION, TUS_CHUNK_BYTES, TUS_FILE_SIZE_BYTES, 
 import { STORAGE_ID, ACTOR_OWNER } from '../lib/dataset.js';
 import { actorHeaders } from '../lib/auth.js';
 import { tusChunk, saltedFirstChunk, sliceOf } from '../lib/fixtures.js';
-import { streamThroughputMiBs, ttfbMs } from '../lib/metrics.js';
+import { recordAcceptedStream, ttfbMs } from '../lib/metrics.js';
 import { trackProtocolStatus } from '../lib/expected.js';
 import { header } from '../lib/headers.js';
 
@@ -85,6 +85,7 @@ export function run() {
       const halfSize = Math.max(1, Math.floor(fullChunkSize / 2));
       const partial = sliceOf(base, halfSize);
 
+      const partialStart = Date.now();
       const partialRes = http.patch(`${API}/resumable-uploads/${uploadId}`, partial, {
         headers: {
           ...headers,
@@ -95,6 +96,7 @@ export function run() {
         tags: { ...TAGS, op: 'OP-02' },
       });
 
+      recordAcceptedStream(partialRes, partial.byteLength, (Date.now() - partialStart) / 1000, { ...TAGS, op: 'OP-02' }, [204, 201], 'sent');
       trackProtocolStatus(partialRes, TAGS);
 
       if (partialRes.status !== 204) {
@@ -110,6 +112,7 @@ export function run() {
       offset = parseInt(header(headRes, 'Upload-Offset') || String(offset), 10);
 
       const rest = sliceOf(base, fullChunkSize).slice(halfSize);
+      const restStart = Date.now();
       const restRes = http.patch(`${API}/resumable-uploads/${uploadId}`, rest, {
         headers: {
           ...headers,
@@ -120,6 +123,7 @@ export function run() {
         tags: { ...TAGS, op: 'OP-02' },
       });
 
+      recordAcceptedStream(restRes, rest.byteLength, (Date.now() - restStart) / 1000, { ...TAGS, op: 'OP-02' }, [204, 201], 'sent');
       trackProtocolStatus(restRes, TAGS);
 
       if (restRes.status === 201) {
@@ -158,9 +162,7 @@ export function run() {
 
     trackProtocolStatus(patchRes, TAGS);
 
-    if (elapsedS > 0) {
-      streamThroughputMiBs.add(chunk.byteLength / 1024 / 1024 / elapsedS, TAGS);
-    }
+    recordAcceptedStream(patchRes, chunk.byteLength, elapsedS, { ...TAGS, op: 'OP-02' }, [204, 201], 'sent');
 
     if (patchRes.status === 201) {
       node = patchRes.json('data');

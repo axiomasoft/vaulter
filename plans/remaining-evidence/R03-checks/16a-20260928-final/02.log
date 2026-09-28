@@ -1,0 +1,17 @@
+(node:955359) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ S3 part/complete selectors keep distinct floors and accepted byte rates (2.017091ms)
+✔ rejected streams cannot contribute bytes or speed; finalization is not sent bytes (0.716155ms)
+✔ mandatory discovery refuses HTTP 500, missing docs and unbacked files (2.030335ms)
+✔ discovery admits byte-backed files and a nonempty document pool (1.725631ms)
+✔ real S3 scenario measures accepted completion without sending its bytes twice (4.472984ms)
+✔ real TUS resume records both accepted half chunks and a rejected PATCH records zero bytes (3.289829ms)
+✔ real single-shot and discarded-body download exclude error payloads (4.15447ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48.95455

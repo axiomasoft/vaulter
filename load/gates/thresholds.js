@@ -120,22 +120,34 @@ function streamingThresholds(tier) {
       trendExpr.push(`min>${row.min}`);
     }
 
-    // `stream_throughput_mibs` is added with each scenario's base `TAGS` constant only
-    // (`scenario`/`tier`/`class` — see e.g. tus-upload.js's `streamThroughputMiBs.add(
-    // ..., TAGS)`), never `op`: verified live while validating this item (a threshold
-    // key that also filtered on `op` never matched a single sample). `data_sent`/
-    // `data_received` ARE per-request built-ins and DO carry `op` (the request's own
-    // `tags` param sets it) — kept there.
-    out[`stream_throughput_mibs{scenario:${tags.scenario},tier:${tier}}`] = trendExpr;
+    // Every custom sample carries the accepted operation, including OP-07.
+    // Downloads share a per-stream floor across OP-08/09/10; their byte-rate
+    // contract remains specifically OP-08.
+    const selector = slug === 'download'
+      ? `scenario:${tags.scenario},tier:${tier}`
+      : `scenario:${tags.scenario},op:${tags.op},tier:${tier}`;
+    out[`stream_throughput_mibs{${selector}}`] = trendExpr;
+
+    const ops = slug === 'download' ? ['OP-08', 'OP-09', 'OP-10'] : [tags.op];
+    for (const op of ops) {
+      const opTags = `scenario:${tags.scenario},op:${op},tier:${tier}`;
+      out[`stream_accepted_total{${opTags}}`] = ['count>=0'];
+      out[`stream_rejected_total{${opTags}}`] = ['count>=0'];
+      out[`accepted_stream_duration_seconds{${opTags}}`] = ['count>=0'];
+      const byteMetric = slug === 'download' ? 'accepted_received_bytes'
+        : slug === 's3_complete' ? 'finalized_bytes' : 'accepted_sent_bytes';
+      out[`${byteMetric}{${opTags}}`] = ['count>=0'];
+      if (slug === 'download') out[`http_reqs{op:${op},tier:${tier}}`] = ['count>0'];
+    }
 
     if (row.dataSentRate !== undefined) {
-      out[`data_sent{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
+      out[`accepted_sent_bytes{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
         `rate>${row.dataSentRate}`,
       ];
     }
 
     if (row.dataReceivedRate !== undefined) {
-      out[`data_received{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
+      out[`accepted_received_bytes{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
         `rate>${row.dataReceivedRate}`,
       ];
     }

@@ -8,7 +8,7 @@ import { API, TIER, VUS_DOWNLOAD, DURATION, thinkTime } from '../lib/config.js';
 import { ACTOR_NORMAL } from '../lib/dataset.js';
 import { actorHeaders } from '../lib/auth.js';
 import { discoverDownloadableFiles, mintShareToken } from '../lib/discovery.js';
-import { streamThroughputMiBs, ttfbMs } from '../lib/metrics.js';
+import { recordAcceptedStream, ttfbMs } from '../lib/metrics.js';
 import { trackProtocolStatus } from '../lib/expected.js';
 import { header } from '../lib/headers.js';
 
@@ -68,7 +68,7 @@ function downloadCurrent(nodeId, headers) {
     responseType: 'none',
   });
 
-  recordThroughput(res, start);
+  recordThroughput(res, start, 'OP-08');
   trackProtocolStatus(res, TAGS);
   check(res, { 'download current 200': (r) => r.status === 200 });
 }
@@ -82,7 +82,7 @@ function downloadVersion(nodeId, headers) {
     responseType: 'none',
   });
 
-  recordThroughput(res, start);
+  recordThroughput(res, start, 'OP-09');
   trackProtocolStatus(res, TAGS);
   check(res, { 'download version 200': (r) => r.status === 200 });
 }
@@ -95,21 +95,19 @@ function downloadShare(token) {
     responseType: 'none',
   });
 
-  recordThroughput(res, start);
+  recordThroughput(res, start, 'OP-10');
   trackProtocolStatus(res, TAGS);
   check(res, { 'download share 200 or throttled': (r) => r.status === 200 || r.status === 429 });
 }
 
-function recordThroughput(res, startedAt) {
+function recordThroughput(res, startedAt, op) {
   const elapsedS = (Date.now() - startedAt) / 1000;
 
   ttfbMs.add(res.timings.waiting, TAGS);
 
   const contentLength = parseInt(header(res, 'Content-Length') || '0', 10);
 
-  if (elapsedS > 0 && contentLength > 0) {
-    streamThroughputMiBs.add(contentLength / 1024 / 1024 / elapsedS, TAGS);
-  }
+  recordAcceptedStream(res, contentLength, elapsedS, { ...TAGS, op }, [200], 'received');
 }
 
 export default function (data) {
