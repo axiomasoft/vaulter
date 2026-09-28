@@ -91,14 +91,14 @@ it('records exact mark metrics and suppresses zero-row batch metrics', function 
         'tombstoned' => 1,
         'skipped' => 0,
     ])->and($metrics->emissions())->toHaveCount(3)
-        ->and($metrics->emissions()[0]['name'])->toBe('vaulter_gc_duration_seconds')
-        ->and($metrics->emissions()[0]['labels'])->toBe(['phase' => 'mark'])
-        ->and($metrics->emissions()[1])->toBe([
+        ->and($metrics->emissions()[2]['name'])->toBe('vaulter_gc_duration_seconds')
+        ->and($metrics->emissions()[2]['labels'])->toBe(['phase' => 'mark'])
+        ->and($metrics->emissions()[0])->toBe([
             'type' => 'histogram',
             'name' => 'vaulter_gc_batch_rows',
             'value' => 1,
             'labels' => [],
-        ])->and($metrics->emissions()[2])->toBe([
+        ])->and($metrics->emissions()[1])->toBe([
             'type' => 'counter',
             'name' => 'vaulter_gc_rows_scanned_total',
             'value' => 1,
@@ -137,13 +137,13 @@ it('records exact sweep metrics including the zero deletion counter', function (
         'swept' => 1,
         'skipped' => 0,
     ])->and($metrics->emissions())->toHaveCount(3)
-        ->and($metrics->emissions()[0]['labels'])->toBe(['phase' => 'sweep'])
-        ->and($metrics->emissions()[1])->toBe([
+        ->and($metrics->emissions()[2]['labels'])->toBe(['phase' => 'sweep'])
+        ->and($metrics->emissions()[0])->toBe([
             'type' => 'histogram',
             'name' => 'vaulter_gc_batch_rows',
             'value' => 1,
             'labels' => [],
-        ])->and($metrics->emissions()[2])->toBe([
+        ])->and($metrics->emissions()[1])->toBe([
             'type' => 'counter',
             'name' => 'vaulter_gc_objects_deleted_total',
             'value' => 1,

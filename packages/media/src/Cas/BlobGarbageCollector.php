@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -41,6 +42,8 @@ use Vaulter\Support\Config;
  */
 final readonly class BlobGarbageCollector
 {
+    private const int BATCH_SIZE = 1000;
+
     private const int MAX_SERIALIZATION_RETRIES = 5;
 
     public function __construct(
@@ -79,40 +82,21 @@ final readonly class BlobGarbageCollector
     {
         $tombstoned = 0;
         $skipped = 0;
-        $scanned = 0;
 
         $this->metrics->timing(
             name: 'vaulter_gc_duration_seconds',
-            labels: ['phase' => 'mark'],
-            operation: function () use ($graceHours, &$tombstoned, &$skipped, &$scanned): void {
-                foreach ($this->candidates(static fn (Builder $q): Builder => $q->garbageCollectable()) as $candidate) {
-                    $scanned++;
-                    $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($graceHours): bool {
-                        // Re-read under the lock; the cheap scan may be stale.
-                        if ($blob->status !== BlobStatus::Committed) {
-                            return false;
-                        }
+            operation: function () use ($graceHours, &$tombstoned, &$skipped): void {
+                foreach ($this->candidateBatches(static fn (Builder $q): Builder => $q->garbageCollectable()) as $batch) {
+                    $marked = $this->markBatch($batch, $graceHours);
+                    $tombstoned += $marked;
+                    $skipped += $batch->count() - $marked;
 
-                        // The liveness re-check that makes online GC safe: an edge created
-                        // after the scan (but before the lock) keeps the blob alive.
-                        if ($this->edges->hasLiveEdge($blob)) {
-                            return false;
-                        }
-
-                        $this->blobs->tombstone(blob: $blob, graceHours: $graceHours);
-
-                        return true;
-                    });
-
-                    $acted ? $tombstoned++ : $skipped++;
+                    $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $batch->count());
+                    $this->metrics->counter(name: 'vaulter_gc_rows_scanned_total', amount: $batch->count());
                 }
             },
+            labels: ['phase' => 'mark'],
         );
-
-        if ($scanned > 0) {
-            $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $scanned);
-            $this->metrics->counter(name: 'vaulter_gc_rows_scanned_total', amount: $scanned);
-        }
 
         return ['tombstoned' => $tombstoned, 'skipped' => $skipped];
     }
@@ -126,52 +110,58 @@ final readonly class BlobGarbageCollector
     {
         $swept = 0;
         $skipped = 0;
-        $scanned = 0;
+        $hadBatch = false;
 
         $this->metrics->timing(
             name: 'vaulter_gc_duration_seconds',
-            labels: ['phase' => 'sweep'],
-            operation: function () use (&$swept, &$skipped, &$scanned): void {
-                foreach ($this->candidates(static fn (Builder $q): Builder => $q->sweepable()) as $candidate) {
-                    $scanned++;
-                    $deleted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob): bool {
-                        // (the body runs inside a SERIALIZABLE transaction on PG — see
-                        // serializable()/lockedTransaction(): the isolation level is set as
-                        // the FIRST statement inside the transaction, before the lock.)
-                        // A resurrection between scan and lock flips it back to committed —
-                        // never delete then.
-                        if ($blob->status !== BlobStatus::Tombstoned) {
-                            return false;
-                        }
+            operation: function () use (&$swept, &$skipped, &$hadBatch): void {
+                foreach ($this->candidateBatches(static fn (Builder $q): Builder => $q->sweepable()) as $batch) {
+                    $hadBatch = true;
+                    $batchSwept = 0;
 
-                        if ($this->edges->hasLiveEdge($blob)) {
-                            return false;
-                        }
+                    foreach ($batch as $candidate) {
+                        $deleted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob): bool {
+                            // (the body runs inside a SERIALIZABLE transaction on PG — see
+                            // serializable()/lockedTransaction(): the isolation level is set as
+                            // the FIRST statement inside the transaction, before the lock.)
+                            // A resurrection between scan and lock flips it back to committed —
+                            // never delete then.
+                            if ($blob->status !== BlobStatus::Tombstoned) {
+                                return false;
+                            }
 
-                        if ($blob->delete_after_at === null || $blob->delete_after_at->isFuture()) {
-                            return false;
-                        }
+                            if ($this->edges->hasLiveEdge($blob)) {
+                                return false;
+                            }
 
-                        // Claim it, delete the scope-qualified object, finalise the
-                        // idempotent tombstone. A missing object is fine — markDeleted is
-                        // idempotent.
-                        $this->blobs->markDeleting($blob);
-                        $this->content->delete($blob->storage_key, $blob->disk);
-                        $this->blobs->markDeleted($blob);
+                            if ($blob->delete_after_at === null || $blob->delete_after_at->isFuture()) {
+                                return false;
+                            }
 
-                        return true;
-                    }, serializable: true));
+                            // Claim it, delete the scope-qualified object, finalise the
+                            // idempotent tombstone. A missing object is fine — markDeleted is
+                            // idempotent.
+                            $this->blobs->markDeleting($blob);
+                            $this->content->delete($blob->storage_key, $blob->disk);
+                            $this->blobs->markDeleted($blob);
 
-                    $deleted ? $swept++ : $skipped++;
+                            return true;
+                        }, serializable: true));
+
+                        $deleted ? $batchSwept++ : $skipped++;
+                    }
+
+                    $swept += $batchSwept;
+                    $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $batch->count());
+                    $this->metrics->counter(name: 'vaulter_gc_objects_deleted_total', amount: $batchSwept);
                 }
             },
+            labels: ['phase' => 'sweep'],
         );
 
-        if ($scanned > 0) {
-            $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $scanned);
+        if (!$hadBatch) {
+            $this->metrics->counter(name: 'vaulter_gc_objects_deleted_total', amount: 0);
         }
-
-        $this->metrics->counter(name: 'vaulter_gc_objects_deleted_total', amount: $swept);
 
         return ['swept' => $swept, 'skipped' => $skipped];
     }
@@ -191,38 +181,42 @@ final readonly class BlobGarbageCollector
         $swept = 0;
         $skipped = 0;
 
-        $candidates = $this->candidates(static fn (Builder $q): Builder => $q
+        $batches = $this->candidateBatches(static fn (Builder $q): Builder => $q
             ->where('status', BlobStatus::Pending->value)
             ->where('first_seen_at', '<', $cutoff));
 
-        foreach ($candidates as $candidate) {
-            // Symmetry with sweep() (F-P1.5-02): the pending-sweep runs its unit
-            // SERIALIZABLE on PostgreSQL with retry-on-40001, so a transient
-            // serialization failure under concurrent GC is retried rather than
-            // propagated as a QueryException that aborts the whole pass.
-            $acted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob) use ($cutoff): bool {
-                if ($blob->status !== BlobStatus::Pending) {
-                    return false;
-                }
+        foreach ($batches as $batch) {
+            foreach ($batch as $candidate) {
+                // Symmetry with sweep() (F-P1.5-02): the pending-sweep runs its unit
+                // SERIALIZABLE on PostgreSQL with retry-on-40001, so a transient
+                // serialization failure under concurrent GC is retried rather than
+                // propagated as a QueryException that aborts the whole pass.
+                $acted = $this->serializable(fn (): bool => $this->lockedTransaction($candidate, function (Blob $blob) use ($cutoff): bool {
+                    if ($blob->status !== BlobStatus::Pending) {
+                        return false;
+                    }
 
-                // A pending row that grew an edge (a commit landing right now) is
-                // live — leave it.
-                if ($this->edges->hasLiveEdge($blob)) {
-                    return false;
-                }
+                    // A pending row that grew an edge (a commit landing right now) is
+                    // live — leave it.
+                    if ($this->edges->hasLiveEdge($blob)) {
+                        return false;
+                    }
 
-                if ($blob->first_seen_at !== null && $blob->first_seen_at->greaterThanOrEqualTo($cutoff)) {
-                    return false;
-                }
+                    if ($blob->first_seen_at !== null && $blob->first_seen_at->greaterThanOrEqualTo($cutoff)) {
+                        return false;
+                    }
 
-                $this->blobs->markDeleting($blob);
-                $this->content->delete($blob->storage_key, $blob->disk);
-                $this->blobs->markDeleted($blob);
+                    $this->blobs->markDeleting($blob);
+                    $this->content->delete($blob->storage_key, $blob->disk);
+                    $this->blobs->markDeleted($blob);
 
-                return true;
-            }, serializable: true));
+                    return true;
+                }, serializable: true));
 
-            $acted ? $swept++ : $skipped++;
+                $acted ? $swept++ : $skipped++;
+            }
+
+            $this->metrics->histogram(name: 'vaulter_gc_batch_rows', value: $batch->count());
         }
 
         return ['swept' => $swept, 'skipped' => $skipped];
@@ -313,16 +307,131 @@ final readonly class BlobGarbageCollector
     }
 
     /**
-     * Stream the GC/sweep candidates for the given scope, as the system (no panel/
-     * workspace — GC is ACL-blind).
+     * Lock before reading state/liveness, but amortise the transaction and reads
+     * over a bounded batch. Keep repository writes so model events still fire.
      *
-     * @param  \Closure(Builder<Blob>): Builder<Blob> $scope
-     * @return iterable<Blob>
+     * @param Collection<int, Blob> $batch
      */
-    private function candidates(\Closure $scope): iterable
+    private function markBatch(Collection $batch, int $graceHours): int
     {
         $model = Config::blobModel();
 
-        return $scope($model::query())->cursor();
+        // Custom models/observers may change another candidate while saving.
+        // Preserve the per-row fresh liveness check for those extension points.
+        if ($model !== Blob::class || $this->hasBlobListeners()) {
+            $marked = 0;
+
+            foreach ($batch as $candidate) {
+                $acted = $this->lockedTransaction($candidate, function (Blob $blob) use ($graceHours): bool {
+                    if ($blob->status !== BlobStatus::Committed || $this->edges->hasLiveEdge($blob)) {
+                        return false;
+                    }
+
+                    $this->blobs->tombstone(blob: $blob, graceHours: $graceHours);
+
+                    return true;
+                });
+
+                $marked += (int) $acted;
+            }
+
+            return $marked;
+        }
+
+        return DB::transaction(function () use ($batch, $graceHours): int {
+            if ($this->lock->isPostgres()) {
+                $keys = $batch->map(fn (Blob $blob): string => $this->scopeFor($blob).'|'.$blob->sha256)->all();
+
+                // The same hashtext namespace as BlobLock. Acquire distinct locks
+                // in hash order (including collisions), before any data read.
+                DB::select(
+                    'SELECT pg_advisory_xact_lock(lock_key) FROM '
+                    .'(SELECT DISTINCT hashtext(value) AS lock_key '
+                    .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',
+                    [json_encode($keys, JSON_THROW_ON_ERROR)],
+                );
+            }
+
+            $model = Config::blobModel();
+            $query = $model::query()->whereKey($batch->modelKeys())->orderBy((new $model)->getKeyName());
+
+            if ($this->lock->usesRowLock()) {
+                $query->lockForUpdate();
+            }
+
+            $fresh = $query->get();
+            $edgeModel = Config::fileVersionBlobModel();
+            /** @var \Illuminate\Support\Collection<int, int|string> $liveIds */
+            $liveIds = $edgeModel::query()->whereIn('blob_id', $batch->modelKeys())->distinct()->pluck('blob_id');
+            $live = array_fill_keys($liveIds->all(), true);
+            $marked = 0;
+
+            foreach ($fresh as $blob) {
+                if ($blob->status !== BlobStatus::Committed) {
+                    continue;
+                }
+
+                if (isset($live[$blob->id])) {
+                    continue;
+                }
+
+                $this->blobs->tombstone(blob: $blob, graceHours: $graceHours);
+                $marked++;
+            }
+
+            return $marked;
+        });
+    }
+
+    private function hasBlobListeners(): bool
+    {
+        $dispatcher = Blob::getEventDispatcher();
+
+        return array_any(
+            ['retrieved', 'saving', 'saved', 'updating', 'updated'],
+            static fn (string $event): bool => $dispatcher?->hasListeners('eloquent.'.$event.': '.Blob::class) ?? false,
+        );
+    }
+
+    /**
+     * Scan by key, never offset: processed and skipped rows both advance the
+     * checkpoint even though status changes remove rows from the candidate set.
+     * A phase-start high-water key keeps inserts from extending a pass forever.
+     * Queries and materialised batches hold at most BATCH_SIZE rows, as the
+     * system (no panel/workspace — GC is ACL-blind).
+     *
+     * @param  \Closure(Builder<Blob>): Builder<Blob> $scope
+     * @return iterable<Collection<int, Blob>>
+     */
+    private function candidateBatches(\Closure $scope): iterable
+    {
+        $model = Config::blobModel();
+        $query = $scope($model::query());
+        $key = $query->getModel()->getKeyName();
+        $upper = (clone $query)->reorder($key, 'desc')->value($key);
+
+        if ($upper === null) {
+            return;
+        }
+
+        $last = null;
+
+        do {
+            $page = (clone $query)->where($key, '<=', $upper)->reorder($key)->limit(self::BATCH_SIZE);
+
+            if ($last !== null) {
+                $page->where($key, '>', $last);
+            }
+
+            $batch = $page->get();
+
+            if ($batch->isEmpty()) {
+                return;
+            }
+
+            $last = $batch->last()->getKey();
+
+            yield $batch;
+        } while ($batch->count() === self::BATCH_SIZE);
     }
 }
