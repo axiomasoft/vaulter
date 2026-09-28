@@ -61,6 +61,8 @@ class P5CaptureTest(unittest.TestCase):
             out = Path(tmp)
             (out / 'sweeper').mkdir()
             observed = p5.run_sweeper(cell, 1, out)['statuses']
+        self.assertNotIn('artisan', observed['command'])
+        self.assertIn('vaulter:sweep-uploads', observed['command'])
         self.assertEqual(observed['exit_code'], 1)
         self.assertEqual(observed['candidate_rows'], 20000)
         self.assertEqual(observed['processed_rows'], 10)

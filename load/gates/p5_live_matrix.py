@@ -542,16 +542,26 @@ def run_checked(argv: list[str], timeout: int) -> subprocess.CompletedProcess[st
     return subprocess.CompletedProcess(argv, process.returncode or 0, stdout, stderr)
 
 
+def command_tuples(text: str) -> list[str]:
+    """psql -At still prints an UPDATE/INSERT/DELETE tag after RETURNING tuples."""
+    skipped = ('UPDATE ', 'INSERT ', 'DELETE ')
+    return [line.strip() for line in text.splitlines() if line.strip() and not line.startswith(skipped)]
+
+
 def capture_during(action) -> tuple[subprocess.CompletedProcess, list[dict]]:
     samples = []
     with ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(action)
         while not future.done():
+            # Started while the actor was still running. A short SQL command can
+            # exit before this docker snapshot returns; that sample is still during
+            # the actor. A snapshot is not started after the actor has finished.
+            started = time.monotonic_ns()
             pg = postgres_snapshot()
             pool = pgbouncer_snapshot()
-            # A collector that finishes after the actor is only a post sample.
-            if not future.done():
-                samples.append({'monotonic_ns': time.monotonic_ns(), 'postgres': pg, 'pgbouncer': pool})
+            samples.append({'monotonic_ns': started, 'postgres': pg, 'pgbouncer': pool})
+            if future.done():
+                break
             time.sleep(0.05)
         completed = future.result()
     if not samples:
@@ -849,16 +859,17 @@ def run_patch_overlap(invoke, upload_id, out, cell, attempt, base):
                     raise gate.EvidenceInvalid('PATCH never entered held window')
                 time.sleep(0.05)
             # Make this exact session a candidate only AFTER the real PATCH owns the lock.
-            evidence['sweepable'] = psql(
+            marked = psql(
                 f"UPDATE v_upload_sessions SET expires_at = now() - interval '1 day' "
                 f"WHERE upload_id = '{upload_id}' AND status IN ('initiated','uploading','assembled') RETURNING upload_id;"
-            ).strip() == upload_id
+            )
+            evidence['sweepable'] = upload_id in command_tuples(marked)
             evidence['lock_observed'] = psql(
                 f"SELECT count(*) FROM pg_locks WHERE pid = {int(evidence['backend_pid'])} "
                 "AND locktype = 'advisory' AND granted;"
             ).strip() == '1'
             evidence['sweep_start_ns'] = time.monotonic_ns()
-            sweep = compose('exec', '-T', '-e', 'P5_SWEEP_TARGET=' + upload_id, 'app', 'php', 'vendor/bin/testbench', 'artisan',
+            sweep = compose('exec', '-T', '-e', 'P5_SWEEP_TARGET=' + upload_id, 'app', 'php', 'vendor/bin/testbench',
                             'vaulter:sweep-uploads', '--no-interaction', timeout=30)
             evidence['lock_after_sweep'] = psql(
                 f"SELECT count(*) FROM pg_locks WHERE pid = {int(evidence['backend_pid'])} "
@@ -964,7 +975,7 @@ def run_sweeper(cell, attempt, out, *, run_id: str | None = None) -> dict:
         raise gate.EvidenceInvalid(f'dirty seed {seeded} != {rows}')
     metric_before = sweep_batch_metric()
     command = ['exec', '-T', 'app', 'php', '-d', 'auto_prepend_file=/app/load/scripts/p5-php-peak.php',
-               'vendor/bin/testbench', 'artisan', 'vaulter:sweep-uploads', '--no-interaction']
+               'vendor/bin/testbench', 'vaulter:sweep-uploads', '--no-interaction']
     started = time.monotonic()
     timed_out = False
     try:

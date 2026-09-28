@@ -46,9 +46,21 @@ class R05CaptureTest(unittest.TestCase):
         self.assertEqual(samples[0]['pgbouncer']['cl_waiting'], 2)
         self.assertGreater(samples[0]['monotonic_ns'], 0)
 
+    def test_sample_started_during_a_short_actor_is_kept(self):
+        future = MagicMock()
+        future.done.side_effect = [False, True]
+        future.result.return_value = subprocess.CompletedProcess([], 0, '', '')
+        with patch.object(p5, 'ThreadPoolExecutor') as executor, \
+             patch.object(p5, 'postgres_snapshot', return_value={'locks': []}), \
+             patch.object(p5, 'pgbouncer_snapshot', return_value={'cl_waiting': 0}), \
+             patch.object(p5.time, 'sleep'):
+            executor.return_value.__enter__.return_value.submit.return_value = future
+            _, samples = p5.capture_during(lambda: None)
+        self.assertEqual(len(samples), 1)
+
     def test_post_only_sample_is_rejected(self):
         future = MagicMock()
-        future.done.side_effect = [False, True, True]
+        future.done.return_value = True
         with patch.object(p5, 'ThreadPoolExecutor') as executor, \
              patch.object(p5, 'postgres_snapshot', return_value={}), \
              patch.object(p5, 'pgbouncer_snapshot', return_value={}), \
@@ -116,14 +128,17 @@ class R05CaptureTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, \
              patch.object(p5, 'capture_during', return_value=(completed, [])), \
              patch.object(p5, 'compose', side_effect=command) as compose, \
-             patch.object(p5, 'psql', side_effect=[upload, '1', '1', json.dumps({'upload_id':upload,'status':'uploading','received_bytes':4}), '']), \
+             patch.object(p5, 'psql', side_effect=[upload + '\nUPDATE 1\n', '1', '1', json.dumps({'upload_id':upload,'status':'uploading','received_bytes':4}), '']), \
              patch.object(p5, 'http_json', return_value=(204, {}, None)) as retry:
             root = Path(tmp)
             (root / 'sweeper').mkdir()
             _, _, overlap = p5.run_patch_overlap(lambda: completed, upload, root,
                 {'cell_id':'overlap'}, 1, 101)
             self.assertEqual(overlap['sweep_exit'], 0)
-            self.assertTrue(any('vaulter:sweep-uploads' in c.args for c in compose.call_args_list))
+            self.assertTrue(overlap['sweepable'])
+            sweep_calls = [c.args for c in compose.call_args_list if 'vaulter:sweep-uploads' in c.args]
+            self.assertEqual(len(sweep_calls), 1)
+            self.assertNotIn('artisan', sweep_calls[0])
             self.assertTrue(any('touch' in c.args for c in compose.call_args_list))
             self.assertEqual(retry.call_args.args[2], bytes([0x70, 0x35, 1, 0x0a]))
             self.assertTrue((root / 'sweeper' / 'overlap.a1.json').is_file())
