@@ -1,0 +1,22 @@
+{
+  "package": "drive",
+  "driver": "pgsql",
+  "stamp": "20260927-reboot",
+  "exit_code": 0,
+  "parallel": false,
+  "min_flag": null,
+  "wall_clock": "3:12:40",
+  "duration_seconds_reported": 11450.93,
+  "source": "55d10b6afd864b2820061c31cc5dc84ec54d714c",
+  "sweep_blob": "6213ce898b9edc4787bc14110a852c1b3b7c2f78",
+  "mutations": {
+    "tested_killed": 1420,
+    "timeout": 0,
+    "untested_escaped": 366,
+    "total": 1786
+  },
+  "score_percent_reported": 79.51,
+  "threshold": 95,
+  "gate_exit": 1,
+  "note": "Pest ran without --min, so exit 0 means the denominator finished. 79.51 is below 95, so the separate gate fails. Step 13 65.38% is unchanged. Drive source was not edited."
+}

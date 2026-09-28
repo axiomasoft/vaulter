@@ -1,0 +1,108 @@
+
+## src/Uploads/S3MultipartHandler.php (35)
+L135 RemoveArrayItem, L147 IfNegated, L148 RemoveFunctionCall, L200 RemoveArrayItem, L207 FalseToTrue, L229 RemoveFunctionCall, L232 FalseToTrue, L241 MinusToPlus, L241 DivisionToMultiplication, L241 DecrementInteger, L241 IncrementInteger, L253 RemoveArrayItem, L271 RemoveFunctionCall, L274 RemoveFunctionCall, L277 RemoveMethodCall, L292 IfNegated, L292 IdenticalToNotIdentical, L297 IncrementInteger, L326 TernaryNegated, L326 GreaterToGreaterOrEqual, L326 GreaterToSmallerOrEqual, L326 DecrementInteger, L326 IncrementInteger, L327 IncrementInteger, L330 FalseToTrue, L330 EmptyStringToNotEmpty, L332 GreaterToGreaterOrEqual, L332 GreaterToGreaterOrEqual, L332 DecrementInteger, L332 IncrementInteger, L348 RemoveIntegerCast, L348 DecrementInteger, L348 IncrementInteger, L363 FalseToTrue, L368 RemoveFunctionCall
+
+## src/Support/Uploads/StagedUpload.php (34)
+L71 TernaryNegated, L71 InstanceOfToTrue, L71 InstanceOfToFalse, L92 RemoveIntegerCast, L120 IncrementInteger, L127 ConcatRemoveRight, L129 FalseToTrue, L138 GreaterToGreaterOrEqual, L138 DecrementInteger, L138 IncrementInteger, L145 RemoveFunctionCall, L153 RemoveFunctionCall, L156 RemoveFunctionCall, L159 DecrementInteger, L159 IncrementInteger, L178 FalseToTrue, L192 PlusToMinus, L192 BooleanOrToBooleanAnd, L193 RemoveEarlyReturn, L203 GreaterToGreaterOrEqual, L203 DecrementInteger, L203 IncrementInteger, L209 RemoveFunctionCall, L228 BooleanOrToBooleanAnd, L228 FalseToTrue, L228 EmptyStringToNotEmpty, L254 IncrementInteger, L258 FalseToTrue, L259 RemoveIntegerCast, L259 DecrementInteger, L259 IncrementInteger, L282 IncrementInteger, L288 IncrementInteger, L290 FalseToTrue
+
+## src/Actions/UploadFileAction.php (32)
+L78 MinusToPlus, L80 IfNegated, L80 RemoveNot, L81 RemoveMethodCall, L106 DecrementInteger, L123 RemoveNullSafeOperator, L129 RemoveArrayItem, L130 RemoveArrayItem, L135 RemoveArrayItem, L136 RemoveArrayItem, L137 RemoveArrayItem, L169 InstanceOfToTrue, L189 InstanceOfToTrue, L196 CoalesceRemoveLeft, L203 CoalesceRemoveLeft, L234 RemoveArrayItem, L235 RemoveArrayItem, L236 RemoveArrayItem, L249 SmallerOrEqualToSmaller, L249 DecrementInteger, L249 IncrementInteger, L265 RemoveNullSafeOperator, L284 RemoveIntegerCast, L284 TernaryNegated, L284 AlwaysReturnNull, L295 RemoveIntegerCast, L295 TernaryNegated, L295 AlwaysReturnNull, L312 RemoveIntegerCast, L312 DecrementInteger, L312 IncrementInteger, L319 EmptyStringToNotEmpty
+
+## src/Http/Controllers/NodeController.php (30)
+L87 RemoveMethodCall, L151 IfNegated, L151 IdenticalToNotIdentical, L152 RemoveMethodCall, L163 CoalesceRemoveLeft, L189 RemoveMethodCall, L202 CoalesceRemoveLeft, L202 RemoveMethodCall, L234 RemoveMethodCall, L235 CoalesceRemoveLeft, L235 RemoveMethodCall, L252 RemoveMethodCall, L253 CoalesceRemoveLeft, L253 RemoveMethodCall, L267 RemoveMethodCall, L279 RemoveMethodCall, L291 RemoveMethodCall, L347 InstanceOfToTrue, L374 BooleanOrToBooleanAnd, L374 InstanceOfToTrue, L383 RemoveIntegerCast, L383 DecrementInteger, L383 IncrementInteger, L385 DecrementInteger, L385 IncrementInteger, L411 BooleanOrToBooleanAnd, L432 IfNegated, L432 RemoveNot, L433 RemoveEarlyReturn, L452 InstanceOfToTrue
+
+## src/Http/Controllers/Uploads/TusUploadController.php (26)
+L118 RemoveStringCast, L123 RemoveStringCast, L155 RemoveStringCast, L173 RemoveStringCast, L186 RemoveMethodCall, L214 RemoveStringCast, L266 RemoveMethodCall, L287 TernaryNegated, L287 IdenticalToNotIdentical, L291 RemoveMethodCall, L331 InstanceOfToTrue, L342 InstanceOfToTrue, L390 RemoveIntegerCast, L390 IncrementInteger, L433 ContinueToBreak, L436 RemoveStringCast, L452 EmptyStringToNotEmpty, L459 IncrementInteger, L462 EmptyStringToNotEmpty, L466 RemoveStringCast, L466 FalseToTrue, L466 DecrementInteger, L466 EmptyStringToNotEmpty, L509 RemoveStringCast, L509 EmptyStringToNotEmpty, L548 InstanceOfToTrue
+
+## src/Actions/CopyNodeAction.php (22)
+L53 RemoveNullSafeOperator, L70 GreaterToGreaterOrEqual, L70 DecrementInteger, L70 IncrementInteger, L93 DecrementInteger, L93 IncrementInteger, L94 FalseToTrue, L95 TrueToFalse, L96 RemoveArrayItem, L103 DecrementInteger, L103 IncrementInteger, L125 InstanceOfToTrue, L132 InstanceOfToTrue, L138 RemoveArrayItem, L139 RemoveArrayItem, L140 RemoveArrayItem, L149 RemoveArrayItem, L151 RemoveArrayItem, L181 RemoveArrayItem, L182 RemoveArrayItem, L183 RemoveArrayItem, L184 RemoveArrayItem
+
+## src/Http/Controllers/DownloadController.php (20)
+L90 InstanceOfToTrue, L110 InstanceOfToTrue, L114 TernaryNegated, L114 NotIdenticalToIdentical, L114 EmptyStringToNotEmpty, L115 CoalesceRemoveLeft, L115 CoalesceRemoveLeft, L149 MultiplicationToDivision, L149 DecrementInteger, L149 DecrementInteger, L149 IncrementInteger, L149 IncrementInteger, L151 FalseToTrue, L166 MinusToPlus, L166 DivisionToMultiplication, L166 DecrementInteger, L166 IncrementInteger, L169 TrueToFalse, L173 RemoveFunctionCall, L178 RemoveStringCast
+
+## src/Console/PurgeTrashCommand.php (18)
+L64 DecrementInteger, L64 IncrementInteger, L84 DecrementInteger, L84 IncrementInteger, L94 RemoveMethodCall, L99 RemoveMethodCall, L105 GreaterToGreaterOrEqual, L105 DecrementInteger, L107 PlusEqualToMinusEqual, L113 IfNegated, L113 GreaterToGreaterOrEqual, L113 GreaterToSmallerOrEqual, L113 DecrementInteger, L113 IncrementInteger, L114 RemoveMethodCall, L130 BooleanAndToBooleanOr, L131 DecrementInteger, L131 IncrementInteger
+
+## src/Http/Requests/Uploads/CreateUploadSessionRequest.php (18)
+L29 RemoveArrayItem, L30 RemoveArrayItem, L30 RemoveArrayItem, L31 RemoveArrayItem, L31 RemoveArrayItem, L34 RemoveArrayItem, L35 RemoveArrayItem, L73 AlwaysReturnNull, L80 BooleanAndToBooleanOr, L80 EmptyStringToNotEmpty, L87 RemoveIntegerCast, L94 TernaryNegated, L94 NotIdenticalToIdentical, L94 BooleanAndToBooleanOr, L94 AlwaysReturnNull, L94 EmptyStringToNotEmpty, L101 BooleanAndToBooleanOr, L101 EmptyStringToNotEmpty
+
+## src/Http/Controllers/Uploads/S3MultipartController.php (17)
+L88 RemoveMethodCall, L128 TernaryNegated, L128 IdenticalToNotIdentical, L132 RemoveMethodCall, L160 InstanceOfToTrue, L182 BooleanOrToBooleanAnd, L182 InstanceOfToTrue, L224 RemoveIntegerCast, L224 SmallerOrEqualToSmaller, L224 SmallerOrEqualToSmaller, L224 BooleanOrToBooleanAnd, L224 BooleanOrToBooleanAnd, L224 DecrementInteger, L224 IncrementInteger, L244 BooleanOrToBooleanAnd, L244 BooleanOrToBooleanAnd, L256 InstanceOfToTrue
+
+## src/Uploads/UploadSessionManager.php (11)
+L64 RemoveArrayItem, L66 RemoveStringCast, L71 RemoveArrayItem, L74 RemoveArrayItem, L82 RemoveMethodCall, L263 BooleanOrToBooleanAnd, L263 DecrementInteger, L263 IncrementInteger, L269 RemoveArrayItem, L300 RemoveArrayItem, L307 AlwaysReturnNull
+
+## src/DriveContext.php (9)
+L101 CoalesceRemoveLeft, L126 CoalesceRemoveLeft, L126 CoalesceRemoveLeft, L132 CoalesceRemoveLeft, L188 CoalesceRemoveLeft, L213 FalseToTrue, L236 FalseToTrue, L240 RemoveFunctionCall, L241 RemoveFunctionCall
+
+## src/Actions/Uploads/CommitUploadAction.php (9)
+L84 RemoveFunctionCall, L112 RemoveFunctionCall, L118 RemoveStringCast, L137 CoalesceRemoveLeft, L137 CoalesceRemoveLeft, L147 CoalesceRemoveLeft, L193 RemoveNullSafeOperator, L193 AlwaysReturnNull, L205 RemoveNullSafeOperator
+
+## src/Http/Requests/UploadFileRequest.php (8)
+L29 RemoveArrayItem, L41 RemoveArrayItem, L41 RemoveArrayItem, L42 RemoveArrayItem, L42 RemoveArrayItem, L43 RemoveArrayItem, L91 BooleanAndToBooleanOr, L91 EmptyStringToNotEmpty
+
+## src/Repositories/Uploads/UploadSessionStoreRepository.php (6)
+L90 ConcatRemoveLeft, L90 ConcatSwitchSides, L93 FalseToTrue, L97 RemoveEarlyReturn, L182 RemoveArrayItem, L217 RemoveArrayItem
+
+## src/Activity/RecordsDriveActivity.php (5)
+L200 UnwrapArrayMap, L237 RemoveArrayItem, L238 RemoveArrayItem, L252 RemoveArrayItem, L253 RemoveArrayItem
+
+## src/Uploads/TusUploadHandler.php (5)
+L142 SmallerToSmallerOrEqual, L161 MinusToPlus, L163 GreaterToGreaterOrEqual, L163 DecrementInteger, L163 IncrementInteger
+
+## src/Models/Uploads/UploadPart.php (5)
+L57 AlwaysReturnEmptyArray, L58 RemoveArrayItem, L59 RemoveArrayItem, L60 RemoveArrayItem, L61 RemoveArrayItem
+
+## src/Http/Requests/CopyNodeRequest.php (5)
+L25 RemoveArrayItem, L25 RemoveArrayItem, L26 RemoveArrayItem, L49 BooleanAndToBooleanOr, L49 EmptyStringToNotEmpty
+
+## src/Webhooks/RecordsDriveOutbox.php (5)
+L224 UnwrapArrayMap, L229 UnwrapArrayMap, L248 RemoveMethodCall, L249 RemoveArrayItem, L250 RemoveArrayItem
+
+## src/Actions/ForceDeleteNodeAction.php (5)
+L61 GreaterToGreaterOrEqual, L61 DecrementInteger, L61 IncrementInteger, L67 UnwrapArrayValues, L84 InstanceOfToTrue
+
+## src/Actions/MoveNodeAction.php (5)
+L48 RemoveNullSafeOperator, L99 RemoveMethodCall, L102 RemoveArrayItem, L105 FalseToTrue, L112 RemoveNullSafeOperator
+
+## src/StorageManager.php (5)
+L49 RemoveEarlyReturn, L117 RemoveArrayItem, L120 DecrementInteger, L120 IncrementInteger, L120 RemoveArrayItem
+
+## src/Models/Uploads/UploadSession.php (4)
+L159 RemoveArrayItem, L160 RemoveArrayItem, L161 RemoveArrayItem, L162 RemoveArrayItem
+
+## src/Http/Requests/MoveNodeRequest.php (4)
+L23 AlwaysReturnEmptyArray, L24 RemoveArrayItem, L24 RemoveArrayItem, L30 AlwaysReturnNull
+
+## src/Http/Resources/StorageResource.php (4)
+L77 InstanceOfToTrue, L89 FalseToTrue, L93 FalseToTrue, L96 FalseToTrue
+
+## src/Actions/CreateFolderAction.php (4)
+L35 RemoveNullSafeOperator, L47 DecrementInteger, L47 IncrementInteger, L47 RemoveArrayItem
+
+## src/Support/Uploads/MagicByteSniffer.php (3)
+L59 RemoveStringCast, L59 DecrementInteger, L84 IncrementInteger
+
+## src/Http/Controllers/StorageController.php (3)
+L66 RemoveMethodCall, L95 BooleanOrToBooleanAnd, L107 InstanceOfToTrue
+
+## src/Console/SweepUploadsCommand.php (2)
+L48 DecrementInteger, L92 IncrementInteger
+
+## src/Http/Requests/CreateFolderRequest.php (2)
+L29 RemoveArrayItem, L29 RemoveArrayItem
+
+## src/Exceptions/OffsetMismatchException.php (1)
+L49 RemoveStringCast
+
+## src/Repositories/Uploads/UploadPartStoreRepository.php (1)
+L43 RemoveArrayItem
+
+## src/Repositories/Uploads/UploadSessionReadRepository.php (1)
+L60 RemoveEarlyReturn
+
+## src/Http/Resources/Uploads/UploadSessionResource.php (1)
+L41 RemoveNullSafeOperator
+
+## src/Actions/RestoreNodeAction.php (1)
+L72 CoalesceRemoveLeft

@@ -1,0 +1,2 @@
+# Raw terminal captures contain CR/ANSI sequences; preserve their original bytes.
+plans/remaining-evidence/R07-checks/**/time.txt -text -diff

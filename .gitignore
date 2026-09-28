@@ -54,6 +54,7 @@ docs/.vitepress/dist/
 /load/seed/out/
 /load/chaos/__pycache__/
 /plans/remaining-evidence/R18-checks/*cache*/
+/plans/remaining-evidence/R07-checks/**/pest-mutate-cache/
 /plans/remaining-evidence/R19-checks/**/pest-mutate-cache/
 /packages/core/core
 /_create_project_drive_drive_tables.php

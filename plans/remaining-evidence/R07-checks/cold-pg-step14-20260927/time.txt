@@ -1,0 +1,92 @@
+
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[31;1m⨯[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[33;1m![39;22m[33;1m![39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[31;1m⨯[39;22m[90;1m.[39;22m[90;1m.[39;22m[31;1m⨯[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\R07TusControllerContractsTest[22m [90m>[39m it…  [41;1m QueryException [49;22m  
+[39;1m  SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "v_upload_sessions" violates foreign key constraint "v_upload_sessions_storage_id_foreign"
+DETAIL:  Key (storage_id)=(9999999) is not present in table "v_storages". (Connection: testing, Host: 127.0.0.1, Port: 55432, Database: vaulter_r02_drive_test, SQL: update "v_upload_sessions" set "storage_id" = 9999999, "updated_at" = 2026-09-27 10:57:05 where "v_upload_sessions"."id" = 1)[39;22m
+
+  at [32mvendor/laravel/framework/src/Illuminate/Database/Connection.php[39m:[32m626[39m
+    [90m622[0m[90m▕ [0m[90;3m            [0m[39;1m$statement [0m[35;1m= [0m[39;1m$this[0m[35;1m->[0m[39;1mgetPdo[0m[35;1m()->[0m[39;1mprepare[0m[35;1m([0m[39;1m$query[0m[35;1m);[0m
+    [90m623[0m[90m▕ [0m
+    [90m624[0m[90m▕ [0m[35;1m            [0m[39;1m$this[0m[35;1m->[0m[39;1mbindValues[0m[35;1m([0m[39;1m$statement[0m[35;1m, [0m[39;1m$this[0m[35;1m->[0m[39;1mprepareBindings[0m[35;1m([0m[39;1m$bindings[0m[35;1m));[0m
+    [90m625[0m[90m▕ [0m
+[31;1m  ➜ [0m[3;1m626[0m[90m▕ [0m[35;1m            [0m[39;1m$statement[0m[35;1m->[0m[39;1mexecute[0m[35;1m();[0m
+    [90m627[0m[90m▕ [0m
+    [90m628[0m[90m▕ [0m[35;1m            [0m[39;1m$this[0m[35;1m->[0m[39;1mrecordsHaveBeenModified[0m[35;1m([0m
+    [90m629[0m[90m▕ [0m[35;1m                ([0m[39;1m$count [0m[35;1m= [0m[39;1m$statement[0m[35;1m->[0m[39;1mrowCount[0m[35;1m()) > [0m[39;1m0[0m
+    [90m630[0m[90m▕ [0m[39;1m            [0m[35;1m);[0m
+
+      [2m+7 vendor frames [22m
+  [33m8   [39m[39;1mtests/Feature/R07TusControllerContractsTest.php[39;22m:[39;1m245[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Uploads\R07SessionManagerContractsTest[22m [90m>[39m it UploadPartStore…   
+[39;1m  Failed asserting that two strings are identical.
+  [39;22m[31m-'sha-b'[39m[39;1m
+  [39;22m[32m+'sha-b                                                           '[39m[39;1m
+  [39;22m
+
+  at [32mtests/Uploads/R07SessionManagerContractsTest.php[39m:[32m205[39m
+    [90m201[0m[90m▕ [0m[35;1m    [0m[39;1mexpect[0m[35;1m([0m[39;1mUploadPart[0m[35;1m::[0m[39;1mquery[0m[35;1m()->[0m[39;1mwhere[0m[35;1m([0m[37m'upload_session_id'[0m[35;1m, [0m[39;1m$session[0m[35;1m->[0m[39;1mgetKey[0m[35;1m())->[0m[39;1mcount[0m[35;1m())->[0m[39;1mtoBe[0m[35;1m([0m[39;1m1[0m[35;1m)[0m
+    [90m202[0m[90m▕ [0m[35;1m        ->[0m[39;1mand[0m[35;1m([0m[39;1m$second[0m[35;1m->[0m[39;1mgetKey[0m[35;1m())->[0m[39;1mtoEqual[0m[35;1m([0m[39;1m$first[0m[35;1m->[0m[39;1mgetKey[0m[35;1m())[0m
+    [90m203[0m[90m▕ [0m[35;1m        ->[0m[39;1mand[0m[35;1m([0m[39;1m$second[0m[35;1m->[0m[39;1msize_bytes[0m[35;1m)->[0m[39;1mtoBe[0m[35;1m([0m[39;1m7[0m[35;1m)[0m
+    [90m204[0m[90m▕ [0m[35;1m        ->[0m[39;1mand[0m[35;1m([0m[39;1m$second[0m[35;1m->[0m[39;1metag[0m[35;1m)->[0m[39;1mtoBe[0m[35;1m([0m[37m'etag-b'[0m[35;1m)[0m
+[31;1m  ➜ [0m[3;1m205[0m[90m▕ [0m[35;1m        ->[0m[39;1mand[0m[35;1m([0m[39;1m$second[0m[35;1m->[0m[39;1mpart_sha256[0m[35;1m)->[0m[39;1mtoBe[0m[35;1m([0m[37m'sha-b'[0m[35;1m);[0m
+    [90m206[0m[90m▕ [0m[35;1m});[0m
+    [90m207[0m[90m▕ [0m
+    [90m208[0m[90m▕ [0m[39;1mit[0m[35;1m([0m[37m'commit commits PNG bytes when declared mime matches and discards staged temp afterward'[0m[35;1m, function (): [0m[39;1mvoid [0m[35;1m{[0m
+    [90m209[0m[90m▕ [0m[35;1m    [0m[39;1m$png [0m[35;1m= [0m[39;1mbase64_decode[0m[35;1m([0m[37m'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAD0lEQVR42mP8z5BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='[0m[35;1m, [0m[39;1mtrue[0m[35;1m) ?: [0m[37m''[0m[35;1m;[0m
+
+  [33m1   [39m[39;1mtests/Uploads/R07SessionManagerContractsTest.php[39;22m:[39;1m205[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Uploads\R07SessionManagerContractsTest[22m [90m>[39m it… [41;1m QueryException [49;22m  
+[39;1m  SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "v_upload_sessions" violates foreign key constraint "v_upload_sessions_storage_id_foreign"
+DETAIL:  Key (storage_id)=(9999999) is not present in table "v_storages". (Connection: testing, Host: 127.0.0.1, Port: 55432, Database: vaulter_r02_drive_test, SQL: update "v_upload_sessions" set "storage_id" = 9999999, "updated_at" = 2026-09-27 10:57:55 where "v_upload_sessions"."id" = 2)[39;22m
+
+  at [32mvendor/laravel/framework/src/Illuminate/Database/Connection.php[39m:[32m626[39m
+    [90m622[0m[90m▕ [0m[90;3m            [0m[39;1m$statement [0m[35;1m= [0m[39;1m$this[0m[35;1m->[0m[39;1mgetPdo[0m[35;1m()->[0m[39;1mprepare[0m[35;1m([0m[39;1m$query[0m[35;1m);[0m
+    [90m623[0m[90m▕ [0m
+    [90m624[0m[90m▕ [0m[35;1m            [0m[39;1m$this[0m[35;1m->[0m[39;1mbindValues[0m[35;1m([0m[39;1m$statement[0m[35;1m, [0m[39;1m$this[0m[35;1m->[0m[39;1mprepareBindings[0m[35;1m([0m[39;1m$bindings[0m[35;1m));[0m
+    [90m625[0m[90m▕ [0m
+[31;1m  ➜ [0m[3;1m626[0m[90m▕ [0m[35;1m            [0m[39;1m$statement[0m[35;1m->[0m[39;1mexecute[0m[35;1m();[0m
+    [90m627[0m[90m▕ [0m
+    [90m628[0m[90m▕ [0m[35;1m            [0m[39;1m$this[0m[35;1m->[0m[39;1mrecordsHaveBeenModified[0m[35;1m([0m
+    [90m629[0m[90m▕ [0m[35;1m                ([0m[39;1m$count [0m[35;1m= [0m[39;1m$statement[0m[35;1m->[0m[39;1mrowCount[0m[35;1m()) > [0m[39;1m0[0m
+    [90m630[0m[90m▕ [0m[39;1m            [0m[35;1m);[0m
+
+      [2m+7 vendor frames [22m
+  [33m8   [39m[39;1mtests/Uploads/R07SessionManagerContractsTest.php[39;22m:[39;1m261[39;22m
+
+
+  [90mTests:[39m    [31;1m3 failed[39;22m[90m,[39m[39m [39m[33;1m2 risky[39;22m[90m,[39m[39m [39m[32;1m338 passed[39;22m[90m (1077 assertions)[39m
+  [90mDuration:[39m [39m164.05s[39m
+
+Command exited with non-zero status 2
+	Command being timed: "script -qefc /usr/bin/php8.4 -d xdebug.mode=off vendor/bin/pest --mutate --path=src --covered-only --clear-cache /home/vostrikov/projects/packages/vaulter/plans/remaining-evidence/R07-checks/cold-pg-step14-20260927/pest.log"
+	User time (seconds): 23.08
+	System time (seconds): 2.29
+	Percent of CPU this job got: 15%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:44.99
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 214884
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 121318
+	Voluntary context switches: 159810
+	Involuntary context switches: 2812
+	Swaps: 0
+	File system inputs: 3824
+	File system outputs: 1175832
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 2
