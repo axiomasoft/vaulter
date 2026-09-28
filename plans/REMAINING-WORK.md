@@ -4,16 +4,16 @@
 
 **Обновлено:** 2026-09-28. Владелец отложил тяжёлые cold-mutation прогоны до фиксации API перед версией 1.0. Последний счёт drive остаётся **86.20%** (1549 killed, 0 timeout, 248 escaped / 1797), gate 95 exit 1. Код drive не менялся. Шаг 13 (65.38%) и промежуточные 79.51%, 84.25%, 84.70% и 86.20% не переписаны. До фиксации API эти прогоны и тесты ради мутантов не запускать.
 
-**Последняя завершённая фаза:** шаг 16a — corrective harness R03-H01…H05. Код и 24 focused tests готовы; [commands/exits и digest](remaining-evidence/R03-checks/16a-20260928-final/checks.json). Исправлен только load harness/seed; product SLO не переизмерялся, qualified proof шага 16 остаётся **REJECTED**, historical RED/unevaluated сохранены. Следующая сессия выполняет только шаг **16b — R27, package-core bind-limit corrective**. Повтор live R03 (16c) и R04 из этой команды не запускать.
+**Последняя завершённая фаза:** шаг 16b — R27, package-core bind-limit corrective. PostgreSQL regression с 65 540 descendants прошла для bigint и ULID; access narrowing, deny и cursor semantics сохранены. [Результат и команды](#r27--результат-шага-16b). Product SLO не переизмерялся, qualified proof шага 16 остаётся **REJECTED**, historical RED/unevaluated сохранены. Следующий разрешённый шаг — **16c / R03**, новый qualified full-window run; R04 допускается только после valid evidence 16c.
 
-**Остаток:** 20 активных шагов: **21 → 20** после 16a. Исторические переходы после 15a/15b и 16 сохранены в результатах ниже. Четыре cold-mutation строки (14, 22, 23, 25) по-прежнему не входят. 18 строк выполнено. Ещё 1 условная строка для repairs по результатам R24/R25 не входит в 20, пока конкретная работа не установлена. Это число шагов, не процент готовности продукта и не оценка времени.
+**Остаток:** 19 активных шагов: **20 → 19** после 16b (ранее **21 → 20** после 16a). Исторические переходы после 15a/15b и 16 сохранены в результатах ниже. Четыре cold-mutation строки (14, 22, 23, 25) по-прежнему не входят. 19 строк выполнено. Ещё 1 условная строка для repairs по результатам R24/R25 не входит в 19, пока конкретная работа не установлена. Это число шагов, не процент готовности продукта и не оценка времени.
 
 Новые задачи нельзя добавлять молча: для каждой вставки нужны finding, причина, scope и изменение счётчика «было → стало». Повтор неуспешного шага остаётся в той же строке с последним результатом и причиной повтора. Если новый дефект не обнаружен, очередь не расширять.
 
-**Следующая команда — R27, package-core corrective (16b):**
+**Следующая команда — R03, qualified full-window remeasurement (16c):**
 
 ```text
-task:dev plans/REMAINING-WORK.md R27
+task:dev plans/REMAINING-WORK.md R03
 ```
 
 Cold mutation (`>=95`, последовательный прогон на часы, тесты ради выживших мутантов) исключена из текущей очереди. Вернуться к ней после фиксации API, перед версией 1.0: к тому моменту имена и контракты перестанут ехать, и набор не придётся писать заново. До этого шаги 14, 22, 23 и 25 не запускать. Номера R — идентификаторы задач, а не порядок запуска. **Порядок запуска задаёт только таблица ниже, сверху вниз.** Отдельных очередей «код» и «измерения» больше нет; справочник findings ниже не является очередью.
@@ -45,8 +45,8 @@ Cold mutation (`>=95`, последовательный прогон на час
 | 15b | ГОТОВО | R05 — повтор rejected live cells | Grok 4.7 | Не запускать этот прогон повторно | Commit `ea77e00`; [run adcdcdb7](VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe): 56/56 valid, verify exit 0, digest `a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074`. R08 SLO-70 не переписан |
 | 16 | ГОТОВО | R03 — full-window throughput / attribution | GPT-6 Sol | Не повторять этот run | Commit `ff0d0d3`; [run 4f565edf](VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/run-manifest.json): S0/S по 180s полностью; k6 exit 99, audits exit 2. Qualified proof **REJECTED**, class B unevaluated; observed throughput RED и причины сохранены. Historical RED не переписан → 16a–16c |
 | 16a | ГОТОВО | R03 — corrective harness H01…H05 | GPT-6 | Не повторять code lane | Исходная revision `52e0e63`; [offline checks/source digest](remaining-evidence/R03-checks/16a-20260928-final/checks.json): 16 Python + 7 JS + 1 PHP, все exit 0. Distinct OP-06/07, accepted-byte/duration tags, primary blob FK, mandatory discovery, nonempty/sample/lab/source admission. Все SLO floors сохранены; live и mutation не запускались → 16b |
-| **16b** | **СЛЕДУЮЩИЙ** | **R27 — package-core PostgreSQL bind-limit corrective** | **GPT-6 Sol** | `task:dev plans/REMAINING-WORK.md R27` | R03-P01: NodeReadRepository::whereKeyInChunked превышает общий лимит bind-параметров; на S listing HTTP 500 и docs pool пуст. Scope packages/core; ограничить bind count с сохранением bigint/ULID, access narrowing и cursor semantics; PG regression >65535 и auth/cursor checks, без mutation |
-| 16c | ОЖИДАЕТ | R03 — qualified full-window remeasurement | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R03` | После 16a/16b: новый source freeze, S0/S window ≥180s, accepted bytes, distinct OP-06/07, непустые download/docs и ≥100 samples на каждый class-B key при допущенном lab. Текущий S дал 0/15 dense; увеличение duration не устраняет H03/P01. RED → concrete corrective route; только valid evidence допускает R04 |
+| 16b | ГОТОВО | R27 — package-core PostgreSQL bind-limit corrective | GPT-6 | Не повторять code lane | [Результат и команды](#r27--результат-шага-16b): большие ID sets добавляют 0 bindings; PG regression 65 540 descendants bigint/ULID, HTTP, access/deny/cursors; SQLite core 574 tests, PG Access+Schema 169 passed/4 skipped, PG ULID 5 passed, PHPStan/Pint exit 0. Mutation/live не запускались → 16c |
+| **16c** | **СЛЕДУЮЩИЙ** | R03 — qualified full-window remeasurement | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R03` | После 16a/16b: новый source freeze, S0/S window ≥180s, accepted bytes, distinct OP-06/07, непустые download/docs и ≥100 samples на каждый class-B key при допущенном lab. Текущий S дал 0/15 dense; увеличение duration не устраняет H03/P01. RED → concrete corrective route; только valid evidence допускает R04 |
 | 17 | ОЖИДАЕТ | R04 — P3 trace/ANALYZE capture | GPT-6 Sol | `task:dev plans/REMAINING-WORK.md R04` | Код готов; непустой flushed trace, bindings, actual ANALYZE, top-20/N+1 |
 | 18 | ОЖИДАЕТ | B07-R — независимый переаудит | GPT-6 Astra | Проведи B07-R по plans/REMAINING-WORK.md; сохрани только plans/remaining-evidence/B07-audit.md; не меняй код, raw evidence или статусы R. | Нужны R03/R04/R05/R06/R08 evidence. Cold R07 >=95 не блокирует: отложен до фиксации API перед 1.0. Finding → его corrective R, без допуска B08 |
 | 19 | ОЖИДАЕТ | B07-R — синхронизация листа | Ответственный исполнитель | Прочитать B07-audit.md и обновить только затронутые статусы/маршруты этого листа | Только явный допуск B07-R открывает шаги 20–21; аудитор сам свои findings не закрывает |
@@ -169,6 +169,24 @@ Evidence admission требует непустые class-A серии, ≥100 sa
 
 Проверки, все exit 0: `python3 -B -m unittest discover -s load/gates -p 'test_r03_*.py'` — 16 tests; `node --experimental-vm-modules --test load/gates/tests/r03-k6.test.mjs` — 7 tests; `vendor/bin/pest load/tests/Feature/R03SeedFileVersionsTest.php --no-coverage` — 1 test/10 assertions; focused Pint, PHP syntax, `sh -n load/scripts/run.sh`, `git diff --check`. JS HTTP и runner Docker — offline fakes; PHP — только SQLite in-memory и fake storage. Эти проверки не доказывают tier-S throughput, PostgreSQL listing или current-source mutation. Live, mutation, R27 и R04 не запускались; historical raw runs и SLO RED/REJECTED не переписаны. Остаток **21 → 20**, единственный NEXT — **16b / R27**, затем pending 16c.
 
+### R27 — результат шага 16b
+
+Исходная revision `531393a`; scope кода/тестов только `packages/core`. На отдельной PostgreSQL 16 regression воспроизвела исходную ошибку: 65 545 bindings в одном statement, `number of parameters must be between 0 and 65535`, exit 2. OR-группы не ограничивали общий bind count.
+
+`NodeReadRepository` теперь сохраняет bound `whereIn` для ≤900 IDs; большие sets используют внутренний `EscapedKeySet` (`Expression`). Grammar оборачивает имя столбца, а `escape()` делегирует цитирование текущему PDO при компиляции запроса. ID set добавляет 0 bind-параметров; int/string не кастуются. Общий helper применяется к listing, shared candidates и subtree anchors. Один AND-предикат сохраняет base filters, soft-delete scopes, SQL ordering и cursor pagination; candidate-superset и exact per-action deny не изменены. SHA-256: `NodeReadRepository.php` — `e66a20839b59fa9b3712411ead88193c93690c8e5bb09011baf3b31540e78595`; `EscapedKeySet.php` — `f136ec57213a38b6a074b7234ac609b002e7c64215f4a8b61976fe59f8b1430a`.
+
+Добавлены 6 regression cases: реальные 65 540 descendants для bigint (ключи >2^53) и ULID; HTTP listing без 500; cursor вперёд/назад при одинаковой position; чужой storage и ungranted sibling исключены; exact deny возвращает 403, другой actor получает пустой set. Общий predicate отдельно проверен на строковом bigint, ULID, кавычках/backslash/SQL payload, base filter, soft deletes и границах 0/900/901. Independent read-only review окончательного diff: blockers не найдены. Wide integration tests для sharedWith/множества subtree anchors отдельно не выполнялись; их общий predicate проверен напрямую.
+
+Проверки на окончательном коде (все exit 0):
+
+- `DB_CONNECTION=sqlite DB_DATABASE=:memory: composer test -- packages/core/tests --no-coverage --log-junit /tmp/vaulter-r27-core.xml` — 574 passed, 1849 assertions; Pest также сообщает 17 risky в существующих metrics tests с 0 PHPUnit assertions, это не скрыто как отсутствие issues.
+- PG env: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=55437 DB_DATABASE=vaulter_r27_test DB_USERNAME=vaulter DB_PASSWORD=r27-test-only`. `composer test -- packages/core/tests/Access packages/core/tests/Schema --no-coverage` — 169 passed, 4 skipped, 344 assertions. Skipped не объявлены проверенными.
+- В том же PG env `composer test -- packages/core/tests/IdStrategy/Ulid --no-coverage` — 5 passed, 36 assertions, включая wide ULID regression.
+- `vendor/bin/phpstan analyse --no-progress --memory-limit=512M` — 0 errors.
+- `vendor/bin/pint --test packages/core/src/Repositories/Drive/NodeReadRepository.php packages/core/src/Repositories/Drive/EscapedKeySet.php packages/core/tests/Access/WideNodeListingTest.php packages/core/tests/Concerns/ExercisesWideNodeListing.php packages/core/tests/IdStrategy/Ulid/WideNodeListingTest.php packages/core/tests/Schema/NodeKeyNarrowingTest.php` — passed; `git diff --check` — exit 0.
+
+PG lane использовал отдельный ephemeral container `vaulter-r27-postgres`, DB `vaulter_r27_test`, tmpfs без persistent volume; image `sha256:de3a4eab8fdfa507ea92aac488b916b08089e515db49b055fe71dfa271ba3a28`. До тестов readiness и имя/пустая public schema проверены. После проверок container остановлен. Общий load stand не использовался. R03 live/16c, R04 и mutation не запускались; это corrective proof, не измерение SLO/throughput. Исторические RED/REJECTED сохранены. Остаток **20 → 19**, единственный NEXT — **16c / R03**.
+
 ### R05 — результат шага 15
 
 Запись прошедшего прогона, не команда. Повторять этот run и считать его допуском B07-R нельзя: verifier exit 1.
@@ -222,7 +240,7 @@ Dirty-20k в этой матрице, три попытки: exit 0, 20000/20000
 
 Collision int4 остаётся unconfirmed. Закрытие B07-01/02 по-прежнему требует Astra re-review; этот прогон даёт raw evidence, а не допуск B08.
 
-Общий стенд эксклюзивен для load, mutation, chaos, DB reset и cold-cache работы. Для каждого измерения нужны новый run ID, source/stand digest, exact commands/exits, raw evidence и cleanup/readback. Исправление и измерение с одинаковым R — разные строки. R05 шаги 15, 15a и 15b выполнены; после них выполнены R03 16 и 16a. Текущий следующий запуск — R27 (16b), не повтор R05. Исполнитель выбирает первую незавершённую строку указанного R только при выполненных зависимостях; номер R не позволяет перескочить очередь. Строки со статусом ОТЛОЖЕНО не выбирать.
+Общий стенд эксклюзивен для load, mutation, chaos, DB reset и cold-cache работы. Для каждого измерения нужны новый run ID, source/stand digest, exact commands/exits, raw evidence и cleanup/readback. Исправление и измерение с одинаковым R — разные строки. R05 шаги 15, 15a и 15b выполнены; после них выполнены R03 16/16a и R27 16b. Текущий следующий запуск — R03 (16c), не повтор R05. Исполнитель выбирает первую незавершённую строку указанного R только при выполненных зависимостях; номер R не позволяет перескочить очередь. Строки со статусом ОТЛОЖЕНО не выбирать.
 
 ## Справочник: правила доказательств
 
@@ -245,7 +263,7 @@ Read the applicable finding, SLO contract, gate contract, raw run and evidence c
 |:--|:--|:--|
 | L-04 core retry | R01 | no relaunch; R26 only supplies any later full-P6 re-verdict |
 | P4 L-01 streaming / D11 | R02, R07, R16, R17, R22 | no aggregate/parallel mutation claim. The >=95 rows are ОТЛОЖЕНО until the API is frozen before 1.0; do not launch them from this cell |
-| F-P2.8-1/2/3; SLO-40/43/49/52 | R03 | 16a harness corrective готов; product proof шага 16 REJECTED сохранён. После R27 нужен 16c: immutable full window, materialized tagged metrics, adequate samples/lab admission; retain or route any RED |
+| F-P2.8-1/2/3; SLO-40/43/49/52 | R03 | 16a harness corrective и 16b R27 готовы; product proof шага 16 REJECTED сохранён. Следующий 16c: immutable full window, materialized tagged metrics, adequate samples/lab admission; retain or route any RED |
 | L-P3-01, L-P3-03 | R04 | nonempty flushed trace, bindings, actual ANALYZE, top-20/N+1 result; no claim from zero rows |
 | L-P3-04/L-05 endpoint scan | R26 | tier-specific verdicts, or explicit unevaluated M/L/24-hour rows in R26/R20 |
 | L-P5-01/02/04; **B07-01** | R05 | step 15b: all 9 overlap attempts sweep exit 0, `sweepable`, lock held, target refused, final uploading/4, retry 204. Close only after Astra re-review |

@@ -52,12 +52,11 @@ final class NodeReadRepository
     public const int DEFAULT_MAX_DEPTH = 64;
 
     /**
-     * The per-group cap when chunking a candidate-id list into OR-ed whereIn groups.
-     * SQLite caps bound variables at ~999 (SQLITE_MAX_VARIABLE_NUMBER) and Postgres
-     * at 65535; 900 stays clear of the SQLite wall (tests run SQLite — a wide subtree
-     * would otherwise HARD-ERROR) with margin for the rest of the query's bindings.
+     * Keep small sets bound, with room for storage, parent and cursor bindings even
+     * on SQLite builds limited to 999 variables. Larger sets use escaped SQL literals
+     * and add no bindings, regardless of the number of grant-reachable nodes.
      */
-    private const int WHERE_IN_CHUNK = 900;
+    private const int WHERE_IN_BIND_LIMIT = 900;
 
     public function __construct(
         private readonly AccessResolver $access,
@@ -388,7 +387,7 @@ final class NodeReadRepository
             return $query->whereRaw('1 = 0');
         }
 
-        return $this->whereKeyInChunked($query, $candidateIds);
+        return $this->whereKeyInBounded($query, $candidateIds);
     }
 
     /**
@@ -436,7 +435,7 @@ final class NodeReadRepository
             ->with('storage');
 
         /** @var Collection<int, Node> $candidates */
-        $candidates = $this->whereKeyInChunked($base, $candidateIds)->get();
+        $candidates = $this->whereKeyInBounded($base, $candidateIds)->get();
 
         /** @var Collection<int, Node> $visible */
         $visible = new Collection($this->filterViewable($actor, $candidates));
@@ -545,7 +544,7 @@ final class NodeReadRepository
         $keyName = (new $model)->getKeyName();
 
         /** @var Collection<int, Node> $anchors */
-        $anchors = $this->whereKeyInChunked($model::query(), $anchorIds)->get();
+        $anchors = $this->whereKeyInBounded($model::query(), $anchorIds)->get();
 
         /** @var list<int|string> $ids */
         $ids = [];
@@ -572,11 +571,12 @@ final class NodeReadRepository
     }
 
     /**
-     * Apply a primary-key whereIn over an arbitrarily large id list WITHOUT exceeding
-     * the driver's bound-variable cap (SQLite ~999, Postgres 65535). The ids are split
-     * into {@see WHERE_IN_CHUNK}-sized groups OR-ed inside a single where() clause, so
-     * the narrowing never HARD-ERRORS on a wide candidate set. A list at or under the
-     * cap compiles to a single whereIn (no nesting overhead).
+     * Bound the ID list's contribution to the statement-wide parameter count.
+     * OR-ing whereIn chunks still binds every ID in one statement. Above the small
+     * set budget, Laravel's connection escape() safely quotes each value through
+     * the read PDO driver. No integer casts: ULIDs and bigint strings retain their
+     * exact values. The predicate remains one AND-ed IN condition, so existing
+     * storage/scopes, ordering and SQL cursor pagination keep their semantics.
      *
      * @template TModel of Model
      *
@@ -584,21 +584,15 @@ final class NodeReadRepository
      * @param  list<int|string> $ids
      * @return Builder<TModel>
      */
-    private function whereKeyInChunked(Builder $query, array $ids): Builder
+    private function whereKeyInBounded(Builder $query, array $ids): Builder
     {
         $keyName = $query->getModel()->getKeyName();
 
-        if (count($ids) <= self::WHERE_IN_CHUNK) {
+        if (count($ids) <= self::WHERE_IN_BIND_LIMIT) {
             return $query->whereIn($keyName, $ids);
         }
 
-        $chunks = array_chunk($ids, self::WHERE_IN_CHUNK);
-
-        return $query->where(static function (Builder $inner) use ($chunks, $keyName): void {
-            foreach ($chunks as $chunk) {
-                $inner->orWhereIn($keyName, $chunk);
-            }
-        });
+        return $query->whereRaw(new EscapedKeySet($keyName, $ids));
     }
 
     /**
