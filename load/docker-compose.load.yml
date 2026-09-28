@@ -161,6 +161,7 @@ services:
       # load/docker/entrypoint.sh for why).
       DB_MIGRATE_HOST: postgres
       DB_MIGRATE_PORT: "5432"
+      LOAD_SKIP_MIGRATIONS: "${LOAD_SKIP_MIGRATIONS:-0}"
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ROOT_USER: vaulter
       MINIO_ROOT_PASSWORD: vaulter-load-secret
@@ -239,6 +240,8 @@ services:
       DB_DATABASE: vaulter_load
       DB_USERNAME: vaulter
       DB_PASSWORD: secret
+      # Workers must never bootstrap/reset the shared application database.
+      LOAD_SKIP_MIGRATIONS: "1"
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ROOT_USER: vaulter
       MINIO_ROOT_PASSWORD: vaulter-load-secret

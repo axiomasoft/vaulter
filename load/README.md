@@ -555,6 +555,19 @@ Injectors and isolated topology belong to P7.2. The authoritative tier-S family
 is P7.3. Cleanup is exact run scope: no wildcard bucket, database or volume
 deletion. `SIGINT`/`SIGTERM` run emergency revert.
 
+P7 route changes and final base-route restore skip migrations for both app and
+queue-worker. Schema bootstrap runs explicitly against `postgres-primary` /
+`vaulter_chaos` only. The entrypoint defaults to skipping migrations and rejects
+migration opt-in on a P7 route; ordinary base-app initialization retains its
+Compose bootstrap setting (`LOAD_SKIP_MIGRATIONS=0`), while workers always skip.
+Final integrity and lock readback follows the actual restore, including failure
+cleanup; the terminal marker is written only after successful restore/readback.
+Offline route controls use the Docker CLI's Compose renderer without a daemon:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_base_restore.py'
+```
+
 ```bash
 chmod +x load/scripts/p7-chaos.sh load/scripts/p7-chaos-snapshot.sh
 TIER=S ./load/scripts/p7-chaos.sh dry-run

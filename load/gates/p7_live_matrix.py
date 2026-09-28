@@ -89,11 +89,14 @@ def compose(*args: str, profile: bool = False, timeout: int = 240,
     _run(command, timeout=timeout, env=environment)
 
 
-def compose_base(*args: str, timeout: int = 240) -> None:
+def compose_base(*args: str, timeout: int = 240,
+                 extra_env: dict[str, str] | None = None) -> None:
+    environment = os.environ.copy()
+    environment.update(extra_env or {})
     _run([
         'docker', 'compose', '-p', PROJECT, '-f', str(COMPOSE),
         '--env-file', str(ENV_FILE), *args,
-    ], timeout=timeout)
+    ], timeout=timeout, env=environment)
 
 
 def psql(sql: str) -> str:
@@ -140,7 +143,7 @@ def route_app(*, ha: bool) -> None:
         'P7_APP_DB_PORT': '6432' if ha else '16432',
         'P7_APP_DB_DATABASE': 'vaulter_chaos' if ha else 'vaulter_load',
         'P7_APP_HA_ROUTED': '1' if ha else '0',
-        'P7_APP_SKIP_MIGRATIONS': '1',
+        'LOAD_SKIP_MIGRATIONS': '1',
     }
     compose(
         'up', '-d', '--force-recreate', '--no-deps', '--wait', '--wait-timeout', '180', 'app',
@@ -392,8 +395,7 @@ def enable_chaos() -> None:
     compose('up', '-d', 'toxiproxy', 's3-fault-proxy', timeout=180)
     compose('up', '-d', '--wait', '--wait-timeout', '180',
             'postgres-primary', 'postgres-standby', 'pgbouncer-ha', profile=True, timeout=240)
-    compose('up', '-d', '--force-recreate', '--no-deps', '--wait', '--wait-timeout', '180',
-            'app', timeout=240)
+    route_app(ha=False)
     compose_base('stop', 'queue-worker', timeout=60)
 
 
@@ -410,9 +412,13 @@ def restore_base(run_id: str) -> None:
     failover_env = os.environ.copy()
     failover_env['TIER'] = 'S'
     failover_env['P7_FAILOVER_STATE'] = f'/tmp/p7-failover-{run_id}'
-    _run([str(FAILOVER), 'revert'], timeout=240, env=failover_env)
-    compose_base('up', '-d', '--force-recreate', '--no-deps', '--wait', '--wait-timeout', '180',
-                 'app', 'queue-worker', timeout=240)
+    try:
+        _run([str(FAILOVER), 'revert'], timeout=240, env=failover_env)
+    finally:
+        # Return the app even when isolated HA teardown fails. Never reset the
+        # base database when either service enters its container entrypoint.
+        compose_base('up', '-d', '--force-recreate', '--no-deps', '--wait', '--wait-timeout', '180',
+                     'app', 'queue-worker', timeout=240, extra_env={'LOAD_SKIP_MIGRATIONS': '1'})
     compose('stop', 'toxiproxy', 's3-fault-proxy', timeout=60)
     compose('stop', 'postgres-primary', 'postgres-standby', 'pgbouncer-ha', profile=True, timeout=60)
 
@@ -819,15 +825,7 @@ def run_matrix(out: Path, run_id: str) -> None:
             if name == 'temp.jsonl':
                 write_jsonl(out / 'temp' / name, rows)
         (out / 'cells.json').write_text(json.dumps(cells, indent=2) + '\n', encoding='utf-8')
-        (out / 'terminal.json').write_text(json.dumps({
-            'schema': 'p7-run-terminal/v1',
-            'run_id': run_id,
-            'monotonic_ns': clock.next(),
-        }, indent=2) + '\n', encoding='utf-8')
         remove_prefix(run_id)
-        after = counts_checksum()
-        (out / 'database' / 'integrity-after.json').write_text(
-            json.dumps(after, indent=2, sort_keys=True) + '\n', encoding='utf-8')
         (out / 'matrix.json').write_text(json.dumps({
             'run_id': run_id,
             'cells': [cell['cell_id'] for cell in gate.catalog()],
@@ -848,10 +846,18 @@ def run_matrix(out: Path, run_id: str) -> None:
                 'evidence': 'valid' if attempts and all(item['evidence'] == 'valid' for item in attempts) else 'invalid',
             })
         (out / 'cell-verdicts.json').write_text(json.dumps(verdicts, indent=2) + '\n', encoding='utf-8')
-        locks = int(psql('SELECT count(*) FROM pg_locks WHERE NOT granted'))
-        (out / 'database' / 'locks.json').write_text(json.dumps({'ungranted': locks}) + '\n', encoding='utf-8')
     finally:
         restore_base(run_id)
+        after = counts_checksum()
+        (out / 'database' / 'integrity-after.json').write_text(
+            json.dumps(after, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+        locks = int(psql('SELECT count(*) FROM pg_locks WHERE NOT granted'))
+        (out / 'database' / 'locks.json').write_text(json.dumps({'ungranted': locks}) + '\n', encoding='utf-8')
+    (out / 'terminal.json').write_text(json.dumps({
+        'schema': 'p7-run-terminal/v1',
+        'run_id': run_id,
+        'monotonic_ns': clock.next(),
+    }, indent=2) + '\n', encoding='utf-8')
 
 
 def secret_scan(root: Path) -> list[str]:

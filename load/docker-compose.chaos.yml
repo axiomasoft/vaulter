@@ -52,7 +52,8 @@ services:
       DB_PORT: ${P7_APP_DB_PORT:-16432}
       DB_DATABASE: ${P7_APP_DB_DATABASE:-vaulter_load}
       P7_APP_HA_ROUTED: ${P7_APP_HA_ROUTED:-0}
-      LOAD_SKIP_MIGRATIONS: ${P7_APP_SKIP_MIGRATIONS:-0}
+      # P7 schema bootstrap is an explicit exec against vaulter_chaos only.
+      LOAD_SKIP_MIGRATIONS: "1"
       TMPDIR: /var/tmp/vaulter-chaos
       CHAOS_TMPFS_ROOT: /var/tmp/vaulter-chaos
       LOAD_CHAOS_PROXIED: "1"
@@ -66,6 +67,7 @@ services:
 
   queue-worker:
     environment:
+      LOAD_SKIP_MIGRATIONS: "1"
       MINIO_ENDPOINT: http://s3-fault-proxy:19000
       DB_HOST: toxiproxy
       DB_PORT: "16432"
