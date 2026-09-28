@@ -1,0 +1,6 @@
+{
+  "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n32",
+  "attempt": 1,
+  "status": "rejected",
+  "cause": "no completed lock/pool sample during actor process"
+}

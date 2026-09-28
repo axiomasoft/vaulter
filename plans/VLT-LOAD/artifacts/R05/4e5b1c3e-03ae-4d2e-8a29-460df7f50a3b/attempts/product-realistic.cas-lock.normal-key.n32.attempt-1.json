@@ -1,0 +1,641 @@
+{
+  "actor_ids": [
+    72910250,
+    72910251,
+    72910252,
+    72910253,
+    72910254,
+    72910255,
+    72910256,
+    72910257,
+    72910258,
+    72910259,
+    72910260,
+    72910261,
+    72910262,
+    72910263,
+    72910264,
+    72910265,
+    72910266,
+    72910267,
+    72910268,
+    72910269,
+    72910270,
+    72910271,
+    72910272,
+    72910273,
+    72910274,
+    72910275,
+    72910276,
+    72910277,
+    72910278,
+    72910279,
+    72910280,
+    72910281
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.cas-lock.normal-key.n32",
+  "during_sample_count": 9,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 72910279,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910273,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910274,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910276,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910275,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910277,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910278,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910271,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910272,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910270,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910269,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910251,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910268,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910281,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910250,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910266,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910265,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910267,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910264,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910253,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910263,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910261,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910259,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910258,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910262,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910260,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910256,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910280,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910252,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910257,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910255,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910254,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910279,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910273,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910274,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910277,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910270,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910272,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910271,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910278,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910275,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910269,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910276,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72910281,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910250,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910251,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910268,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910267,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910266,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910264,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910253,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910265,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910261,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910263,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910258,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910262,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910256,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910280,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910259,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910260,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910252,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910257,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910255,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910254,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910273,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910279,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910274,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910278,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910271,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910275,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    },
+    {
+      "actor_id": 72910276,
+      "phase": "operation",
+      "retry_after": "24",
+      "status": 429
+    }
+  ],
+  "n": 32,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      72910277,
+      72910270,
+      72910272,
+      72910269,
+      72910281,
+      72910250,
+      72910251,
+      72910268,
+      72910267,
+      72910266,
+      72910264,
+      72910253,
+      72910265,
+      72910261,
+      72910263,
+      72910258,
+      72910262,
+      72910256,
+      72910280,
+      72910259,
+      72910260,
+      72910252,
+      72910257,
+      72910255,
+      72910254,
+      72910273,
+      72910279,
+      72910274,
+      72910278,
+      72910271,
+      72910275,
+      72910276
+    ],
+    "expected_actor_ids": [
+      72910250,
+      72910251,
+      72910252,
+      72910253,
+      72910254,
+      72910255,
+      72910256,
+      72910257,
+      72910258,
+      72910259,
+      72910260,
+      72910261,
+      72910262,
+      72910263,
+      72910264,
+      72910265,
+      72910266,
+      72910267,
+      72910268,
+      72910269,
+      72910270,
+      72910271,
+      72910272,
+      72910273,
+      72910274,
+      72910275,
+      72910276,
+      72910277,
+      72910278,
+      72910279,
+      72910280,
+      72910281
+    ],
+    "iterations": 32,
+    "observed_actor_ids": [
+      72910250,
+      72910251,
+      72910252,
+      72910253,
+      72910254,
+      72910255,
+      72910256,
+      72910257,
+      72910258,
+      72910259,
+      72910260,
+      72910261,
+      72910262,
+      72910263,
+      72910264,
+      72910265,
+      72910266,
+      72910267,
+      72910268,
+      72910269,
+      72910270,
+      72910271,
+      72910272,
+      72910273,
+      72910274,
+      72910275,
+      72910276,
+      72910277,
+      72910278,
+      72910279,
+      72910280,
+      72910281
+    ],
+    "started": [
+      72910281,
+      72910250,
+      72910251,
+      72910252,
+      72910254,
+      72910255,
+      72910256,
+      72910257,
+      72910258,
+      72910259,
+      72910260,
+      72910261,
+      72910253,
+      72910262,
+      72910263,
+      72910264,
+      72910265,
+      72910266,
+      72910267,
+      72910268,
+      72910269,
+      72910270,
+      72910271,
+      72910272,
+      72910273,
+      72910275,
+      72910274,
+      72910276,
+      72910277,
+      72910278,
+      72910279,
+      72910280
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA226EE0",
+    "monotonic_ns": 82449664169968
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA20A770",
+    "monotonic_ns": 82444919655804
+  },
+  "run_id": "4e5b1c3e-03ae-4d2e-8a29-460df7f50a3b",
+  "schema": "p5-cell/v1",
+  "shape": "normal-key",
+  "statuses": {
+    "2xx": 39,
+    "409": 0,
+    "429": 32,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "cas-lock",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.903172379999887,
+    "pgbouncer_wait_seconds": null
+  }
+}

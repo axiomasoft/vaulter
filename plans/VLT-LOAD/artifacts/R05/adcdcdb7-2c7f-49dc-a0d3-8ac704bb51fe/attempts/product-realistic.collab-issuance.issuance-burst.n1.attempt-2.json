@@ -1,0 +1,66 @@
+{
+  "actor_ids": [
+    13816500
+  ],
+  "attempt": 2,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.collab-issuance.issuance-burst.n1",
+  "during_sample_count": 8,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13816500,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    }
+  ],
+  "n": 1,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13816500
+    ],
+    "expected_actor_ids": [
+      13816500
+    ],
+    "iterations": 1,
+    "observed_actor_ids": [
+      13816500
+    ],
+    "started": [
+      13816500
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/312983C0",
+    "monotonic_ns": 84369359140602
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/31297AD8",
+    "monotonic_ns": 84365066032792
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "issuance-burst",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 1
+  },
+  "supported_workload": true,
+  "surface": "collab-issuance",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.3400946769979782,
+    "pgbouncer_wait_seconds": null
+  }
+}

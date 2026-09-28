@@ -1,0 +1,143 @@
+{
+  "actor_ids": [
+    13813250,
+    13813251,
+    13813252,
+    13813253,
+    13813254,
+    13813255,
+    13813256,
+    13813257
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.subtree-move.disjoint-tree.n8",
+  "during_sample_count": 9,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13813250,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813256,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813251,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813252,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813257,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813254,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813255,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    },
+    {
+      "actor_id": 13813253,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 200
+    }
+  ],
+  "n": 8,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13813250,
+      13813256,
+      13813251,
+      13813252,
+      13813257,
+      13813254,
+      13813255,
+      13813253
+    ],
+    "expected_actor_ids": [
+      13813250,
+      13813251,
+      13813252,
+      13813253,
+      13813254,
+      13813255,
+      13813256,
+      13813257
+    ],
+    "iterations": 8,
+    "observed_actor_ids": [
+      13813250,
+      13813251,
+      13813252,
+      13813253,
+      13813254,
+      13813255,
+      13813256,
+      13813257
+    ],
+    "started": [
+      13813256,
+      13813250,
+      13813252,
+      13813254,
+      13813255,
+      13813253,
+      13813257,
+      13813251
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/314E2E10",
+    "monotonic_ns": 84519358058609
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/314DAC78",
+    "monotonic_ns": 84515017546955
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "disjoint-tree",
+  "statuses": {
+    "2xx": 8,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "subtree-move",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.4775090720067965,
+    "pgbouncer_wait_seconds": null
+  }
+}

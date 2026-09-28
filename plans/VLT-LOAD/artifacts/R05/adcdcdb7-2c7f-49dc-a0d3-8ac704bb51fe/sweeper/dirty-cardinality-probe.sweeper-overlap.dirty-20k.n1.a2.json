@@ -1,0 +1,33 @@
+{
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1",
+  "attempt": 2,
+  "command": [
+    "exec",
+    "-T",
+    "app",
+    "php",
+    "-d",
+    "auto_prepend_file=/app/load/scripts/p5-php-peak.php",
+    "vendor/bin/testbench",
+    "vaulter:sweep-uploads",
+    "--no-interaction"
+  ],
+  "seeded_rows": 20000,
+  "candidate_rows": 20000,
+  "processed_rows": 20000,
+  "remaining_rows": 0,
+  "elapsed_seconds": 72.796,
+  "exit_code": 0,
+  "timed_out": false,
+  "command_failed": false,
+  "stdout": "\n   INFO  Swept 20000 stale upload sessions.  \n\n",
+  "stderr": "P5_PHP_PEAK_BYTES=132644864\n",
+  "php_peak_bytes": 132644864,
+  "php_peak_kind": "memory_get_peak_usage(true), not process RSS",
+  "vaulter_sweep_batch_rows": null,
+  "batch_metric_before": null,
+  "batch_metric_after": null,
+  "progress_capture_error": null,
+  "tier_l_claim": false
+}

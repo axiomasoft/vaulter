@@ -1,0 +1,39 @@
+{
+  "actor_ids": [],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "primitive-control.advisory-primitive.xact-release.n1",
+  "during_sample_count": 1,
+  "http_5xx": 0,
+  "http_responses": [],
+  "n": 1,
+  "overlap": null,
+  "participation": null,
+  "plane": "primitive-control",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/3128F3B8",
+    "monotonic_ns": 84345299552010
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/3128F3B8",
+    "monotonic_ns": 84343853927937
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "xact-release",
+  "statuses": {
+    "fail": 0,
+    "ok": 1
+  },
+  "supported_workload": true,
+  "surface": "advisory-primitive",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": null,
+    "pgbouncer_wait_seconds": 0
+  }
+}
