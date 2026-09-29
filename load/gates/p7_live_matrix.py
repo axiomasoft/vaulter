@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import subprocess
 import time
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 import p7_chaos as gate
@@ -54,7 +56,7 @@ class Clock:
 
 
 def wall() -> str:
-    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    return datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00', 'Z')
 
 
 def repeat_count(cell: dict) -> int:
@@ -700,6 +702,7 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
         path=f'prometheus/{prom_name}', job='vaulter-sut')
     add('attempts.jsonl', 'fault', 'observe', schema='p7-attempt/v2', source='attempt',
         operation=cell['operation'], product_results=product_results,
+        payload_checksum=checksum,
         http_outcome=http, availability=availability, durable_state=durable, rejected=http != 'accepted')
     up2 = host_status('http://127.0.0.1:8080/up')
     ready2 = host_status('http://127.0.0.1:8080/ready')
@@ -794,8 +797,12 @@ def run_matrix(out: Path, run_id: str) -> None:
                     first = record
                 (out / 'attempts' / f'{cell["cell_id"]}.attempt-{attempt}.json').write_text(
                     json.dumps(record, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+                # Bind the instant-query timestamp to this attempt, before cleanup/next window.
+                observed_at = math.floor(datetime.fromisoformat(
+                    streams['ledger.jsonl'][-1]['wall_time']).timestamp() * 1000) / 1000
                 prom = urllib.request.urlopen(
-                    'http://127.0.0.1:9090/api/v1/query?query=up%7Bjob%3D%22vaulter-sut%22%7D',
+                    'http://127.0.0.1:9090/api/v1/query?query=up%7Bjob%3D%22vaulter-sut%22%7D'
+                    f'&time={observed_at}',
                     timeout=5,
                 )
                 (out / 'prometheus' / f'{cell["cell_id"]}.attempt-{attempt}.json').write_bytes(prom.read())
@@ -880,61 +887,192 @@ def digest_tree(root: Path) -> str:
     return hasher.hexdigest()
 
 
+def _raw_integrity(rows: dict[str, list[dict]], attempt: dict) -> None:
+    """Verify the captured DB/object pair; inventory expansion belongs to B14-05."""
+    require = gate._require
+    entities = rows['database.jsonl']
+    objects = rows['objects.jsonl']
+    require(len(objects) == 1, 'unsupported or duplicate object observation')
+    obj = objects[0]
+    identities = [(row['entity'], row['entity_id']) for row in entities]
+    require(len(identities) == len(set(identities)), 'duplicate durable DB identity')
+    upload = next((row for row in entities if row['entity'] == 'upload_session'), None)
+    blob = next((row for row in entities if row['entity'] == 'blob'), None)
+    outbox = next((row for row in entities if row['entity'] == 'outbox' and row['status'] != 'absent'), None)
+    require(sum(row['entity'] == 'upload_session' for row in entities) <= 1, 'multiple upload identities')
+    require(sum(row['entity'] == 'blob' for row in entities) <= 1, 'multiple blob identities')
+    parts = [row for row in entities if row['entity'] == 'upload_part']
+    if upload is not None:
+        require(upload['status'] in {'initiated', 'uploading', 'assembled', 'committed', 'aborted', 'expired'},
+                'unknown durable upload status')
+        require(upload['status'] != 'committed' or blob is not None, 'committed upload is missing its blob')
+    expected_checksum = None
+    expected_size = None
+    if blob is not None:
+        require(upload is not None and upload.get('assembled_blob_id') == blob['entity_id'],
+                'blob does not join upload session')
+        require(obj['key'] == blob.get('storage_key'), 'object does not join blob key')
+        present = True
+        expected_checksum, expected_size = blob.get('checksum'), blob.get('size')
+    elif upload is not None:
+        upload_id = upload.get('upload_id')
+        require(isinstance(upload_id, str) and upload_id, 'missing durable upload id')
+        suffix = '.parts/1' if attempt['operation'] in {'s3-put-part', 's3-complete', 'sweeper'} else ''
+        require(obj['key'] == f'tmp/uploads/{upload_id}{suffix}', 'object does not join upload key')
+        received = upload.get('received_bytes')
+        require(gate._int(received) and received >= 0, 'upload received bytes')
+        present = upload['status'] not in {'aborted', 'expired'} and (bool(parts) or received > 0)
+        if present and suffix:
+            part = next((row for row in parts if row['entity_id'] == upload['entity_id'] + ':1'), None)
+            require(part is not None, 'object does not join upload part')
+            expected_checksum, expected_size = part.get('checksum'), part.get('size')
+        elif present:
+            expected_checksum, expected_size = attempt.get('payload_checksum'), received
+    else:
+        present = False
+        require(not parts, 'part without upload session')
+        require(obj['key'].startswith(f'tmp/uploads/{attempt["run_id"]}/')
+                and obj['key'].endswith('/not-applicable'), 'invalid not-applicable object key')
+    for part in parts:
+        require(upload is not None and part['entity_id'].startswith(upload['entity_id'] + ':'),
+                'part does not join upload session')
+    require(obj.get('exists') is present, 'missing required object or orphan object')
+    if present:
+        require(isinstance(expected_checksum, str) and gate.CHECKSUM.fullmatch(expected_checksum),
+                'missing DB/payload checksum')
+        require(obj['checksum'] == expected_checksum, 'DB/object checksum mismatch')
+        require(gate._int(expected_size) and obj['size'] == expected_size, 'DB/object size mismatch')
+    else:
+        require(obj['checksum'] is None and obj['size'] == 0, 'absent object contains bytes/checksum')
+    status = 'matched' if present else ('matched-absent' if upload is not None else 'not-applicable')
+    expected_identity = str((blob or upload or outbox or entities[0])['entity_id'])
+    joins = rows['reconcile.jsonl']
+    require(len(joins) == 2 and {row['join'] for row in joins} == {'db-to-object', 'object-to-db'},
+            'missing or duplicate product join')
+    for row in joins:
+        identity = expected_identity if row['join'] == 'db-to-object' else obj['key']
+        require(row['durable_identity'] == identity, 'reconcile durable identity mismatch')
+        require(row['status'] == status, 'reconcile contradicts raw DB/object state')
+    http = outcome(attempt['product_results'][-1]['status'])
+    if blob is not None or (upload is not None and upload['status'] == 'committed') or outbox is not None:
+        durable = 'committed'
+    elif upload is not None and upload['status'] in {'aborted', 'expired'}:
+        durable = 'absent'
+    elif attempt['operation'] in {'cas-stage', 'write'} and http == 'accepted':
+        durable = 'committed'
+    elif upload is not None and upload['status'] in {'initiated', 'uploading', 'assembled'}:
+        durable = 'pending'
+    else:
+        durable = 'rejected'
+    require(attempt['durable_state'] == durable, 'durable verdict contradicts raw DB state')
+
+
+def _check_prometheus(root: Path, rows: dict[str, list[dict]], cell_id: str, attempt: int) -> None:
+    path = f'prometheus/{cell_id}.attempt-{attempt}.json'
+    refs = rows['prometheus.jsonl']
+    gate._require(len(refs) == 1 and refs[0]['schema'] == 'p7-prometheus/v2'
+                  and refs[0]['path'] == path, 'Prometheus attempt reference mismatch')
+    try:
+        start = min(datetime.fromisoformat(row['wall_time']).timestamp()
+                    for row in rows['readiness.jsonl'] if row['phase'] == 'baseline')
+        end = max(datetime.fromisoformat(row['wall_time']).timestamp() for row in rows['ledger.jsonl'])
+        prom = gate._load_json(root / path)
+        gate._require(prom.get('status') == 'success', 'Prometheus query failed')
+        gate._require(prom['data']['resultType'] == 'vector', 'Prometheus query is not an instant vector')
+        values = prom['data']['result']
+        gate._require(isinstance(values, list) and values, 'missing live vaulter-sut Prometheus sample')
+        for item in values:
+            metric = item['metric']
+            gate._require(metric.get('job') == 'vaulter-sut' and metric.get('__name__') == 'up'
+                          and metric.get('instance') == 'app:8080', 'Prometheus series is not vaulter-sut up')
+            value = item['value']
+            gate._require(isinstance(value, list) and len(value) == 2, 'invalid Prometheus value')
+            timestamp, up = float(value[0]), float(value[1])
+            gate._require(math.isfinite(timestamp) and start <= timestamp <= end,
+                          'Prometheus sample outside attempt window')
+            gate._require(up == 1.0, 'live vaulter-sut Prometheus sample is not green')
+    except (KeyError, TypeError, ValueError, OverflowError, AttributeError) as exc:
+        raise gate.EvidenceInvalid('live vaulter-sut Prometheus sample is invalid') from exc
+
+
 def verify_artifacts(root: Path, *, prior_digest: str | None = None) -> str:
     root = Path(root)
-    gate.verify_run_dir(root)
+    expected_attempts = {(cell['cell_id'], attempt) for cell in gate.catalog()
+                         for attempt in range(1, repeat_count(cell) + 1)}
+    streams = gate.verify_run_dir(root, expected_attempts=expected_attempts)
     manifest = json.loads((root / 'run-manifest.json').read_text(encoding='utf-8'))
     if manifest.get('harness_version') != 'r11-product-fidelity/v2':
         raise gate.EvidenceInvalid('R11 product-fidelity harness is missing')
     run_id = manifest['run_id']
-    verdicts = json.loads((root / 'cell-verdicts.json').read_text(encoding='utf-8'))
+    verdicts = gate._load_json(root / 'cell-verdicts.json')
+    gate._require(verdicts.get('run_id') == run_id, 'cross-run verdict')
+    gate._require(isinstance(verdicts.get('cells'), list)
+                  and all(isinstance(row, dict) and isinstance(row.get('cell_id'), str)
+                          for row in verdicts['cells']), 'missing or malformed cell verdicts')
     by_id = {row['cell_id']: row for row in verdicts['cells']}
-    seen = {row['cell_id'] for row in json.loads((root / 'cells.json').read_text(encoding='utf-8'))}
+    gate._require(len(by_id) == len(verdicts['cells']) and set(by_id) == {c['cell_id'] for c in gate.catalog()},
+                  'duplicate or incomplete cell verdicts')
+    cells = {row['cell_id']: row for row in json.loads((root / 'cells.json').read_text(encoding='utf-8'))}
+    seen = set(cells)
     if seen != {cell['cell_id'] for cell in gate.catalog()}:
         raise gate.EvidenceInvalid('matrix coverage is incomplete')
     for cell in gate.catalog():
         row = by_id.get(cell['cell_id'])
         expected = repeat_count(cell)
-        if row is None or row['evidence'] != 'valid' or row['attempts'] != expected:
+        if row is None or row.get('plane') != cell['plane'] or row.get('evidence') != 'valid' or row.get('attempts') != expected:
             raise gate.EvidenceInvalid(f'{cell["cell_id"]} evidence is missing or invalid')
         for attempt in range(1, expected + 1):
             path = root / 'attempts' / f'{cell["cell_id"]}.attempt-{attempt}.json'
             if not path.is_file():
                 raise gate.EvidenceInvalid(f'missing attempt {path.name}')
-            attempt_row = json.loads(path.read_text(encoding='utf-8'))
-            if attempt_row.get('run_id') != run_id:
-                raise gate.EvidenceInvalid('cross-run attempt')
-            if attempt_row.get('baseline_green') is not True:
-                raise gate.EvidenceInvalid('attempt lacks a green live baseline')
-            results = attempt_row.get('product_results')
-            if not isinstance(results, list) or not results:
-                raise gate.EvidenceInvalid('attempt lacks a measured product operation')
-            if cell['fault'] == 'enospc-then-retry':
-                request_ids = [item.get('request_id') for item in results]
-                if len(results) != 2 or len(set(request_ids)) != 2 or attempt_row.get('retry_distinct') is not True:
-                    raise gate.EvidenceInvalid('ENOSPC retry is not a distinct product attempt')
-            prom_path = root / 'prometheus' / f'{cell["cell_id"]}.attempt-{attempt}.json'
-            try:
-                prom = json.loads(prom_path.read_text(encoding='utf-8'))
-                values = prom['data']['result']
-                live = any(float(item['value'][1]) == 1.0 for item in values)
-            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-                raise gate.EvidenceInvalid('live vaulter-sut Prometheus sample is invalid') from exc
-            if not live:
-                raise gate.EvidenceInvalid('live vaulter-sut Prometheus sample is not green')
-
-    attempt_stream = [
-        json.loads(line)
-        for line in (root / 'attempts.jsonl').read_text(encoding='utf-8').splitlines()
-        if line.strip()
-    ]
-    if any(row.get('schema') != 'p7-attempt/v2' for row in attempt_stream):
-        raise gate.EvidenceInvalid('labelled GET evidence is not accepted by R11')
-    before = json.loads((root / 'database' / 'integrity-before.json').read_text(encoding='utf-8'))
-    after = json.loads((root / 'database' / 'integrity-after.json').read_text(encoding='utf-8'))
+            attempt_row = gate._load_json(path)
+            rows = {name: [event for event in events if (event['cell_id'], event['attempt']) ==
+                          (cell['cell_id'], attempt)] for name, events in streams.items()}
+            raw = rows['attempts.jsonl'][0]
+            gate._require(raw['schema'] == 'p7-attempt/v2', 'labelled GET evidence is not accepted by R11')
+            for field, value in {'run_id': run_id, 'cell_id': cell['cell_id'], 'attempt': attempt,
+                                 'plane': cell['plane']}.items():
+                gate._require(attempt_row.get(field) == value, f'attempt file {field} mismatch')
+            gate._require(gate._int(attempt_row.get('attempt')), 'attempt file integer identity')
+            for field in ('product_results', 'http_outcome', 'availability', 'durable_state'):
+                gate._require(attempt_row.get(field) == raw[field], f'attempt file {field} contradicts raw')
+            gate._require(attempt_row.get('checksum') == raw.get('payload_checksum')
+                          and isinstance(raw.get('payload_checksum'), str)
+                          and gate.CHECKSUM.fullmatch(raw['payload_checksum']), 'attempt payload checksum mismatch')
+            results = raw['product_results']
+            final_status = results[-1]['status']
+            availability = 'down' if final_status == 0 else ('degraded' if final_status >= 500 else 'up')
+            gate._require(raw['http_outcome'] == outcome(final_status) and raw['availability'] == availability,
+                          'HTTP/availability verdict contradicts raw product result')
+            retry_distinct = len(results) < 2 or results[0]['request_id'] != results[1]['request_id']
+            gate._require(retry_distinct and attempt_row.get('retry_distinct') is True, 'retry identity mismatch')
+            probes = rows['readiness.jsonl']
+            gate._require(all(probe.get('metrics_ok') is True and probe['up_ok'] and probe['ready_ok']
+                              and probe['source'] == 'dependency-probe'
+                              for probe in probes), 'baseline/recovery is not green')
+            gate._require(attempt_row.get('baseline_green') is True, 'stored baseline contradicts raw')
+            gate._require(any(event['phase'] == 'recovery' and event.get('recovered') is True
+                              for event in rows['ledger.jsonl']), 'raw recovery verdict is not green')
+            _raw_integrity(rows, raw)
+            _check_prometheus(root, rows, cell['cell_id'], attempt)
+            gate._require(attempt_row.get('evidence') == 'valid', 'stored evidence contradicts raw verdict')
+            for field in ('t_detect_ns', 't_restore_ns', 't_converge_ns'):
+                gate._require(gate._int(attempt_row.get(field)) and attempt_row[field] >= 0, 'attempt timing')
+            gate._require(attempt_row['t_converge_ns'] == attempt_row['t_detect_ns'] + attempt_row['t_restore_ns'],
+                          'attempt timing contradiction')
+            if attempt == 1:
+                for field in ('http_outcome', 'availability', 'durable_state',
+                              't_detect_ns', 't_restore_ns', 't_converge_ns'):
+                    gate._require(cells[cell['cell_id']][field] == attempt_row[field], 'cell contradicts first attempt')
+    expected_files = {f'{cid}.attempt-{attempt}.json' for cid, attempt in expected_attempts}
+    for directory in ('attempts', 'prometheus'):
+        gate._require({path.name for path in (root / directory).iterdir()} == expected_files,
+                      f'unexpected or missing {directory} files')
+    before = gate._load_json(root / 'database' / 'integrity-before.json')
+    after = gate._load_json(root / 'database' / 'integrity-after.json')
     if before != after:
         raise gate.EvidenceInvalid('restored snapshot checksums do not match')
-    locks = json.loads((root / 'database' / 'locks.json').read_text(encoding='utf-8'))
+    locks = gate._load_json(root / 'database' / 'locks.json')
     if locks.get('ungranted') != 0:
         raise gate.EvidenceInvalid('locks were not released')
     hits = secret_scan(root)

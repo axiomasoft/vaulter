@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import errno
 import hashlib
-import importlib.util
 import json
 import os
 import shutil
@@ -29,15 +28,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+import p7_chaos as lane
+
 
 GATES = Path(__file__).resolve().parent
 LOAD = GATES.parent
 REPO = LOAD.parent
 CHAOS = LOAD / 'chaos'
-spec = importlib.util.spec_from_file_location('p7_chaos', GATES / 'p7_chaos.py')
-lane = importlib.util.module_from_spec(spec)
-sys.modules['p7_chaos'] = lane
-spec.loader.exec_module(lane)
 
 INJECTOR_VERSION = 'p7.2-injectors'
 S0_CELLS = (

@@ -3,25 +3,21 @@
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import signal
 import subprocess
-import sys
 import time
 import unittest
 from pathlib import Path
+
+import p7_chaos as gate
 
 GATES = Path(__file__).resolve().parent
 REPO = GATES.parents[1]
 FIXTURES = GATES / 'fixtures' / 'p7'
 SCRIPT = REPO / 'load' / 'scripts' / 'p7-chaos.sh'
 SNAPSHOT = REPO / 'load' / 'scripts' / 'p7-chaos-snapshot.sh'
-spec = importlib.util.spec_from_file_location('p7_chaos', GATES / 'p7_chaos.py')
-gate = importlib.util.module_from_spec(spec)
-sys.modules['p7_chaos'] = gate
-spec.loader.exec_module(gate)
 
 CELL = 'product-realistic.tus-patch.503'
 RUN = 'run-complete'

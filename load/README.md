@@ -568,6 +568,21 @@ Offline route controls use the Docker CLI's Compose renderer without a daemon:
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_base_restore.py'
 ```
 
+The R11 full verifier requires all ten primary streams for all 77 attempts in
+the 51-cell matrix. Fault identity, phases and observation order must agree
+within each attempt; baseline and recovery probes are separate. Attempt files
+and cell verdicts must agree with raw product results and both DB↔object joins,
+including durable keys, checksums, sizes and legitimate expected absence.
+Prometheus must contain a green `up{job="vaulter-sut",instance="app:8080"}`
+instant vector within that attempt's wall-time window. The runner queries the
+recorded end of the window explicitly. Historical labelled GET evidence stays
+rejected. These admission checks cover the captured object; staged/part inventory
+capture and the producer's `matched-absent` verdict remain separate repairs.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_evidence.py'
+```
+
 ```bash
 chmod +x load/scripts/p7-chaos.sh load/scripts/p7-chaos-snapshot.sh
 TIER=S ./load/scripts/p7-chaos.sh dry-run

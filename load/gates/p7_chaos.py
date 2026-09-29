@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 
@@ -279,6 +280,10 @@ def _identity(row: dict, manifest: dict, known_cells: dict, where: str) -> None:
     _require(_int(row.get('monotonic_ns')) and row['monotonic_ns'] >= 0, f'monotonic_ns in {where}')
     wall = row.get('wall_time')
     _require(isinstance(wall, str) and WALL_TIME.match(wall) is not None, f'wall_time in {where}')
+    try:
+        datetime.fromisoformat(wall)
+    except ValueError as exc:
+        raise EvidenceInvalid(f'wall_time in {where}') from exc
     _require(row.get('phase') in PHASES, f'phase in {where}')
     _require(row.get('direction') in DIRECTIONS, f'direction in {where}')
     fault_id = row.get('fault_id')
@@ -286,6 +291,8 @@ def _identity(row: dict, manifest: dict, known_cells: dict, where: str) -> None:
     _require(isinstance(row.get('injector_version'), str) and row['injector_version'], f'injector version in {where}')
     digest = row.get('injector_config_digest')
     _require(isinstance(digest, str) and CHECKSUM.match(digest) is not None, f'injector config digest in {where}')
+    if 'injector_config_digest' in manifest:
+        _require(digest == manifest['injector_config_digest'], f'injector config digest in {where}')
     _require(isinstance(row.get('target'), str) and row['target'], f'target in {where}')
     _require(row.get('config_fingerprint') == manifest['config_fingerprint'], f'config fingerprint in {where}')
 
@@ -318,22 +325,23 @@ def _check_barriers(barriers: list[dict], ledger: list[dict]) -> None:
         _require(row.get('schema') == 'p7-barrier/v1', 'barrier schema')
         _require(row.get('observed') is True, 'missing barrier')
         _require(isinstance(row.get('barrier_id'), str) and row['barrier_id'], 'barrier_id')
-        observed.setdefault(row['cell_id'], []).append(row)
+        observed.setdefault((row['cell_id'], row['attempt']), []).append(row)
     for event in ledger:
         if event['phase'] != 'armed':
             continue
         matches = [
-            row for row in observed.get(event['cell_id'], [])
+            row for row in observed.get((event['cell_id'], event['attempt']), [])
             if row['fault_id'] == event['fault_id'] and row['monotonic_ns'] <= event['monotonic_ns']
         ]
         _require(matches, 'missing barrier')
 
 
 def _check_fault_ids(ledger: list[dict], injectors: list[dict]) -> None:
-    owners: dict[str, str] = {}
+    owners: dict[str, tuple[str, int]] = {}
     for row in (*ledger, *injectors):
-        owner = owners.setdefault(row['fault_id'], row['cell_id'])
-        if owner != row['cell_id']:
+        identity = (row['cell_id'], row['attempt'])
+        owner = owners.setdefault(row['fault_id'], identity)
+        if owner != identity:
             raise EvidenceInvalid('overlapping fault ids')
     armed = False
     for event in sorted(ledger, key=lambda item: item['monotonic_ns']):
@@ -377,7 +385,7 @@ def _check_database(rows: list[dict]) -> None:
         _require(isinstance(row.get('entity_id'), str) and row['entity_id'], 'database entity_id')
         _require(isinstance(row.get('status'), str) and row['status'], 'database status')
         if row.get('checksum') is not None:
-            _require(CHECKSUM.match(row['checksum']) is not None, 'absent checksum')
+            _require(isinstance(row['checksum'], str) and CHECKSUM.fullmatch(row['checksum']), 'absent checksum')
 
 
 def _check_temp(rows: list[dict]) -> None:
@@ -390,8 +398,8 @@ def _check_temp(rows: list[dict]) -> None:
         _require(row['run_id'] in path, 'temp path escapes run scope')
 
 
-def _check_readiness(rows: list[dict]) -> dict[str, list[dict]]:
-    by_cell: dict[str, list[dict]] = {}
+def _check_readiness(rows: list[dict]) -> dict[tuple[str, int], list[dict]]:
+    by_cell: dict[tuple[str, int], list[dict]] = {}
     for row in rows:
         _require(row.get('schema') == 'p7-readiness/v1', 'readiness schema')
         _require(isinstance(row.get('up_ok'), bool), 'readiness /up')
@@ -401,7 +409,7 @@ def _check_readiness(rows: list[dict]) -> dict[str, list[dict]]:
         if row.get('phase') == 'baseline' and 'metrics_ok' in row:
             _require(row['up_ok'] and row['ready_ok'] and row['metrics_ok'], 'baseline is not green')
         _require(row.get('source') in {'up', 'ready', 'dependency-probe'}, 'readiness source')
-        by_cell.setdefault(row['cell_id'], []).append(row)
+        by_cell.setdefault((row['cell_id'], row['attempt']), []).append(row)
     return by_cell
 
 
@@ -450,9 +458,9 @@ def _check_attempts(rows: list[dict], known: dict[str, dict]) -> None:
                 _require(retry['written_bytes'] == retry['requested_bytes'], 'ENOSPC retry was short')
 
 
-def _check_reconcile(rows: list[dict], readiness: dict[str, list[dict]],
+def _check_reconcile(rows: list[dict], readiness: dict[tuple[str, int], list[dict]],
                      ledger: list[dict]) -> None:
-    by_cell: dict[str, list[dict]] = {}
+    by_cell: dict[tuple[str, int], list[dict]] = {}
     for row in rows:
         _require(row.get('schema') == 'p7-reconcile/v1', 'reconcile schema')
         join = row.get('join')
@@ -464,21 +472,89 @@ def _check_reconcile(rows: list[dict], readiness: dict[str, list[dict]],
         if status in AMBIGUOUS:
             raise EvidenceInvalid('unresolved ambiguity')
         _require(isinstance(identity, str) and identity, 'reconcile durable_identity')
-        by_cell.setdefault(row['cell_id'], []).append(row)
+        by_cell.setdefault((row['cell_id'], row['attempt']), []).append(row)
     recovered_cells = {
-        event['cell_id']
+        (event['cell_id'], event['attempt'])
         for event in ledger
         if event['phase'] == 'recovery' and event.get('recovered') is True
     }
     for cell_id in recovered_cells:
         probes = [
             row for row in readiness.get(cell_id, [])
-            if row.get('ready_ok') is True and row.get('up_ok') is True
+            if row['phase'] == 'recovery' and row['source'] == 'dependency-probe'
+            and row.get('ready_ok') is True and row.get('up_ok') is True
             and row.get('metrics_ok', True) is True
         ]
         _require(probes, 'recovered without dependency probe')
         matches = [row for row in by_cell.get(cell_id, []) if row.get('status') in RESOLVED]
-        _require(matches, 'recovered without product reconcile')
+        _require({row['join'] for row in matches} == {'db-to-object', 'object-to-db'},
+                 'recovered without both product reconciles')
+
+
+def _check_coverage(streams: dict[str, list[dict]], expected: set[tuple[str, int]],
+                    terminal_ns: int) -> None:
+    """Bind every primary stream to the same complete set of fault windows."""
+    grouped = {}
+    for name, rows in streams.items():
+        groups = {}
+        for row in rows:
+            groups.setdefault((row['cell_id'], row['attempt']), []).append(row)
+            _require(row['monotonic_ns'] < terminal_ns, 'event after terminal')
+        _require(set(groups) == expected, f'incomplete attempt coverage in {name}')
+        grouped[name] = groups
+    for identity in expected:
+        ledger = grouped['ledger.jsonl'][identity]
+        phases = {row['phase']: row['monotonic_ns'] for row in ledger}
+        _require(len(ledger) == len(PHASES) and set(phases) == set(PHASES),
+                 'incomplete or duplicate attempt phases')
+        _require(all(phases[left] < phases[right] for left, right in zip(PHASES, PHASES[1:])),
+                 'impossible phase order')
+        anchor = ledger[0]
+        for event in ledger:
+            direction = 'inject' if event['phase'] == 'fault' else (
+                'revert' if event['phase'] == 'revert' else 'observe')
+            _require(event['direction'] == direction, 'ledger phase direction')
+        for name, groups in grouped.items():
+            for row in groups[identity]:
+                for field in ('fault_id', 'injector_version', 'injector_config_digest', 'target'):
+                    _require(row[field] == anchor[field], f'attempt {field} mismatch in {name}')
+                ns = row['monotonic_ns']
+                if name == 'barriers.jsonl':
+                    _require(row['phase'] == 'armed' and phases['baseline'] <= ns <= phases['armed'],
+                             'barrier outside armed window')
+                elif name == 'injectors.jsonl':
+                    _require(row['phase'] == 'fault' and phases['fault'] <= ns < phases['revert'],
+                             'injector outside fault window')
+                elif name in {'database.jsonl', 'objects.jsonl', 'temp.jsonl',
+                              'prometheus.jsonl', 'attempts.jsonl'}:
+                    # These are post-operation captures; the runner may already have reverted.
+                    _require(row['phase'] == 'fault' and phases['fault'] <= ns < phases['recovery'],
+                             f'observation outside attempt window in {name}')
+                elif name == 'readiness.jsonl':
+                    if row['phase'] == 'baseline':
+                        _require(ns < phases['armed'], 'baseline probe after arm')
+                    else:
+                        _require(row['phase'] == 'recovery' and phases['revert'] <= ns <= phases['reconcile'],
+                                 'recovery probe before revert')
+                elif name == 'reconcile.jsonl':
+                    _require(row['phase'] == 'reconcile' and ns >= phases['recovery'],
+                             'reconcile before recovery')
+        probes = grouped['readiness.jsonl'][identity]
+        _require({row['phase'] for row in probes} == {'baseline', 'recovery'},
+                 'missing baseline or recovery probe')
+        _require(len(grouped['attempts.jsonl'][identity]) == 1, 'duplicate attempt result')
+        for name in ('barriers.jsonl', 'injectors.jsonl', 'temp.jsonl', 'prometheus.jsonl'):
+            _require(len(grouped[name][identity]) == 1, f'duplicate observation in {name}')
+    windows = []
+    for identity in expected:
+        observations = sorted((row for groups in grouped.values() for row in groups[identity]),
+                              key=lambda row: row['monotonic_ns'])
+        walls = [datetime.fromisoformat(row['wall_time']).timestamp() for row in observations]
+        _require(walls == sorted(walls), 'wall time contradicts monotonic order')
+        windows.append((observations[0]['monotonic_ns'], observations[-1]['monotonic_ns']))
+    windows.sort()
+    _require(all(left[1] < right[0] for left, right in zip(windows, windows[1:])),
+             'overlapping attempt observations')
 
 
 def _check_injectors(rows: list[dict]) -> None:
@@ -501,7 +577,8 @@ def _check_timing(cell: dict) -> None:
     }, 'cell durable state')
 
 
-def verify_run_dir(run_dir: Path) -> None:
+def verify_run_dir(run_dir: Path, *, expected_attempts: set[tuple[str, int]] | None = None
+                   ) -> dict[str, list[dict]]:
     run_dir = Path(run_dir)
     manifest_path = run_dir / 'run-manifest.json'
     terminal_path = run_dir / 'terminal.json'
@@ -559,6 +636,11 @@ def verify_run_dir(run_dir: Path) -> None:
     _require(terminal.get('schema') == 'p7-run-terminal/v1', 'missing terminal marker')
     _require(terminal.get('run_id') == manifest['run_id'], 'cross-run event in terminal')
     _require(_int(terminal.get('monotonic_ns')), 'terminal monotonic_ns')
+    expected = expected_attempts if expected_attempts is not None else {
+        (row['cell_id'], row['attempt']) for row in streams['ledger.jsonl']
+    } | {(cell_id, 1) for cell_id in seen_cells}
+    _check_coverage(streams, expected, terminal['monotonic_ns'])
+    return streams
 
 
 def revert_run_dir(run_dir: Path) -> dict:
