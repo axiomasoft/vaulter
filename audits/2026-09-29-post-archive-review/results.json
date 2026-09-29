@@ -1,0 +1,267 @@
+{
+  "entry_head": "1132d8e50e06b58f8aed1107a184e9a88c25a5df",
+  "final_head": "b9f0f0d68cf11f7dfb4f9318deb8ffd27eeb36da",
+  "entry_worktree": "clean",
+  "final_worktree": "clean",
+  "preexisting_origins": [
+    {
+      "commit": "2aa2eda88db634dbf82f9b958e14986e927a2a97",
+      "author": "Dmitry Vostrikov <vostrikovdv@yandex.ru>",
+      "date": "2026-09-29T11:46:03+03:00",
+      "subject": "chore(load): follow archived evidence paths",
+      "scope": "load archive paths",
+      "files": [
+        ".github/workflows/load.yml",
+        "load/README.md",
+        "load/gates/coverage.py",
+        "load/gates/p3_explain.py",
+        "load/gates/p3_workload.py",
+        "load/gates/p4_memory_matrix.py",
+        "load/gates/p5_live_matrix.py",
+        "load/gates/p8_live_gate.py",
+        "load/gates/p8_trace_proof.py",
+        "load/gates/p8_trace_targets.py",
+        "load/gates/perf-assert.py",
+        "load/gates/test_p7_publication.py",
+        "load/gates/test_r04_capture.py",
+        "load/gates/test_r05_capture.py",
+        "load/scripts/p3-capture-workload.sh",
+        "load/scripts/p4-memory-matrix-run.sh",
+        "load/scripts/p4-memory.sh",
+        "load/scripts/p5-concurrency.sh",
+        "load/scripts/p6-queue.sh",
+        "load/scripts/p7-chaos.sh",
+        "load/scripts/p8-live-gate.sh",
+        "load/scripts/p8-trace-proof.sh"
+      ]
+    },
+    {
+      "commit": "6b76bb991efff3ad525bf802e77155486a50274c",
+      "author": "Dmitry Vostrikov <vostrikovdv@yandex.ru>",
+      "date": "2026-09-29T11:46:07+03:00",
+      "subject": "chore(azgard): test against latest public head",
+      "scope": "AzGuard public HEAD compatibility",
+      "files": [
+        ".github/workflows/azgard.yml",
+        "packages/azgard/README.md",
+        "packages/azgard/composer.json",
+        "packages/azgard/tests/Arch/__snapshots__/public-api.txt",
+        "packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php",
+        "packages/azgard/tests/Stubs/SpyAzgardUser.php"
+      ]
+    },
+    {
+      "commit": "1132d8e50e06b58f8aed1107a184e9a88c25a5df",
+      "author": "Dmitry Vostrikov <vostrikovdv@yandex.ru>",
+      "date": "2026-09-29T11:46:17+03:00",
+      "subject": "chore(release): align pipelines with repository ownership",
+      "scope": "release configuration and metadata",
+      "files": [
+        ".changeset/README.md",
+        ".github/workflows/hocuspocus-image.yml",
+        ".github/workflows/monorepo-split.yml",
+        ".github/workflows/release-npm.yml",
+        ".gitignore",
+        "CHANGELOG.md",
+        "docs/adr/0010-php-npm-monorepo-release.md",
+        "docs/guide/hocuspocus-server.md",
+        "docs/ru/guide/hocuspocus-server.md",
+        "hocuspocus-server/Dockerfile",
+        "hocuspocus-server/README.md",
+        "hocuspocus-server/docker-compose.yml",
+        "package-lock.json",
+        "packages/vue/package.json"
+      ]
+    }
+  ],
+  "new_commits": [
+    "b9f0f0d68cf11f7dfb4f9318deb8ffd27eeb36da docs(azgard): align dependency and CI guidance",
+    "9bc347bceb90fc4fea8ed589562e6d10ee4de10a test(load): cover archived trace evidence resolution"
+  ],
+  "azguard": {
+    "public_head": "253cbf4cce0226545cd96ca8c6bcbefe329b1403",
+    "verified_without_token": true,
+    "local_source_matches": true,
+    "neighbor_changes_preserved": true
+  },
+  "checks": {
+    "azgard_pest": {
+      "passed": 21,
+      "assertions": 53,
+      "php": "8.4.1",
+      "laravel": "13.33.0",
+      "testbench": "11.1.0",
+      "database": "sqlite :memory:"
+    },
+    "azgard_pint": "passed",
+    "azgard_phpstan": "passed",
+    "azgard_manifest_without_lock_check": "passed",
+    "load_offline_existing_tests": 57,
+    "load_archive_regression_suite": {
+      "passed": 15,
+      "new_tests": 3,
+      "overlap_with_previous_run": 12
+    },
+    "vue_tests": 112,
+    "vue_typecheck": "passed",
+    "vue_build_and_export_artifacts": "Original build passed using root Vite 5.4.21; follow-up build passed using package-local Vite 6.4.3. Fresh dependency installation was not verified.",
+    "node_version": "24.12.0",
+    "hocuspocus_tests": 53,
+    "hocuspocus_js_syntax": "passed",
+    "yaml_structure": 16,
+    "embedded_shell_syntax": 35,
+    "changed_python_shell_syntax": "passed",
+    "root_npm_lock_metadata": "matches all 3 manifests",
+    "mocked_release_gate_scenarios": 7,
+    "git_diff_check": "passed"
+  },
+  "limitations": [
+    "Release gate requires nonexistent @vaulter/hocuspocus-server (Node 20); reproduced rejection with mock gh.",
+    "Release verifier declares contents:read but not checks:read. No real API permission failure or GitHub 403 was reproduced; the gh mock does not validate authorization.",
+    "Standalone hocuspocus-server/package-lock.json omits @hocuspocus/provider required by package.json since 45cd838; lock consistency check fails.",
+    "Ignored packages/azgard/composer.lock is stale; full composer validate exits 2. Manifest-only validation passes. Existing lock preserved.",
+    "No fresh dependency resolution, Node 20/22 or Laravel 12 CI matrix, actionlint or live release execution performed.",
+    "Release/live/mutation prerequisites remain unverified; no claims of publication readiness."
+  ],
+  "constraints_preserved": [
+    "No push, publish, split repository creation, CI dispatch, npm/Packagist/GHCR requests or token request.",
+    "No live/load campaigns or mutation runs; load tests use fixtures/mocks and temporary directories.",
+    "No active plans created or restored; plans tree byte-identical to entry and only NEXT-COMMANDS.md outside archive.",
+    "Release workflows unchanged; only load regression tests and AzGuard README changed.",
+    "Prior commits and neighboring AzGuard work preserved."
+  ],
+  "recorded_on": "2026-09-29",
+  "scope_note": "entry_head/final_head and worktree states describe the completed code review, before the separate audits documentation commit. This is a historical report, not an active plan.",
+  "follow_up_checks": {
+    "vue_declared_vite_build": {
+      "passed": true,
+      "exit_code": 0,
+      "vite": "6.4.3",
+      "vue_tsc": "2.2.12",
+      "node": "24.12.0",
+      "cwd": "packages/vue",
+      "command": "node ../../node_modules/vue-tsc/bin/vue-tsc.js --noEmit && node node_modules/vite/bin/vite.js build --outDir <temporary-directory>/vue-vite6-dist",
+      "evidence": "evidence/vue-build-vite6.txt"
+    },
+    "azgard_full_validation": {
+      "exit_code": 2,
+      "finding": "Existing ignored composer.lock is stale; not modified.",
+      "evidence": "evidence/azgard-full-validation.txt"
+    },
+    "independent_review": {
+      "model": "gpt-6-sol",
+      "mode": "read-only",
+      "scope": "Provenance, logs, source declarations, local manifest validation. No package test rerun, network access or writes by reviewer."
+    }
+  },
+  "evidence_files": [
+    {
+      "file": "evidence/azgard-tests.txt",
+      "sha256": "793135f8ef39c37b350c73a5deeadd8b13eaa09e1ae8a84cee9bef128d87f839",
+      "source_sha256": "475da4f4a829d864b2b1c52dfc2ea15969bc149f7ed87ce35b1f9d203b0893ff",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/azgard-pint.txt",
+      "sha256": "9fa3c401d4d7dcf9d616a4e847f09d73bafe2397e5f1b5b77531e2516436ed5a",
+      "source_sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/azgard-phpstan.txt",
+      "sha256": "648bededb4d3f743912a1d56d1745709a4858bf0c9631bf1b564012417196b64",
+      "source_sha256": "1112f0561c8f1932b682dfc800cb26be25ae0d00d4941413d6a9e00806b5c8c2",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/azgard-manifest.txt",
+      "sha256": "d535b2831a55bf4ac5d881de3ea084aad7cb5f9b7f494460572554001e95ea35",
+      "source_sha256": "d535b2831a55bf4ac5d881de3ea084aad7cb5f9b7f494460572554001e95ea35",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/azgard-full-validation.txt",
+      "sha256": "d778129a05884792227b9324f397d2330183749fc905f250bf42bdfd985d43bd",
+      "source_sha256": "d778129a05884792227b9324f397d2330183749fc905f250bf42bdfd985d43bd",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/load-offline.txt",
+      "sha256": "ee19b9c69c0f5121c318c3381ee172afac4b5e4cf77a8e81f52966b9c2b1bf7f",
+      "source_sha256": "ee19b9c69c0f5121c318c3381ee172afac4b5e4cf77a8e81f52966b9c2b1bf7f",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/load-archive-regression.txt",
+      "sha256": "e2921858b6b90f6f75ff8c2d54b6409eb095ef186322e07611dbc9700d3e8e8d",
+      "source_sha256": "e2921858b6b90f6f75ff8c2d54b6409eb095ef186322e07611dbc9700d3e8e8d",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/vue-tests.txt",
+      "sha256": "69b0645be4f76cc5b08a42ebcaee0cf7d7dc41402104d7fe4f6876b239164083",
+      "source_sha256": "050113c12581b3602e2aee1015b6112cc560ff7a8e6529a081bb6905f1cd5041",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/vue-build.txt",
+      "sha256": "0dc400010c1013242bf851f5550b5f758b539c700fc22f03ec350a6fd5eb57e6",
+      "source_sha256": "0dc400010c1013242bf851f5550b5f758b539c700fc22f03ec350a6fd5eb57e6",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/vue-build-vite6.txt",
+      "sha256": "39810bde3b1b938301bc41fe05f3084385ea2e02befcecf88751d682025c37e7",
+      "source_sha256": "39810bde3b1b938301bc41fe05f3084385ea2e02befcecf88751d682025c37e7",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/hocuspocus-tests.txt",
+      "sha256": "0ccfce70fe27aebce466dc9551f81f2fad50209536dc09526d04ce5052528c14",
+      "source_sha256": "0ccfce70fe27aebce466dc9551f81f2fad50209536dc09526d04ce5052528c14",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-actual-matrix.txt",
+      "sha256": "b7ad037182a01d545f05190168605cffca0141da47f7fde8f7b1eb270c43abd8",
+      "source_sha256": "b7ad037182a01d545f05190168605cffca0141da47f7fde8f7b1eb270c43abd8",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-off-main.txt",
+      "sha256": "1510a8577e9960a160f7b2c16aa0d56a6c621d1a222bdf1afa76eee950e0c2ff",
+      "source_sha256": "1510a8577e9960a160f7b2c16aa0d56a6c621d1a222bdf1afa76eee950e0c2ff",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-missing.txt",
+      "sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "source_sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-pending.txt",
+      "sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "source_sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-failure.txt",
+      "sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "source_sha256": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-api-error.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    },
+    {
+      "file": "evidence/release-success.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transformation": "ANSI color escapes, trailing horizontal whitespace and trailing blank lines removed; nonempty files end with one newline; other bytes preserved."
+    }
+  ]
+}
