@@ -1,0 +1,80 @@
+{
+  "retrieved_utc": "2026-09-29T10:58:54.292626+00:00",
+  "sources": [
+    {
+      "repo": "spatie/laravel-medialibrary",
+      "commit": "3bbac92f7c6ad4a162307c59378d5125a5ca8868",
+      "path": "src/MediaCollections/FileAdder.php",
+      "url": "https://github.com/spatie/laravel-medialibrary/blob/3bbac92f7c6ad4a162307c59378d5125a5ca8868/src/MediaCollections/FileAdder.php",
+      "sha256": "4bba9dd33f76c256bea479ebcf8d4cac0c3138576e6af7f23e0dba59fd1db0de",
+      "observed_symbols": [
+        {
+          "line": 309
+        },
+        {
+          "line": 375
+        },
+        {
+          "line": 585
+        },
+        {
+          "line": 592
+        },
+        {
+          "line": 595
+        },
+        {
+          "line": 597
+        },
+        {
+          "line": 670
+        },
+        {
+          "line": 682
+        }
+      ]
+    },
+    {
+      "repo": "nextcloud/server",
+      "commit": "882be16fb5d3a8c544315ca18992f1f3372ee536",
+      "path": "lib/public/Files/FileInfo.php",
+      "url": "https://github.com/nextcloud/server/blob/882be16fb5d3a8c544315ca18992f1f3372ee536/lib/public/Files/FileInfo.php",
+      "sha256": "fabfa9b4e4c4dee5db596f7b2bfbafce6f195f5c8e81581d87c8f42cd91ccca9",
+      "observed_symbols": [
+        {
+          "line": 25
+        },
+        {
+          "line": 112
+        },
+        {
+          "line": 160
+        },
+        {
+          "line": 165
+        },
+        {
+          "line": 168
+        }
+      ]
+    },
+    {
+      "repo": "laravel/scout",
+      "commit": "deb229f068a5eb350a906ea25bda9fa2811ba1a9",
+      "path": "src/EngineManager.php",
+      "url": "https://github.com/laravel/scout/blob/deb229f068a5eb350a906ea25bda9fa2811ba1a9/src/EngineManager.php",
+      "sha256": "b3b7d4c5f46bc448372b134bfa14d423a9b3cdfb0d4f7d6011c48bcb3484f2e7",
+      "observed_symbols": [
+        {
+          "line": 21
+        },
+        {
+          "line": 39
+        },
+        {
+          "line": 187
+        }
+      ]
+    }
+  ]
+}
