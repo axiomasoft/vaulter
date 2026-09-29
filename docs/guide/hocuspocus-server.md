@@ -14,7 +14,7 @@ variables, and never copy its source into your app:
 ```yaml
 services:
   vaulter-collab:
-    image: ghcr.io/axioma-studio/vaulter-hocuspocus:1   # pin @sha256:… in production
+    image: ghcr.io/axiomasoft/vaulter-hocuspocus:1   # pin @sha256:… in production
     ports: ["127.0.0.1:1234:1234"]   # loopback only — front it with a TLS reverse proxy
     environment:
       VAULTER_BACKEND_URL: "https://app.example.com"
@@ -164,7 +164,7 @@ so existing sockets finish.
 ## Reuse across projects
 
 The image is intentionally project-agnostic. Point each deployment at its own Laravel
-backend (`VAULTER_BACKEND_URL`) and origins; the same `ghcr.io/axioma-studio/vaulter-hocuspocus`
+backend (`VAULTER_BACKEND_URL`) and origins; the same `ghcr.io/axiomasoft/vaulter-hocuspocus`
 tag serves them all. In production, pin a digest (`@sha256:…`) so every consumer runs the
 exact same artifact.
 

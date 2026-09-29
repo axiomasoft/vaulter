@@ -31,8 +31,51 @@ permissions:
   contents: read
 
 jobs:
+  verify-release-sha:
+    name: Verify release SHA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful CI checks on the tagged commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          required_checks=(
+            'Laravel Pint'
+            'Larastan (PHPStan level 8)'
+            'PHP 8.4 / Laravel 12.*'
+            'PHP 8.4 / Laravel 13.*'
+            'PHP 8.4 / Postgres (full schema portability lane)'
+            '@vaulter/vue (Node 20)'
+            '@vaulter/vue (Node 22)'
+            '@vaulter/hocuspocus-server (Node 20)'
+            '@vaulter/hocuspocus-server (Node 22)'
+          )
+
+          comparison="$(gh api "/repos/${REPOSITORY}/compare/${RELEASE_SHA}...main" --jq '.status')"
+          if [[ "${comparison}" != 'ahead' && "${comparison}" != 'identical' ]]; then
+            echo "Tagged commit is not on main: ${RELEASE_SHA} (${comparison})" >&2
+            exit 1
+          fi
+
+          failed=0
+          for name in "${required_checks[@]}"; do
+            result="$(gh api --method GET "/repos/${REPOSITORY}/commits/${RELEASE_SHA}/check-runs" \
+              -f "check_name=${name}" \
+              --jq '.check_runs | sort_by(.started_at) | last | [.status, (.conclusion // "")] | @tsv')"
+
+            if [[ "${result}" != $'completed\tsuccess' ]]; then
+              echo "Required check is missing or not successful: ${name}" >&2
+              failed=1
+            fi
+          done
+
+          exit "${failed}"
+
   split:
     name: Split packages/${{ matrix.package }}
+    needs: verify-release-sha
     runs-on: ubuntu-latest
 
     strategy:
@@ -71,4 +114,5 @@ jobs:
           branch: main
           # Propagate the pushed tag to the split repo (used internally as as_tag).
           tag: ${{ github.ref_name }}
-          personal_access_token: ${{ secrets.GH_ACCESS_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}

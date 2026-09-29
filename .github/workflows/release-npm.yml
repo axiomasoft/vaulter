@@ -3,7 +3,8 @@ name: Release (npm)
 # Publishes the npm packages (@vaulter/vue, later @vaulter/client) via Changesets.
 # On push to main this either opens/updates the "Version Packages" PR (when pending
 # changesets exist) or, once that PR is merged, publishes the bumped packages with
-# OIDC provenance. The PHP packages are released separately by monorepo-split.yml.
+# a registry token. The source repository is currently private, so npm provenance
+# cannot be generated. The PHP packages are released separately by monorepo-split.yml.
 on:
   push:
     branches: [main]
@@ -17,7 +18,6 @@ concurrency:
 permissions:
   contents: write       # changesets opens/updates the Version Packages PR + tags
   pull-requests: write  # ...and the PR itself
-  id-token: write       # OIDC provenance for npm publish (NPM_CONFIG_PROVENANCE)
 
 jobs:
   release:
@@ -45,6 +45,9 @@ jobs:
       - name: Build npm workspaces
         run: npm run build
 
+      - name: Test npm workspaces
+        run: npm test
+
       - name: Create release PR or publish
         uses: changesets/action@v1
         with:
@@ -58,4 +61,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'

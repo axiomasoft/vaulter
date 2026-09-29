@@ -22,8 +22,9 @@ different registries (Packagist vs npm), so a single release flow cannot serve b
 - **npm — workspaces locally, Changesets on publish.** Root `package.json`
   workspaces build in place. `.changeset/` drives versioning; `release-npm.yml`
   runs `changesets/action` on push to `main`, opening a "Version Packages" PR when
-  changesets exist and publishing the bumped packages **with OIDC provenance**
-  (`id-token: write`, `NPM_CONFIG_PROVENANCE: true`) after that PR merges. The
+  changesets exist and publishing the bumped packages with an npm registry token
+  after that PR merges. npm provenance stays disabled while the source repository
+  is private because npm cannot generate public provenance from a private source. The
   front-end packages are a `linked` group (shared version ceiling, not lockstep);
   `dist/` is gitignored and built before publish.
 

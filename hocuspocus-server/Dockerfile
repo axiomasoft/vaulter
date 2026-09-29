@@ -1,6 +1,6 @@
 # Vaulter collaboration hub — a reusable, env-configured external image
 # (master plan Addendum A). One published image serves many projects; consumers
-# reference it via `image: ghcr.io/axioma-studio/vaulter-hocuspocus:<ver>` and configure
+# reference it via `image: ghcr.io/axiomasoft/vaulter-hocuspocus:<ver>` and configure
 # it through environment variables only — no sources copied, no secrets baked.
 #
 # syntax=docker/dockerfile:1
@@ -41,7 +41,7 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
 
 LABEL org.opencontainers.image.title="Vaulter Hocuspocus hub" \
       org.opencontainers.image.description="Reusable, env-configured Hocuspocus collaboration server for Vaulter (Yjs realtime document editing)." \
-      org.opencontainers.image.source="https://github.com/axioma-studio/vaulter" \
+      org.opencontainers.image.source="https://github.com/axiomasoft/vaulter" \
       org.opencontainers.image.licenses="MIT"
 
 CMD ["node", "src/index.js"]

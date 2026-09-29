@@ -1,7 +1,7 @@
 # Vaulter collaboration hub — reference deployment.
 #
 # The recommended model is to REFERENCE the published image (not vendor the sources):
-#   image: ghcr.io/axioma-studio/vaulter-hocuspocus:<version>   # pin @sha256:… in prod
+#   image: ghcr.io/axiomasoft/vaulter-hocuspocus:<version>   # pin @sha256:… in prod
 # and configure it entirely through environment variables. For LOCAL development against
 # this repo, uncomment `build: .` to build the image from source instead.
 #
@@ -14,7 +14,7 @@
 # docs/guide/hocuspocus-server.md.
 services:
   vaulter-collab:
-    image: ghcr.io/axioma-studio/vaulter-hocuspocus:${VAULTER_COLLAB_IMAGE_TAG:?Set VAULTER_COLLAB_IMAGE_TAG to a pinned vaulter-hocuspocus release tag or @sha256 digest — see docs/guide/hocuspocus-server.md}
+    image: ghcr.io/axiomasoft/vaulter-hocuspocus:${VAULTER_COLLAB_IMAGE_TAG:?Set VAULTER_COLLAB_IMAGE_TAG to a pinned vaulter-hocuspocus release tag or @sha256 digest — see docs/guide/hocuspocus-server.md}
     # build: .   # ← local dev: build from source instead of pulling the published image
     ports:
       # Bound to 127.0.0.1 by default: the WS port must NOT face the internet directly.

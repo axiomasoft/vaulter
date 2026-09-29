@@ -12,16 +12,16 @@
     "file-manager",
     "vaulter"
   ],
-  "homepage": "https://github.com/axioma-studio/vaulter#readme",
-  "bugs": "https://github.com/axioma-studio/vaulter/issues",
+  "homepage": "https://github.com/axiomasoft/vaulter#readme",
+  "bugs": "https://github.com/axiomasoft/vaulter/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/axioma-studio/vaulter.git",
+    "url": "git+https://github.com/axiomasoft/vaulter.git",
     "directory": "packages/vue"
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "sideEffects": [
     "**/*.css"
