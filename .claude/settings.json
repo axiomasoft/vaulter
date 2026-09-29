@@ -29,6 +29,26 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/auto-approve/auto-approve.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/auto-approve/auto-approve.sh"
+          }
+        ]
+      }
     ]
   },
   "autoMemoryEnabled": false,
