@@ -1,0 +1,124 @@
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Package operations: 144 installs, 0 updates, 0 removals
+  - Downloading staudenmeir/laravel-cte (v1.13.0)
+    Failed to download staudenmeir/laravel-cte from dist: Network disabled, request canceled: https://api.github.com/repos/staudenmeir/laravel-cte/zipball/cf59f3b842e411cb22d7446ad40c92e4b5143bbe
+    Now trying to download from source
+  - Syncing staudenmeir/laravel-cte (v1.13.0) into cache
+Aborting git mirror sync of https://github.com/staudenmeir/laravel-cte.git as network is disabled
+  - Downloading staudenmeir/eloquent-has-many-deep-contracts (v1.4)
+    Failed to download staudenmeir/eloquent-has-many-deep-contracts from dist: Network disabled, request canceled: https://api.github.com/repos/staudenmeir/eloquent-has-many-deep-contracts/zipball/6eadbd6904c057e9439f86f8de185f56693fa537
+    Now trying to download from source
+  - Syncing staudenmeir/eloquent-has-many-deep-contracts (v1.4) into cache
+Aborting git mirror sync of https://github.com/staudenmeir/eloquent-has-many-deep-contracts.git as network is disabled
+  - Downloading staudenmeir/laravel-adjacency-list (v1.26.1)
+    Failed to download staudenmeir/laravel-adjacency-list from dist: Network disabled, request canceled: https://api.github.com/repos/staudenmeir/laravel-adjacency-list/zipball/a8302f3564a8d56fff75c53ffe05521ffabe77cc
+    Now trying to download from source
+  - Syncing staudenmeir/laravel-adjacency-list (v1.26.1) into cache
+Aborting git mirror sync of https://github.com/staudenmeir/laravel-adjacency-list.git as network is disabled
+  - Downloading spatie/laravel-package-tools (1.93.1)
+    Failed to download spatie/laravel-package-tools from dist: Network disabled, request canceled: https://api.github.com/repos/spatie/laravel-package-tools/zipball/d5552849801f2642aea710557463234b59ef65eb
+    Now trying to download from source
+  - Syncing spatie/laravel-package-tools (1.93.1) into cache
+Aborting git mirror sync of https://github.com/spatie/laravel-package-tools.git as network is disabled
+  - Downloading sebastian/diff (7.0.0)
+    Failed to download sebastian/diff from dist: Network disabled, request canceled: https://api.github.com/repos/sebastianbergmann/diff/zipball/7ab1ea946c012266ca32390913653d844ecd085f
+    Now trying to download from source
+  - Syncing sebastian/diff (7.0.0) into cache
+Aborting git mirror sync of https://github.com/sebastianbergmann/diff.git as network is disabled
+  - Downloading phpunit/php-file-iterator (6.0.1)
+    Failed to download phpunit/php-file-iterator from dist: Network disabled, request canceled: https://api.github.com/repos/sebastianbergmann/php-file-iterator/zipball/3d1cd096ef6bea4bf2762ba586e35dbd317cbfd5
+    Now trying to download from source
+  - Syncing phpunit/php-file-iterator (6.0.1) into cache
+Aborting git mirror sync of https://github.com/sebastianbergmann/php-file-iterator.git as network is disabled
+  - Downloading nikic/php-parser (v5.7.0)
+    Failed to download nikic/php-parser from dist: Network disabled, request canceled: https://api.github.com/repos/nikic/PHP-Parser/zipball/dca41cd15c2ac9d055ad70dbfd011130757d1f82
+    Now trying to download from source
+  - Syncing nikic/php-parser (v5.7.0) into cache
+Aborting git mirror sync of https://github.com/nikic/PHP-Parser.git as network is disabled
+  - Downloading myclabs/deep-copy (1.13.4)
+    Failed to download myclabs/deep-copy from dist: Network disabled, request canceled: https://api.github.com/repos/myclabs/DeepCopy/zipball/07d290f0c47959fd5eed98c95ee5602db07e0b6a
+    Now trying to download from source
+  - Syncing myclabs/deep-copy (1.13.4) into cache
+Aborting git mirror sync of https://github.com/myclabs/DeepCopy.git as network is disabled
+  - Downloading phpunit/phpunit (12.5.30)
+    Failed to download phpunit/phpunit from dist: Network disabled, request canceled: https://api.github.com/repos/sebastianbergmann/phpunit/zipball/900400a5b616d6fb306f9549f6da33ba615d3fbb
+    Now trying to download from source
+  - Syncing phpunit/phpunit (12.5.30) into cache
+  - Downloading filp/whoops (2.18.4)
+    Failed to download filp/whoops from dist: Network disabled, request canceled: https://api.github.com/repos/filp/whoops/zipball/d2102955e48b9fd9ab24280a7ad12ed552752c4d
+    Now trying to download from source
+  - Syncing filp/whoops (2.18.4) into cache
+Aborting git mirror sync of https://github.com/filp/whoops.git as network is disabled
+  - Downloading hamcrest/hamcrest-php (v2.1.1)
+    Failed to download hamcrest/hamcrest-php from dist: Network disabled, request canceled: https://api.github.com/repos/hamcrest/hamcrest-php/zipball/f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487
+    Now trying to download from source
+  - Syncing hamcrest/hamcrest-php (v2.1.1) into cache
+Aborting git mirror sync of https://github.com/hamcrest/hamcrest-php.git as network is disabled
+  - Downloading phpstan/phpstan (2.2.3)
+  - Downloading larastan/larastan (v3.10.0)
+    Failed to download larastan/larastan from dist: Network disabled, request canceled: https://api.github.com/repos/larastan/larastan/zipball/2970f83398154178a739609c244577267c7ee8eb
+    Now trying to download from source
+  - Syncing larastan/larastan (v3.10.0) into cache
+Aborting git mirror sync of https://github.com/larastan/larastan.git as network is disabled
+  - Downloading laravel/pint (v1.29.3)
+    Failed to download laravel/pint from dist: Network disabled, request canceled: https://api.github.com/repos/laravel/pint/zipball/da1d1111a6aa2e082d2a388b194afe1ba0a05d14
+    Now trying to download from source
+  - Syncing laravel/pint (v1.29.3) into cache
+Aborting git mirror sync of https://github.com/laravel/pint.git as network is disabled
+  - Downloading orchestra/sidekick (v1.2.20)
+    Failed to download orchestra/sidekick from dist: Network disabled, request canceled: https://api.github.com/repos/orchestral/sidekick/zipball/267a71b56cb2fe1a634d69fc99889c671b77ff43
+    Now trying to download from source
+  - Syncing orchestra/sidekick (v1.2.20) into cache
+Aborting git mirror sync of https://github.com/orchestral/sidekick.git as network is disabled
+  - Downloading symfony/yaml (v8.1.1)
+    Failed to download symfony/yaml from dist: Network disabled, request canceled: https://api.github.com/repos/symfony/yaml/zipball/8e4cdd4311683516be06944f4b85244063cdb886
+    Now trying to download from source
+  - Syncing symfony/yaml (v8.1.1) into cache
+  - Downloading orchestra/testbench-core (v11.3.5)
+    Failed to download orchestra/testbench-core from dist: Network disabled, request canceled: https://api.github.com/repos/orchestral/testbench-core/zipball/a6773cd554177edb800f1e610d128b5acf813783
+    Now trying to download from source
+  - Syncing orchestra/testbench-core (v11.3.5) into cache
+Aborting git mirror sync of https://github.com/orchestral/testbench-core.git as network is disabled
+  - Downloading orchestra/canvas (v11.0.1)
+    Failed to download orchestra/canvas from dist: Network disabled, request canceled: https://api.github.com/repos/orchestral/canvas/zipball/d240410f4cd89b380d7d89b5bbaf60c32f4fb691
+    Now trying to download from source
+  - Syncing orchestra/canvas (v11.0.1) into cache
+Aborting git mirror sync of https://github.com/orchestral/canvas.git as network is disabled
+  - Downloading nunomaduro/collision (v8.9.4)
+    Failed to download nunomaduro/collision from dist: Network disabled, request canceled: https://api.github.com/repos/nunomaduro/collision/zipball/716af8f95a470e9094cfca09ed897b023be191a5
+    Now trying to download from source
+  - Syncing nunomaduro/collision (v8.9.4) into cache
+Aborting git mirror sync of https://github.com/nunomaduro/collision.git as network is disabled
+  - Downloading orchestra/workbench (v11.1.0)
+    Failed to download orchestra/workbench from dist: Network disabled, request canceled: https://api.github.com/repos/orchestral/workbench/zipball/e750c7bcae4405e054ff286475502e23274de04b
+    Now trying to download from source
+  - Syncing orchestra/workbench (v11.1.0) into cache
+Aborting git mirror sync of https://github.com/orchestral/workbench.git as network is disabled
+  - Downloading mockery/mockery (1.6.12)
+    Failed to download mockery/mockery from dist: Network disabled, request canceled: https://api.github.com/repos/mockery/mockery/zipball/1f4efdd7d3beafe9807b08156dfcb176d18f1699
+    Now trying to download from source
+  - Syncing mockery/mockery (1.6.12) into cache
+Aborting git mirror sync of https://github.com/mockery/mockery.git as network is disabled
+  - Downloading orchestra/testbench (v11.1.0)
+    Failed to download orchestra/testbench from dist: Network disabled, request canceled: https://api.github.com/repos/orchestral/testbench/zipball/997f33e5200c7e8db4756b35a9deb3f5f3086759
+    Now trying to download from source
+  - Syncing orchestra/testbench (v11.1.0) into cache
+Aborting git mirror sync of https://github.com/orchestral/testbench.git as network is disabled
+  - Downloading pestphp/pest (v4.7.4)
+    Failed to download pestphp/pest from dist: Network disabled, request canceled: https://api.github.com/repos/pestphp/pest/zipball/ee2e97e932d158faceeaa63a4dc17324b15152cb
+    Now trying to download from source
+  - Syncing pestphp/pest (v4.7.4) into cache
+  - Downloading pestphp/pest-plugin-laravel (v4.1.0)
+    Failed to download pestphp/pest-plugin-laravel from dist: Network disabled, request canceled: https://api.github.com/repos/pestphp/pest-plugin-laravel/zipball/3057a36669ff11416cc0dc2b521b3aec58c488d0
+    Now trying to download from source
+  - Syncing pestphp/pest-plugin-laravel (v4.1.0) into cache
+Aborting git mirror sync of https://github.com/pestphp/pest-plugin-laravel.git as network is disabled
+
+In HttpDownloader.php line 329:
+
+  Network disabled, request canceled: https://api.github.com/repos/phpstan/ph
+  pstan/zipball/4048833dd47b377287818841877fb3087289509c
+
+
+install [--prefer-source] [--prefer-dist] [--prefer-install PREFER-INSTALL] [--dry-run] [--download-only] [--dev] [--no-suggest] [--no-dev] [--no-autoloader] [--no-progress] [--no-install] [--audit] [--audit-format AUDIT-FORMAT] [-v|vv|vvv|--verbose] [-o|--optimize-autoloader] [-a|--classmap-authoritative] [--apcu-autoloader] [--apcu-autoloader-prefix APCU-AUTOLOADER-PREFIX] [--ignore-platform-req IGNORE-PLATFORM-REQ] [--ignore-platform-reqs] [--] [<packages>...]

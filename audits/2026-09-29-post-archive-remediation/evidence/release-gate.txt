@@ -1,0 +1,20 @@
+test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) ... mock actual-matrix: exit 0 (expected 0)
+mock identical: exit 0 (expected 0)
+mock off-main: exit 1 (expected 1)
+mock diverged: exit 1 (expected 1)
+mock missing: exit 1 (expected 1)
+mock pending: exit 1 (expected 1)
+mock failure: exit 1 (expected 1)
+mock cancelled: exit 1 (expected 1)
+mock skipped: exit 1 (expected 1)
+mock api-error: exit 1 (expected 1)
+mock compare-error: exit 1 (expected 1)
+ok
+test_required_checks_match_current_ci_matrix (__main__.ReleaseGateTest.test_required_checks_match_current_ci_matrix) ... ok
+test_shell_syntax (__main__.ReleaseGateTest.test_shell_syntax) ... ok
+test_verifier_has_read_permissions_and_gates_split (__main__.ReleaseGateTest.test_verifier_has_read_permissions_and_gates_split) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.261s
+
+OK

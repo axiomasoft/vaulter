@@ -1,0 +1,27 @@
+{
+  "initial_head": "24a0c524b503051a9f0eb71b0edd07a285b6b855",
+  "initial_status": "",
+  "azgard_lock_sha256": "867d2c81b91e118a11b90d7794ab7ead5f4242e7634756acf018274c072157d8",
+  "preserved": {
+    "audits/2026-09-29-post-archive-review/evidence/azgard-full-validation.txt": "d778129a05884792227b9324f397d2330183749fc905f250bf42bdfd985d43bd",
+    "audits/2026-09-29-post-archive-review/evidence/azgard-manifest.txt": "d535b2831a55bf4ac5d881de3ea084aad7cb5f9b7f494460572554001e95ea35",
+    "audits/2026-09-29-post-archive-review/evidence/azgard-phpstan.txt": "648bededb4d3f743912a1d56d1745709a4858bf0c9631bf1b564012417196b64",
+    "audits/2026-09-29-post-archive-review/evidence/azgard-pint.txt": "9fa3c401d4d7dcf9d616a4e847f09d73bafe2397e5f1b5b77531e2516436ed5a",
+    "audits/2026-09-29-post-archive-review/evidence/azgard-tests.txt": "793135f8ef39c37b350c73a5deeadd8b13eaa09e1ae8a84cee9bef128d87f839",
+    "audits/2026-09-29-post-archive-review/evidence/hocuspocus-tests.txt": "0ccfce70fe27aebce466dc9551f81f2fad50209536dc09526d04ce5052528c14",
+    "audits/2026-09-29-post-archive-review/evidence/load-archive-regression.txt": "e2921858b6b90f6f75ff8c2d54b6409eb095ef186322e07611dbc9700d3e8e8d",
+    "audits/2026-09-29-post-archive-review/evidence/load-offline.txt": "ee19b9c69c0f5121c318c3381ee172afac4b5e4cf77a8e81f52966b9c2b1bf7f",
+    "audits/2026-09-29-post-archive-review/evidence/release-actual-matrix.txt": "b7ad037182a01d545f05190168605cffca0141da47f7fde8f7b1eb270c43abd8",
+    "audits/2026-09-29-post-archive-review/evidence/release-api-error.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "audits/2026-09-29-post-archive-review/evidence/release-failure.txt": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+    "audits/2026-09-29-post-archive-review/evidence/release-missing.txt": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+    "audits/2026-09-29-post-archive-review/evidence/release-off-main.txt": "1510a8577e9960a160f7b2c16aa0d56a6c621d1a222bdf1afa76eee950e0c2ff",
+    "audits/2026-09-29-post-archive-review/evidence/release-pending.txt": "378278f03a294f30d7d6cf18bf40b9d421b81be69c32b61e62db94027b038cae",
+    "audits/2026-09-29-post-archive-review/evidence/release-success.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "audits/2026-09-29-post-archive-review/evidence/vue-build-vite6.txt": "39810bde3b1b938301bc41fe05f3084385ea2e02befcecf88751d682025c37e7",
+    "audits/2026-09-29-post-archive-review/evidence/vue-build.txt": "0dc400010c1013242bf851f5550b5f758b539c700fc22f03ec350a6fd5eb57e6",
+    "audits/2026-09-29-post-archive-review/evidence/vue-tests.txt": "69b0645be4f76cc5b08a42ebcaee0cf7d7dc41402104d7fe4f6876b239164083",
+    "audits/2026-09-29-post-archive-review/results.json": "61ac3d36d15a4ee8e6d34f4cc226138769a8065724d094e9b0e89d6e996d2b0f",
+    "audits/2026-09-29-post-archive-review.md": "aa1bfda22f98c4742db01683975b815bed4148e2425d7d62db15ca9767e06b16"
+  }
+}
