@@ -1,0 +1,14 @@
+{
+  "attempt": 1,
+  "cell_id": "state-machine-control.endpoint.disable.after-dead",
+  "evidence": "valid",
+  "failure_count": 10,
+  "is_active": false,
+  "plane": "state-machine-control",
+  "run_id": "aecd7112-8d5c-4fbc-a7ae-a4fe468ced57",
+  "slo": "not-a-product-slo",
+  "worker_pids": [
+    333551,
+    338251
+  ]
+}

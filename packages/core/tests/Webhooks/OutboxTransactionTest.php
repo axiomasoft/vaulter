@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -62,8 +63,13 @@ it('confines a staging failure to a savepoint so the mutation still commits, F-P
     // the following COMMIT fails — silently rolling the grant back (review P0.2).
     // RED-BEFORE requires PostgreSQL: SQLite does not poison an aborted statement, so
     // this asserts the invariant that MUST hold on PG (env here lacks pdo_pgsql).
-    app()->bind(OutboxRecorder::class, fn (): OutboxRecorder => new class extends OutboxRecorder
+    app()->bind(OutboxRecorder::class, fn (): OutboxRecorder => new class(app(MetricsRecorder::class)) extends OutboxRecorder
     {
+        public function __construct(MetricsRecorder $metrics)
+        {
+            parent::__construct($metrics);
+        }
+
         #[Override]
         public function recordGrantCreated(NodeGrantCreated $event): ?Outbox
         {

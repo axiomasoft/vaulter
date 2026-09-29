@@ -1,0 +1,167 @@
+{
+  "base_revision": "bce93930fc074d523e485d9b9eceb77f201bc47d",
+  "scope": "R21 ordinary package checks; no live/load/mutation",
+  "checks": [
+    {
+      "name": "rector",
+      "command": [
+        "vendor/bin/rector",
+        "process",
+        "packages/media/src/Cas/BlobGarbageCollector.php",
+        "--dry-run",
+        "--no-progress-bar"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "elapsed_seconds": 2.318,
+      "log": "rector.log.gz",
+      "log_sha256": "39e85c9aa216a441f55aeb00e9238589ab47ce9808a32be0b4cbdc28f60e67f4"
+    },
+    {
+      "name": "pint",
+      "command": [
+        "composer",
+        "lint:check"
+      ],
+      "cwd": "packages/media",
+      "exit": 0,
+      "elapsed_seconds": 1.345,
+      "log": "pint.log.gz",
+      "log_sha256": "cb32b2a0cc6441121c8acfbfd2da08847e40524f7d97aab1013a1e44c10f4a6f"
+    },
+    {
+      "name": "phpstan",
+      "command": [
+        "composer",
+        "analyse"
+      ],
+      "cwd": "packages/media",
+      "exit": 0,
+      "elapsed_seconds": 2.651,
+      "log": "phpstan.log.gz",
+      "log_sha256": "9799a369281e61d45c9c7f03afa89a4e90bca9ad5745208c370e1c4fcf537028"
+    },
+    {
+      "name": "sqlite",
+      "command": [
+        "composer",
+        "test",
+        "--",
+        "--no-coverage",
+        "--compact"
+      ],
+      "cwd": "packages/media",
+      "exit": 0,
+      "elapsed_seconds": 7.946,
+      "log": "sqlite.log.gz",
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "log_sha256": "771bb6673fb82523428979f8a2a9b83173d6090196f3530d7826c6a525ec4f1b"
+    },
+    {
+      "name": "pgsql",
+      "command": [
+        "composer",
+        "test",
+        "--",
+        "--no-coverage",
+        "--compact"
+      ],
+      "cwd": "packages/media",
+      "exit": 0,
+      "elapsed_seconds": 41.159,
+      "log": "pgsql.log.gz",
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "pgsql",
+        "DB_DATABASE": "vaulter_r21_media_test",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "55432",
+        "DB_USERNAME": "vaulter",
+        "DB_PASSWORD": "<existing test-container credential; not stored>"
+      },
+      "log_sha256": "e34190ac68b0fa1bcbc71fad61442cdae70d1f7a93d211f589e769496c979752"
+    },
+    {
+      "name": "type-coverage",
+      "command": [
+        "composer",
+        "test:types",
+        "--",
+        "--compact"
+      ],
+      "cwd": "packages/media",
+      "exit": 1,
+      "elapsed_seconds": 1.583,
+      "log": "type-coverage-128M.log.gz",
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "log_sha256": "3d794338bf2f892eae4be3795504737c76eb3a46549fa618e3d26f08c4966838"
+    },
+    {
+      "name": "type-coverage",
+      "command": [
+        "composer",
+        "test:types",
+        "--",
+        "--compact",
+        "--memory-limit=512M"
+      ],
+      "cwd": "packages/media",
+      "exit": 0,
+      "elapsed_seconds": 3.404,
+      "log": "type-coverage.log.gz",
+      "log_sha256": "21446e19192ac8925f262f1c2cd2f01c471d5412101a55f6e327636222332500"
+    },
+    {
+      "name": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": ".",
+      "exit": 0,
+      "elapsed_seconds": 0.004,
+      "log": "diff.log.gz",
+      "log_sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    }
+  ],
+  "source_files_sha256": {
+    "packages/media/src/Cas/BlobGarbageCollector.php": "fdeec34ad448e9e1f6a357b5e0d2512d66cdc6b924969f72614ed57b1f746ed9",
+    "packages/media/src/Cas/BlobReconciler.php": "6736cd4d54c5ceeb58a7ce169db2a2ad826c02ee34a59743352d01c9c7a59907",
+    "packages/media/src/Cas/BlobStore.php": "a15b6e0c320665fa7ee27411888adffc3f2fb0a31e6e5b99f2653acf8265db33",
+    "packages/media/src/Cas/FlysystemStorageDriver.php": "fb4e73967e7358ab5fd72c0061b9661f2017e3bca3babc37be375cf906e9ddeb",
+    "packages/media/src/Cas/Sha256ContentStore.php": "e606532ae6ae594188e6da46f63ed0673a9fbe783bf4953923b174cf3e67af1c",
+    "packages/media/src/Cas/StagedTempObject.php": "0fc756c3392c6449552bbc785d3661b9bea11e0ce1a340c64eaca56ef94bfff2",
+    "packages/media/src/Console/GcBlobsCommand.php": "f6844b1a5eb35488d5a2371c2c07c64aa3203e8546e2619e93d60c17de91d9ef",
+    "packages/media/src/Console/ReconcileBlobsCommand.php": "80ea887f64b6131814a8c4c636af0b3edb0a6fbddf076ce2b57ccc3ecc91bce5",
+    "packages/media/src/VaulterMediaServiceProvider.php": "6f13131e1ad1d2d1ff095ce9f9304b708f7119263e409877e6eb4185e86bdcc6"
+  },
+  "source_rollup_sha256": "5db6c3bf7f6fa5cf101c9c0702dcb710d330ccd869369b0f4667d2d64f4f18b9",
+  "source_rollup_recipe": "SHA256(UTF-8 JSON sorted path:SHA256 map, sort_keys=True, separators=(comma,colon), no trailing newline)",
+  "changed_tests_sha256": {
+    "packages/media/tests/Cas/BlobGcBatchTest.php": "96ed39bddaf0a19350d8b9bcf2516600cb3ca33063113c0cc8672f4b83d1d87b",
+    "packages/media/tests/Cas/ColdMutationSurvivorTest.php": "7332b10fcfbb799867132f05398881df252ca576dd4d4d66e67a7195b802ab61"
+  },
+  "earlier_format_check": {
+    "command": [
+      "vendor/bin/rector",
+      "process",
+      "packages/media/src/Cas/BlobGarbageCollector.php",
+      "--dry-run",
+      "--no-progress-bar"
+    ],
+    "exit": 2,
+    "reason": "Rector requested blank lines; corrected before final suites",
+    "log": "rector-before-format.log.gz"
+  },
+  "sqlite_summary": "4 risky, 9 skipped, 127 passed (447 assertions)",
+  "pgsql_summary": "4 risky, 4 skipped, 132 passed (459 assertions)"
+}

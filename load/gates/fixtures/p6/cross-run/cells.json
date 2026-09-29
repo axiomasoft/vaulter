@@ -1,0 +1,17 @@
+[
+  {
+    "schema": "p6-cell/v1",
+    "run_id": "run-complete",
+    "cell_id": "product-realistic.relay.i20.f0.2xx",
+    "attempt": 1,
+    "plane": "product-realistic",
+    "config_fingerprint": "e4d77160ccfe36e5acb2894ef136a67146b206a1b91772f1ff9ce0c1103334dc",
+    "outbox_rows_per_s": 200,
+    "jobs_per_s": 50,
+    "redis_pending": 3,
+    "redis_delayed": 1,
+    "redis_reserved": 2,
+    "worker_occupancy": 2,
+    "http_receives": 1
+  }
+]

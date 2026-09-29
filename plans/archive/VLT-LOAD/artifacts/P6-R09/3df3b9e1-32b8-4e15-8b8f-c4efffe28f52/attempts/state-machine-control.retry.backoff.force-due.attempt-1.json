@@ -1,0 +1,22 @@
+{
+  "attempt": 1,
+  "cell_id": "state-machine-control.retry.backoff.force-due",
+  "configured_backoff_seconds": 10,
+  "evidence": "valid",
+  "forced": {
+    "before": "2026-09-23T22:18:28+00:00",
+    "delivery_id": "226622",
+    "exit": 0,
+    "ok": true,
+    "rss_peak_bytes": 54833152,
+    "status": "failed"
+  },
+  "plane": "state-machine-control",
+  "recorded_before_force_due": true,
+  "run_id": "3df3b9e1-32b8-4e15-8b8f-c4efffe28f52",
+  "slo": "not-a-product-slo",
+  "worker_pids": [
+    4040673,
+    1784595
+  ]
+}

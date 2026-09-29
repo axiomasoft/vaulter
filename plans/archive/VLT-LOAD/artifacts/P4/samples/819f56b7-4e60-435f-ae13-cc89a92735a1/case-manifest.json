@@ -1,0 +1,12 @@
+{
+  "case_id": "tus_final_patch/5m",
+  "ceilings_mib": {
+    "php_peak": 64
+  },
+  "fixture_id": "p4-matrix-8f383737-5m",
+  "process_kind": "fpm_worker",
+  "request": {
+    "method": "PATCH",
+    "path": "/api/vaulter/resumable-uploads/{upload_id}"
+  }
+}

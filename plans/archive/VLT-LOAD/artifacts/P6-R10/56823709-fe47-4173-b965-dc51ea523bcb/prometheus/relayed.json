@@ -1,0 +1,1 @@
+{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"vaulter_outbox_relayed_total","instance":"app:8080","job":"vaulter-sut"},"value":[1790234756.896,"0"]}]}}

@@ -1,0 +1,364 @@
+{
+  "schema_version": "p8-trace-evidence/v1",
+  "rows": [
+    {
+      "evidence_id": "P3:L-06:cte-879347013115918506",
+      "target_id": "tree.read",
+      "producer": "P3",
+      "report": "plans/VLT-LOAD/db-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P3/explain/879347013115918506.json",
+        "plans/VLT-LOAD/artifacts/P3/explain/code-anchor_NodeReadRepository_candidateNodeIds.json",
+        "plans/VLT-LOAD/findings/P3-db-profile.md"
+      ],
+      "validity": "inferred",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": 154511000,
+      "observation_window_ns": 60000000000,
+      "finding_id": "L-P3-05",
+      "notes": "154.5 ms recursive CTE is observed; mapping to NodeReadRepository::candidateNodeIds is inferred and the dedicated code-anchor is rejected"
+    },
+    {
+      "evidence_id": "P5:L-06:subtree-move-2xx",
+      "target_id": "tree.move",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/product-realistic.subtree-move.disjoint-tree.n200.attempt-1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "limitation",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-06",
+      "notes": "P5 disjoint/overlapping moves at N<=200 are 2xx with deadlock delta 0; no CTE-anchor series; L-06 stays with P3 L-P3-05"
+    },
+    {
+      "evidence_id": "P4:tus-final-patch-green",
+      "target_id": "upload.tus",
+      "producer": "P4",
+      "report": "plans/VLT-LOAD/memory-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P4/samples/122d1edc-2d3b-4e03-a767-bfe151ba693c/run-manifest.json",
+        "plans/VLT-LOAD/findings/P4-memory-profile.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "P4-GREEN",
+      "notes": "tus_final_patch/5g allocator and RSS GREEN; not a hotspot"
+    },
+    {
+      "evidence_id": "P5:L-P5-01:tus-429",
+      "target_id": "upload.tus",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/product-realistic.upload-tus.different-resource.n200.attempt-1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "limitation",
+      "severity": "major",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P5-01",
+      "notes": "HTTP 429 is the load-stand limiter, not a TusUploadHandler hotspot"
+    },
+    {
+      "evidence_id": "P4:L-01-closed",
+      "target_id": "upload.s3",
+      "producer": "P4",
+      "report": "plans/VLT-LOAD/memory-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P4/samples/6e4539ac-65e2-4dd8-a4f8-f2a10fcc6066/run-manifest.json",
+        "plans/VLT-LOAD/findings/L-01-streaming-fix-closure.md",
+        "plans/VLT-LOAD/findings/P4-memory-profile.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-01",
+      "notes": "L-01 closed GREEN on 5 GiB complete; closed debt is not a current hotspot"
+    },
+    {
+      "evidence_id": "P5:L-P5-01:s3-429",
+      "target_id": "upload.s3",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/product-realistic.upload-s3.different-resource.n200.attempt-1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "limitation",
+      "severity": "major",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P5-01",
+      "notes": "HTTP 429 is the load-stand limiter, not an S3MultipartHandler hotspot"
+    },
+    {
+      "evidence_id": "P4:download-stream-green",
+      "target_id": "download.stream",
+      "producer": "P4",
+      "report": "plans/VLT-LOAD/memory-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P4/samples/d1a5b9be-2ec9-4ff4-b760-1705f1af841e/run-manifest.json",
+        "plans/VLT-LOAD/findings/P4-memory-profile.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "P4-GREEN",
+      "notes": "download/5g PHP peak 2 MiB GREEN; no download-stream debt"
+    },
+    {
+      "evidence_id": "P4:L-P4-01:cas-stage-page-cache",
+      "target_id": "cas.commit",
+      "producer": "P4",
+      "report": "plans/VLT-LOAD/memory-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P4/samples/84590d30-41d3-4088-b911-da547ff852d1/samples.jsonl",
+        "plans/VLT-LOAD/findings/P4-memory-profile.md"
+      ],
+      "validity": "limitation",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P4-01",
+      "notes": "cgroup file-cache pressure is on Sha256ContentStore::stage(), not BlobStore/BlobStoreRepository commit"
+    },
+    {
+      "evidence_id": "P5:L-07:unconfirmed",
+      "target_id": "cas.commit",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/product-worst-case.cas-lock.int4-collision.n200.attempt-1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "limitation",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-07",
+      "notes": "L-07 unconfirmed: 241/241 HTTP 429; no hashtext lock collision and no measured dedup-hit incidence"
+    },
+    {
+      "evidence_id": "P7:cas-gc-no-orphan-walk",
+      "target_id": "cas.gc",
+      "producer": "P7",
+      "report": "plans/VLT-LOAD/chaos-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/findings/P7-degradation.md",
+        "plans/VLT-LOAD/chaos-report.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P7-02",
+      "notes": "P5/P7 did not invoke BlobGarbageCollector; P7 has no CAS orphan walk"
+    },
+    {
+      "evidence_id": "P5:L-02:dirty-20k.n1.a1",
+      "target_id": "upload.sweep",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1.attempt-1.json",
+        "plans/VLT-LOAD/artifacts/P5/sweeper/dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1.a1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "valid",
+      "severity": "major",
+      "slo_red": true,
+      "integrity_class": "availability-lifecycle",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P5-03",
+      "notes": "SweepUploadsCommand exit 1 remaining=20000/20000; SLO-70 not met; 0.317s is time-to-failure so non-time evidence (impact_ppm=0)"
+    },
+    {
+      "evidence_id": "P7:L-02:sweeper-was-get-probe",
+      "target_id": "upload.sweep",
+      "producer": "P7",
+      "report": "plans/VLT-LOAD/chaos-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/findings/P7-degradation.md",
+        "plans/VLT-LOAD/artifacts/P7/attempts/product-realistic.abort.503.attempt-1.json"
+      ],
+      "validity": "limitation",
+      "severity": "major",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P7-01",
+      "notes": "P7 sweeper cell was a labelled GET probe, not SweepUploadsCommand"
+    },
+    {
+      "evidence_id": "P6:L-04:volume-retry-5k",
+      "target_id": "webhook.pipeline",
+      "producer": "P6",
+      "report": "plans/VLT-LOAD/queue-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P6/database/tier-s-volume.json",
+        "plans/VLT-LOAD/findings/P6-queue-semantics.md"
+      ],
+      "validity": "valid",
+      "severity": "major",
+      "slo_red": true,
+      "integrity_class": "availability-lifecycle",
+      "observed_duration_ns": 2038155441,
+      "observation_window_ns": 2038155441,
+      "finding_id": "L-04",
+      "notes": "claimDue() 5102 rows in 2038155441 ns; SLO-64 tick p95 and lock-set not met; window is the retry tick itself"
+    },
+    {
+      "evidence_id": "P6:L-05:endpoints-n200",
+      "target_id": "webhook.pipeline",
+      "producer": "P6",
+      "report": "plans/VLT-LOAD/queue-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P6/attempts/dirty-cardinality-probe.endpoints.n200.attempt1.attempt-1.json",
+        "plans/VLT-LOAD/findings/P6-queue-semantics.md"
+      ],
+      "validity": "valid",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": 24961776,
+      "observation_window_ns": 24961776,
+      "finding_id": "L-05",
+      "notes": "1-row relay 24961776 ns at 200 endpoints; tier_ml_slo=false so not a product SLO miss"
+    },
+    {
+      "evidence_id": "P3:L-05:subscribed-endpoints-seed",
+      "target_id": "webhook.pipeline",
+      "producer": "P3",
+      "report": "plans/VLT-LOAD/db-profile.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P3/explain/code-anchor_OutboxRelay_subscribedEndpoints.json",
+        "plans/VLT-LOAD/findings/P3-db-profile.md"
+      ],
+      "validity": "limitation",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": 30000,
+      "observation_window_ns": 60000000000,
+      "finding_id": "L-P3-04",
+      "notes": "Seq Scan 5 rows / 0.03 ms at seed cardinality; PHP O(endpoints) remains inferred at this envelope"
+    },
+    {
+      "evidence_id": "P6:dead-control",
+      "target_id": "webhook.pipeline",
+      "producer": "P6",
+      "report": "plans/VLT-LOAD/queue-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P6/attempts/state-machine-control.retry.dead.force-due.attempt-1.json",
+        "plans/VLT-LOAD/findings/P6-queue-semantics.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "P6-dead-control",
+      "notes": "state-machine dead matches config; product business_dead=0; Laravel failed_jobs is not package DLQ; no terminal-dead measurement obligation"
+    },
+    {
+      "evidence_id": "P5:L-P5-02:collab-other",
+      "target_id": "collaboration.session",
+      "producer": "P5",
+      "report": "plans/VLT-LOAD/concurrency-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/artifacts/P5/attempts/product-realistic.collab-issuance.issuance-burst.n1.attempt-1.json",
+        "plans/VLT-LOAD/findings/P5-concurrency.md"
+      ],
+      "validity": "limitation",
+      "severity": "minor",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P5-02",
+      "notes": "collab issuance class=other; HTTP status not persisted; report limitation cannot select a target"
+    },
+    {
+      "evidence_id": "P6:collab-snapshot-unmeasured",
+      "target_id": "collaboration.snapshot",
+      "producer": "P6",
+      "report": "plans/VLT-LOAD/queue-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/queue-report.md",
+        "plans/VLT-LOAD/findings/P6-queue-semantics.md"
+      ],
+      "validity": "limitation",
+      "severity": "observation",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "P6-no-snapshot",
+      "notes": "P6 measured outbox/webhook only; PersistYjsSnapshotAction was not a cell"
+    },
+    {
+      "evidence_id": "P7:empty-get-probes",
+      "target_id": "download.stream",
+      "producer": "P7",
+      "report": "plans/VLT-LOAD/chaos-report.md",
+      "raw_ids": [
+        "plans/VLT-LOAD/findings/P7-degradation.md",
+        "plans/VLT-LOAD/artifacts/P7/attempts/product-realistic.abort.503.attempt-1.json"
+      ],
+      "validity": "limitation",
+      "severity": "major",
+      "slo_red": false,
+      "integrity_class": "other",
+      "observed_duration_ns": null,
+      "observation_window_ns": null,
+      "finding_id": "L-P7-01",
+      "notes": "P7 labelled GET probes are not product HTTP; empty P7 target contribution"
+    }
+  ],
+  "deferred_metrics": {
+    "blob_dedup_hit_total": {
+      "enabled": false,
+      "producer": "P5",
+      "evidence_ids": ["P5:L-07:unconfirmed"],
+      "reason": "L-07 unconfirmed; no measured dedup-hit incidence needed to interpret it"
+    },
+    "webhook_dlq_total": {
+      "enabled": false,
+      "producer": "P6",
+      "evidence_ids": ["P6:dead-control"],
+      "reason": "P6 did not adopt a terminal-dead measurement obligation; business_dead=0 on product cells; failed_jobs is not package DLQ"
+    }
+  }
+}

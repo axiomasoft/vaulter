@@ -19,7 +19,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Override;
 use UnitEnum;
 use Vaulter\Access\AccessResolver;
@@ -193,7 +192,7 @@ final class NodeResource extends Resource
         // Trashed nodes carry trashed_at (a soft-trash, not the Eloquent soft-delete);
         // surface both so the Trashed filter can flip between them, but keep the
         // hard-deleted (deleted_at) rows hidden.
-        $query = parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+        $query = parent::getEloquentQuery();
 
         // Access-aware listing (P1 #3): narrow the table to the acting admin's
         // grant-reachable CANDIDATE set when grant-filtering applies (a grant-

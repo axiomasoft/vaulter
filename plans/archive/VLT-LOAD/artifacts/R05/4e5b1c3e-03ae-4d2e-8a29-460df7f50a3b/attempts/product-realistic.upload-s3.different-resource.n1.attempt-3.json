@@ -1,0 +1,72 @@
+{
+  "actor_ids": [
+    72904750
+  ],
+  "attempt": 3,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.upload-s3.different-resource.n1",
+  "during_sample_count": 8,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 72904750,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 72904750,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    }
+  ],
+  "n": 1,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      72904750
+    ],
+    "expected_actor_ids": [
+      72904750
+    ],
+    "iterations": 1,
+    "observed_actor_ids": [
+      72904750
+    ],
+    "started": [
+      72904750
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA1C8648",
+    "monotonic_ns": 82418019693369
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA1C6FE0",
+    "monotonic_ns": 82413693676472
+  },
+  "run_id": "4e5b1c3e-03ae-4d2e-8a29-460df7f50a3b",
+  "schema": "p5-cell/v1",
+  "shape": "different-resource",
+  "statuses": {
+    "2xx": 2,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "upload-s3",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.505002299003536,
+    "pgbouncer_wait_seconds": null
+  }
+}

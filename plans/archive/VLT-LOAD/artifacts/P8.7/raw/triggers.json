@@ -1,0 +1,252 @@
+{
+  "vaulter_activity_feed_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_activity_write_total": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_assemble_bytes_total": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_assemble_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_broadcast_queue_wait_seconds": {
+    "command": "GET /load/metrics-snapshot",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_collab_room_active": {
+    "command": "p8-collab-join.mjs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_collab_session_issued_total": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_collab_snapshot_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_command_peak_memory_bytes": {
+    "command": "vaulter:sweep-uploads",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_download_bytes_total": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_download_stream_active": {
+    "command": "GET /load/metrics-snapshot",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_download_ttfb_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_export_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_failed_jobs_total": {
+    "command": "vaulter:retry-webhooks",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_gc_batch_rows": {
+    "command": "vaulter:gc-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_gc_duration_seconds": {
+    "command": "vaulter:gc-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_gc_objects_deleted_total": {
+    "command": "vaulter:gc-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_gc_rows_scanned_total": {
+    "command": "vaulter:gc-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_http_request_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_outbox_backlog": {
+    "command": "GET /load/metrics-snapshot",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_outbox_endpoints_scanned_total": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_outbox_relay_duration_seconds": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_outbox_relayed_total": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_outbox_stage_duration_seconds": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_pg_lock_wait_seconds": {
+    "command": "collect-postgres-lock-waits.sh",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_prune_duration_seconds": {
+    "command": "vaulter:prune-webhooks",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_prune_rows_total": {
+    "command": "vaulter:prune-webhooks",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_purge_batch_nodes": {
+    "command": "vaulter:purge-trash",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_purge_duration_seconds": {
+    "command": "vaulter:purge-trash",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_purge_nodes_total": {
+    "command": "vaulter:purge-trash",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_reconcile_duration_seconds": {
+    "command": "vaulter:reconcile-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_reconcile_objects_total": {
+    "command": "vaulter:reconcile-blobs",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_request_peak_memory_bytes": {
+    "command": "GET /load/metrics-snapshot",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_subtree_nodes_touched": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_sweep_batch_rows": {
+    "command": "vaulter:sweep-uploads",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_sweep_expired_total": {
+    "command": "vaulter:sweep-uploads",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_sweep_skipped_total": {
+    "command": "vaulter:sweep-uploads",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_sweep_tick_seconds": {
+    "command": "vaulter:sweep-uploads",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_throttled_total": {
+    "command": "k6 mixed throttle path",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_tree_cte_anchors": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_tree_query_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_upload_bytes_total": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_upload_chunk_duration_seconds": {
+    "command": "TIER=S ./load/scripts/run.sh smoke-perf",
+    "ran": true,
+    "zero_ok": false
+  },
+  "vaulter_upload_conflict_total": {
+    "command": "k6 mixed conflict path",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_upload_session_active": {
+    "command": "GET /load/metrics-snapshot",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_webhook_delivered_total": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_webhook_delivery_duration_seconds": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_webhook_queue_wait_seconds": {
+    "command": "vaulter:relay-outbox",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_webhook_retry_lockset_rows": {
+    "command": "vaulter:retry-webhooks",
+    "ran": true,
+    "zero_ok": true
+  },
+  "vaulter_webhook_retry_tick_seconds": {
+    "command": "vaulter:retry-webhooks",
+    "ran": true,
+    "zero_ok": true
+  }
+}

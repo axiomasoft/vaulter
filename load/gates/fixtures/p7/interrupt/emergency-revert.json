@@ -1,0 +1,6 @@
+{
+  "schema": "p7-emergency-revert/v1",
+  "scope": "run",
+  "wildcard": false,
+  "path": "interrupt"
+}

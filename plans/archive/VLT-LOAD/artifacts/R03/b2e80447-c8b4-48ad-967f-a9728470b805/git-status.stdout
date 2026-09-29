@@ -1,0 +1,30 @@
+ M load/gates/p5_live_matrix.py
+ M load/gates/test_r05_capture.py
+ M load/gates/test_r05_r06_capture.py
+ M plans/REMAINING-WORK.md
+?? packages/drive/tests/Drive/R07CommandActivityContractsTest.php
+?? packages/drive/tests/Feature/R07ActionControllerContractsTest.php
+?? packages/drive/tests/Feature/R07ExceptionContractsTest.php
+?? packages/drive/tests/Feature/R07RequestRuleContractsTest.php
+?? packages/drive/tests/Feature/R07TusControllerContractsTest.php
+?? packages/drive/tests/Feature/R07bActionNodeContractsTest.php
+?? packages/drive/tests/Feature/R07bRequestCommandContractsTest.php
+?? packages/drive/tests/Feature/R07cDenyGuardContractsTest.php
+?? packages/drive/tests/Feature/R07dObservableMutantTest.php
+?? packages/drive/tests/Uploads/R07ModelEnumContractsTest.php
+?? packages/drive/tests/Uploads/R07S3MultipartContractsTest.php
+?? packages/drive/tests/Uploads/R07SessionManagerContractsTest.php
+?? packages/drive/tests/Uploads/R07StagingSnifferContractsTest.php
+?? packages/drive/tests/Uploads/R07bS3StagingContractsTest.php
+?? packages/drive/tests/Uploads/R07bSessionContractsTest.php
+?? plans/VLT-LOAD/artifacts/R03/
+?? plans/VLT-LOAD/artifacts/R05/
+?? plans/VLT-LOAD/artifacts/R06/
+?? plans/VLT-LOAD/artifacts/R08/
+?? plans/remaining-evidence/R07-checks/cold-pg-20260927/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-20260927/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-r07b-20260927/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-r07c-20260927/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-r07d-20260928/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-reboot-20260927/
+?? plans/remaining-evidence/R07-checks/cold-pg-step14-retry-20260927/

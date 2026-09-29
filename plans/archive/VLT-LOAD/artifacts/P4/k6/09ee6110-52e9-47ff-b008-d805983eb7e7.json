@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "cell_id": "s3_complete_postfix/500m",
+  "path_id": "s3_complete_postfix",
+  "http_status": 201,
+  "content_length_bytes": 524288000,
+  "client_bytes_received": 524288000,
+  "transfer_bytes": 0
+}

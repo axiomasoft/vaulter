@@ -1,0 +1,130 @@
+{
+  "files": [
+    {
+      "bytes": 9579,
+      "path": "findings/P0-rag-load-tooling.md",
+      "sha256": "77eaa35647883605bd2b95ec4c84c37edce009d8111707b9b0e83de2c316fb4a"
+    },
+    {
+      "bytes": 9220,
+      "path": "findings/P1-rag-slo-ci-gate.md",
+      "sha256": "1cc1c56d5c7cf2fc8056ddf6260fb9be9159a8d8b3f15c46b9138e8fc07db6fc"
+    },
+    {
+      "bytes": 6557,
+      "path": "findings/P1.4-rag-k6-threshold-syntax.md",
+      "sha256": "b607bdda94acacafc38e56565689acc30d7d022e22fa6e688a46094ac6cbb478"
+    },
+    {
+      "bytes": 10952,
+      "path": "findings/P2-rag-k6-harness.md",
+      "sha256": "eb0d2fe1c564a86d110c8d45676efc04f4acc06091fd257c7b4be5c02779d8e8"
+    },
+    {
+      "bytes": 20416,
+      "path": "findings/P2.7-cv-runner.md",
+      "sha256": "6a1c00e08ff15a062c35e93e821d206340d15b8ad8159ef1c4b4101d68d3c2e1"
+    },
+    {
+      "bytes": 18686,
+      "path": "findings/P2.8-baseline-S.md",
+      "sha256": "80e361fffa6b122d29ce6fcfb582091e111eed5a01748f195fda83f768fb906f"
+    },
+    {
+      "bytes": 4552,
+      "path": "findings/P8-rag-otel-health.md",
+      "sha256": "002062bb6a66a50871bf53384855e15998db925dfd8efbe1d2bf2fe95590b2fc"
+    },
+    {
+      "bytes": 4978,
+      "path": "handoff.md",
+      "sha256": "2b1c4800495af0f8f26b304885dd512470b9aecc9d1dbcc76092ff99d1c3a637"
+    },
+    {
+      "bytes": 19047,
+      "path": "harness.md",
+      "sha256": "64c04c6e3d0247c3c6626d8fe32824e7d8ad580978197d53fd766ba0063f0c9a"
+    },
+    {
+      "bytes": 3201,
+      "path": "open-questions.md",
+      "sha256": "416095b9424bdf0ee5daf41c990cdbce06cc69ce2d8c2af4203d4d582db9f224"
+    },
+    {
+      "bytes": 30303,
+      "path": "operations-catalog.md",
+      "sha256": "1954638cd84f04df6bbf03020549a42ca0b7d32a96580af5b117b2b3217f6b92"
+    },
+    {
+      "bytes": 5121,
+      "path": "phases/P0.md",
+      "sha256": "e9d0514c9c77dca4e781fcf2e6b34418956caaa579e5f4a33ecf41db37ab00af"
+    },
+    {
+      "bytes": 88525,
+      "path": "phases/P1.md",
+      "sha256": "0735283720bfb402beeb30134a97e351e2c93f706d49126b5e1ed7d76cd63548"
+    },
+    {
+      "bytes": 137487,
+      "path": "phases/P2.md",
+      "sha256": "0269a9f2aae7c87cd32cc4f761efb90b500cff6e5004e832f4a8e0e5f9693205"
+    },
+    {
+      "bytes": 2813,
+      "path": "phases/P3.md",
+      "sha256": "3570a704b980de8ebe7be50a3a8bac669cd0a27a327f511ea719b5fadfcb165d"
+    },
+    {
+      "bytes": 3427,
+      "path": "phases/P4.md",
+      "sha256": "189feefa7016ce71f99df9def9b0129ae93b06240071ae04d507066368f5064f"
+    },
+    {
+      "bytes": 3251,
+      "path": "phases/P5.md",
+      "sha256": "bfc0f8583248a33d50ffd18d49505e4372324f91adf1d952dc435b52c822ccaf"
+    },
+    {
+      "bytes": 2995,
+      "path": "phases/P6.md",
+      "sha256": "261e824f75ff5ce8a1dac4f16be18ebb1f0c18a6616ee12e75499491ab1f2197"
+    },
+    {
+      "bytes": 3166,
+      "path": "phases/P7.md",
+      "sha256": "382872c3b67d4abc9d4feb006c273e7220350e7e30e7e5296dce4f51d48f0f86"
+    },
+    {
+      "bytes": 45456,
+      "path": "phases/P8.md",
+      "sha256": "826c0584d7779569dcc8f0533f57f8e46c8848bdc2f8a9d99d41a0eee3b5e7b7"
+    },
+    {
+      "bytes": 80517,
+      "path": "plan.md",
+      "sha256": "ffff837475e1d955419fc4fbd088c937753727aab54a3d6a246879457e110802"
+    },
+    {
+      "bytes": 37321,
+      "path": "reference-env.md",
+      "sha256": "102763c6b86391808bd24d25e7b88511a6fcb73aeed2d8b5976e6ee191387424"
+    },
+    {
+      "bytes": 60378,
+      "path": "slo-gates.md",
+      "sha256": "64fecba640d6316efb23b2d9cd4506005c8886c0423b02cf059f1c1cf55eae88"
+    },
+    {
+      "bytes": 7616,
+      "path": "slo-signoff.md",
+      "sha256": "d42a01ff65274e6c0b57e36ecc053ee42b7d5b884ebb1ededba8eb6b5c732d59"
+    },
+    {
+      "bytes": 63342,
+      "path": "slo.md",
+      "sha256": "db967a4b1cea5eeeafba244fffb08ee6e75ac12eb0ecfd02bab11e9a90ac162b"
+    }
+  ],
+  "schema": "plan-migration-source-v1"
+}

@@ -1,0 +1,16 @@
+{
+  "attempt": 1,
+  "cell_id": "overlap-control.relay-retry.barrier.relay2-retry2",
+  "duration_seconds": 0.342,
+  "evidence": "valid",
+  "plane": "overlap-control",
+  "relay_ticks": 2,
+  "retry_ticks": 2,
+  "run_id": "56823709-fe47-4173-b965-dc51ea523bcb",
+  "slo": "not-a-product-slo",
+  "span_seconds": 0.016554832458496094,
+  "worker_pids": [
+    333551,
+    338251
+  ]
+}

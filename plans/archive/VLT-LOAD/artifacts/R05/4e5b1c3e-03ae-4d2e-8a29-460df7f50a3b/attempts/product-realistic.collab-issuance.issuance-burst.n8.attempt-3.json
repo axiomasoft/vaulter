@@ -1,0 +1,143 @@
+{
+  "actor_ids": [
+    72917750,
+    72917751,
+    72917752,
+    72917753,
+    72917754,
+    72917755,
+    72917756,
+    72917757
+  ],
+  "attempt": 3,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.collab-issuance.issuance-burst.n8",
+  "during_sample_count": 8,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 72917757,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917755,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917753,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917751,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917750,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917752,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917754,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 72917756,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    }
+  ],
+  "n": 8,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      72917757,
+      72917755,
+      72917753,
+      72917751,
+      72917750,
+      72917752,
+      72917754,
+      72917756
+    ],
+    "expected_actor_ids": [
+      72917750,
+      72917751,
+      72917752,
+      72917753,
+      72917754,
+      72917755,
+      72917756,
+      72917757
+    ],
+    "iterations": 8,
+    "observed_actor_ids": [
+      72917750,
+      72917751,
+      72917752,
+      72917753,
+      72917754,
+      72917755,
+      72917756,
+      72917757
+    ],
+    "started": [
+      72917756,
+      72917750,
+      72917751,
+      72917753,
+      72917757,
+      72917754,
+      72917752,
+      72917755
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA3339F8",
+    "monotonic_ns": 82488120133428
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA3312E8",
+    "monotonic_ns": 82483698530827
+  },
+  "run_id": "4e5b1c3e-03ae-4d2e-8a29-460df7f50a3b",
+  "schema": "p5-cell/v1",
+  "shape": "issuance-burst",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 8
+  },
+  "supported_workload": true,
+  "surface": "collab-issuance",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.59496740999748,
+    "pgbouncer_wait_seconds": null
+  }
+}

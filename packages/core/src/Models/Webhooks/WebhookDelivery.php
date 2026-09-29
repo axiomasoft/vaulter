@@ -28,6 +28,8 @@ use Vaulter\Support\Config;
  * @property string               $status
  * @property int                  $attempts
  * @property Carbon|null          $next_retry_at
+ * @property string|null          $claim_token
+ * @property Carbon|null          $claim_until
  * @property string|null          $last_error
  * @property Carbon|null          $created_at
  * @property Carbon|null          $updated_at
@@ -78,7 +80,10 @@ class WebhookDelivery extends Model
         return $query
             ->whereIn('status', ['pending', 'failed'])
             ->whereNotNull('next_retry_at')
-            ->where('next_retry_at', '<=', now());
+            ->where('next_retry_at', '<=', now())
+            ->where(static fn (Builder $claim): Builder => $claim
+                ->whereNull('claim_until')
+                ->orWhere('claim_until', '<=', now()));
     }
 
     /**
@@ -91,6 +96,7 @@ class WebhookDelivery extends Model
             'payload' => 'array',
             'attempts' => 'integer',
             'next_retry_at' => 'datetime',
+            'claim_until' => 'datetime',
         ];
     }
 }

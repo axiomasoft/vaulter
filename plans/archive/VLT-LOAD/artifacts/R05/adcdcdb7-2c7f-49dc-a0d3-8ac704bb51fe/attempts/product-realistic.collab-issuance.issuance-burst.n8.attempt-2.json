@@ -1,0 +1,143 @@
+{
+  "actor_ids": [
+    13817500,
+    13817501,
+    13817502,
+    13817503,
+    13817504,
+    13817505,
+    13817506,
+    13817507
+  ],
+  "attempt": 2,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.collab-issuance.issuance-burst.n8",
+  "during_sample_count": 9,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13817500,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817502,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817504,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817501,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817505,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817506,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817503,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    },
+    {
+      "actor_id": 13817507,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 403
+    }
+  ],
+  "n": 8,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13817500,
+      13817502,
+      13817504,
+      13817501,
+      13817505,
+      13817506,
+      13817503,
+      13817507
+    ],
+    "expected_actor_ids": [
+      13817500,
+      13817501,
+      13817502,
+      13817503,
+      13817504,
+      13817505,
+      13817506,
+      13817507
+    ],
+    "iterations": 8,
+    "observed_actor_ids": [
+      13817500,
+      13817501,
+      13817502,
+      13817503,
+      13817504,
+      13817505,
+      13817506,
+      13817507
+    ],
+    "started": [
+      13817507,
+      13817502,
+      13817500,
+      13817503,
+      13817501,
+      13817504,
+      13817506,
+      13817505
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/3140B020",
+    "monotonic_ns": 84480192193422
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/314089B0",
+    "monotonic_ns": 84475648637359
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "issuance-burst",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 8
+  },
+  "supported_workload": true,
+  "surface": "collab-issuance",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.6527154479990713,
+    "pgbouncer_wait_seconds": null
+  }
+}

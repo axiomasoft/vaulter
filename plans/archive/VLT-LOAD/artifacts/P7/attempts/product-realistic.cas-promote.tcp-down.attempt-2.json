@@ -1,0 +1,15 @@
+{
+  "attempt": 2,
+  "availability": "degraded",
+  "cell_id": "product-realistic.cas-promote.tcp-down",
+  "checksum": "c6195b21da4c8343aeab5de7251d2246d56e4c881da5f67f70681a47fc98cd60",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6925192788,
+  "t_detect_ns": 3350727093,
+  "t_restore_ns": 3574465695
+}

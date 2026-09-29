@@ -1,0 +1,407 @@
+{
+  "actor_ids": [
+    13806250,
+    13806251,
+    13806252,
+    13806253,
+    13806254,
+    13806255,
+    13806256,
+    13806257,
+    13806258,
+    13806259,
+    13806260,
+    13806261,
+    13806262,
+    13806263,
+    13806264,
+    13806265,
+    13806266,
+    13806267,
+    13806268,
+    13806269,
+    13806270,
+    13806271,
+    13806272,
+    13806273,
+    13806274,
+    13806275,
+    13806276,
+    13806277,
+    13806278,
+    13806279,
+    13806280,
+    13806281
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.upload-s3.different-resource.n32",
+  "during_sample_count": 10,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13806261,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806269,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806255,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806268,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806279,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806280,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806267,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806256,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806276,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806275,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806254,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806270,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806274,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806277,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806257,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806278,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806263,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806262,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806253,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806260,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806264,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806258,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806266,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806250,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806265,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806252,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806281,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806259,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806271,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806273,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806251,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    },
+    {
+      "actor_id": 13806272,
+      "phase": "create",
+      "retry_after": "15",
+      "status": 429
+    }
+  ],
+  "n": 32,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13806261,
+      13806269,
+      13806255,
+      13806268,
+      13806279,
+      13806280,
+      13806267,
+      13806256,
+      13806276,
+      13806275,
+      13806254,
+      13806270,
+      13806274,
+      13806277,
+      13806257,
+      13806278,
+      13806263,
+      13806262,
+      13806253,
+      13806260,
+      13806264,
+      13806258,
+      13806266,
+      13806250,
+      13806265,
+      13806252,
+      13806281,
+      13806259,
+      13806271,
+      13806273,
+      13806251,
+      13806272
+    ],
+    "expected_actor_ids": [
+      13806250,
+      13806251,
+      13806252,
+      13806253,
+      13806254,
+      13806255,
+      13806256,
+      13806257,
+      13806258,
+      13806259,
+      13806260,
+      13806261,
+      13806262,
+      13806263,
+      13806264,
+      13806265,
+      13806266,
+      13806267,
+      13806268,
+      13806269,
+      13806270,
+      13806271,
+      13806272,
+      13806273,
+      13806274,
+      13806275,
+      13806276,
+      13806277,
+      13806278,
+      13806279,
+      13806280,
+      13806281
+    ],
+    "iterations": 32,
+    "observed_actor_ids": [
+      13806250,
+      13806251,
+      13806252,
+      13806253,
+      13806254,
+      13806255,
+      13806256,
+      13806257,
+      13806258,
+      13806259,
+      13806260,
+      13806261,
+      13806262,
+      13806263,
+      13806264,
+      13806265,
+      13806266,
+      13806267,
+      13806268,
+      13806269,
+      13806270,
+      13806271,
+      13806272,
+      13806273,
+      13806274,
+      13806275,
+      13806276,
+      13806277,
+      13806278,
+      13806279,
+      13806280,
+      13806281
+    ],
+    "started": [
+      13806261,
+      13806263,
+      13806281,
+      13806250,
+      13806264,
+      13806251,
+      13806265,
+      13806252,
+      13806266,
+      13806253,
+      13806267,
+      13806254,
+      13806255,
+      13806269,
+      13806256,
+      13806270,
+      13806257,
+      13806271,
+      13806258,
+      13806272,
+      13806259,
+      13806273,
+      13806260,
+      13806274,
+      13806262,
+      13806275,
+      13806268,
+      13806276,
+      13806279,
+      13806280,
+      13806277,
+      13806278
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/316A4420",
+    "monotonic_ns": 84609141619138
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/316998E8",
+    "monotonic_ns": 84604583588846
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "different-resource",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 32,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "upload-s3",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.7317838890012354,
+    "pgbouncer_wait_seconds": null
+  }
+}

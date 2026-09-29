@@ -1,0 +1,762 @@
+{
+  "checked": 111,
+  "current_state_import": {
+    "kind": "canonical-current-state-not-chronology",
+    "rows": [
+      {
+        "item": "P0.1",
+        "projected_result": null,
+        "reason": "legacy pending item requires post-migration admission",
+        "source_status": "⬜ Not started"
+      },
+      {
+        "item": "P0.2",
+        "projected_result": null,
+        "reason": "legacy pending item requires post-migration admission",
+        "source_status": "⬜ Not started"
+      },
+      {
+        "item": "P0.3",
+        "projected_result": null,
+        "reason": "legacy pending item requires post-migration admission",
+        "source_status": "⬜ Not started"
+      },
+      {
+        "item": "P0.4",
+        "projected_result": null,
+        "reason": "legacy pending item requires post-migration admission",
+        "source_status": "⬜ Not started"
+      },
+      {
+        "item": "P0.5",
+        "projected_result": null,
+        "reason": "legacy pending item requires post-migration admission",
+        "source_status": "⬜ Not started"
+      }
+    ],
+    "source": "artifacts/migration-source-v1/journal.jsonl"
+  },
+  "decision_id_map": [
+    {
+      "projected_id": "D1",
+      "source_id": "D1"
+    },
+    {
+      "projected_id": "D2",
+      "source_id": "D2"
+    },
+    {
+      "projected_id": "D3",
+      "source_id": "D3"
+    },
+    {
+      "projected_id": "D4",
+      "source_id": "D4"
+    },
+    {
+      "projected_id": "D5",
+      "source_id": "D5"
+    },
+    {
+      "projected_id": "D6",
+      "source_id": "D6"
+    },
+    {
+      "projected_id": "D7",
+      "source_id": "D7"
+    },
+    {
+      "projected_id": "D8",
+      "source_id": "D8"
+    }
+  ],
+  "elements": [
+    {
+      "kind": "meta",
+      "name": "Plan ID",
+      "value": "VLT-HSEAM"
+    },
+    {
+      "kind": "meta",
+      "name": "Title",
+      "value": "Editor-agnostic шов файловых обработчиков: закрыть утечки TipTap до 1.0"
+    },
+    {
+      "kind": "meta",
+      "name": "Version",
+      "value": "0.1.0"
+    },
+    {
+      "kind": "meta",
+      "name": "Status",
+      "value": "⛔ Superseded — see VLT-CANON P3.3 / ADR-0018"
+    },
+    {
+      "kind": "meta",
+      "name": "Document Type",
+      "value": "Executable Master Plan"
+    },
+    {
+      "kind": "meta",
+      "name": "Authoring Model",
+      "value": "opus (fable)"
+    },
+    {
+      "kind": "meta",
+      "name": "Last Updated",
+      "value": "2026-07-10"
+    },
+    {
+      "kind": "meta",
+      "name": "Repository",
+      "value": "/home/vostrikov/projects/packages/vaulter (axioma-studio/vaulter)"
+    },
+    {
+      "kind": "meta",
+      "name": "Related Packages",
+      "value": "vaulter-core, vaulter-documents, vaulter-drive, vaulter-filament, @vaulter/vue"
+    },
+    {
+      "kind": "meta",
+      "name": "Execution Mode",
+      "value": "phase-first"
+    },
+    {
+      "kind": "meta",
+      "name": "Target Operator Models",
+      "value": "opus (P0.1–P0.2 — публичные контракты) · sonnet (P0.3–P0.5)"
+    },
+    {
+      "kind": "meta",
+      "name": "Approval Owner",
+      "value": "Dmitry Vostrikov"
+    },
+    {
+      "kind": "meta",
+      "name": "Home",
+      "value": "repo:plans/VLT-HSEAM"
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Status",
+      "value": "⬜ Not started"
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Intent",
+      "value": "Переименовать публичную поверхность шва в kind-нейтральную: namespace\n`Vaulter\\Contracts\\Documents\\*` → `Vaulter\\Contracts\\Handlers\\*`; `DocumentHandler` →\n`FileHandler`; `DocumentCapabilities` → `HandlerCapabilities`; сопутствующие VO\n(`FileDescriptor`, `HandlerUi`, `HandlerDescriptor`) — в `Vaulter\\ValueObjects\\Handlers\\*`.\n`DocumentContent`/`OpaqueDocumentContent` НЕ трогать (они реально про документный контент)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Why",
+      "value": "Хендлер описывает любой файл (image/*, xlsx, cad), не только документ; пост-1.0\nrename = major (D3, RAG:✅ 2026-07-10 рекон L5)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Scope Included",
+      "value": "rename интерфейсов/VO/namespace + все use-сайты по монорепо (core,\ndocuments, drive, filament); config-ключ `vaulter.handlers` (остаётся); докблоки контрактов."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Scope Excluded",
+      "value": "движок реестра (P0.3); exporter (P0.2); схема/richText (P0.4); vue-пакет\n(строковые id хендлеров не меняются — клиент не задет)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Inputs",
+      "value": "`findings/P0-recon-core-seams.md` (карта use-сайтов — отправная точка)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Files",
+      "value": "`packages/core/src/Contracts/Documents/{DocumentHandler,HandlerRegistry,NodeHandlerResolver}.php`,\n`packages/core/src/ValueObjects/Documents/{DocumentCapabilities,FileDescriptor,HandlerUi}.php`,\n`packages/documents/src/Documents/**`, `packages/documents/src/Enums/Capability.php`,\nвсе use-сайты (grep по FQN)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Required Reads",
+      "value": "`findings/P0-recon-core-seams.md`; skill `php:namespace-refactor-safety`;\n`packages/core/src/Contracts/Documents/DocumentHandler.php` (текущие докблоки — сохранить\nсодержание H.5-инвариантов при переносе)."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Implementation Rules",
+      "value": "Якорить замену на FQN, не на голый токен (`namespace-refactor-safety`);\nhard rename без alias-фазы (пакет @dev — D3); строковые id хендлеров ('tiptap', 'univer',\n'download', 'preview') НЕ менять — это wire-контракт клиента; `Vaulter::registerHandler()`\nсигнатура обновляется на `FileHandler|string`."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Code Guidance",
+      "value": "Сохранить докблоки-инварианты (H.5: «one-class + register», «registry\nstring keys are the source of truth», SemVer-заморозка хендлеров) в новых файлах; phpstan max\nбез новых ignore; НЕ вводить обобщённых `HandlerInterface`-иерархий — плоский интерфейс как\nсейчас; никаких «переименовать заодно» вне списка Scope."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Validation",
+      "value": "`vendor/bin/pint --test` + `vendor/bin/phpstan analyse` + полный pest через\n`/usr/bin/php8.4` зелёные; `vaulter-api-surface`-отчёт: удалённые/добавленные FQN соответствуют\nровно списку Scope; grep по репо: `Contracts\\\\Documents\\\\(DocumentHandler|HandlerRegistry|NodeHandlerResolver)` = 0 вхождений."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Deliverables",
+      "value": "Коммит(ы) rename; отчёт api-surface в Completion Notes."
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Completion Notes",
+      "value": "—"
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Pending Work",
+      "value": "—"
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Known Deviations",
+      "value": "—"
+    },
+    {
+      "item": "P0.1",
+      "kind": "item",
+      "name": "Escalation Needed",
+      "value": "no"
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Status",
+      "value": "⬜ Not started"
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Intent",
+      "value": "`DocumentExporter::export(TipTapContent $content)` → `export(DocumentContent\n$content)`; классы `TipTapContent`, `TiptapExtensions` (attribute), `InvalidTipTapContentException`\nперенести из `packages/core/src` в `packages/documents/src` (namespace `Vaulter\\Documents\\...`)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Why",
+      "value": "Экспортёр не-TipTap-хендлера не может реализовать core-контракт — самая острая утечка\n(L1/L2, D5; RAG:✅ 2026-07-10 рекон)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Scope Included",
+      "value": "сигнатура контракта; move 3 классов + их тестов; реализация экспортёров\ndocuments (html/markdown) — внутри может стоять instanceof-даункаст к TipTapContent с внятным\nисключением для чужого контента; `Vaulter::exporter()`/`registerExporter()` — проверить типы."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Scope Excluded",
+      "value": "новые форматы экспорта; конвертация между форматами (не в скоупе плана)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Inputs",
+      "value": "`findings/P0-recon-core-seams.md` (L1/L2); результат P0.1 (новый namespace)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Files",
+      "value": "`packages/core/src/Contracts/Documents/DocumentExporter.php` (после P0.1 —\n`Contracts/Handlers/` или остаётся в Documents-подпространстве — решить по факту P0.1),\n`packages/core/src/ValueObjects/Documents/TipTapContent.php`,\n`packages/core/src/Attributes/TiptapExtensions.php`,\n`packages/core/src/Exceptions/Documents/InvalidTipTapContentException.php`,\n`packages/documents/src/Export/**`, тесты обоих пакетов."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Required Reads",
+      "value": "`packages/documents/src/Export/` (текущие экспортёры); тесты\nTipTapContent в core."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Implementation Rules",
+      "value": "Контракт принимает `DocumentContent`; реализация, поддерживающая\nтолько TipTap, кидает типизированное исключение (`UnsupportedContentException`-стиль), НЕ\nмолча деградирует; тесты переезжают вместе с классами (test-isolation не ломать)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Code Guidance",
+      "value": "Не вводить generic-параметризацию контракта (phpstan-generics на публичном\nинтерфейсе = DX-налог); сообщение исключения — какой exporter, какой content-класс получен,\nкакой ожидался; писать по `php:code-style-spatie`."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Validation",
+      "value": "Гейт монорепо зелёный; `vaulter-api-surface`: изменение сигнатуры контракта\nзафиксировано; grep `TipTapContent` в `packages/core/src` = 0."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Deliverables",
+      "value": "Коммит(ы); отчёт api-surface; ревью `vaulter-reviewer` (ось BC)."
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Completion Notes",
+      "value": "—"
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Pending Work",
+      "value": "—"
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Known Deviations",
+      "value": "—"
+    },
+    {
+      "item": "P0.2",
+      "kind": "item",
+      "name": "Escalation Needed",
+      "value": "no"
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Status",
+      "value": "⬜ Not started"
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Intent",
+      "value": "[NEEDS CLARIFICATION: owner-решение Q1 (plan.md §7) — вариант A (движок в core)\nили B (оставить в documents); при B item закрывается как ⛔ Skipped by decision]. При A:\nперенести `DocumentHandlerRegistry` (→ `FileHandlerRegistry`), `DownloadOnlyHandler`,\n`PreviewHandler`, `NodeHandlerResolver`-реализацию и `Capability`-enum в core; documents\nоставляет TipTapHandler/UniverHandler/collab и биндит их через tag/config."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Why",
+      "value": "Drive-only хост должен получать preview/download-descriptor'ы без vaulter-documents;\n«tiptap — одно из расширений» становится буквальным (Обсуждение Q1, вариант A рекомендован)."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Scope Included",
+      "value": "move классов + тестов; биндинги SP core (движок = singleton в\n`packageRegistered()`); documents SP теряет `bind(HandlerRegistry, ...)`, оставляет tag своих\nхендлеров; докблок H.5 в `HandlerRegistry`-контракте обновить (движок теперь в core)."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Scope Excluded",
+      "value": "изменение алгоритма резолва (mime → ext → capability → priority — не трогать);\nмемоизация — не трогать."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Inputs",
+      "value": "решение D9; результаты P0.1."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Files",
+      "value": "`packages/documents/src/Documents/DocumentHandlerRegistry.php`,\n`packages/documents/src/Documents/Handlers/{DownloadOnlyHandler,PreviewHandler}.php`,\n`packages/documents/src/Documents/NodeHandlerResolver.php`,\n`packages/documents/src/Enums/Capability.php`, оба ServiceProvider, тесты."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Required Reads",
+      "value": "`packages/documents/src/VaulterDocumentsServiceProvider.php:54-100`;\n`packages/core/src/VaulterServiceProvider.php`."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Implementation Rules",
+      "value": "Биндинги реестра — в `packageRegistered()` (register-vs-boot!);\nfeature-gate 'spreadsheets' для UniverHandler остаётся в documents; поведение «host без\ndocuments» меняется с fail-loud на «Download/Preview из коробки» — зафиксировать это в\nCHANGELOG-заметке как поведенческое изменение."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Code Guidance",
+      "value": "Никакой новой публичной поверхности сверх переносимой; тест «drive-only\nхост (без documents SP) получает download-descriptor» — обязателен (Testbench без\nVaulterDocumentsServiceProvider); TipTapHandler НЕ переносить в core ни при каких условиях."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Validation",
+      "value": "Гейт зелёный; новый testbench-тест drive-only проходит; api-surface отчёт."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Deliverables",
+      "value": "Коммит(ы); тест drive-only; CHANGELOG-заметка."
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Completion Notes",
+      "value": "—"
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Pending Work",
+      "value": "—"
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Known Deviations",
+      "value": "—"
+    },
+    {
+      "item": "P0.3",
+      "kind": "item",
+      "name": "Escalation Needed",
+      "value": "no"
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Status",
+      "value": "⬜ Not started"
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Intent",
+      "value": "(a) `PanelTablesBuilder::defineNodeDocumentVersions`: убрать `->default('tiptap')`\nу `format` — writer проставляет явно; (b) `HandlerCapabilities` (ex-DocumentCapabilities):\n`richText` default `true` → пересмотреть на нейтральный (см. Implementation Rules); (c)\nкомментарии схемы «TipTap/ProseMirror snapshot» → «handler-native snapshot (discriminated by\nformat)»; (d) `yjs_state` — [NEEDS CLARIFICATION: owner-решение Q2 (plan.md §7); рекомендация —\nоставить имя, тогда пункт (d) = только докблок]."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Why",
+      "value": "Молчаливый default 'tiptap' маркирует чужой контент как tiptap = порча данных при\nзабытом format; `richText=true` — «историческая форма» как дефолт core-VO (L3/L4; RAG:✅\n2026-07-10 рекон + таксономия урок 6)."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Scope Included",
+      "value": "builder схемы; write-path документных версий (все места, создающие\nversion-строки, — проставить format от хендлера); VO + его потребители (`PersistYjsSnapshotAction`\nветвится по richText); фикстуры тестов."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Scope Excluded",
+      "value": "переименование колонок (если Q2=A); новые capability-оси (D8 — не добавляем)."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Inputs",
+      "value": "решение D10 (Q2); результаты P0.1."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Files",
+      "value": "`packages/core/src/Schema/PanelTablesBuilder.php:550-565`,\n`packages/core/src/ValueObjects/Documents/DocumentCapabilities.php` (пост-P0.1 путь),\n`packages/documents/src/Actions/PersistYjsSnapshotAction.php`,\n`packages/documents/src/Repositories/NodeDocumentVersionStoreRepository.php`, тесты/фикстуры."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Required Reads",
+      "value": "`findings/P0-recon-core-seams.md` (L3/L4); write-path: grep\n`format` по `packages/documents/src`."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Implementation Rules",
+      "value": "Вариант для richText: дефолт `false` у VO + `TipTapHandler`\nявно ставит `true` (semantics: «rich-text — opt-in свойство хендлера, не мира»); проверить,\nчто UniverHandler уже ставит `false` явно — тогда флип дефолта безопасен; schema-изменение\nпре-1.0 — правится сама миграция 000013 (хостов нет), НЕ новая миграция."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Code Guidance",
+      "value": "Ни одного write-path, способного вставить version-строку без format\n(NOT NULL без default — пусть БД ловит); комментарии схемы — на английском, как весь builder;\nтест: строка с format='univer' не проходит TipTap-валидацию и не проецируется."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Validation",
+      "value": "Гейт зелёный; sqlite+pg миграции проходят; grep `default('tiptap')` = 0."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Deliverables",
+      "value": "Коммит(ы); Completion Notes с решением по richText."
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Completion Notes",
+      "value": "—"
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Pending Work",
+      "value": "—"
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Known Deviations",
+      "value": "—"
+    },
+    {
+      "item": "P0.4",
+      "kind": "item",
+      "name": "Escalation Needed",
+      "value": "no"
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Status",
+      "value": "⬜ Not started"
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Intent",
+      "value": "(a) Задокументировать политику эволюции capabilities (D6) в докблоке\n`HandlerCapabilities` + `docs/` (клиенты игнорируют незнакомые ключи `toArray()`; оси —\nаддитивно с дефолтами; fallback-инвариант); (b) написать гайд «Собственный обработчик файлов»\n(`docs/extending-handlers.md`): интерфейс → реализация → регистрация (3 канала) → priority →\nui-descriptor, со skeleton-примером пакета; (c) опционально `AbstractFileHandler`-база с\nдефолтами (priority 0, extensions [], capabilities downloadOnly) — если после (b) видно, что\nона сокращает boilerplate; (d) финальная сверка: `vaulter-api-surface` diff всей ветки +\nполный гейт + перенос ADR из `plans/VLT-HSEAM/root/` в `docs/adr/`."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Why",
+      "value": "Каркас для сторонних разработчиков — вторая половина запроса владельца; политика\nэволюции — страховка BC на годы (D6, D8; RAG:✅ 2026-07-10 таксономия уроки 1-4)."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Scope Included",
+      "value": "докблоки, docs, опц. Abstract-база + её тест, финальный api-surface, ADR→docs."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Scope Excluded",
+      "value": "реализация новых хендлеров; изменения алгоритма резолва."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Inputs",
+      "value": "результаты P0.1–P0.4; `findings/P0-rag-capability-taxonomy.md` (уроки BC);\n`root/adr-file-handler-seam.md`."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Files",
+      "value": "`packages/core/src/ValueObjects/Handlers/HandlerCapabilities.php` (докблок),\n`docs/extending-handlers.md` (новый), `docs/adr/` (перенос ADR), опц.\n`packages/core/src/Handlers/AbstractFileHandler.php` + тест."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Required Reads",
+      "value": "финальные версии контрактов после P0.1–P0.4; `docs/` (стиль существующих доков)."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Implementation Rules",
+      "value": "Гайд — по реальному коду (каждый сниппет компилируем против текущих\nконтрактов); Abstract-база — final НЕ ставить (её растят наследованием), но методы-дефолты\nтипизированы строго; ADR при переносе получает номер по нумерации `docs/adr/`."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Code Guidance",
+      "value": "Гайд пишется как для внешнего разработчика без доступа к монорепо\n(vendor-перспектива: composer require + SP + config); писать по `general:writing-style`\n(рус. внутр. доки — но `docs/` пакета публичные и англоязычные — следовать языку существующих\n`docs/adr/*`); не обещать в доках нереализованных осей (lossyEdit/convert — упомянуть как\n«зарезервированное направление», не как API)."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Validation",
+      "value": "Гейт зелёный; api-surface diff ветки = ровно сумма P0.1–P0.4; линтер маркдауна\nесли есть; сниппеты гайда собраны в testbench-тест-компиляцию (или вручную проверены — отметить)."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Deliverables",
+      "value": "docs/extending-handlers.md; ADR в docs/adr/; финальный отчёт api-surface;\nPhase Handoff."
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Completion Notes",
+      "value": "—"
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Pending Work",
+      "value": "—"
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Known Deviations",
+      "value": "—"
+    },
+    {
+      "item": "P0.5",
+      "kind": "item",
+      "name": "Escalation Needed",
+      "value": "no"
+    },
+    {
+      "id": "D1",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Реестр обработчиков НЕ строить заново — он существует и корректен; скоуп = закрытие утечек"
+    },
+    {
+      "id": "D1",
+      "kind": "decision",
+      "name": "why",
+      "value": "Рекон: `findings/P0-recon-core-seams.md` (RAG:✅ 2026-07-10 рекон монорепо)"
+    },
+    {
+      "id": "D2",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Единица стороннего расширения = composer-пакет, биндящийся в core-контракты; НЕ каталог в ядре"
+    },
+    {
+      "id": "D2",
+      "kind": "decision",
+      "name": "why",
+      "value": "RAG:✅ 2026-07-10 Filament plugins / Flysystem adapters / Nextcloud apps (`P0-rag-laravel-registry-patterns.md`)"
+    },
+    {
+      "id": "D3",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Kind-нейтральный нейминг до 1.0: `Contracts/Documents/*`→`Contracts/Handlers/*`, `DocumentHandler`→`FileHandler`, `DocumentCapabilities`→`HandlerCapabilities`"
+    },
+    {
+      "id": "D3",
+      "kind": "decision",
+      "name": "why",
+      "value": "Хендлер описывает любой файл; пост-1.0 rename = major (RAG:✅ 2026-07-10 рекон L5)"
+    },
+    {
+      "id": "D4",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Публичный контракт остаётся узким bespoke-интерфейсом; `Illuminate\\Support\\Manager` НЕ вводить"
+    },
+    {
+      "id": "D4",
+      "kind": "decision",
+      "name": "why",
+      "value": "RAG:✅ 2026-07-10 statefulness/$app-coupling/__call (`P0-rag-laravel-registry-patterns.md`)"
+    },
+    {
+      "id": "D5",
+      "kind": "decision",
+      "name": "decision",
+      "value": "`DocumentExporter::export()` принимает опаковый `DocumentContent`; TipTap-специфика — в реализациях documents"
+    },
+    {
+      "id": "D5",
+      "kind": "decision",
+      "name": "why",
+      "value": "Утечка L1; пост-1.0 = major (RAG:✅ 2026-07-10 рекон)"
+    },
+    {
+      "id": "D6",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Политика эволюции capabilities: открытое множество, аддитивные оси с дефолтами, клиенты игнорируют незнакомые ключи; fallback-хендлер = инвариант «новый тип ≠ breaking»"
+    },
+    {
+      "id": "D6",
+      "kind": "decision",
+      "name": "why",
+      "value": "RAG:✅ 2026-07-10 WOPI ignore-unknown / Notion unsupported / OO аддитивный рост (`P0-rag-capability-taxonomy.md`)"
+    },
+    {
+      "id": "D7",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Динамический резолв mime→handler сохранить; handler-id на Node НЕ персистить"
+    },
+    {
+      "id": "D7",
+      "kind": "decision",
+      "name": "why",
+      "value": "RAG:✅ 2026-07-10 WOPI/NC/Drive резолвят динамически; персист протухает (`P0-rag-editor-extension-models.md` п.9)"
+    },
+    {
+      "id": "D8",
+      "kind": "decision",
+      "name": "decision",
+      "value": "Хендлеры под будущие типы НЕ пре-имплементировать; готовность = открытый контракт + fallback + DX-каркас (Abstract-база + skeleton-гайд)"
+    },
+    {
+      "id": "D8",
+      "kind": "decision",
+      "name": "why",
+      "value": "YAGNI; UniverHandler уже доказал шов (RAG:✅ 2026-07-10 таксономия, урок 3)"
+    },
+    {
+      "kind": "update-log",
+      "value": "2026-07-10 | issue-planner/opus | План создан: design-сессия, 4 RAG-фронта в findings/, ADR в root/, P0 детализирован"
+    },
+    {
+      "kind": "discussion",
+      "present": false,
+      "value": ""
+    }
+  ],
+  "item_ids": [
+    "P0.1",
+    "P0.2",
+    "P0.3",
+    "P0.4",
+    "P0.5"
+  ],
+  "meta_fields": [
+    "Plan ID",
+    "Title",
+    "Version",
+    "Status",
+    "Document Type",
+    "Authoring Model",
+    "Last Updated",
+    "Repository",
+    "Related Packages",
+    "Execution Mode",
+    "Target Operator Models",
+    "Approval Owner",
+    "Home"
+  ],
+  "missing": [],
+  "policy_preimage": {
+    "defect_classes": [
+      "current-state-import",
+      "read-budget-carrier",
+      "routing-normalization",
+      "semantic-handoff"
+    ],
+    "source_digest": "b53e110715009c9c4b78c520780211203fd8098a7803cc66dab46d013bfa679a",
+    "source_plan_sha256": "d0fe06f4b51b227ba812496164e22401fd728116c03988aeb3bbf2605fd8b542",
+    "target": "/home/vostrikov/projects/packages/vaulter/plans/VLT-HSEAM"
+  },
+  "routing_omissions": [],
+  "schema": "plan-migration-inventory-v1",
+  "skeleton_phases": []
+}

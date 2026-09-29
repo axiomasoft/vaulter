@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
@@ -20,6 +21,7 @@ use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
+use Vaulter\Support\LoadTier;
 
 /**
  * Read-side queries over the v_nodes adjacency tree (§2.2 / H.4). Tree reads use
@@ -50,17 +52,17 @@ final class NodeReadRepository
     public const int DEFAULT_MAX_DEPTH = 64;
 
     /**
-     * The per-group cap when chunking a candidate-id list into OR-ed whereIn groups.
-     * SQLite caps bound variables at ~999 (SQLITE_MAX_VARIABLE_NUMBER) and Postgres
-     * at 65535; 900 stays clear of the SQLite wall (tests run SQLite — a wide subtree
-     * would otherwise HARD-ERROR) with margin for the rest of the query's bindings.
+     * Keep small sets bound, with room for storage, parent and cursor bindings even
+     * on SQLite builds limited to 999 variables. Larger sets use escaped SQL literals
+     * and add no bindings, regardless of the number of grant-reachable nodes.
      */
-    private const int WHERE_IN_CHUNK = 900;
+    private const int WHERE_IN_BIND_LIMIT = 900;
 
     public function __construct(
         private readonly AccessResolver $access,
         private readonly HostRoleDriverManager $drivers,
         private readonly GrantReadRepository $grants,
+        private readonly MetricsRecorder $metrics,
     ) {}
 
     public function find(int|string $id): ?Node
@@ -88,12 +90,19 @@ final class NodeReadRepository
      */
     public function children(Storage $storage, ?Node $parent): Builder
     {
-        return $this->query()
-            ->treeOf($storage->id)
-            ->whereNull('trashed_at')
-            ->where('parent_id', $parent?->id)
-            ->orderBy('position')
-            ->orderBy('name');
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: fn (): Builder => $this->query()
+                ->treeOf($storage->id)
+                ->whereNull('trashed_at')
+                ->where('parent_id', $parent?->id)
+                ->orderBy('position')
+                ->orderBy('name'),
+            labels: [
+                'query_kind' => 'children',
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**
@@ -124,15 +133,24 @@ final class NodeReadRepository
      */
     public function subtree(Node $node, ?int $maxDepth = null): Collection
     {
-        $model = Config::nodeModel();
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($node, $maxDepth): Collection {
+                $model = Config::nodeModel();
 
-        /** @var Collection<int, Node> $result */
-        $result = $model::withMaxDepth(
-            $maxDepth ?? self::DEFAULT_MAX_DEPTH,
-            static fn (): Collection => $node->descendantsAndSelf()->get(),
+                /** @var Collection<int, Node> $result */
+                $result = $model::withMaxDepth(
+                    $maxDepth ?? self::DEFAULT_MAX_DEPTH,
+                    static fn (): Collection => $node->descendantsAndSelf()->get(),
+                );
+
+                return $result;
+            },
+            labels: [
+                'query_kind' => 'subtree',
+                'tier' => LoadTier::label(),
+            ],
         );
-
-        return $result;
     }
 
     /**
@@ -165,18 +183,27 @@ final class NodeReadRepository
      */
     public function breadcrumb(Node $node): Collection
     {
-        $model = Config::nodeModel();
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($node): Collection {
+                $model = Config::nodeModel();
 
-        /** @var Collection<int, Node> $crumbs */
-        $crumbs = $model::withMaxDepth(
-            self::DEFAULT_MAX_DEPTH,
-            static fn (): Collection => $node->ancestorsAndSelf()->get(),
+                /** @var Collection<int, Node> $crumbs */
+                $crumbs = $model::withMaxDepth(
+                    self::DEFAULT_MAX_DEPTH,
+                    static fn (): Collection => $node->ancestorsAndSelf()->get(),
+                );
+
+                /** @var Collection<int, Node> $ordered */
+                $ordered = $crumbs->reverse()->values();
+
+                return $ordered;
+            },
+            labels: [
+                'query_kind' => 'breadcrumb',
+                'tier' => LoadTier::label(),
+            ],
         );
-
-        /** @var Collection<int, Node> $ordered */
-        $ordered = $crumbs->reverse()->values();
-
-        return $ordered;
     }
 
     /**
@@ -198,14 +225,23 @@ final class NodeReadRepository
      */
     public function search(Storage $storage, string $term): Builder
     {
-        $escaped = addcslashes(mb_strtolower($term), '%_\\');
+        return $this->metrics->timing(
+            name: 'vaulter_tree_query_duration_seconds',
+            operation: function () use ($storage, $term): Builder {
+                $escaped = addcslashes(mb_strtolower($term), '%_\\');
 
-        return $this->query()
-            ->treeOf($storage->id)
-            ->whereNull('trashed_at')
-            ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
-            ->orderBy('name')
-            ->orderBy('id');
+                return $this->query()
+                    ->treeOf($storage->id)
+                    ->whereNull('trashed_at')
+                    ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
+                    ->orderBy('name')
+                    ->orderBy('id');
+            },
+            labels: [
+                'query_kind' => 'search',
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**
@@ -351,7 +387,7 @@ final class NodeReadRepository
             return $query->whereRaw('1 = 0');
         }
 
-        return $this->whereKeyInChunked($query, $candidateIds);
+        return $this->whereKeyInBounded($query, $candidateIds);
     }
 
     /**
@@ -399,7 +435,7 @@ final class NodeReadRepository
             ->with('storage');
 
         /** @var Collection<int, Node> $candidates */
-        $candidates = $this->whereKeyInChunked($base, $candidateIds)->get();
+        $candidates = $this->whereKeyInBounded($base, $candidateIds)->get();
 
         /** @var Collection<int, Node> $visible */
         $visible = new Collection($this->filterViewable($actor, $candidates));
@@ -508,12 +544,18 @@ final class NodeReadRepository
         $keyName = (new $model)->getKeyName();
 
         /** @var Collection<int, Node> $anchors */
-        $anchors = $this->whereKeyInChunked($model::query(), $anchorIds)->get();
+        $anchors = $this->whereKeyInBounded($model::query(), $anchorIds)->get();
 
         /** @var list<int|string> $ids */
         $ids = [];
 
         foreach ($anchors as $anchor) {
+            $this->metrics->histogram(
+                name: 'vaulter_tree_cte_anchors',
+                value: 1,
+                labels: ['tier' => LoadTier::label()],
+            );
+
             /** @var list<int|string> $descendantKeys */
             $descendantKeys = $model::withMaxDepth(
                 self::DEFAULT_MAX_DEPTH,
@@ -529,11 +571,12 @@ final class NodeReadRepository
     }
 
     /**
-     * Apply a primary-key whereIn over an arbitrarily large id list WITHOUT exceeding
-     * the driver's bound-variable cap (SQLite ~999, Postgres 65535). The ids are split
-     * into {@see WHERE_IN_CHUNK}-sized groups OR-ed inside a single where() clause, so
-     * the narrowing never HARD-ERRORS on a wide candidate set. A list at or under the
-     * cap compiles to a single whereIn (no nesting overhead).
+     * Bound the ID list's contribution to the statement-wide parameter count.
+     * OR-ing whereIn chunks still binds every ID in one statement. Above the small
+     * set budget, Laravel's connection escape() safely quotes each value through
+     * the read PDO driver. No integer casts: ULIDs and bigint strings retain their
+     * exact values. The predicate remains one AND-ed IN condition, so existing
+     * storage/scopes, ordering and SQL cursor pagination keep their semantics.
      *
      * @template TModel of Model
      *
@@ -541,21 +584,15 @@ final class NodeReadRepository
      * @param  list<int|string> $ids
      * @return Builder<TModel>
      */
-    private function whereKeyInChunked(Builder $query, array $ids): Builder
+    private function whereKeyInBounded(Builder $query, array $ids): Builder
     {
         $keyName = $query->getModel()->getKeyName();
 
-        if (count($ids) <= self::WHERE_IN_CHUNK) {
+        if (count($ids) <= self::WHERE_IN_BIND_LIMIT) {
             return $query->whereIn($keyName, $ids);
         }
 
-        $chunks = array_chunk($ids, self::WHERE_IN_CHUNK);
-
-        return $query->where(static function (Builder $inner) use ($chunks, $keyName): void {
-            foreach ($chunks as $chunk) {
-                $inner->orWhereIn($keyName, $chunk);
-            }
-        });
+        return $query->whereRaw(new EscapedKeySet($keyName, $ids));
     }
 
     /**

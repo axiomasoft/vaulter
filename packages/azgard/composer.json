@@ -18,12 +18,12 @@
     "require": {
         "php": "^8.4",
         "axioma-studio/vaulter-core": "self.version",
-        "axioma-studio/azguard-core": "^0.2",
+        "axioma-studio/azguard-core": "dev-main",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0"
     },
     "require-dev": {
-        "axioma-studio/azguard-context": "^0.2",
+        "axioma-studio/azguard-context": "dev-main",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
         "orchestra/testbench": "^10.0|^11.0",

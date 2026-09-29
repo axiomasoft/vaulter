@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
+use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 
 it('resolves the configured node-share model (swappable)', function (): void {
@@ -43,6 +47,105 @@ it('creates a share link through the core CreateShareLinkAction', function (): v
 
     expect($share)->toBeInstanceOf(NodeShare::class)
         ->and($share->isResolvable())->toBeTrue();
+});
+
+it('preserves the validated share form contract and one-time token notification', function (): void {
+    $owner = DriveBuilder::user(51);
+    $this->actingAs($owner);
+
+    $storage = DriveBuilder::storage();
+    $folder = DriveBuilder::folder($storage, 'Exact share');
+    DriveBuilder::grant($folder, $owner);
+
+    session()->forget('filament.notifications');
+
+    NodeShareResource::createFromData([
+        'node_id' => $folder->getKey(),
+        'permissions' => '31',
+        'level' => GrantLevel::Writer->value,
+        'scope' => GrantScope::Subtree->value,
+        'password' => 'top-secret',
+        'require_login' => true,
+        'allow_discovery' => true,
+        'expires_at' => '2035-02-03 04:05:06',
+        'max_uses' => '7',
+    ]);
+
+    $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
+
+    expect($share)->toBeInstanceOf(NodeShare::class)
+        ->and($share->permissions)->toBe(31)
+        ->and($share->level)->toBe(GrantLevel::Writer)
+        ->and($share->scope)->toBe(GrantScope::Subtree)
+        ->and(Hash::check('top-secret', $share->password_hash))->toBeTrue()
+        ->and($share->require_login)->toBeTrue()
+        ->and($share->allow_discovery)->toBeTrue()
+        ->and($share->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-02-03 04:05:06')
+        ->and($share->max_uses)->toBe(7)
+        ->and((string) $share->granted_by)->toBe('51');
+
+    $notification = session('filament.notifications.0');
+    $prefix = 'Copy it now — it is shown only once: '.Config::shareUrlBase().'/';
+
+    expect($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Share link created')
+        ->and($notification['status'])->toBe('success')
+        ->and($notification['duration'])->toBe('persistent')
+        ->and($notification['body'])->toStartWith($prefix);
+
+    $token = mb_substr($notification['body'], mb_strlen($prefix));
+
+    expect($token)->not->toBe('')
+        ->and(ShareToken::hash($token))->toBe($share->token_hash);
+});
+
+it('applies safe share defaults to omitted and blank optional values', function (): void {
+    Carbon::setTestNow('2030-03-04 05:06:07');
+
+    try {
+        $owner = DriveBuilder::user(52);
+        $this->actingAs($owner);
+
+        $storage = DriveBuilder::storage();
+        $folder = DriveBuilder::folder($storage, 'Default share');
+        DriveBuilder::grant($folder, $owner);
+
+        NodeShareResource::createFromData([
+            'node_id' => $folder->getKey(),
+            'password' => '',
+            'expires_at' => '',
+            'max_uses' => '',
+        ]);
+
+        $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
+
+        expect($share)->toBeInstanceOf(NodeShare::class)
+            ->and($share->permissions)->toBe(Permission::Read->value)
+            ->and($share->level)->toBe(GrantLevel::Reader)
+            ->and($share->scope)->toBe(GrantScope::Item)
+            ->and($share->password_hash)->toBeNull()
+            ->and($share->require_login)->toBeFalse()
+            ->and($share->allow_discovery)->toBeFalse()
+            ->and($share->expires_at?->equalTo(now()->addHours(Config::shareDefaultTtlHours())))->toBeTrue()
+            ->and($share->max_uses)->toBeNull()
+            ->and((string) $share->granted_by)->toBe('52');
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('rejects a missing share node with the declared warning', function (): void {
+    session()->forget('filament.notifications');
+
+    NodeShareResource::createFromData([]);
+
+    $notification = session('filament.notifications.0');
+
+    expect(NodeShare::query()->count())->toBe(0)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Share not created')
+        ->and($notification['body'])->toBe('The selected node no longer exists.')
+        ->and($notification['status'])->toBe('warning');
 });
 
 it('never persists the raw token — only its hash and prefix', function (): void {
@@ -139,6 +242,8 @@ it('does not create a share when the admin may not share the node', function ():
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
 
+    session()->forget('filament.notifications');
+
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
         'level' => GrantLevel::Reader->value,
@@ -151,5 +256,11 @@ it('does not create a share when the admin may not share the node', function ():
         'expires_at' => '',
     ]);
 
-    expect(app(NodeShareReadRepository::class)->forNode($folder)->count())->toBe(0);
+    $notification = session('filament.notifications.0');
+
+    expect(app(NodeShareReadRepository::class)->forNode($folder)->count())->toBe(0)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Share not created')
+        ->and($notification['body'])->toBe('You may not share this node.')
+        ->and($notification['status'])->toBe('warning');
 });

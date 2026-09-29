@@ -1,0 +1,12 @@
+{
+  "case_id": "s3_complete_postfix/500m",
+  "ceilings_mib": {
+    "php_peak": 160
+  },
+  "fixture_id": "p4-matrix-00000000-500m",
+  "process_kind": "fpm_worker",
+  "request": {
+    "method": "GET",
+    "path": "/load/health"
+  }
+}

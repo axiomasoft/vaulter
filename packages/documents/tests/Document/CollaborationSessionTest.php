@@ -12,6 +12,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
@@ -117,4 +118,14 @@ it('resolves the node-collaboration driver from config', function (): void {
 
     config()->set('vaulter.collaboration.driver', 'hocuspocus');
     expect($manager->driver())->toBeInstanceOf(HocuspocusNodeCollaborationDriver::class);
+});
+
+it('rejects an unknown node-collaboration driver with an operator-facing remedy', function (): void {
+    $manager = app(NodeCollaborationDriverManager::class);
+
+    expect(fn () => $manager->driver('unknown'))
+        ->toThrow(
+            VaulterException::class,
+            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter.collaboration.driver) to one of: reverb, hocuspocus.',
+        );
 });

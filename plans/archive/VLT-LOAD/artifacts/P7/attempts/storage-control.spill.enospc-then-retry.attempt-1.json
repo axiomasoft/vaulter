@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "storage-control.spill.enospc-then-retry",
+  "checksum": "503049175dc0502e3fb3c5b781f4643579944b7fa4b9b781be339eba46599a94",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "tmpfs-enospc",
+  "plane": "storage-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6944400327,
+  "t_detect_ns": 3556070717,
+  "t_restore_ns": 3388329610
+}

@@ -1,0 +1,31 @@
+{
+  "run_id": "8a9c70cf-c531-48ac-bdce-d566726aed20",
+  "git_sha": "55d10b6afd864b2820061c31cc5dc84ec54d714c",
+  "drive_source_blob": "6213ce898b9edc4787bc14110a852c1b3b7c2f78",
+  "drive_source_matches_head": true,
+  "drive_sha256": "94210031ee9718e2aea46f7d6e0d9a8260e640c27baa54733b94f5d448f2926e",
+  "command": [
+    "exec",
+    "-T",
+    "app",
+    "php",
+    "-d",
+    "auto_prepend_file=/app/load/scripts/p5-php-peak.php",
+    "vendor/bin/testbench",
+    "vaulter:sweep-uploads",
+    "--no-interaction"
+  ],
+  "note": "argv omits the literal token artisan; R06 proved that token never starts the command",
+  "seeded_rows": 20000,
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 80.501,
+  "php_peak_bytes": 132644864,
+  "php_peak_kind": "memory_get_peak_usage(true), not process RSS",
+  "stdout": "\n   INFO  Swept 20000 stale upload sessions.  \n\n",
+  "stderr": "P5_PHP_PEAK_BYTES=132644864\n",
+  "batch_metric_before": null,
+  "remaining_rows": 0,
+  "processed_rows": 20000,
+  "batch_metric_after": null
+}

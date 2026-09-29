@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.lock-holder.reset",
+  "checksum": "7dcd95d433239d06821d550fa12b8ca5fd9bbd52ed50c6d29764e41a47478f19",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 7017408477,
+  "t_detect_ns": 3393333382,
+  "t_restore_ns": 3624075095
+}

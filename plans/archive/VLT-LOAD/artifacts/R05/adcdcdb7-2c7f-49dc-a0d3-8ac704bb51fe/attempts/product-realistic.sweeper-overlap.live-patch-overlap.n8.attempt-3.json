@@ -1,0 +1,175 @@
+{
+  "actor_ids": [
+    13821750,
+    13821751,
+    13821752,
+    13821753,
+    13821754,
+    13821755,
+    13821756,
+    13821757
+  ],
+  "attempt": 3,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n8",
+  "during_sample_count": 10,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13821758,
+      "ownership_fixture": "system-minted-created_by-null",
+      "phase": "setup",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13821755,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821754,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821751,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821756,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821750,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821757,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821753,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13821752,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 204
+    }
+  ],
+  "n": 8,
+  "overlap": {
+    "backend_pid": 6558,
+    "final_state": {
+      "received_bytes": 4,
+      "status": "uploading",
+      "upload_id": "34152a13-f1df-4c0a-a881-c7be26dedf6f"
+    },
+    "held_ns": 84571262205611,
+    "lock_after_sweep": true,
+    "lock_observed": true,
+    "release_ns": 84571773342730,
+    "retry_fixture": "restore-ttl-after-final-state-capture",
+    "retry_response": {
+      "actor_id": 13821752,
+      "retry_after": null,
+      "status": 204
+    },
+    "sweep_end_ns": 84571703767274,
+    "sweep_exit": 0,
+    "sweep_start_ns": 84571439120049,
+    "sweep_stderr": "P5_SWEEP_TARGET|34152a13-f1df-4c0a-a881-c7be26dedf6f|refused|END\n",
+    "sweep_stdout": "\n   INFO  Swept 0 stale upload sessions (1 skipped \u2014 a PATCH is in flight).  \n\n",
+    "sweepable": true,
+    "target_refused": true,
+    "upload_id": "34152a13-f1df-4c0a-a881-c7be26dedf6f"
+  },
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13821755,
+      13821754,
+      13821751,
+      13821756,
+      13821750,
+      13821757,
+      13821753,
+      13821752
+    ],
+    "expected_actor_ids": [
+      13821750,
+      13821751,
+      13821752,
+      13821753,
+      13821754,
+      13821755,
+      13821756,
+      13821757
+    ],
+    "iterations": 8,
+    "observed_actor_ids": [
+      13821750,
+      13821751,
+      13821752,
+      13821753,
+      13821754,
+      13821755,
+      13821756,
+      13821757
+    ],
+    "started": [
+      13821757,
+      13821750,
+      13821751,
+      13821753,
+      13821755,
+      13821752,
+      13821756,
+      13821754
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/31671C60",
+    "monotonic_ns": 84575475701308
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/3166E380",
+    "monotonic_ns": 84570096228914
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "live-patch-overlap",
+  "statuses": {
+    "2xx": 1,
+    "409": 7,
+    "429": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "sweeper-overlap",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 4.282359831006033,
+    "pgbouncer_wait_seconds": null
+  }
+}

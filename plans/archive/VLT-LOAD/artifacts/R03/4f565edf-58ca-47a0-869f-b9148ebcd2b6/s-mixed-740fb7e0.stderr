@@ -1,0 +1,5 @@
+time="2026-09-28T17:00:15+03:00" level=warning msg="Found orphan containers (vaulter-r03-4f565edf-seed-repeat, vaulter-r03-4f565edf-s0-mixed-ab5edbe8) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container vaulter-r03-4f565edf-s-mixed-740fb7e0 Creating 
+ Container vaulter-r03-4f565edf-s-mixed-740fb7e0 Created 
+time="2026-09-28T14:03:41Z" level=error msg="thresholds on metrics 'checks, data_received{scenario:download,op:OP-08,tier:S}, data_sent{scenario:tus-upload,op:OP-02,tier:S}, http_req_duration{op:OP-02,tier:S}, http_req_duration{op:OP-12,tier:S}, http_req_duration{op:OP-14,tier:S}, http_req_duration{op:OP-16,tier:S}, http_req_failed{class:interactive}, stream_throughput_mibs{scenario:download,tier:S}, stream_throughput_mibs{scenario:s3-multipart,tier:S}, stream_throughput_mibs{scenario:single-shot,tier:S}, stream_throughput_mibs{scenario:tus-upload,tier:S}' have been crossed"
+

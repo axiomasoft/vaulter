@@ -68,7 +68,8 @@ final class StorageResource extends Resource
         }
 
         if ($nodeIds === []) {
-            return $query->whereRaw('1 = 0');
+            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
+            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         return $query->whereIn('root_node_id', $nodeIds);

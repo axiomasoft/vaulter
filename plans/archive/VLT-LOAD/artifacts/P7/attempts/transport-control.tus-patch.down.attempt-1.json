@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "transport-control.tus-patch.down",
+  "checksum": "e92444f195d6c3a2200511a4ef7e1aa8e1af8b49e57b13a541691bc1fbf7e66a",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "error",
+  "injector": "toxiproxy",
+  "plane": "transport-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6935417728,
+  "t_detect_ns": 3485603432,
+  "t_restore_ns": 3449814296
+}

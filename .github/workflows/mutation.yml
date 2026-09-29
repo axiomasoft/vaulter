@@ -10,8 +10,34 @@ on:
 
 jobs:
   mutation-testing:
-    name: Mutation (advisory)
+    name: Mutation (advisory, ${{ matrix.database-name }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database-name: SQLite
+            connection: sqlite
+            database: ':memory:'
+          - database-name: PostgreSQL
+            connection: pgsql
+            database: vaulter_core_test
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: vaulter_core_test
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U vaulter -d vaulter_core_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout
@@ -21,7 +47,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          extensions: mbstring, pcntl, pdo, pdo_pgsql, pgsql, pdo_sqlite, posix, sqlite3
           coverage: xdebug
           tools: composer:v2
         env:
@@ -43,10 +69,20 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # --min=95: floor(Score) - 5, измерено run 29202699131, headSha f9d478d, 2026-07-12 (Score: 100.00%).
+      # R02 proved that pest-plugin-mutate v4.0.1 plus --parallel reports a false
+      # 100%. Keep both driver lanes sequential and cold. Core's release verdict
+      # is the PG+SQLite mutation-ID union. Until an ID-merging CI gate exists,
+      # require 95 in each isolated lane; passing both is stricter and implies a
+      # union >=95. It does not establish the current-source score: R16's cold
+      # union measurement is still pending, and the existing floor is not lowered.
       - name: Mutation testing
-        run: vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4 --min=95
+        run: vendor/bin/pest --mutate --path=packages/core/src --covered-only --clear-cache --min=95
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+          APP_ENV: testing
+          DB_CONNECTION: ${{ matrix.connection }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: ${{ matrix.database }}
+          DB_USERNAME: vaulter
+          DB_PASSWORD: secret
           XDEBUG_MODE: coverage

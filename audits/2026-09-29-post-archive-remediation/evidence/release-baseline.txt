@@ -1,0 +1,59 @@
+test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) ... mock actual-matrix: exit 1 (expected 0)
+
+  test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) (scenario='actual-matrix') ... FAIL
+mock identical: exit 1 (expected 0)
+  test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) (scenario='identical') ... FAIL
+mock off-main: exit 1 (expected 1)
+mock diverged: exit 1 (expected 1)
+mock missing: exit 1 (expected 1)
+mock pending: exit 1 (expected 1)
+mock failure: exit 1 (expected 1)
+mock cancelled: exit 1 (expected 1)
+mock skipped: exit 1 (expected 1)
+mock api-error: exit 1 (expected 1)
+mock compare-error: exit 1 (expected 1)
+test_required_checks_match_current_ci_matrix (__main__.ReleaseGateTest.test_required_checks_match_current_ci_matrix) ... FAIL
+test_shell_syntax (__main__.ReleaseGateTest.test_shell_syntax) ... ok
+test_verifier_has_read_permissions_and_gates_split (__main__.ReleaseGateTest.test_verifier_has_read_permissions_and_gates_split) ... FAIL
+
+======================================================================
+FAIL: test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) (scenario='actual-matrix')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/vaulter/scripts/test-release-gate.py", line 117, in test_mock_scenarios
+    self.assertEqual(result.returncode, expected, result.stderr)
+AssertionError: 1 != 0 : Required check is missing or not successful: @vaulter/hocuspocus-server (Node 20)
+
+
+======================================================================
+FAIL: test_mock_scenarios (__main__.ReleaseGateTest.test_mock_scenarios) (scenario='identical')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/vaulter/scripts/test-release-gate.py", line 117, in test_mock_scenarios
+    self.assertEqual(result.returncode, expected, result.stderr)
+AssertionError: 1 != 0 : Required check is missing or not successful: @vaulter/hocuspocus-server (Node 20)
+
+
+======================================================================
+FAIL: test_required_checks_match_current_ci_matrix (__main__.ReleaseGateTest.test_required_checks_match_current_ci_matrix)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/vaulter/scripts/test-release-gate.py", line 51, in test_required_checks_match_current_ci_matrix
+    self.assertEqual(set(self.required), self.actual)
+AssertionError: Items in the first set but not the second:
+'@vaulter/hocuspocus-server (Node 20)'
+
+======================================================================
+FAIL: test_verifier_has_read_permissions_and_gates_split (__main__.ReleaseGateTest.test_verifier_has_read_permissions_and_gates_split)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/vostrikov/projects/packages/vaulter/scripts/test-release-gate.py", line 56, in test_verifier_has_read_permissions_and_gates_split
+    self.assertEqual(permissions, {"contents": "read", "checks": "read"})
+AssertionError: {'contents': 'read'} != {'contents': 'read', 'checks': 'read'}
+- {'contents': 'read'}
++ {'checks': 'read', 'contents': 'read'}
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.289s
+
+FAILED (failures=4)

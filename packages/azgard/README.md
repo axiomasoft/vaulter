@@ -1,6 +1,6 @@
 # Vaulter · AzGuard permission bridge
 
-`axioma-studio/vaulter-azgard` wires the [AzGuard](https://github.com/axioma-studio/azguard)
+`axioma-studio/vaulter-azgard` wires the [AzGuard](https://github.com/axiomasoft/azguard-private)
 scoped-permission system (and, through it, the CoreX tenant context) into Vaulter's
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
@@ -56,10 +56,11 @@ Select the driver in `config/vaulter.php`:
    }
    ```
 
-   `AzgardBackedUser` simply composes AzGuard's own public contracts (0.2+) —
+   `AzgardBackedUser` simply composes AzGuard's own public contracts from the 0.3 line —
    `AzGuard\Contracts\HasPermissions` + `HasScopedRoles` — so the `HasAzGuard` +
    `HasScopedRoles` traits already declare every method: no bodies needed, only the
-   `implements` clause. (Requires `axioma-studio/azguard-core: ^0.2`.)
+   `implements` clause. The current Composer requirement is
+   `axioma-studio/azguard-core: dev-main`; the bridge follows AzGuard's public main branch.
 
 2. **The context lane** (`hasPermissionIn`) resolves through AzGuard's bound `ContextGuard`
    — install `axioma-studio/azguard-context` (or the CoreX tenancy provider) so workspace
@@ -97,9 +98,11 @@ Two tiers:
   actually resolve through AzGuard's own engine (super-admin wildcard, workspace-context
   permission → Writer, create gate, scope-precise entity check).
 
-Both need the `axioma-studio/azguard-*` sibling packages as path repositories (an
-ecosystem-local concern), so the suite runs in the monorepo / host CI, not Vaulter's
-standalone matrix.
+Both use `axioma-studio/azguard-core` and `axioma-studio/azguard-context` from a sibling
+`../azguard` checkout through path repositories. The dedicated
+[AzGuard workflow](../../.github/workflows/azgard.yml) clones the latest public AzGuard
+HEAD without a private repository token and tests Laravel 12 and 13 independently.
+Local checks use the existing sibling checkout and installed dependencies.
 
 ```bash
 composer install && composer test

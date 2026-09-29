@@ -48,6 +48,89 @@ it('creates a grant through the core GrantNodeAccessAction', function (): void {
         ->toBeTrue();
 });
 
+it('preserves the validated grant form contract at the core Action boundary', function (): void {
+    $owner = DriveBuilder::user(41);
+    $this->actingAs($owner);
+
+    $storage = DriveBuilder::storage();
+    $folder = DriveBuilder::folder($storage, 'Exact grant');
+    DriveBuilder::grant($folder, $owner);
+
+    session()->forget('filament.notifications');
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => 'user',
+        'subject_id' => '002',
+        'level' => GrantLevel::Writer->value,
+        'effect' => Effect::Deny->value,
+        'scope' => GrantScope::Item->value,
+        'permissions' => '31',
+        'expires_at' => '2035-01-02 03:04:05',
+    ]);
+
+    $grant = app(GrantReadRepository::class)
+        ->forNode($folder)
+        ->get()
+        ->first(fn (NodeGrant $candidate): bool => $candidate->subject_type === 'user');
+
+    expect($grant)->toBeInstanceOf(NodeGrant::class)
+        ->and((string) $grant->subject_id)->toBe('2')
+        ->and($grant->level)->toBe(GrantLevel::Writer)
+        ->and($grant->effect)->toBe(Effect::Deny)
+        ->and($grant->scope)->toBe(GrantScope::Item)
+        ->and($grant->permissions)->toBe(31)
+        ->and($grant->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-01-02 03:04:05')
+        ->and((string) $grant->granted_by)->toBe('41');
+
+    $notification = session('filament.notifications.0');
+
+    expect($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Grant saved')
+        ->and($notification['status'])->toBe('success');
+});
+
+it('applies grant defaults when optional form values are omitted', function (): void {
+    $owner = DriveBuilder::user(42);
+    $this->actingAs($owner);
+
+    $storage = DriveBuilder::storage();
+    $folder = DriveBuilder::folder($storage, 'Default grant');
+    DriveBuilder::grant($folder, $owner);
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $folder->getKey(),
+        'subject_type' => 'user',
+        'subject_id' => 'external-id',
+        'level' => GrantLevel::Reader->value,
+    ]);
+
+    $grant = app(GrantReadRepository::class)
+        ->forNode($folder)
+        ->get()
+        ->first(fn (NodeGrant $candidate): bool => $candidate->subject_id === 'external-id');
+
+    expect($grant)->toBeInstanceOf(NodeGrant::class)
+        ->and($grant->effect)->toBe(Effect::Allow)
+        ->and($grant->scope)->toBe(GrantScope::Subtree)
+        ->and($grant->permissions)->toBe(0)
+        ->and($grant->expires_at)->toBeNull();
+});
+
+it('rejects a missing grant node with the declared warning', function (): void {
+    session()->forget('filament.notifications');
+
+    NodeGrantResource::grantFromData([]);
+
+    $notification = session('filament.notifications.0');
+
+    expect(NodeGrant::query()->count())->toBe(0)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Grant not saved')
+        ->and($notification['body'])->toBe('The selected node no longer exists.')
+        ->and($notification['status'])->toBe('warning');
+});
+
 it('does not create a grant when the admin may not share the node', function (): void {
     $stranger = DriveBuilder::user(9);
     $this->actingAs($stranger);
@@ -55,6 +138,8 @@ it('does not create a grant when the admin may not share the node', function ():
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
     // No grant for $stranger ⇒ AccessResolver denies Share ⇒ the create no-ops.
+
+    session()->forget('filament.notifications');
 
     NodeGrantResource::grantFromData([
         'node_id' => $folder->getKey(),
@@ -67,7 +152,13 @@ it('does not create a grant when the admin may not share the node', function ():
         'expires_at' => '',
     ]);
 
-    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0);
+    $notification = session('filament.notifications.0');
+
+    expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0)
+        ->and($notification)->toBeArray()
+        ->and($notification['title'])->toBe('Grant not saved')
+        ->and($notification['body'])->toBe('You may not manage sharing on this node.')
+        ->and($notification['status'])->toBe('warning');
 });
 
 it('revokes every grant a subject holds through the core RevokeNodeAccessAction', function (): void {

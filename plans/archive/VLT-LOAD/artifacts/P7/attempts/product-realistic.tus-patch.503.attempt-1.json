@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "product-realistic.tus-patch.503",
+  "checksum": "063accd2660b4dae33e81dea7413ef6206876bf767bb464e24d81c26316e9835",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6977637167,
+  "t_detect_ns": 3587045305,
+  "t_restore_ns": 3390591862
+}

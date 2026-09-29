@@ -1,0 +1,10 @@
+{
+  "baseline_exit": 2,
+  "candidate_exit": 2,
+  "new_suggestions": {},
+  "inherited_files": [
+    "packages/core/src/Schema/PanelTablesBuilder.php",
+    "packages/core/tests/Webhooks/DeliverWebhookTest.php",
+    "packages/core/tests/Webhooks/WebhookSchemaTest.php"
+  ]
+}

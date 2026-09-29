@@ -1,0 +1,12 @@
+{
+  "case_id": "download/500m",
+  "ceilings_mib": {
+    "php_peak": 16
+  },
+  "fixture_id": "p4-matrix-8f383737-500m",
+  "process_kind": "fpm_worker",
+  "request": {
+    "method": "GET",
+    "path": "/api/vaulter/nodes/{node_id}/download"
+  }
+}

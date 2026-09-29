@@ -1,0 +1,18 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--check",
+    "--",
+    "load/app/Console/QueueProbeCommand.php",
+    "load/app/Listeners/RecordQueueLifecycle.php",
+    "load/app/LoadServiceProvider.php",
+    "load/webhook-sink/router.php",
+    "load/gates/p6_live_matrix.py",
+    "load/tests/Feature/QueueLifecycleLedgerTest.php",
+    "plans/REMAINING-WORK.md"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "pint",
+    "command": [
+      "vendor/bin/pint",
+      "--test",
+      "packages/core/src/Jobs/Webhooks/DeliverWebhook.php",
+      "packages/core/src/Models/Webhooks/WebhookDelivery.php",
+      "packages/core/src/Schema/PanelTablesBuilder.php",
+      "packages/core/database/migrations/2026_09_28_000001_add_webhook_delivery_claims.php",
+      "packages/core/tests/Webhooks/DeliverWebhookTest.php",
+      "packages/core/tests/Webhooks/WebhookSchemaTest.php",
+      "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
+      "packages/core/tests/Webhooks/DeliveryClaimMigrationTest.php"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.184,
+    "log": "pint.log.gz"
+  },
+  {
+    "name": "phpstan",
+    "command": [
+      "composer",
+      "analyse",
+      "--",
+      "--no-progress"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 2.872,
+    "log": "phpstan.log.gz"
+  },
+  {
+    "name": "rector",
+    "command": [
+      "vendor/bin/rector",
+      "process",
+      "packages/core/src/Jobs/Webhooks/DeliverWebhook.php",
+      "packages/core/src/Models/Webhooks/WebhookDelivery.php",
+      "packages/core/src/Schema/PanelTablesBuilder.php",
+      "packages/core/database/migrations/2026_09_28_000001_add_webhook_delivery_claims.php",
+      "packages/core/tests/Webhooks/DeliverWebhookTest.php",
+      "packages/core/tests/Webhooks/WebhookSchemaTest.php",
+      "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
+      "packages/core/tests/Webhooks/DeliveryClaimMigrationTest.php",
+      "--dry-run",
+      "--no-progress-bar"
+    ],
+    "exit": 2,
+    "elapsed_seconds": 4.862,
+    "log": "rector.log.gz"
+  },
+  {
+    "name": "types",
+    "command": [
+      "composer",
+      "test:types",
+      "--",
+      "--path=packages/core/src",
+      "--compact"
+    ],
+    "exit": 255,
+    "elapsed_seconds": 2.084,
+    "log": "types.log.gz"
+  }
+]

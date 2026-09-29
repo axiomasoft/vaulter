@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "after": 6607,
+      "before": 12994,
+      "item": "P0.1"
+    },
+    {
+      "after": 3692,
+      "before": 10362,
+      "item": "P0.2"
+    },
+    {
+      "after": 4076,
+      "before": 10362,
+      "item": "P0.3"
+    },
+    {
+      "after": 6682,
+      "before": 12994,
+      "item": "P0.4"
+    },
+    {
+      "after": 3981,
+      "before": 10362,
+      "item": "P0.5"
+    }
+  ],
+  "schema": "p2-weight-before-after-v1",
+  "summary": {
+    "aggregate_after": 25038,
+    "aggregate_before": 57074,
+    "median_after": 4076,
+    "median_before": 10362
+  },
+  "threshold": 100000,
+  "unit": {
+    "id": "token-estimate-calibration",
+    "model_id": null,
+    "version": "2.0.0"
+  }
+}

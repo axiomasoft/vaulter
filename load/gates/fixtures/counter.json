@@ -1,0 +1,24 @@
+{
+  "name": "counter increase and rate",
+  "record": {
+    "predicates": [
+      {
+        "expression_class": "counter_increase",
+        "promql": "sum(increase(example_total[60s]))",
+        "comparator": ">",
+        "threshold": 100
+      },
+      {
+        "expression_class": "counter_rate",
+        "promql": "sum(rate(example_total[60s]))",
+        "comparator": ">",
+        "threshold": 2
+      }
+    ]
+  },
+  "responses": {
+    "sum(increase(example_total[60s]))": 180,
+    "sum(rate(example_total[60s]))": 3
+  },
+  "expected": "pass"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "compound histogram gauge counter",
+  "record": {
+    "predicates": [
+      {
+        "expression_class": "histogram_le_ratio",
+        "promql": "sum(increase(example_seconds_bucket{le=\"1\"}[60s])) / sum(increase(example_seconds_count[60s]))",
+        "comparator": ">=",
+        "threshold": 0.95,
+        "count_promql": "sum(increase(example_seconds_count[60s]))"
+      },
+      {
+        "expression_class": "gauge_max",
+        "promql": "max_over_time(example_active[60s])",
+        "comparator": "<=",
+        "threshold": 8
+      },
+      {
+        "expression_class": "counter_rate",
+        "promql": "sum(rate(example_total[60s]))",
+        "comparator": ">",
+        "threshold": 50
+      }
+    ]
+  },
+  "responses": {
+    "sum(increase(example_seconds_count[60s]))": 200,
+    "sum(increase(example_seconds_bucket{le=\"1\"}[60s])) / sum(increase(example_seconds_count[60s]))": 0.98,
+    "max_over_time(example_active[60s])": 6,
+    "sum(rate(example_total[60s]))": 75
+  },
+  "expected": "pass"
+}

@@ -15,7 +15,7 @@
 ```yaml
 services:
   vaulter-collab:
-    image: ghcr.io/axioma-studio/vaulter-hocuspocus:1   # pin @sha256:… in production
+    image: ghcr.io/axiomasoft/vaulter-hocuspocus:1   # pin @sha256:… in production
     ports: ["127.0.0.1:1234:1234"]   # loopback only — front it with a TLS reverse proxy
     environment:
       VAULTER_BACKEND_URL: "https://app.example.com"
@@ -167,7 +167,7 @@ Traefik делает это за вас: `forwardedHeaders` учитываютс
 
 Образ намеренно не привязан к проекту. Направьте каждый деплой на его собственный Laravel-бэкенд
 (`VAULTER_BACKEND_URL`) и origin; один и тот же тег
-`ghcr.io/axioma-studio/vaulter-hocuspocus` обслуживает их все. В production закрепляйте digest
+`ghcr.io/axiomasoft/vaulter-hocuspocus` обслуживает их все. В production закрепляйте digest
 (`@sha256:…`), чтобы каждый потребитель запускал ровно один и тот же артефакт.
 
 ## Локальная разработка

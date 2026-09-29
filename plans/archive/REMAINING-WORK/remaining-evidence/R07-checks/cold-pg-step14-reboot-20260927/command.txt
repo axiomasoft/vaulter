@@ -1,0 +1,1 @@
+/usr/bin/php8.4 -d xdebug.mode=off vendor/bin/pest --mutate --path=src --covered-only --clear-cache

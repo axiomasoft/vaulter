@@ -1,0 +1,32 @@
+{
+  "source": "current",
+  "result": "current ordinary controls; all rejected",
+  "positive_fixture": "51 cells / 77 attempts admitted byte-stably",
+  "controls": [
+    {
+      "control": "missing-76-attempt-streams",
+      "admission": "REJECTED",
+      "reason": "incomplete attempt coverage in ledger.jsonl"
+    },
+    {
+      "control": "baseline-only-recovery",
+      "admission": "REJECTED",
+      "reason": "recovered without dependency probe"
+    },
+    {
+      "control": "foreign-attempt-identity-and-invalid-verdict",
+      "admission": "REJECTED",
+      "reason": "attempt file cell_id mismatch"
+    },
+    {
+      "control": "object-checksum-disagrees-with-database",
+      "admission": "REJECTED",
+      "reason": "DB/object checksum mismatch"
+    },
+    {
+      "control": "wrong-prometheus-job",
+      "admission": "REJECTED",
+      "reason": "Prometheus series is not vaulter-sut up"
+    }
+  ]
+}

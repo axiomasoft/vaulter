@@ -29,13 +29,17 @@
         "firebase/php-jwt": "^7.0",
         "spatie/laravel-permission": "^8.0",
         "laravel/pao": "^1.1",
-        "league/flysystem-aws-s3-v3": "^3.0"
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "open-telemetry/sdk": "^1.2",
+        "open-telemetry/api": "^1.1"
     },
     "autoload-dev": {
         "psr-4": {
             "Vaulter\\Tests\\": "packages/core/tests/",
             "Vaulter\\Database\\Factories\\": "packages/core/database/factories/",
-            "Vaulter\\Load\\": "load/app/"
+            "Vaulter\\Documents\\Tests\\": "packages/documents/tests/",
+            "Vaulter\\Load\\": "load/app/",
+            "Vaulter\\Load\\Tests\\": "load/tests/"
         }
     },
     "repositories": [

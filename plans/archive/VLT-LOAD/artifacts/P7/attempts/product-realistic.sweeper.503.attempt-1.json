@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "product-realistic.sweeper.503",
+  "checksum": "212f5881494b49b9d354ca7e066ac06ce891d674d5b1e9d8038004a46442a2bd",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6823203559,
+  "t_detect_ns": 3549113737,
+  "t_restore_ns": 3274089822
+}

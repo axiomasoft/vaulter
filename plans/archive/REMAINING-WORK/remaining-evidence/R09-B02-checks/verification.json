@@ -1,0 +1,85 @@
+{
+  "date": "2026-09-26",
+  "scope": "R09 B02-01/02 only",
+  "accepted": {
+    "run_id": "bc199ced-5b0f-4e77-b5ca-1a73055c0bfa",
+    "path": "plans/VLT-LOAD/artifacts/P6-R09/bc199ced-5b0f-4e77-b5ca-1a73055c0bfa",
+    "raw_tree_sha256": "bbfa77d90edc2664a158b37aa7cab0a8a936c7af8bfe90cefac3e745a184a0e6",
+    "verifier_exit_codes": [0, 0],
+    "attempts": 118,
+    "cells": 46,
+    "slo": {
+      "SLO-58": "GREEN",
+      "SLO-61": "RED",
+      "SLO-64": "GREEN",
+      "daily_failed_job_budget": "unevaluated",
+      "tiers_M_L": "unevaluated"
+    }
+  },
+  "rejected": {
+    "run_id": "aecd7112-8d5c-4fbc-a7ae-a4fe468ced57",
+    "path": "plans/VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57",
+    "carrier": "plans/VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57/rejected.json",
+    "reason": "long-lived queue workers retained the pre-fix recorder and omitted worker-side P6 metric families"
+  },
+  "volume": {
+    "relay": {
+      "ticks": 101,
+      "rows": 10000,
+      "rows_per_second": 265.8501926664597,
+      "tick_p95_seconds": 0.235588967,
+      "max_os_rss_bytes": 57458688
+    },
+    "retry": {
+      "ticks": 6,
+      "rows": 5000,
+      "rows_per_second": 2756.994852143623,
+      "tick_p95_seconds": 0.382402887,
+      "max_os_rss_bytes": 59752448
+    },
+    "jsonl_matches_embedded_ticks": true
+  },
+  "run_scoped_metrics": {
+    "vaulter_outbox_relayed_total": 57506,
+    "vaulter_outbox_relay_duration_seconds_count": 2012,
+    "vaulter_outbox_endpoints_scanned_total": 126626,
+    "vaulter_webhook_queue_wait_seconds_count": 96669,
+    "vaulter_webhook_delivery_duration_seconds_count": 96669,
+    "vaulter_webhook_delivered_total": 76322,
+    "vaulter_webhook_retry_tick_seconds_count": 10,
+    "vaulter_webhook_retry_lockset_rows_count": 10,
+    "vaulter_webhook_retry_lockset_rows_sum": 7003,
+    "prometheus_queries_match_direct_exposition": true
+  },
+  "negative_controls": {
+    "stale_retry_tick_elapsed_ns": 3000000000,
+    "result": "rejected",
+    "error": "stale volume summary: retry_rows_per_second",
+    "historical_r09_result": "rejected: run-scoped P6 metric exposition is missing",
+    "historical_r10_result": "rejected: run-scoped P6 metric exposition is missing"
+  },
+  "preserved_history": {
+    "r09_raw_tree_sha256": "7bac6725d3af18ac57789e7f70f1fdc3d78b4f28fdc051ff7de2dda39124c270",
+    "r10_raw_tree_sha256": "100d368f90e4c985a40fb4bb624128bda8ee6e483727dc4a7d4db302c9a2dad7",
+    "r09_relayed_json_sha256": "898fd05ee952edd121287dd2504a61badb676071eb5f3bbea57ef4f7979d51e5",
+    "r10_relayed_json_sha256": "aac1bca85b7b7aad7a75cd72dba41d322cda3ab314cc389727caf04a168bbdfa",
+    "r09_archive_sha256": "fc689be535f63e7ef57ca65a01701639ecf84695baea0b7681fd52254fd93662",
+    "raw_runs_rewritten": false,
+    "historical_slo_verdicts_rewritten": false
+  },
+  "checks": {
+    "python_unit": "exit 0; 33 tests",
+    "focused_php": "exit 0; 23 tests, 98 assertions; 7 pre-existing risky tests",
+    "pint": "exit 0",
+    "python_compile": "exit 0",
+    "diff_check": "exit 0",
+    "stand_check": "exit 0"
+  },
+  "source_sha256": {
+    "load/app/Observability/LoadExpositionRecorder.php": "bf040e1c264065cee801dcb502d00d6b2e03642696e54daa1470486e90553f0d",
+    "load/gates/p6_evidence.py": "f7ad25558b673ace5c82db2aefc435d198ba212f68e34cb45acc793971122981",
+    "load/gates/p6_live_matrix.py": "95c6e0aeaad8d7b1ec726b7b3c8d4af65b8b72106cdd3aad5ccdf5e972657f3a",
+    "load/gates/test_p6_evidence.py": "bdf6b3c1d759d6bc40197591a0fa4bef16218e44228f2269f249895084202461",
+    "load/tests/Observability/LoadExpositionRecorderTest.php": "5c95055d674b44121c8191ec7d7858a41d2cd8f0af409004ebedc28d59df09b0"
+  }
+}

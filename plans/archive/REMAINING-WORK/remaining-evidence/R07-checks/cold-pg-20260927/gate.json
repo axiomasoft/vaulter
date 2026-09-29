@@ -1,0 +1,16 @@
+{
+  "score": 65.38,
+  "score_field": "score_percent_recomputed",
+  "killed": 1091,
+  "timeout": 25,
+  "escaped": 591,
+  "uncovered": 0,
+  "total": 1707,
+  "threshold": 95,
+  "gate_exit": 1,
+  "pest_exit": 0,
+  "parallel": false,
+  "min_during_run": null,
+  "wall_clock": "3:50:24",
+  "note": "Pest ran without --min so the denominator finished. The 95 gate is this check; 65.38 fails it. A score of 94.99 fails and 95.0 passes, see gate-fixture.json."
+}

@@ -1,0 +1,314 @@
+{
+  "schema_version": "r02-inventory/v1",
+  "recorded_at": "2026-09-24T08:11:42.654870+00:00",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "git": {
+    "head": "de65b562ed4a8d8f9c578150706233ec2d1ba044",
+    "log1": "de65b562ed4a8d8f9c578150706233ec2d1ba044 2026-09-24T10:32:02+03:00 fix(core): bound webhook subscription enumeration",
+    "dirty": true,
+    "status_line_count": 310
+  },
+  "php": {
+    "binary": "/usr/bin/php8.4",
+    "version_line": "PHP 8.4.25 (cli) (built: Aug 28 2026 06:55:33) (NTS)",
+    "modules": [
+      "pcov",
+      "pdo_pgsql",
+      "pdo_sqlite",
+      "pgsql",
+      "xdebug",
+      "Xdebug"
+    ]
+  },
+  "workflows": {
+    "core": {
+      "path": ".github/workflows/mutation.yml",
+      "sha256": "72001fb40da1ee987724a3886e9ba3d5ac81eef29c9a4a2a32b9fe3fdee4f563",
+      "bytes": 1626,
+      "mutate_commands": [
+        "vendor/bin/pest --mutate --path=packages/core/src --covered-only --parallel --processes=4 --min=95"
+      ],
+      "min_flags": [
+        95,
+        95
+      ],
+      "parallel_on_mutate": true
+    },
+    "documents": {
+      "path": ".github/workflows/documents.yml",
+      "sha256": "20b7aabc84e20f50b6221e840a03113d4ea299050f17888ab2b2ba6118232326",
+      "bytes": 6237,
+      "mutate_commands": [
+        "vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95"
+      ],
+      "min_flags": [
+        100,
+        95,
+        95
+      ],
+      "parallel_on_mutate": true
+    },
+    "drive": {
+      "path": ".github/workflows/drive.yml",
+      "sha256": "ceb97cbc774c2c91a75babf834312ee394cb9c5b6b3403e49f6d5acf9fd2257a",
+      "bytes": 8432,
+      "mutate_commands": [
+        "vendor/bin/pest --mutate --path=src --covered-only --min=43"
+      ],
+      "min_flags": [
+        100,
+        43
+      ],
+      "parallel_on_mutate": false
+    },
+    "media": {
+      "path": ".github/workflows/media.yml",
+      "sha256": "07567f007a83e98f8fad37bf6371e9e038ccf31584524644073b68d0ff22e526",
+      "bytes": 7326,
+      "mutate_commands": [
+        "vendor/bin/pest --mutate --path=src --covered-only --min=66",
+        "vendor/bin/pest --mutate --path=src --covered-only --min=63"
+      ],
+      "min_flags": [
+        100,
+        66,
+        63
+      ],
+      "parallel_on_mutate": false
+    },
+    "filament": {
+      "path": ".github/workflows/filament.yml",
+      "sha256": "d9487056781719353a99f18e8df1e7d3e25859d687553bc421e8addd932750ec",
+      "bytes": 4556,
+      "mutate_commands": [
+        "vendor/bin/pest --mutate --path=src --covered-only --min=54"
+      ],
+      "min_flags": [
+        100,
+        54
+      ],
+      "parallel_on_mutate": false
+    }
+  },
+  "packages": {
+    "core": {
+      "composer_lock_sha256": "3e35a55f3da3652456fc611bd48c7cba88c52c043ca00023cdf04c254cfeaea6",
+      "pestphp/pest-plugin-mutate": {
+        "version": "v4.0.1",
+        "dist_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c",
+        "source_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c"
+      },
+      "pestphp/pest": {
+        "version": "v4.7.4",
+        "dist_reference": "ee2e97e932d158faceeaa63a4dc17324b15152cb"
+      },
+      "src_tree_sha256": "486c354c3eedfb4fa45506b7b50605d8dcf6bef1fc3c6657f019d75dde54c07f",
+      "src_file_count": 215,
+      "dirty_paths": [
+        " M packages/core/config/vaulter.php",
+        " M packages/core/src/Activity/ActivityRecorder.php",
+        " M packages/core/src/Console/PruneWebhooksCommand.php",
+        " M packages/core/src/Http/Controllers/Activity/ActivityController.php",
+        " M packages/core/src/Http/Controllers/Sharing/PublicShareController.php",
+        " M packages/core/src/Jobs/Webhooks/DeliverWebhook.php",
+        " M packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        " M packages/core/src/VaulterServiceProvider.php",
+        " M packages/core/src/Webhooks/OutboxRecorder.php",
+        " M packages/core/src/Webhooks/OutboxRelay.php",
+        " M packages/core/src/Webhooks/WebhookRetryDispatcher.php",
+        " M packages/core/tests/Arch/__snapshots__/public-api.txt",
+        " M packages/core/tests/Webhooks/OutboxTransactionTest.php",
+        "?? packages/core/.cursor/",
+        "?? packages/core/core",
+        "?? packages/core/src/Contracts/Observability/",
+        "?? packages/core/src/Http/Middleware/RecordVaulterRequestMetrics.php",
+        "?? packages/core/src/Http/Middleware/VaulterHttpOperationMap.php",
+        "?? packages/core/src/Http/Middleware/VaulterThrottledRouteMap.php",
+        "?? packages/core/src/Observability/",
+        "?? packages/core/src/Support/AssembleSizeBucket.php",
+        "?? packages/core/src/Support/LoadTier.php",
+        "?? packages/core/src/Testing/FakeMetricsRecorder.php",
+        "?? packages/core/src/Testing/FakeTraceRecorder.php",
+        "?? packages/core/tests/Observability/",
+        "?? packages/core/tests/ObservabilityDocuments/"
+      ]
+    },
+    "documents": {
+      "composer_lock_sha256": "7387e779de800d33205d09a5071fe2872c511b1706e8962c436f75d7d4b0ebee",
+      "pestphp/pest-plugin-mutate": {
+        "version": "v4.0.1",
+        "dist_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c",
+        "source_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c"
+      },
+      "pestphp/pest": {
+        "version": "v4.7.5",
+        "dist_reference": "5dc49a71d63602a9b98fed0f2017c4679ef9f8e0"
+      },
+      "src_tree_sha256": "db44f237b6694925cc66f5519af35ca7941eeb0fb377459936713b51ea84d9c5",
+      "src_file_count": 72,
+      "dirty_paths": [
+        " M packages/documents/src/Actions/Collaboration/PersistYjsSnapshotAction.php",
+        " M packages/documents/src/Collaboration/CollaborationSessionService.php",
+        " M packages/documents/src/Export/NodeExportService.php"
+      ]
+    },
+    "drive": {
+      "composer_lock_sha256": "f68259cb631d1cd8eff916493169250b216d2c99052be68c1cfd085d2f4aa4fb",
+      "pestphp/pest-plugin-mutate": {
+        "version": "v4.0.1",
+        "dist_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c",
+        "source_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c"
+      },
+      "pestphp/pest": {
+        "version": "v4.7.5",
+        "dist_reference": "5dc49a71d63602a9b98fed0f2017c4679ef9f8e0"
+      },
+      "src_tree_sha256": "f95726f2179412ee125f7d099e0651c92c906d060570b2eecad46145b8ca6586",
+      "src_file_count": 73,
+      "dirty_paths": [
+        " M packages/drive/src/Actions/MoveNodeAction.php",
+        " M packages/drive/src/Actions/UploadFileAction.php",
+        " M packages/drive/src/Console/PurgeTrashCommand.php",
+        " M packages/drive/src/Console/SweepUploadsCommand.php",
+        " M packages/drive/src/Http/Controllers/DownloadController.php",
+        " M packages/drive/src/Support/Uploads/StagedUpload.php",
+        " M packages/drive/src/Uploads/S3MultipartHandler.php",
+        " M packages/drive/src/Uploads/TusUploadHandler.php",
+        " M packages/drive/tests/Pest.php",
+        " M packages/drive/tests/Uploads/S3MultipartTest.php",
+        "?? packages/drive/.cursor/",
+        "?? packages/drive/tests/Observability/"
+      ]
+    },
+    "media": {
+      "composer_lock_sha256": "3b50c0ba4b8f45df8a95eba0bfc24287d1ba3e50a3547e4488025c1d4530077d",
+      "pestphp/pest-plugin-mutate": {
+        "version": "v4.0.1",
+        "dist_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c",
+        "source_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c"
+      },
+      "pestphp/pest": {
+        "version": "v4.7.5",
+        "dist_reference": "5dc49a71d63602a9b98fed0f2017c4679ef9f8e0"
+      },
+      "src_tree_sha256": "28e9ecbfc4325eeca0a2859f8f1305d861b8bc412b62a7b75d1372027811fd62",
+      "src_file_count": 9,
+      "dirty_paths": [
+        " M packages/media/src/Cas/BlobGarbageCollector.php",
+        " M packages/media/src/Cas/BlobReconciler.php",
+        " M packages/media/tests/Cas/SweepPendingSerializableTest.php",
+        " M packages/media/tests/Pest.php",
+        "?? packages/media/.cursor/",
+        "?? packages/media/tests/Observability/"
+      ]
+    },
+    "filament": {
+      "composer_lock_sha256": "a3b127b8002060e34d52eddbe507386821dfbf9de21535b27b65d2b625af8768",
+      "pestphp/pest-plugin-mutate": {
+        "version": "v4.0.1",
+        "dist_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c",
+        "source_reference": "d9b32b60b2385e1688a68cc227594738ec26d96c"
+      },
+      "pestphp/pest": {
+        "version": "v4.7.5",
+        "dist_reference": "5dc49a71d63602a9b98fed0f2017c4679ef9f8e0"
+      },
+      "src_tree_sha256": "19d63de991d50cb6ef25ac3eda92c2bc383b59597908e9e2d74e806e7a1fcffe",
+      "src_file_count": 16,
+      "dirty_paths": []
+    }
+  },
+  "archived_vlt_mut": {
+    "plan": "plans/archive/VLT-MUT/plan.md",
+    "findings": [
+      "plans/archive/VLT-MUT/findings/P0.1-parallel-defect.md",
+      "plans/archive/VLT-MUT/findings/P0.2-baseline-drive.md",
+      "plans/archive/VLT-MUT/findings/P0.2-baseline-media-filament.md",
+      "plans/archive/VLT-MUT/findings/P0.2-drive-escaped.txt"
+    ],
+    "skip_matrix": {
+      "drive": "pgsql",
+      "documents": "pgsql",
+      "core": "union pgsql+sqlite",
+      "media": "union pgsql+sqlite",
+      "filament": "sqlite"
+    },
+    "historical_scores": {
+      "drive_pg": {
+        "score": 48.34,
+        "killed": 722,
+        "escaped": 780,
+        "timeouts": 8,
+        "total": 1510,
+        "date": "2026-07-13"
+      },
+      "media_union": {
+        "score": 71.25,
+        "killed": 285,
+        "escaped": 115,
+        "total": 400,
+        "date": "2026-07-13"
+      },
+      "media_pg": {
+        "score": 71.14,
+        "killed": 281,
+        "escaped": 114,
+        "total": 395
+      },
+      "media_sqlite": {
+        "score": 68.16,
+        "killed": 259,
+        "escaped": 121,
+        "total": 380
+      },
+      "filament_sqlite": {
+        "score": 59.26,
+        "killed": 112,
+        "escaped": 77,
+        "total": 189,
+        "date": "2026-07-13"
+      },
+      "core": "unevaluated in archive P0.2",
+      "documents": "unevaluated in archive P0.2"
+    }
+  },
+  "p4_l01": {
+    "baseline": {
+      "assertions": 548,
+      "command": "/usr/bin/php8.4 vendor/bin/pest --parallel --processes=4",
+      "exit_code": 0,
+      "passed": 175,
+      "risky": 2,
+      "skipped": 5
+    },
+    "coverage_driver": {
+      "enabled": true,
+      "name": "pcov",
+      "version": "1.0.12"
+    },
+    "mutation": {
+      "command": "PCOV_ENABLED=1 /usr/bin/php8.4 vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95",
+      "duration_seconds": 25.77,
+      "exit_code": 0,
+      "files": 50,
+      "minimum_percent": 95.0,
+      "processes": 4,
+      "score_percent": 100.0,
+      "tested": 1661
+    },
+    "package": "axioma-studio/vaulter-drive",
+    "php": {
+      "binary": "/usr/bin/php8.4",
+      "version": "8.4.25"
+    },
+    "recorded_at": "2026-09-22T15:27:58Z",
+    "run_id": "8f383737-406e-42b9-addd-3ecf4ef6fc2b",
+    "schema_version": "p4-l01-mutation/v1",
+    "source_sha256": {
+      "packages/drive/src/Support/Uploads/StagedUpload.php": "ad9f5e1789afcfad1cad9fc0068bbfddd412bbf7431e9e4ab8e77ec2212e8f72",
+      "packages/drive/src/Uploads/S3MultipartHandler.php": "86c1e8ce00f552d88cd4fdeffa574d832fa8f086251bd8bf8de0ede9e0ea6dcd",
+      "packages/drive/tests/Uploads/S3MultipartTest.php": "1604e1937760650c1d64448158d8bbdc15bca823cb226933a6a9a3a75fd0c648"
+    },
+    "working_directory": "packages/drive"
+  }
+}

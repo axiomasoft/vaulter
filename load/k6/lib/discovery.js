@@ -22,7 +22,7 @@ export function discoverDownloadableFiles(limit) {
   const listing = nodes.children(STORAGE_ID, WIDE_NODE_ID, actorHeaders(ACTOR_OWNER), SETUP_TAGS);
 
   if (listing.status !== 200) {
-    return [];
+    throw new Error(`download discovery listing HTTP ${listing.status}`);
   }
 
   const items = listing.json('data') || [];
@@ -33,6 +33,7 @@ export function discoverDownloadableFiles(limit) {
     const probe = http.get(`${API}/nodes/${nodeId}/download`, {
       headers: actorHeaders(ACTOR_OWNER),
       tags: SETUP_TAGS,
+      responseType: 'none',
       responseCallback: http.expectedStatuses({ min: 200, max: 399 }, 404),
     });
 
@@ -41,6 +42,7 @@ export function discoverDownloadableFiles(limit) {
     }
   }
 
+  if (verified.length === 0) throw new Error('mandatory download pool is empty');
   return verified;
 }
 
@@ -50,10 +52,12 @@ export function discoverDownloadableFiles(limit) {
  */
 export function discoverDocumentsFolderId() {
   const listing = nodes.children(STORAGE_ID, ROOT_NODE_ID, actorHeaders(ACTOR_OWNER), SETUP_TAGS);
-  const items = (listing.status === 200 && listing.json('data')) || [];
+  if (listing.status !== 200) throw new Error(`documents discovery listing HTTP ${listing.status}`);
+  const items = listing.json('data') || [];
   const folder = items.find((n) => n.kind === 'folder' && n.name === 'documents');
 
-  return folder ? folder.id : null;
+  if (!folder) throw new Error('mandatory documents folder is missing');
+  return folder.id;
 }
 
 /**
@@ -63,14 +67,13 @@ export function discoverDocumentsFolderId() {
 export function discoverDocumentNodeIds(limit) {
   const documentsFolderId = discoverDocumentsFolderId();
 
-  if (documentsFolderId === null) {
-    return [];
-  }
-
   const listing = nodes.children(STORAGE_ID, documentsFolderId, actorHeaders(ACTOR_OWNER), SETUP_TAGS);
-  const items = (listing.status === 200 && listing.json('data')) || [];
+  if (listing.status !== 200) throw new Error(`documents discovery listing HTTP ${listing.status}`);
+  const items = listing.json('data') || [];
 
-  return items.filter((n) => n.kind === 'document').map((n) => n.id).slice(0, limit);
+  const ids = items.filter((n) => n.kind === 'document').map((n) => n.id).slice(0, limit);
+  if (ids.length === 0) throw new Error('mandatory documents pool is empty');
+  return ids;
 }
 
 /**

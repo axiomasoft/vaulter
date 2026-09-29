@@ -85,8 +85,32 @@ jobs:
   # the coverage driver, which the SQLite lane does not need, stays off the fast lanes
   # and the mutation run happens once rather than once per Laravel cell.
   documents-mutation:
-    name: vaulter-documents (mutation gate)
+    name: vaulter-documents (Postgres mutation gate)
     runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: vaulter_documents_test
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_documents_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U vaulter -d vaulter_documents_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout
@@ -96,7 +120,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          extensions: mbstring, pdo, pdo_pgsql, pgsql
           coverage: xdebug
           tools: composer:v2
         env:
@@ -106,15 +130,14 @@ jobs:
         working-directory: packages/documents
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # --min=95: floor(Score) - 5, измерено 2026-07-13 на pcov/PHP 8.5,
-      # `pest --mutate --path=src --covered-only --parallel` → Score 100.00%,
-      # 1472 mutations tested (та же арифметика порога, что у core в mutation.yml).
+      # R02 proved that pest-plugin-mutate v4.0.1 plus --parallel reports a false
+      # 100%. Documents has PG-only coverage, so its authoritative lane is
+      # PostgreSQL and must stay sequential and cold. The configured floor remains
+      # 95; R17's current-source cold score is measured separately.
       - name: Mutation testing
         working-directory: packages/documents
-        run: vendor/bin/pest --mutate --path=src --covered-only --parallel --processes=4 --min=95
+        run: vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
           XDEBUG_MODE: coverage
 
   documents-pgsql:

@@ -1,0 +1,21 @@
+{
+  "role": "argv-control",
+  "scope": "zero due p5-dirty rows after cleanup; not a 20k product measurement",
+  "command": [
+    "exec",
+    "-T",
+    "app",
+    "php",
+    "-d",
+    "auto_prepend_file=/app/load/scripts/p5-php-peak.php",
+    "vendor/bin/testbench",
+    "vaulter:sweep-uploads",
+    "--no-interaction"
+  ],
+  "difference_from_probe": "omits the literal argv token artisan",
+  "exit_code": 0,
+  "stdout": "\n   INFO  Swept 0 stale upload sessions.  \n",
+  "stderr": "P5_PHP_PEAK_BYTES=38273024\n",
+  "php_peak_bytes": 38273024,
+  "dirty_rows_after": 0
+}

@@ -6,7 +6,7 @@ import { API, TIER, VUS_UPLOAD, DURATION, SINGLE_SHOT_FILE_SIZE_BYTES, thinkTime
 import { STORAGE_ID, ACTOR_OWNER } from '../lib/dataset.js';
 import { actorHeaders } from '../lib/auth.js';
 import { tusChunk, saltedFirstChunk, sliceOf } from '../lib/fixtures.js';
-import { streamThroughputMiBs, ttfbMs } from '../lib/metrics.js';
+import { recordAcceptedStream, ttfbMs } from '../lib/metrics.js';
 import { trackProtocolStatus } from '../lib/expected.js';
 
 const TAGS = { scenario: 'single-shot', tier: TIER, class: 'streaming' };
@@ -43,9 +43,7 @@ export function run() {
   ttfbMs.add(res.timings.waiting, TAGS);
   trackProtocolStatus(res, TAGS);
 
-  if (elapsedS > 0) {
-    streamThroughputMiBs.add(size / 1024 / 1024 / elapsedS, TAGS);
-  }
+  recordAcceptedStream(res, bytes.byteLength, elapsedS, { ...TAGS, op: 'OP-17' }, [201], 'sent');
 
   const complete = check(res, { 'single-shot upload 201': (r) => r.status === 201 });
 

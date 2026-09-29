@@ -1,0 +1,141 @@
+{
+  "code_anchors": [],
+  "command": "insert into \"v_upload_parts\" (\"upload_session_id\", \"part_no\", \"byte_offset\", \"size_bytes\", \"etag\", \"part_sha256\", \"temp_blob_id\", \"received_at\") values ($1, $2, $3, $4, $5, $6, $7, $8)",
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "disposable_db": true,
+  "execute_args": [
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "1::bigint",
+    "NOW()"
+  ],
+  "op_ids": [],
+  "parameter_class": "mandatory_hotspot",
+  "plan": [
+    {
+      "Execution Time": 0.386,
+      "Plan": {
+        "Actual Loops": 1,
+        "Actual Rows": 0,
+        "Actual Startup Time": 0.089,
+        "Actual Total Time": 0.089,
+        "Alias": "v_upload_parts",
+        "Async Capable": false,
+        "Local Dirtied Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Written Blocks": 0,
+        "Node Type": "ModifyTable",
+        "Operation": "Insert",
+        "Parallel Aware": false,
+        "Plan Rows": 0,
+        "Plan Width": 0,
+        "Plans": [
+          {
+            "Actual Loops": 1,
+            "Actual Rows": 1,
+            "Actual Startup Time": 0.001,
+            "Actual Total Time": 0.001,
+            "Async Capable": false,
+            "Local Dirtied Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Written Blocks": 0,
+            "Node Type": "Result",
+            "Output": [
+              "'1'::bigint",
+              "1",
+              "'1'::bigint",
+              "'1'::bigint",
+              "'1                                                               '::character(64)",
+              "'1'::character varying(255)",
+              "'1'::bigint",
+              "'2026-09-22 04:33:13'::timestamp(0) without time zone"
+            ],
+            "Parallel Aware": false,
+            "Parent Relationship": "Outer",
+            "Plan Rows": 1,
+            "Plan Width": 820,
+            "Shared Dirtied Blocks": 0,
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Startup Cost": 0.0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Total Cost": 0.01,
+            "WAL Bytes": 0,
+            "WAL FPI": 0,
+            "WAL Records": 0
+          }
+        ],
+        "Relation Name": "v_upload_parts",
+        "Schema": "public",
+        "Shared Dirtied Blocks": 0,
+        "Shared Hit Blocks": 77,
+        "Shared Read Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Startup Cost": 0.0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Total Cost": 0.01,
+        "WAL Bytes": 375,
+        "WAL FPI": 0,
+        "WAL Records": 4
+      },
+      "Planning": {
+        "Local Dirtied Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Written Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Hit Blocks": 45,
+        "Shared Read Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      },
+      "Planning Time": 0.124,
+      "Query Identifier": 7283217862701016213,
+      "Settings": {
+        "effective_cache_size": "3GB",
+        "effective_io_concurrency": "200",
+        "max_parallel_workers_per_gather": "0",
+        "random_page_cost": "1.1",
+        "work_mem": "16MB"
+      },
+      "Triggers": [
+        {
+          "Calls": 1,
+          "Constraint Name": "v_upload_parts_upload_session_id_foreign",
+          "Relation": "v_upload_parts",
+          "Time": 0.284,
+          "Trigger Name": "RI_ConstraintTrigger_c_45026"
+        }
+      ]
+    }
+  ],
+  "query_fingerprint": "7283217862701016213",
+  "rejection_reason": null,
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-explain-plan/v1",
+  "settings_fingerprint": "b6583d8ab3b85206",
+  "status": "ok",
+  "summary": {
+    "actual_rows": 0,
+    "cardinality_ratio": null,
+    "execution_time_ms": 0.386,
+    "max_loops": 1,
+    "plan_rows": 0,
+    "planning_time_ms": 0.124,
+    "root_node_type": "ModifyTable",
+    "seq_scan_count": 0,
+    "seq_scan_verdict": "no-seq-scan",
+    "seq_scans": [],
+    "temp_written_blocks": 0
+  }
+}

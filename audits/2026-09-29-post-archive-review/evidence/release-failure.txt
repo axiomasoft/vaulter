@@ -1,0 +1,9 @@
+Required check is missing or not successful: Laravel Pint
+Required check is missing or not successful: Larastan (PHPStan level 8)
+Required check is missing or not successful: PHP 8.4 / Laravel 12.*
+Required check is missing or not successful: PHP 8.4 / Laravel 13.*
+Required check is missing or not successful: PHP 8.4 / Postgres (full schema portability lane)
+Required check is missing or not successful: @vaulter/vue (Node 20)
+Required check is missing or not successful: @vaulter/vue (Node 22)
+Required check is missing or not successful: @vaulter/hocuspocus-server (Node 20)
+Required check is missing or not successful: @vaulter/hocuspocus-server (Node 22)

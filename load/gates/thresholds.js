@@ -17,8 +17,9 @@
 //  - RSS ceilings (the "A" row's memory half for SLO-40…54): k6 cannot see server memory
 //    at all (RAG-8b) — perf-assert.py only (Prometheus once P8 lands, `container-peak.json`
 //    as a coarse stand-in today).
-//  - Class B (latency — §3.1 entirely, and the "B" row of every §3.2 SLO): advisory in
-//    every profile except `lab` (D20) — never blocking outside `lab`.
+//  - Class B remains advisory outside `lab` (D20). In `lab`, the OP tag selects an
+//    individual request inside a mixed scenario; the file-level scenario tag alone
+//    combines unrelated operations (F-P2.8-3).
 //  - §3.3 (background, SLO-55…81): no k6 metric at all (no clientside input) — perf-
 //    assert.py only.
 //
@@ -43,7 +44,7 @@ const SCENARIO_TAG_MAP = {
 // interactive; tus-upload/s3-multipart/single-shot/download = streaming; mixed.js sets it
 // per-request) — no translation needed, unlike SCENARIO_TAG_MAP above.
 const SEQUENTIAL = {
-  'http_req_failed{class:interactive}': [{ threshold: 'rate<0.005', abortOnFail: true, delayAbortEval: '30s' }],
+  'http_req_failed{class:interactive}': ['rate<0.005'],
   'http_req_failed{class:streaming}': ['rate<0.01'],
   checks: ['rate>0.99'],
 };
@@ -109,39 +110,72 @@ function streamingThresholds(tier) {
     }
 
     const tags = SCENARIO_TAG_MAP[slug];
-    const abort = { abortOnFail: true, delayAbortEval: '30s' };
     const trendExpr = [];
 
     if (row.med !== undefined) {
-      trendExpr.push({ threshold: `med>${row.med}`, ...abort });
+      trendExpr.push(`med>${row.med}`);
     }
 
     if (row.min !== undefined) {
-      trendExpr.push({ threshold: `min>${row.min}`, ...abort });
+      trendExpr.push(`min>${row.min}`);
     }
 
-    // `stream_throughput_mibs` is added with each scenario's base `TAGS` constant only
-    // (`scenario`/`tier`/`class` — see e.g. tus-upload.js's `streamThroughputMiBs.add(
-    // ..., TAGS)`), never `op`: verified live while validating this item (a threshold
-    // key that also filtered on `op` never matched a single sample). `data_sent`/
-    // `data_received` ARE per-request built-ins and DO carry `op` (the request's own
-    // `tags` param sets it) — kept there.
-    out[`stream_throughput_mibs{scenario:${tags.scenario},tier:${tier}}`] = trendExpr;
+    // Every custom sample carries the accepted operation, including OP-07.
+    // Downloads share a per-stream floor across OP-08/09/10; their byte-rate
+    // contract remains specifically OP-08.
+    const selector = slug === 'download'
+      ? `scenario:${tags.scenario},tier:${tier}`
+      : `scenario:${tags.scenario},op:${tags.op},tier:${tier}`;
+    out[`stream_throughput_mibs{${selector}}`] = trendExpr;
+
+    const ops = slug === 'download' ? ['OP-08', 'OP-09', 'OP-10'] : [tags.op];
+    for (const op of ops) {
+      const opTags = `scenario:${tags.scenario},op:${op},tier:${tier}`;
+      out[`stream_accepted_total{${opTags}}`] = ['count>=0'];
+      out[`stream_rejected_total{${opTags}}`] = ['count>=0'];
+      out[`accepted_stream_duration_seconds{${opTags}}`] = ['count>=0'];
+      const byteMetric = slug === 'download' ? 'accepted_received_bytes'
+        : slug === 's3_complete' ? 'finalized_bytes' : 'accepted_sent_bytes';
+      out[`${byteMetric}{${opTags}}`] = ['count>=0'];
+      if (slug === 'download') out[`http_reqs{op:${op},tier:${tier}}`] = ['count>0'];
+    }
 
     if (row.dataSentRate !== undefined) {
-      out[`data_sent{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
-        { threshold: `rate>${row.dataSentRate}`, ...abort },
+      out[`accepted_sent_bytes{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
+        `rate>${row.dataSentRate}`,
       ];
     }
 
     if (row.dataReceivedRate !== undefined) {
-      out[`data_received{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
-        { threshold: `rate>${row.dataReceivedRate}`, ...abort },
+      out[`accepted_received_bytes{scenario:${tags.scenario},op:${tags.op},tier:${tier}}`] = [
+        `rate>${row.dataReceivedRate}`,
       ];
     }
   }
 
   return out;
+}
+
+// Tier-S B rows exercised by the mixed workload. The OP tag is set on each HTTP
+// request, so these submetrics cannot accidentally aggregate tree reads and writes.
+// Sparse export/broadcast/TTFB rows require a separate sample-count verdict.
+const LAB_B_S = {
+  'OP-18': 120, 'OP-12': 300, 'OP-14': 600, 'OP-16': 180,
+  'OP-20': 900, 'OP-25': 225, 'OP-28': 225, 'OP-29': 300,
+  'OP-34': 150, 'OP-31': 375, 'OP-38': 225, 'OP-01': 180,
+  'OP-02': 600, 'OP-06': 4500, 'OP-17': 1800,
+};
+
+function labBThresholds(tier) {
+  if (tier !== 'S') {
+    return {};
+  }
+
+  const thresholds = {};
+  for (const [op, p95] of Object.entries(LAB_B_S)) {
+    thresholds[`http_req_duration{op:${op},tier:S}`] = [`p(95)<${p95}`];
+  }
+  return thresholds;
 }
 
 /**
@@ -161,6 +195,10 @@ export function thresholdsFor(profile, tier) {
 
   if (streamingBlocking(tier, profile)) {
     Object.assign(thresholds, streamingThresholds(tier));
+  }
+
+  if (profile === 'lab') {
+    Object.assign(thresholds, labBThresholds(tier));
   }
 
   return thresholds;

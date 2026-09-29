@@ -1,0 +1,17 @@
+{
+  "name": "run max gauge",
+  "record": {
+    "predicates": [
+      {
+        "expression_class": "gauge_max",
+        "promql": "max_over_time(example_bytes[60s])",
+        "comparator": "<",
+        "threshold": 256
+      }
+    ]
+  },
+  "responses": {
+    "max_over_time(example_bytes[60s])": 128
+  },
+  "expected": "pass"
+}

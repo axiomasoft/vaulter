@@ -1,0 +1,1 @@
+{"actor": "migration/v2", "attempt": 1, "command": "plan-design", "cost_usd": null, "duration_ms": null, "friction": [], "item_id": "layout-v2", "note": "Layout v2 migration activation; source tree archived in artifacts/migration-source-v1.", "num_turns": null, "plan_id": "AUDIT-VLT", "result": "in-progress", "run_id": null, "session_id": null, "ts": "1970-01-01T00:00:01Z"}

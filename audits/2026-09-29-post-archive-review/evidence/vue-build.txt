@@ -1,0 +1,18 @@
+vite v5.4.21 building for production...
+
+(!) outDir /tmp/vaulter-offline-review.JlOcOL/vue-dist is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 48 modules transformed.
+rendering chunks...
+
+[vite:dts] Start generate declaration files...
+computing gzip size...
+../../../../../../../tmp/vaulter-offline-review.JlOcOL/vue-dist/style.css        1.77 kB │ gzip:  0.63 kB
+../../../../../../../tmp/vaulter-offline-review.JlOcOL/vue-dist/vaulter-vue.js  78.17 kB │ gzip: 19.04 kB
+[vite:dts] Declaration files built in 1002ms.
+
+../../../../../../../tmp/vaulter-offline-review.JlOcOL/vue-dist/style.css             1.77 kB │ gzip:  0.63 kB
+../../../../../../../tmp/vaulter-offline-review.JlOcOL/vue-dist/vaulter-vue.umd.cjs  60.73 kB │ gzip: 16.66 kB
+✓ built in 1.24s

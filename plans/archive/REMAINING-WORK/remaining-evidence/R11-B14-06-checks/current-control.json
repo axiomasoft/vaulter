@@ -1,0 +1,7 @@
+{
+  "source": "working-tree",
+  "publisher_exit": 1,
+  "historical_preserved": true,
+  "stdout": "",
+  "stderr": "p7 publication refused: occupied destination: /tmp/p7-publication-test-ept0t57y/published\n"
+}

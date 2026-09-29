@@ -1,0 +1,4 @@
+ Container vaulter-r03-4f565edf-s0-mixed-ab5edbe8 Creating 
+ Container vaulter-r03-4f565edf-s0-mixed-ab5edbe8 Created 
+time="2026-09-28T13:22:25Z" level=error msg="thresholds on metrics 'checks, data_received{scenario:download,op:OP-08,tier:S0}, data_sent{scenario:tus-upload,op:OP-02,tier:S0}, http_req_failed{class:interactive}, stream_throughput_mibs{scenario:download,tier:S0}, stream_throughput_mibs{scenario:s3-multipart,tier:S0}, stream_throughput_mibs{scenario:single-shot,tier:S0}, stream_throughput_mibs{scenario:tus-upload,tier:S0}' have been crossed"
+

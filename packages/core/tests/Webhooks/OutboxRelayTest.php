@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
@@ -69,6 +70,26 @@ it('is idempotent: a second process() does not re-fan an already-dispatched row'
     Queue::assertPushed(DeliverWebhook::class, 1);
 });
 
+it('does not double fan out when a second relay tick starts after the first claim', function (): void {
+    Queue::fake();
+
+    WebhookTestHelpers::endpoint();
+    WebhookTestHelpers::outbox();
+
+    $overlapResult = null;
+    DB::listen(static function ($query) use (&$overlapResult): void {
+        if ($overlapResult === null && str_contains($query->sql, 'webhook_endpoints')) {
+            $overlapResult = relay()->process();
+        }
+    });
+
+    expect(relay()->process())->toBe(1)
+        ->and($overlapResult)->toBe(0)
+        ->and(WebhookDelivery::query()->count())->toBe(1);
+
+    Queue::assertPushed(DeliverWebhook::class, 1);
+});
+
 it('does not create a delivery for an endpoint not subscribed to the event', function (): void {
     Queue::fake();
 
@@ -116,6 +137,42 @@ it('fans out to every subscribed active endpoint and skips the unsubscribed/inac
         ->and($endpointIds)->toContain((string) $b->getKey());
 
     Queue::assertPushed(DeliverWebhook::class, 2);
+});
+
+it('filters subscriptions in SQL and fans out in bounded key-ordered pages', function (): void {
+    Queue::fake();
+
+    $matchingIds = [];
+
+    for ($index = 0; $index < 205; $index++) {
+        $matchingIds[] = WebhookTestHelpers::endpoint()->getKey();
+    }
+
+    for ($index = 0; $index < 120; $index++) {
+        WebhookTestHelpers::endpoint(['events' => ['share.created']]);
+    }
+
+    WebhookTestHelpers::endpoint(['is_active' => false]);
+    WebhookTestHelpers::outbox();
+
+    $endpointQueries = [];
+    DB::listen(static function ($query) use (&$endpointQueries): void {
+        if (str_contains($query->sql, 'webhook_endpoints')) {
+            $endpointQueries[] = $query->sql;
+        }
+    });
+
+    expect(relay()->process())->toBe(1);
+
+    $actualIds = WebhookDelivery::query()->orderBy('id')->pluck('endpoint_id')->all();
+    expect($actualIds)->toBe($matchingIds)
+        ->and(count($endpointQueries))->toBeGreaterThanOrEqual(3);
+
+    foreach ($endpointQueries as $sql) {
+        expect($sql)->toContain('events');
+    }
+
+    Queue::assertPushed(DeliverWebhook::class, 205);
 });
 
 it('leaves a not-yet-available outbox row pending', function (): void {

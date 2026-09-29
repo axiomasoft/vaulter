@@ -59,7 +59,7 @@ final class SeedLoadDatasetCommand extends Command
 
     private const int NORMAL_ACTOR_ID = 900_002;
 
-    private const string SEED_VERSION = '2026-07-14.1';
+    private const string SEED_VERSION = '2026-09-28.1';
 
     private const array WEBHOOK_EVENT_POOL = ['node.created', 'file.uploaded', 'version.created', 'node.trashed', 'grant.created'];
 
@@ -499,6 +499,7 @@ final class SeedLoadDatasetCommand extends Command
                             sha256: $blob->sha256,
                             sizeBytes: strlen($bytes),
                             name: 'v'.$v,
+                            blobId: (int) $blob->getKey(),
                         )])[0];
 
                         $versionModel = Config::fileVersionModel();
@@ -521,7 +522,7 @@ final class SeedLoadDatasetCommand extends Command
                 $newVersionRows = [];
 
                 foreach ($versionRows as $i => $vr) {
-                    $newVersionRows[] = $this->fileVersionRow(fileId: $vr['fileId'], versionNo: $vr['versionNo'], sha256: $vr['sha256'], sizeBytes: $vr['sizeBytes'], name: 'v'.$vr['versionNo']);
+                    $newVersionRows[] = $this->fileVersionRow(fileId: $vr['fileId'], versionNo: $vr['versionNo'], sha256: $vr['sha256'], sizeBytes: $vr['sizeBytes'], name: 'v'.$vr['versionNo'], blobId: $blobIds[$i]);
                 }
 
                 $versionIds = $this->insertBatchReturningIds($versionTable, $newVersionRows);
@@ -581,12 +582,13 @@ final class SeedLoadDatasetCommand extends Command
     /**
      * @return array<string, mixed>
      */
-    private function fileVersionRow(int $fileId, int $versionNo, string $sha256, int $sizeBytes, string $name): array
+    private function fileVersionRow(int $fileId, int $versionNo, string $sha256, int $sizeBytes, string $name, int $blobId): array
     {
         $createdAt = $this->randomPastTimestamp();
 
         return [
             'file_id' => $fileId,
+            'blob_id' => $blobId,
             'version_no' => $versionNo,
             'content_sha256' => $sha256,
             'size_bytes' => $sizeBytes,

@@ -1,0 +1,46 @@
+{
+  "class_b": {},
+  "declared_duration_ms": 180000,
+  "full_window": true,
+  "observed_duration_ms": 190344.87191,
+  "proof_ready": false,
+  "source_meta": {
+    "commit": "55d10b6",
+    "dataset_id": "vlt-load-414fae92477d07f8",
+    "env_fingerprint": "031fcca2e4ac6a69",
+    "expected_class_b_keys": [],
+    "profile": "smoke-perf",
+    "runs": 1,
+    "tier": "S0"
+  },
+  "sparse": {
+    "broadcast_lag_ms{tier:S}": {
+      "count": null,
+      "required": 100,
+      "status": "unevaluated"
+    },
+    "ttfb_ms{scenario:download,tier:S}": {
+      "count": null,
+      "required": 100,
+      "status": "unevaluated"
+    }
+  },
+  "tier_s_streaming": {
+    "stream_throughput_mibs{scenario:download,tier:S}": {
+      "median_mibs": null,
+      "status": "unevaluated"
+    },
+    "stream_throughput_mibs{scenario:s3-multipart,tier:S}": {
+      "median_mibs": null,
+      "status": "unevaluated"
+    },
+    "stream_throughput_mibs{scenario:single-shot,tier:S}": {
+      "median_mibs": null,
+      "status": "unevaluated"
+    },
+    "stream_throughput_mibs{scenario:tus-upload,tier:S}": {
+      "median_mibs": null,
+      "status": "unevaluated"
+    }
+  }
+}

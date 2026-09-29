@@ -7,8 +7,12 @@
 # this image only carries the runtime, not a COPY of the source.
 FROM php:8.4-fpm-alpine
 
-RUN apk add --no-cache nginx gettext postgresql-dev oniguruma-dev \
-    && docker-php-ext-install pdo_pgsql mbstring
+RUN apk add --no-cache nginx gettext postgresql-dev oniguruma-dev python3 \
+    && docker-php-ext-install pdo_pgsql mbstring \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 COPY load/docker/nginx.conf /etc/nginx/nginx.conf
 COPY load/docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf.template

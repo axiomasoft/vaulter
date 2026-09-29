@@ -157,9 +157,11 @@ final class CreateDocumentNodeRequest extends VaulterFormRequest
      */
     private function descriptor(): FileDescriptor
     {
+        $name = $this->input('name');
+
         return FileDescriptor::make(
             nodeId: 0,
-            filename: $this->string('name')->toString(),
+            filename: is_string($name) ? $name : '',
             detectedMime: $this->requestedMime() ?? TipTapHandler::DOCUMENT_MIME,
         );
     }
@@ -170,8 +172,8 @@ final class CreateDocumentNodeRequest extends VaulterFormRequest
      */
     private function requestedMime(): ?string
     {
-        $mime = $this->string('mime')->toString();
+        $mime = $this->input('mime');
 
-        return $mime !== '' ? $mime : null;
+        return is_string($mime) && $mime !== '' ? $mime : null;
     }
 }

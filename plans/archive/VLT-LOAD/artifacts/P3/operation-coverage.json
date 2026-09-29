@@ -1,0 +1,298 @@
+{
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "operations": [
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/TusUploadController.php:67",
+      "op_id": "OP-01",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/TusUploadController.php:134",
+      "op_id": "OP-02",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/TusUploadController.php:106",
+      "op_id": "OP-03",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/TusUploadController.php:223",
+      "op_id": "OP-04",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/TusUploadController.php:180",
+      "op_id": "OP-05",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/S3MultipartController.php:56",
+      "op_id": "OP-06",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/Uploads/S3MultipartController.php:85",
+      "op_id": "OP-07",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/DownloadController.php:47",
+      "op_id": "OP-08",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/DownloadController.php:59",
+      "op_id": "OP-09",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/core/src/Http/Controllers/Sharing/PublicShareController.php:102",
+      "op_id": "OP-10",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/StorageController.php:55",
+      "op_id": "OP-11",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:81",
+      "op_id": "OP-12",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:109",
+      "op_id": "OP-13",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:307",
+      "op_id": "OP-14",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:325",
+      "op_id": "OP-15",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:158",
+      "op_id": "OP-16",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:178",
+      "op_id": "OP-17",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:142",
+      "op_id": "OP-18",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:214",
+      "op_id": "OP-19",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:227",
+      "op_id": "OP-20",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:246",
+      "op_id": "OP-21",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:277",
+      "op_id": "OP-22",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:289",
+      "op_id": "OP-23",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/drive/src/Http/Controllers/NodeController.php:265",
+      "op_id": "OP-24",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/core/src/Http/Controllers/Activity/ActivityController.php:44",
+      "op_id": "OP-25",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/core/src/Http/Controllers/Activity/ActivityController.php:62",
+      "op_id": "OP-26",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:68",
+      "op_id": "OP-27",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:90",
+      "op_id": "OP-28",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:121",
+      "op_id": "OP-29",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:106",
+      "op_id": "OP-30",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:140",
+      "op_id": "OP-31",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:157",
+      "op_id": "OP-32",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/DocumentNodeController.php:199",
+      "op_id": "OP-33",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/NodeCollaborationController.php:60",
+      "op_id": "OP-34",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/NodeCollaborationController.php:79",
+      "op_id": "OP-35",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/NodeCollaborationController.php:110",
+      "op_id": "OP-36",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/NodeCommentController.php:50",
+      "op_id": "OP-37",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/documents/src/Http/Controllers/NodeCommentController.php:57",
+      "op_id": "OP-38",
+      "sql_template_hashes": [],
+      "verdict": "db-explain-covered"
+    },
+    {
+      "code_anchor": "packages/core/src/Webhooks/OutboxRecorder.php:131",
+      "op_id": "OP-39",
+      "reason": "embedded outbox write path; observed only via correlated SQL templates",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/core/src/Console/RelayOutboxCommand.php:29",
+      "op_id": "OP-40",
+      "reason": "background command vaulter:relay-outbox not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/core/src/Jobs/Webhooks/DeliverWebhook.php:55",
+      "op_id": "OP-41",
+      "reason": "queued DeliverWebhook job; SQL visible only when queue worker runs",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/core/src/Console/RetryWebhooksCommand.php:29",
+      "op_id": "OP-42",
+      "reason": "background command vaulter:retry-webhooks not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/core/src/Console/PruneWebhooksCommand.php:40",
+      "op_id": "OP-43",
+      "reason": "background command vaulter:prune-webhooks not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/drive/src/Console/SweepUploadsCommand.php:32",
+      "op_id": "OP-44",
+      "reason": "background command vaulter:sweep-uploads not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/drive/src/Console/PurgeTrashCommand.php:46",
+      "op_id": "OP-45",
+      "reason": "background command vaulter:purge-trash not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/media/src/Console/GcBlobsCommand.php:26",
+      "op_id": "OP-46",
+      "reason": "background command vaulter:gc-blobs not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    },
+    {
+      "code_anchor": "packages/media/src/Console/ReconcileBlobsCommand.php:41",
+      "op_id": "OP-47",
+      "reason": "background command vaulter:reconcile-blobs not triggered in this run",
+      "sql_template_hashes": [],
+      "verdict": "no-db"
+    }
+  ],
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-operation-coverage/v1"
+}

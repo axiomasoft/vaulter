@@ -1,0 +1,19 @@
+{
+  "attempt": 1,
+  "cell_id": "overlap-control.duplicate-job.concurrent.same-delivery",
+  "delivery_id": "131628",
+  "dispatches": 2,
+  "evidence": "valid",
+  "http_receives": 2,
+  "plane": "overlap-control",
+  "queue_uuids": [
+    "d4cc49c7-0640-427f-9094-9a70b9122b80",
+    "9d83fac9-f33e-4c1a-a19d-53d84f34e4b4"
+  ],
+  "run_id": "aecd7112-8d5c-4fbc-a7ae-a4fe468ced57",
+  "slo": "not-a-product-slo",
+  "worker_pids": [
+    333551,
+    338251
+  ]
+}

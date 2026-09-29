@@ -1,0 +1,407 @@
+{
+  "actor_ids": [
+    13802250,
+    13802251,
+    13802252,
+    13802253,
+    13802254,
+    13802255,
+    13802256,
+    13802257,
+    13802258,
+    13802259,
+    13802260,
+    13802261,
+    13802262,
+    13802263,
+    13802264,
+    13802265,
+    13802266,
+    13802267,
+    13802268,
+    13802269,
+    13802270,
+    13802271,
+    13802272,
+    13802273,
+    13802274,
+    13802275,
+    13802276,
+    13802277,
+    13802278,
+    13802279,
+    13802280,
+    13802281
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.upload-tus.different-resource.n32",
+  "during_sample_count": 9,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13802274,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802273,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802263,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802271,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802264,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802272,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802278,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802276,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802270,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802279,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802265,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802277,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802275,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802261,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802260,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802262,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802267,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802268,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802269,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802259,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802266,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802281,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802280,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802255,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802258,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802256,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802257,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802253,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802254,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802252,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802251,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    },
+    {
+      "actor_id": 13802250,
+      "phase": "create",
+      "retry_after": "36",
+      "status": 429
+    }
+  ],
+  "n": 32,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13802274,
+      13802273,
+      13802263,
+      13802271,
+      13802264,
+      13802272,
+      13802278,
+      13802276,
+      13802270,
+      13802279,
+      13802265,
+      13802277,
+      13802275,
+      13802260,
+      13802261,
+      13802262,
+      13802267,
+      13802268,
+      13802269,
+      13802259,
+      13802266,
+      13802281,
+      13802280,
+      13802255,
+      13802258,
+      13802256,
+      13802257,
+      13802253,
+      13802254,
+      13802252,
+      13802251,
+      13802250
+    ],
+    "expected_actor_ids": [
+      13802250,
+      13802251,
+      13802252,
+      13802253,
+      13802254,
+      13802255,
+      13802256,
+      13802257,
+      13802258,
+      13802259,
+      13802260,
+      13802261,
+      13802262,
+      13802263,
+      13802264,
+      13802265,
+      13802266,
+      13802267,
+      13802268,
+      13802269,
+      13802270,
+      13802271,
+      13802272,
+      13802273,
+      13802274,
+      13802275,
+      13802276,
+      13802277,
+      13802278,
+      13802279,
+      13802280,
+      13802281
+    ],
+    "iterations": 32,
+    "observed_actor_ids": [
+      13802250,
+      13802251,
+      13802252,
+      13802253,
+      13802254,
+      13802255,
+      13802256,
+      13802257,
+      13802258,
+      13802259,
+      13802260,
+      13802261,
+      13802262,
+      13802263,
+      13802264,
+      13802265,
+      13802266,
+      13802267,
+      13802268,
+      13802269,
+      13802270,
+      13802271,
+      13802272,
+      13802273,
+      13802274,
+      13802275,
+      13802276,
+      13802277,
+      13802278,
+      13802279,
+      13802280,
+      13802281
+    ],
+    "started": [
+      13802281,
+      13802250,
+      13802251,
+      13802252,
+      13802253,
+      13802254,
+      13802255,
+      13802256,
+      13802257,
+      13802258,
+      13802259,
+      13802260,
+      13802261,
+      13802262,
+      13802264,
+      13802263,
+      13802265,
+      13802266,
+      13802267,
+      13802268,
+      13802269,
+      13802270,
+      13802271,
+      13802272,
+      13802273,
+      13802274,
+      13802275,
+      13802276,
+      13802277,
+      13802278,
+      13802279,
+      13802280
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/317C68E8",
+    "monotonic_ns": 84651473940563
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/317BCC58",
+    "monotonic_ns": 84646997939598
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "different-resource",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 32,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "upload-tus",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.5939219090068946,
+    "pgbouncer_wait_seconds": null
+  }
+}

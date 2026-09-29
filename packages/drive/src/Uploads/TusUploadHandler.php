@@ -6,13 +6,16 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\OffsetMismatchException;
+use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Support\Config;
+use Vaulter\Support\LoadTier;
 
 /**
  * The tus.io CORE protocol handler (§2.8 / D16 / M3a). It implements the three core
@@ -38,6 +41,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
     public function __construct(
         private StagedUpload $staged,
         private UploadSessionStoreRepository $sessions,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -82,6 +86,31 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
      */
     public function patch(UploadSession $session, mixed $chunk, int $offset): array
     {
+        try {
+            return $this->metrics->timing(
+                name: 'vaulter_upload_chunk_duration_seconds',
+                operation: fn (): array => $this->patchChunk(session: $session, chunk: $chunk, offset: $offset),
+                labels: [
+                    'protocol' => 'tus',
+                    'tier' => LoadTier::label(),
+                ],
+            );
+        } catch (UploadConflictException $exception) {
+            $this->metrics->counter(
+                name: 'vaulter_upload_conflict_total',
+                labels: ['protocol' => 'tus'],
+            );
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  resource                           $chunk
+     * @return array{offset: int, complete: bool}
+     */
+    private function patchChunk(UploadSession $session, mixed $chunk, int $offset): array
+    {
         // The whole read-modify-write of received_bytes runs inside ONE transaction
         // that takes a row lock on the session as its FIRST statement (F-P1.4-01 /
         // N3). Without it two concurrent PATCH read the same server offset, both pass
@@ -120,10 +149,24 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
                 // tus 409 Conflict: the client's Upload-Offset does not match ours. The
                 // exception self-renders 409 + the authoritative Upload-Offset (F-P1.4-02)
                 // so the client re-reads HEAD and resumes — never a bare 302/422.
+                $this->metrics->counter(
+                    name: 'vaulter_upload_conflict_total',
+                    labels: ['protocol' => 'tus'],
+                );
+
                 throw new OffsetMismatchException($serverOffset);
             }
 
             $newSize = $this->staged->append(session: $locked, chunk: $chunk, offset: $offset);
+            $acceptedBytes = $newSize - $serverOffset;
+
+            if ($acceptedBytes > 0) {
+                $this->metrics->counter(
+                    name: 'vaulter_upload_bytes_total',
+                    amount: $acceptedBytes,
+                    labels: ['protocol' => 'tus'],
+                );
+            }
 
             $this->assertWithinMaxBytes(session: $locked, size: $newSize);
 

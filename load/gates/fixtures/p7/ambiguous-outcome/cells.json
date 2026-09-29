@@ -1,0 +1,17 @@
+[
+  {
+    "schema": "p7-cell/v1",
+    "run_id": "run-complete",
+    "cell_id": "product-realistic.tus-patch.503",
+    "attempt": 1,
+    "plane": "product-realistic",
+    "config_fingerprint": "ef13ea95198263e0a19e0fba9a62df9db5373bb2187c33c01c04ed1be23e9a84",
+    "availability": "up",
+    "http_outcome": "rejected",
+    "durable_state": "rejected",
+    "t_detect_ns": 100,
+    "t_restore_ns": 200,
+    "t_converge_ns": 300,
+    "rto_verdict": false
+  }
+]

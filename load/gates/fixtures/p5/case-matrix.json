@@ -1,0 +1,717 @@
+{
+  "schema_version": "p5-case-matrix/v1",
+  "cells": [
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n1",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n8",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n32",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-tus.different-resource.n200",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n1",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n8",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n32",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.upload-s3.different-resource.n200",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "within-5pct",
+      "expected_409": "budgeted-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n8",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n32",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.cas-lock.normal-key.n200",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n1",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n8",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n32",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.subtree-move.disjoint-tree.n200",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n1",
+      "http_5xx_success": false,
+      "op": "OP-34",
+      "slo": "SLO-28",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n8",
+      "http_5xx_success": false,
+      "op": "OP-34",
+      "slo": "SLO-28",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n32",
+      "http_5xx_success": false,
+      "op": "OP-34",
+      "slo": "SLO-28",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.collab-issuance.issuance-burst.n200",
+      "http_5xx_success": false,
+      "op": "OP-34",
+      "slo": "SLO-28",
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n1",
+      "http_5xx_success": false,
+      "op": "OP-02+OP-44",
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n8",
+      "http_5xx_success": false,
+      "op": "OP-02+OP-44",
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n32",
+      "http_5xx_success": false,
+      "op": "OP-02+OP-44",
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-expected",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n1",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n8",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n32",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-tus.same-resource.n200",
+      "http_5xx_success": false,
+      "op": "OP-02",
+      "slo": "SLO-40",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n1",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n8",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n32",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.upload-s3.same-resource.n200",
+      "http_5xx_success": false,
+      "op": "OP-06",
+      "slo": "SLO-43",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "protocol-owner-plus-conflicts",
+      "progress_owners": 1,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        204,
+        409
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-protocol",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n8",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-protocol",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n32",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-protocol",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.cas-lock.int4-collision.n200",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "section-0.4-5xx",
+      "expected_409": "not-protocol",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n1",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "not-compared-to-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n8",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "not-compared-to-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n32",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "not-compared-to-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "product-worst-case.subtree-move.overlapping-tree.n200",
+      "http_5xx_success": false,
+      "op": "OP-20",
+      "slo": "SLO-13",
+      "error_budget": "excluded-from-5pct",
+      "expected_409": "not-compared-to-5pct",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": [
+        200
+      ]
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.xact-release.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n8",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n32",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n200",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.try-lock-nowait.n201",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n8",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.advisory-primitive.blocking-wait.n32",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n1",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n8",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n32",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n200",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-queue.n201",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "primitive-control.pgbouncer-queue.pool-timeout.n200",
+      "http_5xx_success": false,
+      "op": null,
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1",
+      "http_5xx_success": false,
+      "op": "OP-44",
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    },
+    {
+      "cell_id": "dirty-cardinality-probe.sweeper-overlap.dirty-1m.n1",
+      "http_5xx_success": false,
+      "op": "OP-44",
+      "slo": null,
+      "error_budget": "not-a-product-slo",
+      "expected_409": "not-applicable",
+      "progress_owners": null,
+      "tier_l_claim": false,
+      "expected_statuses": []
+    }
+  ],
+  "contract_cell_ids": [
+    "product-realistic.upload-tus.different-resource.n1",
+    "product-realistic.upload-s3.different-resource.n1",
+    "product-realistic.cas-lock.normal-key.n1",
+    "product-realistic.subtree-move.disjoint-tree.n1",
+    "product-realistic.collab-issuance.issuance-burst.n1",
+    "product-realistic.sweeper-overlap.live-patch-overlap.n1",
+    "primitive-control.advisory-primitive.xact-release.n1",
+    "primitive-control.pgbouncer-queue.pool-queue.n1"
+  ]
+}

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\ListableContentStore;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
@@ -73,6 +74,7 @@ final readonly class BlobReconciler
         private BlobStoreRepository $blobs,
         private FileVersionBlobStoreRepository $edges,
         private BlobLock $lock,
+        private MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -87,22 +89,31 @@ final readonly class BlobReconciler
         $changed = 0;
         $dangling = [];
 
-        foreach ($this->blobModel()::query()->cursor() as $blob) {
-            /** @var Blob $blob */
-            $reconciled++;
+        $this->metrics->timing(
+            name: 'vaulter_reconcile_duration_seconds',
+            operation: function () use (&$reconciled, &$changed, &$dangling): void {
+                foreach ($this->blobModel()::query()->cursor() as $blob) {
+                    /** @var Blob $blob */
+                    $reconciled++;
 
-            $count = $this->edges->countEdges($blob);
+                    $count = $this->edges->countEdges($blob);
 
-            if ($blob->ref_count !== $count) {
-                $this->blobs->setRefCount(blob: $blob, count: $count);
-                $changed++;
-            }
+                    if ($blob->ref_count !== $count) {
+                        $this->blobs->setRefCount(blob: $blob, count: $count);
+                        $changed++;
+                    }
 
-            // A committed blob must have its bytes on disk; a missing object is a
-            // dangling row the operator should investigate (re-upload or purge).
-            if ($blob->status === BlobStatus::Committed && !$this->content->exists($blob->storage_key, $blob->disk)) {
-                $dangling[] = Identity::stringify($blob->getKey());
-            }
+                    // A committed blob must have its bytes on disk; a missing object is a
+                    // dangling row the operator should investigate (re-upload or purge).
+                    if ($blob->status === BlobStatus::Committed && !$this->content->exists($blob->storage_key, $blob->disk)) {
+                        $dangling[] = Identity::stringify($blob->getKey());
+                    }
+                }
+            },
+        );
+
+        if ($reconciled > 0) {
+            $this->metrics->counter(name: 'vaulter_reconcile_objects_total', amount: $reconciled);
         }
 
         return [

@@ -2,7 +2,7 @@
 
 The Node service that powers Vaulter's realtime **document collaboration** (Yjs/TipTap).
 It is designed to be consumed as an **external, reusable image** — one published image
-(`ghcr.io/axioma-studio/vaulter-hocuspocus`) serves many projects. You **reference** it and
+(`ghcr.io/axiomasoft/vaulter-hocuspocus`) serves many projects. You **reference** it and
 configure it entirely through environment variables; you never copy its source into your app.
 
 > **This is the collaboration backend.** Laravel Reverb is a general broadcast bus

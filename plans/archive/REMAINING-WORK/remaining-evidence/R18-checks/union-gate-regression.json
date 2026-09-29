@@ -1,0 +1,9 @@
+{
+    "ids": 450,
+    "killed_union": 429,
+    "escaped_union": 21,
+    "only_first_driver": 20,
+    "only_second_driver": 5,
+    "score_percent": 95.33,
+    "minimum_percent": 96
+}

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
@@ -93,6 +94,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
         app(BlobLock::class),
         app(BlobStoreRepository::class),
         app(FileVersionBlobStoreRepository::class),
+        app(MetricsRecorder::class),
     );
 
     // Pre-fix: the first 40001 propagates and aborts the pass. Post-fix: the unit is

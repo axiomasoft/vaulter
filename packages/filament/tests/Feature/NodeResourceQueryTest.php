@@ -83,6 +83,26 @@ it('flips between live and trashed WITHIN the accessible set via the Trashed fil
         ->and($trashedIds)->not->toContain($live->getKey());
 });
 
+it('keeps force-deleted tombstones out of the resource table', function (): void {
+    $admin = DriveBuilder::user();
+    $this->actingAs($admin);
+
+    $storage = DriveBuilder::storage();
+    $live = DriveBuilder::folder($storage, 'Live');
+    $deleted = DriveBuilder::folder($storage, 'Deleted');
+
+    DriveBuilder::grant($live, $admin);
+    DriveBuilder::grant($deleted, $admin);
+
+    Vaulter::forStorage($storage)->trash(node: $deleted, actorId: $admin->getKey());
+    Vaulter::forStorage($storage)->forceDelete(node: $deleted, actorId: $admin->getKey());
+
+    $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
+
+    expect($ids)->toContain($live->getKey())
+        ->and($ids)->not->toContain($deleted->getKey());
+});
+
 it('constrains a raw builder to the item anchor only via the repository seam', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);

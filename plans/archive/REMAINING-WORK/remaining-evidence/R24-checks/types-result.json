@@ -1,0 +1,16 @@
+{
+  "name": "types-512m",
+  "command": [
+    "composer",
+    "test:types",
+    "--",
+    "--path=packages/core/src",
+    "--compact"
+  ],
+  "environment": {
+    "PHP_INI_SCAN_DIR": "temporary ini overlay: memory_limit=512M"
+  },
+  "exit": 1,
+  "elapsed_seconds": 2.991,
+  "log": "types-512m.log.gz"
+}

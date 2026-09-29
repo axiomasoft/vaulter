@@ -1,0 +1,134 @@
+[
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 151,
+    "mutator": "BooleanOrToBooleanAnd",
+    "id": "8f499b7abffd28ea"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 163,
+    "mutator": "TrueToFalse",
+    "id": "e8b2f9c7ad2239aa"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 214,
+    "mutator": "NotIdenticalToIdentical",
+    "id": "9faa9e858d9b04cf"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 223,
+    "mutator": "TrueToFalse",
+    "id": "bb8eaee5ea2798c9"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 255,
+    "mutator": "SmallerOrEqualToSmaller",
+    "id": "44a1dbdb2f9aa7d2"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 255,
+    "mutator": "BooleanAndToBooleanOr",
+    "id": "40822817b9863ff3"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 255,
+    "mutator": "DecrementInteger",
+    "id": "3800ea8b2cbf6818"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 281,
+    "mutator": "DecrementInteger",
+    "id": "c022d896fec3b876"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 281,
+    "mutator": "IncrementInteger",
+    "id": "a6e848beebc8bcfa"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 287,
+    "mutator": "PostIncrementToPostDecrement",
+    "id": "aa0655b676a65632"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 289,
+    "mutator": "GreaterOrEqualToGreater",
+    "id": "5ab6f3f96022c738"
+  },
+  {
+    "path": "src/Cas/BlobGarbageCollector.php",
+    "line": 289,
+    "mutator": "BooleanOrToBooleanAnd",
+    "id": "9358a4f5bc2c315d"
+  },
+  {
+    "path": "src/Cas/BlobReconciler.php",
+    "line": 275,
+    "mutator": "TrueToFalse",
+    "id": "8bfe72ee5b046bae"
+  },
+  {
+    "path": "src/Cas/Sha256ContentStore.php",
+    "line": 46,
+    "mutator": "FalseToTrue",
+    "id": "7a11d411d7527bc4"
+  },
+  {
+    "path": "src/Cas/Sha256ContentStore.php",
+    "line": 62,
+    "mutator": "FalseToTrue",
+    "id": "43cc9f0d4f41a795"
+  },
+  {
+    "path": "src/Cas/Sha256ContentStore.php",
+    "line": 71,
+    "mutator": "RemoveFunctionCall",
+    "id": "5236212cf9a8e592"
+  },
+  {
+    "path": "src/Cas/Sha256ContentStore.php",
+    "line": 176,
+    "mutator": "FalseToTrue",
+    "id": "2381b9fc55d25671"
+  },
+  {
+    "path": "src/Console/ReconcileBlobsCommand.php",
+    "line": 76,
+    "mutator": "RemoveBooleanCast",
+    "id": "099f66fb6f81b02d"
+  },
+  {
+    "path": "src/Console/ReconcileBlobsCommand.php",
+    "line": 94,
+    "mutator": "BooleanAndToBooleanOr",
+    "id": "6d0edd1ef1d1505c"
+  },
+  {
+    "path": "src/Console/ReconcileBlobsCommand.php",
+    "line": 94,
+    "mutator": "RemoveNot",
+    "id": "a92566a4d664f86c"
+  },
+  {
+    "path": "src/Console/ReconcileBlobsCommand.php",
+    "line": 143,
+    "mutator": "DecrementInteger",
+    "id": "acb76cfdfa81824c"
+  },
+  {
+    "path": "src/Console/GcBlobsCommand.php",
+    "line": 50,
+    "mutator": "DecrementInteger",
+    "id": "e97cab99ff3ed028"
+  }
+]

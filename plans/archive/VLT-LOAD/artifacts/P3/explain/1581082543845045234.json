@@ -1,0 +1,23 @@
+{
+  "code_anchors": [],
+  "command": "select * from \"v_node_grants\" where \"node_id\" in ($1, $2) and ((\"subject_type\" = $3 and \"subject_id\" = $4)) and (\"expires_at\" is null or \"expires_at\" > $5) and \"v_node_grants\".\"deleted_at\" is null",
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "disposable_db": true,
+  "execute_args": [
+    "12::bigint",
+    "NULL::bigint",
+    "1::bigint",
+    "1::bigint",
+    "NULL::bigint"
+  ],
+  "op_ids": [],
+  "parameter_class": "top20",
+  "plan": null,
+  "query_fingerprint": "1581082543845045234",
+  "rejection_reason": "PSQL: psql:<stdin>:1: ERROR:  parameter $5 of type bigint cannot be coerced to the expected type timestamp without time zone\nLINE 1: ...n(12::bigint, NULL::bigint, 1::bigint, 1::bigint, NULL::bigi...\n                                                             ^\nHINT:  You will need to rewrite or cast the expression.",
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-explain-plan/v1",
+  "settings_fingerprint": "b6583d8ab3b85206",
+  "status": "rejected",
+  "summary": {}
+}

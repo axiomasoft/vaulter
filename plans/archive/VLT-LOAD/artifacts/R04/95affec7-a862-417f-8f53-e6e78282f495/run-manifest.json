@@ -1,0 +1,23 @@
+{
+  "created_at": "2026-09-28T16:37:16.602026+00:00",
+  "dependency": "R03 16c owner-deferred; no valid current-source qualified evidence",
+  "final_checks": "offline-checks.json",
+  "historical_hashes_unchanged": true,
+  "historical_p3_files": {
+    "pgss-top20.json": "a45dff58243ed47f018e2e1c58cda6b0ae529b36a440c2db1391b5d840ac7631",
+    "query-trace.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-manifest.json": "3f2eb7e59784a5f1ecd22afd42c2631f17f36d311f003c329be4341c850e3576"
+  },
+  "historical_trace_bytes": 0,
+  "item": "R04",
+  "kind": "readiness-and-offline-code-validation",
+  "live_started": false,
+  "owner_clarification": "resolved: no live stand, maximize code and tests",
+  "product_proof": "unevaluated",
+  "run_id": "95affec7-a862-417f-8f53-e6e78282f495",
+  "scope_source_hashes": "scope-source-sha256.json",
+  "source_digest": "94f282f338ac7f200ea98486be6e5642dcf6b80cab3d930d2bb0cb962ea869a9",
+  "source_revision": "15170d5c02cb4bfe49fe587cb00db49faada5a50",
+  "status": "CODE_TESTS_VERIFIED_LIVE_DEFERRED",
+  "step": "17"
+}

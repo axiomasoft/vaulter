@@ -1,0 +1,24 @@
+{
+  "dataset_id": "vlt-load-p4-matrix",
+  "env_fingerprint": "deadbeefcafebabe",
+  "matrix": {
+    "attempts_total": 45,
+    "cells": 15,
+    "repetitions_per_cell": 3,
+    "size_order": [
+      "5m",
+      "500m",
+      "5g"
+    ]
+  },
+  "mode": "contract",
+  "preflight": {
+    "contract": true,
+    "p8_7_artifacts": "plans/VLT-LOAD/artifacts/P8.7"
+  },
+  "published_at": "2026-09-22T06:05:21Z",
+  "run_id": "00000000-0000-4000-8000-00000000p403",
+  "schema_version": "p4-memory-matrix-run/v1",
+  "stable_digest": "5ddd315affea0b1801e35b24f204e440ef52d78402e560908edc16b5d8261ad8",
+  "tier": "S"
+}

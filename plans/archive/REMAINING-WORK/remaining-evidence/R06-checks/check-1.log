@@ -1,0 +1,6 @@
+p5-matrix cell dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1 repeats=3
+........................................
+----------------------------------------------------------------------
+Ran 40 tests in 0.194s
+
+OK

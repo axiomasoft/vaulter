@@ -1,0 +1,18 @@
+{
+  "run_id": "aecd7112-8d5c-4fbc-a7ae-a4fe468ced57",
+  "accepted": false,
+  "reason": "P6 product metrics did not reach Prometheus",
+  "disposition": "Rejected without rewriting raw evidence. The two queue workers predated the B02-01 recorder change and emitted zero delivery metric samples while CLI relay/retry processes emitted into the active run.",
+  "observed_metrics": {
+    "vaulter_outbox_relayed_total": 57506,
+    "vaulter_outbox_relay_duration_seconds_count": 2012,
+    "vaulter_outbox_endpoints_scanned_total": 126626,
+    "vaulter_webhook_delivered_total": 0,
+    "vaulter_webhook_delivery_duration_seconds_count": 0,
+    "vaulter_webhook_queue_wait_seconds_count": 0,
+    "vaulter_webhook_retry_tick_seconds_count": 10,
+    "vaulter_webhook_retry_lockset_rows_count": 10,
+    "vaulter_webhook_retry_lockset_rows_sum": 7005
+  },
+  "worker_container_started_at": "2026-09-24T06:07:51.269943764Z"
+}

@@ -1,0 +1,84 @@
+{
+  "scope": "R11-B14-03 load-only code and controlled offline peers",
+  "base_revision": "85c0afd",
+  "synthetic_run_ids": [
+    "offline-ack",
+    "offline-held",
+    "offline-window",
+    "offline-shell",
+    "offline-evidence",
+    "offline-original"
+  ],
+  "source_sha256": {
+    "load/README.md": "791b36403336c2be57f868c900726dda3e5d65cc72244e59ab0f5609bda89885",
+    "load/app/Console/ChaosOperationCommand.php": "c28493d2f6faea787a6c927143bd1fa17e20931a7f9761256e73ba8a9d1129b4",
+    "load/chaos/README.md": "f099b7c6ce2199e2e657f397f9eb5490857c80690c3dc34a93c4519e1a0d374d",
+    "load/chaos/pg-failover.sh": "dc9b07b569f2f72154d4b54d9ab057a20a59577aa89be35300ef96c63013f3de",
+    "load/chaos/s3-fault-proxy.py": "0df18e4546060c9ca0b6fcba3bf427c10b8d20471ad9c754976a7126bedb7ee9",
+    "load/gates/p7_live_matrix.py": "f04c4e4a9cb2fab6ed7b7a511bf1e3dc7ed052c4cbb59044d9ef4808226f6bd0",
+    "load/gates/p7_lock_holder.py": "eb42e3e53c91ab1516ddfcc93f2be44e0dcd43318abafa6a9eb792becbff0edf",
+    "load/gates/test_p7_evidence.py": "b08558e331e395f7c0b85a18c9f9926aaf03ae6548e7ac6e229a84b733c70a10",
+    "load/gates/test_p7_fault_barriers.py": "fd31ab39675adc4cc39546566fa5b5df3ca5f3c37d5523d714ced9311f3d413a",
+    "load/gates/fixtures/peers/lock-holder.php": "7a499ad70101e940fbbb1e39fc57b32d232558a2b755f83020b3bef9c90eac61",
+    "load/scripts/p7-injectors.sh": "9016f7fe3d87b264bd8716f64c6e72804fa852d1ebbabdd3b2da4e52dddebd92"
+  },
+  "source_rollup_sha256": "1607d628f98f4b1c91c569d5fc7d40b230180c1b701f8505721aa9af54508578",
+  "logs_sha256": {
+    "baseline-p7-tests.log": "2e1614d96dc72d3b06754187446a695fca20c7ad254e9ef93ac7f96e1979b5a4",
+    "dry-run.log": "d4b906d1cfe807c4a77e65078402ea92d69ff581704e79165f34c201bfeb910e",
+    "historical-rejection.log": "6776697edc2ae2f4555f77efaba98306fdd86294c57d7ef904f06d4aaa8c87d1",
+    "original-source-controls.json": "3d87495987a0d3267a8bfc673e68490d0bee16298a8a65dc441272b8ab6aeaa9",
+    "p7-tests.log": "6100c4e5f77d5f2f2fccf98da5636c993d8fe77fd0c5917dd5587f5d95d0a26d",
+    "readback.py": "a8ae9afe07d42e04d862d77ce1bee9cc4440fbda9e68d5c800fa29726c52074f",
+    "syntax.json": "38371ae80848190c5d9d68eab1464433249426e5868ec729a3322ec9cd697c28"
+  },
+  "historical_P7_before_and_after": "b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62",
+  "checks": {
+    "baseline_p7_suite": {
+      "exit": 0,
+      "tests": 80
+    },
+    "p7_suite": {
+      "exit": 0,
+      "tests": 111,
+      "new_tests": 31
+    },
+    "original_source_controls": {
+      "exit": 0,
+      "verdict": "expected RED",
+      "unfaulted_ack_accepted": true,
+      "holder_started_after_fault": true,
+      "wrong_reported_target": true
+    },
+    "current_unfaulted_ack": {
+      "exit": 0,
+      "verdict": "REJECTED"
+    },
+    "historical_verifier": {
+      "exit": 1,
+      "verdict": "expected rejection"
+    },
+    "dry_run": {
+      "exit": 0,
+      "cells": 51
+    },
+    "syntax": {
+      "exit": 0
+    },
+    "diff_check": {
+      "exit": 0
+    },
+    "historical_byte_identity": {
+      "exit": 0,
+      "sha256": "b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62"
+    }
+  },
+  "not_run": [
+    "live stand",
+    "Docker runtime faults or actual promotion",
+    "PHP package/PostgreSQL suites",
+    "chaos/load/SLO measurements",
+    "cold mutation"
+  ],
+  "review": "focused self-review; independent B17 offline review remains queued"
+}

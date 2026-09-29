@@ -1,0 +1,42 @@
+{
+  "final-pressured": {
+    "checksum_match": true,
+    "container_state": "oom_killed=false exit=0 started=2026-09-25T04:37:05.36521514Z finished=2026-09-25T04:37:32.298850498Z",
+    "events_high_delta": 0,
+    "events_low_delta": 0,
+    "events_max_delta": 14129,
+    "max_cgroup_anon": 51470336,
+    "max_cgroup_current": 2147479552,
+    "max_cgroup_file": 2098302976,
+    "max_cgroup_peak": 2147483648,
+    "max_pss_anon_kib": 37152,
+    "max_pss_file_kib": 11867,
+    "max_vm_hwm_kib": 50676,
+    "max_vm_rss_kib": 50676,
+    "oom_delta": 0,
+    "oom_kill_delta": 0,
+    "php_peak_bytes": 35651584,
+    "samples": 83,
+    "stage_duration_seconds": 15.188156413
+  },
+  "final-serial": {
+    "checksum_match": true,
+    "container_state": "oom_killed=false exit=0 started=2026-09-25T04:36:22.228434746Z finished=2026-09-25T04:36:47.608009075Z",
+    "events_high_delta": 0,
+    "events_low_delta": 0,
+    "events_max_delta": 13462,
+    "max_cgroup_anon": 51384320,
+    "max_cgroup_current": 2147483648,
+    "max_cgroup_file": 2098909184,
+    "max_cgroup_peak": 2147483648,
+    "max_pss_anon_kib": 37152,
+    "max_pss_file_kib": 11922,
+    "max_vm_hwm_kib": 50696,
+    "max_vm_rss_kib": 50696,
+    "oom_delta": 0,
+    "oom_kill_delta": 0,
+    "php_peak_bytes": 35651584,
+    "samples": 89,
+    "stage_duration_seconds": 13.963382671
+  }
+}

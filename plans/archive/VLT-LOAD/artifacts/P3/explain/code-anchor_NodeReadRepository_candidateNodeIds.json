@@ -1,0 +1,24 @@
+{
+  "code_anchors": [
+    "packages/core/src/Repositories/Drive/NodeReadRepository.php:491"
+  ],
+  "command": "WITH RECURSIVE laravel_cte AS ((SELECT v_nodes.*, 1 AS depth, ARRAY[id] AS path FROM v_nodes WHERE v_nodes.parent_id = 12 AND v_nodes.parent_id IS NOT NULL) UNION ALL (SELECT v_nodes.*, depth + 1, path || v_nodes.id FROM v_nodes INNER JOIN laravel_cte ON laravel_cte.id = v_nodes.parent_id WHERE NOT (v_nodes.id = ANY(path)) AND depth < 50) SELECT id FROM laravel_cte WHERE laravel_cte.deleted_at IS NULL",
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "disposable_db": true,
+  "execute_args": [],
+  "op_ids": [
+    "OP-12",
+    "OP-13",
+    "OP-14",
+    "OP-15"
+  ],
+  "parameter_class": "many_grant_median",
+  "plan": null,
+  "query_fingerprint": "code-anchor:NodeReadRepository::candidateNodeIds",
+  "rejection_reason": "PSQL: psql:<stdin>:1: ERROR:  syntax error at or near \"SELECT\"\nLINE 1: ...HERE NOT (v_nodes.id = ANY(path)) AND depth < 50) SELECT id ...\n                                                             ^",
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-explain-plan/v1",
+  "settings_fingerprint": "b6583d8ab3b85206",
+  "status": "rejected",
+  "summary": {}
+}

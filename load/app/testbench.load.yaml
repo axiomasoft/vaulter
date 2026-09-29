@@ -20,3 +20,9 @@ env:
   # (config(vaulter.collaboration.drivers.hocuspocus.secret)) before a single k6
   # request runs. A fixed dev-only value — this stand never talks to a real hub.
   - VAULTER_COLLAB_SECRET="vlt-load-dev-collab-secret-not-for-production"
+  - QUEUE_CONNECTION="redis"
+  - CACHE_STORE="redis"
+  - REDIS_HOST="redis"
+  - REDIS_PORT="6379"
+  - REDIS_CLIENT="phpredis"
+  - VAULTER_OBSERVABILITY_ENABLED="true"

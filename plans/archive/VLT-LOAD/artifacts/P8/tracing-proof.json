@@ -1,0 +1,16 @@
+{
+  "forbidden_attribute_scan": "pass",
+  "manifest_sha256": "346c1abdff477da501693e5c1ef581ee0022c547dbc0889c2ecaff2ab5fadbea",
+  "mode": "nonempty-candidates",
+  "otel": {
+    "api": "1.10.0",
+    "sdk": "1.15.0"
+  },
+  "package_otel_dependencies": [],
+  "schema_version": "tracing-proof/v1",
+  "selected": [
+    "webhook.pipeline",
+    "upload.sweep"
+  ],
+  "verdict": "green"
+}

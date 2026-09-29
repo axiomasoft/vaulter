@@ -1,0 +1,22 @@
+{
+  "attempt": 1,
+  "cell_id": "overlap-control.duplicate-job.serial.same-delivery",
+  "delivery_id": "172034",
+  "dispatches": 2,
+  "evidence": "valid",
+  "http_receives": 1,
+  "ledger_repair": "uuids taken from processing/processed ledger; queued events fire in the dispatcher, not the worker",
+  "plane": "overlap-control",
+  "queue_uuids": [
+    "e80a69f9-9fc0-4621-92fb-b2733da0b8eb",
+    "5e8a3128-7815-4ec9-b575-9078561e9500",
+    "6ce18f87-5f35-45e2-bb78-4d9a91830b41",
+    "a3317dda-f028-4ea3-ad03-bd80694739e8"
+  ],
+  "run_id": "59dfb7e1-bd32-4c87-ab6f-eb8f409607af",
+  "slo": "not-a-product-slo",
+  "worker_pids": [
+    1231461,
+    1245632
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-worst-case.upload-tus.same-resource.n32",
+  "http_5xx": 0,
+  "n": 32,
+  "plane": "product-worst-case",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E83881B0",
+    "monotonic_ns": 481106783180091
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:1/E83881B0",
+    "monotonic_ns": 481045674880723
+  },
+  "run_id": "2aeca12f-6180-4595-8466-31397c4ed15d",
+  "schema": "p5-cell/v1",
+  "shape": "same-resource",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 1,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "upload-tus",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 0,
+    "pgbouncer_wait_seconds": null
+  }
+}

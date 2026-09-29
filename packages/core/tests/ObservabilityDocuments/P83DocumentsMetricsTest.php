@@ -1,0 +1,83 @@
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Documents\Actions\Collaboration\PersistYjsSnapshotAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Collaboration\CollaborationSessionService;
+use Vaulter\Documents\Data\Collaboration\PersistYjsSnapshotData;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Support\LoadTier;
+use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Fixtures\TestUser;
+
+function p83DocumentNode(): Node
+{
+    $drive = DocumentTestHelpers::drive();
+
+    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+        storage: $drive->storage(),
+        name: 'Metrics doc',
+        content: DocumentTestHelpers::content('Body'),
+        parent: $drive->root(),
+    ));
+}
+
+beforeEach(function (): void {
+    config()->set('vaulter.observability.enabled', true);
+    config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
+    $this->app->forgetInstance(MetricsRecorder::class);
+});
+
+it('records vaulter_export_duration_seconds', function (): void {
+    LoadTier::set('L');
+
+    app(NodeExportService::class)->export(p83DocumentNode(), 'html');
+
+    app(MetricsRecorder::class)->assertHistogram(
+        name: 'vaulter_export_duration_seconds',
+        labels: ['format' => 'html', 'tier' => 'L'],
+    );
+});
+
+it('records vaulter_collab_session_issued_total', function (): void {
+    config()->set('vaulter.collaboration.driver', 'reverb');
+
+    $node = p83DocumentNode();
+    $actor = new TestUser;
+    $actor->forceFill(['id' => 1]);
+    $actor->exists = true;
+    AccessTestHelpers::grant($node, GrantLevel::Owner, subjectId: 1);
+
+    app(CollaborationSessionService::class)->issue($actor, $node);
+
+    app(MetricsRecorder::class)->assertCounter(
+        name: 'vaulter_collab_session_issued_total',
+        labels: [
+            'driver' => config('vaulter.collaboration.driver'),
+            'ability' => Ability::Edit->value,
+        ],
+    );
+});
+
+it('records vaulter_collab_snapshot_duration_seconds', function (): void {
+    LoadTier::set('S');
+
+    app(PersistYjsSnapshotAction::class)->execute(new PersistYjsSnapshotData(
+        node: p83DocumentNode(),
+        yjsState: 'binary',
+        actorId: 1,
+    ));
+
+    app(MetricsRecorder::class)->assertHistogram(
+        name: 'vaulter_collab_snapshot_duration_seconds',
+        labels: ['tier' => 'S'],
+    );
+});

@@ -1,0 +1,11 @@
+load/gates/p7_chaos.py: compile() OK; no bytecode
+load/gates/p7_live_matrix.py: compile() OK; no bytecode
+load/gates/p7_product_ops.py: compile() OK; no bytecode
+load/gates/p7_object_inventory.py: compile() OK; no bytecode
+load/gates/test_p7_evidence.py: compile() OK; no bytecode
+load/gates/test_p7_integrity_contract.py: compile() OK; no bytecode
+load/gates/test_p7_object_inventory.py: compile() OK; no bytecode
+load/gates/test_p7_product_ops.py: compile() OK; no bytecode
+plans/remaining-evidence/R11-B14-05-checks/readback.py: compile() OK; no bytecode
+No syntax errors detected in load/app/LoadServiceProvider.php
+sh -n: 3 inline collector scripts passed; no commands executed

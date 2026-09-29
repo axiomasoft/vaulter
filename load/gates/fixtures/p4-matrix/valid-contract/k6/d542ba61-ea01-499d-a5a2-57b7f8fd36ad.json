@@ -1,0 +1,10 @@
+{
+  "attempt_id": "d542ba61-ea01-499d-a5a2-57b7f8fd36ad",
+  "cell_id": "cas_stage_probe/500m",
+  "dry_run": false,
+  "prometheus_rw": {
+    "job": "vaulter-sut",
+    "linked": true
+  },
+  "repetition": 2
+}

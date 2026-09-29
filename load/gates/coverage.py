@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from _slo_table import KNOWN_RED_IDS, parse_rows, prometheus_metric_names  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SLO_GATES_MD = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'slo-gates.md'
+SLO_GATES_MD = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'slo-gates.md'
 THRESHOLDS_JS = Path(__file__).parent / 'thresholds.js'
 
 # SLO-40..54's "A" row — the only rows a real k6 options.threshold covers

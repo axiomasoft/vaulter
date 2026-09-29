@@ -1,0 +1,35 @@
+services:
+  seed:
+    image: vaulter-load-app:latest
+    working_dir: /app
+    entrypoint:
+    - php
+    volumes:
+    - /home/vostrikov/projects/packages/vaulter:/app
+    - /home/vostrikov/projects/packages/vaulter/load/app/testbench.load.yaml:/app/testbench.yaml:ro
+    environment:
+      TIER: S
+      DB_CONNECTION: pgsql
+      DB_HOST: pgbouncer
+      DB_PORT: '6432'
+      DB_DATABASE: vaulter_r03_4f565edf_s
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: vaulter
+      MINIO_ROOT_PASSWORD: vaulter-load-secret
+      MINIO_BUCKET: vaulter-r03-4f565edf-s
+      MINIO_REGION: us-east-1
+      VAULTER_LOAD_ID_STRATEGY: bigint
+      TESTBENCH_WORKING_PATH: /app
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_CLIENT: phpredis
+      CACHE_STORE: redis
+      VAULTER_LOAD_METRICS_ENABLED: 'false'
+      VAULTER_TRACING_ENABLED: 'false'
+      LOAD_DB_TRACE: 'false'
+    mem_limit: 3g
+    memswap_limit: 3g
+    profiles:
+    - prepare

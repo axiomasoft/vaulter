@@ -318,6 +318,25 @@ final readonly class StagedUpload
     }
 
     /**
+     * Stream an assembled upload into the staged object without materialising the
+     * complete payload in PHP memory.
+     *
+     * @param resource $stream
+     */
+    public function writeStream(UploadSession $session, mixed $stream): int
+    {
+        if (!is_resource($stream)) {
+            throw new RuntimeException('Unable to stage upload from a non-resource stream.');
+        }
+
+        if (!$this->driver->put($this->keyFor($session), $stream, $this->diskName($session))) {
+            throw new RuntimeException("Unable to write staged upload [{$session->upload_id}].");
+        }
+
+        return $this->size($session);
+    }
+
+    /**
      * A read stream over the staged temp, or null when nothing is staged. The commit
      * path feeds this to BlobStore.commit (which stages it locally and re-hashes —
      * H.3).

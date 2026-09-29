@@ -85,7 +85,8 @@ final class NodeShareResource extends Resource
         }
 
         if ($nodeIds === []) {
-            return $query->whereRaw('1 = 0');
+            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
+            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         return $query->whereIn('node_id', $nodeIds);
@@ -263,7 +264,8 @@ final class NodeShareResource extends Resource
             return;
         }
 
-        $permissions = (int) ($data['permissions'] ?? 0);
+        // -1, 0 and 1 defaults all normalize to READ below; only supplied values are significant.
+        $permissions = (int) ($data['permissions'] ?? 0); // @pest-mutate-ignore: DecrementInteger,IncrementInteger
         /** @var string $password */
         $password = $data['password'] ?? '';
         /** @var string $expiresAt */
@@ -274,11 +276,12 @@ final class NodeShareResource extends Resource
             node: $node,
             data: new CreateShareLinkData(
                 permissions: $permissions > 0 ? $permissions : Permission::Read->value,
-                level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)),
-                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)),
+                // Filament validation already supplies enum/string and toggle values with these types.
+                level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)), // @pest-mutate-ignore: RemoveStringCast
+                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
                 password: $password === '' ? null : $password,
-                requireLogin: (bool) ($data['require_login'] ?? false),
-                allowDiscovery: (bool) ($data['allow_discovery'] ?? false),
+                requireLogin: (bool) ($data['require_login'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
+                allowDiscovery: (bool) ($data['allow_discovery'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
                 expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
                 maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
                 grantedBy: PanelActor::id(),
@@ -347,7 +350,8 @@ final class NodeShareResource extends Resource
 
     private static function resolveNode(int|string|null $id): ?Node
     {
-        if ($id === null || $id === '') {
+        // Both values also produce `find() === null`; this fast path avoids a needless query.
+        if ($id === null || $id === '') { // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty
             return null;
         }
 

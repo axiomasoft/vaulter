@@ -1,0 +1,21 @@
+{
+  "package": "core",
+  "driver": "pgsql",
+  "initial_suite": "RED",
+  "pest_json": {
+    "result": "failed",
+    "tests": 549,
+    "passed": 80,
+    "failed": null,
+    "assertions": 512,
+    "duration_ms": 165735,
+    "warnings": null
+  },
+  "implied_not_passed": 469,
+  "unknown_panel_message_count": 417,
+  "UnknownPanelException_count": 418,
+  "dominant_error": "Unknown Vaulter storage panel [project]. Registered: default.",
+  "mutation": "not started; Pest aborts mutation when the baseline suite is red",
+  "disposition": "unevaluated",
+  "note": "Redirected Pest emitted PAO JSON because the suite failed before mutation; failed_field is null in that payload. Counts above come from tests/passed plus log string matches."
+}

@@ -1,0 +1,439 @@
+{
+  "actor_ids": [
+    13822500,
+    13822501,
+    13822502,
+    13822503,
+    13822504,
+    13822505,
+    13822506,
+    13822507,
+    13822508,
+    13822509,
+    13822510,
+    13822511,
+    13822512,
+    13822513,
+    13822514,
+    13822515,
+    13822516,
+    13822517,
+    13822518,
+    13822519,
+    13822520,
+    13822521,
+    13822522,
+    13822523,
+    13822524,
+    13822525,
+    13822526,
+    13822527,
+    13822528,
+    13822529,
+    13822530,
+    13822531
+  ],
+  "attempt": 2,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n32",
+  "during_sample_count": 10,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13822532,
+      "ownership_fixture": "system-minted-created_by-null",
+      "phase": "setup",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13822522,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822516,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822504,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822515,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822530,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822508,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822523,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822509,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822507,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822529,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822514,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822521,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822506,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822531,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822517,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822520,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822526,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822518,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822505,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822512,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822513,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822528,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822503,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822510,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822527,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822511,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822500,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822501,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822525,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822502,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822524,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 409
+    },
+    {
+      "actor_id": 13822519,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 204
+    }
+  ],
+  "n": 32,
+  "overlap": {
+    "backend_pid": 6549,
+    "final_state": {
+      "received_bytes": 4,
+      "status": "uploading",
+      "upload_id": "febc15ee-9f9a-462a-b0d1-678c99baec0c"
+    },
+    "held_ns": 84582322057731,
+    "lock_after_sweep": true,
+    "lock_observed": true,
+    "release_ns": 84582855294866,
+    "retry_fixture": "restore-ttl-after-final-state-capture",
+    "retry_response": {
+      "actor_id": 13822519,
+      "retry_after": null,
+      "status": 204
+    },
+    "sweep_end_ns": 84582785683463,
+    "sweep_exit": 0,
+    "sweep_start_ns": 84582508263205,
+    "sweep_stderr": "P5_SWEEP_TARGET|febc15ee-9f9a-462a-b0d1-678c99baec0c|refused|END\n",
+    "sweep_stdout": "\n   INFO  Swept 0 stale upload sessions (1 skipped \u2014 a PATCH is in flight).  \n\n",
+    "sweepable": true,
+    "target_refused": true,
+    "upload_id": "febc15ee-9f9a-462a-b0d1-678c99baec0c"
+  },
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13822522,
+      13822516,
+      13822504,
+      13822515,
+      13822530,
+      13822508,
+      13822523,
+      13822509,
+      13822507,
+      13822529,
+      13822514,
+      13822521,
+      13822506,
+      13822531,
+      13822517,
+      13822520,
+      13822526,
+      13822518,
+      13822505,
+      13822512,
+      13822513,
+      13822528,
+      13822503,
+      13822510,
+      13822527,
+      13822511,
+      13822500,
+      13822501,
+      13822525,
+      13822502,
+      13822524,
+      13822519
+    ],
+    "expected_actor_ids": [
+      13822500,
+      13822501,
+      13822502,
+      13822503,
+      13822504,
+      13822505,
+      13822506,
+      13822507,
+      13822508,
+      13822509,
+      13822510,
+      13822511,
+      13822512,
+      13822513,
+      13822514,
+      13822515,
+      13822516,
+      13822517,
+      13822518,
+      13822519,
+      13822520,
+      13822521,
+      13822522,
+      13822523,
+      13822524,
+      13822525,
+      13822526,
+      13822527,
+      13822528,
+      13822529,
+      13822530,
+      13822531
+    ],
+    "iterations": 32,
+    "observed_actor_ids": [
+      13822500,
+      13822501,
+      13822502,
+      13822503,
+      13822504,
+      13822505,
+      13822506,
+      13822507,
+      13822508,
+      13822509,
+      13822510,
+      13822511,
+      13822512,
+      13822513,
+      13822514,
+      13822515,
+      13822516,
+      13822517,
+      13822518,
+      13822519,
+      13822520,
+      13822521,
+      13822522,
+      13822523,
+      13822524,
+      13822525,
+      13822526,
+      13822527,
+      13822528,
+      13822529,
+      13822530,
+      13822531
+    ],
+    "started": [
+      13822531,
+      13822501,
+      13822500,
+      13822502,
+      13822503,
+      13822504,
+      13822505,
+      13822506,
+      13822518,
+      13822520,
+      13822507,
+      13822522,
+      13822508,
+      13822523,
+      13822509,
+      13822524,
+      13822510,
+      13822525,
+      13822526,
+      13822511,
+      13822527,
+      13822512,
+      13822528,
+      13822513,
+      13822529,
+      13822514,
+      13822530,
+      13822515,
+      13822516,
+      13822519,
+      13822521,
+      13822517
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/31685F28",
+    "monotonic_ns": 84586579684732
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/3167BEE8",
+    "monotonic_ns": 84581177276674
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "live-patch-overlap",
+  "statuses": {
+    "2xx": 1,
+    "409": 31,
+    "429": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "sweeper-overlap",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 4.351129098999081,
+    "pgbouncer_wait_seconds": null
+  }
+}

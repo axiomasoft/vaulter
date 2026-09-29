@@ -1,0 +1,15 @@
+{
+  "attempt": 3,
+  "availability": "down",
+  "cell_id": "product-realistic.s3-put-part.timeout",
+  "checksum": "f734a6dca1a16a2fdef53076049a2586d19cdce5454d52b3909db125ee496874",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "timeout",
+  "injector": "toxiproxy",
+  "plane": "product-realistic",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6962692716,
+  "t_detect_ns": 3411271015,
+  "t_restore_ns": 3551421701
+}

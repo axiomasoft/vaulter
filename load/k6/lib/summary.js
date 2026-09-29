@@ -20,6 +20,9 @@ function meta(profile, runs) {
     env_fingerprint: __ENV.ENV_FINGERPRINT || 'unset',
     dataset_id: DATASET_ID,
     runs: runs || 1,
+    run_id: __ENV.RUN_ID || 'unset',
+    source_digest: __ENV.SOURCE_DIGEST || 'unset',
+    declared_duration: __ENV.DURATION || 'unset',
   };
 }
 
@@ -30,7 +33,12 @@ function meta(profile, runs) {
  *   path -> string), so a scenario can spread this straight into its own `handleSummary`.
  */
 export function summaryOutputs(data, opts = {}) {
-  const enriched = { ...data, meta: meta(opts.profile, opts.runs) };
+  const runMeta = meta(opts.profile, opts.runs);
+  if (opts.expectedClassBKeys) {
+    runMeta.expected_class_b_keys = opts.expectedClassBKeys;
+  }
+  const enriched = { ...data, meta: runMeta };
+  if (__ENV.LAB_FACTS_JSON) enriched.lab_facts = JSON.parse(__ENV.LAB_FACTS_JSON);
 
   return {
     // /results is a dedicated writable mount (docker-compose.load.yml) — `/scripts`

@@ -1,0 +1,20 @@
+{
+  "delta": 0.1,
+  "fingerprint_equal": true,
+  "latency_delta": 0.0,
+  "mismatches": [],
+  "off": {
+    "dataset_id": "vlt-load-fixture",
+    "env_fingerprint": "abc123",
+    "image_versions": "postgres:16-alpine"
+  },
+  "on": {
+    "dataset_id": "vlt-load-fixture",
+    "env_fingerprint": "abc123",
+    "image_versions": "postgres:16-alpine"
+  },
+  "rss_ceiling_bytes": 67108864,
+  "rss_off_bytes": 40000000,
+  "rss_on_bytes": 40000000,
+  "verdict": "green"
+}

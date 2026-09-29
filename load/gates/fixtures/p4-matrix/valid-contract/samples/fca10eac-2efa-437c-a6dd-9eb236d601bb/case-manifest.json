@@ -1,0 +1,12 @@
+{
+  "case_id": "cas_stage_probe/5g",
+  "ceilings_mib": {
+    "php_peak": 64
+  },
+  "fixture_id": "p4-matrix-00000000-5g",
+  "process_kind": "php_cli",
+  "request": {
+    "method": "GET",
+    "path": "/load/health"
+  }
+}

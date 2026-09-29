@@ -1,0 +1,11 @@
+YAML parsed: monorepo-split.yml
+bash -n: 2 release shell blocks; expressions replaced for syntax only
+YAML parsed: frontend.yml
+YAML parsed: tests.yml
+YAML parsed: static-analysis.yml
+YAML parsed: code-style.yml
+Standalone manifest/lock fields match
+All pre-existing standalone versions preserved
+Root lock agrees with all workspace manifests
+Original ignored Azgard lock preserved: 867d2c81b91e118a11b90d7794ab7ead5f4242e7634756acf018274c072157d8
+Original review report/evidence byte hashes preserved: 20

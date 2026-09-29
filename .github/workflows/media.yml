@@ -80,10 +80,10 @@ jobs:
   # a KILLED mutant. Every mutant was "killed"; the 100.00 % this lane reported was an artefact.
   # Proof: plans/VLT-MUT/findings/P0.1-parallel-defect.md.
   #
-  # TWO runs, both gated (VLT-MUT D6). media has driver-conditional tests in BOTH directions —
-  # 3 skip on Postgres, 3 skip on SQLite — so neither driver alone covers the package, and
-  # `--covered-only` would leave the other driver's branches ungated. Each run carries its own
-  # measured floor; passing both is strictly stronger than passing their union.
+  # TWO cold runs and one ID-union gate (VLT-MUT D6). media has driver-conditional tests in BOTH directions,
+  # so neither driver alone covers the package and
+  # `--covered-only` would leave the other driver's branches ungated. The final score merges
+  # Pest cache results by mutation ID: killed by either required driver means killed in the union.
   media-mutation:
     name: vaulter-media (mutation gate)
     runs-on: ubuntu-latest
@@ -126,14 +126,11 @@ jobs:
         working-directory: packages/media
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      # Пороги — ratchet ВВЕРХ (VLT-MUT D4 / D35): цель 95, поднимается каждой фазой, НИКОГДА не
-      # опускается. Значения = floor(Score) − 5 по честному замеру 2026-07-13 (последовательно,
-      # pcov/PHP 8.4, холодный кэш): Postgres — Score 71.14 % (281/395), SQLite — 68.16 % (259/380),
-      # union — 71.25 % (285/400). Прежние «100.00 %, 380 мутантов» — артефакт `--parallel`.
-      # Добивание 115 выживших до 95 — фаза P5 плана VLT-MUT.
       - name: 'Mutation testing: Postgres'
         working-directory: packages/media
-        run: vendor/bin/pest --mutate --path=src --covered-only --min=66
+        run: |
+          vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=0
+          cp -a vendor/pestphp/pest-plugin-mutate/.temp/pest-mutate-cache "$RUNNER_TEMP/media-mutate-pgsql"
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -142,11 +139,21 @@ jobs:
 
       - name: 'Mutation testing: SQLite'
         working-directory: packages/media
-        run: vendor/bin/pest --mutate --path=src --covered-only --min=63
+        run: |
+          vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=0
+          cp -a vendor/pestphp/pest-plugin-mutate/.temp/pest-mutate-cache "$RUNNER_TEMP/media-mutate-sqlite"
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
           XDEBUG_MODE: coverage
+
+      - name: 'Mutation gate: PostgreSQL + SQLite ID union (95%)'
+        working-directory: packages/media
+        run: >-
+          php bin/assert-mutation-union.php
+          "$RUNNER_TEMP/media-mutate-pgsql"
+          "$RUNNER_TEMP/media-mutate-sqlite"
+          95
 
   media-pgsql:
     name: vaulter-media (Postgres CAS lane)

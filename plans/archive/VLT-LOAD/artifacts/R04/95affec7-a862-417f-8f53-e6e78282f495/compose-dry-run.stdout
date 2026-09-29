@@ -1,0 +1,2 @@
+prepare: compose config ok (dry-run)
+prepare: would build postgres profile image and run preflight.sql

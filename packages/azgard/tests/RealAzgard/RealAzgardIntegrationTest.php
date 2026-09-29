@@ -108,7 +108,8 @@ it('resolves a real DB-backed scoped role through the adapter (entity lane)', fu
     $workspace = WorkspaceModel::query()->create(['id' => 1, 'name' => 'Alpha']);
     $other = WorkspaceModel::query()->create(['id' => 2, 'name' => 'Beta']);
 
-    $role = Role::create(['name' => 'docs-viewer', 'class_name' => DocsViewerRole::class, 'level' => 10]);
+    $role = new Role;
+    $role->forceFill(['name' => 'docs-viewer', 'class_name' => DocsViewerRole::class, 'level' => 10])->save();
     $user->assignScopedRole($role, $workspace);
 
     $adapter = new AzgardGuardAdapter($user);

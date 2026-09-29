@@ -871,6 +871,8 @@ final class PanelTablesBuilder
         $table->string('status');
         $table->unsignedInteger('attempts')->default(0);
         $table->timestamp('next_retry_at')->nullable();
+        $table->string('claim_token', 32)->nullable();
+        $table->timestamp('claim_until')->nullable();
         $table->text('last_error')->nullable();
         $table->timestamps();
 

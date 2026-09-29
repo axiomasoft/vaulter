@@ -1,0 +1,9 @@
+{
+  "schema": "p7-run/v1",
+  "run_id": "run-complete",
+  "tier": "S",
+  "config_fingerprint": "ef13ea95198263e0a19e0fba9a62df9db5373bb2187c33c01c04ed1be23e9a84",
+  "injector_version": "p7.1-lane-stub",
+  "terminal_marker": "p7-run-terminal/v1",
+  "cleanup_scope": "run"
+}

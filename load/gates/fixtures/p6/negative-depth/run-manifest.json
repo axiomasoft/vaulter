@@ -1,0 +1,29 @@
+{
+  "schema": "p6-run/v1",
+  "run_id": "run-complete",
+  "tier": "S",
+  "config_fingerprint": "e4d77160ccfe36e5acb2894ef136a67146b206a1b91772f1ff9ce0c1103334dc",
+  "worker_command": "php vendor/bin/testbench queue:work redis --queue=load-health,default --sleep=1 --tries=1",
+  "retry_after": 90,
+  "worker_timeout": 60,
+  "tries": 1,
+  "redis_keys": {
+    "load-health": {
+      "pending": "queues:load-health",
+      "pending_op": "LLEN",
+      "delayed": "queues:load-health:delayed",
+      "delayed_op": "ZCARD",
+      "reserved": "queues:load-health:reserved",
+      "reserved_op": "ZCARD"
+    },
+    "default": {
+      "pending": "queues:default",
+      "pending_op": "LLEN",
+      "delayed": "queues:default:delayed",
+      "delayed_op": "ZCARD",
+      "reserved": "queues:default:reserved",
+      "reserved_op": "ZCARD"
+    }
+  },
+  "terminal_marker": "p6-run-terminal/v1"
+}

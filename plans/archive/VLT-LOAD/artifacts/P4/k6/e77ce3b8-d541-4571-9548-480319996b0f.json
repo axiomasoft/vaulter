@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "cell_id": "tus_final_patch/5m",
+  "path_id": "tus_final_patch",
+  "http_status": 204,
+  "content_length_bytes": 5242880,
+  "client_bytes_received": 5242880,
+  "transfer_bytes": 5242880
+}

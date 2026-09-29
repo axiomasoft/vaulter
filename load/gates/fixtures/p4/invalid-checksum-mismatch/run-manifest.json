@@ -1,0 +1,39 @@
+{
+  "byte_accounting": {
+    "client_bytes_received": 15,
+    "content_length_bytes": 15,
+    "http_status": 200,
+    "probe_object_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "server_object_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "case_id": "lane_selftest",
+  "cgroup_mode": "v2",
+  "env_fingerprint": "deadbeefcafebabe",
+  "fixture_id": "synthetic-bounded",
+  "fpm": {
+    "max_children": 1,
+    "pm": "static",
+    "pool": "memory"
+  },
+  "php_peak_bytes": 8000000,
+  "preflight": {
+    "cgroup_v2": true,
+    "smaps_rollup": true,
+    "worker_pid_unique": true
+  },
+  "prometheus_capture": {
+    "family": "vaulter_request_peak_memory_bytes",
+    "value_bytes": 8000000
+  },
+  "run_id": "00000000-0000-4000-8000-000000000001",
+  "schema_version": "p4-memory/v1",
+  "terminal": {
+    "marker": "p4-run-complete",
+    "verified_at": "2026-09-22T00:00:00Z"
+  },
+  "tier": "S0",
+  "worker_pid_identity": {
+    "pid": 42,
+    "starttime_ticks": 123456
+  }
+}

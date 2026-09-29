@@ -275,8 +275,31 @@ async function encodeBinaryState({ state, document }) {
  * A tiny HTTP health endpoint for the compose/orchestrator healthcheck, on a SEPARATE
  * port so it never interferes with the WebSocket upgrade handling on the main port.
  */
-function startHealthEndpoint() {
+function activeRoomStats(server) {
+  const documents = server?.hocuspocus?.documents
+
+  if (!documents || typeof documents.size !== 'number') {
+    return { rooms: 0, connections: 0 }
+  }
+
+  let connections = 0
+
+  for (const document of documents.values()) {
+    const count = document?.connections?.size
+    connections += typeof count === 'number' ? count : 0
+  }
+
+  return { rooms: documents.size, connections }
+}
+
+function startHealthEndpoint(server) {
   const health = createServer((req, res) => {
+    if (req.url === '/stats') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify(activeRoomStats(server)))
+      return
+    }
+
     if (req.url === '/health' || req.url === '/healthz' || req.url === '/') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ status: 'ok', service: 'vaulter-hocuspocus', name: config.instanceName }))
@@ -313,9 +336,8 @@ async function boot() {
     console.warn('Vaulter collab hub: Origin allowlist is OPEN (dev / "*") — set VAULTER_COLLAB_ALLOWED_ORIGINS in production.')
   }
 
-  startHealthEndpoint()
-
   const server = await buildServer()
+  startHealthEndpoint(server)
   // The ws frame limits (maxPayload / perMessageDeflate) are already wired via the
   // `websocketOptions` config key in buildServer() — v4 forwards them to the crossws
   // transport, so listen() no longer needs (or accepts) them as an argument.
@@ -336,5 +358,5 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   })
 }
 
-export { buildServer, buildExtensions, onConnect, onAuthenticate, decodeTokenExpiry, armExpiryTimer }
+export { buildServer, buildExtensions, onConnect, onAuthenticate, decodeTokenExpiry, armExpiryTimer, activeRoomStats }
 // websocketOptions is exported above (function declaration) for boot() + the hardening test.

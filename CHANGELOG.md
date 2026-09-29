@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `vaulter-azgard` now follows the public AzGuard 0.3 line and its widened
+  `BackedEnum` panel/role contracts; CI checks out the latest public AzGuard commit
+  directly from GitHub without a private repository token.
+
+### Fixed
+- Release workflows now keep the root npm lockfile, test the npm workspace before
+  publishing, pass the PHP split token through the action's supported environment,
+  reject tags whose exact SHA lacks the ordinary CI checks, and publish the GHCR
+  image under the source repository owner.
+
 ## [0.2.0] — 2026-07-15
 
 ### Changed

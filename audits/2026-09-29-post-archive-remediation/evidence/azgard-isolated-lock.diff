@@ -1,0 +1,20 @@
+--- original-ignored-lock
++++ isolated-refreshed-lock
+@@ -4,7 +4,7 @@
+         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+         "This file is @generated automatically"
+     ],
+-    "content-hash": "68f5c72cdd2dfff18d39d41bde03e6ad",
++    "content-hash": "fbc9103b0453bb0f35bd8d02c45f33ae",
+     "packages": [
+         {
+             "name": "axioma-studio/azguard-core",
+@@ -10687,6 +10687,8 @@
+     "aliases": [],
+     "minimum-stability": "dev",
+     "stability-flags": {
++        "axioma-studio/azguard-context": 20,
++        "axioma-studio/azguard-core": 20,
+         "axioma-studio/vaulter-core": 20
+     },
+     "prefer-stable": true,

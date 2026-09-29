@@ -1,0 +1,98 @@
+{
+  "actor_ids": [
+    13820250
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-realistic.sweeper-overlap.live-patch-overlap.n1",
+  "during_sample_count": 10,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13820251,
+      "ownership_fixture": "system-minted-created_by-null",
+      "phase": "setup",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13820250,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 204
+    }
+  ],
+  "n": 1,
+  "overlap": {
+    "backend_pid": 234,
+    "final_state": {
+      "received_bytes": 4,
+      "status": "uploading",
+      "upload_id": "6f834c36-709c-4722-8e0f-197eb6ef985b"
+    },
+    "held_ns": 84388133932165,
+    "lock_after_sweep": true,
+    "lock_observed": true,
+    "release_ns": 84388718485122,
+    "retry_fixture": "restore-ttl-after-final-state-capture",
+    "retry_response": {
+      "actor_id": 13820250,
+      "retry_after": null,
+      "status": 204
+    },
+    "sweep_end_ns": 84388652122972,
+    "sweep_exit": 0,
+    "sweep_start_ns": 84388323693762,
+    "sweep_stderr": "P5_SWEEP_TARGET|6f834c36-709c-4722-8e0f-197eb6ef985b|refused|END\n",
+    "sweep_stdout": "\n   INFO  Swept 0 stale upload sessions (1 skipped \u2014 a PATCH is in flight).  \n\n",
+    "sweepable": true,
+    "target_refused": true,
+    "upload_id": "6f834c36-709c-4722-8e0f-197eb6ef985b"
+  },
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13820250
+    ],
+    "expected_actor_ids": [
+      13820250
+    ],
+    "iterations": 1,
+    "observed_actor_ids": [
+      13820250
+    ],
+    "started": [
+      13820250
+    ]
+  },
+  "plane": "product-realistic",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/312DBE50",
+    "monotonic_ns": 84392650973918
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/312DA340",
+    "monotonic_ns": 84387244224152
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "live-patch-overlap",
+  "statuses": {
+    "2xx": 1,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "sweeper-overlap",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 4.43345561499882,
+    "pgbouncer_wait_seconds": null
+  }
+}

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -17,6 +18,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Activity\ActivityReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Support\LoadTier;
 
 /**
  * The read surface over the append-only activity feed (§2.9 / M2c-activity): the
@@ -35,6 +37,7 @@ final class ActivityController extends Controller
         private readonly AccessResolver $access,
         private readonly ActivityReadRepository $activity,
         private readonly NodeReadRepository $nodes,
+        private readonly MetricsRecorder $metrics,
     ) {}
 
     /**
@@ -47,12 +50,21 @@ final class ActivityController extends Controller
 
         $this->guardView($request, $root);
 
-        $feed = $this->activity
-            ->forStorage($storage, $this->verb($request))
-            ->cursorPaginate(perPage: $this->perPage($request))
-            ->withQueryString();
+        return $this->metrics->timing(
+            name: 'vaulter_activity_feed_duration_seconds',
+            operation: function () use ($request, $storage): AnonymousResourceCollection {
+                $feed = $this->activity
+                    ->forStorage($storage, $this->verb($request))
+                    ->cursorPaginate(perPage: $this->perPage($request))
+                    ->withQueryString();
 
-        return ActivityResource::collection($feed);
+                return ActivityResource::collection($feed);
+            },
+            labels: [
+                'filtered' => $this->verb($request) !== null,
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**
@@ -63,12 +75,21 @@ final class ActivityController extends Controller
     {
         $this->guardView($request, $node);
 
-        $feed = $this->activity
-            ->forNode($node, $this->verb($request))
-            ->cursorPaginate(perPage: $this->perPage($request))
-            ->withQueryString();
+        return $this->metrics->timing(
+            name: 'vaulter_activity_feed_duration_seconds',
+            operation: function () use ($request, $node): AnonymousResourceCollection {
+                $feed = $this->activity
+                    ->forNode($node, $this->verb($request))
+                    ->cursorPaginate(perPage: $this->perPage($request))
+                    ->withQueryString();
 
-        return ActivityResource::collection($feed);
+                return ActivityResource::collection($feed);
+            },
+            labels: [
+                'filtered' => $this->verb($request) !== null,
+                'tier' => LoadTier::label(),
+            ],
+        );
     }
 
     /**

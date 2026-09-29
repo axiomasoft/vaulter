@@ -1,0 +1,3 @@
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/azgard/phpstan.neon.
+
+ [OK] No errors

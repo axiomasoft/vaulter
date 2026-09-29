@@ -10,6 +10,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
@@ -116,6 +117,33 @@ it('complete без частей отклоняется', function (): void {
 
     expect(fn () => app(S3MultipartHandler::class)->complete($session->refresh()))
         ->toThrow(ValidationException::class);
+});
+
+it('streams multipart assembly with bounded complete memory', function (): void {
+    $partBytes = 1024 * 1024;
+    $partCount = 32;
+    $session = initiateS3(totalBytes: $partBytes * $partCount, name: 'bounded.bin');
+    $handler = app(S3MultipartHandler::class);
+    $part = str_repeat('x', $partBytes);
+
+    foreach (range(1, $partCount) as $partNo) {
+        $handler->putPart(
+            $session->refresh(),
+            partNo: $partNo,
+            byteOffset: ($partNo - 1) * $partBytes,
+            chunk: UploadTestHelpers::streamFor($part),
+        );
+    }
+
+    unset($part);
+    gc_collect_cycles();
+    memory_reset_peak_usage();
+    $before = memory_get_usage(true);
+
+    expect($handler->complete($session->refresh()))->toBe($partBytes * $partCount)
+        ->and(memory_get_peak_usage(true) - $before)->toBeLessThan(16 * 1024 * 1024)
+        ->and(app(StagedUpload::class)->size($session->refresh()))
+        ->toBe($partBytes * $partCount);
 });
 
 it('abort удаляет per-part объекты и помечает aborted', function (): void {

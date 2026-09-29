@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\IdStrategy;
 
 use Illuminate\Foundation\Application;
+use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Tests\TestCase;
 
 /**
@@ -12,6 +13,8 @@ use Vaulter\Tests\TestCase;
  */
 class Uuid7StrategyTestCase extends TestCase
 {
+    use RefreshesDatabaseForSchemaVariant;
+
     /**
      * @param Application $app
      */

@@ -1,0 +1,791 @@
+{
+  "actor_ids": [
+    13833250,
+    13833251,
+    13833252,
+    13833253,
+    13833254,
+    13833255,
+    13833256,
+    13833257,
+    13833258,
+    13833259,
+    13833260,
+    13833261,
+    13833262,
+    13833263,
+    13833264,
+    13833265,
+    13833266,
+    13833267,
+    13833268,
+    13833269,
+    13833270,
+    13833271,
+    13833272,
+    13833273,
+    13833274,
+    13833275,
+    13833276,
+    13833277,
+    13833278,
+    13833279,
+    13833280,
+    13833281
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-worst-case.cas-lock.int4-collision.n32",
+  "during_sample_count": 12,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 13833276,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833275,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833260,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833273,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833279,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833278,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833277,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833274,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833271,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833272,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833270,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833262,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833259,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833268,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833269,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833266,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833265,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833267,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833258,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833263,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833255,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833261,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833264,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833256,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833257,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833254,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833251,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833252,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833253,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833250,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833280,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833281,
+      "phase": "create",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833276,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833278,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833260,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833275,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833274,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833277,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833273,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833279,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833271,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833270,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833268,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833266,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833262,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833269,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833272,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833265,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833259,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833267,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833258,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833264,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833261,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833257,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833256,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833255,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833263,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833251,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833250,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833254,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833252,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833281,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833253,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833280,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833276,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833260,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833277,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833273,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833274,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833275,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833278,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833279,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833271,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833270,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833268,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833266,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833262,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833269,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833272,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833265,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833259,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833267,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833258,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833257,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833264,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833261,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833256,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833255,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833251,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833250,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833253,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833254,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833263,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833252,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 422
+    },
+    {
+      "actor_id": 13833280,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    },
+    {
+      "actor_id": 13833281,
+      "phase": "operation",
+      "retry_after": null,
+      "status": 201
+    }
+  ],
+  "n": 32,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      13833276,
+      13833260,
+      13833277,
+      13833273,
+      13833274,
+      13833275,
+      13833278,
+      13833279,
+      13833271,
+      13833270,
+      13833268,
+      13833266,
+      13833262,
+      13833269,
+      13833272,
+      13833265,
+      13833259,
+      13833267,
+      13833258,
+      13833257,
+      13833264,
+      13833261,
+      13833256,
+      13833255,
+      13833251,
+      13833250,
+      13833253,
+      13833254,
+      13833263,
+      13833252,
+      13833280,
+      13833281
+    ],
+    "expected_actor_ids": [
+      13833250,
+      13833251,
+      13833252,
+      13833253,
+      13833254,
+      13833255,
+      13833256,
+      13833257,
+      13833258,
+      13833259,
+      13833260,
+      13833261,
+      13833262,
+      13833263,
+      13833264,
+      13833265,
+      13833266,
+      13833267,
+      13833268,
+      13833269,
+      13833270,
+      13833271,
+      13833272,
+      13833273,
+      13833274,
+      13833275,
+      13833276,
+      13833277,
+      13833278,
+      13833279,
+      13833280,
+      13833281
+    ],
+    "iterations": 32,
+    "observed_actor_ids": [
+      13833250,
+      13833251,
+      13833252,
+      13833253,
+      13833254,
+      13833255,
+      13833256,
+      13833257,
+      13833258,
+      13833259,
+      13833260,
+      13833261,
+      13833262,
+      13833263,
+      13833264,
+      13833265,
+      13833266,
+      13833267,
+      13833268,
+      13833269,
+      13833270,
+      13833271,
+      13833272,
+      13833273,
+      13833274,
+      13833275,
+      13833276,
+      13833277,
+      13833278,
+      13833279,
+      13833280,
+      13833281
+    ],
+    "started": [
+      13833281,
+      13833250,
+      13833251,
+      13833252,
+      13833253,
+      13833254,
+      13833255,
+      13833256,
+      13833257,
+      13833261,
+      13833262,
+      13833263,
+      13833264,
+      13833258,
+      13833265,
+      13833267,
+      13833266,
+      13833268,
+      13833269,
+      13833259,
+      13833260,
+      13833276,
+      13833270,
+      13833271,
+      13833272,
+      13833273,
+      13833274,
+      13833275,
+      13833279,
+      13833277,
+      13833278,
+      13833280
+    ]
+  },
+  "plane": "product-worst-case",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/31905260",
+    "monotonic_ns": 84690374663504
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:3/318A4508",
+    "monotonic_ns": 84684800036293
+  },
+  "run_id": "adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe",
+  "schema": "p5-cell/v1",
+  "shape": "int4-collision",
+  "statuses": {
+    "2xx": 88,
+    "409": 0,
+    "429": 0,
+    "5xx": 0,
+    "other": 8
+  },
+  "supported_workload": true,
+  "surface": "cas-lock",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 4.6459385639900574,
+    "pgbouncer_wait_seconds": null
+  }
+}

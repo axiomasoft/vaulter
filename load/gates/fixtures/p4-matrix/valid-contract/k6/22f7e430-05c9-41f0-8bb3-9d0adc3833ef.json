@@ -1,0 +1,10 @@
+{
+  "attempt_id": "22f7e430-05c9-41f0-8bb3-9d0adc3833ef",
+  "cell_id": "s3_putpart/5g",
+  "dry_run": false,
+  "prometheus_rw": {
+    "job": "vaulter-sut",
+    "linked": true
+  },
+  "repetition": 3
+}

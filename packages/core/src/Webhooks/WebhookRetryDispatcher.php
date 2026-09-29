@@ -7,8 +7,12 @@ namespace Vaulter\Webhooks;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Observability\TracingAttributes;
+use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
@@ -30,19 +34,40 @@ use Vaulter\Support\Identity;
  */
 final class WebhookRetryDispatcher
 {
+    private const int MAX_CLAIM_ROWS = 1000;
+
+    public function __construct(
+        private readonly MetricsRecorder $metrics,
+        private readonly TraceRecorder $tracer,
+    ) {}
+
     /**
-     * Claim every due retry and dispatch its delivery job exactly once. Returns how
-     * many were re-dispatched.
+     * Claim at most 1000 due retries and dispatch each delivery job once. Returns
+     * how many were re-dispatched; later ticks drain the remaining due rows.
      */
     public function redispatchDue(): int
     {
-        $deliveries = $this->claimDue();
+        return $this->tracer->span(
+            name: TracingSpanNames::WEBHOOK_RETRY,
+            operation: fn (): int => $this->metrics->timing(
+                name: 'vaulter_webhook_retry_tick_seconds',
+                operation: function (): int {
+                    $deliveries = $this->claimDue();
 
-        foreach ($deliveries as $delivery) {
-            Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
-        }
+                    $this->metrics->histogram(
+                        name: 'vaulter_webhook_retry_lockset_rows',
+                        value: $deliveries->count(),
+                    );
 
-        return $deliveries->count();
+                    foreach ($deliveries as $delivery) {
+                        Bus::dispatch(new DeliverWebhook(deliveryId: Identity::stringify($delivery->getKey())));
+                    }
+
+                    return $deliveries->count();
+                },
+            ),
+            attributes: TracingAttributes::forTarget(targetId: 'webhook.pipeline', layer: 'action'),
+        );
     }
 
     /**
@@ -57,9 +82,13 @@ final class WebhookRetryDispatcher
         $deliveryClass = Config::webhookDeliveryModel();
 
         return DB::transaction(function () use ($deliveryClass): Collection {
+            $query = $deliveryClass::query()->dueForRetry();
+
             /** @var Collection<int, WebhookDelivery> $deliveries */
-            $deliveries = $deliveryClass::query()
-                ->dueForRetry()
+            $deliveries = $query
+                ->orderBy('next_retry_at')
+                ->orderBy($query->getModel()->getQualifiedKeyName())
+                ->limit(self::MAX_CLAIM_ROWS)
                 ->lockForUpdate()
                 ->get();
 

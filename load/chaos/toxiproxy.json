@@ -1,0 +1,14 @@
+[
+  {
+    "name": "minio",
+    "listen": "[::]:19001",
+    "upstream": "minio:9000",
+    "enabled": true
+  },
+  {
+    "name": "pgbouncer",
+    "listen": "[::]:16432",
+    "upstream": "pgbouncer:6432",
+    "enabled": true
+  }
+]

@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Actions\Collaboration;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Data\Collaboration\PersistYjsSnapshotData;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -17,6 +18,7 @@ use Vaulter\Documents\Support\DocumentContentHasher;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
+use Vaulter\Support\LoadTier;
 
 /**
  * Persist a Yjs snapshot (master plan §7 / ADR-0001 / M4b) — the write the Node
@@ -39,6 +41,7 @@ final readonly class PersistYjsSnapshotAction
         private NodeDocumentVersionReadRepository $read,
         private NodeDocumentVersionStoreRepository $store,
         private NodeStoreRepository $nodes,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function execute(PersistYjsSnapshotData $data): NodeDocumentVersion
@@ -54,53 +57,57 @@ final readonly class PersistYjsSnapshotAction
         // design (§7); only the optional TipTap JSON projection is size-checked.
         $data->content?->ensureWithin(Config::maxDocumentSizeKb());
 
-        return DB::transaction(function () use ($node, $data): NodeDocumentVersion {
-            $head = $this->read->head($node);
+        return $this->metrics->timing(
+            name: 'vaulter_collab_snapshot_duration_seconds',
+            operation: fn (): NodeDocumentVersion => DB::transaction(function () use ($node, $data): NodeDocumentVersion {
+                $head = $this->read->head($node);
 
-            if ($head !== null && $this->shouldOverwrite($head)) {
-                $version = $this->store->update($head, $this->payload($data, $head));
+                if ($head !== null && $this->shouldOverwrite($head)) {
+                    $version = $this->store->update($head, $this->payload($data, $head));
+
+                    event(new DocumentContentUpdated(
+                        node: $node,
+                        version: $version,
+                        created: false,
+                        actorId: $data->actorId,
+                    ));
+
+                    return $version;
+                }
+
+                $version = $this->store->create([
+                    'node_id' => $node->getKey(),
+                    'version_no' => $this->store->nextVersionNo($node),
+                    // A new snapshot row on an existing document CONTINUES its format —
+                    // never a schema default (P0.4/L3, D4/D12). Falls back to the
+                    // rich-text default only for the (practically unreachable) case of a
+                    // document node with no prior version at all.
+                    'format' => $head->format ?? DocumentType::RichText->value,
+                    'is_autosave' => true,
+                    'status' => 'committed',
+                    'created_at' => now(),
+                    ...$this->payload($data, null),
+                ]);
+
+                $this->nodes->update($node, ['current_version_id' => $version->getKey()]);
+
+                $this->store->prune(
+                    node: $node,
+                    max: Config::maxDocumentVersions(),
+                    headId: $version->getKey(),
+                );
 
                 event(new DocumentContentUpdated(
                     node: $node,
                     version: $version,
-                    created: false,
+                    created: true,
                     actorId: $data->actorId,
                 ));
 
                 return $version;
-            }
-
-            $version = $this->store->create([
-                'node_id' => $node->getKey(),
-                'version_no' => $this->store->nextVersionNo($node),
-                // A new snapshot row on an existing document CONTINUES its format —
-                // never a schema default (P0.4/L3, D4/D12). Falls back to the
-                // rich-text default only for the (practically unreachable) case of a
-                // document node with no prior version at all.
-                'format' => $head->format ?? DocumentType::RichText->value,
-                'is_autosave' => true,
-                'status' => 'committed',
-                'created_at' => now(),
-                ...$this->payload($data, null),
-            ]);
-
-            $this->nodes->update($node, ['current_version_id' => $version->getKey()]);
-
-            $this->store->prune(
-                node: $node,
-                max: Config::maxDocumentVersions(),
-                headId: $version->getKey(),
-            );
-
-            event(new DocumentContentUpdated(
-                node: $node,
-                version: $version,
-                created: true,
-                actorId: $data->actorId,
-            ));
-
-            return $version;
-        });
+            }),
+            labels: ['tier' => LoadTier::label()],
+        );
     }
 
     /**

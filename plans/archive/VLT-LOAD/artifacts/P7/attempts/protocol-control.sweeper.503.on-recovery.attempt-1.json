@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "availability": "degraded",
+  "cell_id": "protocol-control.sweeper.503.on-recovery",
+  "checksum": "72ae16acbf210b19adba61af0caa95189d1f8c0737c1cb436e0626e667905201",
+  "durable_state": "rejected",
+  "evidence": "valid",
+  "http_outcome": "rejected",
+  "injector": "s3-fault-proxy",
+  "plane": "protocol-control",
+  "run_id": "7b255888-43bb-4071-b106-45f70a7f475c",
+  "t_converge_ns": 6806839086,
+  "t_detect_ns": 3389501111,
+  "t_restore_ns": 3417337975
+}

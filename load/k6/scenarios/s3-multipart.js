@@ -9,7 +9,7 @@ import { API, TIER, VUS_UPLOAD, DURATION, S3_PART_BYTES, S3_FILE_SIZE_BYTES, thi
 import { STORAGE_ID, ACTOR_OWNER } from '../lib/dataset.js';
 import { actorHeaders } from '../lib/auth.js';
 import { s3Part, saltedFirstChunk, sliceOf } from '../lib/fixtures.js';
-import { streamThroughputMiBs, ttfbMs } from '../lib/metrics.js';
+import { recordAcceptedStream, ttfbMs } from '../lib/metrics.js';
 import { trackProtocolStatus } from '../lib/expected.js';
 
 const TAGS = { scenario: 's3-multipart', tier: TIER, class: 'streaming' };
@@ -87,9 +87,7 @@ export function run() {
 
     trackProtocolStatus(partRes, TAGS);
 
-    if (elapsedS > 0) {
-      streamThroughputMiBs.add(part.byteLength / 1024 / 1024 / elapsedS, TAGS);
-    }
+    recordAcceptedStream(partRes, part.byteLength, elapsedS, { ...TAGS, op: 'OP-06' }, [201], 'sent');
 
     if (!check(partRes, { 's3 putPart 201': (r) => r.status === 201 })) {
       return { uploadId, complete: false, node: null };
@@ -108,11 +106,13 @@ export function run() {
   // enough S3_FILE_SIZE can legitimately 5xx the worker on memory. That is the finding,
   // not a harness bug: the check below records it as a known outcome, never "fixed" by
   // shrinking the file (Implementation Rules / Code Guidance).
+  const completeStart = Date.now();
   const completeRes = http.post(`${API}/resumable-uploads/${uploadId}/complete`, null, {
     headers,
     tags: { ...TAGS, op: 'OP-07' },
   });
 
+  recordAcceptedStream(completeRes, byteOffset, (Date.now() - completeStart) / 1000, { ...TAGS, op: 'OP-07' }, [201], 'finalize');
   trackProtocolStatus(completeRes, TAGS);
   complete = completeRes.status === 201;
 

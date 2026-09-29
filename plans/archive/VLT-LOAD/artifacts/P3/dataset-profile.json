@@ -1,0 +1,230 @@
+{
+  "dataset_id": "vlt-load-414fae92477d07f8",
+  "pg_stat_statements_info": {
+    "dealloc": 0,
+    "stats_reset": "2026-09-22T04:02:36.707314+00:00"
+  },
+  "pg_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+  "run_id": "51259904-2241-4636-a06f-c82cd7d2d2ef",
+  "schema_version": "p3-dataset-profile/v1",
+  "settings": [
+    {
+      "name": "effective_cache_size",
+      "setting": "393216",
+      "unit": "8kB"
+    },
+    {
+      "name": "pg_stat_statements.max",
+      "setting": "10000",
+      "unit": null
+    },
+    {
+      "name": "pg_stat_statements.track",
+      "setting": "all",
+      "unit": null
+    },
+    {
+      "name": "random_page_cost",
+      "setting": "1.1",
+      "unit": null
+    },
+    {
+      "name": "shared_buffers",
+      "setting": "131072",
+      "unit": "8kB"
+    },
+    {
+      "name": "shared_preload_libraries",
+      "setting": "pg_stat_statements",
+      "unit": null
+    },
+    {
+      "name": "track_io_timing",
+      "setting": "off",
+      "unit": null
+    },
+    {
+      "name": "work_mem",
+      "setting": "16384",
+      "unit": "kB"
+    }
+  ],
+  "tables": [
+    {
+      "dead_rows": 0,
+      "heap_bytes": 38772736,
+      "index_bytes": 86810624,
+      "last_analyze": "2026-09-22T04:00:07.575801+00:00",
+      "last_autoanalyze": "2026-09-22T03:59:44.639481+00:00",
+      "live_rows": 203951,
+      "relation": "v_activity",
+      "relkind": "r",
+      "total_bytes": 125632512
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 7962624,
+      "index_bytes": 12042240,
+      "last_analyze": "2026-09-22T04:00:07.531334+00:00",
+      "last_autoanalyze": "2026-09-22T03:59:38.179012+00:00",
+      "live_rows": 29772,
+      "relation": "v_blobs",
+      "relkind": "r",
+      "total_bytes": 20045824
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 1679360,
+      "index_bytes": 2686976,
+      "last_analyze": "2026-09-22T04:00:07.60446+00:00",
+      "last_autoanalyze": "2026-09-22T03:58:38.20327+00:00",
+      "live_rows": 27870,
+      "relation": "v_file_version_blobs",
+      "relkind": "r",
+      "total_bytes": 4399104
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 4677632,
+      "index_bytes": 7307264,
+      "last_analyze": "2026-09-22T04:00:07.643963+00:00",
+      "last_autoanalyze": "2026-09-22T03:58:38.290662+00:00",
+      "live_rows": 27870,
+      "relation": "v_file_versions",
+      "relkind": "r",
+      "total_bytes": 12025856
+    },
+    {
+      "dead_rows": 42,
+      "heap_bytes": 2891776,
+      "index_bytes": 3973120,
+      "last_analyze": "2026-09-22T04:00:07.651199+00:00",
+      "last_autoanalyze": "2026-09-22T03:58:38.35147+00:00",
+      "live_rows": 19967,
+      "relation": "v_files",
+      "relkind": "r",
+      "total_bytes": 6905856
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 106496,
+      "index_bytes": 172032,
+      "last_analyze": "2026-09-22T04:00:07.601094+00:00",
+      "last_autoanalyze": "2026-09-22T04:03:48.71801+00:00",
+      "live_rows": 511,
+      "relation": "v_node_comments",
+      "relkind": "r",
+      "total_bytes": 311296
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 49152,
+      "index_bytes": 122880,
+      "last_analyze": "2026-09-22T04:00:07.599796+00:00",
+      "last_autoanalyze": null,
+      "live_rows": 94,
+      "relation": "v_node_document_versions",
+      "relkind": "r",
+      "total_bytes": 204800
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 8192,
+      "index_bytes": 196608,
+      "last_analyze": "2026-09-22T04:00:07.532737+00:00",
+      "last_autoanalyze": null,
+      "live_rows": 7,
+      "relation": "v_node_grants",
+      "relkind": "r",
+      "total_bytes": 212992
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 8192,
+      "index_bytes": 131072,
+      "last_analyze": "2026-09-22T04:00:07.601836+00:00",
+      "last_autoanalyze": null,
+      "live_rows": 20,
+      "relation": "v_node_shares",
+      "relkind": "r",
+      "total_bytes": 147456
+    },
+    {
+      "dead_rows": 334,
+      "heap_bytes": 6619136,
+      "index_bytes": 7774208,
+      "last_analyze": "2026-09-22T04:00:07.744368+00:00",
+      "last_autoanalyze": "2026-09-22T03:58:38.588169+00:00",
+      "live_rows": 20132,
+      "relation": "v_nodes",
+      "relkind": "r",
+      "total_bytes": 14434304
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 212992,
+      "index_bytes": 155648,
+      "last_analyze": "2026-09-22T04:00:07.577956+00:00",
+      "last_autoanalyze": "2026-09-22T04:02:48.705169+00:00",
+      "live_rows": 518,
+      "relation": "v_outbox",
+      "relkind": "r",
+      "total_bytes": 401408
+    },
+    {
+      "dead_rows": 4,
+      "heap_bytes": 8192,
+      "index_bytes": 163840,
+      "last_analyze": "2026-09-22T04:00:07.745185+00:00",
+      "last_autoanalyze": null,
+      "live_rows": 1,
+      "relation": "v_storages",
+      "relkind": "r",
+      "total_bytes": 180224
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 778240,
+      "index_bytes": 622592,
+      "last_analyze": "2026-09-22T04:00:07.585569+00:00",
+      "last_autoanalyze": "2026-09-22T03:59:44.65402+00:00",
+      "live_rows": 11215,
+      "relation": "v_upload_parts",
+      "relkind": "r",
+      "total_bytes": 1433600
+    },
+    {
+      "dead_rows": 153,
+      "heap_bytes": 925696,
+      "index_bytes": 868352,
+      "last_analyze": "2026-09-22T04:00:07.598998+00:00",
+      "last_autoanalyze": "2026-09-22T03:59:44.682249+00:00",
+      "live_rows": 5536,
+      "relation": "v_upload_sessions",
+      "relkind": "r",
+      "total_bytes": 1835008
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 16384,
+      "index_bytes": 65536,
+      "last_analyze": "2026-09-22T04:00:07.576589+00:00",
+      "last_autoanalyze": "2026-09-22T03:59:44.64044+00:00",
+      "live_rows": 100,
+      "relation": "v_webhook_deliveries",
+      "relkind": "r",
+      "total_bytes": 114688
+    },
+    {
+      "dead_rows": 0,
+      "heap_bytes": 8192,
+      "index_bytes": 32768,
+      "last_analyze": "2026-09-22T04:00:07.577184+00:00",
+      "last_autoanalyze": null,
+      "live_rows": 5,
+      "relation": "v_webhook_endpoints",
+      "relkind": "r",
+      "total_bytes": 49152
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "actor_ids": [
+    72931250
+  ],
+  "attempt": 1,
+  "backend_pids": [],
+  "boundary_control": false,
+  "cell_id": "product-worst-case.cas-lock.int4-collision.n1",
+  "during_sample_count": 6,
+  "http_5xx": 0,
+  "http_responses": [
+    {
+      "actor_id": 72931250,
+      "phase": "create",
+      "retry_after": "5",
+      "status": 429
+    }
+  ],
+  "n": 1,
+  "overlap": null,
+  "participation": {
+    "aborted": [],
+    "completed": [
+      72931250
+    ],
+    "expected_actor_ids": [
+      72931250
+    ],
+    "iterations": 1,
+    "observed_actor_ids": [
+      72931250
+    ],
+    "started": [
+      72931250
+    ]
+  },
+  "plane": "product-worst-case",
+  "post": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA7D3838",
+    "monotonic_ns": 82691151321517
+  },
+  "pre": {
+    "deadlocks": 0,
+    "log_cursor": "wal-lsn:2/FA7D2F68",
+    "monotonic_ns": 82686002064678
+  },
+  "run_id": "4e5b1c3e-03ae-4d2e-8a29-460df7f50a3b",
+  "schema": "p5-cell/v1",
+  "shape": "int4-collision",
+  "statuses": {
+    "2xx": 0,
+    "409": 0,
+    "429": 1,
+    "5xx": 0,
+    "other": 0
+  },
+  "supported_workload": true,
+  "surface": "cas-lock",
+  "waits": {
+    "barrier_skew_seconds": 0,
+    "db_lock_wait_seconds": null,
+    "http_duration_seconds": 3.7969915959984064,
+    "pgbouncer_wait_seconds": null
+  }
+}

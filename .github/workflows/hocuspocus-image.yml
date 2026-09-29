@@ -2,7 +2,7 @@ name: Hocuspocus image (GHCR)
 
 # Builds and publishes the reusable Vaulter collaboration hub image to GitHub Container
 # Registry on a release tag, multi-arch, with build provenance + SBOM attestation. Consumers
-# REFERENCE the published image (image: ghcr.io/axioma-studio/vaulter-hocuspocus:<ver>) — see
+# REFERENCE the published image (image: ghcr.io/axiomasoft/vaulter-hocuspocus:<ver>) — see
 # docs/guide/hocuspocus-server.md. Uses the built-in GITHUB_TOKEN (no extra secret needed);
 # the first successful run creates the package, which an org admin can then make public.
 #
@@ -22,7 +22,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: axioma-studio/vaulter-hocuspocus
+  IMAGE_NAME: ${{ github.repository_owner }}/vaulter-hocuspocus
 
 jobs:
   image:

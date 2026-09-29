@@ -1,0 +1,747 @@
+{
+  "run_id": "721dd40b-ce8e-410a-8ecf-58873644f038",
+  "cells": [
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "0",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f0.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "0",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f0.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "0",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f0.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "0",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f0.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "1",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f1.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "1",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f1.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "1",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f1.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "1",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.f1.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "all",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.fall.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "all",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.fall.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "all",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.fall.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 20,
+      "fanout": "all",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i20.fall.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "0",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f0.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "0",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f0.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "0",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f0.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "0",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f0.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "1",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f1.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "1",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f1.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "1",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f1.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "1",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.f1.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "all",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.fall.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "all",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.fall.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "all",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.fall.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 100,
+      "fanout": "all",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i100.fall.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "0",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f0.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "0",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f0.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "0",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f0.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "0",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f0.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "1",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f1.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "1",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f1.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "1",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f1.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "1",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.f1.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "all",
+      "sink": "2xx",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.fall.2xx",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "all",
+      "sink": "500",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.fall.500",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "all",
+      "sink": "slow-under-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.fall.slow-under-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": 200,
+      "fanout": "all",
+      "sink": "over-timeout",
+      "throughput_claim": true,
+      "slo": [
+        "SLO-58",
+        "SLO-61",
+        "SLO-64"
+      ],
+      "cell_id": "product-realistic.relay.i200.fall.over-timeout",
+      "plane": "product-realistic"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "overlap-control.relay-retry.barrier.relay2-retry2",
+      "plane": "overlap-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "overlap-control.duplicate-job.serial.same-delivery",
+      "plane": "overlap-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "overlap-control.duplicate-job.concurrent.same-delivery",
+      "plane": "overlap-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "state-machine-control.retry.backoff.force-due",
+      "plane": "state-machine-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "state-machine-control.retry.dead.force-due",
+      "plane": "state-machine-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "state-machine-control.endpoint.disable.after-dead",
+      "plane": "state-machine-control"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 200,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "dirty-cardinality-probe.endpoints.n200.attempt1",
+      "plane": "dirty-cardinality-probe"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 1000,
+      "due_rows": 5000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "dirty-cardinality-probe.endpoints.n1000.attempt1",
+      "plane": "dirty-cardinality-probe"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 50000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "dirty-cardinality-probe.due-rows.n50000.attempt1",
+      "plane": "dirty-cardinality-probe"
+    },
+    {
+      "workers": 2,
+      "outbox_rows": 10000,
+      "endpoints": 20,
+      "due_rows": 500000,
+      "ingress_per_s": null,
+      "fanout": null,
+      "sink": null,
+      "throughput_claim": false,
+      "slo": [],
+      "cell_id": "dirty-cardinality-probe.due-rows.n500000.attempt1",
+      "plane": "dirty-cardinality-probe"
+    }
+  ]
+}

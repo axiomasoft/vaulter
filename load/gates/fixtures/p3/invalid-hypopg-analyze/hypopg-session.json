@@ -1,0 +1,6 @@
+{
+  "baseline_plan": "EXPLAIN SELECT 1",
+  "candidate_plan": "EXPLAIN ANALYZE SELECT 1 hypopg",
+  "hypopg_reset": false,
+  "session_id": "bad"
+}

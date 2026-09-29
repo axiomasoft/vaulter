@@ -22,7 +22,11 @@ it('отвергает панель без собственных таблиц',
     $panel = (new Panel)->id('shared');
 
     expect(fn () => $this->generator->generate(panel: $panel))
-        ->toThrow(InvalidArgumentException::class, 'shared default-panel schema');
+        ->toThrow(
+            InvalidArgumentException::class,
+            'Vaulter panel [shared] writes to the shared default-panel schema and needs no generated migration. '.
+            'Give it a tablePrefix() or a tables() map to generate per-panel tables.',
+        );
 });
 
 it('генерирует per-panel миграцию с именем по префиксу', function (): void {
@@ -30,8 +34,23 @@ it('генерирует per-panel миграцию с именем по пре�
 
     $file = $this->generator->generate(panel: $panel);
 
-    expect($file)->toEndWith('_create_project_drive_drive_tables.php')
-        ->and(file_get_contents($file))->toContain("->get('project')");
+    expect(basename($file))->toMatch('/^\d{4}_\d{2}_\d{2}_\d{6}_create_project_drive_drive_tables\.php$/')
+        ->and(file_get_contents($file))
+        ->toContain('for the "project" panel (project_drive_*).')
+        ->toContain("->get('project')")
+        ->not->toContain('{{ panel }}', '{{ prefix }}');
+});
+
+it('отдаёт приоритет явному префиксу над табличной картой', function (): void {
+    $panel = (new Panel)
+        ->id('project')
+        ->tablePrefix('project_drive')
+        ->tables(['storages' => 'mapped_storages']);
+
+    $file = $this->generator->generate(panel: $panel);
+
+    expect(basename($file))->toEndWith('_create_project_drive_drive_tables.php')
+        ->and(file_get_contents($file))->toContain('for the "project" panel (project_drive_*).');
 });
 
 it('migrationExists игнорирует timestamp и блокирует без force', function (): void {

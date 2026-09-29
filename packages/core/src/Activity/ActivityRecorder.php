@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Activity;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -42,6 +43,7 @@ final readonly class ActivityRecorder
 {
     public function __construct(
         private ActivityStoreRepository $store,
+        private MetricsRecorder $metrics,
     ) {}
 
     public function recordGrantCreated(NodeGrantCreated $event): Activity
@@ -158,7 +160,7 @@ final readonly class ActivityRecorder
         [$actorType, $resolvedActorId] = $this->resolveActor($actorId);
         $request = RequestContext::capture();
 
-        return $this->store->record(new RecordActivityCommand(
+        $activity = $this->store->record(new RecordActivityCommand(
             verb: $verb,
             tenantId: $tenantId,
             storageId: $storageId,
@@ -171,6 +173,13 @@ final readonly class ActivityRecorder
             userAgent: $request->userAgent,
             requestId: $request->requestId,
         ));
+
+        $this->metrics->counter(
+            name: 'vaulter_activity_write_total',
+            labels: ['verb' => $verb->value],
+        );
+
+        return $activity;
     }
 
     /**

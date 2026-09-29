@@ -1,0 +1,152 @@
+{
+  "items": [
+    {
+      "after": 7960,
+      "before": 31013,
+      "item": "P0.0"
+    },
+    {
+      "after": 11456,
+      "before": 58178,
+      "item": "P1.1"
+    },
+    {
+      "after": 10569,
+      "before": 58178,
+      "item": "P1.2"
+    },
+    {
+      "after": 11377,
+      "before": 58178,
+      "item": "P1.3"
+    },
+    {
+      "after": 12314,
+      "before": 58178,
+      "item": "P1.4"
+    },
+    {
+      "after": 10354,
+      "before": 58178,
+      "item": "P1.5"
+    },
+    {
+      "after": 12182,
+      "before": 72899,
+      "item": "P2.1"
+    },
+    {
+      "after": 11654,
+      "before": 72899,
+      "item": "P2.2"
+    },
+    {
+      "after": 11827,
+      "before": 72899,
+      "item": "P2.3"
+    },
+    {
+      "after": 12515,
+      "before": 72899,
+      "item": "P2.4"
+    },
+    {
+      "after": 12012,
+      "before": 72899,
+      "item": "P2.5"
+    },
+    {
+      "after": 11109,
+      "before": 72899,
+      "item": "P2.6"
+    },
+    {
+      "after": 11738,
+      "before": 72899,
+      "item": "P2.7"
+    },
+    {
+      "after": 11673,
+      "before": 72899,
+      "item": "P2.8"
+    },
+    {
+      "after": 7751,
+      "before": 30609,
+      "item": "P3.1"
+    },
+    {
+      "after": 7994,
+      "before": 30851,
+      "item": "P4.1"
+    },
+    {
+      "after": 7935,
+      "before": 30792,
+      "item": "P5.1"
+    },
+    {
+      "after": 7916,
+      "before": 30773,
+      "item": "P6.1"
+    },
+    {
+      "after": 7938,
+      "before": 30796,
+      "item": "P7.1"
+    },
+    {
+      "after": 35586,
+      "before": 71799,
+      "item": "P8.1"
+    },
+    {
+      "after": 10169,
+      "before": 46789,
+      "item": "P8.2"
+    },
+    {
+      "after": 33810,
+      "before": 70186,
+      "item": "P8.3"
+    },
+    {
+      "after": 40175,
+      "before": 76304,
+      "item": "P8.4"
+    },
+    {
+      "after": 33901,
+      "before": 70186,
+      "item": "P8.5"
+    },
+    {
+      "after": 34749,
+      "before": 71799,
+      "item": "P8.6"
+    },
+    {
+      "after": 40391,
+      "before": 119800,
+      "item": "P8.7"
+    },
+    {
+      "after": 35110,
+      "before": 71799,
+      "item": "P8.8"
+    }
+  ],
+  "schema": "p2-weight-before-after-v1",
+  "summary": {
+    "aggregate_after": 462165,
+    "aggregate_before": 1657578,
+    "median_after": 11673,
+    "median_before": 70186
+  },
+  "threshold": 100000,
+  "unit": {
+    "id": "token-estimate-calibration",
+    "model_id": null,
+    "version": "2.0.0"
+  }
+}

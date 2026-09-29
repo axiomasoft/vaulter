@@ -1,0 +1,71 @@
+{
+  "campaign_id": "4f565edf-58ca-47a0-869f-b9148ebcd2b6",
+  "source_code_modified": false,
+  "findings": [
+    {
+      "id": "R03-H01",
+      "reason": "S3 putPart and complete overwrite the same custom-trend selector",
+      "scope": [
+        "load/gates/thresholds.js",
+        "load/k6/scenarios/s3-multipart.js"
+      ],
+      "observed": "putPart 25/15 MiB/s contract is replaced by complete median>100 threshold; complete has no separate samples",
+      "required": "Distinct operation tags/selectors preserving all original SLO thresholds; acceptance-aware samples"
+    },
+    {
+      "id": "R03-H02",
+      "reason": "Tagged builtin bytes are zero despite multi-GB global traffic",
+      "scope": [
+        "load/k6/lib/metrics.js",
+        "load/k6/scenarios",
+        "load/gates/thresholds.js"
+      ],
+      "observed": "data_sent OP-02 and data_received OP-08 counters materialize zero; no valid op throughput verdict",
+      "required": "Capture accepted bytes with matching operation tags and retain original per-op byte-rate contracts"
+    },
+    {
+      "id": "R03-H03",
+      "reason": "Seed omits the primary blob foreign key used by current-version downloads",
+      "scope": [
+        "load/app/Console/SeedLoadDatasetCommand.php",
+        "load/k6/lib/discovery.js",
+        "load/gates tests"
+      ],
+      "observed": "FileVersion primary blob_id null while data edge and MinIO object exist; setup discovers empty download pool",
+      "required": "Seed fixture relations matching current API; fail run preflight on an empty mandatory download pool"
+    },
+    {
+      "id": "R03-H04",
+      "reason": "Sparse and absent series can receive threshold status without evidence; lab qualification is absent",
+      "scope": [
+        "load/gates/r03_summary.py",
+        "load/gates/test_r03_summary.py",
+        "load/scripts/run.sh"
+      ],
+      "observed": "A zero-sample download has threshold fail, yet is unevaluated; powersave/turbo/swap/foreign stacks prevent class-B admission",
+      "required": "Gate nonempty A and >=100 B observations; retain real status acceptance, lab facts and full-window identity"
+    },
+    {
+      "id": "R03-H05",
+      "reason": "Payload-size throughput is sampled before HTTP acceptance",
+      "scope": [
+        "load/k6/scenarios/tus-upload.js",
+        "load/k6/scenarios/s3-multipart.js",
+        "load/k6/scenarios/single-shot.js"
+      ],
+      "observed": "Rejected PATCH/part/single-shot can contribute apparent payload throughput; server single protocol counters also include finalization via shared UploadFileAction",
+      "required": "Measure accepted operation bytes and durations separately from failed response counts; preserve throughput floors and expose finalization-counter overlap"
+    },
+    {
+      "id": "R03-P01",
+      "reason": "Tier-S accessible-node query exceeds PostgreSQL total bind limit",
+      "scope": [
+        "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "packages/core/tests"
+      ],
+      "observed": "HTTP 500 from root children; SQLSTATE HY000 number of parameters must be between 0 and 65535. whereKeyInChunked ORs groups of 900 into one prepared statement without reducing the total bind count. Owner grant reaches >100000 nodes. Documents folder exists (5000 documents), but setup receives 500 and silently produces an empty docs pool.",
+      "required": "Separate package-core corrective R27: bounded, type-safe visibility query supporting bigint and ULID; preserve auth and cursor semantics; PG regression above65535 binds plus deny/cursor checks; no mutation run"
+    }
+  ],
+  "routing": "R03 harness corrective, R27 package-core bind-limit corrective, then new qualified R03 window before R04"
+}

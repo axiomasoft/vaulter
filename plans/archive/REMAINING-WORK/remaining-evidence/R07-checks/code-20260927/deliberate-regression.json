@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/usr/bin/php8.4",
+    "/home/vostrikov/.config/herd-lite/bin/composer",
+    "test",
+    "--",
+    "tests/Feature/MutationContractsTest.php",
+    "--filter=records every force-deleted",
+    "--ci"
+  ],
+  "removed": "'freed_bytes' => $event->freedBytes,",
+  "r02_mutant_id": "d0d77c1ac359cbe9",
+  "exit": 1,
+  "restored_sha256": "7e318a7bbc480e774195044b640b3fbae9b11fffc203a47a3c49293893ea9ad6"
+}

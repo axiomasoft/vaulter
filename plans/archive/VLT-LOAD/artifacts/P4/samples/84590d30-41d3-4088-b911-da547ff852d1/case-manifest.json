@@ -1,0 +1,12 @@
+{
+  "case_id": "cas_stage_probe/5g",
+  "ceilings_mib": {
+    "php_peak": 64
+  },
+  "fixture_id": "p4-matrix-8f383737-5g",
+  "process_kind": "php_cli",
+  "request": {
+    "method": "POST",
+    "path": "/cli/load:memory-probe-cas-stage"
+  }
+}
