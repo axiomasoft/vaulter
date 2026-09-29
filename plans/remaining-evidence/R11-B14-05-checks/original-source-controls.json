@@ -1,0 +1,89 @@
+{
+  "controls": [
+    {
+      "control": "leftover-part",
+      "evidence": "valid",
+      "joins": [
+        {
+          "join": "db-to-object",
+          "object_key": null,
+          "status": "matched"
+        },
+        {
+          "join": "object-to-db",
+          "object_key": null,
+          "status": "matched"
+        }
+      ],
+      "sampled_keys": [
+        "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "control": "extra-part",
+      "evidence": "valid",
+      "joins": [
+        {
+          "join": "db-to-object",
+          "object_key": null,
+          "status": "matched"
+        },
+        {
+          "join": "object-to-db",
+          "object_key": null,
+          "status": "matched"
+        }
+      ],
+      "sampled_keys": [
+        "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "control": "leftover-stage",
+      "evidence": "valid",
+      "joins": [
+        {
+          "join": "db-to-object",
+          "object_key": null,
+          "status": "matched"
+        },
+        {
+          "join": "object-to-db",
+          "object_key": null,
+          "status": "matched"
+        }
+      ],
+      "sampled_keys": [
+        "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ]
+    },
+    {
+      "control": "missing-second-part",
+      "evidence": "valid",
+      "joins": [
+        {
+          "join": "db-to-object",
+          "object_key": null,
+          "status": "matched"
+        },
+        {
+          "join": "object-to-db",
+          "object_key": null,
+          "status": "matched"
+        }
+      ],
+      "sampled_keys": [
+        "tmp/uploads/readback-upload.parts/1"
+      ]
+    }
+  ],
+  "expected_original_false_admissions": true,
+  "nonzero_collector": {
+    "checksum": null,
+    "exists": false,
+    "key": "tmp/uploads/readback-upload",
+    "size": 0
+  },
+  "scope": "controlled offline producer/collector",
+  "source": "2c1e70f"
+}

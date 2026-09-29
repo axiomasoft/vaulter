@@ -154,6 +154,10 @@ class ProductOperationRunner:
         storage = json_body(storage_response, 'storage fixture')
         fixture['storage_id'] = storage.get('storage_id')
         fixture['root_node_id'] = storage.get('root_node_id')
+        fixture['cas_scope'] = storage.get('cas_scope')
+        if not isinstance(fixture['cas_scope'], str) or not re.fullmatch(
+                r'global|t(?:null|[0-9]+)|s(?:null|[A-Za-z0-9]+)', fixture['cas_scope']):
+            raise ProductOperationError('storage fixture omitted a valid CAS scope')
 
         if operation in {'outbox-mutation', 'pgbouncer'}:
             return fixture

@@ -56,6 +56,7 @@ use Vaulter\Load\Observability\QueryTraceRecorder;
 use Vaulter\Load\Observability\RedisMetricsRegistry;
 use Vaulter\Load\Webhooks\LoadSinkOutboundUrlGuard;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
@@ -363,6 +364,11 @@ final class LoadServiceProvider extends ServiceProvider
                 'storage_id' => $storage->getKey(),
                 'root_node_id' => $root->getKey(),
                 'actor_id' => $actorId,
+                'cas_scope' => match (Config::dedupScope()) {
+                    'storage' => 's'.$storage->getKey(),
+                    'tenant' => 't'.(is_numeric($storage->tenant_id) ? (int) $storage->tenant_id : 'null'),
+                    default => 'global',
+                },
             ]);
         });
     }

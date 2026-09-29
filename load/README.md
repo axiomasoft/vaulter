@@ -631,6 +631,26 @@ session kill is not failover. ENOSPC is a dedicated app tmpfs at
 `tmp/uploads/<id>.parts/*` keys, not AWS `UploadId`. Direct MinIO/Postgres
 bypass fails preflight. Fixture cleanup is run-prefix scoped.
 
+P7 now captures a `p7-object-inventory/v1` on each raw attempt and
+`p7-object/v3` observations before fixture cleanup. The inventory includes the
+exact staged key, every recorded/attempted part and every actual key listed
+under that upload's `.parts/` prefix, plus the predicted final CAS key. The
+load storage seam supplies the configured CAS scope; the final candidate must
+be observed absent before the fault. No bucket-wide or shared CAS walk runs.
+Both join directions are recorded per key with required presence/absence;
+the reader recomputes expectations, checksum and size from DB/payload state.
+Committed/aborted/expired sessions require their staged/part objects to be
+absent. Extra objects and missing required objects invalidate the attempt.
+
+Collector failures have `observation=observation-error`, `exists=null` and an
+invalid verdict. Exact-key HEAD uses `mc stat --no-list --json`; arbitrary
+nonzero exits never establish absence. MinIO's
+[stat flags](https://github.com/minio/mc/blob/master/cmd/stat-main.go),
+[typed HEAD errors](https://github.com/minio/mc/blob/master/cmd/client-s3.go)
+and [listing JSON](https://github.com/minio/mc/blob/master/cmd/ls.go) define the
+collector format. Fake collectors test these boundaries offline; actual
+DB/object reconciliation and dependency recovery remain unmeasured.
+
 ```bash
 chmod +x load/scripts/p7-injectors.sh load/chaos/pg-failover.sh
 TIER=S docker compose -f load/docker-compose.load.yml -f load/docker-compose.chaos.yml \

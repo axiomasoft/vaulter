@@ -1,0 +1,130 @@
+{
+  "checks": [
+    {
+      "exit": 0,
+      "log": "baseline-p7-tests.log",
+      "name": "baseline P7 on 2c1e70f",
+      "tests": 125
+    },
+    {
+      "exit": 0,
+      "log": "original-source-controls.json",
+      "meaning": "Expected RED original: four false producer admissions; nonzero collector treated as absent",
+      "name": "python3 -B readback.py --original-ref 2c1e70f"
+    },
+    {
+      "exit": 0,
+      "log": "current-controls.json",
+      "meaning": "Four controls evidence-invalid; collector failure has exists=null/observation-error",
+      "name": "python3 -B readback.py"
+    },
+    {
+      "exit": 0,
+      "log": "object-inventory-tests.log",
+      "name": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_object_inventory.py' -v",
+      "tests": 30
+    },
+    {
+      "exit": 0,
+      "log": "p7-tests.log",
+      "name": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_*.py' -v",
+      "new_tests": 31,
+      "tests": 156
+    },
+    {
+      "cells": 51,
+      "exit": 0,
+      "log": "dry-run.log",
+      "name": "PYTHONDONTWRITEBYTECODE=1 TIER=S ./load/scripts/p7-chaos.sh dry-run"
+    },
+    {
+      "exit": 1,
+      "expected_exit": 1,
+      "log": "historical-rejection.log",
+      "meaning": "Historical evidence stays rejected: recovered without dependency probe",
+      "name": "python3 -B load/gates/p7_live_matrix.py verify --artifacts plans/VLT-LOAD/artifacts/P7"
+    },
+    {
+      "exit": 0,
+      "log": "syntax.log",
+      "name": "compile() without bytecode, PHP lint, sh -n of 3 inline collector scripts"
+    },
+    {
+      "exit": 0,
+      "log": "diff-check.log",
+      "name": "git diff --check"
+    },
+    {
+      "exit": 0,
+      "files": 176,
+      "log": "historical-preservation.log",
+      "name": "historical fingerprint equality"
+    }
+  ],
+  "full_reader_forged_success_controls_rejected": [
+    "leftover part",
+    "extra part without DB row",
+    "missing final",
+    "listing observation error"
+  ],
+  "full_reader_positive_cases": [
+    "committed multipart with stage/parts absent",
+    "active two-part upload with stage/final absent"
+  ],
+  "historical_preserved": true,
+  "historical_tree_sha256": "b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62",
+  "log_format": "Text logs strip trailing whitespace at end of line; diagnostics and command exits are preserved.",
+  "logs_sha256": {
+    "baseline-p7-tests.log": "0b25ff9d843b3b2fb0bf9871858c25ab41ce3941bef60262badc7c992e6c31bf",
+    "current-controls.json": "e5db9ada958a3287e3bdbe6652f6360f5dcf8409ca68884df0dca0c61c81c7a0",
+    "diff-check.log": "f15e272db1df9395716cc6c9451d6ec887a90f7264f91b639e60886b3df17b56",
+    "dry-run.log": "d4b906d1cfe807c4a77e65078402ea92d69ff581704e79165f34c201bfeb910e",
+    "historical-before.json": "a06fa75d80f91847b4bf60f00d8d77b1f4739a4eee8de6908fec91662b35e75d",
+    "historical-preservation.log": "17de311830dfafa2a8283f95c43673e74e42cbe983d9b1050580f04787329364",
+    "historical-rejection.log": "6776697edc2ae2f4555f77efaba98306fdd86294c57d7ef904f06d4aaa8c87d1",
+    "object-inventory-tests.log": "c5730602642726c77b0fc1194b685da465e40d1962cce26d68263600f28de7c2",
+    "original-source-controls.json": "d7379ca59508b42bc7102ff75b49429a926bb7de979e874931ccbc9ba2e53329",
+    "p7-tests.log": "b0cc73c0463c113d5de9243a2f779d8f3d9d8d00f083e09cb5812a063f87c0a1",
+    "readback.py": "f45d97652ccdd01fe3bd39587c1dc7645b5152d798bff25ff92cf4d3bf5ed709",
+    "syntax.log": "434bd5ec1f2a1342a2db1e23c7dc012e2fc1cbf0aaf9b09e21806270681fad78"
+  },
+  "mc_schema_sources": [
+    "https://github.com/minio/mc/blob/master/cmd/stat-main.go",
+    "https://github.com/minio/mc/blob/master/cmd/client-s3.go",
+    "https://github.com/minio/mc/blob/master/cmd/error.go",
+    "https://github.com/minio/mc/blob/master/cmd/ls.go"
+  ],
+  "not_run": [
+    "live/load/chaos/SLO measurements",
+    "package/PHP Testbench/PostgreSQL suites",
+    "cold mutation",
+    "independent review",
+    "real mc/Docker runtime"
+  ],
+  "pre_existing_dirty_paths": [
+    "plans/REMAINING-WORK.md",
+    "plans/remaining-evidence/B14-audit.md"
+  ],
+  "review": {
+    "findings": [],
+    "skill": "quality:code-review",
+    "type": "focused self-review",
+    "verified": "Exact scope/CAS identities, pre-fault final absence, every DB/actual part identity, per-key joins and expected checksums/sizes; observation errors and listing/read races invalidate producer and reader; cleanup only captured owned identities; publisher excluded."
+  },
+  "scope": "load-only attempt-owned staged/part/final inventory; controlled offline producer/collector/full-reader regressions",
+  "source_base": "2c1e70ffa9d0398d508efe0fdae8e15d87924d2c",
+  "source_rollup_sha256": "1947facad82421e6130505f1396aa8cef67a24edaa8e182e57c1f50ff9a41183",
+  "source_sha256": {
+    "load/README.md": "fd385ff731b5dae10cfeff572ad2323ba6820c2942e1670da12d8be195463da3",
+    "load/app/LoadServiceProvider.php": "ff4ecc70ea0b90ec778b8331dcb2f2a99869af14ed6044319c901e7780116397",
+    "load/gates/p7_chaos.py": "51224236580a2dffab5074fd83d130ec5bebfc7ec29e88e02ab7c6403a4c6106",
+    "load/gates/p7_live_matrix.py": "4939b13a5bf707069ad69595fde68d65c912bc6bc052dc75f9940113c530579a",
+    "load/gates/p7_object_inventory.py": "ea794b89affeac31f566b0c6032875302f22bfe8c70d6247abcacba09c3be234",
+    "load/gates/p7_product_ops.py": "0b6ce841ebff0d0f189873745a26f0b244045e2c9336ec1d76e10c122de91603",
+    "load/gates/test_p7_evidence.py": "9c1374f0f4adb401f2f3c0db3044643eef37b08a67241d0bfdbd226f58323edc",
+    "load/gates/test_p7_integrity_contract.py": "5f845094f0bf7bb66efd03703d4f4d7bbb76ec6207f27a93a988e642d79c36ea",
+    "load/gates/test_p7_object_inventory.py": "6e44935c3c73b2e47065ddcdc9f3ac93bacda70f95072d49c086f6bd9cf5e410",
+    "load/gates/test_p7_product_ops.py": "bd45114348499ed3605e63404851ffd4d7384fc419e8d27394672400771fde98"
+  },
+  "task": "R11-B14-05"
+}

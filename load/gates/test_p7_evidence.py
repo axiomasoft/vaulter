@@ -14,6 +14,7 @@ import p7_live_matrix as live
 
 RUN = 'offline-evidence'
 CHECKSUM = 'b' * 64
+FINAL_KEY = 'global/bb/bb/' + CHECKSUM
 CELL = gate.catalog()[0]['cell_id']
 EPOCH = 1790632800
 
@@ -152,9 +153,54 @@ def build(root):
     write(root / 'cell-verdicts.json', {'run_id': RUN, 'cells': verdicts})
     for name, values in streams.items():
         write_rows(root / name, values)
+    for cell in gate.catalog():
+        for attempt in range(1, live.repeat_count(cell) + 1):
+            refresh_inventory_streams(streams, cell['cell_id'], attempt)
+    for name in ('objects.jsonl', 'reconcile.jsonl', 'attempts.jsonl'):
+        write_rows(root / name, streams[name])
     for name in ('integrity-before.json', 'integrity-after.json'):
         write(root / 'database' / name, {'unchanged': 0})
     write(root / 'database/locks.json', {'ungranted': 0})
+
+
+def refresh_inventory_streams(all_streams, cid, attempt):
+    selected = lambda name: [row for row in all_streams[name] if (row['cell_id'], row['attempt']) == (cid, attempt)]
+    raw = selected('attempts.jsonl')[0]
+    entities = selected('database.jsonl')
+    upload = next((row for row in entities if row['entity'] == 'upload_session'), None)
+    fixture = {'marker': live.product_ops.marker_for(RUN, cid, attempt), 'cas_scope': 'global',
+               'upload_id': upload['upload_id'] if upload else None}
+    inv = live.inventory.scope_for(fixture, raw['operation'])
+    old = selected('objects.jsonl')
+    inv['part_listing']['keys'] = sorted(row['key'] for row in old if row['exists'] is True and '.parts/' in row['key'])
+    if upload:
+        inv['final_before'] = {'key': FINAL_KEY, 'exists': False, 'checksum': None, 'size': 0, 'observation': 'absent'}
+    expected = live.inventory.expectations(entities, inv, raw)
+    inv['expected'] = expected
+    raw['object_inventory'] = inv
+    anchor = old[0]
+    objects = []
+    for item in expected:
+        prior = next((row for row in old if row['key'] == item['key']), None)
+        state = {field: prior[field] for field in ('exists','checksum','size')} if prior else {'exists': False,'checksum': None,'size':0}
+        objects.append({**anchor, **state, 'schema': 'p7-object/v3', 'run_marker': RUN,
+                        'key': item['key'], 'observation': 'observed' if state['exists'] else 'absent',
+                        'role': item['role'], 'expected': item})
+    join_anchor = selected('reconcile.jsonl')[0]
+    joins = [{**join_anchor, **join, 'monotonic_ns': (15 if join['join']=='db-to-object' else 16) +
+              selected('ledger.jsonl')[0]['monotonic_ns'] - 1,
+              'wall_time': datetime.fromtimestamp(EPOCH + (15 if join['join']=='db-to-object' else 16) +
+              selected('ledger.jsonl')[0]['monotonic_ns'] - 1, timezone.utc).isoformat().replace('+00:00','Z')}
+             for join in live.inventory.reconcile(expected, objects)]
+    for name, replacement in (('objects.jsonl',objects),('reconcile.jsonl',joins)):
+        all_streams[name] = [row for row in all_streams[name] if (row['cell_id'],row['attempt']) != (cid,attempt)] + replacement
+
+
+def refresh_inventory(root, cid, attempt):
+    streams = {name: rows(root / name) for name in gate.JSONL_FILES}
+    refresh_inventory_streams(streams, cid, attempt)
+    for name in ('objects.jsonl', 'reconcile.jsonl', 'attempts.jsonl'):
+        write_rows(root / name, streams[name])
 
 
 class CompleteEvidenceTest(unittest.TestCase):
@@ -347,6 +393,7 @@ class CompleteEvidenceTest(unittest.TestCase):
                 self.stream('attempts.jsonl', lambda row: row.__setitem__('durable_state', durable))
                 self.file(f'attempts/{CELL}.attempt-1.json', lambda row: row.__setitem__('durable_state', durable))
                 self.file('cells.json', lambda cells: cells[0].__setitem__('durable_state', durable))
+                refresh_inventory(self.root, CELL, 1)
                 live.verify_artifacts(self.root)
         self.stream('objects.jsonl', lambda row: row.update(exists=True, checksum=CHECKSUM, size=16))
         self.rejected()
@@ -356,14 +403,17 @@ class CompleteEvidenceTest(unittest.TestCase):
         db = rows(self.root / 'database.jsonl')
         first = db[0]
         db.append({**first, 'entity': 'blob', 'entity_id': 'blob-1', 'status': 'committed',
-                   'checksum': CHECKSUM, 'storage_key': 'cas/final', 'size': 16})
+                   'checksum': CHECKSUM, 'storage_key': FINAL_KEY, 'size': 16})
         write_rows(self.root / 'database.jsonl', db)
-        self.stream('objects.jsonl', lambda row: row.__setitem__('key', 'cas/final'))
+        self.stream('objects.jsonl', lambda row: row.update(
+            exists=row['role']=='final', checksum=CHECKSUM if row['role']=='final' else None,
+            size=16 if row['role']=='final' else 0))
         self.stream('reconcile.jsonl', lambda row: row.__setitem__('durable_identity',
-                    'blob-1' if row['join'] == 'db-to-object' else 'cas/final'))
+                    'blob-1' if row['join'] == 'db-to-object' else FINAL_KEY))
         self.stream('attempts.jsonl', lambda row: row.__setitem__('durable_state', 'committed'))
         self.file(f'attempts/{CELL}.attempt-1.json', lambda row: row.__setitem__('durable_state', 'committed'))
         self.file('cells.json', lambda cells: cells[0].__setitem__('durable_state', 'committed'))
+        refresh_inventory(self.root, CELL, 1)
         live.verify_artifacts(self.root)
         self.stream('database.jsonl', lambda row: row.__setitem__('checksum', 'c' * 64) if row['entity'] == 'blob' else None)
         self.rejected()
@@ -418,6 +468,7 @@ class CompleteEvidenceTest(unittest.TestCase):
         self.stream('attempts.jsonl', lambda row: row.__setitem__('durable_state', 'committed'))
         self.file(f'attempts/{CELL}.attempt-1.json', lambda row: row.__setitem__('durable_state', 'committed'))
         self.file('cells.json', lambda cells: cells[0].__setitem__('durable_state', 'committed'))
+        refresh_inventory(self.root, CELL, 1)
         live.verify_artifacts(self.root)
 
     def test_actual_window_producer_binds_to_full_verifier(self):
@@ -432,16 +483,19 @@ class CompleteEvidenceTest(unittest.TestCase):
                 return self.value
 
         clock = Clock()
-        fixture = {'payload_sha256': CHECKSUM, 'upload_id': 'upload-1', 'marker': RUN, 'run_id': RUN}
+        fixture = {'payload_sha256': CHECKSUM, 'upload_id': 'upload-1', 'marker': RUN, 'run_id': RUN, 'cas_scope': 'global'}
         entities = [{'entity': 'upload_session', 'entity_id': '1', 'upload_id': 'upload-1',
                      'status': 'uploading', 'received_bytes': 16}]
         result = {'status': 503, 'transport': 'http', 'operation': 'tus-patch', 'request_id': 'producer-1'}
         boundaries = {
             'host_status': 200, 'host_probe': (200, 'vaulter_metric 1'), 'arm': 's3-fault-proxy',
             'barrier_ack': ack_for(cell), 'revert': None, 'sample_entities': entities, 'cleanup_fixture': None,
-            'object_sample': {'key': 'tmp/uploads/upload-1', 'exists': True, 'checksum': CHECKSUM, 'size': 16},
+            'object_listing': {'status': 'observed', 'keys': []},
         }
         with ExitStack() as stack:
+            stack.enter_context(patch.object(live, 'object_sample', side_effect=lambda key, checksum=None:
+                {'key': key, 'exists': key=='tmp/uploads/upload-1', 'checksum': CHECKSUM if key=='tmp/uploads/upload-1' else None,
+                 'size': 16 if key=='tmp/uploads/upload-1' else 0, 'observation': 'observed' if key=='tmp/uploads/upload-1' else 'absent'}))
             for name, value in boundaries.items():
                 stack.enter_context(patch.object(live, name, return_value=value))
             stack.enter_context(patch.object(live.product_ops.ProductOperationRunner, 'prepare', return_value=fixture))

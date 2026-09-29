@@ -355,7 +355,7 @@ def _check_fault_ids(ledger: list[dict], injectors: list[dict]) -> None:
 
 def _check_objects(rows: list[dict], manifest: dict) -> None:
     for row in rows:
-        _require(row.get('schema') in {'p7-object/v1', 'p7-object/v2'}, 'object schema')
+        _require(row.get('schema') in {'p7-object/v1', 'p7-object/v2', 'p7-object/v3'}, 'object schema')
         _require(row.get('run_id') == manifest['run_id'], 'cross-run object')
         key = row.get('key')
         _require(isinstance(key, str) and key, 'object key')
@@ -368,6 +368,10 @@ def _check_objects(rows: list[dict], manifest: dict) -> None:
                 'cross-run object marker',
             )
         exists = row.get('exists', True)
+        if row['schema'] == 'p7-object/v3' and row.get('observation') == 'observation-error':
+            _require(exists is None and row.get('checksum') is None and row.get('size') == 0,
+                     'observation error must not claim presence/absence')
+            continue
         _require(isinstance(exists, bool), 'object exists')
         checksum = row.get('checksum')
         if exists or checksum is not None:
@@ -467,7 +471,7 @@ def _check_reconcile(rows: list[dict], readiness: dict[tuple[str, int], list[dic
         _require(join in ('db-to-object', 'object-to-db'), 'reconcile join')
         status = row.get('status')
         _require(status in (*RESOLVED, *AMBIGUOUS, 'missing-object', 'missing-row',
-                            'checksum-mismatch', 'orphan-object'), 'reconcile status')
+                            'checksum-mismatch', 'orphan-object', 'observation-error', 'size-mismatch'), 'reconcile status')
         identity = row.get('durable_identity')
         if status in AMBIGUOUS:
             raise EvidenceInvalid('unresolved ambiguity')

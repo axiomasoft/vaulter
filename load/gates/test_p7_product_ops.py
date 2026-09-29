@@ -22,6 +22,7 @@ class FakeHttp:
             return ops.HttpResponse(200, json.dumps({
                 'storage_id': 17,
                 'root_node_id': 23,
+                'cas_scope': 's17',
             }).encode(), {})
         if path.endswith('/resumable-uploads'):
             return ops.HttpResponse(201, b'{"data":{"upload_id":"fixture-upload"}}', {})
@@ -54,6 +55,23 @@ class ProductOperationRunnerTest(unittest.TestCase):
         self.assertEqual(http.calls[-1][1], '/api/vaulter/resumable-uploads/fixture-upload')
         self.assertEqual(http.calls[-1][3]['X-Load-Actor'], str(fixture['actor_id']))
         self.assertNotIn('s3-fault-proxy', http.calls[-1][1])
+        self.assertEqual(fixture['cas_scope'], 's17')
+
+    def test_fixture_refuses_missing_or_foreign_cas_scope_before_upload(self):
+        for scope in (None, '../foreign', 'other/global'):
+            with self.subTest(scope=scope):
+                http = FakeHttp()
+                def request(method, path, body, headers):
+                    response = http(method, path, body, headers)
+                    if path == '/load/storage':
+                        value = json.loads(response.body)
+                        value['cas_scope'] = scope
+                        return ops.HttpResponse(200, json.dumps(value).encode(), {})
+                    return response
+                runner = ops.ProductOperationRunner(request=request)
+                with self.assertRaises(ops.ProductOperationError):
+                    runner.prepare({'cell_id': 'product-realistic.tus-patch.503', 'operation': 'tus-patch'}, 'offline-scope', 1)
+                self.assertEqual([call[1] for call in http.calls], ['/load/storage'])
 
     def test_complete_stages_a_real_part_before_the_fault_operation(self):
         http = FakeHttp()

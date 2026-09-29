@@ -21,7 +21,7 @@ class IntegrityContractTest(unittest.TestCase):
         cell = next(row for row in gate.catalog() if row['cell_id'] == cid)
         fixture = {'marker': live.product_ops.marker_for(evidence.RUN, cid, attempt),
                    'run_id': evidence.RUN, 'upload_id': 'offline-upload',
-                   'payload_sha256': evidence.CHECKSUM, 'requested_bytes': 16}
+                   'payload_sha256': evidence.CHECKSUM, 'requested_bytes': 16, 'cas_scope': 'global'}
         upload = {'entity': 'upload_session', 'entity_id': 'session-1',
                   'upload_id': fixture['upload_id'], 'status': status, 'received_bytes': received,
                   'assembled_blob_id': 'blob-1' if blob else None}
@@ -31,11 +31,18 @@ class IntegrityContractTest(unittest.TestCase):
                              'status': 'stored', 'checksum': evidence.CHECKSUM, 'size': 16})
         if blob:
             entities.append({'entity': 'blob', 'entity_id': 'blob-1', 'status': 'committed',
-                             'storage_key': 'cas/offline-final', 'checksum': evidence.CHECKSUM, 'size': 16})
+                             'storage_key': evidence.FINAL_KEY, 'checksum': evidence.CHECKSUM, 'size': 16})
         suffix = '.parts/1' if operation in {'s3-put-part', 's3-complete', 'sweeper'} else ''
-        key = 'cas/offline-final' if blob else f'tmp/uploads/{fixture["upload_id"]}{suffix}'
+        key = evidence.FINAL_KEY if blob else f'tmp/uploads/{fixture["upload_id"]}{suffix}'
         obj = {'key': key, 'exists': exists, 'checksum': checksum if exists else None,
-               'size': 16 if exists else 0}
+               'size': 16 if exists else 0, 'observation': 'observed' if exists else 'absent'}
+        self.primary_key = key
+        sampled = []
+        def sample_object(requested, expected_checksum=None):
+            sampled.append(requested)
+            if requested == key and (requested != evidence.FINAL_KEY or len(sampled) > 1):
+                return obj
+            return {'key': requested, 'exists': False, 'checksum': None, 'size': 0, 'observation': 'absent'}
         result = {'operation': operation, 'status': http, 'transport': 'http',
                   'request_id': 'offline-request-1', 'requested_bytes': 16, 'written_bytes': 0}
         streams = {name: [] for name in gate.JSONL_FILES}
@@ -50,14 +57,16 @@ class IntegrityContractTest(unittest.TestCase):
             stack.enter_context(patch.object(live, 'barrier_ack', return_value=evidence.ack_for(cell)))
             stack.enter_context(patch.object(live.product_ops.ProductOperationRunner, 'prepare', return_value=fixture))
             stack.enter_context(patch.object(live.product_ops.ProductOperationRunner, 'execute', return_value=result))
-            sample = stack.enter_context(patch.object(live, 'object_sample', return_value=obj))
+            stack.enter_context(patch.object(live, 'object_sample', side_effect=sample_object))
+            stack.enter_context(patch.object(live, 'object_listing', return_value={
+                'status': 'observed', 'keys': [key] if '.parts/' in key and exists else []}))
             record = live.run_window(streams, live.Clock(), cell, attempt, evidence.RUN,
                                      gate.config_fingerprint(), 'a' * 64)
-            sample.assert_called_once_with(key, evidence.CHECKSUM)
+            self.assertIn(key, sampled)
         return record, streams
 
     def assert_pair(self, record, streams, *, status, valid):
-        self.assertEqual([row['status'] for row in streams['reconcile.jsonl']], [status, status])
+        self.assertEqual([row['status'] for row in streams['reconcile.jsonl'] if row['object_key'] == self.primary_key], [status, status])
         self.assertEqual(record['evidence'], 'valid' if valid else 'invalid')
         raw = streams['attempts.jsonl'][0]
         if valid:

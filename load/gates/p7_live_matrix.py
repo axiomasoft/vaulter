@@ -9,10 +9,12 @@ probe stays evidence-invalid. Timing is recorded without an RTO verdict.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import math
 import os
+import re
 import subprocess
 import time
 import urllib.request
@@ -23,6 +25,7 @@ import p7_chaos as gate
 import p7_injectors as injectors
 import p7_product_ops as product_ops
 import p7_lock_holder as lock_holder
+import p7_object_inventory as inventory
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -289,21 +292,83 @@ def sample_entities(fixture: dict, *, ha: bool = False) -> list[dict]:
     return rows
 
 
-def object_sample(key: str, expected_checksum: str | None = None) -> dict:
-    result = _run([
+def _mc_json(text: str) -> list[dict]:
+    values = []
+    decoder = json.JSONDecoder()
+    while text.strip():
+        value, end = decoder.raw_decode(text.lstrip())
+        if not isinstance(value, dict):
+            raise ValueError('non-object mc response')
+        values.append(value)
+        text = text.lstrip()[end:]
+    return values
+
+
+def _mc(key: str, command: str) -> subprocess.CompletedProcess[str]:
+    return _run([
         'docker', 'exec', '-e', f'KEY={key}', MINIO, 'sh', '-c',
-        'mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '
-        'mc cat "local/vaulter-load/$KEY"',
+        'mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && ' + command,
     ], timeout=30, check=False)
-    if result.returncode != 0:
-        return {'key': key, 'exists': False, 'checksum': None, 'size': 0}
-    raw = result.stdout.encode('utf-8')
-    return {
-        'key': key,
-        'exists': True,
-        'checksum': hashlib.sha256(raw).hexdigest(),
-        'size': len(raw),
-    }
+
+
+def object_sample(key: str, expected_checksum: str | None = None) -> dict:
+    absent = {'key': key, 'exists': False, 'checksum': None, 'size': 0, 'observation': 'absent'}
+    error = {**absent, 'exists': None, 'observation': 'observation-error'}
+    try:
+        stat = _mc(key, 'mc stat --no-list --json "local/vaulter-load/$KEY"')
+        messages = _mc_json(stat.stdout)
+        if len(messages) != 1:
+            return error
+        message = messages[0]
+        if stat.returncode != 0:
+            detail = message.get('error', {})
+            cause_detail = detail.get('cause', {})
+            cause = cause_detail.get('error')
+            # mc converts HEAD NoSuchKey to ObjectMissing (an empty Go struct).
+            typed_missing = (cause == {} and cause_detail.get('message') == 'Object does not exist'
+                             and detail.get('message') == f'Unable to stat `local/{BUCKET}/{key}`.')
+            if message.get('status') == 'error' and (typed_missing or (
+                    isinstance(cause, dict) and cause.get('Code') == 'NoSuchKey'
+                    and cause.get('Key') == key and cause.get('BucketName') == BUCKET)):
+                return absent
+            return error
+        if message.get('status') != 'success' or not gate._int(message.get('size')) or message['size'] < 0:
+            return error
+        # Base64 keeps arbitrary object bytes out of the text subprocess decoder.
+        result = _mc(key, 'tmp=$(mktemp) || exit 1; '
+                     "trap 'rm -f \"$tmp\"' EXIT; "
+                     'mc cat "local/vaulter-load/$KEY" >"$tmp" || exit 1; base64 "$tmp"')
+        if result.returncode != 0:
+            return error
+        raw = base64.b64decode(''.join(result.stdout.split()), validate=True)
+        if len(raw) != message['size']:
+            return error
+        return {'key': key, 'exists': True, 'checksum': hashlib.sha256(raw).hexdigest(),
+                'size': len(raw), 'observation': 'observed'}
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError):
+        return error
+
+
+def object_listing(prefix: str) -> dict:
+    gate._require(re.fullmatch(r'tmp/uploads/[A-Za-z0-9._-]+\.parts/', prefix), 'unscoped object listing')
+    error = {'status': 'observation-error', 'keys': []}
+    try:
+        result = _mc(prefix, 'mc ls --recursive --json "local/vaulter-load/$KEY"')
+        if result.returncode != 0:
+            return error
+        keys = []
+        for row in _mc_json(result.stdout):
+            key = row.get('key')
+            if (row.get('status') != 'success' or row.get('type') != 'file' or
+                    not isinstance(key, str) or not key or
+                    any(piece in {'', '.', '..'} for piece in key.split('/'))):
+                return error
+            keys.append(prefix + key)
+        if len(keys) != len(set(keys)):
+            return error
+        return {'status': 'observed', 'keys': sorted(keys)}
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError):
+        return error
 
 
 def remove_object(key: str) -> None:
@@ -314,17 +379,21 @@ def remove_object(key: str) -> None:
     ], timeout=30, check=False)
 
 
-def cleanup_fixture(fixture: dict, entities: list[dict], object_state: dict, *, ha: bool) -> None:
+def cleanup_fixture(fixture: dict, entities: list[dict], object_states: list[dict], *, ha: bool) -> None:
     """Delete only rows/objects minted for this attempt; never reset shared state."""
-    if object_state.get('exists'):
-        remove_object(str(object_state['key']))
     upload_id = fixture.get('upload_id')
     if upload_id:
-        remove_object(f'tmp/uploads/{upload_id}')
-        for entity in entities:
-            if entity.get('entity') == 'upload_part':
-                part_no = str(entity['entity_id']).rsplit(':', 1)[-1]
-                remove_object(f'tmp/uploads/{upload_id}.parts/{part_no}')
+        staged_key = f'tmp/uploads/{upload_id}'
+        prefix = staged_key + '.parts/'
+        final = inventory.final_key(fixture.get('cas_scope'), fixture['payload_sha256'])
+        for state in object_states:
+            key = state['key']
+            # A foreign/unknown observation is never a deletion instruction.
+            owned_temp = key == staged_key or (key.startswith(prefix) and
+                         all(piece not in {'', '.', '..'} for piece in key[len(prefix):].split('/')))
+            owned_final = key == final == fixture.get('owned_final_key') and state.get('checksum') == fixture['payload_sha256']
+            if state.get('exists') is True and (owned_temp or owned_final):
+                remove_object(key)
 
     marker = str(fixture['marker'])
     _run([
@@ -664,6 +733,14 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
     runner = product_ops.ProductOperationRunner(sql=psql_ha_primary if ha else psql)
     fixture = runner.prepare(cell, run_id, attempt)
     checksum = str(fixture['payload_sha256'])
+    object_inventory = inventory.scope_for(fixture, cell['operation'])
+    if fixture.get('upload_id'):
+        candidate = inventory.final_key(fixture.get('cas_scope'), checksum)
+        before_final = object_sample(candidate, checksum)
+        if before_final.get('observation') != 'absent' or before_final.get('exists') is not False:
+            raise LiveError('final candidate must be observed absent before fault')
+        object_inventory['final_before'] = before_final
+        fixture['owned_final_key'] = candidate
     up = host_status('http://127.0.0.1:8080/up')
     ready = host_status('http://127.0.0.1:8080/ready')
     metrics_status, metrics_body = host_probe('http://127.0.0.1:8080/metrics')
@@ -762,20 +839,36 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
     for entity in entities:
         add('database.jsonl', 'fault', 'observe', schema='p7-database/v1', source='database', **entity)
 
-    if blob is not None:
-        object_state = object_sample(str(blob['storage_key']), str(blob['checksum']))
-    elif fixture.get('upload_id'):
-        suffix = '.parts/1' if cell['operation'] in {'s3-put-part', 's3-complete', 'sweeper'} else ''
-        object_state = object_sample(f'tmp/uploads/{fixture["upload_id"]}{suffix}', checksum)
-    else:
-        object_state = {
-            'key': f'tmp/uploads/{run_id}/{fixture["marker"]}/not-applicable',
-            'exists': False,
-            'checksum': None,
-            'size': 0,
-        }
-    add('objects.jsonl', 'fault', 'observe', schema='p7-object/v2', source='object',
-        run_marker=run_id, **object_state)
+    if fixture.get('upload_id'):
+        object_inventory['part_listing'] = object_listing(f'tmp/uploads/{fixture["upload_id"]}.parts/')
+    raw_attempt = {'run_id': run_id, 'operation': cell['operation'], 'payload_checksum': checksum}
+    try:
+        expected = inventory.expectations(entities, object_inventory, raw_attempt)
+        inventory_error = None
+    except gate.EvidenceInvalid:
+        # Keep scoped observations even when the listing or DB join failed.
+        prefix = f'tmp/uploads/{fixture.get("upload_id")}.parts/'
+        reported = object_inventory['part_listing'].get('keys', [])
+        safe_keys = sorted({key for key in reported if isinstance(key, str) and key.startswith(prefix)
+                            and len(key) > len(prefix) and
+                            all(piece not in {'', '.', '..'} for piece in key[len(prefix):].split('/'))})
+        safe_inventory = {**object_inventory, 'part_listing': {'status': 'observed', 'keys': safe_keys}}
+        try:
+            expected = inventory.expectations(entities, safe_inventory, raw_attempt)
+        except gate.EvidenceInvalid:
+            uid = fixture.get('upload_id')
+            synthetic = [{'entity': 'upload_session', 'entity_id': fixture['marker'], 'upload_id': uid,
+                          'status': 'initiated', 'received_bytes': 0}] if uid else entities
+            expected = inventory.expectations(synthetic, safe_inventory, raw_attempt)
+        inventory_error = 'observation-error' if object_inventory['part_listing']['status'] != 'observed' else 'missing-row'
+    object_inventory['expected'] = expected
+    object_states = []
+    for item in expected:
+        state = (object_sample(item['key'], item['checksum']) if item['role'] != 'not-applicable' else
+                 {'key': item['key'], 'exists': False, 'checksum': None, 'size': 0, 'observation': 'absent'})
+        object_states.append({**state, 'role': item['role'], 'expected': item})
+        add('objects.jsonl', 'fault', 'observe', schema='p7-object/v3', source='object',
+            run_marker=run_id, **object_states[-1])
     free_after = int(arm.enospc.get('free_bytes_after') or 0) if cell['plane'] == 'storage-control' else 0
     written = int(result.get('written_bytes') or 0)
     add('temp.jsonl', 'fault', 'observe', schema='p7-temp/v1', source='temp',
@@ -786,7 +879,7 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
         path=f'prometheus/{prom_name}', job='vaulter-sut')
     add('attempts.jsonl', 'fault', 'observe', schema='p7-attempt/v2', source='attempt',
         operation=cell['operation'], product_results=product_results,
-        payload_checksum=checksum,
+        object_inventory=object_inventory, payload_checksum=checksum,
         http_outcome=http, availability=availability, durable_state=durable, rejected=http != 'accepted')
     up2 = host_status('http://127.0.0.1:8080/up')
     ready2 = host_status('http://127.0.0.1:8080/ready')
@@ -797,36 +890,19 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
     recovered = up2 == 200 and ready2 == 200 and metrics2 == 200 and 'vaulter_' in metrics_body2
     add('ledger.jsonl', 'recovery', 'observe', schema='p7-ledger/v1', source='ledger', recovered=recovered)
 
-    relevant_object = blob is not None or fixture.get('upload_id') is not None
-    parts = [row for row in entities if row['entity'] == 'upload_part']
-    if blob is not None:
-        expects_object = True
-    elif upload is not None and upload['status'] in {'aborted', 'expired'}:
-        expects_object = False
-    else:
-        expects_object = bool(parts) or (
-            upload is not None and int(upload.get('received_bytes') or 0) > 0
-        )
-    if relevant_object and expects_object and object_state['exists']:
-        expected_checksums = {checksum, blob.get('checksum') if blob else None}
-        expected_checksums.update(row.get('checksum') for row in parts)
-        object_status = 'matched' if object_state['checksum'] in expected_checksums else 'checksum-mismatch'
-    elif relevant_object and expects_object:
-        object_status = 'missing-object'
-    elif relevant_object and object_state['exists']:
-        object_status = 'orphan-object'
-    elif relevant_object:
-        object_status = 'matched-absent'
-    else:
-        object_status = 'not-applicable'
-    add('reconcile.jsonl', 'reconcile', 'observe', schema='p7-reconcile/v1', source='reconcile',
-        join='db-to-object', durable_identity=str((blob or upload or outbox or entities[0])['entity_id']),
-        status=object_status)
-    add('reconcile.jsonl', 'reconcile', 'observe', schema='p7-reconcile/v1', source='reconcile',
-        join='object-to-db', durable_identity=str(object_state['key']), status=object_status)
+    joins = inventory.reconcile(expected, object_states)
+    present_parts = sorted(row['key'] for row in object_states if row['role'] == 'part' and row.get('exists') is True)
+    if present_parts != object_inventory['part_listing']['keys']:
+        inventory_error = 'observation-error'
+    if inventory_error:
+        joins.extend({'join': direction, 'object_key': 'inventory', 'durable_identity': fixture['marker'],
+                  'requirement': 'absence', 'status': inventory_error}
+                     for direction in ('db-to-object', 'object-to-db'))
+    for join in joins:
+        add('reconcile.jsonl', 'reconcile', 'observe', schema='p7-reconcile/v1', source='reconcile', **join)
     add('ledger.jsonl', 'reconcile', 'observe', schema='p7-ledger/v1', source='ledger')
     finished = clock.next()
-    integrity_ok = object_status in gate.RESOLVED
+    integrity_ok = bool(joins) and all(row['status'] in gate.RESOLVED for row in joins)
     retry_distinct = len(product_results) < 2 or product_results[0]['request_id'] != product_results[1]['request_id']
     record = {
         'run_id': run_id,
@@ -846,7 +922,7 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
         't_restore_ns': finished - fault_ns,
         't_converge_ns': finished - started,
     }
-    cleanup_fixture(fixture, entities, object_state, ha=ha)
+    cleanup_fixture(fixture, entities, object_states, ha=ha)
     return record
 
 
@@ -972,71 +1048,17 @@ def digest_tree(root: Path) -> str:
 
 
 def _raw_integrity(rows: dict[str, list[dict]], attempt: dict) -> None:
-    """Verify the captured DB/object pair; inventory expansion belongs to B14-05."""
+    """Recompute both joins for every expected and actually listed scoped object."""
     require = gate._require
     entities = rows['database.jsonl']
-    objects = rows['objects.jsonl']
-    require(len(objects) == 1, 'unsupported or duplicate object observation')
-    obj = objects[0]
     identities = [(row['entity'], row['entity_id']) for row in entities]
     require(len(identities) == len(set(identities)), 'duplicate durable DB identity')
+    require(sum(row['entity'] == 'upload_session' for row in entities) <= 1, 'multiple upload identities')
+    require(sum(row['entity'] == 'blob' for row in entities) <= 1, 'multiple blob identities')
+    inventory.verify(rows, attempt)
     upload = next((row for row in entities if row['entity'] == 'upload_session'), None)
     blob = next((row for row in entities if row['entity'] == 'blob'), None)
     outbox = next((row for row in entities if row['entity'] == 'outbox' and row['status'] != 'absent'), None)
-    require(sum(row['entity'] == 'upload_session' for row in entities) <= 1, 'multiple upload identities')
-    require(sum(row['entity'] == 'blob' for row in entities) <= 1, 'multiple blob identities')
-    parts = [row for row in entities if row['entity'] == 'upload_part']
-    if upload is not None:
-        require(upload['status'] in {'initiated', 'uploading', 'assembled', 'committed', 'aborted', 'expired'},
-                'unknown durable upload status')
-        require(upload['status'] != 'committed' or blob is not None, 'committed upload is missing its blob')
-    expected_checksum = None
-    expected_size = None
-    if blob is not None:
-        require(upload is not None and upload.get('assembled_blob_id') == blob['entity_id'],
-                'blob does not join upload session')
-        require(obj['key'] == blob.get('storage_key'), 'object does not join blob key')
-        present = True
-        expected_checksum, expected_size = blob.get('checksum'), blob.get('size')
-    elif upload is not None:
-        upload_id = upload.get('upload_id')
-        require(isinstance(upload_id, str) and upload_id, 'missing durable upload id')
-        suffix = '.parts/1' if attempt['operation'] in {'s3-put-part', 's3-complete', 'sweeper'} else ''
-        require(obj['key'] == f'tmp/uploads/{upload_id}{suffix}', 'object does not join upload key')
-        received = upload.get('received_bytes')
-        require(gate._int(received) and received >= 0, 'upload received bytes')
-        present = upload['status'] not in {'aborted', 'expired'} and (bool(parts) or received > 0)
-        if present and suffix:
-            part = next((row for row in parts if row['entity_id'] == upload['entity_id'] + ':1'), None)
-            require(part is not None, 'object does not join upload part')
-            expected_checksum, expected_size = part.get('checksum'), part.get('size')
-        elif present:
-            expected_checksum, expected_size = attempt.get('payload_checksum'), received
-    else:
-        present = False
-        require(not parts, 'part without upload session')
-        require(obj['key'].startswith(f'tmp/uploads/{attempt["run_id"]}/')
-                and obj['key'].endswith('/not-applicable'), 'invalid not-applicable object key')
-    for part in parts:
-        require(upload is not None and part['entity_id'].startswith(upload['entity_id'] + ':'),
-                'part does not join upload session')
-    require(obj.get('exists') is present, 'missing required object or orphan object')
-    if present:
-        require(isinstance(expected_checksum, str) and gate.CHECKSUM.fullmatch(expected_checksum),
-                'missing DB/payload checksum')
-        require(obj['checksum'] == expected_checksum, 'DB/object checksum mismatch')
-        require(gate._int(expected_size) and obj['size'] == expected_size, 'DB/object size mismatch')
-    else:
-        require(obj['checksum'] is None and obj['size'] == 0, 'absent object contains bytes/checksum')
-    status = 'matched' if present else ('matched-absent' if upload is not None else 'not-applicable')
-    expected_identity = str((blob or upload or outbox or entities[0])['entity_id'])
-    joins = rows['reconcile.jsonl']
-    require(len(joins) == 2 and {row['join'] for row in joins} == {'db-to-object', 'object-to-db'},
-            'missing or duplicate product join')
-    for row in joins:
-        identity = expected_identity if row['join'] == 'db-to-object' else obj['key']
-        require(row['durable_identity'] == identity, 'reconcile durable identity mismatch')
-        require(row['status'] == status, 'reconcile contradicts raw DB/object state')
     http = outcome(attempt['product_results'][-1]['status'])
     if blob is not None or (upload is not None and upload['status'] == 'committed') or outbox is not None:
         durable = 'committed'
