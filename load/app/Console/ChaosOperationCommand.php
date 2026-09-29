@@ -25,12 +25,17 @@ final class ChaosOperationCommand extends Command
         {operation : cas-stage|write|lock-holder}
         {--run-prefix= : Run-scoped durable identity}
         {--bytes=4096 : Requested byte count}
-        {--ordinal=1 : Product-attempt ordinal}';
+        {--ordinal=1 : Product-attempt ordinal}
+        {--hold-lock : Acknowledge the acquired lock and wait for scoped release on stdin}
+        {--hold-timeout=240 : Maximum lock hold in seconds}';
 
     protected $description = 'Run one bounded P7 product operation and print a measured JSON result.';
 
+    private ?array $lockBoundary = null;
+
     public function handle(Sha256ContentStore $content, OutboxRecorder $outbox): int
     {
+        $this->lockBoundary = null;
         $operation = (string) $this->argument('operation');
         $runPrefix = ChaosFixtureSupport::sanitizeToken((string) $this->option('run-prefix'));
         $requested = max(1, min((int) $this->option('bytes'), 4 * 1024 * 1024));
@@ -50,6 +55,7 @@ final class ChaosOperationCommand extends Command
                 'ordinal' => $ordinal,
                 ...$result,
                 'error_class' => null,
+                ...$this->lockEvidence(),
             ]));
 
             return self::SUCCESS;
@@ -61,6 +67,7 @@ final class ChaosOperationCommand extends Command
                 'requested_bytes' => $requested,
                 'written_bytes' => $this->writtenAfterFailure($operation, $runPrefix, $ordinal),
                 'error_class' => $exception::class,
+                ...$this->lockEvidence(),
             ]));
 
             return self::FAILURE;
@@ -152,9 +159,32 @@ final class ChaosOperationCommand extends Command
     ): array {
         $eventId = "{$runPrefix}:lock-holder:{$ordinal}";
 
-        DB::transaction(function () use ($outbox, $eventId, $runPrefix): void {
+        DB::transaction(function () use ($outbox, $eventId, $runPrefix, $ordinal): void {
+            if ($this->option('hold-lock') && DB::getDriverName() !== 'pgsql') {
+                throw new \RuntimeException('A held lock boundary requires PostgreSQL.');
+            }
             if (DB::getDriverName() === 'pgsql') {
                 DB::select('select pg_advisory_xact_lock(hashtextextended(?, 0))', [$eventId]);
+            }
+
+            if ($this->option('hold-lock')) {
+                $backend = DB::selectOne('select pg_backend_pid() as backend_pid, current_database() as database');
+                $this->lockBoundary = [
+                    'schema' => 'p7-lock-holder-ready/v1',
+                    'run_prefix' => $runPrefix,
+                    'ordinal' => $ordinal,
+                    'event_id' => $eventId,
+                    'backend_pid' => (int) $backend->backend_pid,
+                    'database' => $backend->database,
+                    'lock_acquired' => true,
+                ];
+                $this->line($this->encode($this->lockBoundary));
+                fflush(STDOUT);
+                $this->waitForLockRelease($runPrefix, $ordinal, $eventId);
+                $current = DB::selectOne('select pg_backend_pid() as backend_pid');
+                if ((int) $current->backend_pid !== $this->lockBoundary['backend_pid']) {
+                    throw new \RuntimeException('The held transaction changed DB backend.');
+                }
             }
 
             $outbox->stage(
@@ -172,6 +202,51 @@ final class ChaosOperationCommand extends Command
             'written_bytes' => $requested,
             'entity_id' => $eventId,
         ];
+    }
+
+    private function waitForLockRelease(string $runPrefix, int $ordinal, string $eventId): void
+    {
+        $timeout = max(1, min(240, (int) $this->option('hold-timeout')));
+        $deadline = hrtime(true) + $timeout * 1_000_000_000;
+        $line = '';
+        stream_set_blocking(STDIN, false);
+        while (!str_contains($line, "\n")) {
+            $remaining = $deadline - hrtime(true);
+            $read = [STDIN];
+            $write = $except = [];
+            if ($remaining <= 0 || stream_select(
+                $read,
+                $write,
+                $except,
+                intdiv($remaining, 1_000_000_000),
+                intdiv($remaining % 1_000_000_000, 1000),
+            ) !== 1) {
+                throw new \RuntimeException('The held lock timed out awaiting release.');
+            }
+            $chunk = fread(STDIN, 4096);
+            if ($chunk === false || $chunk === '' || strlen($line) + strlen($chunk) > 4096) {
+                throw new \RuntimeException('The held lock received an invalid control frame.');
+            }
+            $line .= $chunk;
+        }
+        $message = json_decode($line, true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($message)
+            || ($message['schema'] ?? null) !== 'p7-lock-holder-control/v1'
+            || ($message['run_prefix'] ?? null) !== $runPrefix
+            || ($message['ordinal'] ?? null) !== $ordinal
+            || ($message['event_id'] ?? null) !== $eventId
+            || ($message['action'] ?? null) !== 'release') {
+            throw new \RuntimeException('The held lock was cancelled or received a foreign release.');
+        }
+    }
+
+    private function lockEvidence(): array
+    {
+        if (!$this->option('hold-lock')) {
+            return [];
+        }
+
+        return ['schema' => 'p7-lock-holder-result/v1', 'lock_boundary' => $this->lockBoundary];
     }
 
     /**

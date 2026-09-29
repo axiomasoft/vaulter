@@ -1,0 +1,8 @@
+shared endpoint s3.amazonaws.com
+unfenced promotion
+tmpfs path escape /tmp/x
+----------------------------------------------------------------------
+Ran 80 tests in 8.256s
+
+OK
+{"ok": true}

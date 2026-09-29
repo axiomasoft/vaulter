@@ -583,6 +583,29 @@ capture and the producer's `matched-absent` verdict remain separate repairs.
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_evidence.py'
 ```
 
+Fault ACK requires the exact requested target and state, not just HTTP 200:
+S3 mode/run identity, Toxiproxy route/enabled/toxic configuration, scoped tmpfs
+measurements, or fenced/promoted/repointed HA status. Both barrier and injector
+streams retain this proof, which the full verifier checks against the named cell.
+Transport toxics use a run/cell name; revert removes only that target's toxic.
+
+For lock-holder cells, a separate `docker exec -i` process acquires the PostgreSQL
+transaction lock and reports its database, backend PID and durable event identity
+before injection or promotion. It waits for a scoped stdin release (maximum 240
+seconds), probes the same backend, then returns its measured success/failure and
+the original lock boundary. Missing readiness prevents injection; invalid ACK or
+protocol failure cancels the holder and attempts fault revert. The runner and
+verifier join the terminal outcome to that pre-fault boundary.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_fault_barriers.py'
+```
+
+These offline tests use controlled HTTP/state responses, the real PHP command
+with stubbed DB/outbox peers, and a fake Docker CLI for the real promotion shell.
+They check ordering and refusal paths without a DB, Docker runtime, real faults
+or promotion. They do not establish actual lock loss, recovery or product GREEN.
+
 ```bash
 chmod +x load/scripts/p7-chaos.sh load/scripts/p7-chaos-snapshot.sh
 TIER=S ./load/scripts/p7-chaos.sh dry-run

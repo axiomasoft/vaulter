@@ -111,6 +111,7 @@ class ControlHandler(BaseHTTPRequestHandler):
                 self._send(200, {
                     'run_id': STATE['run_id'],
                     'mode': STATE['mode'],
+                    'target': STATE['target'],
                     'events': list(STATE['events']),
                 })
             return

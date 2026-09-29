@@ -151,15 +151,22 @@ repoint_pgbouncer() {
 }
 
 status() {
+    echo "run_id=$([ -f "$STATE_DIR/run-id" ] && cat "$STATE_DIR/run-id" || echo missing)"
+    echo "primary=$PRIMARY"
+    echo "standby=$STANDBY"
+    echo "pgbouncer=$PGBOUNCER"
     echo "primary_recovery=$(in_recovery "$PRIMARY" 2>/dev/null || echo down)"
     echo "standby_recovery=$(in_recovery "$STANDBY" 2>/dev/null || echo down)"
     echo "writable=$(writable_count)"
     echo "fenced=$([ -f "$STATE_DIR/fenced" ] && echo yes || echo no)"
     echo "promoted=$([ -f "$STATE_DIR/promoted" ] && echo yes || echo no)"
+    echo "repointed=$([ -f "$STATE_DIR/repointed" ] && echo yes || echo no)"
 }
 
 rehearse() {
     mkdir -p "$STATE_DIR"
+    [ -n "${P7_RUN_ID:-}" ] || { echo 'pg-failover: run identity required' >&2; return 1; }
+    printf '%s\n' "$P7_RUN_ID" > "$STATE_DIR/run-id"
     reject_shared "$PRIMARY"
     reject_shared "$STANDBY"
     reject_shared "$PGBOUNCER"

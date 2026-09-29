@@ -18,6 +18,28 @@ CELL = gate.catalog()[0]['cell_id']
 EPOCH = 1790632800
 
 
+def ack_for(cell, run_id=RUN):
+    spec = live.fault_spec(cell, run_id)
+    ack = {'injector': spec['injector'], 'target': spec['target'], 'run_id': run_id}
+    if spec['injector'] == 's3-fault-proxy':
+        return {**ack, 'mode': spec['mode']}
+    if spec['injector'] == 'toxiproxy':
+        return {**ack, 'enabled': spec['enabled'], 'toxic': spec['toxic'] if spec['enabled'] else None}
+    if spec['injector'] == 'pg-failover':
+        return {**ack, 'primary': 'postgres-primary', 'standby': 'postgres-standby',
+                'pgbouncer': 'pgbouncer-ha', 'primary_recovery': 'down', 'standby_recovery': 'f',
+                'writable': '1', 'fenced': 'yes', 'promoted': 'yes', 'repointed': 'yes'}
+    return {**ack, 'fstype': 'tmpfs', 'free_bytes_after': 0, 'write_length': 8192}
+
+
+def holder_ready(cell, attempt, run_id=RUN):
+    marker = live.product_ops.marker_for(run_id, cell['cell_id'], attempt)
+    return {'schema': 'p7-lock-holder-ready/v1', 'run_prefix': marker, 'ordinal': 1,
+            'event_id': marker + ':lock-holder:1', 'backend_pid': 123,
+            'database': 'vaulter_chaos' if cell['plane'] == 'primary-transition' else 'vaulter_load',
+            'lock_acquired': True}
+
+
 def write(path, value):
     path.write_text(json.dumps(value) + '\n')
 
@@ -54,6 +76,9 @@ def build(root):
             result = {'operation': cell['operation'], 'status': 503, 'transport': 'http',
                       'request_id': f'request-{counter}-1', 'requested_bytes': 16, 'written_bytes': 0}
             results = [result]
+            if cell['operation'] == 'lock-holder':
+                result.update(transport='artisan', lock_boundary=holder_ready(cell, attempt),
+                              command_exit=1, error_class='PDOException', request_id='lock-holder-1', status=500)
             if cell['fault'] == 'enospc-then-retry':
                 results.append({**result, 'status': 200, 'request_id': f'request-{counter}-2', 'written_bytes': 16})
             http = live.outcome(results[-1]['status'])
@@ -67,7 +92,7 @@ def build(root):
                        .isoformat().replace('+00:00', 'Z'),
                        'phase': phase, 'direction': 'observe', 'fault_id': f'fault-{counter}',
                        'injector_version': gate.INJECTOR_VERSION, 'injector_config_digest': 'a' * 64,
-                       'target': 'minio', 'config_fingerprint': gate.config_fingerprint()}
+                       'target': live.fault_spec(cell, RUN)['target'], 'config_fingerprint': gate.config_fingerprint()}
                 row.update(extra)
                 streams[name].append(row)
 
@@ -78,8 +103,10 @@ def build(root):
                 extra = {'recovered': True} if phase == 'recovery' else {}
                 extra['direction'] = 'inject' if phase == 'fault' else ('revert' if phase == 'revert' else 'observe')
                 add('ledger.jsonl', rank, phase, schema='p7-ledger/v1', **extra)
-            add('barriers.jsonl', 3, 'armed', schema='p7-barrier/v1', observed=True, barrier_id=f'barrier-{counter}')
-            add('injectors.jsonl', 6, 'fault', schema='p7-injector/v1', injector_id='offline-injector')
+            add('barriers.jsonl', 3, 'armed', schema='p7-barrier/v1', observed=True, barrier_id=f'barrier-{counter}',
+                ack=ack_for(cell), **({'holder_ready': holder_ready(cell, attempt)} if cell['operation'] == 'lock-holder' else {}))
+            add('injectors.jsonl', 6, 'fault', schema='p7-injector/v1',
+                injector_id=live.fault_spec(cell, RUN)['injector'], ack=ack_for(cell))
             add('database.jsonl', 8, 'fault', schema='p7-database/v1', entity='upload_session',
                 entity_id=entity_id, upload_id=uid, status='uploading', received_bytes=16)
             if suffix:
@@ -410,8 +437,8 @@ class CompleteEvidenceTest(unittest.TestCase):
                      'status': 'uploading', 'received_bytes': 16}]
         result = {'status': 503, 'transport': 'http', 'operation': 'tus-patch', 'request_id': 'producer-1'}
         boundaries = {
-            'host_status': 200, 'host_probe': (200, 'vaulter_metric 1'), 'arm': 'offline-injector',
-            'barrier_ack': None, 'revert': None, 'sample_entities': entities, 'cleanup_fixture': None,
+            'host_status': 200, 'host_probe': (200, 'vaulter_metric 1'), 'arm': 's3-fault-proxy',
+            'barrier_ack': ack_for(cell), 'revert': None, 'sample_entities': entities, 'cleanup_fixture': None,
             'object_sample': {'key': 'tmp/uploads/upload-1', 'exists': True, 'checksum': CHECKSUM, 'size': 16},
         }
         with ExitStack() as stack:

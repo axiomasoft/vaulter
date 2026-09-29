@@ -22,6 +22,7 @@ from pathlib import Path
 import p7_chaos as gate
 import p7_injectors as injectors
 import p7_product_ops as product_ops
+import p7_lock_holder as lock_holder
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -425,6 +426,29 @@ def restore_base(run_id: str) -> None:
     compose('stop', 'postgres-primary', 'postgres-standby', 'pgbouncer-ha', profile=True, timeout=60)
 
 
+def fault_spec(cell: dict, run_id: str) -> dict:
+    """One target/config drives injection, ACK, event identity and scoped revert."""
+    fault, plane = cell['fault'], cell['plane']
+    if plane == 'primary-transition':
+        return {'injector': 'pg-failover', 'target': 'postgres-primary'}
+    if plane == 'storage-control':
+        return {'injector': 'tmpfs-enospc', 'target': '/var/tmp/vaulter-chaos'}
+    if fault == '503' or plane == 'protocol-control':
+        mode = 'after-accept-503' if cell.get('moment') == 'after-accept' else 'pre-upstream-503'
+        return {'injector': 's3-fault-proxy', 'target': 'minio', 'mode': mode}
+    proxy = 'pgbouncer' if cell['operation'] in {
+        'upload-commit', 'outbox-mutation', 'lock-holder', 'pgbouncer', 'upload-patch',
+    } else 'minio'
+    disabled = fault in {'down', 'tcp-down', 'connection-loss', 'disconnect'}
+    toxic = 'latency' if fault == 'latency' else 'timeout' if fault == 'timeout' else 'reset_peer'
+    attributes = {'latency': 200, 'jitter': 0} if toxic == 'latency' else (
+        {'timeout': 50} if toxic == 'timeout' else {'timeout': 0})
+    name = 'p7-' + hashlib.sha256(f'{run_id}|{cell["cell_id"]}'.encode()).hexdigest()[:24]
+    return {'injector': 'toxiproxy', 'target': proxy, 'enabled': not disabled,
+            'toxic': {'name': name, 'type': toxic, 'stream': 'downstream',
+                      'toxicity': 1.0, 'attributes': attributes}}
+
+
 def arm(cell: dict, run_id: str) -> str:
     fault = cell['fault']
     plane = cell['plane']
@@ -433,6 +457,7 @@ def arm(cell: dict, run_id: str) -> str:
         env = os.environ.copy()
         env['TIER'] = 'S'
         env['P7_FAILOVER_STATE'] = f'/tmp/p7-failover-{run_id}'
+        env['P7_RUN_ID'] = run_id
         _run([str(FAILOVER), 'rehearse'], timeout=180, env=env)
         return 'pg-failover'
     if plane == 'storage-control' or str(fault).startswith('enospc'):
@@ -460,24 +485,14 @@ def arm(cell: dict, run_id: str) -> str:
         if response['status'] not in {200, 204}:
             raise LiveError(f's3 arm status {response["status"]}')
         return 's3-fault-proxy'
-    proxy = 'pgbouncer' if cell['operation'] in {
-        'upload-commit', 'outbox-mutation', 'lock-holder', 'pgbouncer', 'upload-patch',
-    } else 'minio'
-    if fault in {'down', 'tcp-down', 'connection-loss', 'disconnect'}:
+    spec = fault_spec(cell, run_id)
+    proxy = spec['target']
+    if not spec['enabled']:
         response = app_http('POST', f'http://toxiproxy:8474/proxies/{proxy}', '{"enabled":false}')
-        if response['status'] not in {200, 204}:
-            raise LiveError(f'toxiproxy disable {response["status"]}')
-        return 'toxiproxy'
-    toxic = 'latency' if fault == 'latency' else 'timeout' if fault == 'timeout' else 'reset_peer'
-    attributes = {'latency': 200, 'jitter': 0} if toxic == 'latency' else (
-        {'timeout': 50} if toxic == 'timeout' else {}
-    )
-    response = app_http(
-        'POST', f'http://toxiproxy:8474/proxies/{proxy}/toxics',
-        json.dumps({'name': 'p7-fault', 'type': toxic, 'attributes': attributes}),
-    )
-    if response['status'] not in {200, 201, 204, 409}:
-        raise LiveError(f'toxiproxy arm {response["status"]}')
+    else:
+        response = app_http('POST', f'http://toxiproxy:8474/proxies/{proxy}/toxics', json.dumps(spec['toxic']))
+    if response['status'] not in {200, 201, 204}:
+        raise LiveError('toxiproxy arm was not acknowledged')
     return 'toxiproxy'
 
 
@@ -502,38 +517,88 @@ def revert(cell: dict, run_id: str, injector: str) -> None:
         if response['status'] not in {200, 204}:
             raise LiveError(f's3 revert status {response["status"]}')
         return
-    for proxy in ('minio', 'pgbouncer'):
-        app_http('DELETE', f'http://toxiproxy:8474/proxies/{proxy}/toxics/p7-fault')
-        response = app_http('POST', f'http://toxiproxy:8474/proxies/{proxy}', '{"enabled":true}')
-        if response['status'] not in {200, 204, 0}:
-            raise LiveError(f'toxiproxy revert {proxy} {response["status"]}')
+    spec = fault_spec(cell, run_id)
+    proxy = spec['target']
+    app_http('DELETE', f'http://toxiproxy:8474/proxies/{proxy}/toxics/{spec["toxic"]["name"]}')
+    response = app_http('POST', f'http://toxiproxy:8474/proxies/{proxy}', '{"enabled":true}')
+    if response['status'] not in {200, 204}:
+        raise LiveError('toxiproxy revert was not acknowledged')
 
 
-def barrier_ack(injector: str, run_id: str) -> None:
-    if injector == 's3-fault-proxy':
-        response = app_http('GET', 'http://s3-fault-proxy:19099/observe')
-        if response['status'] != 200 or run_id not in response['body']:
-            raise LiveError('s3 barrier was not observed')
-        return
-    if injector == 'toxiproxy':
-        response = app_http('GET', 'http://toxiproxy:8474/proxies')
-        if response['status'] != 200:
-            raise LiveError('toxiproxy barrier was not observed')
-        return
+def barrier_ack(injector: str, run_id: str, cell: dict) -> dict:
+    spec = fault_spec(cell, run_id)
+    if injector != spec['injector']:
+        raise LiveError('injector does not match fault target')
+    if injector in {'s3-fault-proxy', 'toxiproxy'}:
+        url = 'http://s3-fault-proxy:19099/observe' if injector == 's3-fault-proxy' else (
+            f'http://toxiproxy:8474/proxies/{spec["target"]}')
+        response = app_http('GET', url)
+        try:
+            state = json.loads(response['body'])
+        except (ValueError, TypeError) as exc:
+            raise LiveError('fault ACK is not JSON') from exc
+        if response['status'] != 200 or not isinstance(state, dict):
+            raise LiveError('fault state was not observed')
+        if injector == 's3-fault-proxy':
+            if any(state.get(field) != value for field, value in {
+                'run_id': run_id, 'target': spec['target'], 'mode': spec['mode'],
+            }.items()):
+                raise LiveError('s3 ACK has a foreign identity, target or mode')
+            return {'injector': injector, 'run_id': run_id, 'target': spec['target'], 'mode': spec['mode']}
+        upstream = 'pgbouncer:6432' if spec['target'] == 'pgbouncer' else 'minio:9000'
+        listen = '[::]:16432' if spec['target'] == 'pgbouncer' else '[::]:19001'
+        if state.get('name') != spec['target'] or state.get('upstream') != upstream or state.get('listen') != listen:
+            raise LiveError('toxiproxy ACK has a foreign target')
+        if state.get('enabled') is not spec['enabled']:
+            raise LiveError('toxiproxy ACK has the wrong enabled state')
+        toxics = state.get('toxics')
+        if not isinstance(toxics, list):
+            raise LiveError('toxiproxy ACK is missing toxic state')
+        if spec['enabled']:
+            if len(toxics) != 1 or toxics[0] != spec['toxic']:
+                raise LiveError('toxiproxy ACK has the wrong toxic configuration')
+        elif toxics:
+            raise LiveError('disabled proxy has unrelated toxics')
+        return {'injector': injector, 'run_id': run_id, 'target': spec['target'],
+                'enabled': spec['enabled'], 'toxic': spec['toxic'] if spec['enabled'] else None}
     if injector == 'pg-failover':
         env = os.environ.copy()
-        env['TIER'] = 'S'
-        env['P7_FAILOVER_STATE'] = f'/tmp/p7-failover-{run_id}'
+        env.update(TIER='S', P7_FAILOVER_STATE=f'/tmp/p7-failover-{run_id}', P7_RUN_ID=run_id)
         result = _run([str(FAILOVER), 'status'], timeout=30, env=env)
-        if 'writable=1' not in result.stdout or 'promoted=yes' not in result.stdout:
-            raise LiveError('promotion barrier was not observed')
-        return
+        pairs = [line.split('=', 1) for line in result.stdout.splitlines()]
+        if any(len(pair) != 2 for pair in pairs) or len({pair[0] for pair in pairs}) != len(pairs):
+            raise LiveError('promotion ACK is malformed')
+        state = dict(pairs)
+        expected = {'run_id': run_id, 'primary': 'postgres-primary', 'standby': 'postgres-standby',
+                    'pgbouncer': 'pgbouncer-ha', 'primary_recovery': 'down', 'standby_recovery': 'f',
+                    'writable': '1', 'fenced': 'yes', 'promoted': 'yes', 'repointed': 'yes'}
+        if state != expected:
+            raise LiveError('promotion ACK has the wrong identity, fence or routing state')
+        return {'injector': injector, 'target': spec['target'], **state}
     result = _run([
         'docker', 'exec', '-e', f'RUN={run_id}', APP, 'sh', '-c',
-        'test -f "/var/tmp/vaulter-chaos/$RUN/fill.bin"',
+        'root=/var/tmp/vaulter-chaos; test -f "$root/$RUN/fill.bin"; '
+        'fstype=$(df -T "$root" | awk \'NR==2{print $2}\'); '
+        'free=$(($(df -P "$root" | awk \'NR==2{print $4}\')*1024)); '
+        'written=$(wc -c < "$root/$RUN/fill.bin" | tr -d " "); '
+        'grep -q "No space left" "$root/$RUN/dd.err" || exit 1; '
+        'printf \'{"run_id":"%s","target":"/var/tmp/vaulter-chaos","fstype":"%s",'
+        '"free_bytes_after":%s,"write_length":%s}\\n\' "$RUN" "$fstype" "$free" "$written"',
     ], timeout=20, check=False)
-    if result.returncode != 0:
-        raise LiveError('enospc barrier was not observed')
+    try:
+        state = json.loads(result.stdout)
+        valid = (result.returncode == 0 and state.get('run_id') == run_id
+                 and state.get('target') == spec['target'] and state.get('fstype') == 'tmpfs'
+                 and type(state.get('write_length')) is int and type(state.get('free_bytes_after')) is int
+                 and state.get('write_length') == arm.enospc['write_length']
+                 and state.get('write_length', 0) > 0
+                 and state.get('free_bytes_after') == arm.enospc['free_bytes_after']
+                 and 0 <= state['free_bytes_after'] < arm.enospc['free_bytes_before'])
+    except (ValueError, KeyError, TypeError, AttributeError):
+        valid = False
+    if not valid:
+        raise LiveError('enospc ACK has the wrong run, filesystem or measured state')
+    return {'injector': injector, **state}
 
 
 def preflight(out: Path, run_id: str) -> dict:
@@ -589,9 +654,8 @@ def common(run_id: str, cell: dict, attempt: int, fault_id: str, digest: str,
 def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt: int,
                run_id: str, fingerprint: str, digest: str) -> dict:
     fault_id = f'f-{attempt}-{cell["cell_id"]}'
-    target = 'postgres' if cell['plane'] == 'primary-transition' else (
-        'tmpfs' if cell['plane'] == 'storage-control' else 'minio'
-    )
+    spec = fault_spec(cell, run_id)
+    target = spec['target']
     started = clock.next()
     ha = cell['plane'] == 'primary-transition'
     if ha:
@@ -619,39 +683,59 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
     add('readiness.jsonl', 'baseline', 'observe', schema='p7-readiness/v1', source='dependency-probe',
         up_ok=True, ready_ok=True, metrics_ok=True)
     add('ledger.jsonl', 'baseline', 'observe', schema='p7-ledger/v1', source='ledger')
-    armed_at = add('barriers.jsonl', 'armed', 'observe', schema='p7-barrier/v1', source='barrier',
-                   barrier_id=f'b-{attempt}-{cell["cell_id"]}', observed=False)
-    injector = arm(cell, run_id)
-    barrier_ack(injector, run_id)
-    for row in streams['barriers.jsonl']:
-        if row['fault_id'] == fault_id and row['monotonic_ns'] == armed_at:
-            row['observed'] = True
-    add('ledger.jsonl', 'armed', 'observe', schema='p7-ledger/v1', source='ledger')
-    fault_ns = add('ledger.jsonl', 'fault', 'inject', schema='p7-ledger/v1', source='ledger')
-    add('injectors.jsonl', 'fault', 'inject', schema='p7-injector/v1', source='injector', injector_id=injector)
+    holder = None
+    injector = spec['injector']
     product_results: list[dict] = []
     captured_entities: list[dict] | None = None
     reverted = False
-    if cell.get('moment') == 'on-recovery':
-        revert(cell, run_id, injector)
-        reverted = True
-        add('ledger.jsonl', 'revert', 'revert', schema='p7-ledger/v1', source='ledger')
-        product_results.append(runner.execute(cell, fixture, ordinal=1))
-    else:
-        product_results.append(runner.execute(cell, fixture, ordinal=1))
-
-    if ha:
-        captured_entities = sample_entities(fixture, ha=True)
-
-    if not reverted:
-        revert(cell, run_id, injector)
-        reverted = True
-        add('ledger.jsonl', 'revert', 'revert', schema='p7-ledger/v1', source='ledger')
+    arm_started = False
+    try:
+        if cell['operation'] == 'lock-holder':
+            holder = lock_holder.LockHolderSession(fixture, database='vaulter_chaos' if ha else 'vaulter_load')
+        armed_at = add('barriers.jsonl', 'armed', 'observe', schema='p7-barrier/v1', source='barrier',
+                       barrier_id=f'b-{attempt}-{cell["cell_id"]}', observed=False,
+                       **({'holder_ready': holder.ready} if holder is not None else {}))
+        if holder is not None:
+            holder.ensure_held()
+        arm_started = True
+        actual_injector = arm(cell, run_id)
+        if actual_injector != injector:
+            raise LiveError('armed injector does not match requested fault')
+        ack = barrier_ack(injector, run_id, cell)
+        for row in streams['barriers.jsonl']:
+            if row['fault_id'] == fault_id and row['monotonic_ns'] == armed_at:
+                row.update(observed=True, ack=ack)
+        add('ledger.jsonl', 'armed', 'observe', schema='p7-ledger/v1', source='ledger')
+        fault_ns = add('ledger.jsonl', 'fault', 'inject', schema='p7-ledger/v1', source='ledger')
+        add('injectors.jsonl', 'fault', 'inject', schema='p7-injector/v1', source='injector',
+            injector_id=injector, ack=ack)
+        if cell.get('moment') == 'on-recovery':
+            revert(cell, run_id, injector)
+            reverted = True
+            add('ledger.jsonl', 'revert', 'revert', schema='p7-ledger/v1', source='ledger')
+        if holder is not None:
+            product_results.append(holder.finish())
+        else:
+            product_results.append(runner.execute(cell, fixture, ordinal=1))
         if ha:
-            route_app(ha=False)
-
-    if cell['fault'] == 'enospc-then-retry':
-        product_results.append(runner.execute(cell, fixture, ordinal=2))
+            captured_entities = sample_entities(fixture, ha=True)
+        if not reverted:
+            revert(cell, run_id, injector)
+            reverted = True
+            add('ledger.jsonl', 'revert', 'revert', schema='p7-ledger/v1', source='ledger')
+            if ha:
+                route_app(ha=False)
+        if cell['fault'] == 'enospc-then-retry':
+            product_results.append(runner.execute(cell, fixture, ordinal=2))
+    finally:
+        try:
+            if holder is not None:
+                holder.close()
+        finally:
+            if arm_started and not reverted:
+                revert(cell, run_id, injector)
+                if ha:
+                    route_app(ha=False)
 
     result = product_results[-1]
     http = outcome(int(result['status']))
@@ -995,6 +1079,54 @@ def _check_prometheus(root: Path, rows: dict[str, list[dict]], cell_id: str, att
         raise gate.EvidenceInvalid('live vaulter-sut Prometheus sample is invalid') from exc
 
 
+def _check_fault_proof(rows: dict[str, list[dict]], cell: dict, run_id: str, attempt: int) -> None:
+    spec = fault_spec(cell, run_id)
+    barrier, injector = rows['barriers.jsonl'][0], rows['injectors.jsonl'][0]
+    ack = barrier.get('ack')
+    gate._require(isinstance(ack, dict) and injector.get('ack') == ack, 'missing or contradictory fault ACK')
+    gate._require(injector.get('injector_id') == spec['injector']
+                  and all(row['target'] == spec['target'] for events in rows.values() for row in events),
+                  'fault target disagrees with named cell')
+    base = {'run_id': run_id, 'injector': spec['injector'], 'target': spec['target']}
+    if spec['injector'] == 's3-fault-proxy':
+        gate._require(ack == {**base, 'mode': spec['mode']}, 's3 fault ACK disagrees with requested state')
+    elif spec['injector'] == 'toxiproxy':
+        gate._require(ack.get('enabled') is spec['enabled'] and ack == {**base, 'enabled': spec['enabled'],
+                             'toxic': spec['toxic'] if spec['enabled'] else None},
+                      'toxiproxy fault ACK disagrees with requested state')
+    elif spec['injector'] == 'pg-failover':
+        gate._require(ack == {**base, 'primary': 'postgres-primary', 'standby': 'postgres-standby',
+                              'pgbouncer': 'pgbouncer-ha', 'primary_recovery': 'down', 'standby_recovery': 'f',
+                              'writable': '1', 'fenced': 'yes', 'promoted': 'yes', 'repointed': 'yes'},
+                      'promotion ACK disagrees with requested fence/route')
+    else:
+        gate._require(all(ack.get(key) == value for key, value in {**base, 'fstype': 'tmpfs'}.items())
+                      and gate._int(ack.get('free_bytes_after')) and ack['free_bytes_after'] >= 0
+                      and gate._int(ack.get('write_length')) and ack['write_length'] > 0,
+                      'invalid scoped ENOSPC ACK')
+    if cell['operation'] == 'lock-holder':
+        ready = barrier.get('holder_ready')
+        marker = product_ops.marker_for(run_id, cell['cell_id'], attempt)
+        expected = {'schema': 'p7-lock-holder-ready/v1', 'run_prefix': marker, 'ordinal': 1,
+                    'event_id': f'{marker}:lock-holder:1', 'database':
+                    'vaulter_chaos' if cell['plane'] == 'primary-transition' else 'vaulter_load',
+                    'lock_acquired': True}
+        gate._require(isinstance(ready, dict) and all(ready.get(key) == value for key, value in expected.items())
+                      and set(ready) == set(expected) | {'backend_pid'}
+                      and ready.get('lock_acquired') is True and gate._int(ready.get('ordinal'))
+                      and gate._int(ready.get('backend_pid')) and ready['backend_pid'] > 0,
+                      'missing or foreign held lock boundary')
+        results = rows['attempts.jsonl'][0]['product_results']
+        gate._require(len(results) == 1 and results[0].get('lock_boundary') == ready,
+                      'lock-holder terminal outcome does not join the pre-fault boundary')
+        result = results[0]
+        gate._require(result.get('transport') == 'artisan' and result.get('operation') == 'lock-holder'
+                      and result.get('request_id') == 'lock-holder-1'
+                      and gate._int(result.get('command_exit'))
+                      and result['status'] == (200 if result['command_exit'] == 0 else 500),
+                      'lock-holder terminal outcome is not measured')
+
+
 def verify_artifacts(root: Path, *, prior_digest: str | None = None) -> str:
     root = Path(root)
     expected_attempts = {(cell['cell_id'], attempt) for cell in gate.catalog()
@@ -1030,6 +1162,7 @@ def verify_artifacts(root: Path, *, prior_digest: str | None = None) -> str:
                           (cell['cell_id'], attempt)] for name, events in streams.items()}
             raw = rows['attempts.jsonl'][0]
             gate._require(raw['schema'] == 'p7-attempt/v2', 'labelled GET evidence is not accepted by R11')
+            _check_fault_proof(rows, cell, run_id, attempt)
             for field, value in {'run_id': run_id, 'cell_id': cell['cell_id'], 'attempt': attempt,
                                  'plane': cell['plane']}.items():
                 gate._require(attempt_row.get(field) == value, f'attempt file {field} mismatch')
@@ -1103,7 +1236,7 @@ def main(argv: list[str] | None = None) -> int:
         digest = verify_artifacts(Path(args.artifacts), prior_digest=args.prior_digest)
         print(f'p7-live verify: ok digest={digest}')
         return 0
-    except (gate.EvidenceInvalid, LiveError, product_ops.ProductOperationError, OSError, json.JSONDecodeError) as exc:
+    except (gate.EvidenceInvalid, LiveError, product_ops.ProductOperationError, lock_holder.HolderError, OSError, json.JSONDecodeError) as exc:
         print(f'p7-live: evidence-invalid: {exc}', flush=True)
         return 1
 

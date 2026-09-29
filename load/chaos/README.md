@@ -39,3 +39,11 @@ only that volume. Host `/tmp` fill is rejected.
 Every injector: arm (run-id bound) → observe barrier → revert (idempotent) →
 self-test. Current multipart cleanup is Flysystem `tmp/uploads/<id>.parts/*`
 keys, not AWS `UploadId`.
+
+The live matrix checks exact target/state at the barrier. `/observe` reports S3
+run, target and mode; Toxiproxy ACK checks its route, enabled state and exact
+run/cell toxic. HA `rehearse` requires `P7_RUN_ID`, records it under
+`P7_FAILOVER_STATE`, and status includes the service identities and routing flag.
+The `p7-injectors.sh promotion-rehearsal` wrapper supplies a process-scoped
+identity when one is not provided. A lock-holder must acknowledge its held
+transaction before either transport injection or HA rehearsal begins.

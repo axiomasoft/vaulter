@@ -65,7 +65,8 @@ promotion() {
     P7_FAILOVER_STATE=$STATE COMPOSE_PROJECT=$PROJECT ENV_FILE=$ENV_FILE \
         compose_ha up -d --wait --wait-timeout 180 \
             postgres-primary postgres-standby pgbouncer-ha
-    P7_FAILOVER_STATE=$STATE COMPOSE_PROJECT=$PROJECT ENV_FILE=$ENV_FILE \
+    P7_RUN_ID=${P7_RUN_ID:-p7.2-promotion-$$} \
+        P7_FAILOVER_STATE=$STATE COMPOSE_PROJECT=$PROJECT ENV_FILE=$ENV_FILE \
         "$FAILOVER" rehearse
     trap - EXIT INT TERM
     cleanup_ha
