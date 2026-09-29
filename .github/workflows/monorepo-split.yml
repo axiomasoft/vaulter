@@ -34,6 +34,9 @@ jobs:
   verify-release-sha:
     name: Verify release SHA
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
     steps:
       - name: Require successful CI checks on the tagged commit
         env:
@@ -49,7 +52,6 @@ jobs:
             'PHP 8.4 / Postgres (full schema portability lane)'
             '@vaulter/vue (Node 20)'
             '@vaulter/vue (Node 22)'
-            '@vaulter/hocuspocus-server (Node 20)'
             '@vaulter/hocuspocus-server (Node 22)'
           )
 
