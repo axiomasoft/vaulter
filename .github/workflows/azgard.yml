@@ -38,6 +38,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout latest public AzGuard
+        run: git clone --depth=1 https://github.com/axiomasoft/azguard-private.git ../azguard
+
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
         with:

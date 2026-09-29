@@ -7,6 +7,7 @@ namespace Vaulter\Azgard\Tests\Stubs;
 use AzGuard\Contracts\PermissionContext;
 use AzGuard\Models\Role;
 use AzGuard\Registry\Values\PermissionSet;
+use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
@@ -32,10 +33,10 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
 
     protected $guarded = [];
 
-    /** @var list<array{permission: string|UnitEnum, entity: Model, panelId: ?string}> */
+    /** @var list<array{permission: string|UnitEnum, entity: Model, panelId: string|BackedEnum|null}> */
     public array $scopedCalls = [];
 
-    /** @var list<array{contextType: string, contextId: int|string, permission: string|UnitEnum, panelId: ?string}> */
+    /** @var list<array{contextType: string, contextId: int|string, permission: string|UnitEnum, panelId: string|BackedEnum|null}> */
     public array $contextCalls = [];
 
     /** @var list<string> Permission keys the user holds scoped to an entity (any entity). */
@@ -91,7 +92,7 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
 
     // ─── The three checks the adapter actually forwards ──────────────────────
 
-    public function hasScopedPermission(string|UnitEnum $permission, Model $entity, ?string $panelId = null): bool
+    public function hasScopedPermission(string|UnitEnum $permission, Model $entity, string|BackedEnum|null $panelId = null): bool
     {
         $this->scopedCalls[] = ['permission' => $permission, 'entity' => $entity, 'panelId' => $panelId];
 
@@ -102,7 +103,7 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
         string $contextType,
         int|string $contextId,
         string|UnitEnum $permission,
-        ?string $panelId = null,
+        string|BackedEnum|null $panelId = null,
     ): bool {
         $this->contextCalls[] = [
             'contextType' => $contextType,
@@ -114,24 +115,24 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
         return in_array($this->key($permission), $this->workspaceGrants[$contextType.':'.$contextId] ?? [], strict: true);
     }
 
-    public function isSuperAdmin(?string $panelId = null): bool
+    public function isSuperAdmin(string|BackedEnum|null $panelId = null): bool
     {
         return in_array('*', $this->globalGrants, strict: true);
     }
 
     // ─── Remaining HasPermissions / HasScopedRoles surface (inert stubs) ─────
 
-    public function hasPermission(string|UnitEnum $permission, ?string $panelId = null, ?PermissionContext $context = null): bool
+    public function hasPermission(string|UnitEnum $permission, string|BackedEnum|null $panelId = null, ?PermissionContext $context = null): bool
     {
         return in_array($this->key($permission), $this->globalGrants, strict: true);
     }
 
-    public function checkPermission(string|UnitEnum $permission, ?string $panelId = null, ?PermissionContext $context = null): bool
+    public function checkPermission(string|UnitEnum $permission, string|BackedEnum|null $panelId = null, ?PermissionContext $context = null): bool
     {
         return $this->hasPermission($permission, $panelId, $context);
     }
 
-    public function permissionSet(?string $panelId = null): PermissionSet
+    public function permissionSet(string|BackedEnum|null $panelId = null): PermissionSet
     {
         return PermissionSet::fromRawKeys($this->globalGrants);
     }
@@ -139,29 +140,29 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
     /**
      * @return Collection<int, string>
      */
-    public function permissions(?string $panelId = null): Collection
+    public function permissions(string|BackedEnum|null $panelId = null): Collection
     {
         return new Collection($this->globalGrants);
     }
 
-    public function flushPermissions(?string $panelId = null): void {}
+    public function flushPermissions(string|BackedEnum|null $panelId = null): void {}
 
     public function hasContextGuard(): bool
     {
         return true;
     }
 
-    public function assignScopedRole(string|Role $role, Model $entity, ?string $panelId = null): static
+    public function assignScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): static
     {
         return $this;
     }
 
-    public function removeScopedRole(string|Role $role, Model $entity, ?string $panelId = null): static
+    public function removeScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): static
     {
         return $this;
     }
 
-    public function hasScopedRole(string|Role $role, Model $entity, ?string $panelId = null): bool
+    public function hasScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): bool
     {
         return false;
     }

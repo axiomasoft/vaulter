@@ -1,13 +1,13 @@
 Vaulter\Azgard\Contracts\AzgardBackedUser
-  assignScopedRole(\AzGuard\Models\Role|string $role, \Illuminate\Database\Eloquent\Model $entity, ?string $panelId = null): \static
-  checkPermission(\UnitEnum|string $permission, ?string $panelId = null, ?\AzGuard\Contracts\PermissionContext $context = null): bool
-  flushPermissions(?string $panelId = null): void
+  assignScopedRole(\AzGuard\Models\Role|\BackedEnum|string $role, \Illuminate\Database\Eloquent\Model $entity, \BackedEnum|null|string $panelId = null): \static
+  checkPermission(\UnitEnum|string $permission, \BackedEnum|null|string $panelId = null, ?\AzGuard\Contracts\PermissionContext $context = null): bool
+  flushPermissions(\BackedEnum|null|string $panelId = null): void
   hasContextGuard(): bool
-  hasPermission(\UnitEnum|string $permission, ?string $panelId = null, ?\AzGuard\Contracts\PermissionContext $context = null): bool
-  hasPermissionIn(string $contextType, int|string $contextId, \UnitEnum|string $permission, ?string $panelId = null): bool
-  hasScopedPermission(\UnitEnum|string $permission, \Illuminate\Database\Eloquent\Model $entity, ?string $panelId = null): bool
-  hasScopedRole(\AzGuard\Models\Role|string $role, \Illuminate\Database\Eloquent\Model $entity, ?string $panelId = null): bool
-  isSuperAdmin(?string $panelId = null): bool
-  permissionSet(?string $panelId = null): \AzGuard\Registry\Values\PermissionSet
-  permissions(?string $panelId = null): \Illuminate\Support\Collection
-  removeScopedRole(\AzGuard\Models\Role|string $role, \Illuminate\Database\Eloquent\Model $entity, ?string $panelId = null): \static
+  hasPermission(\UnitEnum|string $permission, \BackedEnum|null|string $panelId = null, ?\AzGuard\Contracts\PermissionContext $context = null): bool
+  hasPermissionIn(string $contextType, int|string $contextId, \UnitEnum|string $permission, \BackedEnum|null|string $panelId = null): bool
+  hasScopedPermission(\UnitEnum|string $permission, \Illuminate\Database\Eloquent\Model $entity, \BackedEnum|null|string $panelId = null): bool
+  hasScopedRole(\AzGuard\Models\Role|\BackedEnum|string $role, \Illuminate\Database\Eloquent\Model $entity, \BackedEnum|null|string $panelId = null): bool
+  isSuperAdmin(\BackedEnum|null|string $panelId = null): bool
+  permissionSet(\BackedEnum|null|string $panelId = null): \AzGuard\Registry\Values\PermissionSet
+  permissions(\BackedEnum|null|string $panelId = null): \Illuminate\Support\Collection
+  removeScopedRole(\AzGuard\Models\Role|\BackedEnum|string $role, \Illuminate\Database\Eloquent\Model $entity, \BackedEnum|null|string $panelId = null): \static

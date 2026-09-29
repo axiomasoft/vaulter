@@ -59,7 +59,7 @@ Select the driver in `config/vaulter.php`:
    `AzgardBackedUser` simply composes AzGuard's own public contracts (0.2+) —
    `AzGuard\Contracts\HasPermissions` + `HasScopedRoles` — so the `HasAzGuard` +
    `HasScopedRoles` traits already declare every method: no bodies needed, only the
-   `implements` clause. (Requires `axioma-studio/azguard-core: ^0.2`.)
+   `implements` clause. (Requires `axioma-studio/azguard-core: ^0.3`.)
 
 2. **The context lane** (`hasPermissionIn`) resolves through AzGuard's bound `ContextGuard`
    — install `axioma-studio/azguard-context` (or the CoreX tenancy provider) so workspace
