@@ -1,0 +1,104 @@
+{
+  "checks": [
+    {
+      "exit": 0,
+      "log": "baseline-p7-tests.log",
+      "name": "baseline P7",
+      "tests": 111
+    },
+    {
+      "errors": 4,
+      "exit": 1,
+      "expected_exit": 1,
+      "failures": 5,
+      "log": "original-source-tests.log",
+      "meaning": "Original producer defect reproduced; negative controls pass",
+      "name": "python3 -B readback.py --original-ref dd23b68",
+      "tests": 14
+    },
+    {
+      "exit": 0,
+      "log": "integrity-contract-tests.log",
+      "name": "python3 -B readback.py",
+      "tests": 14
+    },
+    {
+      "exit": 0,
+      "log": "p7-tests.log",
+      "name": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_*.py' -v",
+      "tests": 125
+    },
+    {
+      "cells": 51,
+      "exit": 0,
+      "log": "dry-run.log",
+      "name": "PYTHONDONTWRITEBYTECODE=1 TIER=S ./load/scripts/p7-chaos.sh dry-run"
+    },
+    {
+      "exit": 1,
+      "expected_exit": 1,
+      "log": "historical-rejection.log",
+      "meaning": "Historical evidence stays rejected: recovered without dependency probe",
+      "name": "python3 -B load/gates/p7_live_matrix.py verify --artifacts plans/VLT-LOAD/artifacts/P7"
+    },
+    {
+      "exit": 0,
+      "log": "syntax.log",
+      "name": "compile() without bytecode"
+    },
+    {
+      "exit": 0,
+      "log": "diff-check.log",
+      "name": "git diff --check"
+    },
+    {
+      "exit": 0,
+      "files": 176,
+      "log": "historical-preservation.log",
+      "name": "historical fingerprint equality"
+    }
+  ],
+  "full_reader_forged_absence_controls_rejected": 6,
+  "full_reader_positive_cases": 4,
+  "historical_preserved": true,
+  "historical_tree_sha256": "b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62",
+  "log_format": "Text logs strip trailing whitespace at end of line; diagnostics and command exits are preserved.",
+  "logs_sha256": {
+    "baseline-p7-tests.log": "7ca40a9a7f9581cef598f5fa15860a22f363174619583f253bea58aa98a01592",
+    "diff-check.log": "f15e272db1df9395716cc6c9451d6ec887a90f7264f91b639e60886b3df17b56",
+    "dry-run.log": "d4b906d1cfe807c4a77e65078402ea92d69ff581704e79165f34c201bfeb910e",
+    "historical-before.json": "a06fa75d80f91847b4bf60f00d8d77b1f4739a4eee8de6908fec91662b35e75d",
+    "historical-preservation.log": "17de311830dfafa2a8283f95c43673e74e42cbe983d9b1050580f04787329364",
+    "historical-rejection.log": "6776697edc2ae2f4555f77efaba98306fdd86294c57d7ef904f06d4aaa8c87d1",
+    "integrity-contract-tests.log": "8e5ab82783f61a78ccd5a942a16aceb0aa3a8419a3bc93edb9196c2a0e253efe",
+    "original-source-tests.log": "aef3d211923835080a98ccbb6929317e51ce5385b1fb8598e8f1fbbccb3d12d1",
+    "p7-tests.log": "f60bf39dd6fcb21999a1d3444639c71909f08bdcc92f428b2b43965e1bfcb9aa",
+    "readback.py": "5d065a399d44b462051df6b441a905335041f83bd09c068c6e52e9e672cae2dc",
+    "syntax.log": "11ff158cbd567d7b226d5d07188f0734190a0cb57c7ffeb50d86c2fce25477d3"
+  },
+  "not_run": [
+    "live/load/chaos/SLO measurements",
+    "package/PHP/PostgreSQL suites",
+    "cold mutation",
+    "independent review"
+  ],
+  "original_producer_sha256": "f04c4e4a9cb2fab6ed7b7a511bf1e3dc7ed052c4cbb59044d9ef4808226f6bd0",
+  "pre_existing_dirty_paths": [
+    "plans/REMAINING-WORK.md",
+    "plans/remaining-evidence/B14-audit.md"
+  ],
+  "review": {
+    "findings": [],
+    "skill": "quality:code-review",
+    "type": "focused self-review",
+    "verified": "Producer shares gate.RESOLVED; raw presence/checksum/size/key/identity recomputation unchanged. Recovery and retry gates remain required. Inventory expansion and publisher excluded."
+  },
+  "scope": "load-only captured-pair integrity contract; controlled offline producer/reader regressions",
+  "source_base": "dd23b6852e25149af69a608c6bf82959d1364893",
+  "source_rollup_sha256": "a6a4fd8d368862fc8ede063fc8e9c1c940d636377a37e07deed76309cb8402a4",
+  "source_sha256": {
+    "load/gates/p7_live_matrix.py": "eb3269913dfeaeb32057a9209df55b64b7d4988435db5118acb365023ce62cf8",
+    "load/gates/test_p7_integrity_contract.py": "b9f944044878c0459147ee65dc890ae6f1cffaa4cb9b63bacde45a7b506105a0"
+  },
+  "task": "R11-B14-04"
+}

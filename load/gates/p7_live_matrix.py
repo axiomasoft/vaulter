@@ -826,7 +826,7 @@ def run_window(streams: dict[str, list[dict]], clock: Clock, cell: dict, attempt
         join='object-to-db', durable_identity=str(object_state['key']), status=object_status)
     add('ledger.jsonl', 'reconcile', 'observe', schema='p7-ledger/v1', source='ledger')
     finished = clock.next()
-    integrity_ok = object_status in {'matched', 'rejected-persisted', 'not-applicable'}
+    integrity_ok = object_status in gate.RESOLVED
     retry_distinct = len(product_results) < 2 or product_results[0]['request_id'] != product_results[1]['request_id']
     record = {
         'run_id': run_id,
