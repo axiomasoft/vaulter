@@ -1,0 +1,10 @@
+$ npm run check
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l13/hocuspocus-server
+source: frontend.yml:hocuspocus
+
+> @vaulter/hocuspocus-server@0.1.0 check
+> node --check src/index.js && node --check src/config.js && node --check src/webhook.js
+
+
+exit: 0
+elapsed_seconds: 0.109

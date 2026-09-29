@@ -1,0 +1,37 @@
+$ npm install
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
+source: frontend.yml:vue
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@vaulter/hocuspocus-server@0.1.0',
+npm warn EBADENGINE   required: { node: '>=22' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@hocuspocus/server@4.3.0',
+npm warn EBADENGINE   required: { node: '>=22' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@vaulter/hocuspocus-server@0.1.0',
+npm warn EBADENGINE   required: { node: '>=22' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+
+added 477 packages, and audited 480 packages in 2s
+
+122 packages are looking for funding
+  run `npm fund` for details
+
+36 vulnerabilities (29 moderate, 7 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+
+exit: 0
+elapsed_seconds: 2.628

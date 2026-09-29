@@ -1,0 +1,6 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --mutate --path=packages/core/src --covered-only --clear-cache --min=95
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-core-mutation-pg
+source: mutation.yml:mutation-testing PostgreSQL
+
+exit: -15
+elapsed_seconds: 6142.679

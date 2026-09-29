@@ -20,6 +20,35 @@ npm install          # npm workspaces (packages/vue, hocuspocus-server) + docs
 
 ## Development workflow (PHP)
 
+### Local environment
+
+Use the PHP 8.4 wrapper for Composer and PHP tooling, including subprocesses:
+
+```bash
+scripts/php84 --check
+scripts/php84 composer install
+scripts/db-preflight.sh pgsql
+scripts/db-preflight.sh mysql
+```
+
+The database preflight defaults to `127.0.0.1`, PostgreSQL port `5432` or MySQL
+port `3306`, database `vaulter_test`, and user/password `vaulter`/`secret`.
+Override these with `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and
+`DB_PASSWORD`. Database names must end with `_test`. Authentication failures
+return exit 2 and print the administrator command needed to provision the test
+account; other failures return exit 1. Resolve preflight failures before tests.
+
+Run the PostgreSQL base suite with the same coordinates as CI:
+
+```bash
+DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
+DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
+scripts/php84 vendor/bin/pest --ci \
+packages/core/tests/Access packages/core/tests/Activity \
+packages/core/tests/Feature packages/core/tests/Panels \
+packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
+```
+
 All quality tooling is wired through the `Makefile`:
 
 | Command | What it does |

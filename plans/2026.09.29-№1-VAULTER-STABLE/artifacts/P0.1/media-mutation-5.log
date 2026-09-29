@@ -1,0 +1,15 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 php bin/assert-mutation-union.php "$RUNNER_TEMP/media-mutate-pgsql" "$RUNNER_TEMP/media-mutate-sqlite" 95
+cwd: /home/vostrikov/projects/packages/vaulter/packages/media
+source: media.yml:media-mutation / Mutation gate: PostgreSQL + SQLite ID union (95%)
+{
+    "ids": 513,
+    "killed_union": 484,
+    "escaped_union": 29,
+    "only_first_driver": 34,
+    "only_second_driver": 5,
+    "score_percent": 94.35,
+    "minimum_percent": 95
+}
+
+exit: 1
+elapsed_seconds: 0.347

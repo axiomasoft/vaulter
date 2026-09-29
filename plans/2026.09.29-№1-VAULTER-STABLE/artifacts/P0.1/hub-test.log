@@ -1,0 +1,347 @@
+$ npm test
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l13/hocuspocus-server
+source: frontend.yml:hocuspocus
+
+> @vaulter/hocuspocus-server@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: decodeTokenExpiry reads the exp claim WITHOUT verifying the signature
+ok 1 - decodeTokenExpiry reads the exp claim WITHOUT verifying the signature
+  ---
+  duration_ms: 0.539409
+  type: 'test'
+  ...
+# Subtest: decodeTokenExpiry returns null for a non-string / malformed / too-short token
+ok 2 - decodeTokenExpiry returns null for a non-string / malformed / too-short token
+  ---
+  duration_ms: 0.067569
+  type: 'test'
+  ...
+# Subtest: decodeTokenExpiry returns null when the middle segment is not valid base64url JSON
+ok 3 - decodeTokenExpiry returns null when the middle segment is not valid base64url JSON
+  ---
+  duration_ms: 0.068308
+  type: 'test'
+  ...
+# Subtest: decodeTokenExpiry returns null when the exp claim is missing or non-numeric
+ok 4 - decodeTokenExpiry returns null when the exp claim is missing or non-numeric
+  ---
+  duration_ms: 0.106368
+  type: 'test'
+  ...
+# Subtest: armExpiryTimer is a no-op when exp is null (unparsable token — pre-P3.2 behaviour)
+ok 5 - armExpiryTimer is a no-op when exp is null (unparsable token — pre-P3.2 behaviour)
+  ---
+  duration_ms: 0.082223
+  type: 'test'
+  ...
+# Subtest: armExpiryTimer closes the connection IMMEDIATELY when exp is already in the past
+ok 6 - armExpiryTimer closes the connection IMMEDIATELY when exp is already in the past
+  ---
+  duration_ms: 0.143175
+  type: 'test'
+  ...
+# Subtest: armExpiryTimer does NOT close a connection whose token has not expired yet
+ok 7 - armExpiryTimer does NOT close a connection whose token has not expired yet
+  ---
+  duration_ms: 0.128688
+  type: 'test'
+  ...
+# Subtest: armExpiryTimer force-closes the connection once exp passes (F-P1.6-03)
+ok 8 - armExpiryTimer force-closes the connection once exp passes (F-P1.6-03)
+  ---
+  duration_ms: 1201.190925
+  type: 'test'
+  ...
+# Subtest: derives the webhook base from backend URL + the default api prefix
+ok 9 - derives the webhook base from backend URL + the default api prefix
+  ---
+  duration_ms: 0.431007
+  type: 'test'
+  ...
+# Subtest: respects a custom api prefix and strips stray slashes
+ok 10 - respects a custom api prefix and strips stray slashes
+  ---
+  duration_ms: 0.069957
+  type: 'test'
+  ...
+# Subtest: an explicit VAULTER_LARAVEL_WEBHOOK_URL wins over the derived base
+ok 11 - an explicit VAULTER_LARAVEL_WEBHOOK_URL wins over the derived base
+  ---
+  duration_ms: 0.055954
+  type: 'test'
+  ...
+# Subtest: falls back to localhost when nothing is configured
+ok 12 - falls back to localhost when nothing is configured
+  ---
+  duration_ms: 0.526639
+  type: 'test'
+  ...
+# Subtest: onConnect refuses a forged browser Origin (CSWSH)
+ok 13 - onConnect refuses a forged browser Origin (CSWSH)
+  ---
+  duration_ms: 0.631141
+  type: 'test'
+  ...
+# Subtest: onConnect admits an allowlisted browser Origin
+ok 14 - onConnect admits an allowlisted browser Origin
+  ---
+  duration_ms: 0.127608
+  type: 'test'
+  ...
+# Subtest: onConnect admits a non-browser client with no Origin (still auth-gated downstream)
+ok 15 - onConnect admits a non-browser client with no Origin (still auth-gated downstream)
+  ---
+  duration_ms: 0.066304
+  type: 'test'
+  ...
+# Subtest: onConnect reads Origin from a v4-style Headers object too (forged → refused)
+ok 16 - onConnect reads Origin from a v4-style Headers object too (forged → refused)
+  ---
+  duration_ms: 0.47661
+  type: 'test'
+  ...
+# Subtest: onConnect admits an allowlisted Origin from a v4-style Headers object
+ok 17 - onConnect admits an allowlisted Origin from a v4-style Headers object
+  ---
+  duration_ms: 0.101044
+  type: 'test'
+  ...
+# Subtest: F-P4.1-R2: the direct ioredis major matches the version @hocuspocus/extension-redis is built against
+ok 18 - F-P4.1-R2: the direct ioredis major matches the version @hocuspocus/extension-redis is built against
+  ---
+  duration_ms: 0.610719
+  type: 'test'
+  ...
+# Subtest: F-P4.1-R2: buildExtensions wires the Redis multi-instance extension (after Throttle) when a Redis URL is set
+ok 19 - F-P4.1-R2: buildExtensions wires the Redis multi-instance extension (after Throttle) when a Redis URL is set
+  ---
+  duration_ms: 33.380384
+  type: 'test'
+  ...
+# Subtest: a browser Origin on the allowlist is allowed (exact match)
+ok 20 - a browser Origin on the allowlist is allowed (exact match)
+  ---
+  duration_ms: 1.414847
+  type: 'test'
+  ...
+# Subtest: a browser Origin NOT on the allowlist is rejected
+ok 21 - a browser Origin NOT on the allowlist is rejected
+  ---
+  duration_ms: 0.118037
+  type: 'test'
+  ...
+# Subtest: no substring/prefix bypass of the allowlist
+ok 22 - no substring/prefix bypass of the allowlist
+  ---
+  duration_ms: 0.075368
+  type: 'test'
+  ...
+# Subtest: a non-browser client (no Origin) is allowed — not a CSWSH vector, still auth-gated
+ok 23 - a non-browser client (no Origin) is allowed — not a CSWSH vector, still auth-gated
+  ---
+  duration_ms: 0.065695
+  type: 'test'
+  ...
+# Subtest: "*" in the allowlist allows any Origin (explicit opt-in)
+ok 24 - "*" in the allowlist allows any Origin (explicit opt-in)
+  ---
+  duration_ms: 0.062818
+  type: 'test'
+  ...
+# Subtest: dev with an empty allowlist allows any Origin (convenience)
+ok 25 - dev with an empty allowlist allows any Origin (convenience)
+  ---
+  duration_ms: 0.071433
+  type: 'test'
+  ...
+# Subtest: production with an empty allowlist rejects a browser Origin (fail-closed)
+ok 26 - production with an empty allowlist rejects a browser Origin (fail-closed)
+  ---
+  duration_ms: 0.09014
+  type: 'test'
+  ...
+# Subtest: validateConfig: production requires a backend URL and an origin allowlist
+ok 27 - validateConfig: production requires a backend URL and an origin allowlist
+  ---
+  duration_ms: 0.216544
+  type: 'test'
+  ...
+# Subtest: validateConfig: a fully configured production hub is valid
+ok 28 - validateConfig: a fully configured production hub is valid
+  ---
+  duration_ms: 0.46416
+  type: 'test'
+  ...
+# Subtest: validateConfig: dev needs no backend/origin config
+ok 29 - validateConfig: dev needs no backend/origin config
+  ---
+  duration_ms: 0.211544
+  type: 'test'
+  ...
+# Subtest: validateConfig: a non-positive maxPayload is rejected
+ok 30 - validateConfig: a non-positive maxPayload is rejected
+  ---
+  duration_ms: 0.130764
+  type: 'test'
+  ...
+# Subtest: a non-canonical NODE_ENV is treated as production (fail-closed, not silently dev)
+ok 31 - a non-canonical NODE_ENV is treated as production (fail-closed, not silently dev)
+  ---
+  duration_ms: 0.086659
+  type: 'test'
+  ...
+# Subtest: validateConfig: a malformed integer (trailing garbage / non-numeric) is rejected
+ok 32 - validateConfig: a malformed integer (trailing garbage / non-numeric) is rejected
+  ---
+  duration_ms: 0.122769
+  type: 'test'
+  ...
+# Subtest: validateConfig: a port outside 1..65535 is rejected
+ok 33 - validateConfig: a port outside 1..65535 is rejected
+  ---
+  duration_ms: 0.056171
+  type: 'test'
+  ...
+# Subtest: validateConfig: the WS port and the health port must differ
+ok 34 - validateConfig: the WS port and the health port must differ
+  ---
+  duration_ms: 0.044661
+  type: 'test'
+  ...
+# Subtest: validateConfig: a negative throttle window is rejected
+ok 35 - validateConfig: a negative throttle window is rejected
+  ---
+  duration_ms: 0.042849
+  type: 'test'
+  ...
+# Subtest: validateConfig: a well-formed dev config with custom numerics stays valid
+ok 36 - validateConfig: a well-formed dev config with custom numerics stays valid
+  ---
+  duration_ms: 0.047872
+  type: 'test'
+  ...
+# Subtest: authenticate forwards the JWT as a bearer token and the room in the body
+ok 37 - authenticate forwards the JWT as a bearer token and the room in the body
+  ---
+  duration_ms: 1.174921
+  type: 'test'
+  ...
+# Subtest: authenticate honours readOnly:true from the backend
+ok 38 - authenticate honours readOnly:true from the backend
+  ---
+  duration_ms: 0.18008
+  type: 'test'
+  ...
+# Subtest: authenticate maps allowed:false to a refused connection
+ok 39 - authenticate maps allowed:false to a refused connection
+  ---
+  duration_ms: 0.103156
+  type: 'test'
+  ...
+# Subtest: authenticate treats a non-2xx as not-allowed + read-only (fail closed)
+ok 40 - authenticate treats a non-2xx as not-allowed + read-only (fail closed)
+  ---
+  duration_ms: 0.101743
+  type: 'test'
+  ...
+# Subtest: authenticate defaults to read-only when the backend omits readOnly
+ok 41 - authenticate defaults to read-only when the backend omits readOnly
+  ---
+  duration_ms: 0.131986
+  type: 'test'
+  ...
+# Subtest: authenticate omits the secret header when none is configured (JWT-only)
+ok 42 - authenticate omits the secret header when none is configured (JWT-only)
+  ---
+  duration_ms: 0.084934
+  type: 'test'
+  ...
+# Subtest: storeDocument posts the base64 yjs_state + room and authenticates with the JWT
+ok 43 - storeDocument posts the base64 yjs_state + room and authenticates with the JWT
+  ---
+  duration_ms: 0.254889
+  type: 'test'
+  ...
+# Subtest: storeDocument carries user_id out of band for a shared-secret call
+ok 44 - storeDocument carries user_id out of band for a shared-secret call
+  ---
+  duration_ms: 0.637
+  type: 'test'
+  ...
+# Subtest: storeDocument throws on a non-2xx so the server can retry
+ok 45 - storeDocument throws on a non-2xx so the server can retry
+  ---
+  duration_ms: 0.555712
+  type: 'test'
+  ...
+# Subtest: authenticate signs the exact bytes it sends, matching the PHP canonical string
+ok 46 - authenticate signs the exact bytes it sends, matching the PHP canonical string
+  ---
+  duration_ms: 0.365569
+  type: 'test'
+  ...
+# Subtest: storeDocument signs the exact bytes it sends, matching the PHP canonical string
+ok 47 - storeDocument signs the exact bytes it sends, matching the PHP canonical string
+  ---
+  duration_ms: 0.148135
+  type: 'test'
+  ...
+# Subtest: no signature is sent when no webhookSecret is configured (nothing to sign with)
+ok 48 - no signature is sent when no webhookSecret is configured (nothing to sign with)
+  ---
+  duration_ms: 0.077042
+  type: 'test'
+  ...
+# Subtest: a different body under the same timestamp produces a DIFFERENT signature (tamper-evidence)
+ok 49 - a different body under the same timestamp produces a DIFFERENT signature (tamper-evidence)
+  ---
+  duration_ms: 0.097925
+  type: 'test'
+  ...
+# WebSocket error for peer: def7f889-56ca-4910-a39f-c51cea20a156
+# WSError: RangeError: Max payload size exceeded
+#     at WebSocket.<anonymous> (file:///home/vostrikov/projects/packages/vaulter/build/baseline-l13/node_modules/crossws/dist/_chunks/node.mjs:66:34)
+#     at WebSocket.emit (node:events:519:28)
+#     at Receiver.receiverOnError (file:///home/vostrikov/projects/packages/vaulter/build/baseline-l13/node_modules/crossws/dist/_chunks/libs/ws.mjs:2023:14)
+#     at Receiver.emit (node:events:519:28)
+#     at emitErrorNT (node:internal/streams/destroy:170:8)
+#     at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+# Subtest: F-P4.5-02: the maxPayload cap is enforced by the v4 transport — an oversized frame is refused with 1009
+ok 50 - F-P4.5-02: the maxPayload cap is enforced by the v4 transport — an oversized frame is refused with 1009
+  ---
+  duration_ms: 11.886929
+  type: 'test'
+  ...
+# Subtest: F-P4.5-02: negative control — WITHOUT websocketOptions the same oversized frame is NOT refused with 1009
+ok 51 - F-P4.5-02: negative control — WITHOUT websocketOptions the same oversized frame is NOT refused with 1009
+  ---
+  duration_ms: 1500.591736
+  type: 'test'
+  ...
+# Subtest: F-P4.5-02: buildServer wires the hardened websocketOptions (maxPayload + perMessageDeflate off) into the v4 Server config
+ok 52 - F-P4.5-02: buildServer wires the hardened websocketOptions (maxPayload + perMessageDeflate off) into the v4 Server config
+  ---
+  duration_ms: 0.615297
+  type: 'test'
+  ...
+# Subtest: F-P4.5-02: the Throttle flood guard leads the extension chain with the configured per-IP limits
+ok 53 - F-P4.5-02: the Throttle flood guard leads the extension chain with the configured per-IP limits
+  ---
+  duration_ms: 0.109759
+  type: 'test'
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1598.467324
+
+exit: 0
+elapsed_seconds: 1.697

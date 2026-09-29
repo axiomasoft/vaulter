@@ -1,0 +1,83 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --type-coverage --min=100
+cwd: /home/vostrikov/projects/packages/vaulter/packages/drive
+source: drive.yml:drive / Type coverage (100%)
+
+  src/Activity/RecordsDriveActivity.php [90m.................................[39m [32m100%[39m  
+  src/Events/NodeCreated.php [90m............................................[39m [32m100%[39m  
+  src/Events/NodeCopied.php [90m.............................................[39m [32m100%[39m  
+  src/Events/UploadSessionExpired.php [90m...................................[39m [32m100%[39m  
+  src/Events/NodeVersionCommitted.php [90m...................................[39m [32m100%[39m  
+  src/Events/StorageCreated.php [90m.........................................[39m [32m100%[39m  
+  src/Events/NodeTrashed.php [90m............................................[39m [32m100%[39m  
+  src/Events/NodeRestored.php [90m...........................................[39m [32m100%[39m  
+  src/Events/NodeRenamed.php [90m............................................[39m [32m100%[39m  
+  src/Events/FileUploaded.php [90m...........................................[39m [32m100%[39m  
+  src/Events/UploadSessionInitiated.php [90m.................................[39m [32m100%[39m  
+  src/Events/NodeForceDeleted.php [90m.......................................[39m [32m100%[39m  
+  src/Events/NodeMoved.php [90m..............................................[39m [32m100%[39m  
+  src/Events/UploadSessionAborted.php [90m...................................[39m [32m100%[39m  
+  src/Uploads/UploadSessionManager.php [90m..................................[39m [32m100%[39m  
+  src/Uploads/S3MultipartHandler.php [90m....................................[39m [32m100%[39m  
+  src/Uploads/TusUploadHandler.php [90m......................................[39m [32m100%[39m  
+  src/Support/Uploads/MagicByteSniffer.php [90m..............................[39m [32m100%[39m  
+  src/Support/Uploads/UploadModels.php [90m..................................[39m [32m100%[39m  
+  src/Support/Uploads/StagedUpload.php [90m..................................[39m [32m100%[39m  
+  src/Data/RenameNodeData.php [90m...........................................[39m [32m100%[39m  
+  src/Data/UploadFileData.php [90m...........................................[39m [32m100%[39m  
+  src/Data/MoveNodeData.php [90m.............................................[39m [32m100%[39m  
+  src/Data/Uploads/UploadInitData.php [90m...................................[39m [32m100%[39m  
+  src/Data/CreateDriveFolderData.php [90m....................................[39m [32m100%[39m  
+  src/Data/CopyNodeData.php [90m.............................................[39m [32m100%[39m  
+  src/ValueObjects/WorkspaceRef.php [90m.....................................[39m [32m100%[39m  
+  src/Exceptions/UploadConflictException.php [90m............................[39m [32m100%[39m  
+  src/Exceptions/CrossStorageMoveException.php [90m..........................[39m [32m100%[39m  
+  src/Exceptions/CycleException.php [90m.....................................[39m [32m100%[39m  
+  src/Exceptions/QuotaExceededException.php [90m.............................[39m [32m100%[39m  
+  src/Exceptions/StagedUploadMissingException.php [90m.......................[39m [32m100%[39m  
+  src/Exceptions/UploadContentMismatchException.php [90m.....................[39m [32m100%[39m  
+  src/Exceptions/OffsetMismatchException.php [90m............................[39m [32m100%[39m  
+  src/Models/Uploads/UploadSession.php [90m..................................[39m [32m100%[39m  
+  src/Models/Uploads/UploadPart.php [90m.....................................[39m [32m100%[39m  
+  src/DriveContext.php [90m..................................................[39m [32m100%[39m  
+  src/Enums/BulkAction.php [90m..............................................[39m [32m100%[39m  
+  src/Enums/Uploads/UploadStatus.php [90m....................................[39m [32m100%[39m  
+  src/Enums/Uploads/UploadProtocol.php [90m..................................[39m [32m100%[39m  
+  src/Console/PurgeTrashCommand.php [90m.....................................[39m [32m100%[39m  
+  src/Console/SweepUploadsCommand.php [90m...................................[39m [32m100%[39m  
+  src/Repositories/Uploads/UploadPartStoreRepository.php [90m................[39m [32m100%[39m  
+  src/Repositories/Uploads/UploadSessionStoreRepository.php [90m.............[39m [32m100%[39m  
+  src/Repositories/Uploads/UploadSessionReadRepository.php [90m..............[39m [32m100%[39m  
+  src/Http/Requests/Uploads/CreateUploadSessionRequest.php [90m..............[39m [32m100%[39m  
+  src/Http/Requests/MoveNodeRequest.php [90m.................................[39m [32m100%[39m  
+  src/Http/Requests/CopyNodeRequest.php [90m.................................[39m [32m100%[39m  
+  src/Http/Requests/RenameNodeRequest.php [90m...............................[39m [32m100%[39m  
+  src/Http/Requests/CreateFolderRequest.php [90m.............................[39m [32m100%[39m  
+  src/Http/Requests/UploadFileRequest.php [90m...............................[39m [32m100%[39m  
+  src/Http/Resources/Uploads/UploadSessionResource.php [90m..................[39m [32m100%[39m  
+  src/Http/Resources/StorageResource.php [90m................................[39m [32m100%[39m  
+  src/Http/Resources/FileVersionResource.php [90m............................[39m [32m100%[39m  
+  src/Http/Controllers/DownloadController.php [90m...........................[39m [32m100%[39m  
+  src/Http/Controllers/NodeController.php [90m...............................[39m [32m100%[39m  
+  src/Http/Controllers/Uploads/TusUploadController.php [90m..................[39m [32m100%[39m  
+  src/Http/Controllers/Uploads/S3MultipartController.php [90m................[39m [32m100%[39m  
+  src/Http/Controllers/StorageController.php [90m............................[39m [32m100%[39m  
+  src/DriveManager.php [90m..................................................[39m [32m100%[39m  
+  src/Webhooks/RecordsDriveOutbox.php [90m...................................[39m [32m100%[39m  
+  src/Actions/UploadFileAction.php [90m......................................[39m [32m100%[39m  
+  src/Actions/CreateFolderAction.php [90m....................................[39m [32m100%[39m  
+  src/Actions/Uploads/CommitUploadAction.php [90m............................[39m [32m100%[39m  
+  src/Actions/ForceDeleteNodeAction.php [90m.................................[39m [32m100%[39m  
+  src/Actions/TrashNodeAction.php [90m.......................................[39m [32m100%[39m  
+  src/Actions/CopyNodeAction.php [90m........................................[39m [32m100%[39m  
+  src/Actions/MoveNodeAction.php [90m........................................[39m [32m100%[39m  
+  src/Actions/RestoreNodeAction.php [90m.....................................[39m [32m100%[39m  
+  src/Actions/RenameNodeAction.php [90m......................................[39m [32m100%[39m  
+  src/StorageManager.php [90m................................................[39m [32m100%[39m  
+  src/VaulterDriveServiceProvider.php [90m...................................[39m [32m100%[39m  
+  src/Contracts/Uploads/UploadProtocolHandler.php [90m.......................[39m [32m100%[39m  
+  [90m────────────────────────────────────────────────────────────────────────────[39m  
+                                                        [90;1m(0.30s)[39;22m[1m Total: 100.0 %[22m  
+
+
+exit: 0
+elapsed_seconds: 0.358
