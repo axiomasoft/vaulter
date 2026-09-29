@@ -1,0 +1,42 @@
+{
+  "source_base": "cf967c7",
+  "source_sha256": {
+    "load/README.md": "f6b11a36514ff7a3570572ac4a852c98c50c90c37fb1bd425c167dde7a333c8f",
+    "load/gates/p7_publish.py": "c50bf8d1502590566afb56fc23b142aa19bb4b8ebfb72f35baed1dc97f5cef11",
+    "load/gates/test_p7_publication.py": "521df277dce243b67e94d28788c6e3e93c07d4ff270118b1b0db7a47b9a6bde9",
+    "load/gates/test_p7_chaos.py": "d382b66d668ef57becbb0dc2c3786e6fe6f22647053fa2f81fc913dc55695452",
+    "load/scripts/p7-chaos.sh": "873796ec48397f82f84ac34907fe57f3d800bbac3a47a4f15b3555bec6247cf8"
+  },
+  "logs_sha256": {
+    "baseline-p7-tests.log": "1484d9c83c765e5754ea3f4587939f9cd73d67482e4fc5717cd142bd5532eb24",
+    "command-exits.json": "e19790f3d6eb41f6313fefdc327bf80ffb77e4c384ccb53a85bb8a36700874ae",
+    "current-control.json": "e4b5945b99919da008641660656ac88f08d4622172a45b3ffb9b1e09defcc138",
+    "diff-check.log": "f15e272db1df9395716cc6c9451d6ec887a90f7264f91b639e60886b3df17b56",
+    "dry-run.log": "d4b906d1cfe807c4a77e65078402ea92d69ff581704e79165f34c201bfeb910e",
+    "historical-before.json": "6ad9e17e816fedcecbfd489480a4a971dcfa570999b844a6fedb9f513ff3e664",
+    "historical-preservation.log": "babe7355e3670410e50e0b2c43ee7d14ec47b7b39085b59f496b98f727f914fc",
+    "historical-rejection.log": "6776697edc2ae2f4555f77efaba98306fdd86294c57d7ef904f06d4aaa8c87d1",
+    "independent-review.md": "2c65fd43327aa70c6600e7100219434f1f1af6458f01ab9220fba50b849dc924",
+    "original-source-control.json": "99951d7ac78722cd231d81c0327931c514126270e27c2578100f6c8a8aee75f0",
+    "p7-tests.log": "98f4227faf81d0a7c764b407fa2169c10225a35cbc6d02bd17d1af3eb1e2ad89",
+    "publication-tests.log": "36c771e7476e8c8efaed9e265873c07d7dda8b16ac72bb9bd227ab37ba708567",
+    "python-syntax.log": "6b3eeefe4cc555072520adb29001d16ad5f77e7e78456e1e73c0b97b4529f9bc",
+    "readback.py": "730d385c7867cb477729b63aca59ebde39582deaf2e0d83d0db3cd89731c6d00",
+    "shell-syntax.log": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "actual_exits": {
+    "baseline_p7_156": 0,
+    "focused_publication_12": 0,
+    "p7_168": 0,
+    "original_defect_wrapper": 0,
+    "original_publisher": 0,
+    "current_control_wrapper": 0,
+    "current_occupied_publisher": 1,
+    "dry_run_51_cells": 0,
+    "historical_verifier_rejection": 1,
+    "shell_syntax": 0,
+    "python_compile": 0,
+    "historical_preservation_176": 0,
+    "diff_check": 0
+  }
+}

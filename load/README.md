@@ -619,6 +619,27 @@ python3 -m unittest load/gates/test_p7_chaos.py
 database or object store. `run` without `P7_PUBLISH=1` refuses to start a live
 fault window. `interrupt-fixture` arms a marker and proves revert on `SIGINT`.
 
+P7 publication uses fresh run paths: matrix evidence goes to
+`plans/VLT-LOAD/artifacts/P7/runs/<run_id>`, and copied lane evidence to
+`plans/VLT-LOAD/artifacts/P7/lane-runs/<manifest.run_id>`. `P7_ARTIFACTS`
+selects an exact destination; it must be unoccupied (including empty directories,
+files and dangling symlinks). `verify --run-id ID` reads `P7/runs/ID` by default;
+use `P7_ARTIFACTS` for read-only verification of an older matrix location.
+
+The private staging directory is created beside the destination, verified before
+publication and atomically renamed with Linux `renameat2(RENAME_NOREPLACE)`.
+Concurrent publishers have at most one winner; unsupported systems/filesystems
+fail closed. No copy or replacing-rename fallback is used. Failed run, copy,
+verification or publication retains staging and reports its path. The operator
+can inspect/retry it; cleanup is a separate explicit action. An interrupted
+matrix still attempts scoped fault revert, while a copied lane is never used to
+trigger a live revert. This preserves historical evidence; it does not provide
+new fault/recovery or product proof.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_publication.py' -v
+```
+
 ## P7 injectors and matrix (P7.2)
 
 Isolated topology lives in `docker-compose.chaos.yml` plus `load/chaos/`.

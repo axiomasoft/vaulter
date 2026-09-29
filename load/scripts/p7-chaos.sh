@@ -18,6 +18,7 @@ TIER=${TIER:-S}
 ENV_FILE=$LOAD_ROOT/env/${TIER}.env
 GATE=$REPO_ROOT/load/gates/p7_chaos.py
 SNAPSHOT=$SCRIPT_DIR/p7-chaos-snapshot.sh
+PUBLISHER=$LOAD_ROOT/gates/p7_publish.py
 
 usage() {
     echo "usage: TIER=S $0 dry-run|run|revert|verify|interrupt-fixture [--run-dir DIR|--run-id ID|--out DIR|--matrix]" >&2
@@ -85,7 +86,7 @@ case "$COMMAND" in
         ;;
     verify)
         if [ -n "$RUN_ID" ]; then
-            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7}
+            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/runs/$RUN_ID}
             manifest_run=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$dest/run-manifest.json")
             if [ "$manifest_run" != "$RUN_ID" ]; then
                 echo "p7-chaos verify: run_id mismatch (manifest=${manifest_run})" >&2
@@ -123,8 +124,10 @@ case "$COMMAND" in
                 exit 1
             fi
             run_id=${RUN_ID:-$(python3 -c 'import uuid; print(uuid.uuid4())')}
-            staging=$(mktemp -d "${TMPDIR:-/tmp}/p7-matrix.XXXXXX")
-            trap 'emergency_revert "$staging"; rm -rf "$staging"' EXIT INT TERM
+            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/runs/$run_id}
+            staging=$(python3 "$PUBLISHER" stage --destination "$dest" --run-id "$run_id")
+            trap 'emergency_revert "$staging"; echo "p7-chaos: staging kept at ${staging}" >&2; exit 130' INT
+            trap 'emergency_revert "$staging"; echo "p7-chaos: staging kept at ${staging}" >&2; exit 143' TERM
             set +e
             python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" run --run-id "$run_id" --out "$staging"
             run_code=$?
@@ -139,12 +142,11 @@ case "$COMMAND" in
                 trap - EXIT INT TERM
                 exit 1
             fi
-            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7}
-            rm -rf "$dest"
-            mkdir -p "$(dirname "$dest")"
-            mv "$staging" "$dest"
+            if ! python3 "$PUBLISHER" publish --staging "$staging" --destination "$dest" --run-id "$run_id"; then
+                echo "p7-chaos matrix: publication failed, staging kept at ${staging}" >&2
+                exit 1
+            fi
             trap - EXIT INT TERM
-            python3 "$REPO_ROOT/load/gates/p7_live_matrix.py" verify --artifacts "$dest"
             echo "p7-chaos run: published ${dest} run_id=${run_id}"
             exit 0
         fi
@@ -152,19 +154,28 @@ case "$COMMAND" in
             echo "p7-chaos run: authoritative tier-S family is P7.3; set P7_PUBLISH=1 and --run-dir to publish already verified evidence. This command does not start Docker or write the database or object store." >&2
             exit 1
         fi
-        staging=$(mktemp -d "${TMPDIR:-/tmp}/p7-chaos.XXXXXX")
-        trap 'emergency_revert "$staging"; rm -rf "$staging"' EXIT INT TERM
-        cp -a "$RUN_DIR"/. "$staging"/
-        if ! python3 "$GATE" verify --run-dir "$staging"; then
-            echo "p7-chaos run: verify failed; destination unchanged" >&2
+        run_id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$RUN_DIR/run-manifest.json")
+        if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "$run_id" ]; then
+            echo "p7-chaos run: run_id mismatch" >&2
             exit 1
         fi
-        dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/lane}
-        rm -rf "$dest"
-        mkdir -p "$(dirname "$dest")"
-        mv "$staging" "$dest"
+        dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/lane-runs/$run_id}
+        staging=$(python3 "$PUBLISHER" stage --destination "$dest" --run-id "$run_id")
+        trap 'echo "p7-chaos: staging kept at ${staging}" >&2; exit 130' INT
+        trap 'echo "p7-chaos: staging kept at ${staging}" >&2; exit 143' TERM
+        if ! cp -a "$RUN_DIR"/. "$staging"/; then
+            echo "p7-chaos run: copy failed, staging kept at ${staging}" >&2
+            exit 1
+        fi
+        if ! python3 "$GATE" verify --run-dir "$staging"; then
+            echo "p7-chaos run: verify failed, staging kept at ${staging}" >&2
+            exit 1
+        fi
+        if ! python3 "$PUBLISHER" publish --staging "$staging" --destination "$dest" --run-id "$run_id"; then
+            echo "p7-chaos run: publication failed, staging kept at ${staging}" >&2
+            exit 1
+        fi
         trap - EXIT INT TERM
-        python3 "$GATE" verify --run-dir "$dest"
         echo "p7-chaos run: published ${dest}"
         ;;
 esac

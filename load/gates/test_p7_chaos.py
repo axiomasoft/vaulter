@@ -8,6 +8,7 @@ import os
 import signal
 import subprocess
 import time
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -447,18 +448,20 @@ class P7ChaosGateTest(unittest.TestCase):
         )
         self.assertEqual(refused.returncode, 1)
         self.assertIn('P7.3', refused.stderr)
-        dest = FIXTURES / 'published-invalid'
-        if dest.exists():
-            subprocess.run(['rm', '-rf', str(dest)], check=True)
-        proc = subprocess.run(
-            ['sh', str(SCRIPT), 'run', '--run-dir', str(FIXTURES / 'absent-checksum')],
-            check=False,
-            capture_output=True,
-            text=True,
-            env={'TIER': 'S', 'PATH': '/usr/bin:/bin', 'P7_PUBLISH': '1', 'P7_ARTIFACTS': str(dest)},
-        )
-        self.assertNotEqual(proc.returncode, 0)
-        self.assertFalse(dest.exists())
+        with tempfile.TemporaryDirectory(prefix='p7-invalid-publication-') as directory:
+            dest = Path(directory) / 'published-invalid'
+            proc = subprocess.run(
+                ['sh', str(SCRIPT), 'run', '--run-dir', str(FIXTURES / 'absent-checksum')],
+                check=False,
+                capture_output=True,
+                text=True,
+                env={'TIER': 'S', 'PATH': '/usr/bin:/bin', 'P7_PUBLISH': '1', 'P7_ARTIFACTS': str(dest)},
+            )
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertFalse(dest.exists())
+            staging, = Path(directory).glob('.p7-staging-*')
+            self.assertTrue((staging / 'run-manifest.json').exists())
+            self.assertIn(str(staging), proc.stderr)
 
 
 if __name__ == '__main__':
