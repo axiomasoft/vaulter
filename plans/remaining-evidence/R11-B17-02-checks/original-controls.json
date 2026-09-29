@@ -1,0 +1,76 @@
+[
+  {
+    "control": "lost-parts-with-positive-received",
+    "producer": "invalid",
+    "full_reader": "rejected: multipart received bytes contradict durable parts",
+    "received_bytes": 16,
+    "payload_checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "joins": [
+      {
+        "object_key": "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload.parts/1",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload.parts/1",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "inventory",
+        "status": "missing-row"
+      },
+      {
+        "object_key": "inventory",
+        "status": "missing-row"
+      }
+    ]
+  },
+  {
+    "control": "wrong-final-content",
+    "producer": "valid",
+    "full_reader": "accepted",
+    "received_bytes": 16,
+    "payload_checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "joins": [
+      {
+        "object_key": "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "matched"
+      },
+      {
+        "object_key": "global/bb/bb/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "matched"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload.parts/1",
+        "status": "matched-absent"
+      },
+      {
+        "object_key": "tmp/uploads/b17-upload.parts/1",
+        "status": "matched-absent"
+      }
+    ]
+  }
+]

@@ -668,6 +668,10 @@ matching object, checksum and size. Losing both the part rows and objects
 cannot establish legitimate absence when received bytes remain positive.
 Zero-byte pre-write refusal remains valid. Assembled sessions prove their
 bytes through staging; terminal cleanup does not require retained part rows.
+For a final blob, its recorded checksum must equal the attempt payload SHA-256
+and the checksum encoded in the predicted CAS key. The measured object checksum
+must match that payload checksum as well; matching DB and object checksums alone
+does not establish integrity. The recorded and observed size check still applies.
 
 Collector failures have `observation=observation-error`, `exists=null` and an
 invalid verdict. Exact-key HEAD uses `mc stat --no-list --json`; arbitrary

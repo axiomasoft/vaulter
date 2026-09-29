@@ -1,0 +1,104 @@
+{
+  "checks": [
+    {
+      "command": "B17 controls with git show 719af61:load/gates/p7_object_inventory.py in temporary import path",
+      "exit": 0,
+      "log": "original-controls.json",
+      "meaning": "B17-01 rejected; expected B17-02 false admission"
+    },
+    {
+      "command": "python3 -B readback.py",
+      "exit": 0,
+      "log": "current-controls.json",
+      "meaning": "both B17 controls rejected by producer and full reader"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7_final_integrity.py' -v",
+      "exit": 0,
+      "log": "final-tests.log",
+      "tests": 8
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s load/gates -p 'test_p7*.py' -v",
+      "exit": 0,
+      "log": "p7-tests.log",
+      "new_tests": 8,
+      "tests": 185
+    },
+    {
+      "command": "python3 -B load/gates/p7_live_matrix.py verify --artifacts plans/VLT-LOAD/artifacts/P7",
+      "exit": 1,
+      "expected_exit": 1,
+      "log": "historical-rejection.log"
+    },
+    {
+      "cells": 51,
+      "command": "TIER=S ./load/scripts/p7-chaos.sh dry-run",
+      "exit": 0,
+      "log": "dry-run.log"
+    },
+    {
+      "command": "compile() and git diff --check",
+      "exit": 0
+    }
+  ],
+  "historical_files": 176,
+  "historical_preserved": true,
+  "historical_tree_sha256": "b51a143828512efb5bb85c5d4f05863677545ae183f2ee3b9f407e3100895a62",
+  "logs_sha256": {
+    "current-controls.json": "d0341b3213789045beae15b3dcf2a50184d6274e34d817e07bbb15ff05249636",
+    "diff-check.log": "f15e272db1df9395716cc6c9451d6ec887a90f7264f91b639e60886b3df17b56",
+    "dry-run.log": "d4b906d1cfe807c4a77e65078402ea92d69ff581704e79165f34c201bfeb910e",
+    "final-tests.log": "7aea6f2d5e62315a018e8b1a90c516c282259d8e0acf7ca0f97e050ebc6f7b44",
+    "historical-rejection.log": "6776697edc2ae2f4555f77efaba98306fdd86294c57d7ef904f06d4aaa8c87d1",
+    "original-controls.json": "1b1c39e7c199fcc6037e771386376e23aa629eda9816bbcb728eabd0b7f2eb31",
+    "p7-tests.log": "cad74b46f64ad6168017277ace891999beeb7eaaf7a68ba24ccdb37eed8ea136",
+    "readback.py": "63e108e6e8149a9c9872e46c5005665c65151abe45c7f5baaa5731eb50038189",
+    "review-controls.log": "d0341b3213789045beae15b3dcf2a50184d6274e34d817e07bbb15ff05249636",
+    "review-final-tests.log": "1a2428fad76c06d74632c2c8624672bcd647fe183bb5f76ae18f6a8b2cec026c",
+    "review-inventory-tests.log": "497f822ecf1e91da2c9106b1357181d93b5dc2bb9d5a8f961e2f5f1d7d6f104d",
+    "review-multipart-tests.log": "f701970a416ade35eab31d896e37288ae713b86fa934959db3a599221afa1787",
+    "syntax.log": "292cf15c4d0394996263d5e676b63f3adbda3e16be8fa080ce5699d725da0a24"
+  },
+  "not_run": [
+    "live/load/chaos/SLO measurements",
+    "PHP/package/PostgreSQL suites",
+    "cold mutation"
+  ],
+  "review": {
+    "agent": "/root/b17_01_recheck",
+    "checks": [
+      {
+        "exit": 0,
+        "log": "review-final-tests.log",
+        "tests": 8
+      },
+      {
+        "exit": 0,
+        "log": "review-multipart-tests.log",
+        "tests": 9
+      },
+      {
+        "exit": 0,
+        "log": "review-inventory-tests.log",
+        "tests": 30
+      },
+      {
+        "exit": 0,
+        "log": "review-controls.log"
+      }
+    ],
+    "findings": [],
+    "skill": "quality:code-review",
+    "type": "independent focused recheck of B17-02 and both repairs"
+  },
+  "scope": "load-only payload/blob/final CAS/object checksum invariant; controlled offline producer/full reader",
+  "source_base": "719af61",
+  "source_sha256": {
+    "load/README.md": "d8944074d1e8ad5ec0a3852ddd83ed3b120a34d939042455fe8c0e3da0b0e33c",
+    "load/gates/p7_object_inventory.py": "708b6f6bf586bb3a24f572fb3e0c2d87b22cdc65309ac62b372bf3bf80be6fab",
+    "load/gates/test_p7_final_integrity.py": "1785961fede603c8a7dbc41144dc173fb3db225bf4bab459957bd656cf8f4d2a",
+    "load/gates/test_p7_object_inventory.py": "218be7222b885c86ce480ace6a7abd33825a0205d666de0b4cf64f621b5fa69a"
+  },
+  "task": "R11-B17-02"
+}

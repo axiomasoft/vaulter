@@ -73,12 +73,14 @@ def expectations(entities, inventory, attempt):
     if blob is not None:
         require(upload.get('assembled_blob_id') == blob['entity_id'], 'blob does not join upload session')
         require(blob.get('storage_key') == final, 'object does not join blob key')
+        require(blob.get('checksum') == attempt['payload_checksum'],
+                'blob checksum contradicts payload and CAS key')
     staged = not terminal and received > 0 and (protocol == 'tus' or upload['status'] == 'assembled')
     expected = [{'key': f'tmp/uploads/{uid}', 'role': 'staged', 'required': staged,
                  'checksum': attempt['payload_checksum'] if staged else None,
                  'size': received if staged else 0, 'durable_identity': upload['entity_id']},
                 {'key': final, 'role': 'final', 'required': blob is not None,
-                 'checksum': blob.get('checksum') if blob else None,
+                 'checksum': attempt['payload_checksum'] if blob else None,
                  'size': blob.get('size') if blob else 0,
                  'durable_identity': (blob or upload)['entity_id']}]
     part_rows = {}

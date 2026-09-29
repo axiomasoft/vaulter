@@ -30,7 +30,8 @@ def present(key, *, checksum=evidence.CHECKSUM, size=16):
 
 class InventoryTest(unittest.TestCase):
     def window(self, *, status='committed', parts=(1,), objects=None, listing=None,
-               blob=True, baseline=None, missing_session=False, received=None, part_sizes=None):
+               blob=True, baseline=None, missing_session=False, received=None, part_sizes=None,
+               blob_checksum=evidence.CHECKSUM):
         cell = next(row for row in gate.catalog() if row['cell_id'] == 'product-realistic.s3-complete.503')
         fixture = {'run_id': evidence.RUN, 'marker': live.product_ops.marker_for(evidence.RUN, cell['cell_id'], 1),
                    'upload_id': 'inventory-upload', 'cas_scope': 'global',
@@ -46,7 +47,7 @@ class InventoryTest(unittest.TestCase):
                              'size': part_sizes[number] if part_sizes is not None else 16} for number in parts)
             if blob:
                 entities.append({'entity': 'blob', 'entity_id': 'blob-1', 'status': 'committed',
-                                 'storage_key': FINAL, 'checksum': evidence.CHECKSUM, 'size': 16})
+                                 'storage_key': FINAL, 'checksum': blob_checksum, 'size': 16})
         objects = {FINAL: present(FINAL)} if objects is None else objects
         if listing is None:
             listing = {'status': 'observed', 'keys': sorted(key for key, obj in objects.items()
