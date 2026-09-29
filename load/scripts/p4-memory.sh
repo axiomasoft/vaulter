@@ -27,7 +27,7 @@ CAPTURE="$REPO_ROOT/load/scripts/p4-memory-capture-in-container.sh"
 DATASET_ID="${DATASET_ID:-vlt-load-p4-lane}"
 MATRIX_DATASET_ID="${P4_MATRIX_DATASET_ID:-vlt-load-p4-matrix}"
 RESULTS_ROOT="$LOAD_ROOT/results/p4"
-P4_ART="${P4_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P4}"
+P4_ART="${P4_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P4}"
 
 usage() {
     echo "usage: TIER=S0 $0 dry-run|run|verify [options]" >&2

@@ -86,7 +86,7 @@ case "$COMMAND" in
         ;;
     verify)
         if [ -n "$RUN_ID" ]; then
-            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/runs/$RUN_ID}
+            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P7/runs/$RUN_ID}
             manifest_run=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$dest/run-manifest.json")
             if [ "$manifest_run" != "$RUN_ID" ]; then
                 echo "p7-chaos verify: run_id mismatch (manifest=${manifest_run})" >&2
@@ -124,7 +124,7 @@ case "$COMMAND" in
                 exit 1
             fi
             run_id=${RUN_ID:-$(python3 -c 'import uuid; print(uuid.uuid4())')}
-            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/runs/$run_id}
+            dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P7/runs/$run_id}
             staging=$(python3 "$PUBLISHER" stage --destination "$dest" --run-id "$run_id")
             trap 'emergency_revert "$staging"; echo "p7-chaos: staging kept at ${staging}" >&2; exit 130' INT
             trap 'emergency_revert "$staging"; echo "p7-chaos: staging kept at ${staging}" >&2; exit 143' TERM
@@ -159,7 +159,7 @@ case "$COMMAND" in
             echo "p7-chaos run: run_id mismatch" >&2
             exit 1
         fi
-        dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P7/lane-runs/$run_id}
+        dest=${P7_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P7/lane-runs/$run_id}
         staging=$(python3 "$PUBLISHER" stage --destination "$dest" --run-id "$run_id")
         trap 'echo "p7-chaos: staging kept at ${staging}" >&2; exit 130' INT
         trap 'echo "p7-chaos: staging kept at ${staging}" >&2; exit 143' TERM

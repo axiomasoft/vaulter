@@ -1,6 +1,6 @@
 #!/bin/sh
 # P8.11 nonempty host tracing proof.
-# Usage: TIER=S ./load/scripts/p8-trace-proof.sh --manifest plans/VLT-LOAD/artifacts/P8/tracing-targets.json
+# Usage: TIER=S ./load/scripts/p8-trace-proof.sh --manifest plans/archive/VLT-LOAD/artifacts/P8/tracing-targets.json
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)"

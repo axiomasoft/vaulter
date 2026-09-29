@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P8.8 tracing-target reducer and verifier.
 
-Frozen contract: plans/VLT-LOAD/observability-spec.md §20.2 / §20.6.
+Frozen contract: plans/archive/VLT-LOAD/observability-spec.md §20.2 / §20.6.
 Selects at most six allowlisted targets from structured P3–P7 evidence.
 Empty selection is a valid D41 no-op.
 """
@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PLAN_DIR = REPO_ROOT / 'plans' / 'VLT-LOAD'
+PLAN_DIR = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD'
 SPEC_PATH = PLAN_DIR / 'observability-spec.md'
 DEFAULT_MANIFEST = PLAN_DIR / 'artifacts' / 'P8' / 'tracing-targets.json'
 DEFAULT_EVIDENCE = Path(__file__).resolve().parent / 'fixtures' / 'p8-tracing' / 'live-evidence.json'
@@ -180,6 +180,14 @@ def resolve_raw_id(raw_id: str, *, repo: Path = REPO_ROOT) -> Path:
     if not path.is_absolute():
         path = repo / path
     if not path.is_file():
+        # Frozen evidence retains its original path; the bytes now live in archive.
+        try:
+            relative = path.relative_to(repo)
+        except ValueError:
+            relative = None
+        if relative is not None and relative.parts[:2] == ('plans', 'VLT-LOAD'):
+            path = repo / 'plans' / 'archive' / 'VLT-LOAD' / Path(*relative.parts[2:])
+    if not path.is_file():
         raise GateError('EVIDENCE_UNRESOLVED', f'raw id does not resolve to a file: {raw_id}')
     return path
 
@@ -242,11 +250,10 @@ def validate_row(row: dict, *, repo: Path = REPO_ROOT, resolve_raw: bool = True)
     if resolve_raw:
         for raw_id in row['raw_ids']:
             resolve_raw_id(raw_id, repo=repo)
-        report_path = Path(row['report'])
-        if not report_path.is_absolute():
-            report_path = repo / report_path
-        if not report_path.is_file():
-            raise GateError('EVIDENCE_UNRESOLVED', f"report does not resolve: {row['report']}")
+        try:
+            resolve_raw_id(row['report'], repo=repo)
+        except GateError as exc:
+            raise GateError('EVIDENCE_UNRESOLVED', f"report does not resolve: {row['report']}") from exc
 
 
 def eligible_rows(rows: list[dict], *, repo: Path = REPO_ROOT, resolve_raw: bool = True) -> list[dict]:
@@ -388,7 +395,7 @@ def select_targets(
     repo: Path = REPO_ROOT,
     resolve_raw: bool = True,
     source_commit: str | None = None,
-    manifest_rel: str = 'plans/VLT-LOAD/artifacts/P8/tracing-targets.json',
+    manifest_rel: str = 'plans/archive/VLT-LOAD/artifacts/P8/tracing-targets.json',
     spec_path: Path = SPEC_PATH,
     reports: dict[str, Path] | None = None,
 ) -> dict:

@@ -17,9 +17,9 @@ from pathlib import Path
 from p3_profile import ProfileError, verify_manifest, verify_trace
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CATALOG = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'operations-catalog.md'
-P8_ARTIFACTS = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'artifacts' / 'P8.7'
-P3_ARTIFACTS = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'artifacts' / 'P3'
+CATALOG = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'operations-catalog.md'
+P8_ARTIFACTS = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'artifacts' / 'P8.7'
+P3_ARTIFACTS = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'artifacts' / 'P3'
 
 MANDATORY_HOTSPOT_VIEWS = (
     'v_nodes',

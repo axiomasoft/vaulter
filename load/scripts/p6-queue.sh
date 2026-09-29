@@ -66,7 +66,7 @@ case "$COMMAND" in
         ;;
     verify)
         if [ -n "$RUN_ID" ]; then
-            dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P6}
+            dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P6}
             manifest_run=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$dest/run-manifest.json")
             if [ "$manifest_run" != "$RUN_ID" ]; then
                 echo "p6-queue verify: run_id mismatch (manifest=${manifest_run})" >&2
@@ -118,7 +118,7 @@ case "$COMMAND" in
                 trap - EXIT INT TERM
                 exit 1
             fi
-            dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P6}
+            dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P6}
             rm -rf "$dest"
             mkdir -p "$(dirname "$dest")"
             mv "$staging" "$dest"
@@ -138,7 +138,7 @@ case "$COMMAND" in
             echo "p6-queue run: verify failed; destination unchanged" >&2
             exit 1
         fi
-        dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P6/lane}
+        dest=${P6_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P6/lane}
         rm -rf "$dest"
         mkdir -p "$(dirname "$dest")"
         mv "$staging" "$dest"

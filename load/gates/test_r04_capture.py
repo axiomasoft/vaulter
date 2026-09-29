@@ -57,7 +57,7 @@ elif name == 'workload.py':
 
 class R04CaptureTest(unittest.TestCase):
     def run_capture(self, root, failure='', existing=False, duration='2s'):
-        for folder in ('bin', 'load/scripts', 'load/seed/out', 'load/k6/lib', 'load/gates', 'load/sql/p3', 'plans/VLT-LOAD/artifacts/P8.7'):
+        for folder in ('bin', 'load/scripts', 'load/seed/out', 'load/k6/lib', 'load/gates', 'load/sql/p3', 'plans/archive/VLT-LOAD/artifacts/P8.7'):
             (root / folder).mkdir(parents=True, exist_ok=True)
         for name in ('compose', 'docker', 'curl'):
             path = root / 'bin' / name
@@ -72,12 +72,12 @@ class R04CaptureTest(unittest.TestCase):
         (root / 'load/gates/thresholds.js').write_text('// fake')
         for name in ('preflight', 'dataset-profile', 'pg-stat-io', 'reset', 'pgss-export', 'hotspot-fingerprints'):
             (root / f'load/sql/p3/{name}.sql').write_text(name)
-        history = root / 'plans/VLT-LOAD/artifacts/P3'
+        history = root / 'plans/archive/VLT-LOAD/artifacts/P3'
         history.mkdir(parents=True, exist_ok=True)
         (history / 'run-manifest.json').write_text('historical sentinel')
         if existing:
             (history / 'fake-run').mkdir()
-        (root / 'plans/VLT-LOAD/artifacts/P8.7/run-manifest.json').write_text('{"run_id":"old"}')
+        (root / 'plans/archive/VLT-LOAD/artifacts/P8.7/run-manifest.json').write_text('{"run_id":"old"}')
         env = {**os.environ, 'PATH': str(root / 'bin') + ':' + os.environ['PATH'],
                'FAKE_ROOT': str(root), 'FAKE_FAILURE': failure, 'LOAD_RUN_ID': 'fake-run',
                'P3_DURATION': duration, 'LOAD_ROOT': str(root / 'load'), 'REPO_ROOT': str(root),
@@ -109,7 +109,7 @@ class R04CaptureTest(unittest.TestCase):
             self.assertEqual([args[0] for name, args in calls if name == 'workload.py'],
                              ['preflight', 'build', 'verify-artifacts', 'publish', 'verify-artifacts'])
             publication = next(args for name, args in calls if name == 'workload.py' and args[0] == 'publish')
-            self.assertEqual(publication[-1], str(root / 'plans/VLT-LOAD/artifacts/P3/fake-run'))
+            self.assertEqual(publication[-1], str(root / 'plans/archive/VLT-LOAD/artifacts/P3/fake-run'))
 
     def test_failed_work_never_publishes(self):
         for failure in ('writer-warmup', 'writer-measured', 'k6-warmup', 'k6-measured', 'maintenance', 'empty-trace', 'invalid-artifacts'):

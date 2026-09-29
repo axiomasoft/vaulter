@@ -73,7 +73,7 @@ case "$COMMAND" in
         ;;
     verify)
         if [ -n "$RUN_ID" ]; then
-            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P5}
+            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P5}
             manifest_run=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$dest/run-manifest.json")
             if [ "$manifest_run" != "$RUN_ID" ]; then
                 echo "p5-concurrency verify: run_id mismatch (manifest=${manifest_run})" >&2
@@ -116,7 +116,7 @@ case "$COMMAND" in
                 trap - EXIT INT TERM
                 exit 1
             fi
-            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P5}
+            dest=${P5_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P5}
             rm -rf "$dest"
             mkdir -p "$(dirname "$dest")"
             mv "$staging" "$dest"

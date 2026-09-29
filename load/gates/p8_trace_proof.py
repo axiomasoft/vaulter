@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PLAN_DIR = REPO_ROOT / 'plans' / 'VLT-LOAD'
+PLAN_DIR = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD'
 DEFAULT_MANIFEST = PLAN_DIR / 'artifacts' / 'P8' / 'tracing-targets.json'
 DEFAULT_PROOF = PLAN_DIR / 'artifacts' / 'P8' / 'tracing-proof.json'
 DEFAULT_OVERHEAD = PLAN_DIR / 'artifacts' / 'P8' / 'tracing-overhead.json'

@@ -497,7 +497,7 @@ def finalize_matrix_artifacts(
                 'size_order': list(SIZE_ORDER),
             },
             'preflight': {
-                'p8_7_artifacts': 'plans/VLT-LOAD/artifacts/P8.7',
+                'p8_7_artifacts': 'plans/archive/VLT-LOAD/artifacts/P8.7',
                 'contract': mode == 'contract',
             },
             'published_at': utc_now(),

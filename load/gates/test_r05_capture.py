@@ -186,7 +186,7 @@ process.stdout.write(JSON.stringify(results));
 class R05PersistedParticipationTest(unittest.TestCase):
     """Read-only regression controls on the admitted 56-cell R05 capture."""
 
-    ROOT = GATES.parents[1] / 'plans/VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe'
+    ROOT = GATES.parents[1] / 'plans/archive/VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe'
     DIGEST = 'a248913b1c49555b4cd397b31df2044cd1a54585410c7362987cb2899dde2074'
 
     @classmethod

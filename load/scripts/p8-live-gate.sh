@@ -2,8 +2,8 @@
 # P8.7 — one LOAD_RUN_ID, live Prometheus scrape, 50-family matrix, perf-assert, on/off overhead.
 # Usage:
 #   TIER=S0 ./load/scripts/p8-live-gate.sh gate --profile smoke-perf
-#   TIER=S  ./load/scripts/p8-live-gate.sh overhead --baseline plans/VLT-LOAD/findings/P2.8-baseline-S.md
-#   python3 load/gates/p8_live_gate.py verify --artifacts plans/VLT-LOAD/artifacts/P8.7
+#   TIER=S  ./load/scripts/p8-live-gate.sh overhead --baseline plans/archive/VLT-LOAD/findings/P2.8-baseline-S.md
+#   python3 load/gates/p8_live_gate.py verify --artifacts plans/archive/VLT-LOAD/artifacts/P8.7
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -17,7 +17,7 @@ COMPOSE=(
     --env-file "$ENV_FILE"
 )
 IMAGE_VERSIONS="postgres:16-alpine minio/minio:latest php:8.4-fpm-alpine grafana/k6:0.55.0"
-ART="${P8_ARTIFACTS:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P8.7}"
+ART="${P8_ARTIFACTS:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P8.7}"
 RAW="$ART/raw"
 GATE_PY="$REPO_ROOT/load/gates/p8_live_gate.py"
 APP_URL="${LOAD_APP_URL:-http://127.0.0.1:${LOAD_APP_PORT:-8080}}"

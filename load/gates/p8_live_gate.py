@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P8.7 live-gate artifact builder and verifier.
 
-Builds and checks the four immutable artifacts under plans/VLT-LOAD/artifacts/P8.7:
+Builds and checks the four immutable artifacts under plans/archive/VLT-LOAD/artifacts/P8.7:
 run-manifest, metric-matrix, gate-matrix, overhead. Raw UUIDs/secrets are rejected.
 """
 
@@ -19,7 +19,7 @@ from _slo_table import EXPECTED_CLASS_A_ROWS, EXPECTED_ROW_COUNT, KNOWN_RED_IDS,
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CATALOG = REPO_ROOT / 'load' / 'app' / 'Observability' / 'MetricFamilyCatalog.php'
-SLO_GATES_MD = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'slo-gates.md'
+SLO_GATES_MD = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'slo-gates.md'
 DELTA = 0.10
 EXPECTED_FAMILIES = 50
 UUID_RE = re.compile(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b', re.I)

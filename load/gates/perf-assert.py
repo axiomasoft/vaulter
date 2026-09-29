@@ -23,7 +23,7 @@ from _slo_table import KNOWN_RED_IDS, blocking_profiles, parse_rows  # noqa: E40
 from promql_map import build_promql_map, instantiate_windows  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SLO_GATES_MD = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'slo-gates.md'
+SLO_GATES_MD = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'slo-gates.md'
 DELTA = 0.10
 
 

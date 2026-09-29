@@ -27,8 +27,8 @@ on:
       - 'packages/documents/**'
       - 'packages/filament/**'
       - 'load/**'
-      - 'plans/VLT-LOAD/slo-gates.md'
-      - 'plans/VLT-LOAD/reference-env.md'
+      - 'plans/archive/VLT-LOAD/slo-gates.md'
+      - 'plans/archive/VLT-LOAD/reference-env.md'
       - '.github/workflows/load.yml'
   schedule:
     - cron: '17 3 * * *'

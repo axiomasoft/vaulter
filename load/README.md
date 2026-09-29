@@ -1,11 +1,11 @@
 # VLT-LOAD — load-test stand
 
-Docker stand for the VLT-LOAD load-readiness program (`plans/VLT-LOAD/`). SUT = nginx +
+Docker stand for the VLT-LOAD load-readiness program (`plans/archive/VLT-LOAD/`). SUT = nginx +
 php-fpm over the `orchestra/testbench-core` skeleton (**not** `vendor/bin/testbench
 serve` — that's a single-threaded dev server, `pm.max_children`/`slo.md` §0.1 cannot exist
-on it — see `plans/VLT-LOAD/plan.md` D28). Numbers (cpuset/memory/PG/PgBouncer/pool
-raccounting) come from `plans/VLT-LOAD/reference-env.md` §1 — this stand does not invent
-any of its own; see `plans/VLT-LOAD/harness.md` §2 for the mechanics.
+on it — see `plans/archive/VLT-LOAD/plan.md` D28). Numbers (cpuset/memory/PG/PgBouncer/pool
+raccounting) come from `plans/archive/VLT-LOAD/reference-env.md` §1 — this stand does not invent
+any of its own; see `plans/archive/VLT-LOAD/harness.md` §2 for the mechanics.
 
 ## Up / down
 
@@ -247,19 +247,19 @@ published only after `p3-profile.sh verify` / `python3 load/gates/p3_profile.py 
 Authoritative profiling capture: P8.7 preflight, disposable re-seed, `ANALYZE`, shared-buffer-cold-like
 postgres restart, warm + ranked workload window (`scenarios/mixed.js`, not SLO thresholds), `pg_stat_statements`
 top-20, cluster `pg_stat_io` delta, OP coverage matrix. Publication validates a complete snapshot
-and creates `plans/VLT-LOAD/artifacts/P3/<run_id>/`; existing destinations are refused.
+and creates `plans/archive/VLT-LOAD/artifacts/P3/<run_id>/`; existing destinations are refused.
 Warmup and measured writers run for their respective durations and finish before trace reset or
 publication. Writer, k6 and maintenance command failures reject the capture.
 
 ```sh
 python3 load/gates/p3_workload.py preflight
 export LOAD_RUN_ID="$(python3 -c 'import uuid; print(uuid.uuid4())')"
-export P3_ARTIFACT_DIR="$PWD/plans/VLT-LOAD/artifacts/P3/$LOAD_RUN_ID"
+export P3_ARTIFACT_DIR="$PWD/plans/archive/VLT-LOAD/artifacts/P3/$LOAD_RUN_ID"
 TIER=S P3_DURATION=120s ./load/scripts/p3-profile.sh capture
 python3 load/gates/p3_workload.py verify-artifacts --artifact-dir "$P3_ARTIFACT_DIR"
 ```
 
-Requires local load stand (Docker), GREEN `plans/VLT-LOAD/artifacts/P8.7/`, and `load:seed` profile
+Requires local load stand (Docker), GREEN `plans/archive/VLT-LOAD/artifacts/P8.7/`, and `load:seed` profile
 (`--tier=S0` volume on tier-S hardware matches P2.8/P3 lab envelope).
 
 ## P3.3 actual EXPLAIN, index review, HypoPG (tier S corpus)
@@ -335,20 +335,20 @@ S0 contract lane exercises all five paths at **5 MiB** only.
 
 ## P4.3 tier-S memory matrix (authoritative run)
 
-P8.7 preflight must be GREEN (`plans/VLT-LOAD/artifacts/P8.7`). The matrix publishes immutable
-carriers under `plans/VLT-LOAD/artifacts/P4/` (`run-manifest.json`, `cases.json`, `samples/`,
+P8.7 preflight must be GREEN (`plans/archive/VLT-LOAD/artifacts/P8.7`). The matrix publishes immutable
+carriers under `plans/archive/VLT-LOAD/artifacts/P4/` (`run-manifest.json`, `cases.json`, `samples/`,
 `php-peaks.json`, `cgroup.json`, `k6/`, `cell-verdicts.json`): 15 cells (5 paths × 3 sizes),
 3 repetitions each (45 attempts), size order **5 MiB → 500 MiB → 5 GiB**, fresh `app` container
 per attempt.
 
 ```sh
-python3 load/gates/p8_live_gate.py verify --artifacts plans/VLT-LOAD/artifacts/P8.7
+python3 load/gates/p8_live_gate.py verify --artifacts plans/archive/VLT-LOAD/artifacts/P8.7
 python3 -m unittest load/gates/test_p4_memory_matrix.py
 chmod +x load/scripts/p4-memory.sh load/scripts/p4-memory-matrix-run.sh
 
 # Live matrix (default; real k6/CLI paths; needs ≥2×5 GiB free disk for full 45):
 TIER=S ./load/scripts/p4-memory.sh run --matrix
-TIER=S ./load/scripts/p4-memory.sh verify --run-id "$(jq -r .run_id plans/VLT-LOAD/artifacts/P4/run-manifest.json)"
+TIER=S ./load/scripts/p4-memory.sh verify --run-id "$(jq -r .run_id plans/archive/VLT-LOAD/artifacts/P4/run-manifest.json)"
 
 # Rebuild only after Dockerfile/build-context changes; normal runs reuse the existing app image:
 P4_MATRIX_REBUILD=1 TIER=S ./load/scripts/p4-memory.sh run --matrix
@@ -364,7 +364,7 @@ P4_MATRIX_SMOKE_CELL=tus_final_patch/5m P4_MATRIX_MAX_ATTEMPTS=1 TIER=S0 \
   ./load/scripts/p4-memory-matrix-run.sh --live --run-id "$(uuidgen)" --out /tmp/p4-matrix-smoke
 ```
 
-`python3 load/gates/p4_memory_matrix.py verify-matrix --artifacts plans/VLT-LOAD/artifacts/P4`
+`python3 load/gates/p4_memory_matrix.py verify-matrix --artifacts plans/archive/VLT-LOAD/artifacts/P4`
 confirms 45 valid attempts, exact byte sizes, repetitions, per-attempt `p4_memory.verify_run_dir`,
 secret scan, and byte-stable re-verify (`verify --run-id` runs verify-matrix twice).
 
@@ -434,7 +434,7 @@ vendor/bin/pest load/tests/Feature/ConcurrencyFixturesTest.php
 |:--|:--|
 | `docker-compose.load.yml` | postgres / pgbouncer / minio(+init) / app / prometheus / k6 |
 | `docker-compose.memory.yml` | P4.1 overlay — `PM_MAX_CHILDREN=1`, memory FPM pools, FPM-status healthcheck |
-| `env/{S0,S,M}.env` | tier numbers — `plans/VLT-LOAD/reference-env.md` §1/§4.1, cpuset translated to this lab-box's physical core ids (`lscpu -e=CPU,CORE,MAXMHZ`) |
+| `env/{S0,S,M}.env` | tier numbers — `plans/archive/VLT-LOAD/reference-env.md` §1/§4.1, cpuset translated to this lab-box's physical core ids (`lscpu -e=CPU,CORE,MAXMHZ`) |
 | `docker/Dockerfile.app` | nginx + php-fpm, ONE image; app code is bind-mounted, not COPYed |
 | `docker/{nginx.conf,php-fpm.conf,php.ini}` | SUT runtime config — `php-fpm.conf` is a template, `pm.max_children` substituted at container start from the tier's `PM_MAX_CHILDREN` |
 | `docker/php-fpm.memory.conf` | P4.1 memory lane pool template (`memory` + `memory_status`) |
@@ -620,8 +620,8 @@ database or object store. `run` without `P7_PUBLISH=1` refuses to start a live
 fault window. `interrupt-fixture` arms a marker and proves revert on `SIGINT`.
 
 P7 publication uses fresh run paths: matrix evidence goes to
-`plans/VLT-LOAD/artifacts/P7/runs/<run_id>`, and copied lane evidence to
-`plans/VLT-LOAD/artifacts/P7/lane-runs/<manifest.run_id>`. `P7_ARTIFACTS`
+`plans/archive/VLT-LOAD/artifacts/P7/runs/<run_id>`, and copied lane evidence to
+`plans/archive/VLT-LOAD/artifacts/P7/lane-runs/<manifest.run_id>`. `P7_ARTIFACTS`
 selects an exact destination; it must be unoccupied (including empty directories,
 files and dangling symlinks). `verify --run-id ID` reads `P7/runs/ID` by default;
 use `P7_ARTIFACTS` for read-only verification of an older matrix location.

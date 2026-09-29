@@ -190,7 +190,7 @@ class PublicationTest(unittest.TestCase):
         gates.mkdir()
         for name in ('p7_publish.py', 'p7_chaos.py', 'p7_live_matrix.py'):
             (gates / name).symlink_to(GATES / name)
-        historical = repo / 'plans/VLT-LOAD/artifacts/P7'
+        historical = repo / 'plans/archive/VLT-LOAD/artifacts/P7'
         historical.mkdir(parents=True)
         (historical / 'sentinel').write_bytes(b'historical evidence')
         for kind, relative in (('matrix', 'runs/offline-evidence'), ('lane', 'lane-runs/run-complete')):

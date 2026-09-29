@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-P3_ARTIFACTS = REPO_ROOT / 'plans' / 'VLT-LOAD' / 'artifacts' / 'P3'
+P3_ARTIFACTS = REPO_ROOT / 'plans' / 'archive' / 'VLT-LOAD' / 'artifacts' / 'P3'
 SEED_GLOB = REPO_ROOT / 'load' / 'seed' / 'out'
 
 HOT_FAMILIES = (

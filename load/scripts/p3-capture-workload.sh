@@ -26,7 +26,7 @@ IMAGE_VERSIONS="vaulter-load-postgres-profile:16-hypopg-1.4.1 minio/minio:latest
 GIT_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
 P87_RUN_ID="$(python3 - "$REPO_ROOT" <<'PY'
 import json, pathlib, sys
-path = pathlib.Path(sys.argv[1]) / "plans/VLT-LOAD/artifacts/P8.7/run-manifest.json"
+path = pathlib.Path(sys.argv[1]) / "plans/archive/VLT-LOAD/artifacts/P8.7/run-manifest.json"
 manifest = json.loads(path.read_text(encoding="utf-8"))
 print(manifest.get("run_id") or manifest.get("run_id_sha256", ""))
 PY
@@ -40,7 +40,7 @@ if not re.fullmatch(r'[1-9][0-9]*[smh]', sys.argv[2]):
     raise SystemExit('P3_DURATION must be a positive integer with s, m or h suffix')
 PY
 RUN_DIR="${P3_RUN_DIR:-$LOAD_ROOT/results/p3/$RUN_ID}"
-ARTIFACT_DIR="${P3_ARTIFACT_DIR:-$REPO_ROOT/plans/VLT-LOAD/artifacts/P3/$RUN_ID}"
+ARTIFACT_DIR="${P3_ARTIFACT_DIR:-$REPO_ROOT/plans/archive/VLT-LOAD/artifacts/P3/$RUN_ID}"
 TRACE_HOST_PATH="$LOAD_ROOT/results/p3/$RUN_ID/query-trace.jsonl"
 TRACE_PATH="/app/load/results/p3/$RUN_ID/query-trace.jsonl"
 [ ! -e "$ARTIFACT_DIR" ] && [ ! -L "$ARTIFACT_DIR" ] || { echo "P3 artifact destination already exists" >&2; exit 1; }
