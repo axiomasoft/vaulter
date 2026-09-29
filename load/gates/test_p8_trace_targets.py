@@ -105,6 +105,54 @@ class TraceTargetReducerTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_archived_raw_and_report_resolve_without_rewriting_frozen_references(self):
+        old_raw = Path('plans/VLT-LOAD/artifacts/P3/raw.json')
+        old_report = Path('plans/VLT-LOAD/db-profile.md')
+        archived = self.root / 'plans/archive/VLT-LOAD'
+        _write(archived / 'artifacts/P3/raw.json', {'historical': True})
+        (archived / 'db-profile.md').write_text('# Frozen report\n', encoding='utf-8')
+        before = {path: path.read_bytes() for path in archived.rglob('*') if path.is_file()}
+
+        for prefix in (Path(), self.root):
+            with self.subTest(prefix=prefix):
+                row = _row(
+                    evidence_id='P3:archived', target_id='tree.read', producer='P3',
+                    raw=prefix / old_raw, report=prefix / old_report,
+                )
+                frozen = json.dumps(row, sort_keys=True)
+                gate.validate_row(row, repo=self.root)
+                self.assertEqual(json.dumps(row, sort_keys=True), frozen)
+                self.assertEqual(gate.resolve_raw_id(str(prefix / old_raw), repo=self.root),
+                                 archived / 'artifacts/P3/raw.json')
+
+        self.assertFalse((self.root / 'plans/VLT-LOAD').exists())
+        self.assertEqual({path: path.read_bytes() for path in archived.rglob('*') if path.is_file()}, before)
+
+    def test_existing_raw_path_takes_precedence_over_archive(self):
+        relative = Path('plans/VLT-LOAD/artifacts/P3/raw.json')
+        original = self.root / relative
+        archived = self.root / 'plans/archive/VLT-LOAD/artifacts/P3/raw.json'
+        _write(original, {'source': 'original'})
+        _write(archived, {'source': 'archive'})
+
+        resolved = gate.resolve_raw_id(str(relative), repo=self.root)
+
+        self.assertEqual(resolved, original)
+        self.assertEqual(json.loads(resolved.read_text()), {'source': 'original'})
+
+    def test_archive_fallback_still_rejects_missing_raw_and_report(self):
+        old_raw = 'plans/VLT-LOAD/artifacts/P3/missing.json'
+        old_report = 'plans/VLT-LOAD/missing-report.md'
+        row = _row(evidence_id='P3:missing', target_id='tree.read', producer='P3',
+                   raw=old_raw, report=old_report)
+
+        with self.assertRaisesRegex(gate.GateError, 'EVIDENCE_UNRESOLVED.*raw id'):
+            gate.validate_row(row, repo=self.root)
+
+        _write(self.root / 'plans/archive/VLT-LOAD/artifacts/P3/missing.json', {})
+        with self.assertRaisesRegex(gate.GateError, 'EVIDENCE_UNRESOLVED.*report'):
+            gate.validate_row(row, repo=self.root)
+
     def _select(self, rows, deferred=None):
         bundle = {
             'schema_version': gate.EVIDENCE_SCHEMA,
