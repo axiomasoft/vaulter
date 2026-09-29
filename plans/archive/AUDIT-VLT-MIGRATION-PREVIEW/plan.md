@@ -1,3 +1,5 @@
+> **Архивный migration-preview.** Канонический AUDIT-VLT завершён и хранится в `plans/archive/AUDIT-VLT/`; этот carrier не исполнять.
+
 # План
 
 ## 0. Meta

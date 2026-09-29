@@ -1,3 +1,5 @@
+> **Архивировано 2026-09-29:** исходные P0–P8 терминальны (Done with deviations). Их не запускать повторно. Сохранившиеся proof gaps и последующие результаты — в [REMAINING-WORK](../REMAINING-WORK/REMAINING-WORK.md); product GREEN не заявлен.
+
 # HANDOFF — 2026-09-23 — after P8
 
 **Next:** terminal: исполнение завершено; окончательное закрытие/архивация отложены владельцем

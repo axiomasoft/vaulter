@@ -1,0 +1,149 @@
+{
+  "task": "R20",
+  "date": "2026-09-29",
+  "head": "9c8497a03f0d8f7275796805ee2dea65e67040e0",
+  "head_short": "9c8497a",
+  "dirty": [
+    " M plans/REMAINING-WORK.md",
+    "?? plans/remaining-evidence/B14-audit.md",
+    "?? plans/remaining-evidence/R20-checks/"
+  ],
+  "tags": [
+    "v0.2.0"
+  ],
+  "coverage_floor": 80,
+  "tests_yml_min": "--min=80",
+  "local_coverage_xml": false,
+  "plan_coverage_xml": [],
+  "package_schedule_registrations": [],
+  "deferred_rows": [
+    "14",
+    "16c",
+    "17a",
+    "20",
+    "21",
+    "22",
+    "23",
+    "25",
+    "26",
+    "30",
+    "31",
+    "34"
+  ],
+  "repair_commits": {
+    "R05-overlap": {
+      "rev": "d0426957823e24b02cbeb6d9028bf50d7c777a3c",
+      "subject": "fix(load): исправили capture overlap и участия actors в R05"
+    },
+    "R05-capture": {
+      "rev": "56015c88f13d2374f0d39ba7924c343546535c7d",
+      "subject": "fix(load): сохранили during-samples и исправили запуск sweeper в R05"
+    },
+    "R05-live-evidence": {
+      "rev": "ea77e00823079cbc16ef4020bb4d505221886cfa",
+      "subject": "docs(load): сохранили live evidence R05 R06 и R08"
+    },
+    "R03-harness": {
+      "rev": "531393ac92f190acc1c757901251d64d9e29a00f",
+      "subject": "fix(load): исправили метрики и допуск доказательств R03"
+    },
+    "R27-bind-limit": {
+      "rev": "0160ce3e38d6d2cd5242732931cfc391aa21afe9",
+      "subject": "fix(core): исправили лимит bind-параметров в listing R27"
+    },
+    "R03-preflight": {
+      "rev": "15170d5c02cb4bfe49fe587cb00db49faada5a50",
+      "subject": "fix(load): исправили memory admission и сохранили preflight R03"
+    },
+    "R04-gates": {
+      "rev": "326f69b8555959d8bbff6deaf9383140a9b71e2c",
+      "subject": "fix(load): исправили capture и проверку доказательств R04"
+    },
+    "R21-gc": {
+      "rev": "c6b43c00f8558e13932c323b301a9314f313d241",
+      "subject": "fix(media): ограничили GC-батчи и сократили запросы маркировки"
+    },
+    "R24-webhook": {
+      "rev": "6f477ef39b670644a52cb1c5b558a13dabf9d62b",
+      "subject": "fix(core): исключили одновременную доставку одного webhook"
+    },
+    "R05-B07-02": {
+      "rev": "9bd90da11eb63ab276d68e4834ff34a73813f10e",
+      "subject": "fix(load): validate persisted participation for both product planes"
+    },
+    "R11-B14-01": {
+      "rev": "a6c6b9178639786cd0dcc78091f64cf9107826b4",
+      "subject": "fix(load): preserve base database across P7 route restore"
+    },
+    "R11-B14-02": {
+      "rev": "85c0afdae5801c37185abc17cee71c4fc417c59f",
+      "subject": "fix(load): require complete raw P7 evidence admission"
+    },
+    "R11-B14-03": {
+      "rev": "dd23b6852e25149af69a608c6bf82959d1364893",
+      "subject": "fix(load): bind fault ACK to a preheld lock boundary"
+    },
+    "R11-B14-04": {
+      "rev": "2c1e70ffa9d0398d508efe0fdae8e15d87924d2c",
+      "subject": "fix(load): admit matched absence in P7 producer integrity"
+    },
+    "R11-B14-05": {
+      "rev": "cf967c7f7edaba78c5ef9aabdae3efa668414150",
+      "subject": "fix(load): reconcile complete attempt-owned P7 object inventory"
+    },
+    "R11-B14-06": {
+      "rev": "9c8497a03f0d8f7275796805ee2dea65e67040e0",
+      "subject": "fix(load): publish P7 runs atomically without replacing evidence"
+    }
+  },
+  "evidence_present": [
+    ".github/workflows/monorepo-split.yml",
+    ".github/workflows/mutation.yml",
+    ".github/workflows/tests.yml",
+    "docs/adr/0018-editor-engine-canon.md",
+    "docs/reference/commands.md",
+    "packages/core/config/vaulter.php",
+    "plans/VLT-LOAD/slo-gates.md",
+    "plans/VLT-LOAD/slo.md",
+    "plans/archive/VLT-CANON/handoff.md",
+    "plans/archive/VLT-REL/handoff.md",
+    "plans/archive/VLT-REMED/handoff.md",
+    "plans/remaining-evidence/B07-audit.md",
+    "plans/remaining-evidence/B14-audit.md",
+    "plans/remaining-evidence/R03.md",
+    "plans/remaining-evidence/R09.md",
+    "plans/remaining-evidence/R10.md",
+    "plans/remaining-evidence/R11-B14-06-checks/checks.json",
+    "plans/remaining-evidence/R14.md",
+    "plans/remaining-evidence/R19.md",
+    "plans/remaining-evidence/R21-checks/checks.json",
+    "plans/remaining-evidence/R24-checks/checks.json",
+    "plans/remaining-evidence/R25-checks/checks.json"
+  ],
+  "sha256": {
+    "plans/VLT-LOAD/slo.md": "db967a4b1cea5eeeafba244fffb08ee6e75ac12eb0ecfd02bab11e9a90ac162b",
+    "plans/VLT-LOAD/slo-gates.md": "9e67c6b42275c827ab5a69589b38c5fb0038662f31d199aab3baa66bfd552fa9",
+    ".github/workflows/tests.yml": "260020368aeb5df6165b1da3a89dc990ddfc6da238b7684ce807cf91e32c97d3",
+    ".github/workflows/monorepo-split.yml": "776fb40f5dfa923c5f812ea4bf903ea36e09ffd28ff2f6c4affa23035164c806",
+    ".github/workflows/mutation.yml": "88cecc61e224d58c975779f805bc5456d2cc97478243f3ce719480699ee570aa",
+    "docs/reference/commands.md": "e3fe3c1b5a7e14f298f6bb5f206342062a78d5e79e79baa2b3bb3707aa47420d",
+    "docs/adr/0018-editor-engine-canon.md": "e2131a2899edcfdd2c27f7792bfcf2bb3d38518070ccb6198815af53b87ec36c",
+    "composer.json": "5028a16c2bb3627cfab873506baec22528f2305d670a15deaac64d9f0ef2b76b",
+    "plans/archive/VLT-REMED/handoff.md": "55769577937fc993f7cbbcdadcd5e59d176086ebab2a10c520acb44500a3d983",
+    "plans/archive/VLT-CANON/handoff.md": "119cfaa524517df2782930bb58a341e4b51555e46ee3ad1c2f6edf4c7effa0da",
+    "plans/archive/VLT-REL/handoff.md": "89ee9f4a49dadfe140a2b302b3a28fab10a1dc8509e0ddbf0371dd58857016cd",
+    "plans/remaining-evidence/R09.md": "0a71b547a250b7c6f116a78a7e1dc43a78459c6accd464258fee6e752b5949d8",
+    "plans/remaining-evidence/R10.md": "9898357886906667a525c538151d6a611066d9afeeced36e08fe1847c59586b3",
+    "plans/remaining-evidence/R14.md": "90c9f3c5080192c0c4faf3fdc7774753ccb8d941699c446380a6561543f43853",
+    "plans/remaining-evidence/B07-audit.md": "23bb5b5356804a9fd4a9b9debfb1b181cf7ee43f4fb1ddbba4ed2c0fceffb53f",
+    "plans/remaining-evidence/B14-audit.md": "2fe8ac9ac9af2f69f7d19e0cec1741c42df79e7a7fefb1949ff773ec27617184",
+    "plans/remaining-evidence/R11-B14-06-checks/checks.json": "2d11235192bb272ffe89a196b20d031080d8b12770bba72029fe109802c374cd",
+    "plans/remaining-evidence/R21-checks/checks.json": "7d809ceb29af06224619118458b8dcd83e63fea0fd0df2bc0c2135108ad67430",
+    "plans/remaining-evidence/R24-checks/checks.json": "d64a82524cff79bc32a6c091ba40b6dcec5eaf1e29691991030c8c833788ac89",
+    "plans/remaining-evidence/R25-checks/checks.json": "76f1376101653ae5337bbdff881719b5a52616777444b9403514a8ce035f072b"
+  },
+  "errors": [],
+  "live_run": null,
+  "ci_dispatched": false,
+  "risk_accepted": false
+}

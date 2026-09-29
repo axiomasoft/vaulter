@@ -1,3 +1,5 @@
+> **Архивировано 2026-09-29 с отложенным остатком.** Cold mutation и tests ради mutants отложены владельцем до API freeze перед 1.0. Остаток: current-source proof drive/core/documents, tracked как R07/14, R16/22 и R17/23 в [REMAINING-WORK](../REMAINING-WORK/REMAINING-WORK.md). Frozen-source media R18 95.33% и filament R19 95.51% выполнены; не повторять их из-за исторических Todo ниже. Старые baseline/phase statuses — исходный контекст, а не текущая очередь.
+
 # VLT-MUT — Мутационный гейт: починить измерение, довести Score до ≥95
 
 ## 0. Meta

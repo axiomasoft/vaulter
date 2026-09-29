@@ -3,7 +3,8 @@
 This is a parking lot for features that are **architecturally scoped but deliberately not
 scheduled**. Everything here was either explicitly deferred by the maintainer or flagged
 "optional" in the historical working plan (`docs/plan/00-master-plan.md`). It is outside
-the current evidence and remediation queue in [plans/REMAINING-WORK.md](plans/REMAINING-WORK.md);
+the archived evidence and remediation queue in
+[plans/archive/REMAINING-WORK/REMAINING-WORK.md](plans/archive/REMAINING-WORK/REMAINING-WORK.md);
 a future owner decision is needed to schedule an idea.
 
 Each entry records the extension seam and historical source. Check both against current code
