@@ -1,4 +1,4 @@
-> **Архивировано 2026-09-29:** исходные P0–P8 терминальны (Done with deviations). Их не запускать повторно. Сохранившиеся proof gaps и последующие результаты — в [REMAINING-WORK](../../REMAINING-WORK/REMAINING-WORK.md); product GREEN не заявлен.
+> **Архивировано 2026-09-29:** исходные P0–P8 терминальны (Done with deviations). Их не запускать повторно. Сохранившиеся proof gaps и последующие результаты — в [REMAINING-WORK](../REMAINING-WORK/REMAINING-WORK.md); product GREEN не заявлен.
 
 # Индекс плана — VLT-LOAD
 

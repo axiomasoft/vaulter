@@ -4,6 +4,8 @@
 
 **Это итоговый исторический реестр закрытой очереди.** Здесь сохранены порядок, статусы, остаток и результаты на момент архивации. `remaining-evidence/`, VLT-LOAD и остальные архивные планы — доказательства/история; их launch/next-блоки не задают текущую очередь. Дублирующие START-HERE, ACTIVE и RUNBOOK удалены.
 
+Рабочие адреса исторических ссылок из сохранённых evidence-снимков: [архивная навигация REC-02](#архивная-навигация-rec-02-2026-09-29).
+
 **Обновлено:** 2026-09-29. Владелец отложил тяжёлые cold-mutation прогоны до фиксации API перед версией 1.0. Последний счёт drive остаётся **86.20%** (1549 killed, 0 timeout, 248 escaped / 1797), gate 95 exit 1. Код drive не менялся. Шаг 13 (65.38%) и промежуточные 79.51%, 84.25%, 84.70% и 86.20% не переписаны. До фиксации API эти прогоны и тесты ради мутантов не запускать.
 
 **Статус:** **Done with deviations — закрыт в согласованном offline scope (2026-09-29).** Последующее указание владельца — «доделывай все до закрытия плана» — выполнено: оба последних repairs и независимый focused recheck завершены. Все исключённые измерения и product residuals сохранены ниже; product readiness и принятие риска не заявляются.
@@ -809,3 +811,72 @@ The authorized offline work is ready for owner review when the following are evi
 - R24/R25 code/test/classification results are reported with historical P6 duplicate/recovery/SLO-61 verdicts and unknown original failed-job identities preserved; missing current R26 matrix and R11/R12 P7 baseline/recovery remain explicit deferred gaps;
 - R20 publishes the SLO-by-tier table separating historical measurements from current-source gaps, current CI/release/host facts, all 12 deferred rows and the owner-decision list. M/L or 24-hour gaps remain `unevaluated` unless actually measured. No new live stand/run is required to finish the authorized offline scope;
 - the owner, not an executor or audit, decides whether any remaining RED, unevaluated target, deployment constraint, required-check limitation, or deferred publication is acceptable and whether to close/archive VLT-LOAD.
+
+## Архивная навигация REC-02 (2026-09-29)
+
+Это навигационное дополнение к историческому реестру, не очередь и не разрешение
+на запуск старых команд. Оно покрывает все 47 ссылок REC-02 (36 различных целей).
+
+Байты девяти Markdown-снимков сохранены. `B02-audit.md`, `R01.md`, `R02.md`,
+`R05.md`, `R06.md`, `R07.md`, `R09.md` и `R10.md` входят в
+[task-start SHA-256 snapshot R09/B02](remaining-evidence/R09-B02-seam-checks/task-start-evidence-sha256.json).
+Для `B02-audit.md` также записана побайтная сохранность в
+[preservation.json](remaining-evidence/R09-B02-seam-checks/preservation.json).
+`B07-audit.md`, `R09.md` и `R10.md` входят в поле `sha256`
+[исторического readback R20](remaining-evidence/R20-checks/readback.json);
+`B07-audit.md` прямо требует побайтного сохранения прежних отчётов B07-R/B07.
+Recorded fingerprints относятся к своим историческим версиям; они не обновлены
+и не объявляются хешами текущего HEAD.
+
+В сохранённых снимках адреса `../../../../VLT-LOAD/<suffix>` и
+`../../../../VLT-MUT/<suffix>` разрешаются вне архива. От нынешнего каталога
+`remaining-evidence/` рабочие префиксы были бы `../../VLT-LOAD/` и
+`../../VLT-MUT/`. Исторические repo-пути `plans/VLT-LOAD/`, `plans/VLT-MUT/` и
+`plans/remaining-evidence/` после архивации читаются как
+`plans/archive/VLT-LOAD/`, `plans/archive/VLT-MUT/` и
+`plans/archive/REMAINING-WORK/remaining-evidence/`. Это пояснение маршрутов,
+а не замена provenance, raw evidence, manifests или команд воспроизведения.
+
+В таблице слева указаны сохранённые файлы и строки каждого вхождения; справа —
+прямой рабочий адрес из этого реестра. Имя цели совпадает с историческим адресом
+после префикса `../../../../`. Каталоги и tar.gz доступны для чтения; наличие
+маршрута не означает новый verifier outcome, live admission или product GREEN.
+
+| Сохранённые вхождения в `remaining-evidence/` | Рабочая архивная цель |
+|:--|:--|
+| `B02-audit.md:7`, `R09.md:116` | [VLT-LOAD/artifacts/P6-R09/52cc42c8-1cb5-48a5-8e5b-0a3c0b9b0201/](../VLT-LOAD/artifacts/P6-R09/52cc42c8-1cb5-48a5-8e5b-0a3c0b9b0201/) |
+| `B02-audit.md:90`, `R09.md:84` | [VLT-LOAD/artifacts/P6-R09/bc199ced-5b0f-4e77-b5ca-1a73055c0bfa/](../VLT-LOAD/artifacts/P6-R09/bc199ced-5b0f-4e77-b5ca-1a73055c0bfa/) |
+| `B02-audit.md:94`, `R09.md:82` | [VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57/rejected.json](../VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57/rejected.json) |
+| `B02-audit.md:96` | [VLT-LOAD/artifacts/P6-R09/bc199ced-5b0f-4e77-b5ca-1a73055c0bfa/prometheus/exposition.prom](../VLT-LOAD/artifacts/P6-R09/bc199ced-5b0f-4e77-b5ca-1a73055c0bfa/prometheus/exposition.prom) |
+| `B02-audit.md:100`, `B02-audit.md:229` | [VLT-LOAD/slo-gates.md](../VLT-LOAD/slo-gates.md) |
+| `B02-audit.md:222` | [VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/prometheus/relayed.json](../VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/prometheus/relayed.json) |
+| `B02-audit.md:223` | [VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb/prometheus/relayed.json](../VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb/prometheus/relayed.json) |
+| `B02-audit.md:243`, `R01.md:3` | [VLT-LOAD/slo.md](../VLT-LOAD/slo.md) |
+| `B02-audit.md:321`, `R09.md:26` | [VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52-runtime-source.tar.gz](../VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52-runtime-source.tar.gz) |
+| `B02-audit.md:322`, `R10.md:24` | [VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb-runtime-source.tar.gz](../VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb-runtime-source.tar.gz) |
+| `B07-audit.md:126` | [VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe](../VLT-LOAD/artifacts/R05/adcdcdb7-2c7f-49dc-a0d3-8ac704bb51fe) |
+| `B07-audit.md:136` | [VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/run-manifest.json](../VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/run-manifest.json) |
+| `B07-audit.md:140` | [VLT-LOAD/artifacts/P3](../VLT-LOAD/artifacts/P3) |
+| `B07-audit.md:144` | [VLT-LOAD/artifacts/R06/03f5d89d-e882-41e9-86e0-43eb0f93cd2e/sweeper](../VLT-LOAD/artifacts/R06/03f5d89d-e882-41e9-86e0-43eb0f93cd2e/sweeper) |
+| `B07-audit.md:146` | [VLT-LOAD/artifacts/R08/8a9c70cf-c531-48ac-bdce-d566726aed20/sweeper/dirty-20k.json](../VLT-LOAD/artifacts/R08/8a9c70cf-c531-48ac-bdce-d566726aed20/sweeper/dirty-20k.json) |
+| `R01.md:3` | [VLT-LOAD/brief/2026-09-23-l04-core-retry.md](../VLT-LOAD/brief/2026-09-23-l04-core-retry.md) |
+| `R01.md:3`, `R09.md:6` | [VLT-LOAD/queue-report.md](../VLT-LOAD/queue-report.md) |
+| `R01.md:42` | [VLT-LOAD/artifacts/P6/database/tier-s-volume.json](../VLT-LOAD/artifacts/P6/database/tier-s-volume.json) |
+| `R02.md:6`, `R02.md:18` | [VLT-MUT/findings/P0.1-parallel-defect.md](../VLT-MUT/findings/P0.1-parallel-defect.md) |
+| `R02.md:6` | [VLT-MUT/findings/P0.2-baseline-drive.md](../VLT-MUT/findings/P0.2-baseline-drive.md) |
+| `R02.md:6` | [VLT-MUT/findings/P0.2-baseline-media-filament.md](../VLT-MUT/findings/P0.2-baseline-media-filament.md) |
+| `R02.md:6`, `R02.md:52` | [VLT-LOAD/artifacts/P4-l01-mutation.json](../VLT-LOAD/artifacts/P4-l01-mutation.json) |
+| `R05.md:5` | [VLT-LOAD/concurrency-report.md](../VLT-LOAD/concurrency-report.md) |
+| `R05.md:5`, `R06.md:5` | [VLT-LOAD/findings/P5-concurrency.md](../VLT-LOAD/findings/P5-concurrency.md) |
+| `R05.md:5` | [VLT-LOAD/artifacts/P5/run-manifest.json](../VLT-LOAD/artifacts/P5/run-manifest.json) |
+| `R05.md:5` | [VLT-LOAD/artifacts/P5/cell-verdicts.json](../VLT-LOAD/artifacts/P5/cell-verdicts.json) |
+| `R06.md:5` | [VLT-LOAD/artifacts/P5/sweeper/dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1.a1.json](../VLT-LOAD/artifacts/P5/sweeper/dirty-cardinality-probe.sweeper-overlap.dirty-20k.n1.a1.json) |
+| `R06.md:5` | [VLT-LOAD/artifacts/P5/sweeper/dirty-cardinality-probe.sweeper-overlap.dirty-1m.n1.a1.json](../VLT-LOAD/artifacts/P5/sweeper/dirty-cardinality-probe.sweeper-overlap.dirty-1m.n1.a1.json) |
+| `R07.md:7` | [VLT-MUT/findings/P0.2-drive-escaped.txt](../VLT-MUT/findings/P0.2-drive-escaped.txt) |
+| `R09.md:6` | [VLT-LOAD/findings/P6-queue-semantics.md](../VLT-LOAD/findings/P6-queue-semantics.md) |
+| `R09.md:23` | [VLT-LOAD/artifacts/P6-R09/e281e5bb-1bd1-4435-8ed0-69eaa26ee134/rejected.json](../VLT-LOAD/artifacts/P6-R09/e281e5bb-1bd1-4435-8ed0-69eaa26ee134/rejected.json) |
+| `R09.md:24` | [VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/](../VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/) |
+| `R09.md:60` | [VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/slo-verdicts.json](../VLT-LOAD/artifacts/P6-R09/3df3b9e1-32b8-4e15-8b8f-c4efffe28f52/slo-verdicts.json) |
+| `R09.md:82` | [VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57/](../VLT-LOAD/artifacts/P6-R09/aecd7112-8d5c-4fbc-a7ae-a4fe468ced57/) |
+| `R09.md:133` | [VLT-LOAD/artifacts/P6-R09/52cc42c8-1cb5-48a5-8e5b-0a3c0b9b0201-runtime-source.tar.gz](../VLT-LOAD/artifacts/P6-R09/52cc42c8-1cb5-48a5-8e5b-0a3c0b9b0201-runtime-source.tar.gz) |
+| `R10.md:24` | [VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb/](../VLT-LOAD/artifacts/P6-R10/56823709-fe47-4173-b965-dc51ea523bcb/) |
