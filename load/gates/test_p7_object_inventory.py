@@ -30,18 +30,20 @@ def present(key, *, checksum=evidence.CHECKSUM, size=16):
 
 class InventoryTest(unittest.TestCase):
     def window(self, *, status='committed', parts=(1,), objects=None, listing=None,
-               blob=True, baseline=None, missing_session=False):
+               blob=True, baseline=None, missing_session=False, received=None, part_sizes=None):
         cell = next(row for row in gate.catalog() if row['cell_id'] == 'product-realistic.s3-complete.503')
         fixture = {'run_id': evidence.RUN, 'marker': live.product_ops.marker_for(evidence.RUN, cell['cell_id'], 1),
                    'upload_id': 'inventory-upload', 'cas_scope': 'global',
                    'payload_sha256': evidence.CHECKSUM, 'requested_bytes': 16}
         entities = [{'entity': 'upload_session', 'entity_id': 'session-1', 'upload_id': 'inventory-upload',
-                     'status': status, 'received_bytes': 16 * len(parts), 'assembled_blob_id': 'blob-1' if blob else None}]
+                     'status': status, 'received_bytes': 16 * len(parts) if received is None else received,
+                     'assembled_blob_id': 'blob-1' if blob else None}]
         if missing_session:
             entities = [{'entity': 'outbox', 'entity_id': fixture['marker'], 'status': 'absent'}]
         else:
             entities.extend({'entity': 'upload_part', 'entity_id': f'session-1:{number}', 'status': 'recorded',
-                             'checksum': evidence.CHECKSUM, 'size': 16} for number in parts)
+                             'checksum': evidence.CHECKSUM,
+                             'size': part_sizes[number] if part_sizes is not None else 16} for number in parts)
             if blob:
                 entities.append({'entity': 'blob', 'entity_id': 'blob-1', 'status': 'committed',
                                  'storage_key': FINAL, 'checksum': evidence.CHECKSUM, 'size': 16})

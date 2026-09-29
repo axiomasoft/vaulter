@@ -99,7 +99,7 @@ class IntegrityContractTest(unittest.TestCase):
         self.assert_pair(record, streams, status='missing-object', valid=False)
 
     def test_missing_required_part_object(self):
-        record, streams = self.window(operation='s3-put-part', status='uploading', part=True)
+        record, streams = self.window(operation='s3-put-part', status='uploading', received=16, part=True)
         self.assert_pair(record, streams, status='missing-object', valid=False)
 
     def test_missing_required_blob_object(self):
@@ -183,7 +183,7 @@ class IntegrityContractTest(unittest.TestCase):
 
     def test_full_reader_rejects_false_matched_absent_even_with_valid_labels(self):
         for case in ({'status': 'uploading', 'received': 16},
-                     {'operation': 's3-put-part', 'status': 'uploading', 'part': True},
+                     {'operation': 's3-put-part', 'status': 'uploading', 'received': 16, 'part': True},
                      {'operation': 's3-complete', 'status': 'committed', 'received': 16, 'blob': True},
                      {'exists': True},
                      {'operation': 'abort', 'status': 'aborted', 'received': 16, 'exists': True, 'http': 204},

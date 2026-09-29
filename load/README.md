@@ -662,6 +662,12 @@ Both join directions are recorded per key with required presence/absence;
 the reader recomputes expectations, checksum and size from DB/payload state.
 Committed/aborted/expired sessions require their staged/part objects to be
 absent. Extra objects and missing required objects invalidate the attempt.
+For open, unassembled multipart sessions, `received_bytes` must equal the sum
+of the unique recorded part sizes. Each recorded part still requires its
+matching object, checksum and size. Losing both the part rows and objects
+cannot establish legitimate absence when received bytes remain positive.
+Zero-byte pre-write refusal remains valid. Assembled sessions prove their
+bytes through staging; terminal cleanup does not require retained part rows.
 
 Collector failures have `observation=observation-error`, `exists=null` and an
 invalid verdict. Exact-key HEAD uses `mc stat --no-list --json`; arbitrary

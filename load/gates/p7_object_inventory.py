@@ -87,7 +87,14 @@ def expectations(entities, inventory, attempt):
                 'part does not join upload session')
         number = part['entity_id'].rsplit(':', 1)[-1]
         require(number.isdigit() and int(number) > 0 and str(int(number)) == number, 'invalid part identity')
+        require(prefix + number not in part_rows, 'duplicate part identity')
+        require(gate._int(part.get('size')) and part['size'] >= 0, 'invalid part size')
         part_rows[prefix + number] = part
+    if protocol == 's3-multipart' and not terminal and upload['status'] != 'assembled':
+        # received_bytes is the sum of recorded parts while the upload is open.
+        # Empty joins cannot prove absence after both a part row and its bytes are lost.
+        require(sum(part['size'] for part in part_rows.values()) == received,
+                'multipart received bytes contradict durable parts')
     part_keys = set(keys) | set(part_rows)
     if protocol == 's3-multipart':
         part_keys.add(prefix + '1')  # Prepared/attempted part remains observable if its row is gone.
