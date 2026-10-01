@@ -4,8 +4,10 @@
 #   scripts/fixtures/make-v0.2-dump.sh            # write tests/fixtures/v0.2.0/*.sql + SHA256SUMS
 #   scripts/fixtures/make-v0.2-dump.sh --verify   # regenerate into a temp dir, compare, load, count
 #
-# FIXTURE_CONFIGS limits the configurations (space-separated); default: all five.
-# Every configuration recreates its schema on the *_test database first.
+# PostgreSQL only: v0.2.0 cannot be installed on MySQL 8 (stored generated column over
+# a CASCADE foreign key → error 1215), so no 0.2 data exists there (PLAN2 D09).
+# FIXTURE_CONFIGS limits the configurations (space-separated); default: all three.
+# Every configuration recreates the public schema of the *_test database first.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -16,24 +18,20 @@ verify=false
 
 worktree="$root/build/fixtures/v0.2.0"
 fixtures="$root/tests/fixtures/v0.2.0"
-configs="${FIXTURE_CONFIGS:-pgsql-bigint pgsql-ulid mysql-bigint mysql-ulid pgsql-bigint-preflight-red}"
+configs="${FIXTURE_CONFIGS:-pgsql-bigint pgsql-ulid pgsql-bigint-preflight-red}"
 
 export DB_HOST="${DB_HOST:-127.0.0.1}"
+export DB_PORT="${DB_PORT:-5432}"
 export DB_DATABASE="${DB_DATABASE:-vaulter_test}"
 export DB_USERNAME="${DB_USERNAME:-vaulter}"
 export DB_PASSWORD="${DB_PASSWORD:-secret}"
 [[ "$DB_DATABASE" == *_test ]] || { echo "make-v0.2-dump: database must end with _test: $DB_DATABASE" >&2; exit 1; }
-export PGPASSWORD="$DB_PASSWORD" MYSQL_PWD="$DB_PASSWORD"
+export PGPASSWORD="$DB_PASSWORD"
 
-pg() { psql -X -q -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "${PG_PORT:-5432}" -U "$DB_USERNAME" -d "$DB_DATABASE" "$@"; }
-my() { mysql --no-defaults --protocol=TCP -h "$DB_HOST" -P "${MYSQL_PORT:-3306}" -u "$DB_USERNAME" "$@"; }
+pg() { psql -X -q -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" "$@"; }
 
 reset_schema() {
-    if [[ "$1" == pgsql ]]; then
-        pg -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public' 2>/dev/null
-    else
-        my -e "DROP DATABASE IF EXISTS \`$DB_DATABASE\`; CREATE DATABASE \`$DB_DATABASE\`"
-    fi
+    pg -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public' 2>/dev/null
 }
 
 # pg_dump of the SERVER's major (Debian pg_wrapper otherwise picks the newest client,
@@ -49,52 +47,35 @@ pg_dump_bin() {
 }
 
 dump() {
-    if [[ "$1" == pgsql ]]; then
-        "$(pg_dump_bin)" -h "$DB_HOST" -p "${PG_PORT:-5432}" -U "$DB_USERNAME" -d "$DB_DATABASE" \
-            --no-owner --no-privileges --no-comments --inserts --rows-per-insert=100 \
-            --quote-all-identifiers --restrict-key=vaulterfixturev020
-    else
-        mysqldump --no-defaults --protocol=TCP -h "$DB_HOST" -P "${MYSQL_PORT:-3306}" -u "$DB_USERNAME" \
-            --skip-dump-date --skip-comments --no-tablespaces --skip-extended-insert --order-by-primary \
-            "$DB_DATABASE"
-    fi
+    "$(pg_dump_bin)" -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" \
+        --no-owner --no-privileges --no-comments --inserts --rows-per-insert=100 \
+        --quote-all-identifiers --restrict-key=vaulterfixturev020
 }
 
 # `<file>: <table>=<rows> … owners=<sorted owner_id set>` for the schema loaded now.
 counts() {
-    local driver="$1" file="$2" line tables table n owners
-    if [[ "$driver" == pgsql ]]; then
-        tables="$(pg -Atc "select tablename from pg_tables where schemaname = 'public' order by 1")"
-        owners="$(pg -Atc "select string_agg(owner_id::text, ',' order by owner_id::text) from v_storages")"
-    else
-        tables="$(my -N -B -D "$DB_DATABASE" -e "select table_name from information_schema.tables where table_schema = database() order by 1")"
-        owners="$(my -N -B -D "$DB_DATABASE" -e "select group_concat(owner_id order by owner_id separator ',') from v_storages")"
-    fi
-    line="$file:"
-    for table in $tables; do
-        if [[ "$driver" == pgsql ]]; then n="$(pg -Atc "select count(*) from \"$table\"")"; else n="$(my -N -B -D "$DB_DATABASE" -e "select count(*) from \`$table\`")"; fi
-        line+=" $table=$n"
+    local line table
+    line="$1:"
+    for table in $(pg -Atc "select tablename from pg_tables where schemaname = 'public' order by 1"); do
+        line+=" $table=$(pg -Atc "select count(*) from \"$table\"")"
     done
-    echo "$line owners=$owners"
+    echo "$line owners=$(pg -Atc "select string_agg(owner_id::text, ',' order by owner_id::text) from v_storages")"
 }
 
 generate() {
-    local out="$1" config driver strategy variant
+    local out="$1" config strategy variant
     if [[ ! -f "$worktree/vendor/autoload.php" ]]; then
         git worktree add --force "$worktree" v0.2.0 >/dev/null
         "$root/scripts/php84" composer --working-dir="$worktree" install --no-interaction --quiet
     fi
+    "$root/scripts/db-preflight.sh" pgsql >/dev/null
     for config in $configs; do
-        driver="${config%%-*}"
         strategy="$(cut -d- -f2 <<<"$config")"
         variant=main
         [[ "$config" == *-preflight-red ]] && variant=preflight-red
-        DB_PORT="$([[ $driver == pgsql ]] && echo "${PG_PORT:-5432}" || echo "${MYSQL_PORT:-3306}")" \
-            "$root/scripts/db-preflight.sh" "$driver" >/dev/null
-        reset_schema "$driver"
-        DB_PORT="$([[ $driver == pgsql ]] && echo "${PG_PORT:-5432}" || echo "${MYSQL_PORT:-3306}")" \
-            FIXTURE_WORKTREE="$worktree" "$root/scripts/php84" php "$root/scripts/fixtures/make-v0.2-dump.php" "$driver" "$strategy" "$variant"
-        dump "$driver" >"$out/$config.sql"
+        reset_schema
+        FIXTURE_WORKTREE="$worktree" "$root/scripts/php84" php "$root/scripts/fixtures/make-v0.2-dump.php" "$strategy" "$variant"
+        dump >"$out/$config.sql"
         echo "generated $config.sql" >&2
     done
     (cd "$out" && sha256sum -- $(for c in $configs; do echo "$c.sql"; done)) >"$out/SHA256SUMS"
@@ -117,10 +98,9 @@ if ! diff -u <(grep -F -f <(for c in $configs; do echo " $c.sql"; done) "$fixtur
 fi
 
 for config in $configs; do
-    driver="${config%%-*}"
-    reset_schema "$driver"
-    if [[ "$driver" == pgsql ]]; then pg -f "$fixtures/$config.sql" >/dev/null; else my -D "$DB_DATABASE" <"$fixtures/$config.sql"; fi
-    line="$(counts "$driver" "$config.sql")"
+    reset_schema
+    pg -f "$fixtures/$config.sql" >/dev/null
+    line="$(counts "$config.sql")"
     expected="$(grep -F "$config.sql:" "$fixtures/README.md" | head -1 || true)"
     case "$config" in
         *-preflight-red) owners_ok=true ;;

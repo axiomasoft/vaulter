@@ -5,12 +5,13 @@ declare(strict_types=1);
 /*
  * Builds the v0.2.0 data fixture for one configuration (PLAN2 P0.3).
  *
- *   php scripts/fixtures/make-v0.2-dump.php <pgsql|mysql> <bigint|ulid> [main|preflight-red] [--migrate-only]
+ *   php scripts/fixtures/make-v0.2-dump.php <bigint|ulid> [main|preflight-red] [--migrate-only]
  *
  * Boots a Testbench application from the `v0.2.0` worktree (FIXTURE_WORKTREE,
  * default build/fixtures/v0.2.0) — never the current main code — runs the tag's
  * own core migrations on an EMPTY schema and seeds it through seed-v0.2.php.
  * The caller (make-v0.2-dump.sh) recreates the schema before and dumps after.
+ * PostgreSQL only: v0.2.0 cannot be installed on MySQL 8 (PLAN2 D09).
  */
 
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,10 @@ use Vaulter\VaulterServiceProvider;
 
 $args = array_values(array_filter(array_slice($argv, 1), static fn (string $a): bool => !str_starts_with($a, '--')));
 $migrateOnly = in_array('--migrate-only', $argv, true);
-[$driver, $strategy, $variant] = $args + [null, null, 'main'];
+[$strategy, $variant] = $args + [null, 'main'];
 
-if (!in_array($driver, ['pgsql', 'mysql'], true) || !in_array($strategy, ['bigint', 'ulid'], true)
-    || !in_array($variant, ['main', 'preflight-red'], true)) {
-    fwrite(STDERR, "Usage: make-v0.2-dump.php <pgsql|mysql> <bigint|ulid> [main|preflight-red] [--migrate-only]\n");
+if (!in_array($strategy, ['bigint', 'ulid'], true) || !in_array($variant, ['main', 'preflight-red'], true)) {
+    fwrite(STDERR, "Usage: make-v0.2-dump.php <bigint|ulid> [main|preflight-red] [--migrate-only]\n");
     exit(1);
 }
 
@@ -51,9 +51,9 @@ $env = [
     'APP_KEY' => 'base64:tJ4mVwShl8LETWdRtTCwcoKS7MS2ipekchk9seHrIVc=',
     'CACHE_STORE' => 'array',
     'QUEUE_CONNECTION' => 'sync',
-    'DB_CONNECTION' => $driver,
+    'DB_CONNECTION' => 'pgsql',
     'DB_HOST' => getenv('DB_HOST') ?: '127.0.0.1',
-    'DB_PORT' => getenv('DB_PORT') ?: ($driver === 'pgsql' ? '5432' : '3306'),
+    'DB_PORT' => getenv('DB_PORT') ?: '5432',
     'DB_DATABASE' => $database,
     'DB_USERNAME' => getenv('DB_USERNAME') ?: 'vaulter',
     'DB_PASSWORD' => getenv('DB_PASSWORD') ?: 'secret',
@@ -91,7 +91,7 @@ $app = Application::create(
     ],
 );
 
-if (config('vaulter.ids.default') !== $strategy || DB::connection()->getDriverName() !== $driver
+if (config('vaulter.ids.default') !== $strategy || DB::connection()->getDriverName() !== 'pgsql'
     || config('vaulter.features.document_versions') !== true) {
     fwrite(STDERR, 'make-v0.2-dump: config did not take: ids='.config('vaulter.ids.default').' driver='.DB::connection()->getDriverName()."\n");
     exit(1);

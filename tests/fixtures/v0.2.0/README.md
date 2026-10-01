@@ -13,18 +13,17 @@ API/models (`scripts/fixtures/seed-v0.2.php`), run from a `git worktree` of the 
 ```bash
 scripts/fixtures/make-v0.2-dump.sh            # rewrite the dumps + SHA256SUMS (recreates the *_test schema)
 scripts/fixtures/make-v0.2-dump.sh --verify   # regenerate into a temp dir, compare SHA256SUMS, load, count
-FIXTURE_CONFIGS="pgsql-bigint pgsql-ulid pgsql-bigint-preflight-red" scripts/fixtures/make-v0.2-dump.sh --verify
+FIXTURE_CONFIGS=pgsql-bigint scripts/fixtures/make-v0.2-dump.sh --verify   # one configuration
 ```
 
-Prerequisites: `scripts/db-preflight.sh pgsql|mysql` exit 0 (D04), PHP 8.4 via `scripts/php84`. The worktree
+Prerequisites: `scripts/db-preflight.sh pgsql` exit 0 (D04), PHP 8.4 via `scripts/php84`. The worktree
 `build/fixtures/v0.2.0` is created and `composer install`ed on first run (`build/` is not committed).
 Two consecutive runs produce byte-identical files: frozen clock, counter-based ULID/UUID/random-string
 factories, fixed bytes, a content-derived encryption IV, `pg_dump --restrict-key`; the DB-clock default
 `v_blobs.first_seen_at` is pinned to `committed_at` by the seeder.
 
-Tools: `pg_dump` 16.15 (the server's major, not the `pg_wrapper` default),
-`--no-owner --no-privileges --no-comments --inserts --rows-per-insert=100 --quote-all-identifiers`;
-`mysqldump` 8.0.46, `--skip-dump-date --skip-comments --no-tablespaces --skip-extended-insert --order-by-primary`.
+Tool: `pg_dump` 16.15 (the server's major, not the `pg_wrapper` default),
+`--no-owner --no-privileges --no-comments --inserts --rows-per-insert=100 --quote-all-identifiers`.
 
 ## Configurations
 
@@ -33,8 +32,6 @@ Tools: `pg_dump` 16.15 (the server's major, not the `pg_wrapper` default),
 | `pgsql-bigint.sql` | generated |
 | `pgsql-ulid.sql` | generated |
 | `pgsql-bigint-preflight-red.sql` | generated |
-| `mysql-bigint.sql` | **not generated** — see «MySQL» below |
-| `mysql-ulid.sql` | **not generated** — see «MySQL» below |
 
 Feature flags at seed time: `document_versions`, `share_links`, `comments` on (the document version table
 exists only with `document_versions`); tenancy off; host-key strategy = the dump's `bigint`/`ulid`.
@@ -78,5 +75,5 @@ pgsql-bigint-preflight-red.sql: migrations=19 v_activity=3 v_blobs=1 v_file_vers
 `v0.2.0` cannot be installed on MySQL 8.0 (checked on 8.0.46): its nodes migration adds the STORED generated
 column `v_nodes.sibling_active` over `parent_id`, whose foreign key is `ON DELETE CASCADE`; MySQL rejects that
 (`SQLSTATE[HY000] 1215 Cannot add foreign key constraint`, `PanelTablesBuilder.php:1139` at the tag). The tag's
-CI had no MySQL job. The fixture schema is not altered to work around it (P0.3 rule), so no MySQL dump exists
-until the owner decides how the MySQL requirement of OPUS 13 P0.3 is met.
+CI had no MySQL job, so 0.2 data on MySQL cannot exist and the fixture is PostgreSQL-only (PLAN2 D09). The 0.2 → 0.3
+upgrade is proven on these PostgreSQL dumps; MySQL support of 0.3 is proven from a fresh 0.3 install.
