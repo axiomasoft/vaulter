@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # swissknifeman:generated
 # Generated-by: harness agent-packs
-# Pack: laravel-package@0.2.2
+# Pack: laravel-package@0.2.3
 # Template: hooks/review-gate.sh
-# Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+# Edit-policy: generated-core — DO NOT edit; expand through extension-point
 # Extension-points: .claude/rules/vaulter-reviewer-overrides.md
 # Upgrade: harness agent-packs upgrade --pack laravel-package --target .
 #
@@ -51,9 +51,9 @@ RC=$?
 TRIM="$(printf '%s' "$OUT" | tail -n 40)"
 
 if [[ "$MODE" == "strict" ]]; then
-  printf 'review-gate (strict): проверка качества упала — почини перед завершением.\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
+  printf 'review-gate (strict): quality check failed - fix before completion.\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
   exit 2
 fi
 
-printf 'review-gate (warn): проверка качества упала (не блокирую).\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
+printf 'review-gate (warn): quality control failed (not blocking).\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
 exit 0

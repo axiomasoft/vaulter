@@ -1,0 +1,37 @@
+{
+  "adapter_attestation": null,
+  "commit_sha": "a572121a84ac95e86f767a2f104d896bd4b9a017",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:b3c80de588f83c096a894fed120d38dcb387da60f1144a2dc7082a1dea234da9",
+    "plan": "sha256:f727d29f4a9dbb2c2aaea68f25a63f701948ad389cf5767ea5b064eb53b4ff27",
+    "state": null
+  },
+  "journal": null,
+  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "rationale": {
+    "open_risks": "Повторная проверка исправлений выполнена автором по D08. Роли БД",
+    "remaining": "P0.1 → B0-A (P0.2 → P0.3) и P0.4 → O-3-CI/hosted CI итогового SHA →"
+  },
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model class | implementation |\n| Effort | medium |\n| Capabilities | — |\n| Context | continue-root |\n| Суть | Дизайн P0 GREEN: перейти к P0.1 по execution-sheet, bootstrap скриптов → --check/PG-preflight → baseline. |\n\n**Native command:**\n\n```text\n$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n```",
+  "route": {
+    "batch": "solo",
+    "command": null,
+    "context": "continue-root",
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "handoff-recommendation-receipt/v1",
+  "status": "handoff-persisted",
+  "subject": "P0"
+}

@@ -4,24 +4,24 @@ paths:
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.2
+Pack: laravel-package@0.2.3
 Template: rules/tests.md
-Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Edit-policy: generated-core — DO NOT edit; expand through extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md
 Upgrade: harness agent-packs upgrade --pack laravel-package --target .
 -->
 
-При работе с тестами пакета (глубина — скилл `php-packages:laravel-package-testing`):
+When working with package tests (depth - skill `php-packages:laravel-package-testing`):
 
-- Прогон только `composer test` (хост-специфика проекта), не bare `php`.
-- Тест-фреймворк проекта — `pest`: прочитай 1–2 существующих теста и зеркаль их стиль.
-- Инфра — Orchestra Testbench: тесты наследуют пакетный `TestCase` с `getPackageProviders()`;
-  БД — in-memory sqlite (`:memory:`), без внешнего окружения.
-- Пакетный тест не зависит от приложения: никаких `use App\...` — стабы/модели для
-  тестов живут в `tests/` (Workbench/fixtures).
-- Матрично-чувствительные места (`version_compare`-ветки, проверки версии `illuminate/*`) —
-  кейсы на ОБЕ ветки: CI-матрица PHP×Laravel исполнит обе, локальный прогон — одну.
-- На изменённое поведение — тест; существующие проверки не ослаблять.
-- **Честность тестов:** любая обходка/форс ради зелёного (форс `config(...)`, ручная
-  регистрация биндинга вместо провайдера, sibling-класс в обход `final`) — пометь
-  `[POSSIBLE-DEFECT]` в отчёте: за обходкой почти всегда реальный баг.
+- Run only `composer test` (project host specifics), not bare `php`.
+- Project test framework - `pest`: read 1-2 existing tests and mirror their style.
+- Infra - Orchestra Testbench: tests inherit batch `TestCase` with `getPackageProviders()`;
+  DB - in-memory sqlite (`:memory:`), without external environment.
+- Batch test is application independent: none `use App\...` — stubs/models for
+  tests live in `tests/` (Workbench/fixtures).
+- Matrix sensitive areas (`version_compare`-branches, version checks `illuminate/*`) —
+  cases for BOTH branches: CI-matrix PHP×Laravel will execute both, the local run will execute one.
+- For changed behavior - test; existing checks should not be weakened.
+- **Test fairness:** any workaround/force for the sake of green (force `config(...)`, manual
+  registering a binding instead of a provider, sibling-class bypass `final`) — mark
+  `[POSSIBLE-DEFECT]` in the report: there is almost always a real bug behind the workaround.

@@ -15,8 +15,8 @@
         "public",
         "surface",
         "diff",
-        "методы",
-        "контракты",
+        "methods",
+        "contracts",
         "facades",
         "config"
       ]
@@ -26,15 +26,15 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "внешнем",
+        "external",
         "vaulter",
-        "нужен",
-        "ревью",
-        "уважением",
-        "времени",
-        "контрибьютора",
+        "need",
+        "review",
+        "respect",
+        "contributor",
+        "time",
         "severity",
-        "влияние",
+        "impact",
         "public",
         "api"
       ]
@@ -44,17 +44,17 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "входящем",
-        "потоке",
+        "incoming",
+        "stream",
         "vaulter",
-        "накопились",
+        "have",
+        "accumulated",
         "issues",
-        "надо",
-        "затриажить",
-        "классификация",
-        "метки",
-        "приоритет",
-        "example"
+        "needs",
+        "triggered",
+        "classification",
+        "labels",
+        "priority"
       ]
     },
     {
@@ -62,16 +62,16 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "задача",
+        "task",
         "vaulter",
-        "крупная",
-        "многодоменная",
-        "слоя",
-        "нужно",
-        "разбить",
-        "делегировать",
-        "ролям",
-        "пака",
+        "large",
+        "multi-domain",
+        "layer",
+        "needs",
+        "split",
+        "delegated",
+        "pack",
+        "roles",
         "delegate-only"
       ]
     },
@@ -80,15 +80,15 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "пора",
-        "выпустить",
-        "релиз",
+        "time",
+        "release",
         "vaulter",
-        "версия",
+        "software",
+        "version",
         "semver",
         "changelog",
-        "объявление",
-        "breaking-изменений",
+        "announcement",
+        "breaking-changes",
         "example",
         "user"
       ]
@@ -98,14 +98,14 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "код",
-        "laravel-пакета",
+        "code",
+        "laravel-package",
         "vaulter",
-        "написан",
-        "изменён",
-        "нужен",
+        "written",
+        "changed",
+        "needed",
         "read-only",
-        "ревью",
+        "review",
         "semver",
         "serviceprovider",
         "publishables"
@@ -119,14 +119,14 @@
         "read-only",
         "security",
         "pass",
-        "over",
         "vaulter",
         "package",
         "change",
-        "секреты",
-        "слабый",
-        "хэш",
-        "токенов"
+        "secrets",
+        "weak",
+        "token",
+        "hash",
+        "sql-injections"
       ]
     },
     {
@@ -134,16 +134,16 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "нужно",
-        "реализовать",
-        "фичу",
-        "laravel-пакета",
+        "need",
+        "implement",
+        "feature",
+        "laravel-package",
         "vaulter",
         "contracts",
-        "реализация",
+        "implementation",
         "serviceprovider",
         "publishables",
-        "фасад",
+        "facade",
         "example"
       ]
     },
@@ -152,17 +152,17 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "перед",
-        "крупной",
-        "неоднозначной",
-        "фичей",
-        "пакета",
+        "before",
+        "large",
+        "ambiguous",
+        "package",
+        "feature",
         "vaulter",
-        "новая",
-        "подсистема",
-        "контракта",
-        "нужен",
-        "короткий"
+        "new",
+        "subsystem",
+        "contract",
+        "need",
+        "short"
       ]
     },
     {
@@ -176,11 +176,11 @@
         "test",
         "suite",
         "filter",
-        "isolated-контексте",
-        "только",
-        "компактный",
+        "isolated-context",
+        "compact",
+        "only",
         "pass",
-        "fail-итог"
+        "fail-summary"
       ]
     },
     {
@@ -188,17 +188,17 @@
       "weight": 1,
       "keywords": [
         "agent",
-        "код",
-        "фичи",
-        "laravel-пакета",
+        "feature",
+        "code",
+        "laravel-package",
         "vaulter",
-        "готов",
-        "нужно",
-        "написать",
-        "тесты",
+        "ready",
+        "needed",
+        "write",
+        "tests",
         "pest",
         "testbench",
-        "зелёного"
+        "green"
       ]
     }
   ],

@@ -51,6 +51,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
   (`artifacts/coverage/section-owners.tsv`); при дизайне фазы каждая её единица назначается item в
   `artifacts/coverage/ledger-Pn.tsv`; гейт `python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check`
   exit 0 — в Validation каждого finish, фазового аудита и закрытия. Отказ от единицы — только D# плана.
+  D07 добавляет побайтный manifest `opus-sources.sha256`, проверку свежести дословных входов и негативные контроли;
+  ID/назначения не меняются, исходные переносы строк в render сохраняются.
 - **Всё перед глазами исполнителя** (D06, B7): первый Required Read каждого item —
   `artifacts/Pn-design/<Pn.m>-opus.md` (дословные единицы OPUS, `opus-coverage.py render`); исполнитель выполняет каждую
   или эскалирует. Контракт/досье содержат все файлы, имена, сигнатуры, решения развилок, точные команды с ожидаемым
@@ -59,6 +61,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - Запреты OPUS 01 §5 и отложенное AD39 действуют во всех фазах (D06 п.7).
 - **Катящийся дизайн** (D03): детализируется только текущая фаза по фактическому коду; фазы после неё — skeleton в
   `backlog/Pn.md`. Цикл фазы: design → finish → независимый design audit → execute → **фазовый аудит** → close.
+  Для повторной проверки исправлений текущего дизайна P0 владелец разрешил same-author recheck до GREEN (D08);
+  исходный независимый RED сохранён. Это исключение не распространяется на проверку реализации или будущие фазы.
 - **Гейт затронутых пакетов до коммита** (OPUS 13 правило 1): `scripts/php84 vendor/bin/pint --test`,
   `scripts/php84 vendor/bin/phpstan analyse` (уровень пакета; max — цель P2.5+), `scripts/php84 vendor/bin/pest` (+ arch);
   для Vue — `vue-tsc`, `vitest`, `vite build`. Пропуск или падение ≠ успех.
@@ -79,6 +83,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - Item закрывается только по своим Validation-командам; «тест есть» ≠ доказательство; новый гейт/харнесс имеет
   негативный контроль (падает на внедрённом нарушении).
 - Внешние действия (push, PR, merge, теги, Packagist/npm, split-репозитории) — owner gates (O-3, P8).
+  Для P0 D07 уточняет O-3: push итогового candidate и workflow_dispatch — O-3-CI до фазового аудита;
+  PR/merge — O-3-PR после GREEN аудита. Оба требуют отдельного явного запроса владельца.
 - Canonical statuses: `⬜ Not started`, `🟡 In progress`, `🟢 Done`, `🟠 Done with deviations`, `🔴 Blocked`,
   `⛔ Skipped by decision`. Generated carriers (state, status, bundles, decision views, journal) — только через Task tooling.
 - **Маршрут запуска** (D05): класс/effort — §3 Routing; исполнитель/ревьюер — `roadmap.md` `execution-sheet/v1`;
@@ -95,10 +101,10 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| solo | P0.1 | implementation/medium | manual | light | recommended: окружение (`scripts/php84`, preflight БД) и базовая линия — предусловие остальных items; O-1 проверяется первым шагом. |
+| solo | P0.1 | implementation/medium | manual | light | recommended: окружение (`scripts/php84`, preflight БД) и базовая линия — предусловие остальных items; сначала bootstrap, затем O-1 preflight. |
 | B0-A | P0.2 | implementation/medium | manual | full | recommended: харнесс конкурентности — фундамент доказательств T0 (V02, V03, V13, V17, V19–V21); первым в B0-A. |
 | B0-A | P0.3 | implementation/medium | manual | full | recommended: фикстура 0.2 на том же окружении PG/MySQL; вторым в B0-A; O-2 до старта. |
-| solo | P0.4 | frontier/medium | manual | light | recommended: ADR 0019–0024 — перенос решений OPUS, не переосмысление; frontier не смешивается с implementation. |
+| solo | P0.4 | frontier/medium | manual | light | recommended: ADR 0019–0024 — перенос решений OPUS; потребляет baseline P0.1; после него независим от B0-A, frontier не смешивается с implementation. |
 
 ## 4. Update Log
 
@@ -106,6 +112,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 |:--|:--|:--|
 | 2026-09-29 | План создан по OPUS: D01–D05 (норматив, Q1–Q15, порядок и цикл фаз, окружение, маршрутизация/доставка); P0 детализирована (P0.1–P0.4); P1–P8 — skeleton в `backlog/` | claude-opus-5-5/high |
 | 2026-09-29 | Уточнение владельца (B6, B7) → D06: реестр единиц OPUS (1438/254), владельцы секций, ledger P0 (92 единицы), гейт `opus-coverage.py`, дословные входы `artifacts/P0-design/P0.m-opus.md`; P0 дополнена (полный CI в baseline, MySQL-ulid дамп, AD → mAInd, поправки ADR строго по OPUS) | claude-opus-5-5/high |
+| 2026-09-29 | По поручению владельца исправлены DA01–DA06 (D07): owner IDs исходной схемы, явный PG-job харнесса, O-3-CI до аудита, bootstrap, дословный render/manifest/негативные контроли, producer baseline P0.4; повторная финализация, без исполнения P0 | gpt-6-sol/high |
+| 2026-09-29 | D08: владелец разрешил завершить перепроверку исправлений дизайна P0 до GREEN в текущей sol-сессии; same-author recheck явно обозначен, фазовая приёмка реализации сохранена | gpt-6-sol/high |
 
 ## 5. Decision Log
 

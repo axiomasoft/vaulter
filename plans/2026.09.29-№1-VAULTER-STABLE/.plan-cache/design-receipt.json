@@ -1,33 +1,33 @@
 {
   "adapter_attestation": null,
-  "commit_sha": "c70bf9125f273e47a33b40839f295af71d48b6b1",
+  "commit_sha": "a572121a84ac95e86f767a2f104d896bd4b9a017",
   "continuity": {
     "evidence": [
-      "persisted-context:whole-plan-independent-audit"
+      "persisted-context:continue-root"
     ],
-    "outcome": "cold-start-root",
-    "reason": "whole-plan-independent-audit",
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
     "runnable": true,
     "schema_version": "session-continuity-decision/v1"
   },
   "digests": {
     "closure": null,
-    "handoff": "sha256:6d41e9b5c53dc6249c0ae670b6e20c7f5ca9542f3649ecfc4c442c4ffbacc4b3",
-    "plan": "sha256:bddc25eae4a594b8ffb9231c0dbcf96c349ae38faa16ea24a7a4a66aa9512a73",
+    "handoff": "sha256:b3c80de588f83c096a894fed120d38dcb387da60f1144a2dc7082a1dea234da9",
+    "plan": "sha256:f727d29f4a9dbb2c2aaea68f25a63f701948ad389cf5767ea5b064eb53b4ff27",
     "state": null
   },
   "journal": null,
-  "next_exact": "audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design",
+  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1",
   "plan_id": "2026.09.29-№1-VAULTER-STABLE",
   "rationale": {
-    "open_risks": "роли БД на хосте отсутствуют (O-1, O-2).",
-    "remaining": "design audit (codex, не автор) → owner gates O-1/O-2 → исполнение строк 1–3 execution-sheet → фазовый"
+    "open_risks": "Повторная проверка исправлений выполнена автором по D08. Роли БД",
+    "remaining": "P0.1 → B0-A (P0.2 → P0.3) и P0.4 → O-3-CI/hosted CI итогового SHA →"
   },
-  "recommendation": "**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | n/a |\n| Model class | frontier |\n| Effort | high |\n| Capabilities | — |\n| Context | cold-start-root: whole-plan-independent-audit |\n| Суть | Независимый аудит дизайна (не автор плана): проверить P0 и execution-sheet против fingerprint из `finalize-design --finish` и записать вердикт (`roadmap.md` §P0, шаг 2). Исполнение P0 — только после GREEN. |\n\n**Provider-native command:**\n\n```text\ncodex -C \"$(git rev-parse --show-toplevel)\" -m gpt-6-sol -c 'model_reasoning_effort=\"high\"' -a never -s danger-full-access '$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE design'\n```",
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model class | implementation |\n| Effort | medium |\n| Capabilities | — |\n| Context | continue-root |\n| Суть | Дизайн P0 GREEN: перейти к P0.1 по execution-sheet, bootstrap скриптов → --check/PG-preflight → baseline. |\n\n**Native command:**\n\n```text\n$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n```",
   "route": {
-    "batch": "n/a",
+    "batch": "solo",
     "command": null,
-    "context": "cold-start-root: whole-plan-independent-audit",
+    "context": "continue-root",
     "model": null,
     "thinking": null
   },

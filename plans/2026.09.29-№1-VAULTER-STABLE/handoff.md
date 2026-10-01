@@ -1,34 +1,26 @@
-# HANDOFF — 2026-09-29 — after P0
+# HANDOFF — 2026-09-29 — after P0.1
 
-**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design
+**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2 P0.3
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model class | frontier |
-| Effort | high |
+| Batch | B0-A |
+| Model class | implementation |
+| Effort | medium |
 | Capabilities | — |
-| Context | cold-start-root: whole-plan-independent-audit |
-| Суть | Независимый аудит дизайна (не автор плана): проверить P0 и execution-sheet против fingerprint из `finalize-design --finish` и записать вердикт (`roadmap.md` §P0, шаг 2). Исполнение P0 — только после GREEN. |
+| Context | continue-root |
+| Суть | P0.1 завершён с принятыми ограничениями; следующий рекомендуемый batch — P0.2/P0.3. |
 
-**Provider-native command:**
-
-```text
-codex -C "$(git rev-parse --show-toplevel)" -m gpt-6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE design'
+```session-continuity-decision/v1
+{"evidence": ["batch:089a1a9d862604a2176158303faa346118e5d9217543e9464606b08154a7f610", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:handoff.md:after-P0.1"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** План создан по OPUS (D01); уточнение владельца → D06 (реестр 1438 единиц OPUS, владельцы 254 секций, ledger P0,
-гейт `opus-coverage.py check` OK, дословные входы `artifacts/P0-design/P0.m-opus.md`); brief, D01–D06; plan.md, roadmap,
-session-routing; P0 детализирована (P0.1–P0.4), P1–P8 — skeleton в `backlog/`. Дизайн P0 финализирован
-(`finalize-design --phase P0`, dry-render bundles); finish: execution-sheet подтверждён (3 запуска: solo P0.1 → B0-A
-P0.2+P0.3; solo P0.4 независим), `opus-coverage OK: 1438 единиц, 254 секций, 0 нарушений`, fingerprint записан в journal.
+**Done:** P0.1 завершён с отклонениями по явному указанию владельца «доделывай, но без тяжелых перепроверок». scripts/php84, scripts/db-preflight.sh, CONTRIBUTING.md, findings/baseline.md и измеренные логи готовы. Лёгкие критерии проверены: PHP/PG positive + negative controls, bash syntax, unchanged manifests, полнота таблицы/классификации/ссылок и plan-lint. 95 команд завершены, 4 mutation-процесса ранее остановлены с actual exit -15. Неполные mutation gates не объявлены GREEN.
 
-**Remaining:** design audit (codex, не автор) → owner gates O-1/O-2 → исполнение строк 1–3 execution-sheet → фазовый
-аудит P0 → закрытие → дизайн P1.
+**Remaining:** P0.2/P0.3 (отдельный запрос; для P0.3 нужен O-2), затем P0.4. Работы P0.1 повторно не требуются в текущем согласованном объёме. Полные mutation-score Core SQLite/PG, Drive и Documents остаются неизвестными; запускать их только при отдельном изменении ресурсного ограничения, не автоматически.
 
-**Sources of truth:** plan.md; roadmap.md (`execution-sheet/v1`); phases/P0/P0.md; phases/P0/P0.1.md–P0.4.md;
-decisions/D01–D06; `audits/2026-09-29-stable-audit/opus/`.
+**Sources of truth:** phases/P0/P0.1.md; findings/baseline.md; artifacts/P0.1/owner-close.log; artifacts/P0.1/close-validation.log; journal.jsonl.
 
-**Open risks:** роли БД на хосте отсутствуют (O-1, O-2).
+**Open risks:** Hosted CI запрещён владельцем; push/dispatch/Docker не выполнялись. O-1 снят, O-2 относится к будущему P0.3. B-12 Media union 94.35% < 95%, exit 1, и прочие baseline failures классифицированы и переданы предложенным владельцам, не исправлялись вне scope. Local PCOV line coverage не доказывает engine parity с hosted Xdebug CI (B-15). Четыре неполных mutation verdict — принятое ограничение B-16, не релизное свидетельство. Фаза P0 остаётся открыта.
 
-**Workarounds/Deferred/Open questions:** ADR 0019–0024 переводит в `accepted` владелец после P0.4.
+**Execution:** Все mutation-процессы и координаторы завершены; автоматических рестартов нет. Ignored worktrees/scratch сохранены. Чужие существующие изменения плана не включаются в scoped code/report commits.

@@ -5,19 +5,19 @@ paths:
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: laravel-package@0.2.2
+Pack: laravel-package@0.2.3
 Template: rules/public-api.md
-Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Edit-policy: generated-core — DO NOT edit; expand through extension-point
 Extension-points: .claude/rules/vaulter-reviewer-overrides.md
 Upgrade: harness agent-packs upgrade --pack laravel-package --target .
 -->
 
-Публичный контракт пакета (глубина — скилл `php-packages:laravel-package-compatibility`).
-Risk-слой: **BC/SemVer** — это обещание чужим потребителям, не внутренний код.
+Public contract of the package (depth - skill `php-packages:laravel-package-compatibility`).
+Risk-layer: **BC/SemVer** — is a promise to other people's consumers, not internal code.
 
-- Контракты стабильны: интерфейс в `Contracts/` и фасад — публичное API. Удаление/
-  переименование метода, сужение типов параметров — breaking → **MAJOR** + upgrade-заметка.
-- Новое `public` — осознанное SemVer-обязательство: сперва спроси, нельзя ли оставить
-  внутренним.
-- Внутреннее помечай `@internal` (+`final` для классов) — это выводит его из BC-обещания.
-- Фасад — над контейнер-биндингом (`getFacadeAccessor` → контракт), не над конкретным классом.
+- Contracts are stable: interface in `Contracts/` and facade - public API. Removal/
+  method renaming, narrowing parameter types - breaking → **MAJOR** + upgrade-note.
+- New `public` — conscious SemVer-obligation: first ask if you can leave
+  internal.
+- Internal mark `@internal` (+`final` for classes) — this takes it out BC-promises.
+- Facade - above the binding container (`getFacadeAccessor` → contract), not over a specific class.

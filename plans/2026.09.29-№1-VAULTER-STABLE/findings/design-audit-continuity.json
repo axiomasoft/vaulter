@@ -1,0 +1,54 @@
+{
+  "estimate": {
+    "route_attested": true,
+    "capabilities_attested": true,
+    "capabilities_sufficient": true,
+    "context_attested": false,
+    "context_health": "unavailable",
+    "batch_receipt_valid": true,
+    "remaining_batch_digest": "5574a009a83d013a58c90860549be264dc9a8f6f669c3d8d94e36c6b6b0dd1b5",
+    "loaded_inputs_reusable": true,
+    "cold_start_cost": 0,
+    "lifecycle": "scope-complete",
+    "isolated_review": false,
+    "reviewer_task": null,
+    "checkpoint": "findings/design-audit.md",
+    "external_pause": null,
+    "schema_version": "session-work-estimate/v1"
+  },
+  "decision": {
+    "outcome": "continue-root",
+    "reason": "authorized-scope-complete",
+    "evidence": [
+      "batch:5574a009a83d013a58c90860549be264dc9a8f6f669c3d8d94e36c6b6b0dd1b5",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "lifecycle:scope-complete",
+      "checkpoint:findings/design-audit.md"
+    ],
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "next_carrier": {
+    "kind": "manual",
+    "command_id": null,
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "arguments": [],
+    "context_kind": "continue-root",
+    "item_ids": [],
+    "cold_start_scope": [],
+    "continuity": {
+      "outcome": "continue-root",
+      "reason": "authorized-scope-complete",
+      "evidence": [
+        "batch:5574a009a83d013a58c90860549be264dc9a8f6f669c3d8d94e36c6b6b0dd1b5",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "lifecycle:scope-complete",
+        "checkpoint:findings/design-audit.md"
+      ],
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    }
+  }
+}
