@@ -1,0 +1,312 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95
+cwd: /home/vostrikov/projects/packages/vaulter/packages/filament
+source: filament.yml:filament-mutation
+
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[33;1ms[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m
+
+  [90mTests:[39m    [33;1m1 skipped[39;22m[90m,[39m[39m [39m[32;1m75 passed[39;22m[90m (213 assertions)[39m
+  [90mDuration:[39m [39m11.69s[39m
+
+  Mutating application files...
+  [90m178 Mutations for 9 Files created[39m
+
+  [39;100;1m RUN [39;49;22m src/VaulterPlugin.php
+  [32;1m✓[39;22m [90mLine 64: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 94: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 94: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 94: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 95: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 95: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 95: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 96: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 96: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 96: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 97: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 97: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 97: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 98: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 98: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 98: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 103: ForeachEmptyIterable[39m
+  [32;1m✓[39;22m [90mLine 103: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 103: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 104: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 109: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 125: TrueToFalse[39m
+  [32;1m✓[39;22m [90mLine 126: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 126: TrueToFalse[39m
+  [32;1m✓[39;22m [90mLine 128: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 128: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 129: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 129: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 132: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 132: BooleanOrToBooleanAnd[39m
+
+  [39;100;1m RUN [39;49;22m src/Support/PanelAccessScope.php
+  [32;1m✓[39;22m [90mLine 37: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 37: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 43: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 43: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 47: AlwaysReturnNull[39m
+
+  [39;100;1m RUN [39;49;22m src/Support/PanelActor.php
+  [32;1m✓[39;22m [90mLine 38: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 38: InstanceOfToTrue[39m
+  [32;1m✓[39;22m [90mLine 38: InstanceOfToFalse[39m
+  [32;1m✓[39;22m [90mLine 38: AlwaysReturnNull[39m
+  [32;1m✓[39;22m [90mLine 50: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 50: InstanceOfToTrue[39m
+  [32;1m✓[39;22m [90mLine 50: InstanceOfToFalse[39m
+  [32;1m✓[39;22m [90mLine 50: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 51: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 57: AlwaysReturnNull[39m
+
+  [39;100;1m RUN [39;49;22m src/Resources/ActivityResource.php
+  [32;1m✓[39;22m [90mLine 67: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 67: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 71: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 71: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 159: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 160: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 161: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 168: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 174: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 180: FalseToTrue[39m
+
+  [39;100;1m RUN [39;49;22m src/Resources/NodeGrantResource.php
+  [32;1m✓[39;22m [90mLine 80: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 80: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 84: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 84: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 160: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 161: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 170: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 235: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 237: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 237: InstanceOfToTrue[39m
+  [32;1m✓[39;22m [90mLine 237: InstanceOfToFalse[39m
+  [32;1m✓[39;22m [90mLine 237: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 238: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 240: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 243: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 243: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 244: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 250: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 250: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 252: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 258: CoalesceRemoveLeft[39m
+  [31;1m⨯[39;22m [90mLine 258: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 261: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 262: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 263: RemoveIntegerCast[39m
+  [32;1m✓[39;22m [90mLine 263: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 263: DecrementInteger[39m
+  [32;1m✓[39;22m [90mLine 263: IncrementInteger[39m
+  [32;1m✓[39;22m [90mLine 264: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 264: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 264: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 269: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 303: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 303: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 313: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 313: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 313: IdenticalToNotIdentical[39m
+  [31;1m⨯[39;22m [90mLine 314: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 319: AlwaysReturnNull[39m
+  [31;1m⨯[39;22m [90mLine 349: RemoveStringCast[39m
+  [31;1m⨯[39;22m [90mLine 351: RemoveIntegerCast[39m
+  [32;1m✓[39;22m [90mLine 351: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 356: RemoveMethodCall[39m
+
+  [39;100;1m RUN [39;49;22m src/Resources/NodeShareResource.php
+  [32;1m✓[39;22m [90mLine 83: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 83: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 87: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 87: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 178: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 179: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 188: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 253: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 255: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 255: InstanceOfToTrue[39m
+  [32;1m✓[39;22m [90mLine 255: InstanceOfToFalse[39m
+  [32;1m✓[39;22m [90mLine 255: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 256: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 258: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 261: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 261: RemoveNot[39m
+  [32;1m✓[39;22m [90mLine 262: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 268: RemoveIntegerCast[39m
+  [32;1m✓[39;22m [90mLine 268: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 270: CoalesceRemoveLeft[39m
+  [31;1m⨯[39;22m [90mLine 270: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 272: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 272: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 273: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 278: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 278: GreaterToGreaterOrEqual[39m
+  [32;1m✓[39;22m [90mLine 278: GreaterToSmallerOrEqual[39m
+  [32;1m✓[39;22m [90mLine 278: DecrementInteger[39m
+  [31;1m⨯[39;22m [90mLine 278: IncrementInteger[39m
+  [32;1m✓[39;22m [90mLine 280: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 281: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 282: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 282: IdenticalToNotIdentical[39m
+  [31;1m⨯[39;22m [90mLine 282: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 283: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 283: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 284: CoalesceRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 284: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 285: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 285: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 285: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 286: RemoveIntegerCast[39m
+  [32;1m✓[39;22m [90mLine 286: TernaryNegated[39m
+  [32;1m✓[39;22m [90mLine 286: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 286: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 286: BooleanOrToBooleanAnd[39m
+  [32;1m✓[39;22m [90mLine 286: EmptyStringToNotEmpty[39m
+  [32;1m✓[39;22m [90mLine 293: RemoveMethodCall[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveLeft[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveRight[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveRight[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatRemoveRight[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatSwitchSides[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatSwitchSides[39m
+  [32;1m✓[39;22m [90mLine 295: ConcatSwitchSides[39m
+  [32;1m✓[39;22m [90mLine 344: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 344: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 354: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 354: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 354: IdenticalToNotIdentical[39m
+  [31;1m⨯[39;22m [90mLine 355: RemoveEarlyReturn[39m
+  [32;1m✓[39;22m [90mLine 360: AlwaysReturnNull[39m
+  [32;1m✓[39;22m [90mLine 386: RemoveMethodCall[39m
+
+  [39;100;1m RUN [39;49;22m src/Resources/StorageResource.php
+  [32;1m✓[39;22m [90mLine 65: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 65: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 70: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 70: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 152: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 161: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 162: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 163: RemoveArrayItem[39m
+
+  [39;100;1m RUN [39;49;22m src/Resources/NodeResource.php
+  [32;1m✓[39;22m [90mLine 176: AlwaysReturnEmptyArray[39m
+  [32;1m✓[39;22m [90mLine 177: RemoveArrayItem[39m
+  [32;1m✓[39;22m [90mLine 186: FalseToTrue[39m
+  [32;1m✓[39;22m [90mLine 208: IfNegated[39m
+  [32;1m✓[39;22m [90mLine 208: IdenticalToNotIdentical[39m
+  [32;1m✓[39;22m [90mLine 209: RemoveEarlyReturn[39m
+
+  [39;100;1m RUN [39;49;22m src/VaulterFilamentServiceProvider.php
+  [32;1m✓[39;22m [90mLine 14: RemoveMethodCall[39m
+  [39;41;1m UNTESTED [39;49;22m [39;1msrc/Resources/NodeGrantResource.php [39;22m[90m > Line 258: EmptyStringToNotEmpty - ID: 9195292f5046a697[39m
+[39;1m
+  [39;22m[90m                 // Filament validation already supplies these enum/string fields with their declared types.[39m[39;1m
+  [39;22m[90m                 type: (string) $data['subject_type'],[39m[39;1m
+  [39;22m[90m                 // @pest-mutate-ignore: RemoveStringCast[39m[39;1m
+  [39;22m[31m-                id: self::scalarId($data['subject_id'] ?? '')[39m[39;1m
+  [39;22m[32m+                id: self::scalarId($data['subject_id'] ?? 'PEST Mutator was here!')[39m[39;1m
+  [39;22m[90m             ),[39m[39;1m
+  [39;22m[90m             level: GrantLevel::from((string) $data['level']),[39m[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveStringCast[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeGrantResource.php [39;22m[90m > Line 314: RemoveEarlyReturn - ID: e22376b0699b9bcf[39m
+[39;1m
+  [39;22m[90m     {[39m[39;1m
+  [39;22m[90m         // Both values also produce `find() === null`; this fast path avoids a needless query.[39m[39;1m
+  [39;22m[90m         if ($id === null || $id === '') {[39m[39;1m
+  [39;22m[31m-            // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty[39m[39;1m
+  [39;22m[31m-            return null;[39m[39;1m
+  [39;22m[32m+            [39m[39;1m
+  [39;22m[90m         }[39m[39;1m
+  [39;22m[90m         $model = Config::nodeModel();[39m[39;1m
+  [39;22m[90m         return $model::query()->find($id);[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeGrantResource.php [39;22m[90m > Line 349: RemoveStringCast - ID: 328332f25cea08c2[39m
+[39;1m
+  [39;22m[90m             return $value;[39m[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveEarlyReturn[39m[39;1m
+  [39;22m[90m         }[39m[39;1m
+  [39;22m[31m-        $string = (string) $value;[39m[39;1m
+  [39;22m[32m+        $string = $value;[39m[39;1m
+  [39;22m[90m         return ctype_digit($string) ? (int) $string : $string;[39m[39;1m
+  [39;22m[90m     }[39m[39;1m
+  [39;22m[90m     private static function notifyDenied(string $body): void[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeGrantResource.php [39;22m[90m > Line 351: RemoveIntegerCast - ID: 223dc87412df7de7[39m
+[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveEarlyReturn[39m[39;1m
+  [39;22m[90m         }[39m[39;1m
+  [39;22m[90m         $string = (string) $value;[39m[39;1m
+  [39;22m[31m-        return ctype_digit($string) ? (int) $string : $string;[39m[39;1m
+  [39;22m[32m+        return ctype_digit($string) ? $string : $string;[39m[39;1m
+  [39;22m[90m     }[39m[39;1m
+  [39;22m[90m     private static function notifyDenied(string $body): void[39m[39;1m
+  [39;22m[90m     {[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeShareResource.php [39;22m[90m > Line 270: EmptyStringToNotEmpty - ID: 769e5d0a7453ce88[39m
+[39;1m
+  [39;22m[90m         $permissions = (int) ($data['permissions'] ?? 0);[39m[39;1m
+  [39;22m[90m         // @pest-mutate-ignore: DecrementInteger,IncrementInteger[39m[39;1m
+  [39;22m[90m         /** @var string $password */[39m[39;1m
+  [39;22m[31m-        $password = $data['password'] ?? '';[39m[39;1m
+  [39;22m[32m+        $password = $data['password'] ?? 'PEST Mutator was here!';[39m[39;1m
+  [39;22m[90m         /** @var string $expiresAt */[39m[39;1m
+  [39;22m[90m         $expiresAt = $data['expires_at'] ?? '';[39m[39;1m
+  [39;22m[90m         $maxUses = $data['max_uses'] ?? null;[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeShareResource.php [39;22m[90m > Line 278: IncrementInteger - ID: b448c5a7fb6f2cdf[39m
+[39;1m
+  [39;22m[90m         $expiresAt = $data['expires_at'] ?? '';[39m[39;1m
+  [39;22m[90m         $maxUses = $data['max_uses'] ?? null;[39m[39;1m
+  [39;22m[90m         $minted = app(CreateShareLinkAction::class)->execute(node: $node, data: new CreateShareLinkData([39m[39;1m
+  [39;22m[31m-            permissions: $permissions > 0 ? $permissions : Permission::Read->value,[39m[39;1m
+  [39;22m[32m+            permissions: $permissions > 1 ? $permissions : Permission::Read->value,[39m[39;1m
+  [39;22m[90m             // Filament validation already supplies enum/string and toggle values with these types.[39m[39;1m
+  [39;22m[90m             level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)),[39m[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveStringCast[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeShareResource.php [39;22m[90m > Line 282: EmptyStringToNotEmpty - ID: 305c0cc07820b10b[39m
+[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveStringCast[39m[39;1m
+  [39;22m[90m             scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)),[39m[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveStringCast[39m[39;1m
+  [39;22m[31m-            password: $password === '' ? null : $password,[39m[39;1m
+  [39;22m[32m+            password: $password === 'PEST Mutator was here!' ? null : $password,[39m[39;1m
+  [39;22m[90m             requireLogin: (bool) ($data['require_login'] ?? false),[39m[39;1m
+  [39;22m[90m             // @pest-mutate-ignore: RemoveBooleanCast[39m[39;1m
+  [39;22m[90m             allowDiscovery: (bool) ($data['allow_discovery'] ?? false),[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[39;41;1m UNTESTED [39;49;22m[39;1m [39;22m[39;1msrc/Resources/NodeShareResource.php [39;22m[90m > Line 355: RemoveEarlyReturn - ID: e7532a411c60c34a[39m
+[39;1m
+  [39;22m[90m     {[39m[39;1m
+  [39;22m[90m         // Both values also produce `find() === null`; this fast path avoids a needless query.[39m[39;1m
+  [39;22m[90m         if ($id === null || $id === '') {[39m[39;1m
+  [39;22m[31m-            // @pest-mutate-ignore: BooleanOrToBooleanAnd,EmptyStringToNotEmpty[39m[39;1m
+  [39;22m[31m-            return null;[39m[39;1m
+  [39;22m[32m+            [39m[39;1m
+  [39;22m[90m         }[39m[39;1m
+  [39;22m[90m         $model = Config::nodeModel();[39m[39;1m
+  [39;22m[90m         return $model::query()->find($id);[39m[39;1m
+  [39;22m[39;1m
+[39;22m
+[39;1m  [39;22m[90mMutations:[39m[39;1m [39;22m[31;1m8 untested[39;22m[90m,[39m[39m [39m[32;1m170 tested[39;22m
+[39m  [39m[90mScore:[39m[39m     [39m[39m95.51%[39m
+[39m  [39m[90mDuration:[39m[39m  [39m[39m211.44s[39m
+
+
+exit: 0
+elapsed_seconds: 235.842
