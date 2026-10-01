@@ -3,14 +3,14 @@ projection: decision-archive
 projection_version: v1
 source_scope: decisions/
 through: 2026-09-29/D08
-inputs_sha256: 29d59a2fb2805bc211fbefc8c156aebecc4a5a6165b280def96659941747c7d1
+inputs_sha256: 22e4ab046a8c7b21593227ab6975798a1b1543d5549b88841b3b1926014a3cae
 generated_by: task plan-views decisions
 -->
 
-# Архив решений
+# Solutions archive
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
-| ID | Date | Status | Items | Решение |
+| ID | Date | Status | Items | Solution |
 |:--|:--|:--|:--|:--|
-| — | — | — | — | Нет записей |
+| — | — | — | — | No entries |

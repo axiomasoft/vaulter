@@ -49,6 +49,39 @@ packages/core/tests/Feature packages/core/tests/Panels \
 packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
 ```
 
+### Concurrency tests
+
+SQLite serialises writes, so a race test on it passes even against defective code.
+Any test that must prove behaviour under real concurrency (two writers on one row,
+a lock held across a read-modify-write, a sweep racing an upload) runs on PostgreSQL
+through `Vaulter\Tests\Concurrency\ForkRace`: each task runs in its own forked
+process on its own connection, and a file barrier releases them together.
+
+```php
+ForkRace::skipUnlessSupported($this); // pgsql + pcntl + posix, otherwise skipped
+
+$outcomes = ForkRace::run([
+    fn () => DB::transaction(fn () => bump(lock: true)),
+    fn () => DB::transaction(fn () => bump(lock: true)),
+]);
+
+expect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true]);
+```
+
+Each `RaceOutcome` carries `ok`, the task's JSON-serialisable `value`, and the thrown
+`exception`/`message` (`failedWith(SomeException::class)`). Fixtures the children
+read must be committed: bind the test directory with `DatabaseMigrations`, not
+`RefreshDatabase`. The harness refuses a database whose name does not end in `_test`.
+Packages reach it through the `Vaulter\Tests\` autoload-dev mapping to `../core/tests/`.
+
+Run the harness suite locally exactly as the `test-pgsql` CI job does:
+
+```bash
+DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 \
+DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret \
+scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency
+```
+
 All quality tooling is wired through the `Makefile`:
 
 | Command | What it does |

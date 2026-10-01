@@ -2,41 +2,41 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-09-29
-inputs_sha256: 485ba09c457a85fb703a4b4bd847c70921d697fee6942aa49176e73a42e8e797
+through: 2026-10-01
+inputs_sha256: c9d9afafc8751d8c2ce1ea9914e676f7f28d9c7dd5fcc785654346ec789449c9
 generated_by: task plan-views status
 -->
 
-# Статус плана
+# Plan status
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
-| Last Updated | 2026-09-29 |
+| Last Updated | 2026-10-01 |
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 0/4 | 🟡 In progress |
+| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 1/4 | 🟡 In progress |
 
 ## Phase P0
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
-| P0.2 | Харнесс конкурентности PostgreSQL | ⬜ Not started | — |
+| P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-01 |
 | P0.3 | Фикстура данных 0.2 | ⬜ Not started | — |
 | P0.4 | ADR 0019–0024 | ⬜ Not started | — |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
 | 2026-09-29 | claude-opus-5-5/high | plan-design · no-op · Plan created from OPUS audit (D01–D06); P0 detailed, P1–P8 skeletons in backlog/. Journal seed missing at creation, recorded during P0 finalize-design. |
 | 2026-09-29 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
@@ -63,6 +63,9 @@ generated_by: task plan-views status
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-29 | gpt-6-sol/medium | plan-design · no-op · Bounded metadata refresh after P0.1: resolvable P0.3 references only; original tag commands/scope/OPUS unchanged. plan-lint exit 0. Evidence: findings/P0.1-metadata-repair.md. |
 | 2026-09-29 | gpt-6-sol/medium | plan-audit · audit-green · Bounded review of two metadata references and closure fields; original GREEN semantic design retained, no new feature design. plan-lint exit 0; tag commands unchanged. Evidence: findings/P0.1-metadata-repair.md. |
+| 2026-10-01 | claude-code | plan-run · in-progress · — |
+| 2026-10-01 | claude-opus-5-5/high | plan-run · closed-green · ForkRace harness: PG 4 passed ×5, SQLite 4 skipped, sequential negative control red, root PG lane = baseline, CI step added. Pending outside item: hosted CI O-3-CI, independent review. Evidence: artifacts/P0.2/completion.md |
+| 2026-10-01 | claude-opus-5-5/high | plan-run · decision-pending · note abbreviated; full text: journal.jsonl:27 |
 
 ## Owner Gates
 

@@ -131,7 +131,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_pgsql, pgsql
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pcntl, posix
           coverage: none
           tools: composer:v2
 
@@ -160,6 +160,12 @@ jobs:
           packages/core/tests/Schema
           packages/core/tests/Sharing
           packages/core/tests/Webhooks
+
+      # The ForkRace harness (P0.2): forked children race on their own connections.
+      # always() — a known baseline failure of the suite above must not hide it.
+      - name: 'Postgres: concurrency harness'
+        if: always()
+        run: vendor/bin/pest --ci packages/core/tests/Concurrency
 
       # The id-strategy schemas — each proves the self-referencing v_nodes.parent_id FK
       # migrates (the PK must be declared before the FK; see UlidIds/Uuid7Ids::key).

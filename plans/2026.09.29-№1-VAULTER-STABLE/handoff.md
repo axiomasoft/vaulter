@@ -1,26 +1,26 @@
-# HANDOFF — 2026-09-29 — after P0.1
+# HANDOFF — 2026-10-01 — after P0.2
 
-**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2 P0.3
+**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.3
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Batch | B0-A |
 | Model class | implementation |
 | Effort | medium |
 | Capabilities | — |
 | Context | continue-root |
-| Суть | P0.1 завершён с принятыми ограничениями; следующий рекомендуемый batch — P0.2/P0.3. |
+| The bottom line | P0.2 closed green; P0.3 is the remaining member of B0-A in the same invocation (O-2 MySQL preflight exit 0). |
 
 ```session-continuity-decision/v1
-{"evidence": ["batch:089a1a9d862604a2176158303faa346118e5d9217543e9464606b08154a7f610", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:handoff.md:after-P0.1"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
+{"evidence": ["batch:fd72630fd555d7586bfa11850ba086b267d66920ac2d9e9cd25277987c7917d3", "loaded-inputs:reusable", "cold-start-cost:0"], "outcome": "continue-root", "reason": "compatible-active-work", "runnable": true, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** P0.1 завершён с отклонениями по явному указанию владельца «доделывай, но без тяжелых перепроверок». scripts/php84, scripts/db-preflight.sh, CONTRIBUTING.md, findings/baseline.md и измеренные логи готовы. Лёгкие критерии проверены: PHP/PG positive + negative controls, bash syntax, unchanged manifests, полнота таблицы/классификации/ссылок и plan-lint. 95 команд завершены, 4 mutation-процесса ранее остановлены с actual exit -15. Неполные mutation gates не объявлены GREEN.
+**Done:** P0.2 — `ForkRace`/`RaceOutcome`/`ForkRaceTest` in `packages/core/tests/Concurrency`; PG 4 passed ×5, SQLite 4 skipped; sequential-harness negative control turns the lost-update test red; root PG lane 9/9 exit 0, base 391/0/4 = baseline; `pcntl, posix` in PG jobs, step `Postgres: concurrency harness`; media autoload-dev; CONTRIBUTING «Concurrency tests». Evidence: `artifacts/P0.2/completion.md`.
 
-**Remaining:** P0.2/P0.3 (отдельный запрос; для P0.3 нужен O-2), затем P0.4. Работы P0.1 повторно не требуются в текущем согласованном объёме. Полные mutation-score Core SQLite/PG, Drive и Documents остаются неизвестными; запускать их только при отдельном изменении ресурсного ограничения, не автоматически.
+**Remaining:** P0.3 (B0-A), then P0.4 (solo, frontier/medium). Phase P0 acceptance still needs hosted CI O-3-CI (owner authorisation) and the independent review `full` for B0-A.
 
-**Sources of truth:** phases/P0/P0.1.md; findings/baseline.md; artifacts/P0.1/owner-close.log; artifacts/P0.1/close-validation.log; journal.jsonl.
+**Sources of truth:** phases/P0/P0.2.md; artifacts/P0.2/completion.md; findings/runtime-0.26-literal-migration.md; journal.jsonl.
 
-**Open risks:** Hosted CI запрещён владельцем; push/dispatch/Docker не выполнялись. O-1 снят, O-2 относится к будущему P0.3. B-12 Media union 94.35% < 95%, exit 1, и прочие baseline failures классифицированы и переданы предложенным владельцам, не исправлялись вне scope. Local PCOV line coverage не доказывает engine parity с hosted Xdebug CI (B-15). Четыре неполных mutation verdict — принятое ограничение B-16, не релизное свидетельство. Фаза P0 остаётся открыта.
+**Open risks:** Task 0.26 translated schema literals without a legacy reader; this plan was migrated locally (findings/runtime-0.26-literal-migration.md) — other Russian-literal plans will refuse the same way. Hosted CI is not authorised; «example passes in CI» remains unproven until O-3-CI.
 
-**Execution:** Все mutation-процессы и координаторы завершены; автоматических рестартов нет. Ignored worktrees/scratch сохранены. Чужие существующие изменения плана не включаются в scoped code/report commits.
+**Execution:** No background processes. Temporary negative-control edits reverted byte-identically.

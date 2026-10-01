@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
@@ -72,6 +73,13 @@ uses(BrokenPanelBootTestCase::class)->in(
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit
 // tests) moved to the vaulter-documents package (P2 #5 / ADR-0015, D2); they run under
 // that package's own Pest suite.
+
+// The ForkRace harness (P0.2): forked children race on their OWN PostgreSQL
+// connections, so fixtures must be committed — DatabaseMigrations, not
+// RefreshDatabase (its wrapping transaction is invisible to another connection).
+uses(TestCase::class, DatabaseMigrations::class)->in(
+    $core.'/Concurrency',
+);
 
 uses(UlidTestCase::class, RefreshDatabase::class)->in(
     $core.'/Ulid',

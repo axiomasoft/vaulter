@@ -2,11 +2,11 @@
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | 2026.09.29-№1-VAULTER-STABLE |
 | Short ID | PLAN2 |
-| Title | План №1 — Vaulter 1.0: канон, корректность и стабильный API |
+| Title | Plan №1 — Vaulter 1.0: канон, корректность и стабильный API |
 | Layout | v2 |
 | Document Type | Executable Master Plan (катящийся дизайн с немедленным исполнением — D03) |
 | Authoring Model | claude-opus-5-5/high (создание плана, дизайн P0, 2026-09-29) |
@@ -99,7 +99,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 Детализирована: P0. Фазы P1–P8 — skeleton в `backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
 окончательная — execution-sheet в `roadmap.md`.
 
-| Batch | Items | Model class/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Why |
 |:--|:--|:--|:--|:--|:--|
 | solo | P0.1 | implementation/medium | manual | light | recommended: окружение (`scripts/php84`, preflight БД) и базовая линия — предусловие остальных items; сначала bootstrap, затем O-1 preflight. |
 | B0-A | P0.2 | implementation/medium | manual | full | recommended: харнесс конкурентности — фундамент доказательств T0 (V02, V03, V13, V17, V19–V21); первым в B0-A. |
@@ -124,14 +124,14 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 ### Exported
 
-| Контракт | Версия | Статус | Потребители | Уведомлены |
+| Contract | Version | Status | Consumers | Notified |
 |:--|:--|:--|:--|:--|
 | Публичный PHP API (`Vaulter::drive()` handle, контракты OPUS 05/06) | P3 | draft | хосты, авторы расширений | — |
 | REST v1 + OpenAPI `openapi/vaulter-v1.yaml` | P6 | draft | `@vaulter/vue`, хаб, хосты | — |
 
 ### Consumed
 
-| Контракт | Донор-план | Pinned | Замечено | Реакция |
+| Contract | Donor plan | Pinned | Spotted | Reaction |
 |:--|:--|:--|:--|:--|
 | Кандидат `v0.2.0` | vaulter (архивные планы) | `v0.2.0` | 2026-09-29 | Исходная точка; BC PHP не обязательна (AD01), данные и конфиг 0.2 мигрируют. |
 | Процесс Task layout v2, катящийся дизайн | `corex:PLAN3` | 2026-09-29 | 2026-09-29 | Принят (B4, D03). |

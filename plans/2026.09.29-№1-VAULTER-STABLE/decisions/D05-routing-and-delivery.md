@@ -13,7 +13,7 @@ superseded_by: null
 **Evidence:** RAG:— OPUS `13-workstreams.md` (правила 1–6, маршрутизация opus/sonnet/haiku); `corex:PLAN3` `session-routing.md`;
 `.swissknife.json` (providers claude-code, codex, cursor); история `main` (слияния через PR #47, #48).
 
-## Решение
+## Solution
 
 1. **Классы.** Маршрут аудита переводится в семантический класс Routing: `opus` → `frontier`, `sonnet` →
    `implementation`, `haiku` → `economy`; effort — из аудита (`low|medium|high`), `xhigh` — для массовых механических
@@ -26,11 +26,11 @@ superseded_by: null
    аудита. Push, PR и merge — **owner gate O-3**. Гейт затронутых пакетов (Pint, PHPStan, Pest; для Vue — `vue-tsc`,
    vitest, build) зелёный до коммита — правило 1 OPUS в остальном сохраняется.
 
-## Почему
+## Why
 
 Фазовый аудит проверяет фазу целиком; PR на item дробит ревью и множит конфликты golden-снимков. Классы Routing
 provider-neutral по протоколу Task.
 
-## Последствия
+## Consequences
 
 `session-routing.md` задаёт пул моделей; `roadmap.md` `execution-sheet/v1` — конкретного исполнителя и ревьюера на строку.

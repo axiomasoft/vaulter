@@ -14,7 +14,7 @@ superseded_by: null
 `https://repo.packagist.org/p2/axioma-studio/vaulter-core.json` → 404, `https://registry.npmjs.org/@vaulter%2fvue` → 404;
 ни один `composer.json` в `~/projects/*` и `~/projects/*/*` (кроме самого vaulter) не требует `vaulter`.
 
-## Решение
+## Solution
 
 1. **Q1 — релиза 0.2.1 нет.** 0.2.0 не опубликован в Packagist/npm, локальных потребителей нет. Фаза P1 входит в
    **0.3.0** (AD01); цепочка upgrade-миграций — одна (OPUS 08 §3, без выделения №3/№7/ремонта N04 в 0.2.1).
@@ -26,11 +26,11 @@ superseded_by: null
    выходит только при теге AzGuard (owner gate O-4); Q10 `DELETE` = purge; Q11 планировщик включён; Q12 MySQL
    «поддерживается»; Q13 Laravel 12 сохраняется; Q14 OpenAPI вручную; Q15 префикс `vaulter/`.
 
-## Почему
+## Why
 
 Отдельный 0.2.1 без внешних установок — лишний релиз и две цепочки миграций; README под API, который удаляется в той же
 0.3, — выброшенная работа.
 
-## Последствия
+## Consequences
 
 UPGRADE.md описывает один переход 0.2 → 0.3. Если владелец сообщит о внешних установках 0.2 — новый D# возвращает 0.2.1.

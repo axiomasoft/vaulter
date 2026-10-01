@@ -3,15 +3,15 @@ projection: decision-current
 projection_version: v1
 source_scope: decisions/
 through: 2026-09-29/D08
-inputs_sha256: 29d59a2fb2805bc211fbefc8c156aebecc4a5a6165b280def96659941747c7d1
+inputs_sha256: 22e4ab046a8c7b21593227ab6975798a1b1543d5549b88841b3b1926014a3cae
 generated_by: task plan-views decisions
 -->
 
-# Текущие решения
+# Current solutions
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
-| ID | Date | Status | Items | Решение |
+| ID | Date | Status | Items | Solution |
 |:--|:--|:--|:--|:--|
 | D01 | 2026-09-29 | accepted | P0, P1, P2, P3, P4, P5, P6, P7, P8 | 1. Каталог `audits/2026-09-29-stable-audit/opus/` (далее **OPUS**) — норматив плана: решения `02-decisions.md` D01–D40, находки `01-review.md` N01–N28 и Codex E1–E10, сценарии `14-verification.md` V01–V37, спецификации 03–12. Тексты не копируются в план — только ссылки с §-якорем. 2. Чтобы не путать с решениями плана, решения аудита в плане пишутся **`AD01…AD40`** (= OPUS `02-decisions.md#dNN`). Находки `Nxx`/`Exx` и сценарии `Vxx` — как в аудите. 3. Нумерация сохраняется: фаза аудита `Fn` = фаза плана `Pn`; пункты `P0.1…P8.3` — без перенумерации (на них ссылаются сценарии V). 4. Решение аудита меняется только новым `D##` этого плана со ссылкой на заменяемый `AD##`. Расхождение кода с досье в ходе item — стоп и описание расхождения (OPUS 13, правило 5), не импровизация. 5. Исходный аудит Perplexity и пакет Codex (`audits/2026-09-29-stable-audit/0*.md`, `research/`) — провенанс, не норматив. |
 | D02 | 2026-09-29 | accepted | P1, P1.11, P2, P4, P7, P8 | 1. **Q1 — релиза 0.2.1 нет.** 0.2.0 не опубликован в Packagist/npm, локальных потребителей нет. Фаза P1 входит в **0.3.0** (AD01); цепочка upgrade-миграций — одна (OPUS 08 §3, без выделения №3/№7/ремонта N04 в 0.2.1). 2. **P1.11 сужается** до метаданных: URL `axiomasoft` в `composer.json`/`package.json`/`VaulterException::docs()`/install command. Переписывание README под 0.2 API не делается — README пишется с нуля в P7.6 (OPUS 12 §4, §8). 3. Q2–Q15 — решения по умолчанию OPUS 15 действуют без изменений: Q2 «данные 0.2 возможны» (строгий preflight, upgrade-миграции, `repair-scopes` обязательны); Q3 бит `Comment`; Q4 удалить own-tables; Q5 удалить `table`/`template`; Q6 `auth:sanctum` по умолчанию; Q7 удалить Reverb-драйвер коллаборации; Q8 outbox откатывает мутацию; Q9 `vaulter-azgard` выходит только при теге AzGuard (owner gate O-4); Q10 `DELETE` = purge; Q11 планировщик включён; Q12 MySQL «поддерживается»; Q13 Laravel 12 сохраняется; Q14 OpenAPI вручную; Q15 префикс `vaulter/`. |
