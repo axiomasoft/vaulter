@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-01
-inputs_sha256: c9d9afafc8751d8c2ce1ea9914e676f7f28d9c7dd5fcc785654346ec789449c9
+inputs_sha256: e915eeff4982245e88205ac04117fae52e47ff76bf2ff2cd065975c70aaffbf2
 generated_by: task plan-views status
 -->
 
@@ -31,7 +31,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
 | P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-01 |
-| P0.3 | Фикстура данных 0.2 | ⬜ Not started | — |
+| P0.3 | Фикстура данных 0.2 | 🟡 In progress | 2026-10-01 |
 | P0.4 | ADR 0019–0024 | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -66,6 +66,8 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-01 | claude-code | plan-run · in-progress · — |
 | 2026-10-01 | claude-opus-5-5/high | plan-run · closed-green · ForkRace harness: PG 4 passed ×5, SQLite 4 skipped, sequential negative control red, root PG lane = baseline, CI step added. Pending outside item: hosted CI O-3-CI, independent review. Evidence: artifacts/P0.2/completion.md |
 | 2026-10-01 | claude-opus-5-5/high | plan-run · decision-pending · note abbreviated; full text: journal.jsonl:27 |
+| 2026-10-01 | claude-opus-5-5/high | plan-run · in-progress · — |
+| 2026-10-01 | claude-opus-5-5/high | plan-run · decision-pending · PG dumps (bigint, ulid, preflight-red) generated, verified, deterministic. MySQL blocked: v0.2.0 migrations fail on MySQL 8 (1215, stored generated column over CASCADE FK). Owner decision needed. Evidence: artifacts/P0.3/completion.md |
 
 ## Owner Gates
 

@@ -1,0 +1,82 @@
+# v0.2.0 data fixture
+
+Database dumps of a Vaulter **0.2.0** install holding every data shape the 0.2 → 0.3 upgrade migrations
+(OPUS 08 §3) must carry over or refuse. Consumers: V15 (upgrade on the fixture), V14 (`repair-scopes` on
+`legacy:snull`), upgrade migrations №1 (preflight), №5 (documents, every `format`), №6 (N04 «second roots»),
+№7 (`scope_key`), №8 (soft-deleted grants/shares).
+
+Generated from `v0.2.0` (`983c345c1088363a1f52c6b44096f4e82c6a2cd4`): the tag's own core migrations and the tag's
+API/models (`scripts/fixtures/seed-v0.2.php`), run from a `git worktree` of the tag — never the current code.
+
+## Regenerate / verify
+
+```bash
+scripts/fixtures/make-v0.2-dump.sh            # rewrite the dumps + SHA256SUMS (recreates the *_test schema)
+scripts/fixtures/make-v0.2-dump.sh --verify   # regenerate into a temp dir, compare SHA256SUMS, load, count
+FIXTURE_CONFIGS="pgsql-bigint pgsql-ulid pgsql-bigint-preflight-red" scripts/fixtures/make-v0.2-dump.sh --verify
+```
+
+Prerequisites: `scripts/db-preflight.sh pgsql|mysql` exit 0 (D04), PHP 8.4 via `scripts/php84`. The worktree
+`build/fixtures/v0.2.0` is created and `composer install`ed on first run (`build/` is not committed).
+Two consecutive runs produce byte-identical files: frozen clock, counter-based ULID/UUID/random-string
+factories, fixed bytes, a content-derived encryption IV, `pg_dump --restrict-key`; the DB-clock default
+`v_blobs.first_seen_at` is pinned to `committed_at` by the seeder.
+
+Tools: `pg_dump` 16.15 (the server's major, not the `pg_wrapper` default),
+`--no-owner --no-privileges --no-comments --inserts --rows-per-insert=100 --quote-all-identifiers`;
+`mysqldump` 8.0.46, `--skip-dump-date --skip-comments --no-tablespaces --skip-extended-insert --order-by-primary`.
+
+## Configurations
+
+| Dump | Status |
+|:--|:--|
+| `pgsql-bigint.sql` | generated |
+| `pgsql-ulid.sql` | generated |
+| `pgsql-bigint-preflight-red.sql` | generated |
+| `mysql-bigint.sql` | **not generated** — see «MySQL» below |
+| `mysql-ulid.sql` | **not generated** — see «MySQL» below |
+
+Feature flags at seed time: `document_versions`, `share_links`, `comments` on (the document version table
+exists only with `document_versions`); tenancy off; host-key strategy = the dump's `bigint`/`ulid`.
+
+## Composition (each main dump)
+
+| Shape | Count | Rows | For |
+|:--|:--|:--|:--|
+| storages of three owners (`owner_type = fixture_host`); bigint `owner_id` `1,2,3`; ulid `01ARZ3NDEKTSV4RRFFQ69G5FAV/W/X` | 3 | `v_storages` | №2, №3; arbitrary string HK — P1.7/V23 |
+| tree per storage: root, `Projects`, `Projects/Reports 2025`, `Projects/2025` (moved), `Archive`, files, `old.txt` in trash, `Temp/` folder in trash | 10 nodes/storage | `v_nodes` | №6, AD27 |
+| files with 1 version (`brief.txt`, `old.txt`, `note.txt`) and 3 versions (`q1.csv`) | 15 files, 21 versions | `v_files`, `v_file_versions` | №4, V03 |
+| `legacy:snull`: `dedup_scope=storage`, `storage_id NULL` (brief.txt of storage 1) | 1 | `v_blobs` | №7, V14 |
+| `legacy:tnull`: `dedup_scope=tenant`, `tenant_id NULL` (tenancy off) | 2 | `v_blobs` | №7, V14 |
+| one blob shared by two storages (`shared.bin` in storages 2 and 3) | 1 | `v_blobs` | №7, V14 |
+| documents of every 0.2 `DocumentType`: `richtext` (Notes, 2 versions), `table` (Budget), `markdown` (Readme, 2 versions), `template` (Letter template) | 4 | `v_nodes`, `v_node_document_versions` | №5 |
+| N04 «second roots»: documents with `parent_id NULL` — `Loose note` and `Projects` (name clash with the root's `Projects` folder) | 2 | `v_nodes` | №6 N04 repair |
+| grants on `Projects`: active user + role, soft-deleted (`deleted_at`) user + role | 4 | `v_node_grants` | №8 |
+| shares on `brief.txt`: active, revoked (`revoked_at`), soft-deleted (`deleted_at`) | 3 | `v_node_shares` | №8 |
+| activity: create, upload, version, rename, move, trash, restore, grant, share, upload-session | 68 | `v_activity` | №9, P5 |
+| outbox: relayed (`dispatched`) and `pending`; webhook endpoint + 4 delivered deliveries | 64 / 1 / 4 | `v_outbox`, `v_webhook_*` | №9, P5 |
+| tus upload in progress (`uploading`, 4 of 10 bytes) | 1 | `v_upload_sessions` | P3.7 |
+
+Raw SQL only where the 0.2 API never produces the shape (each marked `raw:` in the seeder): `legacy:snull`
+(0.2 always stamps the uploading storage), the DB-clock `first_seen_at`, and the preflight-red rows below.
+The N04 second roots, `legacy:tnull`, soft-deleted grants/shares come from the 0.2 API itself.
+
+`pgsql-bigint-preflight-red.sql` holds only the shapes that make preflight №1 refuse, one of each (negative test
+in P2.1): a node with `v_nodes.deleted_at` set (`gone.txt`), a document node without version rows (`Headless`),
+and own tables of a storage panel (`vlegacy_storages`, one row). These shapes are absent from the main dumps.
+
+## Row counts (`--verify` compares these lines)
+
+```text
+pgsql-bigint.sql: migrations=19 v_activity=68 v_blobs=20 v_file_version_blobs=21 v_file_versions=21 v_files=15 v_node_comments=0 v_node_document_versions=8 v_node_grants=4 v_node_shares=3 v_nodes=39 v_outbox=64 v_storages=3 v_upload_parts=0 v_upload_sessions=1 v_webhook_deliveries=4 v_webhook_endpoints=1 owners=1,2,3
+pgsql-ulid.sql: migrations=19 v_activity=68 v_blobs=20 v_file_version_blobs=21 v_file_versions=21 v_files=15 v_node_comments=0 v_node_document_versions=8 v_node_grants=4 v_node_shares=3 v_nodes=39 v_outbox=64 v_storages=3 v_upload_parts=0 v_upload_sessions=1 v_webhook_deliveries=4 v_webhook_endpoints=1 owners=01ARZ3NDEKTSV4RRFFQ69G5FAV,01ARZ3NDEKTSV4RRFFQ69G5FAW,01ARZ3NDEKTSV4RRFFQ69G5FAX
+pgsql-bigint-preflight-red.sql: migrations=19 v_activity=3 v_blobs=1 v_file_version_blobs=1 v_file_versions=1 v_files=1 v_node_comments=0 v_node_document_versions=0 v_node_grants=0 v_node_shares=0 v_nodes=4 v_outbox=3 v_storages=1 v_upload_parts=0 v_upload_sessions=0 v_webhook_deliveries=0 v_webhook_endpoints=0 vlegacy_storages=1 owners=1
+```
+
+## MySQL
+
+`v0.2.0` cannot be installed on MySQL 8.0 (checked on 8.0.46): its nodes migration adds the STORED generated
+column `v_nodes.sibling_active` over `parent_id`, whose foreign key is `ON DELETE CASCADE`; MySQL rejects that
+(`SQLSTATE[HY000] 1215 Cannot add foreign key constraint`, `PanelTablesBuilder.php:1139` at the tag). The tag's
+CI had no MySQL job. The fixture schema is not altered to work around it (P0.3 rule), so no MySQL dump exists
+until the owner decides how the MySQL requirement of OPUS 13 P0.3 is met.
