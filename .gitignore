@@ -35,9 +35,10 @@ docs/.vitepress/dist/
 /.agents/**
 !/.agents/skills/
 !/.agents/skills/**
-/.agents/skills/**/*.bak
 !/.agents/plugins/
 !/.agents/plugins/**
+/.agents/skills/**/*.bak
+/.agents/plugins/**/*.bak
 /.swissknifeman/
 
 # AI tooling — machine-specific (абсолютные пути / локальный кэш). Портируемая карта
