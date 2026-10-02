@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-02
-inputs_sha256: 1a29c0df9bd57250f18b511949342b9da253be2a9bfcff1b8722612cf8e657db
+inputs_sha256: 6c427c562f9e73ca9cae0c3aba29b9e49139d2d062b2b3de690097fea51fde5c
 generated_by: task plan-views status
 -->
 
@@ -16,14 +16,14 @@ generated_by: task plan-views status
 | Field | Meaning |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-10-02 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 2/4 | 🟡 In progress |
+| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
 
 ## Phase P0
 
@@ -32,7 +32,7 @@ generated_by: task plan-views status
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
 | P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-02 |
 | P0.3 | Фикстура данных 0.2 | 🟢 Done | 2026-10-02 |
-| P0.4 | ADR 0019–0024 | ⬜ Not started | — |
+| P0.4 | ADR 0019–0024 | 🟢 Done | 2026-10-02 |
 
 ## 6. Update Log
 
@@ -71,6 +71,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-02 | claude-opus-5-5/high | plan-run · no-op · B0-A review GREEN (findings/B0-A-review.md, D09); R6/R8 fixed and re-validated: PG 4 passed x5, SQLite skipped, negative control red. E22 = local CI step; hosted run stays phase gate O-3-CI.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-02 | claude-opus-5-5/high | plan-run · closed-green · PG 0.2 fixture (bigint, ulid, preflight-red): --verify OK, deterministic, all §4 shapes; MySQL refused by D09 (v0.2.0 not installable on MySQL 8). B0-A review GREEN. Evidence: artifacts/P0.3/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-02 | claude-code | plan-run · in-progress · — |
+| 2026-10-02 | claude-opus-5-5/medium | plan-run · closed-green · ADR 0019–0024 proposed, amendments 0009/0018, index +6; 40 AD records in mAInd project:vaulter; docs build green. Evidence: artifacts/P0.4/completion.md.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

@@ -1,6 +1,6 @@
-# HANDOFF — 2026-10-02 — after P0.3
+# HANDOFF — 2026-10-02 — after P0.4
 
-**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.4
+**Next:** waiting: owner authorisation of O-3-CI (push of the P0 candidate and `tests.yml` workflow_dispatch on that ref) before the P0 phase audit
 
 | Parameter | Meaning |
 |:--|:--|
@@ -8,19 +8,24 @@
 | Model class | frontier |
 | Effort | medium |
 | Capabilities | — |
-| Context | continue-root |
-| The bottom line | B0-A closed: P0.2 harness and P0.3 PostgreSQL fixture green, independent review GREEN; P0.4 (ADR 0019–0024) is the last P0 item. |
+| Context | waiting-owner |
+| The bottom line | All P0 items closed green; P0 phase stays open until the hosted O-3-CI run on the final candidate (D07 п.3). |
 
 ```session-continuity-decision/v1
-{"evidence": ["batch:fd72630fd555d7586bfa11850ba086b267d66920ac2d9e9cd25277987c7917d3", "loaded-inputs:reusable", "cold-start-cost:0"], "outcome": "continue-root", "reason": "compatible-active-work", "runnable": true, "schema_version": "session-continuity-decision/v1"}
+{"evidence": ["batch:e71bc33fae12ced0a57d7042349a981626a487520a71ff45afae806fea0c1dde", "loaded-inputs:reusable", "cold-start-cost:0"], "outcome": "waiting-owner", "reason": "owner-wait", "runnable": false, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** P0.2 — ForkRace PG harness, CI step, CONTRIBUTING; write-site allow/allow after review. P0.3 — PostgreSQL 0.2 fixture (`pgsql-bigint`, `pgsql-ulid`, `pgsql-bigint-preflight-red`), deterministic, `--verify` OK; MySQL refused by D09 (v0.2.0 not installable on MySQL 8). B0-A independent review GREEN, 9 of 10 findings fixed, R7 accepted (`findings/B0-A-review.md`).
+**Done:** P0.4 — ADR 0019–0024 (`proposed`) in `docs/adr/`, `Amended by` lines in ADR-0009/0018, six index rows; 40 AD records in mAInd `project:vaulter` (recall AD07/AD01/AD20/AD40 OK); docs build green; unit → ADR § 78/78 (`artifacts/P0.4/completion.md`). Local phase-level checks on the final tree (`artifacts/P0.4/phase-local/`): php84 --check, db-preflight pgsql/mysql, Concurrency 4 passed / 0 skipped, opus-coverage OK 1438/254/0, unittest 6 OK — all exit 0.
 
-**Remaining:** P0.4 (ADR 0019–0024, mAInd AD01–AD40; docs build ≈8 s). Then P0 phase acceptance: O-3-CI hosted run (owner action — push), phase audit only on explicit residual-risk question.
+**Owner decisions needed:**
+1. O-3-CI: authorise push of the P0 candidate branch and `tests.yml` workflow_dispatch on it (D07 п.3); the hosted run must show `Postgres: concurrency harness` success, 4 passed, 0 skipped.
+2. Root `pint --test` exits 1 on the same 35 files as baseline B-03 (30 `plans/archive`, 5 `load/`; owner P8.1). The phase-level Validation lists `pint --test` exit 0; confirm B-03 is accepted as a classified baseline failure for P0 acceptance (D07 п.3 wording), or assign the fix.
+3. Promotion of ADR 0019–0024 to `accepted` — owner action (OPUS 15).
 
-**Sources of truth:** decisions/D09-b0a-closure-owner-delegation.md; findings/B0-A-review.md; artifacts/P0.2/, artifacts/P0.3/; journal.jsonl.
+**Remaining:** O-3-CI hosted evidence → `audit-admission/v2` consent → P0 phase audit → close P0; PR/merge only after GREEN audit on a separate owner request.
 
-**Open risks:** O-3-CI not authorised yet; Task 0.26 literal regression affects other Russian-literal plans (findings/runtime-0.26-literal-migration.md). Run budget per D09 п.4: no hour-long runs.
+**Sources of truth:** decisions/D07-design-audit-remediation.md, D09-b0a-closure-owner-delegation.md; findings/baseline.md; artifacts/P0.4/; journal.jsonl.
+
+**Open risks:** VitePress ADR sidebar stops at 0014 (0016–0024 reachable only via the index) — outside P0.4 Files. Task 0.26 literal regression affects other Russian-literal plans (findings/runtime-0.26-literal-migration.md). Run budget per D09 п.4: no hour-long runs.
 
 **Execution:** No background processes. Worktree `build/fixtures/v0.2.0` kept (ignored).

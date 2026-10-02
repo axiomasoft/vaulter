@@ -1,0 +1,35 @@
+# P0.4 — Completion Notes
+
+**Result:** ADR 0019–0024 created in status `proposed`; ADR-0009 and ADR-0018 carry
+`> Amended by ADR-0021 (proposed).` / `> Amended by ADR-0022 (proposed).`; `docs/adr/index.md` has six new rows;
+40 AD records stored in mAInd `project:vaulter`.
+
+## Validation
+
+| Carrier | Result | Evidence |
+|:--|:--|:--|
+| `ls docs/adr/00{19..24}-*.md \| wc -l` | `6` | this session |
+| `grep -l '^\*\*Status:\*\* proposed' …` | `6` | this session |
+| `grep -c 'ADR-00(19..24)' docs/adr/index.md` | `6` | this session |
+| `grep -c 'Amended by ADR-0021' 0009` / `'Amended by ADR-0022' 0018` | `1` / `1` | this session |
+| Docs build (`docs.yml:build`, `npm run docs:build`) | exit 0, baseline green → not worse | `docs-build.log` |
+| `maind memory recall` AD07, AD01, AD20, AD40 | all four returned from `project:vaulter` | `maind-recall.txt` |
+| Self-check unit → ADR § | 78/78 units mapped | `unit-map.md` |
+
+`maind health --cwd` → `connected` before storing. Records stored via `maind memory remember --scope project:vaulter
+--type decision` (the CLI has no `store` subcommand; `remember` is its write verb); 40 ok, 0 failed. Source lines:
+`ad-memory.tsv`.
+
+## Notes on transfer (not in ADRs)
+
+- Index row count: annotating the existing 0009/0018 rows with "amended by ADR-0021/0022" would make the index grep
+  return 8 instead of 6; the amendment is therefore stated in the new rows ("amends ADR-0009/0018") and in the
+  amended ADR bodies only.
+- The VitePress sidebar (`docs/.vitepress/config.*`) lists ADRs only up to 0014 (0016–0018 are already absent); it is
+  outside this item's Files and was not changed.
+- OPUS D02 "Почему" cites "отмена ADR-0015"; `docs/adr/` has no ADR-0015 file. ADR-0019 phrases it as a reversal of
+  the earlier core/drive split without linking a missing record.
+- ADR-0022/0023/0024 have no "Отвергнуто" in their source decisions; their "Alternatives rejected" section says so
+  explicitly rather than inventing alternatives.
+- References use code spans for `audits/…` paths: docs build runs with `ignoreDeadLinks: false`, and `audits/` is
+  outside the docs tree.
