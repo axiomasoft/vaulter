@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vaulter\Load;
 
 use Illuminate\Database\Events\QueryExecuted;
@@ -12,7 +14,7 @@ final class P5PatchWindow
     {
         DB::listen(static function (QueryExecuted $query): void {
             $console = app()->runningInConsole();
-            $id = $console ? getenv('P5_SWEEP_TARGET') : request()->header('X-P5-Overlap', '');
+            $id = (string) ($console ? getenv('P5_SWEEP_TARGET') : request()->header('X-P5-Overlap', ''));
             if (!$console && request()->method() !== 'PATCH') {
                 return;
             }
@@ -26,6 +28,7 @@ final class P5PatchWindow
             );
             if ($console) {
                 fwrite(STDERR, 'P5_SWEEP_TARGET|'.$id.'|'.($lock === null ? 'refused' : 'granted').'|END'.PHP_EOL);
+
                 return;
             }
             if ($lock === null) {
