@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-02
-inputs_sha256: e5ddaf53e8ade11f7f276834f2251483abaebba4ad876e6f974f9ac146e368a0
+inputs_sha256: 11e8cbfd0827f656379e5f8a387c190f32145b383412145793b94800263c3e9f
 generated_by: task plan-views status
 -->
 
@@ -16,21 +16,21 @@ generated_by: task plan-views status
 | Field | Meaning |
 |:--|:--|
 | Version | — |
-| Status | 🟠 Done with deviations |
+| Status | 🟡 In progress |
 | Last Updated | 2026-10-02 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
+| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 2/4 | 🟡 In progress |
 
 ## Phase P0
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
-| P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-02 |
+| P0.2 | Харнесс конкурентности PostgreSQL | 🟡 In progress | 2026-10-02 |
 | P0.3 | Фикстура данных 0.2 | 🟢 Done | 2026-10-02 |
 | P0.4 | ADR 0019–0024 | 🟢 Done | 2026-10-02 |
 
@@ -75,6 +75,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-02 | claude-code | plan-run · in-progress · — |
 | 2026-10-02 | claude-opus-5-5/medium | plan-run · closed-green · ADR 0019–0024 proposed, amendments 0009/0018, index +6; 40 AD records in mAInd project:vaulter; docs build green. Evidence: artifacts/P0.4/completion.md.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-02 | codex/gpt-6.1-sol/high | plan-audit · in-progress · D11: one independent read-only P0 audit; R-P0-1…4 only. Accepted P0.1 mutation deviation excluded. Current route verified from provider turn context. |
+| 2026-10-02 | codex/gpt-6.1-sol/high | plan-audit · audit-attention · ATTENTION PA01 (Major): no-barrier mutant survives 4 tests; return P0.2. Fixture/ADR/baseline checks have no finding. Product bytes unchanged. D11 mutation deviation retained. See findings/P0-phase-audit.md. |
+| 2026-10-02 | codex/gpt-6.1-sol/high | plan-run · in-progress · — |
+| 2026-10-02 | codex/gpt-6.1-sol/high | plan-run · decision-pending · PA01 strengthened; serial PG 5/5 GREEN, barrier-only/sequential RED, SQLite/Pint OK. E23 unavailable: Claude quota resets 13:20 Volgograd. Saved waiting-external checkpoint; no terminal GREEN. See artifacts/P0.2-PA01/completion.md. |
 
 ## Owner Gates
 

@@ -1,0 +1,73 @@
+[
+  {
+    "evidence_id": "E15",
+    "mode": "fresh affected validation",
+    "sources": [
+      "serial-pgsql-1.log",
+      "serial-pgsql-2.log",
+      "serial-pgsql-3.log",
+      "serial-pgsql-4.log",
+      "serial-pgsql-5.log"
+    ],
+    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+  },
+  {
+    "evidence_id": "E16",
+    "mode": "fresh affected validation",
+    "sources": [
+      "sqlite.log"
+    ],
+    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+  },
+  {
+    "evidence_id": "E17",
+    "mode": "fresh affected validation",
+    "sources": [
+      "sequential.log"
+    ],
+    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+  },
+  {
+    "evidence_id": "E18",
+    "mode": "fresh affected validation",
+    "sources": [
+      "pint.log"
+    ],
+    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+  },
+  {
+    "evidence_id": "E19",
+    "mode": "reused",
+    "sources": [
+      "artifacts/P0.2/completion.md",
+      "artifacts/P0.2/validation-receipts.json"
+    ],
+    "explanation": "Media composer.json and ForkRace source unchanged. Only test file changed. Original executed_at retained; no media mutation/rerun."
+  },
+  {
+    "evidence_id": "E20",
+    "mode": "reused",
+    "sources": [
+      "artifacts/P0.2/completion.md",
+      "artifacts/P0.2/validation-receipts.json"
+    ],
+    "explanation": "Root PG selections apart from the separate Concurrency step are unaffected. Only that step changed and was rerun five times. Original broad proof retained; no broad rerun."
+  },
+  {
+    "evidence_id": "E21",
+    "mode": "fresh affected validation",
+    "sources": [
+      "serial-pgsql-5.log",
+      "barrier-bypass-final.log"
+    ],
+    "explanation": "Exact CI --ci directory command GREEN and barrier-only mutant RED confirms current readiness test selection. Earlier CI-path sentinel proof reused for unchanged workflow selection."
+  },
+  {
+    "evidence_id": "E22",
+    "mode": "fresh affected validation",
+    "sources": [
+      "serial-pgsql-5.log"
+    ],
+    "explanation": "Local equivalent CI step GREEN. Hosted O-3-CI on repaired candidate is a separate phase gate; not claimed GREEN."
+  }
+]

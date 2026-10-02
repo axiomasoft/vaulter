@@ -1,0 +1,115 @@
+# P0 — independent phase audit, 2026-10-02
+
+**Verdict: ATTENTION — PA01 (Major), owning continuation P0.2.** The reviewer is
+finished; P0 remains open. No product source was modified and no successor was executed.
+
+Reviewer: `codex/gpt-6.1-sol/high`, fresh session, not an executor of P0.
+Route captured from provider-written turn context. Admission: accepted D11,
+`audit-admission/v2`, scope `2bf33ad010b7c6c7ed24b1ce73cf76c63b93b834352a628fa66479ddf86ebb0a`;
+run `7024e4a82dae3ec8a4faba63017b2037de1a57871e8836bb2014dbab5d814e1a`.
+Candidate fingerprint: `9f0cd756788c777eebad822744b415017aa606df4516565a1ac8e0b7c1d3c85b`;
+observed HEAD `3f679e6`; product anchor `5a7aac85e683fc0658c65e53528cc9aeb23996ff`.
+The in-progress journal event holds the runtime candidate snapshot; the terminal event
+retains the same snapshot and consumes this one audit consent.
+
+## PA01 — Existing tests do not detect removal of the ready barrier
+
+**Severity:** Major. **Owner:** P0.2. **Confidence:** reproduced.
+Locations: `packages/core/tests/Concurrency/ForkRaceTest.php:29–70`,
+`packages/core/tests/Concurrency/ForkRace.php:130`.
+Contract: D11 R-P0-1 explicitly asks whether bypassing the barrier or sequential
+execution gives a red result; P0.2 and OPUS unit `13:150b7bc0` require synchronized
+operations on separate PostgreSQL connections.
+
+The lost-update test gives both tasks a 200 ms read/write window. On ordinary local
+scheduling, two unsynchronized forks also overlap in that window. Replacing only
+`while (count(glob("{$dir}/ready.*") ?: []) < $count)` with `while (false)` therefore
+still produces **4 passed / 15 assertions / exit 0**. The ReflectionClass output
+confirms that the suite actually loaded the temporary mutated class. A second run
+also passed. The saved sequential control is red (one task reads 1 rather than 0),
+but it changes both the barrier and parent scheduling, so it cannot prove sensitivity
+to bypassing the barrier alone.
+
+This is a defect in the harness's verification, not proof that the present barrier
+implementation is broken. A regression removing synchronization can pass this same
+CI step. With uneven connection startup or scheduling, tasks may then run without
+the overlap needed to reproduce a downstream race. P1 relies on this harness for
+its T0 race evidence, making the undetected regression material to the admitted
+residual-risk question.
+
+Repair direction: strengthen an existing harness test with controlled unequal
+readiness, asserting that a task cannot begin before every participant is ready.
+The normal class must pass and the isolated barrier-bypass mutation must fail;
+retain the existing sequential control and four-test suite. Verify only the changed
+P0.2 checks and independent review required by its contract. Reuse unaffected fixture,
+ADR, baseline and hosted evidence; a changed product candidate reruns its affected
+hosted harness gate through the existing O-3-CI authority. No new full phase audit is
+authorized by this finding; any repeat needs a new material hypothesis and consent.
+
+Evidence:
+
+- `artifacts/P0-audit/concurrency-original.log`: unmodified candidate, 4 passed, exit 0.
+- `artifacts/P0-audit/concurrency-no-barrier.log`: first bypass run, 4 passed, exit 0.
+- `artifacts/P0-audit/concurrency-no-barrier-proven.log`: ReflectionClass source plus
+  4 passed, exit 0.
+- `artifacts/P0-audit/repro-barrier-bypass.py`: repeatable reproduction using a temporary
+  class and `auto_prepend_file`; repository PHP remains byte-identical.
+- `artifacts/P0.2/negative-control-sequential.diff` and `.log`: prior sequential
+  control, 3 passed / 1 failed, reused unchanged.
+
+## Other admitted questions
+
+| D11 question | Result | Evidence and boundary |
+|:--|:--|:--|
+| R-P0-1 — processes, connections, barrier | Separate processes/connections and current barrier present; bypass detection fails (PA01) | Inspected ForkRace/RaceOutcome and all four tests; original PG suite green; sequential control red; bypass mutant green |
+| R-P0-2 — PG fixture shapes and determinism | No finding | Inspected tag-only bootstrap, seeder, all Scope §4 shapes and README; `--verify` regenerated all three dumps, matched committed SHA256SUMS and row/owner sets, exit 0; prior two-run determinism and shape queries reused |
+| R-P0-3 — baseline and O-3-CI reconciliation | No finding | Hosted JSON binds run 36969058019 to 5a7aac8; PG job and harness success (4 passed / 0 skipped); only L12/L13 type coverage fails at 99.8% / TracingSpanNames co12,co14,co16,co18, matching B-01; inspected both local baseline and hosted logs; root Pint fixed by D10 |
+| R-P0-4 — ADR transfers | No finding | Compared all six ADRs with AD02, AD05–AD09, AD15–AD17, AD22–AD23, AD29–AD31 and ownership table; reviewed 78-unit transfer map; contracts, actor/hiding semantics, module ownership, event durability, revision model, middleware and problem format preserved |
+
+Fixture checks cover main bigint/ulid plus the separate preflight-red dump. Every
+legacy DocumentType, second roots/name collision, single/multiple file revisions,
+legacy:snull/tnull/global/shared blobs, active/revoked/deleted grant/share combinations,
+activity, pending/dispatched outbox, webhooks and partial tus upload is present.
+MySQL dumps were explicitly removed by D09; modern MySQL fresh-install support
+belongs to later phases. Generator portability and floating tag dependencies are
+documented limitations already reviewed in B0-A.
+
+The ADRs stay `proposed`; promotion to `accepted` remains the owner's action.
+The known sidebar omission is outside P0.4 Files and does not change ADR content.
+
+P0.1's four unknown mutation verdicts remain the owner's accepted deviation, per
+D11. They were neither rerun nor counted as green. Runtime
+`PHASE_ACCEPTANCE_NON_GREEN` is the recorded compatibility limitation for P0.1,
+not a new product finding. The separate direct admission check returned
+`AUDIT_ADMITTED` for this exact candidate/run. No GREEN finalization or phase
+closure is claimed while PA01 remains unresolved.
+
+## Validation and scope
+
+Fresh: PostgreSQL preflight exit 0; original concurrency suite exit 0; isolated
+barrier-bypass suite exit 0 (the reproduced verification defect); fixture `--verify`
+exit 0, three OK rows; OPUS coverage 1438 units / 254 sections / 0 violations;
+six coverage-gate unit tests OK; plan-lint OK before final bookkeeping; final lint has one runtime handoff error (below).
+Reused unchanged: P0.2 five-run/SQLite/sequential/CI-path controls, P0.3 deterministic
+and SQL-shape receipts, P0.4 docs/memory receipts, D10 root Pint and load checks,
+O-3-CI JSON/job logs. Broad suites and mutation scores were not replayed.
+
+Product fingerprint and declared product bytes must match the start snapshot at
+terminal append; unrelated dirty `.gitignore` is left untouched. Only audit
+artifacts, journal and audit handoff/projections are written.
+
+**Next:** `run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2`.
+
+## Final bookkeeping limitation — Task batch handoff lint
+
+Final `plan-lint` reports one error: Batch B0-A expects remaining adjacent suffix
+`[]`, while the required reviewer return addresses `['P0.2']`. All B0-A items
+were already terminal before this audit. The Task reducers nevertheless return
+`pending_phase_repair(P0.2) = true` and `phase_close_gate.code =
+PHASE_AUDIT_ATTENTION` with exactly the P0.2 continuation. Delivery validates
+that exact return and D11 is consumed. This is a runtime lint/reducer mismatch,
+not another product finding. No item was falsely reopened, no successor started,
+and no Task runtime outside this repository was modified. The lint failure is
+retained in `artifacts/P0-audit/plan-lint-final.txt`; it is not reported as green.
+The report and journal are saved in the working tree; no commit with a red plan
+check is made. Repair work remains the single P0.2 continuation above.

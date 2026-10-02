@@ -1,0 +1,231 @@
+{
+  "schema_version": "P0.2-PA01-checkpoint/v1",
+  "run_id": "d447c95f3c67ef01d7fbfa2f5f18d32b78cd30bc66ad10066c8af395f1f85319",
+  "attempt": 2,
+  "route": "codex/gpt-6.1-sol/high",
+  "status": "implementation and affected validation complete; mandatory independent review pending",
+  "pre_mutation": "allow (prepare admitted owning repair)",
+  "pre_final": "block:VALIDATION_RECEIPT_MISSING",
+  "missing_evidence": "E23 independent full review under D09",
+  "changed_file": "packages/core/tests/Concurrency/ForkRaceTest.php",
+  "changed_sha256": "8b34fcb19b28aad8b0d0c513c8c6a71ce0472400f1296be2acb87933c4ef02e7",
+  "results": [
+    {
+      "name": "serial-pgsql-1.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "serial-pgsql-2.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "serial-pgsql-3.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "serial-pgsql-4.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "serial-pgsql-5.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "sqlite.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "pint.log",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pint",
+        "--test",
+        "packages/core/tests/Concurrency",
+        "tests/Pest.php"
+      ],
+      "exit_code": 0,
+      "expected_exit": 0
+    },
+    {
+      "name": "barrier-bypass-final.log",
+      "command": [
+        "python3",
+        "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0-audit/repro-barrier-bypass.py"
+      ],
+      "exit_code": 1,
+      "expected_exit": 1
+    },
+    {
+      "name": "sequential.log",
+      "command": [
+        "scripts/php84",
+        "php",
+        "-d",
+        "auto_prepend_file=/tmp/vaulter-p0-sequential-er71gdg4/prepend.php",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency"
+      ],
+      "exit_code": 1,
+      "expected_exit": 1
+    }
+  ],
+  "external_pause": {
+    "reason": "Claude Code session quota; mandatory D09 independent review unavailable",
+    "started_at": "2026-10-02T08:17:07Z",
+    "resume_at": "2026-10-02T10:20:00Z",
+    "observed_at": "2026-10-02T08:37:59Z",
+    "fingerprint": "2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+    "runnable_after": "2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+    "predicate_satisfied": false,
+    "continuation": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2"
+  },
+  "continuity": {
+    "outcome": "waiting-external",
+    "reason": "external-wait",
+    "evidence": [
+      "batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "reason:Claude Code session quota; mandatory D09 independent review unavailable",
+      "started_at:2026-10-02T08:17:07Z",
+      "resume_at:2026-10-02T10:20:00Z",
+      "observed_at:2026-10-02T08:37:59Z",
+      "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+      "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+      "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
+      "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"
+    ],
+    "runnable": false,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "reused_evidence": [
+    {
+      "evidence_id": "E15",
+      "mode": "fresh affected validation",
+      "sources": [
+        "serial-pgsql-1.log",
+        "serial-pgsql-2.log",
+        "serial-pgsql-3.log",
+        "serial-pgsql-4.log",
+        "serial-pgsql-5.log"
+      ],
+      "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    },
+    {
+      "evidence_id": "E16",
+      "mode": "fresh affected validation",
+      "sources": [
+        "sqlite.log"
+      ],
+      "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    },
+    {
+      "evidence_id": "E17",
+      "mode": "fresh affected validation",
+      "sources": [
+        "sequential.log"
+      ],
+      "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    },
+    {
+      "evidence_id": "E18",
+      "mode": "fresh affected validation",
+      "sources": [
+        "pint.log"
+      ],
+      "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    },
+    {
+      "evidence_id": "E19",
+      "mode": "reused",
+      "sources": [
+        "artifacts/P0.2/completion.md",
+        "artifacts/P0.2/validation-receipts.json"
+      ],
+      "explanation": "Media composer.json and ForkRace source unchanged. Only test file changed. Original executed_at retained; no media mutation/rerun."
+    },
+    {
+      "evidence_id": "E20",
+      "mode": "reused",
+      "sources": [
+        "artifacts/P0.2/completion.md",
+        "artifacts/P0.2/validation-receipts.json"
+      ],
+      "explanation": "Root PG selections apart from the separate Concurrency step are unaffected. Only that step changed and was rerun five times. Original broad proof retained; no broad rerun."
+    },
+    {
+      "evidence_id": "E21",
+      "mode": "fresh affected validation",
+      "sources": [
+        "serial-pgsql-5.log",
+        "barrier-bypass-final.log"
+      ],
+      "explanation": "Exact CI --ci directory command GREEN and barrier-only mutant RED confirms current readiness test selection. Earlier CI-path sentinel proof reused for unchanged workflow selection."
+    },
+    {
+      "evidence_id": "E22",
+      "mode": "fresh affected validation",
+      "sources": [
+        "serial-pgsql-5.log"
+      ],
+      "explanation": "Local equivalent CI step GREEN. Hosted O-3-CI on repaired candidate is a separate phase gate; not claimed GREEN."
+    }
+  ],
+  "invalid_runs": [
+    "pgsql-1.log",
+    "pgsql-2.log",
+    "pgsql-3.log",
+    "pgsql-4.log",
+    "barrier-bypass.log",
+    "runs.json"
+  ],
+  "invalid_reason": "Initial normal repetitions and first mutant overlapped on vaulter_test migrations. Excluded; only serial-* and final control logs count.",
+  "next_steps": [
+    "When quota allows, run one fresh read-only D09 reviewer with saved review-prompt.txt. No DB reruns for unchanged source SHA.",
+    "GREEN: add E23, pre_final, closed-green for existing run, finalize. Findings: repair only affected delta and validate it.",
+    "Changed-candidate hosted O-3-CI and accepted P0.1 deviations remain phase gates. No automatic repeat audit."
+  ]
+}

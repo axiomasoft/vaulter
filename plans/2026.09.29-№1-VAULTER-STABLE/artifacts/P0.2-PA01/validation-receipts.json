@@ -1,0 +1,98 @@
+[
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E15",
+    "command": "- PG: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret\n  scripts/php84 vendor/bin/pest packages/core/tests/Concurrency` → `4 passed`, 0 skipped, exit 0; повтор 5 раз подряд —\n  5/5 зелёные (флейк-проверка), вывод в Completion Notes.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E16",
+    "command": "- SQLite: `scripts/php84 vendor/bin/pest packages/core/tests/Concurrency` → `4 skipped`, exit 0.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E17",
+    "command": "- Негативный контроль из Code Guidance выполнен и описан.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E18",
+    "command": "- `scripts/php84 vendor/bin/pint --test packages/core/tests/Concurrency tests/Pest.php` exit 0.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E19",
+    "command": "- `scripts/php84 composer --working-dir=packages/media dump-autoload` exit 0 и\n  `scripts/php84 php -r \"require 'packages/media/vendor/autoload.php'; exit(class_exists('Vaulter\\\\Tests\\\\Concurrency\\\\ForkRace') ? 0 : 1);\"` exit 0.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-01T19:40:27Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E20",
+    "command": "- Полный root PG-лейн из `findings/baseline.md` — не хуже baseline (те же или меньше failed).",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-01T19:43:26Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E21",
+    "command": "- Точная команда нового CI-шага локально: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test\n  DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency`\n  → `4 passed`, `0 skipped`, exit 0. Негативный контроль выбора каталога: временно добавить в `ForkRaceTest.php`\n  `it('CI path negative control', fn () => expect(false)->toBeTrue());`, повторить ту же команду → ненулевой exit;\n  убрать только эту временную проверку и повторить команду → `4 passed`, `0 skipped`, exit 0.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E22",
+    "command": "- «Пример проходит в CI» (OPUS 13 P0.2) подтверждается hosted run итогового candidate P0 через O-3-CI **до** фазового\n  аудита (D07). Item Validation проверяет локальную эквивалентную команду и точный новый шаг workflow; hosted-исход\n  остаётся обязательной приёмкой фазы, локальный результат его не подменяет. Нет разрешения O-3-CI/run,\n  шаг харнесса не GREEN или появились ошибки вне классифицированного baseline (D07) → фазу не закрывать,\n  записать ожидание/реальное падение и owning continuation.",
+    "contract_sha256": "684b483aba37d2c0ec1d803160f48e61556eb66924a1661c439d000612af32d1",
+    "spec_sha256": "afaa3dfdf5539ea4e969ad123e53e17094542301434d8545a0c24299408aa117",
+    "head": "3f679e61bd24abd2a8225d90b478b7a7b66f0689",
+    "tree": "84084cefe94755b03321985496473769e2313dedd75a328636c9aa6b8fa437e4",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-02T08:37:59Z"
+  }
+]

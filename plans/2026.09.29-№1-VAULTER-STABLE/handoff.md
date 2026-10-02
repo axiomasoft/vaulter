@@ -1,38 +1,35 @@
-# HANDOFF — 2026-10-02 — after P0.4
+# HANDOFF — 2026-10-02 — after P0.2
 
-**Next:** waiting: owner-launched phase audit P0 by codex/gpt-6.1-sol/high under consent D11 (candidate 9f0cd756…, run 7024e4a8…)
+**Next:** waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2
 
 | Parameter | Meaning |
 |:--|:--|
-| Batch | solo |
-| Model class | frontier |
-| Effort | high |
-| Capabilities | — |
-| Context | waiting-owner |
-| The bottom line | All P0 items closed; O-3-CI hosted run meets D07 п.3 (harness 4 passed / 0 skipped, only baseline B-01 red); audit consent granted (D11); auditor codex/gpt-6.1-sol/high. |
+| Batch | B0-A |
+| Model class | implementation |
+| Model | gpt-6-sol |
+| Effort | medium |
+| Thinking | medium |
+| Context | waiting-external |
+| The bottom line | Resume mandatory D09 review; reuse completed affected validation. |
 
 ```session-continuity-decision/v1
-{"evidence": ["batch:e71bc33fae12ced0a57d7042349a981626a487520a71ff45afae806fea0c1dde", "loaded-inputs:reusable", "cold-start-cost:0"], "outcome": "waiting-owner", "reason": "owner-wait", "runnable": false, "schema_version": "session-continuity-decision/v1"}
+{"outcome": "waiting-external", "reason": "external-wait", "evidence": ["batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90", "loaded-inputs:reusable", "cold-start-cost:0", "reason:Claude Code session quota; mandatory D09 independent review unavailable", "started_at:2026-10-02T08:17:07Z", "resume_at:2026-10-02T10:20:00Z", "observed_at:2026-10-02T08:37:59Z", "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e", "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request", "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2", "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"], "runnable": false, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** P0.4 — ADR 0019–0024 (`proposed`) in `docs/adr/`, `Amended by` lines in ADR-0009/0018, six index rows; 40 AD records in mAInd `project:vaulter` (recall AD07/AD01/AD20/AD40 OK); docs build green; unit → ADR § 78/78 (`artifacts/P0.4/completion.md`). Local phase-level checks on the final tree (`artifacts/P0.4/phase-local/`): php84 --check, db-preflight pgsql/mysql, Concurrency 4 passed / 0 skipped, opus-coverage OK 1438/254/0, unittest 6 OK — all exit 0.
-
-**O-3-CI (D10):** root Pint B-03 closed (`5a7aac8`: `plans/` excluded, 5 `load/` files formatted, P5/P7 load tests OK); branch `plan2/P0` pushed; `tests.yml` run 36969058019 on `5a7aac8`: Postgres harness success, 4 passed / 0 skipped; L12/L13 fail only on B-01 type coverage 99.8% (`artifacts/P0-O3CI/o3ci.md`).
-
-**Audit launch (D11):**
-
-```bash
-codex -C "$(git rev-parse --show-toplevel)" -m gpt-6.1-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE P0'
+```text
+$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2
+MODE: resume PA01 owning repair; mandatory independent full review pending
+ENTRANCE: artifacts/P0.2-PA01/checkpoint.json; artifacts/P0.2-PA01/completion.md; findings/P0.2-PA01-review.md
+SCORE: one fresh read-only D09 review GREEN; pre_final allow; terminal journal and finalize
+DO NOT TOUCH: P0.1 mutation scores; P0.3/P0.4; unrelated .gitignore; unchanged validated source
 ```
 
-Consent: `decisions/D11-p0-phase-audit-admission.md` (`audit_admission.evaluate` → `AUDIT_ADMITTED`). P0.1 🟠 accepted as non-gating by owner (D11 п.3); runtime `phase_audit_policy` still reports `PHASE_ACCEPTANCE_NON_GREEN` — auditor must record that and not treat it as a product finding.
+**Done:** PA01 implementation and affected validation: PG 5/5, each 4 passed / 17 assertions; SQLite 4 skipped; Pint exit 0. Barrier-only mutant RED on readiness; sequential mutant RED on lost-update and readiness. No more DB checks for unchanged SHA.
 
-**Owner decisions needed:** promotion of ADR 0019–0024 to `accepted` (OPUS 15).
+**Remaining:** E23 independent full review. Claude Code session quota; no verdict. Resume existing run after actual availability, execute saved review-prompt.txt once, add truthful E23 receipt, pre_final, terminal GREEN and finalize. Unaffected media/root proof reused. Hosted changed-candidate O-3-CI and accepted P0.1 deviations remain phase gates; no automatic repeat audit.
 
-**Remaining:** P0 phase audit (gpt-6.1-sol) → close P0; PR/merge only after GREEN audit on a separate owner request.
+**Open risks:** P0.2 In progress, not GREEN. PA01 audit finding pending formal closure until E23. P0.1 mutation scores remain accepted unknowns (D11). No adjacent package, workflow or .gitignore change.
 
-**Sources of truth:** decisions/D07-design-audit-remediation.md, D09-b0a-closure-owner-delegation.md, D10-p0-o3ci-and-pint-baseline.md; artifacts/P0-O3CI/o3ci.md; findings/baseline.md; artifacts/P0.4/; journal.jsonl.
+**Sources of truth:** artifacts/P0.2-PA01/checkpoint.json; final-runs.json; completion.md; review-result.json; journal.jsonl; decisions/D09-b0a-closure-owner-delegation.md.
 
-**Open risks:** VitePress ADR sidebar stops at 0014 (0016–0024 reachable only via the index) — outside P0.4 Files. Task 0.26 literal regression affects other Russian-literal plans (findings/runtime-0.26-literal-migration.md). Run budget per D09 п.4: no hour-long runs.
-
-**Execution:** No background processes. Worktree `build/fixtures/v0.2.0` kept (ignored).
+**Execution:** No background processes. Controls ran from temporary copies; harness unchanged.

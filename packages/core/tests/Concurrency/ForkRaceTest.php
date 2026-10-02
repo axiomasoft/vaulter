@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -70,7 +71,7 @@ it('негативный контроль: без FOR UPDATE обновлени�
         ->and(DB::table('race_counter')->value('value'))->toBe(1);
 });
 
-it('каждая задача работает на своём соединении: разные pg_backend_pid, оба ≠ pid родителя', function (): void {
+it('каждая задача имеет своё соединение и ждёт готовности всех участников', function (): void {
     ForkRace::skipUnlessSupported($this);
 
     $parentPid = (int) DB::selectOne('select pg_backend_pid() as pid')->pid;
@@ -86,6 +87,45 @@ it('каждая задача работает на своём соединен�
         ->and($first)->toBeInt()->not->toBe($second)
         ->and($first)->not->toBe($parentPid)
         ->and($second)->not->toBe($parentPid);
+
+    $dir = sys_get_temp_dir().'/vlt_readiness_'.bin2hex(random_bytes(8));
+    mkdir($dir);
+    $connection = DB::getDefaultConnection();
+    $factory = app('db.factory');
+    $parentProcess = getmypid();
+
+    // Exactly one child fails before announcing ready. Its sibling must time out
+    // at the barrier without running a task, regardless of fork scheduling.
+    DB::extend($connection, static function (array $config, string $name) use ($factory, $parentProcess, $dir): Connection {
+        if (getmypid() !== $parentProcess) {
+            $claim = @fopen($dir.'/failed-startup', 'x');
+
+            if ($claim !== false) {
+                fclose($claim);
+
+                throw new RuntimeException('startup failed before ready');
+            }
+        }
+
+        return $factory->make($config, $name);
+    });
+
+    try {
+        $task = static function () use ($dir): int {
+            file_put_contents($dir.'/task-started', '1');
+
+            return (int) DB::selectOne('select pg_backend_pid() as pid')->pid;
+        };
+        $outcomes = ForkRace::run([$task, $task], timeoutMs: 200);
+
+        expect(array_map(fn (RaceOutcome $o) => $o->exception, $outcomes))
+            ->toEqualCanonicalizing([RuntimeException::class, 'ForkRace\\BarrierTimeout'])
+            ->and(file_exists($dir.'/task-started'))->toBeFalse();
+    } finally {
+        DB::forgetExtension($connection);
+        array_map('unlink', glob($dir.'/*') ?: []);
+        rmdir($dir);
+    }
 });
 
 it('исключение задачи возвращается как исход, соседняя задача ok', function (): void {
