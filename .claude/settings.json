@@ -18,6 +18,14 @@
             "command": "python3 ~/.claude/hooks/run-report/run-report.py"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/vostrikov/projects/packages/vaulter/.claude/maind-feature-log.sh"
+          }
+        ]
       }
     ],
     "SubagentStop": [
