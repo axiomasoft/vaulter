@@ -1,0 +1,21 @@
+# P0 — O-3-CI hosted evidence (D07 п.3, D10)
+
+| Field | Value |
+|:--|:--|
+| Run | https://github.com/axiomasoft/vaulter/actions/runs/36969058019 (`tests.yml`, event `workflow_dispatch`) |
+| Ref / headSha | `plan2/P0` / `5a7aac85e683fc0658c65e53528cc9aeb23996ff` (= candidate, local `main` HEAD) |
+| Status / conclusion | completed / failure |
+| JSON | `run.json` (`gh run view --json …`) |
+| Job logs | `job-110719003223.log` (Postgres), `job-110719003299.log` (L13), `job-110719003452.log` (L12) — local only (`*.log` gitignored) |
+
+## Against D07 п.3
+
+| Requirement | Hosted result | Verdict |
+|:--|:--|:--|
+| Job `PHP 8.4 / Postgres (full schema portability lane)`, step `Postgres: concurrency harness` (`if: always()`) | success; `Tests: 4 passed (15 assertions)`, 0 skipped | ✅ |
+| Other results: no regressions vs classified baseline P0.1 | L12 and L13 fail only at `Type coverage (100%)`: `TracingSpanNames.php co12, co14, co16, co18 75%`, `currently 99.8%` — identical to baseline **B-01** (owner P8.1). All other steps success; `Upload coverage to Codecov` and post-cache skipped after that failure | ✅ baseline only |
+| Not cancelled, harness not skipped, no infra errors | completed, harness ran | ✅ |
+
+Note: `Total: 82.6 %` in the L12/L13 logs is the line-coverage step before `composer test:types`, not type coverage.
+
+Root Pint (B-03) closed before the candidate by D10 (`5a7aac8`).
