@@ -31,8 +31,13 @@ docs/.vitepress/dist/
 *.bak
 .claude/settings.local.json.bak
 
-# Machine-local SKM vendor (marketplace + CORE symlink); воспроизводится sync-скриптом
-/.agents/
+# Machine-local SKM vendor; .agents/skills/ and .agents/plugins/ are committed
+/.agents/**
+!/.agents/skills/
+!/.agents/skills/**
+/.agents/skills/**/*.bak
+!/.agents/plugins/
+!/.agents/plugins/**
 /.swissknifeman/
 
 # AI tooling — machine-specific (абсолютные пути / локальный кэш). Портируемая карта
@@ -75,6 +80,10 @@ _e2e_smoke.mjs
 
 # Claude Code: рантайм-телеметрия аналитика (не артефакт репозитория)
 .claude/analyst/
+.claude/.maind-feature-log.last
+.claude/maind-*.sh
+.claude/settings.json
+.claude/agent-pack.lock.json
 
 # VLT-LOAD (plans/VLT-LOAD) — run artifacts, not stand definition (seed manifests/
 # snapshots are P2.3, not produced yet — ignored ahead of time so they never land by accident).
