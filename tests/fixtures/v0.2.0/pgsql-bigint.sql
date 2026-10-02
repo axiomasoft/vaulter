@@ -887,17 +887,21 @@ INSERT INTO "public"."v_activity" VALUES
 	(55, NULL, 2, 1001, NULL, 'file.uploaded', 31, 'Vaulter\Models\Drive\Node', '{"name": "shared.bin", "mime_type": "application/octet-stream", "size_bytes": 29, "version_id": "19"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 00:52:00'),
 	(56, NULL, 3, 1001, NULL, 'file.uploaded', 32, 'Vaulter\Models\Drive\Node', '{"name": "shared.bin", "mime_type": "application/octet-stream", "size_bytes": 29, "version_id": "20"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 00:53:00'),
 	(57, NULL, 3, 1001, NULL, 'file.uploaded', 33, 'Vaulter\Models\Drive\Node', '{"name": "tenant.bin", "mime_type": "application/octet-stream", "size_bytes": 33, "version_id": "21"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 00:54:00'),
-	(58, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "1", "subject_id": "101", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:04:00'),
-	(59, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "2", "subject_id": "201", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:05:00'),
-	(60, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "3", "subject_id": "102", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:06:00'),
-	(61, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "4", "subject_id": "202", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:07:00'),
-	(62, NULL, 1, 1001, NULL, 'grant.revoked', 2, 'Vaulter\Models\Drive\Node', '{"revoked": 1, "subject_id": "102", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:09:00'),
-	(63, NULL, 1, 1001, NULL, 'grant.revoked', 2, 'Vaulter\Models\Drive\Node', '{"revoked": 1, "subject_id": "202", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:10:00'),
-	(64, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "1", "permissions": 1, "token_prefix": "fx000003"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:11:00'),
-	(65, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "2", "permissions": 1, "token_prefix": "fx000004"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:12:00'),
-	(66, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "3", "permissions": 1, "token_prefix": "fx000005"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:13:00'),
-	(67, NULL, 1, 1001, NULL, 'share.revoked', 6, 'Vaulter\Models\Drive\Node', '{"share_id": "2", "token_prefix": "fx000004"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:14:00'),
-	(68, NULL, 1, 1001, NULL, 'upload_session.initiated', NULL, NULL, '{"protocol": "tus", "upload_id": "00000000-0000-4000-8000-000000000001", "target_name": "large.bin"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:16:00');
+	(58, NULL, 1, 1001, NULL, 'file.uploaded', 34, 'Vaulter\Models\Drive\Node', '{"name": "global.bin", "mime_type": "application/octet-stream", "size_bytes": 28, "version_id": "22"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 00:55:00'),
+	(59, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "1", "subject_id": "101", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:05:00'),
+	(60, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "2", "subject_id": "201", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:06:00'),
+	(61, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "3", "subject_id": "102", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:07:00'),
+	(62, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "writer", "scope": "subtree", "effect": "allow", "grant_id": "4", "subject_id": "202", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:08:00'),
+	(63, NULL, 1, 1001, NULL, 'grant.revoked', 2, 'Vaulter\Models\Drive\Node', '{"revoked": 1, "subject_id": "102", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:10:00'),
+	(64, NULL, 1, 1001, NULL, 'grant.revoked', 2, 'Vaulter\Models\Drive\Node', '{"revoked": 1, "subject_id": "202", "subject_type": "role"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:11:00'),
+	(65, NULL, 1, 1001, NULL, 'grant.created', 2, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "subtree", "effect": "allow", "grant_id": "5", "subject_id": "102", "subject_type": "user"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:12:00'),
+	(66, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "1", "permissions": 1, "token_prefix": "fx000003"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:13:00'),
+	(67, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "2", "permissions": 1, "token_prefix": "fx000004"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:14:00'),
+	(68, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "3", "permissions": 1, "token_prefix": "fx000005"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:15:00'),
+	(69, NULL, 1, 1001, NULL, 'share.created', 6, 'Vaulter\Models\Drive\Node', '{"level": "reader", "scope": "item", "share_id": "4", "permissions": 1, "token_prefix": "fx000006"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:16:00'),
+	(70, NULL, 1, 1001, NULL, 'share.revoked', 6, 'Vaulter\Models\Drive\Node', '{"share_id": "2", "token_prefix": "fx000004"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:17:00'),
+	(71, NULL, 1, 1001, NULL, 'share.revoked', 6, 'Vaulter\Models\Drive\Node', '{"share_id": "4", "token_prefix": "fx000006"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:19:00'),
+	(72, NULL, 1, 1001, NULL, 'upload_session.initiated', NULL, NULL, '{"protocol": "tus", "upload_id": "00000000-0000-4000-8000-000000000001", "target_name": "large.bin"}', '127.0.0.1', 'Symfony', '00000000-0000-4000-8000-000000000001', NULL, '2026-01-01 01:21:00');
 
 
 --
@@ -924,7 +928,8 @@ INSERT INTO "public"."v_blobs" VALUES
 	(18, NULL, 3, 'sha256', '6411a3531c9f8239119d6f341cdbd87b57a8a6b2316825454cadb2e80c6603a8', 21, 'local', 's3/64/11/6411a3531c9f8239119d6f341cdbd87b57a8a6b2316825454cadb2e80c6603a8', 'committed', 0, 'storage', NULL, NULL, NULL, false, NULL, '2026-01-01 00:45:00', '2026-01-01 00:45:00', NULL, NULL),
 	(1, NULL, NULL, 'sha256', '17fd007b1eae89012f85996449b99ab04057b97183729e08ac1c2fcb7bb813e5', 19, 'local', 's1/17/fd/17fd007b1eae89012f85996449b99ab04057b97183729e08ac1c2fcb7bb813e5', 'committed', 0, 'storage', NULL, NULL, NULL, false, NULL, '2026-01-01 00:05:00', '2026-01-01 00:05:00', NULL, NULL),
 	(19, NULL, NULL, 'sha256', '94364e27e6e12dbfc6ccf67281bd396596ffb68d5e76723e4f2f2c90eb9c1d8d', 29, 'local', 'tnull/94/36/94364e27e6e12dbfc6ccf67281bd396596ffb68d5e76723e4f2f2c90eb9c1d8d', 'committed', 0, 'tenant', NULL, NULL, NULL, false, NULL, '2026-01-01 00:52:00', '2026-01-01 00:52:00', NULL, NULL),
-	(20, NULL, NULL, 'sha256', '42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 33, 'local', 'tnull/42/41/42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 'committed', 0, 'tenant', NULL, NULL, NULL, false, NULL, '2026-01-01 00:54:00', '2026-01-01 00:54:00', NULL, NULL);
+	(20, NULL, NULL, 'sha256', '42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 33, 'local', 'tnull/42/41/42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 'committed', 0, 'tenant', NULL, NULL, NULL, false, NULL, '2026-01-01 00:54:00', '2026-01-01 00:54:00', NULL, NULL),
+	(21, NULL, NULL, 'sha256', '15f300f99b8e3f8055bf0b9fc28475180d61a88586db1f3eec2107116ca26e57', 28, 'local', 'global/15/f3/15f300f99b8e3f8055bf0b9fc28475180d61a88586db1f3eec2107116ca26e57', 'committed', 0, 'global', NULL, NULL, NULL, false, NULL, '2026-01-01 00:55:00', '2026-01-01 00:55:00', NULL, NULL);
 
 
 --
@@ -952,7 +957,8 @@ INSERT INTO "public"."v_file_version_blobs" VALUES
 	(18, 18, 'data', 0, NULL, NULL),
 	(19, 19, 'data', 0, NULL, NULL),
 	(20, 19, 'data', 0, NULL, NULL),
-	(21, 20, 'data', 0, NULL, NULL);
+	(21, 20, 'data', 0, NULL, NULL),
+	(22, 21, 'data', 0, NULL, NULL);
 
 
 --
@@ -980,7 +986,8 @@ INSERT INTO "public"."v_file_versions" VALUES
 	(18, NULL, 12, 1, 18, NULL, '6411a3531c9f8239119d6f341cdbd87b57a8a6b2316825454cadb2e80c6603a8', 21, 'text/plain', 'note.txt', 'committed', false, NULL, 1001, '2026-01-01 00:45:00', '2026-01-01 00:45:00'),
 	(19, NULL, 13, 1, 19, NULL, '94364e27e6e12dbfc6ccf67281bd396596ffb68d5e76723e4f2f2c90eb9c1d8d', 29, 'application/octet-stream', 'shared.bin', 'committed', false, NULL, 1001, '2026-01-01 00:52:00', '2026-01-01 00:52:00'),
 	(20, NULL, 14, 1, 19, NULL, '94364e27e6e12dbfc6ccf67281bd396596ffb68d5e76723e4f2f2c90eb9c1d8d', 29, 'application/octet-stream', 'shared.bin', 'committed', false, NULL, 1001, '2026-01-01 00:53:00', '2026-01-01 00:53:00'),
-	(21, NULL, 15, 1, 20, NULL, '42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 33, 'application/octet-stream', 'tenant.bin', 'committed', false, NULL, 1001, '2026-01-01 00:54:00', '2026-01-01 00:54:00');
+	(21, NULL, 15, 1, 20, NULL, '42416976a60a7a8a85a0efb8d41e755a44df6dc739160b61fbe5b16cf8b0755a', 33, 'application/octet-stream', 'tenant.bin', 'committed', false, NULL, 1001, '2026-01-01 00:54:00', '2026-01-01 00:54:00'),
+	(22, NULL, 16, 1, 21, NULL, '15f300f99b8e3f8055bf0b9fc28475180d61a88586db1f3eec2107116ca26e57', 28, 'application/octet-stream', 'global.bin', 'committed', false, NULL, 1001, '2026-01-01 00:55:00', '2026-01-01 00:55:00');
 
 
 --
@@ -1002,7 +1009,8 @@ INSERT INTO "public"."v_files" VALUES
 	(12, NULL, 30, 18, 'text/plain', 21, 1, NULL, NULL, NULL, '2026-01-01 00:45:00', '2026-01-01 00:45:00'),
 	(13, NULL, 31, 19, 'application/octet-stream', 29, 1, NULL, NULL, NULL, '2026-01-01 00:52:00', '2026-01-01 00:52:00'),
 	(14, NULL, 32, 20, 'application/octet-stream', 29, 1, NULL, NULL, NULL, '2026-01-01 00:53:00', '2026-01-01 00:53:00'),
-	(15, NULL, 33, 21, 'application/octet-stream', 33, 1, NULL, NULL, NULL, '2026-01-01 00:54:00', '2026-01-01 00:54:00');
+	(15, NULL, 33, 21, 'application/octet-stream', 33, 1, NULL, NULL, NULL, '2026-01-01 00:54:00', '2026-01-01 00:54:00'),
+	(16, NULL, 34, 22, 'application/octet-stream', 28, 1, NULL, NULL, NULL, '2026-01-01 00:55:00', '2026-01-01 00:55:00');
 
 
 --
@@ -1016,14 +1024,14 @@ INSERT INTO "public"."v_files" VALUES
 --
 
 INSERT INTO "public"."v_node_document_versions" VALUES
-	(1, NULL, 34, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Notes v1", "type": "text"}]}]}', NULL, NULL, 'richtext', '2cb2e79dc80ba1aef0e7a77f8aeb9d05e3c5274111dcec241052753146eb197f', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:55:00'),
-	(2, NULL, 35, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Budget v1", "type": "text"}]}]}', NULL, NULL, 'table', '4c887b035155bc2c9c92c17776c363c4fc644a92ccd6eee550d0e41e4acf66f6', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:56:00'),
-	(3, NULL, 36, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Readme v1", "type": "text"}]}]}', NULL, NULL, 'markdown', '8190d674e2d3ee38163fd067499b6570bf2ffb4a84c8261ae26efb9959e5c556', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:57:00'),
-	(4, NULL, 37, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Letter template v1", "type": "text"}]}]}', NULL, NULL, 'template', 'f84f6800101d3eb5ac5e0110cf4ffca24a2936181901f6621291552fb7c65cac', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:58:00'),
-	(5, NULL, 34, 2, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "richtext v2", "type": "text"}]}]}', NULL, NULL, 'richtext', '417d10efa92642f3bd057d96bab2cc619f4af852a7d4f008237c616f61b44308', NULL, true, 'committed', false, NULL, NULL, '2026-01-01 00:59:00'),
-	(6, NULL, 36, 2, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "markdown v2", "type": "text"}]}]}', NULL, NULL, 'markdown', '9ea6a2f5567068885dd689bd31f9c43534d09a7a8b76db76d78e4c2f7b7ffda4', NULL, true, 'committed', false, NULL, NULL, '2026-01-01 01:00:00'),
-	(7, NULL, 38, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "loose", "type": "text"}]}]}', NULL, NULL, 'richtext', 'f47fb0ea0f7abc7ee4a56cbd76bfa564c111a8e3fbc7df833b65136ac74116ff', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 01:01:00'),
-	(8, NULL, 39, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "name clash with the root folder", "type": "text"}]}]}', NULL, NULL, 'richtext', '0cae7f5294201c02bc97ae0d1f64cdc91f8b0237fc6e25de066b5630b9805666', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 01:02:00');
+	(1, NULL, 35, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Notes v1", "type": "text"}]}]}', NULL, NULL, 'richtext', '2cb2e79dc80ba1aef0e7a77f8aeb9d05e3c5274111dcec241052753146eb197f', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:56:00'),
+	(2, NULL, 36, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Budget v1", "type": "text"}]}]}', NULL, NULL, 'table', '4c887b035155bc2c9c92c17776c363c4fc644a92ccd6eee550d0e41e4acf66f6', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:57:00'),
+	(3, NULL, 37, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Readme v1", "type": "text"}]}]}', NULL, NULL, 'markdown', '8190d674e2d3ee38163fd067499b6570bf2ffb4a84c8261ae26efb9959e5c556', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:58:00'),
+	(4, NULL, 38, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "Letter template v1", "type": "text"}]}]}', NULL, NULL, 'template', 'f84f6800101d3eb5ac5e0110cf4ffca24a2936181901f6621291552fb7c65cac', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 00:59:00'),
+	(5, NULL, 35, 2, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "richtext v2", "type": "text"}]}]}', NULL, NULL, 'richtext', '417d10efa92642f3bd057d96bab2cc619f4af852a7d4f008237c616f61b44308', NULL, true, 'committed', false, NULL, NULL, '2026-01-01 01:00:00'),
+	(6, NULL, 37, 2, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "markdown v2", "type": "text"}]}]}', NULL, NULL, 'markdown', '9ea6a2f5567068885dd689bd31f9c43534d09a7a8b76db76d78e4c2f7b7ffda4', NULL, true, 'committed', false, NULL, NULL, '2026-01-01 01:01:00'),
+	(7, NULL, 39, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "loose", "type": "text"}]}]}', NULL, NULL, 'richtext', 'f47fb0ea0f7abc7ee4a56cbd76bfa564c111a8e3fbc7df833b65136ac74116ff', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 01:02:00'),
+	(8, NULL, 40, 1, '{"type": "doc", "content": [{"type": "paragraph", "content": [{"text": "name clash with the root folder", "type": "text"}]}]}', NULL, NULL, 'richtext', '0cae7f5294201c02bc97ae0d1f64cdc91f8b0237fc6e25de066b5630b9805666', NULL, false, 'committed', false, NULL, 1001, '2026-01-01 01:03:00');
 
 
 --
@@ -1031,10 +1039,11 @@ INSERT INTO "public"."v_node_document_versions" VALUES
 --
 
 INSERT INTO "public"."v_node_grants" VALUES
-	(1, NULL, 2, 101, 'user', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:04:00', '2026-01-01 01:04:00'),
-	(2, NULL, 2, 201, 'role', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:05:00', '2026-01-01 01:05:00'),
-	(3, NULL, 2, 102, 'user', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, '2026-01-01 01:09:00', '2026-01-01 01:06:00', '2026-01-01 01:09:00'),
-	(4, NULL, 2, 202, 'role', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, '2026-01-01 01:10:00', '2026-01-01 01:07:00', '2026-01-01 01:10:00');
+	(1, NULL, 2, 101, 'user', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:05:00', '2026-01-01 01:05:00'),
+	(2, NULL, 2, 201, 'role', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:06:00', '2026-01-01 01:06:00'),
+	(3, NULL, 2, 102, 'user', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, '2026-01-01 01:10:00', '2026-01-01 01:07:00', '2026-01-01 01:10:00'),
+	(4, NULL, 2, 202, 'role', 'writer', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, '2026-01-01 01:11:00', '2026-01-01 01:08:00', '2026-01-01 01:11:00'),
+	(5, NULL, 2, 102, 'user', 'reader', 0, 'allow', 'subtree', false, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:12:00', '2026-01-01 01:12:00');
 
 
 --
@@ -1042,9 +1051,10 @@ INSERT INTO "public"."v_node_grants" VALUES
 --
 
 INSERT INTO "public"."v_node_shares" VALUES
-	(1, NULL, 6, 'cc699e2456918a67d078db4e5e8655bc40f73146ca40f5fffc137f5901c832a9', 'fx000003', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:11:00', NULL, 0, NULL, 1001, NULL, NULL, '2026-01-01 01:11:00', '2026-01-01 01:11:00'),
-	(2, NULL, 6, 'd80d249f3ee6d3d1c0fdc62ffda8f30e94ca3c340e38dc2cbd628b491fc657fb', 'fx000004', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:12:00', NULL, 0, '2026-01-01 01:14:00', 1001, NULL, NULL, '2026-01-01 01:12:00', '2026-01-01 01:14:00'),
-	(3, NULL, 6, 'e3f840e240e14db43f7a3265c640d988eb82e5ffd1a7f45efb0536047abaf0ea', 'fx000005', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:13:00', NULL, 0, NULL, 1001, NULL, '2026-01-01 01:15:00', '2026-01-01 01:13:00', '2026-01-01 01:15:00');
+	(1, NULL, 6, 'cc699e2456918a67d078db4e5e8655bc40f73146ca40f5fffc137f5901c832a9', 'fx000003', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:13:00', NULL, 0, NULL, 1001, NULL, NULL, '2026-01-01 01:13:00', '2026-01-01 01:13:00'),
+	(2, NULL, 6, 'd80d249f3ee6d3d1c0fdc62ffda8f30e94ca3c340e38dc2cbd628b491fc657fb', 'fx000004', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:14:00', NULL, 0, '2026-01-01 01:17:00', 1001, NULL, NULL, '2026-01-01 01:14:00', '2026-01-01 01:17:00'),
+	(3, NULL, 6, 'e3f840e240e14db43f7a3265c640d988eb82e5ffd1a7f45efb0536047abaf0ea', 'fx000005', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:15:00', NULL, 0, NULL, 1001, NULL, '2026-01-01 01:18:00', '2026-01-01 01:15:00', '2026-01-01 01:18:00'),
+	(4, NULL, 6, '23a5ddb7f2c7c6346baa81adc1117f2dcf41a84b8072097ff12481f34f199b26', 'fx000006', 1, 'reader', 'item', NULL, false, false, '2027-01-01 01:16:00', NULL, 0, '2026-01-01 01:19:00', 1001, NULL, '2026-01-01 01:20:00', '2026-01-01 01:16:00', '2026-01-01 01:20:00');
 
 
 --
@@ -1085,12 +1095,13 @@ INSERT INTO "public"."v_nodes" VALUES
 	(31, 'default', NULL, 2, 11, 'file', 'shared.bin', 'application/octet-stream', 'bin', 29, 19, 13, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:52:00', '2026-01-01 00:52:00'),
 	(32, 'default', NULL, 3, 21, 'file', 'shared.bin', 'application/octet-stream', 'bin', 29, 20, 14, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:53:00', '2026-01-01 00:53:00'),
 	(33, 'default', NULL, 3, 21, 'file', 'tenant.bin', 'application/octet-stream', 'bin', 33, 21, 15, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:54:00', '2026-01-01 00:54:00'),
-	(35, 'default', NULL, 1, 2, 'document', 'Budget', 'application/vnd.vaulter.document+json', NULL, 94, 2, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:56:00', '2026-01-01 00:56:00'),
-	(37, 'default', NULL, 1, 2, 'document', 'Letter template', 'application/vnd.vaulter.document+json', NULL, 103, 4, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:58:00', '2026-01-01 00:58:00'),
-	(34, 'default', NULL, 1, 2, 'document', 'Notes', 'application/vnd.vaulter.document+json', NULL, 93, 5, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:55:00', '2026-01-01 00:59:00'),
-	(36, 'default', NULL, 1, 2, 'document', 'Readme', 'application/vnd.vaulter.document+json', NULL, 94, 6, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:57:00', '2026-01-01 01:00:00'),
-	(38, 'default', NULL, 1, NULL, 'document', 'Loose note', 'application/vnd.vaulter.document+json', NULL, 90, 7, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:01:00', '2026-01-01 01:01:00'),
-	(39, 'default', NULL, 1, NULL, 'document', 'Projects', 'application/vnd.vaulter.document+json', NULL, 116, 8, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:02:00', '2026-01-01 01:02:00');
+	(34, 'default', NULL, 1, 1, 'file', 'global.bin', 'application/octet-stream', 'bin', 28, 22, 16, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:55:00', '2026-01-01 00:55:00'),
+	(36, 'default', NULL, 1, 2, 'document', 'Budget', 'application/vnd.vaulter.document+json', NULL, 94, 2, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:57:00', '2026-01-01 00:57:00'),
+	(38, 'default', NULL, 1, 2, 'document', 'Letter template', 'application/vnd.vaulter.document+json', NULL, 103, 4, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:59:00', '2026-01-01 00:59:00'),
+	(35, 'default', NULL, 1, 2, 'document', 'Notes', 'application/vnd.vaulter.document+json', NULL, 93, 5, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:56:00', '2026-01-01 01:00:00'),
+	(37, 'default', NULL, 1, 2, 'document', 'Readme', 'application/vnd.vaulter.document+json', NULL, 94, 6, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 00:58:00', '2026-01-01 01:01:00'),
+	(39, 'default', NULL, 1, NULL, 'document', 'Loose note', 'application/vnd.vaulter.document+json', NULL, 90, 7, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:02:00', '2026-01-01 01:02:00'),
+	(40, 'default', NULL, 1, NULL, 'document', 'Projects', 'application/vnd.vaulter.document+json', NULL, 116, 8, NULL, 0, false, true, NULL, 1001, NULL, NULL, NULL, NULL, 1001, NULL, NULL, '2026-01-01 01:03:00', '2026-01-01 01:03:00');
 
 
 --
@@ -1098,70 +1109,74 @@ INSERT INTO "public"."v_nodes" VALUES
 --
 
 INSERT INTO "public"."v_outbox" VALUES
-	(1, 'storage.created:1', 'default', '1', 'storage.created', '{"storage_id":"1","root_node_id":"1","name":"FixtureV020Host storage","event_id":"storage.created:1","actor_id":null}', '2026-01-01 00:00:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:00:00', '2026-01-01 01:08:00'),
-	(2, 'node.created:2', 'default', '2', 'node.created', '{"node_id":"2","storage_id":"1","parent_id":"1","kind":"folder","name":"Projects","event_id":"node.created:2","actor_id":1001}', '2026-01-01 00:01:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:01:00', '2026-01-01 01:08:00'),
-	(3, 'node.created:3', 'default', '3', 'node.created', '{"node_id":"3","storage_id":"1","parent_id":"2","kind":"folder","name":"Reports","event_id":"node.created:3","actor_id":1001}', '2026-01-01 00:02:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:02:00', '2026-01-01 01:08:00'),
-	(4, 'node.created:4', 'default', '4', 'node.created', '{"node_id":"4","storage_id":"1","parent_id":"1","kind":"folder","name":"Archive","event_id":"node.created:4","actor_id":1001}', '2026-01-01 00:03:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:03:00', '2026-01-01 01:08:00'),
-	(5, 'node.created:5', 'default', '5', 'node.created', '{"node_id":"5","storage_id":"1","parent_id":"4","kind":"folder","name":"2025","event_id":"node.created:5","actor_id":1001}', '2026-01-01 00:04:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:04:00', '2026-01-01 01:08:00'),
-	(6, 'file.uploaded:1', 'default', '6', 'file.uploaded', '{"node_id":"6","storage_id":"1","version_id":"1","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:1","actor_id":1001}', '2026-01-01 00:05:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:05:00', '2026-01-01 01:08:00'),
-	(7, 'file.uploaded:2', 'default', '7', 'file.uploaded', '{"node_id":"7","storage_id":"1","version_id":"2","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:2","actor_id":1001}', '2026-01-01 00:06:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:06:00', '2026-01-01 01:08:00'),
-	(8, 'version.created:3', 'default', '7', 'version.created', '{"node_id":"7","storage_id":"1","version_id":"3","version_no":2,"size_bytes":16,"event_id":"version.created:3","actor_id":1001}', '2026-01-01 00:07:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:07:00', '2026-01-01 01:08:00'),
-	(9, 'version.created:4', 'default', '7', 'version.created', '{"node_id":"7","storage_id":"1","version_id":"4","version_no":3,"size_bytes":16,"event_id":"version.created:4","actor_id":1001}', '2026-01-01 00:08:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:08:00', '2026-01-01 01:08:00'),
-	(10, 'file.uploaded:5', 'default', '8', 'file.uploaded', '{"node_id":"8","storage_id":"1","version_id":"5","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:5","actor_id":1001}', '2026-01-01 00:09:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:09:00', '2026-01-01 01:08:00'),
-	(11, 'node.created:9', 'default', '9', 'node.created', '{"node_id":"9","storage_id":"1","parent_id":"1","kind":"folder","name":"Temp","event_id":"node.created:9","actor_id":1001}', '2026-01-01 00:10:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:10:00', '2026-01-01 01:08:00'),
-	(12, 'file.uploaded:6', 'default', '10', 'file.uploaded', '{"node_id":"10","storage_id":"1","version_id":"6","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:6","actor_id":1001}', '2026-01-01 00:11:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:11:00', '2026-01-01 01:08:00'),
-	(13, 'node.renamed:3:Reports 2025', 'default', '3', 'node.renamed', '{"node_id":"3","storage_id":"1","from":"Reports","to":"Reports 2025","event_id":"node.renamed:3:Reports 2025","actor_id":1001}', '2026-01-01 00:12:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:12:00', '2026-01-01 01:08:00'),
-	(14, 'node.moved:5:2', 'default', '5', 'node.moved', '{"node_id":"5","storage_id":"1","from_parent_id":"4","to_parent_id":"2","event_id":"node.moved:5:2","actor_id":1001}', '2026-01-01 00:13:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:13:00', '2026-01-01 01:08:00'),
-	(15, 'node.trashed:8', 'default', '8', 'node.trashed', '{"node_id":"8","storage_id":"1","name":"old.txt","event_id":"node.trashed:8","actor_id":1001}', '2026-01-01 00:14:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:14:00', '2026-01-01 01:08:00'),
-	(16, 'node.restored:8', 'default', '8', 'node.restored', '{"node_id":"8","storage_id":"1","parent_id":"4","name":"old.txt","event_id":"node.restored:8","actor_id":1001}', '2026-01-01 00:15:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:15:00', '2026-01-01 01:08:00'),
-	(17, 'node.trashed:9', 'default', '9', 'node.trashed', '{"node_id":"9","storage_id":"1","name":"Temp","event_id":"node.trashed:9","actor_id":1001}', '2026-01-01 00:17:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:17:00', '2026-01-01 01:08:00'),
-	(18, 'storage.created:2', 'default', '2', 'storage.created', '{"storage_id":"2","root_node_id":"11","name":"FixtureV020Host storage","event_id":"storage.created:2","actor_id":null}', '2026-01-01 00:17:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:17:00', '2026-01-01 01:08:00'),
-	(19, 'node.created:12', 'default', '12', 'node.created', '{"node_id":"12","storage_id":"2","parent_id":"11","kind":"folder","name":"Projects","event_id":"node.created:12","actor_id":1001}', '2026-01-01 00:18:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:18:00', '2026-01-01 01:08:00'),
-	(20, 'node.created:13', 'default', '13', 'node.created', '{"node_id":"13","storage_id":"2","parent_id":"12","kind":"folder","name":"Reports","event_id":"node.created:13","actor_id":1001}', '2026-01-01 00:19:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:19:00', '2026-01-01 01:08:00'),
-	(21, 'node.created:14', 'default', '14', 'node.created', '{"node_id":"14","storage_id":"2","parent_id":"11","kind":"folder","name":"Archive","event_id":"node.created:14","actor_id":1001}', '2026-01-01 00:20:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:20:00', '2026-01-01 01:08:00'),
-	(22, 'node.created:15', 'default', '15', 'node.created', '{"node_id":"15","storage_id":"2","parent_id":"14","kind":"folder","name":"2025","event_id":"node.created:15","actor_id":1001}', '2026-01-01 00:21:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:21:00', '2026-01-01 01:08:00'),
-	(23, 'file.uploaded:7', 'default', '16', 'file.uploaded', '{"node_id":"16","storage_id":"2","version_id":"7","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:7","actor_id":1001}', '2026-01-01 00:22:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:22:00', '2026-01-01 01:08:00'),
-	(24, 'file.uploaded:8', 'default', '17', 'file.uploaded', '{"node_id":"17","storage_id":"2","version_id":"8","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:8","actor_id":1001}', '2026-01-01 00:23:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:23:00', '2026-01-01 01:08:00'),
-	(25, 'version.created:9', 'default', '17', 'version.created', '{"node_id":"17","storage_id":"2","version_id":"9","version_no":2,"size_bytes":16,"event_id":"version.created:9","actor_id":1001}', '2026-01-01 00:24:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:24:00', '2026-01-01 01:08:00'),
-	(26, 'version.created:10', 'default', '17', 'version.created', '{"node_id":"17","storage_id":"2","version_id":"10","version_no":3,"size_bytes":16,"event_id":"version.created:10","actor_id":1001}', '2026-01-01 00:25:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:25:00', '2026-01-01 01:08:00'),
-	(27, 'file.uploaded:11', 'default', '18', 'file.uploaded', '{"node_id":"18","storage_id":"2","version_id":"11","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:11","actor_id":1001}', '2026-01-01 00:26:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:26:00', '2026-01-01 01:08:00'),
-	(28, 'node.created:19', 'default', '19', 'node.created', '{"node_id":"19","storage_id":"2","parent_id":"11","kind":"folder","name":"Temp","event_id":"node.created:19","actor_id":1001}', '2026-01-01 00:27:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:27:00', '2026-01-01 01:08:00'),
-	(29, 'file.uploaded:12', 'default', '20', 'file.uploaded', '{"node_id":"20","storage_id":"2","version_id":"12","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:12","actor_id":1001}', '2026-01-01 00:28:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:28:00', '2026-01-01 01:08:00'),
-	(30, 'node.renamed:13:Reports 2025', 'default', '13', 'node.renamed', '{"node_id":"13","storage_id":"2","from":"Reports","to":"Reports 2025","event_id":"node.renamed:13:Reports 2025","actor_id":1001}', '2026-01-01 00:29:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:29:00', '2026-01-01 01:08:00'),
-	(31, 'node.moved:15:12', 'default', '15', 'node.moved', '{"node_id":"15","storage_id":"2","from_parent_id":"14","to_parent_id":"12","event_id":"node.moved:15:12","actor_id":1001}', '2026-01-01 00:30:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:30:00', '2026-01-01 01:08:00'),
-	(32, 'node.trashed:18', 'default', '18', 'node.trashed', '{"node_id":"18","storage_id":"2","name":"old.txt","event_id":"node.trashed:18","actor_id":1001}', '2026-01-01 00:31:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:31:00', '2026-01-01 01:08:00'),
-	(33, 'node.restored:18', 'default', '18', 'node.restored', '{"node_id":"18","storage_id":"2","parent_id":"14","name":"old.txt","event_id":"node.restored:18","actor_id":1001}', '2026-01-01 00:32:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:32:00', '2026-01-01 01:08:00'),
-	(34, 'node.trashed:19', 'default', '19', 'node.trashed', '{"node_id":"19","storage_id":"2","name":"Temp","event_id":"node.trashed:19","actor_id":1001}', '2026-01-01 00:34:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:34:00', '2026-01-01 01:08:00'),
-	(35, 'storage.created:3', 'default', '3', 'storage.created', '{"storage_id":"3","root_node_id":"21","name":"FixtureV020Host storage","event_id":"storage.created:3","actor_id":null}', '2026-01-01 00:34:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:34:00', '2026-01-01 01:08:00'),
-	(36, 'node.created:22', 'default', '22', 'node.created', '{"node_id":"22","storage_id":"3","parent_id":"21","kind":"folder","name":"Projects","event_id":"node.created:22","actor_id":1001}', '2026-01-01 00:35:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:35:00', '2026-01-01 01:08:00'),
-	(37, 'node.created:23', 'default', '23', 'node.created', '{"node_id":"23","storage_id":"3","parent_id":"22","kind":"folder","name":"Reports","event_id":"node.created:23","actor_id":1001}', '2026-01-01 00:36:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:36:00', '2026-01-01 01:08:00'),
-	(38, 'node.created:24', 'default', '24', 'node.created', '{"node_id":"24","storage_id":"3","parent_id":"21","kind":"folder","name":"Archive","event_id":"node.created:24","actor_id":1001}', '2026-01-01 00:37:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:37:00', '2026-01-01 01:08:00'),
-	(39, 'node.created:25', 'default', '25', 'node.created', '{"node_id":"25","storage_id":"3","parent_id":"24","kind":"folder","name":"2025","event_id":"node.created:25","actor_id":1001}', '2026-01-01 00:38:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:38:00', '2026-01-01 01:08:00'),
-	(40, 'file.uploaded:13', 'default', '26', 'file.uploaded', '{"node_id":"26","storage_id":"3","version_id":"13","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:13","actor_id":1001}', '2026-01-01 00:39:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:39:00', '2026-01-01 01:08:00'),
-	(41, 'file.uploaded:14', 'default', '27', 'file.uploaded', '{"node_id":"27","storage_id":"3","version_id":"14","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:14","actor_id":1001}', '2026-01-01 00:40:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:40:00', '2026-01-01 01:08:00'),
-	(42, 'version.created:15', 'default', '27', 'version.created', '{"node_id":"27","storage_id":"3","version_id":"15","version_no":2,"size_bytes":16,"event_id":"version.created:15","actor_id":1001}', '2026-01-01 00:41:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:41:00', '2026-01-01 01:08:00'),
-	(43, 'version.created:16', 'default', '27', 'version.created', '{"node_id":"27","storage_id":"3","version_id":"16","version_no":3,"size_bytes":16,"event_id":"version.created:16","actor_id":1001}', '2026-01-01 00:42:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:42:00', '2026-01-01 01:08:00'),
-	(44, 'file.uploaded:17', 'default', '28', 'file.uploaded', '{"node_id":"28","storage_id":"3","version_id":"17","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:17","actor_id":1001}', '2026-01-01 00:43:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:43:00', '2026-01-01 01:08:00'),
-	(45, 'node.created:29', 'default', '29', 'node.created', '{"node_id":"29","storage_id":"3","parent_id":"21","kind":"folder","name":"Temp","event_id":"node.created:29","actor_id":1001}', '2026-01-01 00:44:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:44:00', '2026-01-01 01:08:00'),
-	(46, 'file.uploaded:18', 'default', '30', 'file.uploaded', '{"node_id":"30","storage_id":"3","version_id":"18","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:18","actor_id":1001}', '2026-01-01 00:45:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:45:00', '2026-01-01 01:08:00'),
-	(47, 'node.renamed:23:Reports 2025', 'default', '23', 'node.renamed', '{"node_id":"23","storage_id":"3","from":"Reports","to":"Reports 2025","event_id":"node.renamed:23:Reports 2025","actor_id":1001}', '2026-01-01 00:46:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:46:00', '2026-01-01 01:08:00'),
-	(48, 'node.moved:25:22', 'default', '25', 'node.moved', '{"node_id":"25","storage_id":"3","from_parent_id":"24","to_parent_id":"22","event_id":"node.moved:25:22","actor_id":1001}', '2026-01-01 00:47:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:47:00', '2026-01-01 01:08:00'),
-	(49, 'node.trashed:28', 'default', '28', 'node.trashed', '{"node_id":"28","storage_id":"3","name":"old.txt","event_id":"node.trashed:28","actor_id":1001}', '2026-01-01 00:48:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:48:00', '2026-01-01 01:08:00'),
-	(50, 'node.restored:28', 'default', '28', 'node.restored', '{"node_id":"28","storage_id":"3","parent_id":"24","name":"old.txt","event_id":"node.restored:28","actor_id":1001}', '2026-01-01 00:49:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:49:00', '2026-01-01 01:08:00'),
-	(51, 'node.trashed:29', 'default', '29', 'node.trashed', '{"node_id":"29","storage_id":"3","name":"Temp","event_id":"node.trashed:29","actor_id":1001}', '2026-01-01 00:51:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:51:00', '2026-01-01 01:08:00'),
-	(52, 'file.uploaded:19', 'default', '31', 'file.uploaded', '{"node_id":"31","storage_id":"2","version_id":"19","name":"shared.bin","size_bytes":29,"mime_type":"application\/octet-stream","event_id":"file.uploaded:19","actor_id":1001}', '2026-01-01 00:52:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:52:00', '2026-01-01 01:08:00'),
-	(53, 'file.uploaded:20', 'default', '32', 'file.uploaded', '{"node_id":"32","storage_id":"3","version_id":"20","name":"shared.bin","size_bytes":29,"mime_type":"application\/octet-stream","event_id":"file.uploaded:20","actor_id":1001}', '2026-01-01 00:53:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:53:00', '2026-01-01 01:08:00'),
-	(54, 'file.uploaded:21', 'default', '33', 'file.uploaded', '{"node_id":"33","storage_id":"3","version_id":"21","name":"tenant.bin","size_bytes":33,"mime_type":"application\/octet-stream","event_id":"file.uploaded:21","actor_id":1001}', '2026-01-01 00:54:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 00:54:00', '2026-01-01 01:08:00'),
-	(55, 'grant.created:1', 'default', '2', 'grant.created', '{"grant_id":"1","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"101","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:1","actor_id":1001}', '2026-01-01 01:04:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 01:04:00', '2026-01-01 01:08:00'),
-	(56, 'grant.created:2', 'default', '2', 'grant.created', '{"grant_id":"2","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"201","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:2","actor_id":1001}', '2026-01-01 01:05:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 01:05:00', '2026-01-01 01:08:00'),
-	(57, 'grant.created:3', 'default', '2', 'grant.created', '{"grant_id":"3","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:3","actor_id":1001}', '2026-01-01 01:06:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 01:06:00', '2026-01-01 01:08:00'),
-	(58, 'grant.created:4', 'default', '2', 'grant.created', '{"grant_id":"4","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:4","actor_id":1001}', '2026-01-01 01:07:00', '2026-01-01 01:08:00', 0, 'dispatched', '2026-01-01 01:07:00', '2026-01-01 01:08:00'),
-	(59, 'grant.revoked:2:user:102', 'default', '2', 'grant.revoked', '{"node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","revoked":1,"event_id":"grant.revoked:2:user:102","actor_id":1001}', '2026-01-01 01:09:00', NULL, 0, 'pending', '2026-01-01 01:09:00', '2026-01-01 01:09:00'),
-	(60, 'grant.revoked:2:role:202', 'default', '2', 'grant.revoked', '{"node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","revoked":1,"event_id":"grant.revoked:2:role:202","actor_id":1001}', '2026-01-01 01:10:00', NULL, 0, 'pending', '2026-01-01 01:10:00', '2026-01-01 01:10:00'),
-	(61, 'share.created:1', 'default', '6', 'share.created', '{"share_id":"1","node_id":"6","storage_id":"1","token_prefix":"fx000003","level":"reader","scope":"item","permissions":1,"event_id":"share.created:1","actor_id":1001}', '2026-01-01 01:11:00', NULL, 0, 'pending', '2026-01-01 01:11:00', '2026-01-01 01:11:00'),
-	(62, 'share.created:2', 'default', '6', 'share.created', '{"share_id":"2","node_id":"6","storage_id":"1","token_prefix":"fx000004","level":"reader","scope":"item","permissions":1,"event_id":"share.created:2","actor_id":1001}', '2026-01-01 01:12:00', NULL, 0, 'pending', '2026-01-01 01:12:00', '2026-01-01 01:12:00'),
-	(63, 'share.created:3', 'default', '6', 'share.created', '{"share_id":"3","node_id":"6","storage_id":"1","token_prefix":"fx000005","level":"reader","scope":"item","permissions":1,"event_id":"share.created:3","actor_id":1001}', '2026-01-01 01:13:00', NULL, 0, 'pending', '2026-01-01 01:13:00', '2026-01-01 01:13:00'),
-	(64, 'share.revoked:2', 'default', '6', 'share.revoked', '{"share_id":"2","node_id":"6","storage_id":"1","token_prefix":"fx000004","event_id":"share.revoked:2","actor_id":1001}', '2026-01-01 01:14:00', NULL, 0, 'pending', '2026-01-01 01:14:00', '2026-01-01 01:14:00');
+	(1, 'storage.created:1', 'default', '1', 'storage.created', '{"storage_id":"1","root_node_id":"1","name":"FixtureV020Host storage","event_id":"storage.created:1","actor_id":null}', '2026-01-01 00:00:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:00:00', '2026-01-01 01:09:00'),
+	(2, 'node.created:2', 'default', '2', 'node.created', '{"node_id":"2","storage_id":"1","parent_id":"1","kind":"folder","name":"Projects","event_id":"node.created:2","actor_id":1001}', '2026-01-01 00:01:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:01:00', '2026-01-01 01:09:00'),
+	(3, 'node.created:3', 'default', '3', 'node.created', '{"node_id":"3","storage_id":"1","parent_id":"2","kind":"folder","name":"Reports","event_id":"node.created:3","actor_id":1001}', '2026-01-01 00:02:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:02:00', '2026-01-01 01:09:00'),
+	(4, 'node.created:4', 'default', '4', 'node.created', '{"node_id":"4","storage_id":"1","parent_id":"1","kind":"folder","name":"Archive","event_id":"node.created:4","actor_id":1001}', '2026-01-01 00:03:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:03:00', '2026-01-01 01:09:00'),
+	(5, 'node.created:5', 'default', '5', 'node.created', '{"node_id":"5","storage_id":"1","parent_id":"4","kind":"folder","name":"2025","event_id":"node.created:5","actor_id":1001}', '2026-01-01 00:04:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:04:00', '2026-01-01 01:09:00'),
+	(6, 'file.uploaded:1', 'default', '6', 'file.uploaded', '{"node_id":"6","storage_id":"1","version_id":"1","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:1","actor_id":1001}', '2026-01-01 00:05:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:05:00', '2026-01-01 01:09:00'),
+	(7, 'file.uploaded:2', 'default', '7', 'file.uploaded', '{"node_id":"7","storage_id":"1","version_id":"2","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:2","actor_id":1001}', '2026-01-01 00:06:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:06:00', '2026-01-01 01:09:00'),
+	(8, 'version.created:3', 'default', '7', 'version.created', '{"node_id":"7","storage_id":"1","version_id":"3","version_no":2,"size_bytes":16,"event_id":"version.created:3","actor_id":1001}', '2026-01-01 00:07:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:07:00', '2026-01-01 01:09:00'),
+	(9, 'version.created:4', 'default', '7', 'version.created', '{"node_id":"7","storage_id":"1","version_id":"4","version_no":3,"size_bytes":16,"event_id":"version.created:4","actor_id":1001}', '2026-01-01 00:08:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:08:00', '2026-01-01 01:09:00'),
+	(10, 'file.uploaded:5', 'default', '8', 'file.uploaded', '{"node_id":"8","storage_id":"1","version_id":"5","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:5","actor_id":1001}', '2026-01-01 00:09:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:09:00', '2026-01-01 01:09:00'),
+	(11, 'node.created:9', 'default', '9', 'node.created', '{"node_id":"9","storage_id":"1","parent_id":"1","kind":"folder","name":"Temp","event_id":"node.created:9","actor_id":1001}', '2026-01-01 00:10:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:10:00', '2026-01-01 01:09:00'),
+	(12, 'file.uploaded:6', 'default', '10', 'file.uploaded', '{"node_id":"10","storage_id":"1","version_id":"6","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:6","actor_id":1001}', '2026-01-01 00:11:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:11:00', '2026-01-01 01:09:00'),
+	(13, 'node.renamed:3:Reports 2025', 'default', '3', 'node.renamed', '{"node_id":"3","storage_id":"1","from":"Reports","to":"Reports 2025","event_id":"node.renamed:3:Reports 2025","actor_id":1001}', '2026-01-01 00:12:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:12:00', '2026-01-01 01:09:00'),
+	(14, 'node.moved:5:2', 'default', '5', 'node.moved', '{"node_id":"5","storage_id":"1","from_parent_id":"4","to_parent_id":"2","event_id":"node.moved:5:2","actor_id":1001}', '2026-01-01 00:13:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:13:00', '2026-01-01 01:09:00'),
+	(15, 'node.trashed:8', 'default', '8', 'node.trashed', '{"node_id":"8","storage_id":"1","name":"old.txt","event_id":"node.trashed:8","actor_id":1001}', '2026-01-01 00:14:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:14:00', '2026-01-01 01:09:00'),
+	(16, 'node.restored:8', 'default', '8', 'node.restored', '{"node_id":"8","storage_id":"1","parent_id":"4","name":"old.txt","event_id":"node.restored:8","actor_id":1001}', '2026-01-01 00:15:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:15:00', '2026-01-01 01:09:00'),
+	(17, 'node.trashed:9', 'default', '9', 'node.trashed', '{"node_id":"9","storage_id":"1","name":"Temp","event_id":"node.trashed:9","actor_id":1001}', '2026-01-01 00:17:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:17:00', '2026-01-01 01:09:00'),
+	(18, 'storage.created:2', 'default', '2', 'storage.created', '{"storage_id":"2","root_node_id":"11","name":"FixtureV020Host storage","event_id":"storage.created:2","actor_id":null}', '2026-01-01 00:17:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:17:00', '2026-01-01 01:09:00'),
+	(19, 'node.created:12', 'default', '12', 'node.created', '{"node_id":"12","storage_id":"2","parent_id":"11","kind":"folder","name":"Projects","event_id":"node.created:12","actor_id":1001}', '2026-01-01 00:18:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:18:00', '2026-01-01 01:09:00'),
+	(20, 'node.created:13', 'default', '13', 'node.created', '{"node_id":"13","storage_id":"2","parent_id":"12","kind":"folder","name":"Reports","event_id":"node.created:13","actor_id":1001}', '2026-01-01 00:19:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:19:00', '2026-01-01 01:09:00'),
+	(21, 'node.created:14', 'default', '14', 'node.created', '{"node_id":"14","storage_id":"2","parent_id":"11","kind":"folder","name":"Archive","event_id":"node.created:14","actor_id":1001}', '2026-01-01 00:20:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:20:00', '2026-01-01 01:09:00'),
+	(22, 'node.created:15', 'default', '15', 'node.created', '{"node_id":"15","storage_id":"2","parent_id":"14","kind":"folder","name":"2025","event_id":"node.created:15","actor_id":1001}', '2026-01-01 00:21:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:21:00', '2026-01-01 01:09:00'),
+	(23, 'file.uploaded:7', 'default', '16', 'file.uploaded', '{"node_id":"16","storage_id":"2","version_id":"7","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:7","actor_id":1001}', '2026-01-01 00:22:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:22:00', '2026-01-01 01:09:00'),
+	(24, 'file.uploaded:8', 'default', '17', 'file.uploaded', '{"node_id":"17","storage_id":"2","version_id":"8","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:8","actor_id":1001}', '2026-01-01 00:23:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:23:00', '2026-01-01 01:09:00'),
+	(25, 'version.created:9', 'default', '17', 'version.created', '{"node_id":"17","storage_id":"2","version_id":"9","version_no":2,"size_bytes":16,"event_id":"version.created:9","actor_id":1001}', '2026-01-01 00:24:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:24:00', '2026-01-01 01:09:00'),
+	(26, 'version.created:10', 'default', '17', 'version.created', '{"node_id":"17","storage_id":"2","version_id":"10","version_no":3,"size_bytes":16,"event_id":"version.created:10","actor_id":1001}', '2026-01-01 00:25:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:25:00', '2026-01-01 01:09:00'),
+	(27, 'file.uploaded:11', 'default', '18', 'file.uploaded', '{"node_id":"18","storage_id":"2","version_id":"11","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:11","actor_id":1001}', '2026-01-01 00:26:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:26:00', '2026-01-01 01:09:00'),
+	(28, 'node.created:19', 'default', '19', 'node.created', '{"node_id":"19","storage_id":"2","parent_id":"11","kind":"folder","name":"Temp","event_id":"node.created:19","actor_id":1001}', '2026-01-01 00:27:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:27:00', '2026-01-01 01:09:00'),
+	(29, 'file.uploaded:12', 'default', '20', 'file.uploaded', '{"node_id":"20","storage_id":"2","version_id":"12","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:12","actor_id":1001}', '2026-01-01 00:28:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:28:00', '2026-01-01 01:09:00'),
+	(30, 'node.renamed:13:Reports 2025', 'default', '13', 'node.renamed', '{"node_id":"13","storage_id":"2","from":"Reports","to":"Reports 2025","event_id":"node.renamed:13:Reports 2025","actor_id":1001}', '2026-01-01 00:29:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:29:00', '2026-01-01 01:09:00'),
+	(31, 'node.moved:15:12', 'default', '15', 'node.moved', '{"node_id":"15","storage_id":"2","from_parent_id":"14","to_parent_id":"12","event_id":"node.moved:15:12","actor_id":1001}', '2026-01-01 00:30:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:30:00', '2026-01-01 01:09:00'),
+	(32, 'node.trashed:18', 'default', '18', 'node.trashed', '{"node_id":"18","storage_id":"2","name":"old.txt","event_id":"node.trashed:18","actor_id":1001}', '2026-01-01 00:31:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:31:00', '2026-01-01 01:09:00'),
+	(33, 'node.restored:18', 'default', '18', 'node.restored', '{"node_id":"18","storage_id":"2","parent_id":"14","name":"old.txt","event_id":"node.restored:18","actor_id":1001}', '2026-01-01 00:32:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:32:00', '2026-01-01 01:09:00'),
+	(34, 'node.trashed:19', 'default', '19', 'node.trashed', '{"node_id":"19","storage_id":"2","name":"Temp","event_id":"node.trashed:19","actor_id":1001}', '2026-01-01 00:34:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:34:00', '2026-01-01 01:09:00'),
+	(35, 'storage.created:3', 'default', '3', 'storage.created', '{"storage_id":"3","root_node_id":"21","name":"FixtureV020Host storage","event_id":"storage.created:3","actor_id":null}', '2026-01-01 00:34:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:34:00', '2026-01-01 01:09:00'),
+	(36, 'node.created:22', 'default', '22', 'node.created', '{"node_id":"22","storage_id":"3","parent_id":"21","kind":"folder","name":"Projects","event_id":"node.created:22","actor_id":1001}', '2026-01-01 00:35:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:35:00', '2026-01-01 01:09:00'),
+	(37, 'node.created:23', 'default', '23', 'node.created', '{"node_id":"23","storage_id":"3","parent_id":"22","kind":"folder","name":"Reports","event_id":"node.created:23","actor_id":1001}', '2026-01-01 00:36:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:36:00', '2026-01-01 01:09:00'),
+	(38, 'node.created:24', 'default', '24', 'node.created', '{"node_id":"24","storage_id":"3","parent_id":"21","kind":"folder","name":"Archive","event_id":"node.created:24","actor_id":1001}', '2026-01-01 00:37:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:37:00', '2026-01-01 01:09:00'),
+	(39, 'node.created:25', 'default', '25', 'node.created', '{"node_id":"25","storage_id":"3","parent_id":"24","kind":"folder","name":"2025","event_id":"node.created:25","actor_id":1001}', '2026-01-01 00:38:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:38:00', '2026-01-01 01:09:00'),
+	(40, 'file.uploaded:13', 'default', '26', 'file.uploaded', '{"node_id":"26","storage_id":"3","version_id":"13","name":"brief.txt","size_bytes":19,"mime_type":"text\/plain","event_id":"file.uploaded:13","actor_id":1001}', '2026-01-01 00:39:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:39:00', '2026-01-01 01:09:00'),
+	(41, 'file.uploaded:14', 'default', '27', 'file.uploaded', '{"node_id":"27","storage_id":"3","version_id":"14","name":"q1.csv","size_bytes":16,"mime_type":"text\/csv","event_id":"file.uploaded:14","actor_id":1001}', '2026-01-01 00:40:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:40:00', '2026-01-01 01:09:00'),
+	(42, 'version.created:15', 'default', '27', 'version.created', '{"node_id":"27","storage_id":"3","version_id":"15","version_no":2,"size_bytes":16,"event_id":"version.created:15","actor_id":1001}', '2026-01-01 00:41:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:41:00', '2026-01-01 01:09:00'),
+	(43, 'version.created:16', 'default', '27', 'version.created', '{"node_id":"27","storage_id":"3","version_id":"16","version_no":3,"size_bytes":16,"event_id":"version.created:16","actor_id":1001}', '2026-01-01 00:42:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:42:00', '2026-01-01 01:09:00'),
+	(44, 'file.uploaded:17', 'default', '28', 'file.uploaded', '{"node_id":"28","storage_id":"3","version_id":"17","name":"old.txt","size_bytes":17,"mime_type":"text\/plain","event_id":"file.uploaded:17","actor_id":1001}', '2026-01-01 00:43:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:43:00', '2026-01-01 01:09:00'),
+	(45, 'node.created:29', 'default', '29', 'node.created', '{"node_id":"29","storage_id":"3","parent_id":"21","kind":"folder","name":"Temp","event_id":"node.created:29","actor_id":1001}', '2026-01-01 00:44:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:44:00', '2026-01-01 01:09:00'),
+	(46, 'file.uploaded:18', 'default', '30', 'file.uploaded', '{"node_id":"30","storage_id":"3","version_id":"18","name":"note.txt","size_bytes":21,"mime_type":"text\/plain","event_id":"file.uploaded:18","actor_id":1001}', '2026-01-01 00:45:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:45:00', '2026-01-01 01:09:00'),
+	(47, 'node.renamed:23:Reports 2025', 'default', '23', 'node.renamed', '{"node_id":"23","storage_id":"3","from":"Reports","to":"Reports 2025","event_id":"node.renamed:23:Reports 2025","actor_id":1001}', '2026-01-01 00:46:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:46:00', '2026-01-01 01:09:00'),
+	(48, 'node.moved:25:22', 'default', '25', 'node.moved', '{"node_id":"25","storage_id":"3","from_parent_id":"24","to_parent_id":"22","event_id":"node.moved:25:22","actor_id":1001}', '2026-01-01 00:47:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:47:00', '2026-01-01 01:09:00'),
+	(49, 'node.trashed:28', 'default', '28', 'node.trashed', '{"node_id":"28","storage_id":"3","name":"old.txt","event_id":"node.trashed:28","actor_id":1001}', '2026-01-01 00:48:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:48:00', '2026-01-01 01:09:00'),
+	(50, 'node.restored:28', 'default', '28', 'node.restored', '{"node_id":"28","storage_id":"3","parent_id":"24","name":"old.txt","event_id":"node.restored:28","actor_id":1001}', '2026-01-01 00:49:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:49:00', '2026-01-01 01:09:00'),
+	(51, 'node.trashed:29', 'default', '29', 'node.trashed', '{"node_id":"29","storage_id":"3","name":"Temp","event_id":"node.trashed:29","actor_id":1001}', '2026-01-01 00:51:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:51:00', '2026-01-01 01:09:00'),
+	(52, 'file.uploaded:19', 'default', '31', 'file.uploaded', '{"node_id":"31","storage_id":"2","version_id":"19","name":"shared.bin","size_bytes":29,"mime_type":"application\/octet-stream","event_id":"file.uploaded:19","actor_id":1001}', '2026-01-01 00:52:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:52:00', '2026-01-01 01:09:00'),
+	(53, 'file.uploaded:20', 'default', '32', 'file.uploaded', '{"node_id":"32","storage_id":"3","version_id":"20","name":"shared.bin","size_bytes":29,"mime_type":"application\/octet-stream","event_id":"file.uploaded:20","actor_id":1001}', '2026-01-01 00:53:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:53:00', '2026-01-01 01:09:00'),
+	(54, 'file.uploaded:21', 'default', '33', 'file.uploaded', '{"node_id":"33","storage_id":"3","version_id":"21","name":"tenant.bin","size_bytes":33,"mime_type":"application\/octet-stream","event_id":"file.uploaded:21","actor_id":1001}', '2026-01-01 00:54:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:54:00', '2026-01-01 01:09:00'),
+	(55, 'file.uploaded:22', 'default', '34', 'file.uploaded', '{"node_id":"34","storage_id":"1","version_id":"22","name":"global.bin","size_bytes":28,"mime_type":"application\/octet-stream","event_id":"file.uploaded:22","actor_id":1001}', '2026-01-01 00:55:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 00:55:00', '2026-01-01 01:09:00'),
+	(56, 'grant.created:1', 'default', '2', 'grant.created', '{"grant_id":"1","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"101","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:1","actor_id":1001}', '2026-01-01 01:05:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 01:05:00', '2026-01-01 01:09:00'),
+	(57, 'grant.created:2', 'default', '2', 'grant.created', '{"grant_id":"2","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"201","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:2","actor_id":1001}', '2026-01-01 01:06:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 01:06:00', '2026-01-01 01:09:00'),
+	(58, 'grant.created:3', 'default', '2', 'grant.created', '{"grant_id":"3","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:3","actor_id":1001}', '2026-01-01 01:07:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 01:07:00', '2026-01-01 01:09:00'),
+	(59, 'grant.created:4', 'default', '2', 'grant.created', '{"grant_id":"4","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:4","actor_id":1001}', '2026-01-01 01:08:00', '2026-01-01 01:09:00', 0, 'dispatched', '2026-01-01 01:08:00', '2026-01-01 01:09:00'),
+	(60, 'grant.revoked:2:user:102', 'default', '2', 'grant.revoked', '{"node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","revoked":1,"event_id":"grant.revoked:2:user:102","actor_id":1001}', '2026-01-01 01:10:00', NULL, 0, 'pending', '2026-01-01 01:10:00', '2026-01-01 01:10:00'),
+	(61, 'grant.revoked:2:role:202', 'default', '2', 'grant.revoked', '{"node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","revoked":1,"event_id":"grant.revoked:2:role:202","actor_id":1001}', '2026-01-01 01:11:00', NULL, 0, 'pending', '2026-01-01 01:11:00', '2026-01-01 01:11:00'),
+	(62, 'grant.created:5', 'default', '2', 'grant.created', '{"grant_id":"5","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","level":"reader","effect":"allow","scope":"subtree","event_id":"grant.created:5","actor_id":1001}', '2026-01-01 01:12:00', NULL, 0, 'pending', '2026-01-01 01:12:00', '2026-01-01 01:12:00'),
+	(63, 'share.created:1', 'default', '6', 'share.created', '{"share_id":"1","node_id":"6","storage_id":"1","token_prefix":"fx000003","level":"reader","scope":"item","permissions":1,"event_id":"share.created:1","actor_id":1001}', '2026-01-01 01:13:00', NULL, 0, 'pending', '2026-01-01 01:13:00', '2026-01-01 01:13:00'),
+	(64, 'share.created:2', 'default', '6', 'share.created', '{"share_id":"2","node_id":"6","storage_id":"1","token_prefix":"fx000004","level":"reader","scope":"item","permissions":1,"event_id":"share.created:2","actor_id":1001}', '2026-01-01 01:14:00', NULL, 0, 'pending', '2026-01-01 01:14:00', '2026-01-01 01:14:00'),
+	(65, 'share.created:3', 'default', '6', 'share.created', '{"share_id":"3","node_id":"6","storage_id":"1","token_prefix":"fx000005","level":"reader","scope":"item","permissions":1,"event_id":"share.created:3","actor_id":1001}', '2026-01-01 01:15:00', NULL, 0, 'pending', '2026-01-01 01:15:00', '2026-01-01 01:15:00'),
+	(66, 'share.created:4', 'default', '6', 'share.created', '{"share_id":"4","node_id":"6","storage_id":"1","token_prefix":"fx000006","level":"reader","scope":"item","permissions":1,"event_id":"share.created:4","actor_id":1001}', '2026-01-01 01:16:00', NULL, 0, 'pending', '2026-01-01 01:16:00', '2026-01-01 01:16:00'),
+	(67, 'share.revoked:2', 'default', '6', 'share.revoked', '{"share_id":"2","node_id":"6","storage_id":"1","token_prefix":"fx000004","event_id":"share.revoked:2","actor_id":1001}', '2026-01-01 01:17:00', NULL, 0, 'pending', '2026-01-01 01:17:00', '2026-01-01 01:17:00'),
+	(68, 'share.revoked:4', 'default', '6', 'share.revoked', '{"share_id":"4","node_id":"6","storage_id":"1","token_prefix":"fx000006","event_id":"share.revoked:4","actor_id":1001}', '2026-01-01 01:19:00', NULL, 0, 'pending', '2026-01-01 01:19:00', '2026-01-01 01:19:00');
 
 
 --
@@ -1169,9 +1184,9 @@ INSERT INTO "public"."v_outbox" VALUES
 --
 
 INSERT INTO "public"."v_storages" VALUES
-	(1, 'default', NULL, 1, 'fixture_host', 'FixtureV020Host storage', NULL, 1, 'local', 'private', NULL, 73, 'active', 31, NULL, NULL, NULL, '2026-01-01 00:00:00', '2026-01-01 00:00:00'),
 	(2, 'default', NULL, 2, 'fixture_host', 'FixtureV020Host storage', NULL, 11, 'local', 'private', NULL, 102, 'active', 31, NULL, NULL, NULL, '2026-01-01 00:17:00', '2026-01-01 00:17:00'),
-	(3, 'default', NULL, 3, 'fixture_host', 'FixtureV020Host storage', NULL, 21, 'local', 'private', NULL, 135, 'active', 31, NULL, NULL, NULL, '2026-01-01 00:34:00', '2026-01-01 00:34:00');
+	(3, 'default', NULL, 3, 'fixture_host', 'FixtureV020Host storage', NULL, 21, 'local', 'private', NULL, 135, 'active', 31, NULL, NULL, NULL, '2026-01-01 00:34:00', '2026-01-01 00:34:00'),
+	(1, 'default', NULL, 1, 'fixture_host', 'FixtureV020Host storage', NULL, 1, 'local', 'private', NULL, 101, 'active', 31, NULL, NULL, NULL, '2026-01-01 00:00:00', '2026-01-01 00:00:00');
 
 
 --
@@ -1185,7 +1200,7 @@ INSERT INTO "public"."v_storages" VALUES
 --
 
 INSERT INTO "public"."v_upload_sessions" VALUES
-	(1, NULL, 1, '00000000-0000-4000-8000-000000000001', NULL, 2, 'large.bin', 'tus', 'uploading', NULL, 10, 4, 8388608, 'application/octet-stream', NULL, NULL, NULL, NULL, '2026-01-02 01:16:00', 1001, '2026-01-01 01:16:00', '2026-01-01 01:17:00');
+	(1, NULL, 1, '00000000-0000-4000-8000-000000000001', NULL, 2, 'large.bin', 'tus', 'uploading', NULL, 10, 4, 8388608, 'application/octet-stream', NULL, NULL, NULL, NULL, '2026-01-02 01:21:00', 1001, '2026-01-01 01:21:00', '2026-01-01 01:22:00');
 
 
 --
@@ -1193,10 +1208,10 @@ INSERT INTO "public"."v_upload_sessions" VALUES
 --
 
 INSERT INTO "public"."v_webhook_deliveries" VALUES
-	(1, 1, 'grant.created', '{"grant_id":"1","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"101","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:1","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:08:00', '2026-01-01 01:08:00'),
-	(2, 1, 'grant.created', '{"grant_id":"2","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"201","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:2","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:08:00', '2026-01-01 01:08:00'),
-	(3, 1, 'grant.created', '{"grant_id":"3","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:3","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:08:00', '2026-01-01 01:08:00'),
-	(4, 1, 'grant.created', '{"grant_id":"4","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:4","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:08:00', '2026-01-01 01:08:00');
+	(1, 1, 'grant.created', '{"grant_id":"1","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"101","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:1","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:09:00', '2026-01-01 01:09:00'),
+	(2, 1, 'grant.created', '{"grant_id":"2","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"201","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:2","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:09:00', '2026-01-01 01:09:00'),
+	(3, 1, 'grant.created', '{"grant_id":"3","node_id":"2","storage_id":"1","subject_type":"user","subject_id":"102","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:3","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:09:00', '2026-01-01 01:09:00'),
+	(4, 1, 'grant.created', '{"grant_id":"4","node_id":"2","storage_id":"1","subject_type":"role","subject_id":"202","level":"writer","effect":"allow","scope":"subtree","event_id":"grant.created:4","actor_id":1001}', 'delivered', 1, NULL, NULL, '2026-01-01 01:09:00', '2026-01-01 01:09:00');
 
 
 --
@@ -1204,7 +1219,7 @@ INSERT INTO "public"."v_webhook_deliveries" VALUES
 --
 
 INSERT INTO "public"."v_webhook_endpoints" VALUES
-	(1, 'https://hooks.fixture.test/vaulter', '["grant.created","grant.revoked","share.created"]', 'eyJpdiI6IlV2QXpXTnpDVjhBQTNsQ2wrR2ZDWGc9PSIsInZhbHVlIjoiTmVkblQ0WmxGU2VQL1Jocmd1YzF3ald3TlZaZnRFVWNTUkpQRkh1S2tndXlzY2tTd2RHOTFRVENsK3VLSmpXdk5kZFVYd1YybXFJbWVGSnVBSWRvY0xsSkx0VnpOb3BnY3p2eXlqNXBINXc9IiwibWFjIjoiMWM4OTRhMDA4NjI5NzFmZTQyMzUzMWQyMTI0ZDU0YzI5ODYxNDg4YWVjNWQwYjY0MTFlZmI2NTJjNzJjNWMxZiIsInRhZyI6IiJ9', true, '2026-01-01 01:08:00', 0, '2026-01-01 01:03:00', '2026-01-01 01:08:00');
+	(1, 'https://hooks.fixture.test/vaulter', '["grant.created","grant.revoked","share.created"]', 'eyJpdiI6IlV2QXpXTnpDVjhBQTNsQ2wrR2ZDWGc9PSIsInZhbHVlIjoiTmVkblQ0WmxGU2VQL1Jocmd1YzF3ald3TlZaZnRFVWNTUkpQRkh1S2tndXlzY2tTd2RHOTFRVENsK3VLSmpXdk5kZFVYd1YybXFJbWVGSnVBSWRvY0xsSkx0VnpOb3BnY3p2eXlqNXBINXc9IiwibWFjIjoiMWM4OTRhMDA4NjI5NzFmZTQyMzUzMWQyMTI0ZDU0YzI5ODYxNDg4YWVjNWQwYjY0MTFlZmI2NTJjNzJjNWMxZiIsInRhZyI6IiJ9', true, '2026-01-01 01:09:00', 0, '2026-01-01 01:04:00', '2026-01-01 01:09:00');
 
 
 --
@@ -1218,28 +1233,28 @@ SELECT pg_catalog.setval('"public"."migrations_id_seq"', 19, true);
 -- Name: v_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_activity_id_seq"', 68, true);
+SELECT pg_catalog.setval('"public"."v_activity_id_seq"', 72, true);
 
 
 --
 -- Name: v_blobs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_blobs_id_seq"', 20, true);
+SELECT pg_catalog.setval('"public"."v_blobs_id_seq"', 21, true);
 
 
 --
 -- Name: v_file_versions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_file_versions_id_seq"', 21, true);
+SELECT pg_catalog.setval('"public"."v_file_versions_id_seq"', 22, true);
 
 
 --
 -- Name: v_files_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_files_id_seq"', 15, true);
+SELECT pg_catalog.setval('"public"."v_files_id_seq"', 16, true);
 
 
 --
@@ -1260,28 +1275,28 @@ SELECT pg_catalog.setval('"public"."v_node_document_versions_id_seq"', 8, true);
 -- Name: v_node_grants_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_node_grants_id_seq"', 4, true);
+SELECT pg_catalog.setval('"public"."v_node_grants_id_seq"', 5, true);
 
 
 --
 -- Name: v_node_shares_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_node_shares_id_seq"', 3, true);
+SELECT pg_catalog.setval('"public"."v_node_shares_id_seq"', 4, true);
 
 
 --
 -- Name: v_nodes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_nodes_id_seq"', 39, true);
+SELECT pg_catalog.setval('"public"."v_nodes_id_seq"', 40, true);
 
 
 --
 -- Name: v_outbox_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('"public"."v_outbox_id_seq"', 64, true);
+SELECT pg_catalog.setval('"public"."v_outbox_id_seq"', 68, true);
 
 
 --

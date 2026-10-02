@@ -22,6 +22,9 @@ use Throwable;
  * Fixtures the children must see have to be COMMITTED before run(): bind the test
  * directory with DatabaseMigrations, never RefreshDatabase (its wrapping
  * transaction is invisible to another connection).
+ *
+ * A task must return or throw, never exit(): the child would skip its result
+ * (outcome ForkRace\MissingResult) and run PHPUnit's shutdown handlers.
  */
 final class ForkRace
 {
@@ -150,7 +153,9 @@ final class ForkRace
     private static function finish(string $dir, int $index, array $result): never
     {
         try {
-            $json = json_encode($result, JSON_THROW_ON_ERROR);
+            // Invalid UTF-8 (e.g. a bytea binding in a QueryException message) is
+            // substituted, so a failed task keeps its exception class.
+            $json = json_encode($result, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
         } catch (JsonException $e) {
             $json = json_encode(['ok' => false, 'value' => null, 'exception' => 'ForkRace\\UnserializableValue', 'message' => $e->getMessage()]);
         }

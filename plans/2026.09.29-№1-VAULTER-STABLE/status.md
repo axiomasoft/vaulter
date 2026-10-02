@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-10-01
-inputs_sha256: e915eeff4982245e88205ac04117fae52e47ff76bf2ff2cd065975c70aaffbf2
+through: 2026-10-02
+inputs_sha256: 1a29c0df9bd57250f18b511949342b9da253be2a9bfcff1b8722612cf8e657db
 generated_by: task plan-views status
 -->
 
@@ -17,21 +17,21 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
-| Last Updated | 2026-10-01 |
+| Last Updated | 2026-10-02 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 1/4 | 🟡 In progress |
+| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 2/4 | 🟡 In progress |
 
 ## Phase P0
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
-| P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-01 |
-| P0.3 | Фикстура данных 0.2 | 🟡 In progress | 2026-10-01 |
+| P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-02 |
+| P0.3 | Фикстура данных 0.2 | 🟢 Done | 2026-10-02 |
 | P0.4 | ADR 0019–0024 | ⬜ Not started | — |
 
 ## 6. Update Log
@@ -68,6 +68,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-01 | claude-opus-5-5/high | plan-run · decision-pending · note abbreviated; full text: journal.jsonl:27 |
 | 2026-10-01 | claude-opus-5-5/high | plan-run · in-progress · — |
 | 2026-10-01 | claude-opus-5-5/high | plan-run · decision-pending · PG dumps (bigint, ulid, preflight-red) generated, verified, deterministic. MySQL blocked: v0.2.0 migrations fail on MySQL 8 (1215, stored generated column over CASCADE FK). Owner decision needed. Evidence: artifacts/P0.3/completion.md |
+| 2026-10-02 | claude-opus-5-5/high | plan-run · no-op · B0-A review GREEN (findings/B0-A-review.md, D09); R6/R8 fixed and re-validated: PG 4 passed x5, SQLite skipped, negative control red. E22 = local CI step; hosted run stays phase gate O-3-CI.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-02 | claude-opus-5-5/high | plan-run · closed-green · PG 0.2 fixture (bigint, ulid, preflight-red): --verify OK, deterministic, all §4 shapes; MySQL refused by D09 (v0.2.0 not installable on MySQL 8). B0-A review GREEN. Evidence: artifacts/P0.3/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

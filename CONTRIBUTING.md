@@ -71,7 +71,8 @@ expect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true]);
 Each `RaceOutcome` carries `ok`, the task's JSON-serialisable `value`, and the thrown
 `exception`/`message` (`failedWith(SomeException::class)`). Fixtures the children
 read must be committed: bind the test directory with `DatabaseMigrations`, not
-`RefreshDatabase`. The harness refuses a database whose name does not end in `_test`.
+`RefreshDatabase`. A task returns or throws, never calls `exit()`. The harness refuses a
+database whose name does not end in `_test`.
 Packages reach it through the `Vaulter\Tests\` autoload-dev mapping to `../core/tests/`.
 
 Run the harness suite locally exactly as the `test-pgsql` CI job does:

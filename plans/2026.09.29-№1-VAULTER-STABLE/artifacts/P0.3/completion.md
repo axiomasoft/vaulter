@@ -10,7 +10,7 @@ PostgreSQL 16.15 (`pg_dump` 16.15), MySQL 8.0.46 (`db-preflight.sh mysql` exit 0
 | `--verify` with the original five configs (before D09) | exit 1 at `mysql-bigint`: v0.2.0 migration fails on MySQL (below) | `verify-all.log` |
 | Determinism (Code Guidance command, final scripts) | `diff -r` empty, exit 0; dumps byte-identical to the committed ones | `determinism.log` |
 | README composition / `grep -c "legacy\|parent_id"` | 9 ≥ 1; table mirrors Scope §4 | `tests/fixtures/v0.2.0/README.md` |
-| `pgsql-bigint.sql` queries | `parent_id IS NULL` = 5 > 3 storages (2 N04 documents); soft-deleted grants = 2; `storage_id IS NULL` storage-scoped blobs = 1; tnull = 2; blob 19 shared by 2 storages; formats markdown/richtext/table/template; shares 1/1/1; outbox dispatched 58 / pending 6; tus uploading 4/10 | `validation-queries.txt` |
+| `pgsql-bigint.sql` queries | `parent_id IS NULL` = 5 > 3 storages (2 N04 documents); soft-deleted grants = 2 (+ active re-grant twin); blobs: snull 1, tnull 2, global 1, blob 19 shared by 2 storages; formats markdown/richtext/table/template; shares active/revoked/soft-deleted/revoked+deleted; outbox dispatched 59 / pending 9; tus uploading 4/10 | `validation-queries.txt` |
 | Owner set check in `--verify` | bigint `1,2,3`; ulid `01ARZ3NDEKTSV4RRFFQ69G5FAV,…FAW,…FAX` → OK | `verify-pgsql.log` |
 | `bash -n`, `pint --test scripts/fixtures` | exit 0, exit 0 | `lint.log` |
 
@@ -28,4 +28,5 @@ Resolution (owner-delegated, D09): the fixture is PostgreSQL-only; the MySQL par
 (`plan:D09`), P0.3 Scope/Files/Validation amended, MySQL branches removed from the generator (no dead code).
 The upgrade 0.2 → 0.3 is proven on the PG dumps; MySQL support of 0.3 from a fresh 0.3 install.
 
-Not claimed here: independent review `full` (B0-A, cursor/grok-4.7/high, separate session) — pending.
+Independent review `full` (B0-A, D09 п.3): **GREEN**, 6 Minor + 4 Nit, 9 fixed, R7 accepted — `findings/B0-A-review.md`.
+Fixture regenerated after the R9 additions; determinism, `--verify` and the queries above re-run on the final code.

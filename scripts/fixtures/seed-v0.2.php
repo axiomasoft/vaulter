@@ -286,6 +286,10 @@ return static function ($app, string $strategy, string $variant): void {
         $drives[3]->upload("shared bytes across storages\n", null, 'shared.bin', 'application/octet-stream', actorId: $actor);
         $tick();
         $drives[3]->upload("tenant-scoped bytes of storage 3\n", null, 'tenant.bin', 'application/octet-stream', actorId: $actor);
+        // dedup.scope = global → scope_key `global` (№7).
+        config()->set('vaulter.dedup.scope', 'global');
+        $tick();
+        $drives[1]->upload("globally deduplicated bytes\n", null, 'global.bin', 'application/octet-stream', actorId: $actor);
         config()->set('vaulter.dedup.scope', 'storage');
 
         // --- documents: every 0.2 DocumentType, 1–2 versions ---------------------
@@ -347,12 +351,18 @@ return static function ($app, string $strategy, string $variant): void {
             $revoke->execute($projects, $subject, $actor);
         }
 
-        // shares: active, revoked, soft-deleted.
+        // Re-grant of a revoked user: an active grant next to its soft-deleted twin (№8 uniqueness rebuild).
+        $tick();
+        $grant->execute($projects, new GrantNodeAccessData(
+            subject: $subjects[2], level: GrantLevel::Reader, grantedBy: $actor,
+        ));
+
+        // shares: active, revoked, soft-deleted, revoked then soft-deleted (№8 coalesce precedence).
         $brief = $s1->list($projects)->firstWhere('name', 'brief.txt');
         $mint = app(CreateShareLinkAction::class);
         $minted = [];
 
-        foreach (range(1, 3) as $_) {
+        foreach (range(1, 4) as $_) {
             $tick();
             $minted[] = $mint->execute($brief, new CreateShareLinkData(
                 permissions: 1, expiresAt: $now->copy()->addYear(), grantedBy: $actor,
@@ -363,6 +373,10 @@ return static function ($app, string $strategy, string $variant): void {
         app(RevokeShareLinkAction::class)->execute($minted[1]->share, $actor);
         $tick();
         $minted[2]->share->delete();
+        $tick();
+        app(RevokeShareLinkAction::class)->execute($minted[3]->share, $actor);
+        $tick();
+        $minted[3]->share->delete();
 
         // --- a tus upload in progress ------------------------------------------
         $tick();

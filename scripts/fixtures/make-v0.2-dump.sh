@@ -13,12 +13,16 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$root"
 
-verify=false
-[[ "${1:-}" == --verify ]] && verify=true
+case "${1:-}" in
+    '') verify=false ;;
+    --verify) verify=true ;;
+    *) echo 'Usage: scripts/fixtures/make-v0.2-dump.sh [--verify]' >&2; exit 2 ;;
+esac
 
 worktree="$root/build/fixtures/v0.2.0"
 fixtures="$root/tests/fixtures/v0.2.0"
-configs="${FIXTURE_CONFIGS:-pgsql-bigint pgsql-ulid pgsql-bigint-preflight-red}"
+all_configs="pgsql-bigint pgsql-ulid pgsql-bigint-preflight-red"
+configs="${FIXTURE_CONFIGS:-$all_configs}"
 
 export DB_HOST="${DB_HOST:-127.0.0.1}"
 export DB_PORT="${DB_PORT:-5432}"
@@ -68,6 +72,12 @@ generate() {
         git worktree add --force "$worktree" v0.2.0 >/dev/null
         "$root/scripts/php84" composer --working-dir="$worktree" install --no-interaction --quiet
     fi
+    # The seeder must run on the untouched tag: refuse a stale or edited worktree.
+    if [[ "$(git -C "$worktree" rev-parse HEAD)" != "$(git rev-parse 'v0.2.0^{commit}')" \
+        || -n "$(git -C "$worktree" status --porcelain --untracked-files=no)" ]]; then
+        echo "make-v0.2-dump: $worktree is not a clean checkout of v0.2.0" >&2
+        exit 1
+    fi
     "$root/scripts/db-preflight.sh" pgsql >/dev/null
     for config in $configs; do
         strategy="$(cut -d- -f2 <<<"$config")"
@@ -78,19 +88,38 @@ generate() {
         dump >"$out/$config.sql"
         echo "generated $config.sql" >&2
     done
-    (cd "$out" && sha256sum -- $(for c in $configs; do echo "$c.sql"; done)) >"$out/SHA256SUMS"
+}
+
+# SHA256SUMS of the given configurations' dumps in $1, in canonical order.
+sums() {
+    local dir="$1" c files=()
+    shift
+    for c in $all_configs; do
+        [[ " $* " == *" $c "* && -f "$dir/$c.sql" ]] && files+=("$c.sql")
+    done
+    (cd "$dir" && sha256sum -- "${files[@]}")
 }
 
 if [[ "$verify" == false ]]; then
     mkdir -p "$fixtures"
     generate "$fixtures"
+    # Always over every committed dump, so a FIXTURE_CONFIGS subset keeps the other lines.
+    sums "$fixtures" $all_configs >"$fixtures/SHA256SUMS"
     exit 0
 fi
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-generate "$tmp"
 status=0
+
+# The committed dumps themselves must match SHA256SUMS (a value edit keeps row counts).
+if ! (cd "$fixtures" && sha256sum --quiet -c SHA256SUMS); then
+    echo "make-v0.2-dump --verify: committed dumps differ from SHA256SUMS" >&2
+    status=1
+fi
+
+generate "$tmp"
+sums "$tmp" $configs >"$tmp/SHA256SUMS"
 
 if ! diff -u <(grep -F -f <(for c in $configs; do echo " $c.sql"; done) "$fixtures/SHA256SUMS") "$tmp/SHA256SUMS"; then
     echo "make-v0.2-dump --verify: regenerated dumps differ from SHA256SUMS" >&2

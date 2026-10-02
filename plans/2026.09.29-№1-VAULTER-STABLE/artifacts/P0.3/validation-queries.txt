@@ -4,10 +4,17 @@
 3
 > SELECT count(*) AS soft_deleted_grants FROM v_node_grants WHERE deleted_at IS NOT NULL
 2
-> SELECT count(*) AS snull_blobs FROM v_blobs WHERE dedup_scope = 'storage' AND storage_id IS NULL
-1
-> SELECT count(*) AS tnull_blobs FROM v_blobs WHERE dedup_scope = 'tenant' AND tenant_id IS NULL
-2
+> SELECT subject_type, subject_id, deleted_at IS NOT NULL AS soft_deleted FROM v_node_grants ORDER BY id
+user|101|f
+role|201|f
+user|102|t
+role|202|t
+user|102|f
+> SELECT dedup_scope, (storage_id IS NULL) AS storage_null, (tenant_id IS NULL) AS tenant_null, count(*) FROM v_blobs GROUP BY 1,2,3 ORDER BY 1,2
+global|t|t|1
+storage|f|t|17
+storage|t|t|1
+tenant|t|t|2
 > SELECT b.id, count(DISTINCT n.storage_id) AS storages FROM v_blobs b JOIN v_file_versions v ON v.blob_id = b.id JOIN v_files f ON f.id = v.file_id JOIN v_nodes n ON n.id = f.node_id GROUP BY b.id HAVING count(DISTINCT n.storage_id) > 1
 19|2
 > SELECT format, count(*) FROM v_node_document_versions GROUP BY 1 ORDER BY 1
@@ -15,18 +22,16 @@ markdown|2
 richtext|4
 table|1
 template|1
-> SELECT name, kind, storage_id FROM v_nodes WHERE parent_id IS NULL AND kind = 'document' ORDER BY id
-Loose note|document|1
-Projects|document|1
-> SELECT count(*) FILTER (WHERE revoked_at IS NULL AND deleted_at IS NULL) AS active, count(*) FILTER (WHERE revoked_at IS NOT NULL) AS revoked, count(*) FILTER (WHERE deleted_at IS NOT NULL) AS soft_deleted FROM v_node_shares
-1|1|1
+> SELECT name, kind FROM v_nodes WHERE parent_id IS NULL AND kind = 'document' ORDER BY id
+Loose note|document
+Projects|document
+> SELECT revoked_at IS NOT NULL AS revoked, deleted_at IS NOT NULL AS soft_deleted FROM v_node_shares ORDER BY id
+f|f
+t|f
+f|t
+t|t
 > SELECT status, count(*) FROM v_outbox GROUP BY 1 ORDER BY 1
-dispatched|58
-pending|6
+dispatched|59
+pending|9
 > SELECT protocol, status, received_bytes, total_size_bytes FROM v_upload_sessions
 tus|uploading|4|10
-> SELECT f.id, f.version_count FROM v_files f ORDER BY f.id LIMIT 4
-1|1
-2|3
-3|1
-4|1

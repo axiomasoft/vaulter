@@ -22,5 +22,5 @@ CI: `pcntl, posix` added to `tests.yml:test-pgsql`, `media.yml:media-pgsql`, `do
 Not covered by this item (not claimed GREEN here):
 - «Example passes in CI» (OPUS 13 P0.2) — hosted run through O-3-CI before the P0 phase audit (D07); the owner has
   not authorised hosted CI (handoff after P0.1). Phase-level acceptance, pending.
-- Independent review `full` (Routing B0-A) — a separate read-only review deliverable per the execution protocol,
-  not a step inside this item; pending.
+- Independent review `full` (Routing B0-A, D09 п.3): **GREEN** — `findings/B0-A-review.md`; R6/R8 fixed in ForkRace,
+  re-validated: PG 4 passed, SQLite 4 skipped, pint exit 0 (`*-after-review.log`).
