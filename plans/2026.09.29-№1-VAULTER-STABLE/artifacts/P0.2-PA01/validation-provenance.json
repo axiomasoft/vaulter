@@ -9,7 +9,7 @@
       "serial-pgsql-4.log",
       "serial-pgsql-5.log"
     ],
-    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    "explanation": "Five fresh serial PostgreSQL runs of the original suite. Each is GREEN: 4 passed, 0 skipped. Not a RED control."
   },
   {
     "evidence_id": "E16",
@@ -17,7 +17,7 @@
     "sources": [
       "sqlite.log"
     ],
-    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    "explanation": "Fresh SQLite run of the original suite: 4 skipped, exit 0. Not a RED control."
   },
   {
     "evidence_id": "E17",
@@ -33,7 +33,7 @@
     "sources": [
       "pint.log"
     ],
-    "explanation": "Expected RED controls demonstrate detection. The final original suite is GREEN."
+    "explanation": "Fresh Pint of the Concurrency tests and tests/Pest.php: exit 0. Not a RED control."
   },
   {
     "evidence_id": "E19",
@@ -69,5 +69,22 @@
       "serial-pgsql-5.log"
     ],
     "explanation": "Local equivalent CI step GREEN. Hosted O-3-CI on repaired candidate is a separate phase gate; not claimed GREEN."
+  },
+  {
+    "evidence_id": "E23",
+    "mode": "fresh independent review (same-model, D13)",
+    "sources": [
+      "review-gpt61.md",
+      "review-prompt.txt"
+    ],
+    "explanation": "codex/gpt-6.1-sol/high read-only review of review-prompt.txt: GREEN, 0 findings (Blocker/Major/Minor/Nit). Input-only analysis; reviewer did not rerun tests. executed_at = review output time 2026-10-02T19:34:03+03:00. Same-model per D13, not independent."
+  },
+  {
+    "evidence_id": "E15-E22",
+    "mode": "contract hash re-bind",
+    "sources": [
+      "validation-receipts.json"
+    ],
+    "explanation": "contract_sha256 re-bound from 684b483a to 14c6ac1b because the session route (actual claude-sonnet-5-5/xhigh) is part of the contract. No re-execution; executed_at, head, tree (84084cef), spec and environment retained; product tree unchanged."
   }
 ]

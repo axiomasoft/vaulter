@@ -163,9 +163,19 @@ jobs:
 
       # The ForkRace harness (P0.2): forked children race on their own connections.
       # always() — a known baseline failure of the suite above must not hide it.
+      # A skipped suite exits 0 from Pest; require 4 passed and refuse any skipped
+      # count so a missing pcntl/pgsql lane cannot look green.
       - name: 'Postgres: concurrency harness'
         if: always()
-        run: vendor/bin/pest --ci packages/core/tests/Concurrency
+        run: |
+          set -o pipefail
+          log="${RUNNER_TEMP:-/tmp}/vlt-concurrency.txt"
+          vendor/bin/pest --ci --colors=never packages/core/tests/Concurrency | tee "$log"
+          grep -E 'Tests:[[:space:]]+4 passed' "$log"
+          if grep -E 'Tests:.*[0-9]+ skipped' "$log"; then
+            echo "concurrency harness skipped tests" >&2
+            exit 1
+          fi
 
       # The id-strategy schemas — each proves the self-referencing v_nodes.parent_id FK
       # migrates (the PK must be declared before the FK; see UlidIds/Uuid7Ids::key).

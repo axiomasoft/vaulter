@@ -1,35 +1,25 @@
-# HANDOFF — 2026-10-02 — after P0.2
+# HANDOFF — 2026-10-03 — P0 closed
 
-**Next:** waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2
+**Next:** P0 закрыта. Исполнение P1 не начато (D12 п.2: только после этого закрытия, отдельным запросом).
 
 | Parameter | Meaning |
 |:--|:--|
-| Batch | B0-A |
+| Batch | P0 |
 | Model class | implementation |
-| Model | gpt-6-sol |
+| Model | grok-4.7 |
 | Effort | medium |
 | Thinking | medium |
-| Context | waiting-external |
-| The bottom line | Resume mandatory D09 review; reuse completed affected validation. |
+| Context | continue-root |
+| The bottom line | P0 closed. Mutation follow-up stopped (D14). Two review minors fixed. |
 
 ```session-continuity-decision/v1
-{"outcome": "waiting-external", "reason": "external-wait", "evidence": ["batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90", "loaded-inputs:reusable", "cold-start-cost:0", "reason:Claude Code session quota; mandatory D09 independent review unavailable", "started_at:2026-10-02T08:17:07Z", "resume_at:2026-10-02T10:20:00Z", "observed_at:2026-10-02T08:37:59Z", "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e", "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request", "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2", "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"], "runnable": false, "schema_version": "session-continuity-decision/v1"}
+{"outcome": "scope-complete", "reason": "authorized-scope-complete", "evidence": ["decision:D14", "review:artifacts/P0-grok/grok-review.md", "hosted:37120372889 harness 4 passed"], "runnable": false, "schema_version": "session-continuity-decision/v1"}
 ```
 
-```text
-$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2
-MODE: resume PA01 owning repair; mandatory independent full review pending
-ENTRANCE: artifacts/P0.2-PA01/checkpoint.json; artifacts/P0.2-PA01/completion.md; findings/P0.2-PA01-review.md
-SCORE: one fresh read-only D09 review GREEN; pre_final allow; terminal journal and finalize
-DO NOT TOUCH: P0.1 mutation scores; P0.3/P0.4; unrelated .gitignore; unchanged validated source
-```
+**Done:** P0.1 закрыт с записанным отклонением по mutation, и это отклонение больше не долг (D14). P0.2/P0.3/P0.4 закрыты. Независимое ревью 2026-10-03: два Minor, оба исправлены (шаг CI харнесса не зелёный при skip; provenance E15/E16/E18). Hosted tests.yml на зеркале, SHA `a5d8792`, run 37120372889: Postgres job success, harness 4 passed / 0 skipped; L12/L13 только B-01.
 
-**Done:** PA01 implementation and affected validation: PG 5/5, each 4 passed / 17 assertions; SQLite 4 skipped; Pint exit 0. Barrier-only mutant RED on readiness; sequential mutant RED on lost-update and readiness. No more DB checks for unchanged SHA.
+**Remaining:** нет по P0. Mutation-score не добирается.
 
-**Remaining:** E23 independent full review. Claude Code session quota; no verdict. Resume existing run after actual availability, execute saved review-prompt.txt once, add truthful E23 receipt, pre_final, terminal GREEN and finalize. Unaffected media/root proof reused. Hosted changed-candidate O-3-CI and accepted P0.1 deviations remain phase gates; no automatic repeat audit.
+**Open risks:** PR/merge не разрешены. P1 не стартовала.
 
-**Open risks:** P0.2 In progress, not GREEN. PA01 audit finding pending formal closure until E23. P0.1 mutation scores remain accepted unknowns (D11). No adjacent package, workflow or .gitignore change.
-
-**Sources of truth:** artifacts/P0.2-PA01/checkpoint.json; final-runs.json; completion.md; review-result.json; journal.jsonl; decisions/D09-b0a-closure-owner-delegation.md.
-
-**Execution:** No background processes. Controls ran from temporary copies; harness unchanged.
+**Sources of truth:** decisions/D14-mutation-follow-up-stopped.md; artifacts/P0-grok/grok-review.md; findings/baseline.md B-12 и B-16.
