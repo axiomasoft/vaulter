@@ -9,7 +9,9 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Support\Config;
+use Vaulter\Support\VaulterSchema;
 
 /**
  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
@@ -279,6 +281,8 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotInterface(Config::class);
+    $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
+    $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
     $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);
     $blocks[] = vaulterSnapshotInterface(ProblemException::class);
     foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {

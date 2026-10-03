@@ -1,0 +1,32 @@
+{
+  "provider": "grok-cli",
+  "model": "grok-4.7",
+  "effort": "high",
+  "fresh_context": true,
+  "read_only": true,
+  "session_id": "8f4a7588-4cb5-42fc-b07d-b68104f53f0f",
+  "invocation": [
+    "grok",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--tools",
+    "read_file,grep",
+    "--max-turns",
+    "12",
+    "--disable-web-search",
+    "--no-subagents",
+    "--permission-mode",
+    "plan",
+    "--cwd",
+    "/home/vostrikov/projects/packages/vaulter",
+    "--session-id",
+    "8f4a7588-4cb5-42fc-b07d-b68104f53f0f",
+    "--output-format",
+    "json",
+    "--prompt-file",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/review-packet.txt"
+  ],
+  "retry_reason": "prior max-turns reached before verdict; no acceptance claimed"
+}

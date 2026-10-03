@@ -159,9 +159,9 @@ final class PanelTablesBuilder
     {
         $ids->key(table: $table);
         $this->panelDiscriminator(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
 
-        $ids->reference(table: $table, column: 'owner_id');
+        HostKeyColumns::add(table: $table, column: 'owner_id', nullable: false, index: true);
         $table->string('owner_type');
 
         $table->string('name');
@@ -174,7 +174,7 @@ final class PanelTablesBuilder
         $table->string('status', 16)->default('active')->index();
         $table->unsignedInteger('default_node_permissions')->default(31);
         $this->extraData(table: $table, panel: $panel);
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->softDeletes();
         $table->timestamps();
 
@@ -200,7 +200,7 @@ final class PanelTablesBuilder
     {
         $ids->key(table: $table);
         $this->panelDiscriminator(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'storage_id');
         $ids->reference(table: $table, column: 'parent_id', nullable: true);
 
@@ -215,16 +215,16 @@ final class PanelTablesBuilder
         $table->boolean('is_pinned')->default(false);
         $table->boolean('inherit_grants')->default(true);
         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
-        $ids->actor(table: $table, column: 'owner_id', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false);
         $this->extraData(table: $table, panel: $panel);
 
         // Soft-trash triplet (D17) — distinct from the permanent soft-delete below.
         $table->timestamp('trashed_at')->nullable();
-        $ids->actor(table: $table, column: 'trashed_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'trashed_by', nullable: true, index: false);
         $ids->reference(table: $table, column: 'trashed_from_parent_id', nullable: true);
 
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
-        $ids->actor(table: $table, column: 'updated_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+        HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
         $table->softDeletes();
         $table->timestamps();
 
@@ -255,7 +255,7 @@ final class PanelTablesBuilder
     private function defineBlobs(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'storage_id', nullable: true);
 
         $table->string('hash_algo', 16)->default('sha256');
@@ -323,7 +323,7 @@ final class PanelTablesBuilder
     private function defineFiles(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
         $ids->reference(table: $table, column: 'current_version_id', nullable: true);
 
@@ -331,7 +331,7 @@ final class PanelTablesBuilder
         $table->bigInteger('size_bytes')->default(0);
         $table->unsignedInteger('version_count')->default(0);
         $this->extraData(table: $table, panel: $panel);
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->softDeletes();
         $table->timestamps();
 
@@ -350,7 +350,7 @@ final class PanelTablesBuilder
     private function defineFileVersions(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'file_id');
         $table->integer('version_no');
         $ids->reference(table: $table, column: 'blob_id', nullable: true);
@@ -362,7 +362,7 @@ final class PanelTablesBuilder
         $table->string('status', 12)->default('pending')->index();
         $table->boolean('keep_forever')->default(false);
         $this->extraData(table: $table, panel: $panel);
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
 
@@ -412,11 +412,11 @@ final class PanelTablesBuilder
     private function defineNodeGrants(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
 
         // Subject morph: a registered alias (user|role|team), never a raw FQCN.
-        $ids->reference(table: $table, column: 'subject_id');
+        HostKeyColumns::add(table: $table, column: 'subject_id', nullable: false, index: true);
         $table->string('subject_type');
 
         $table->string('level', 16)->index();
@@ -431,7 +431,7 @@ final class PanelTablesBuilder
         $ids->reference(table: $table, column: 'inherited_from_node_id', nullable: true);
 
         $table->timestamp('expires_at')->nullable()->index();
-        $ids->actor(table: $table, column: 'granted_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
         $this->extraData(table: $table, panel: $panel);
         $table->softDeletes();
         $table->timestamps();
@@ -459,7 +459,7 @@ final class PanelTablesBuilder
     private function defineNodeShares(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
 
         // ONLY the hash is stored — the raw bearer token is returned once at mint
@@ -488,7 +488,7 @@ final class PanelTablesBuilder
         $table->unsignedInteger('use_count')->default(0);
         $table->timestamp('revoked_at')->nullable()->index();
 
-        $ids->actor(table: $table, column: 'granted_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
         $this->extraData(table: $table, panel: $panel);
         $table->softDeletes();
         $table->timestamps();
@@ -521,7 +521,7 @@ final class PanelTablesBuilder
     private function defineNodeComments(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
 
         // Threading: a reply points at its parent comment (same table). Nullable —
@@ -530,7 +530,7 @@ final class PanelTablesBuilder
 
         // Author morph: a registered alias (user|…), never a raw FQCN — the Data layer
         // writes $user->getMorphClass() (honours the host's enforceMorphMap).
-        $ids->reference(table: $table, column: 'author_id');
+        HostKeyColumns::add(table: $table, column: 'author_id', nullable: false, index: true);
         $table->string('author_type');
 
         $table->text('body');
@@ -541,7 +541,7 @@ final class PanelTablesBuilder
 
         // Resolution tombstone: when + by whom the thread was marked resolved.
         $table->timestamp('resolved_at')->nullable();
-        $ids->actor(table: $table, column: 'resolved_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
 
         $this->extraData(table: $table, panel: $panel);
         $table->timestamps();
@@ -581,7 +581,7 @@ final class PanelTablesBuilder
     private function defineDocumentVersions(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
 
         $table->integer('version_no');
@@ -608,7 +608,7 @@ final class PanelTablesBuilder
         $table->boolean('keep_forever')->default(false);
 
         $this->extraData(table: $table, panel: $panel);
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
 
         $name = $table->getTable();
@@ -641,7 +641,7 @@ final class PanelTablesBuilder
     private function defineUploadSessions(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'storage_id');
 
         // The client handle: a UUID (S3 uploadId / tus resource id) the resumable
@@ -684,7 +684,7 @@ final class PanelTablesBuilder
         $this->extraData(table: $table, panel: $panel);
 
         $table->timestamp('expires_at')->nullable();
-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamps();
 
         $name = $table->getTable();
@@ -747,12 +747,12 @@ final class PanelTablesBuilder
     private function defineActivity(Blueprint $table, Panel $panel, IdStrategy $ids): void
     {
         $ids->key(table: $table);
-        $this->tenant(table: $table, ids: $ids);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'storage_id', nullable: true);
 
         // Actor morph — the acting host user (nullable: a system/console write has
         // no actor). actor_id is an actor reference (no DB FK to the host's table).
-        $ids->actor(table: $table, column: 'actor_id', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'actor_id', nullable: true, index: false);
         $table->string('actor_type')->nullable();
 
         $table->string('verb')->index();
@@ -1165,14 +1165,11 @@ final class PanelTablesBuilder
     }
 
     /**
-     * The optional tenant_id column (host-owned, D8) — emitted only when tenancy
-     * is enabled. On blobs it participates in the dedup-unique index, so the
-     * column must always exist there; we still gate it on the global flag, and the
-     * dedup index simply spans a NULL column when tenancy is off.
+     * Tenant keys belong to the host. The column always exists for CAS scope indexes.
      */
-    private function tenant(Blueprint $table, IdStrategy $ids): void
+    private function tenant(Blueprint $table): void
     {
-        $ids->reference(table: $table, column: 'tenant_id', nullable: true);
+        HostKeyColumns::add(table: $table, column: 'tenant_id', nullable: true, index: true);
     }
 
     /**

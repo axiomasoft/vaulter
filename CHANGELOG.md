@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
+  and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
+
 ### Changed
 - `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
 - HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
@@ -24,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Host owner, subject, author, tenant and actor columns now use `ids.host_keys`
+  instead of Vaulter's entity-ID strategy. Upgrade migration №3 preserves existing
+  values and restores the strategy's types on rollback (N02, AD25).
 - Repository metadata, exception documentation, collaboration errors and install
   star prompt now point to `axiomasoft/vaulter`; package vendor names stay
   `axioma-studio/vaulter-*` (N20/E6, AD02).

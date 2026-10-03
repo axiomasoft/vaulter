@@ -83,7 +83,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
     ));
 
     // AlwaysReturnNull mutation: tenantId() always returns null → session.tenant_id = null
-    expect($session->tenant_id)->toBe($tenantId);
+    expect($session->tenant_id)->toBe((string) $tenantId);
 });
 
 it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCast)', function (): void {

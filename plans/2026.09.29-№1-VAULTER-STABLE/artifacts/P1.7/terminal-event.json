@@ -1,0 +1,110 @@
+{
+  "ts": "2026-10-03T20:17:27Z",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P1.7",
+  "command": "plan-run",
+  "session_id": "01a1033a-95ce-7da2-bd13-ab7dbfa8eda5",
+  "run_id": "15f6cba310588a4a6e056a4f6f2ee59bef0acfc13f62ba0c4342c24c20cd2a02",
+  "attempt": 1,
+  "actor": "codex/gpt-6.1-sol/high",
+  "friction": [
+    "deviation"
+  ],
+  "result": "closed-deviations",
+  "cost_usd": null,
+  "num_turns": null,
+  "duration_ms": null,
+  "note": "P1.7 implemented and validated; known MySQL fresh-install baseline deviation retained for PLAN2.P8.1. See artifacts/P1.7/completion.md. review: grok/grok-4.7 GREEN\nwrite-site: pre_mutation: allow · pre_final: allow",
+  "decision": {
+    "signal_class": "acceptance",
+    "scope_class": "item",
+    "action": "close-deviations",
+    "recovered": true,
+    "terminal": true,
+    "terminal_evidence": {
+      "schema_version": "terminal-evidence/v1",
+      "spec_sha256": "9eada71c44147cdd7c5e1de6abcbc41d44d80ec50324084aec0dffde7c6f7f10",
+      "validation": [
+        {
+          "carrier": "- Code Guidance → пустой вывод.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/code-guidance.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid packages/core/tests/IdStrategy/Bigint packages/core/tests/Schema/HostKeyColumnsSchemaTest.php packages/core/tests/Upgrade`\n  → 0 failed, 0 skipped.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/pgsql-final.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Schema/HostKeyColumnsSchemaTest.php`\n  → 0 failed (правило MySQL выше).",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-final.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-baseline.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-baseline-classification.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-ddl-final.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-known-deviation.md",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Негативный контроль V23: временно вернуть `$ids->reference(…'subject_id')` → `HostKeysTest` красный на PG (вставка UUID в `char(26)`); вернуть.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/v23-negative.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/v23-restored.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Гейт core и гейты drive, documents, media → exit 0.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/completion.md"
+          ]
+        }
+      ],
+      "repair_exhausted": {
+        "classifier": "recoverable-validation-gap/v1",
+        "failed_carrier": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Schema/HostKeyColumnsSchemaTest.php`\n  → 0 failed (правило MySQL выше).",
+        "verdict": "outside-scope",
+        "reason": "Declared MySQL installation command is red on unchanged HEAD because sibling_active STORED conflicts with cascading parent_id FK. The P1.7 contract explicitly assigns this existing defect to P8.1; real MySQL host-key DDL is proven separately. Repairing the tree-generated-index contract is outside this item and owner authorization.",
+        "continuation": "PLAN2.P8.1: resolve the pre-existing MySQL installation incompatibility and rerun the full fresh-install carrier.",
+        "evidence_ids": [
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-final.log",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-baseline.log",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-baseline-classification.json",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-ddl-final.log",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.7/mysql-known-deviation.md"
+        ]
+      }
+    }
+  },
+  "batch_receipt": {
+    "batch_id": "solo",
+    "completed_prefix": [
+      "P1.7"
+    ],
+    "handoff_digest": "8143e53aa3da501ea91626d885eb4ae83ed1978b5947cbd5cb6d87f0b37dd66c",
+    "invocation_digest": "ebf5a51fac44a7e0dc811314a38caa4ab2ae15dda957e4c7f92533faa082a469",
+    "membership": [
+      "P1.7"
+    ],
+    "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+    "schema_version": "batch-receipt/v1",
+    "spec_digest": "9eada71c44147cdd7c5e1de6abcbc41d44d80ec50324084aec0dffde7c6f7f10",
+    "stop_disposition": "continue"
+  }
+}

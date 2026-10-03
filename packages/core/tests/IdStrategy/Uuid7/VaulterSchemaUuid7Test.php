@@ -18,11 +18,11 @@ it('emits every convention column under the uuid7 strategy', function (): void {
     ]))->toBeTrue();
 });
 
-it('shapes keys, references, actors and tenant as uuid columns', function (): void {
+it('shapes Vaulter keys and references as uuid columns and host keys independently', function (): void {
     expect(SchemaProbe::emittedType('id', fn ($t) => VaulterSchema::key($t)))->toBe('uuid')
         ->and(SchemaProbe::emittedType('storage_id', fn ($t) => VaulterSchema::reference($t, 'storage_id')))->toBe('uuid')
-        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('uuid')
-        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('uuid')
+        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('string')
+        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('string')
         ->and(SchemaProbe::emittedType('owner_id', fn ($t) => VaulterSchema::morphs($t, 'owner')))->toBe('uuid');
 });
 

@@ -168,6 +168,7 @@ Vaulter\Support\Config
   fileVersionModel(): string
   gcGraceHours(int $override = 0): int
   grantModel(): string
+  hostKeyType(): string
   hubMiddleware(): array
   idStrategies(): array
   idStrategy(): string
@@ -237,6 +238,22 @@ Vaulter\Support\Config
   webhookTimeout(): int
   webhookTimestampHeader(): string
   webhookUrlGuardClass(): string
+
+Vaulter\Schema\HostKeyColumns
+  add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
+  sqlType(string $driver): string
+
+Vaulter\Support\VaulterSchema
+  actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
+  bits(\Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
+  extraData(\Illuminate\Database\Schema\Blueprint $table): void
+  foreignKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  hostKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  key(\Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  morphs(\Illuminate\Database\Schema\Blueprint $table, string $name): void
+  panel(\Illuminate\Database\Schema\Blueprint $table): void
+  reference(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  tenant(\Illuminate\Database\Schema\Blueprint $table): void
 
 Vaulter\Http\Support\HttpResourceResolver
   __construct(\Vaulter\Repositories\Drive\StorageReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)

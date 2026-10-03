@@ -150,6 +150,9 @@ jobs:
       # (.github/workflows/drive.yml, drive-pgsql job); the yjs_state bytea round-trip
       # (tests/Document) moved to vaulter-documents (.github/workflows/documents.yml,
       # documents-pgsql job) — P2 #5 / ADR-0015, D1/D2.
+      - name: 'Postgres: fixture loader available'
+        run: psql --version
+
       - name: 'Postgres: base TestCase suite'
         run: >-
           vendor/bin/pest --ci
@@ -160,6 +163,7 @@ jobs:
           packages/core/tests/Schema
           packages/core/tests/Sharing
           packages/core/tests/Webhooks
+          packages/core/tests/Upgrade
 
       # The ForkRace harness (P0.2): forked children race on their own connections.
       # always() — a known baseline failure of the suite above must not hide it.

@@ -1,0 +1,469 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.29-№1-vaulter-stable-p1-7",
+  "version": {
+    "revision": 1,
+    "content_hash": "03494a092a3b15544e5a80d5c0503beca29eaa7536bb089d8be214b264be5820",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Колонки, хранящие ключи хоста (владелец storage, субъект grant, tenant, автор и все actor-колонки),\nтипизируются отдельным ключом `vaulter.ids.host_keys` (по умолчанию `string` = `varchar(64)`), а не стратегией ID Vaulter,\nтак что хост с UUID/bigint/ULID-ключами пишет и читает grants, activity и provisioning при любой `ids` стратегии (N02, AD25, V23).",
+    "non_goals": [
+      "переименование колонок (`owner_id` узла → `owned_by`, `storage_id` → `drive_id`) и порядок с\nмиграцией №2 (P2.1, R3)",
+      "doctor-проверка фактических типов `core.schema.key_types` (P7.1)",
+      "удаление `IdStrategy::actor()`\n(P2.1)",
+      "нормализатор `tenant.column` (P2.5)."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "1. Конфиг: `packages/core/config/vaulter.php` блок `ids` — ключ `'host_keys' => env('VAULTER_HOST_KEYS', 'string')`\n   (`string|bigint|uuid|ulid`) с комментарием",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M2",
+      "requirement": "`packages/core/src/Support/Config.php` — `hostKeyType(): string`\n   (значение вне четырёх — `InvalidArgumentException('[Vaulter] Unknown vaulter.ids.host_keys [<v>]",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M3",
+      "requirement": "expected string|bigint|uuid|ulid.')`).\n2. `packages/core/src/Schema/HostKeyColumns.php` (new, `final class`): `add(Blueprint $table, string $column, bool $nullable, bool $index): void`\n   по `Config::hostKeyType()`: `string` → `$table->string($column, 64)`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M4",
+      "requirement": "`bigint` → `unsignedBigInteger`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M5",
+      "requirement": "`uuid` → `uuid`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M6",
+      "requirement": "`ulid` → `char($column, 26)`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M7",
+      "requirement": "затем `nullable($nullable)` и `->index()` при `$index`. `sqlType(string $driver): string` —\n   целевой SQL-тип для миграции: PG `varchar(64)|bigint|uuid|char(26)`, MySQL/MariaDB `varchar(64)|bigint unsigned|char(36)|char(26)`.\n3. `PanelTablesBuilder`: ровно 27 колонок переходят на `HostKeyColumns::add()` с прежними `nullable` и наличием индекса\n   (индекс был у `reference()`, у `actor()` не было):\n   `tenant_id` (index, nullable) в `storages`, `nodes`, `blobs`, `files`, `file_versions`, `node_grants`, `node_shares`,\n   `node_comments`, `document_versions`, `upload_sessions`, `activity` (через приватный `tenant()`, строка 1173)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M8",
+      "requirement": "`storages.owner_id` (index, not null, строка 164)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M9",
+      "requirement": "`node_grants.subject_id` (index, not null, 419)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M10",
+      "requirement": "`node_comments.author_id` (index, not null, 533)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M11",
+      "requirement": "без индекса, nullable: `storages.created_by` (177), `nodes.owner_id` (218),\n   `nodes.trashed_by` (223), `nodes.created_by` (226), `nodes.updated_by` (227), `files.created_by` (334),\n   `file_versions.created_by` (365), `node_grants.granted_by` (434), `node_shares.granted_by` (491),\n   `node_comments.resolved_by` (544), `document_versions.created_by` (611), `upload_sessions.created_by` (687),\n   `activity.actor_id` (755). Ссылки на сущности Vaulter (`storage_id`, `parent_id`, `node_id`, …) не меняются.\n4. `packages/core/src/Support/VaulterSchema.php` (хелпер миграций хоста): новый `hostKey(Blueprint $table, string $column, bool $nullable = false): void`\n   → `HostKeyColumns::add(..., index: false)`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M12",
+      "requirement": "`actor()` и `tenant()` используют `HostKeyColumns` (это ключи хоста).\n   `IdStrategy::actor()` в контракте остаётся (удаление — P2.1).\n5. Upgrade-миграция `packages/core/database/migrations/2026_10_01_000003_host_key_columns.php` (R3): для каждой из 27\n   пар (таблица `Config::table('<key>')`, колонка), если таблица и колонка есть и фактический тип ≠ целевого:\n   PG — `ALTER TABLE \"<t>\" ALTER COLUMN \"<c>\" TYPE <sqlType> USING \"<c>\"::<cast>` (`cast` = `text` для string/ulid,\n   `bigint`, `uuid`)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M13",
+      "requirement": "MySQL/MariaDB — `ALTER TABLE \\`<t>\\` MODIFY \\`<c>\\` <sqlType> NULL|NOT NULL` (как в п.3)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M14",
+      "requirement": "SQLite —\n   no-op (динамическая типизация, только dev/test). Фактический тип — `Schema::getColumns($t)` (`type_name`). Ошибка\n   приведения (например, ULID-значения при `host_keys = bigint`) не перехватывается: миграция падает с сообщением\n   драйвера — данные не теряются. Шаг №3 «кастомная `tenant.column` → `tenant_id`» — no-op по R10 (`tenant_id` всегда).\n   `down()`: обратно к типу стратегии (`IdStrategyResolver` → `reference`-тип для `tenant_id`/`owner_id`/`subject_id`/`author_id`,\n   `actor`-тип для остальных) тем же способом",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M15",
+      "requirement": "несовместимые значения → падение с сообщением драйвера.\n6. Тесты:\n   - V23 — `packages/core/tests/IdStrategy/Ulid/HostKeysTest.php` (`UlidStrategyTestCase`, `host_keys = string`): пользователь\n     хоста с UUID-ключом, проект-владелец с bigint-ключом (тестовые модели в `packages/core/tests/Fixtures/`), роль Spatie\n     с bigint-ключом: provisioning storage для проекта, grant на пользователя и на роль, запись activity, `created_by` узла —\n     все вставки проходят, чтение возвращает исходные строки ключей (`'550e8400-e29b-41d4-a716-446655440000'`, `'42'`).\n   - `packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php` (`BigintStrategyTestCase`): grant на ULID-пользователя и\n     activity с ULID-actor при `ids = bigint`, `host_keys = string` → успех.\n   - Миграция: `packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php` (PG",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M16",
+      "requirement": "пропуск без pgsql или без `psql` в PATH):\n     хелпер `packages/core/tests/Upgrade/LoadsV02Fixture.php` (trait) — `DROP SCHEMA public CASCADE",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M17",
+      "requirement": "CREATE SCHEMA public`,\n     загрузка `tests/fixtures/v0.2.0/pgsql-<bigint|ulid>.sql` через `psql -X -q -v ON_ERROR_STOP=1` с координатами `DB_*`,\n     затем `$this->artisan('migrate', ['--force' => true])->assertSuccessful()`. Проверки для обоих дампов: все 27 колонок\n     имеют `information_schema.columns.data_type = 'character varying'` и `character_maximum_length = 64`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M18",
+      "requirement": "исходные значения\n     (`owner_id` `1/2/3` и три ULID из `tests/fixtures/v0.2.0/README.md`) прочитаны как строки",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M19",
+      "requirement": "повторный `migrate` — no-op",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M20",
+      "requirement": "`migrate:rollback --step=1` возвращает исходные типы (bigint-дамп → `bigint`, ulid-дамп → `character`).\n     Привязка в `tests/Pest.php`: `uses(TestCase::class)->in($core.'/Upgrade')",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M21",
+      "requirement": "`\n     без `RefreshDatabase`/`DatabaseMigrations` (схему готовит хелпер)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M22",
+      "requirement": "тест задаёт `vaulter.ids.default` = стратегия дампа.\n   - Свежая установка: `packages/core/tests/Schema/HostKeyColumnsSchemaTest.php` — для `host_keys` ∈ {string, bigint, uuid, ulid}\n     (dataset) колонка `node_grants.subject_id` после `PanelTablesBuilder::createAll` имеет ожидаемый `type_name` драйвера.\n7. Документация: `docs/guide/configuration.md` (`ids.host_keys`), `docs/guide/database-compatibility.md` (HK-колонки),\n   `UPGRADE.md` (миграция №3, AD25), `CHANGELOG.md [Unreleased]`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M23",
+      "requirement": "golden `PublicApiSnapshotTest` (`HostKeyColumns`,\n   `VaulterSchema::hostKey`).",
+      "source_ref": "phases/P1.md:12"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "переименование колонок (`owner_id` узла → `owned_by`, `storage_id` → `drive_id`) и порядок с\nмиграцией №2 (P2.1, R3)",
+      "source_ref": "phases/P1.md:64"
+    },
+    {
+      "id": "N2",
+      "prohibition": "doctor-проверка фактических типов `core.schema.key_types` (P7.1)",
+      "source_ref": "phases/P1.md:64"
+    },
+    {
+      "id": "N3",
+      "prohibition": "удаление `IdStrategy::actor()`\n(P2.1)",
+      "source_ref": "phases/P1.md:64"
+    },
+    {
+      "id": "N4",
+      "prohibition": "нормализатор `tenant.column` (P2.5).",
+      "source_ref": "phases/P1.md:64"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "`ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.",
+        "scope": "public",
+        "check": "- Code Guidance → пустой вывод.",
+        "evidence_ref": "E8"
+      },
+      {
+        "id": "A2",
+        "predicate": "`ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.",
+        "scope": "public",
+        "check": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid packages/core/tests/IdStrategy/Bigint packages/core/tests/Schema/HostKeyColumnsSchemaTest.php packages/core/tests/Upgrade`\n  → 0 failed, 0 skipped.",
+        "evidence_ref": "E9"
+      },
+      {
+        "id": "A3",
+        "predicate": "`ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.",
+        "scope": "public",
+        "check": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Schema/HostKeyColumnsSchemaTest.php`\n  → 0 failed (правило MySQL выше).",
+        "evidence_ref": "E10"
+      },
+      {
+        "id": "A4",
+        "predicate": "`ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.",
+        "scope": "public",
+        "check": "- Негативный контроль V23: временно вернуть `$ids->reference(…'subject_id')` → `HostKeysTest` красный на PG (вставка UUID в `char(26)`); вернуть.",
+        "evidence_ref": "E11"
+      },
+      {
+        "id": "A5",
+        "predicate": "`ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.",
+        "scope": "public",
+        "check": "- Гейт core и гейты drive, documents, media → exit 0.",
+        "evidence_ref": "E12"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P1/P1.7.md:P1.7",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "run-items",
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.7",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "implementation",
+      "effort": "high"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": []
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "packages/core/src/Schema/UlidIds.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "packages/core/database/migrations/2026_07_11_000001_optimize_hot_path_indexes.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "tests/fixtures/v0.2.0/README.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E7",
+      "path": "tests/Pest.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E8",
+      "path": "- Code Guidance → пустой вывод.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E9",
+      "path": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid packages/core/tests/IdStrategy/Bigint packages/core/tests/Schema/HostKeyColumnsSchemaTest.php packages/core/tests/Upgrade`\n  → 0 failed, 0 skipped.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E10",
+      "path": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Schema/HostKeyColumnsSchemaTest.php`\n  → 0 failed (правило MySQL выше).",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E11",
+      "path": "- Негативный контроль V23: временно вернуть `$ids->reference(…'subject_id')` → `HostKeysTest` красный на PG (вставка UUID в `char(26)`); вернуть.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E12",
+      "path": "- Гейт core и гейты drive, documents, media → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "normalized": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Support/VaulterSchema.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Support/VaulterSchema.php",
+        "normalized": "packages/core/src/Support/VaulterSchema.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "tests/fixtures/v0.2.0/README.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "tests/fixtures/v0.2.0/README.md",
+        "normalized": "tests/fixtures/v0.2.0/README.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "tests/Pest.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "tests/Pest.php",
+        "normalized": "tests/Pest.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "normalized": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Schema/UlidIds.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Schema/UlidIds.php",
+        "normalized": "packages/core/src/Schema/UlidIds.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/database/migrations/2026_07_11_000001_optimize_hot_path_indexes.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/database/migrations/2026_07_11_000001_optimize_hot_path_indexes.php",
+        "normalized": "packages/core/database/migrations/2026_07_11_000001_optimize_hot_path_indexes.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "tests/fixtures/v0.2.0/README.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "tests/fixtures/v0.2.0/README.md",
+        "normalized": "tests/fixtures/v0.2.0/README.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "tests/Pest.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "tests/Pest.php",
+        "normalized": "tests/Pest.php",
+        "path_kind": "internal",
+        "rejection": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "chain-of-thought",
+        "raw-transcript-bodies",
+        "secrets",
+        "tool-payloads"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.7",
+      "codex": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.7"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P1.7",
+    "reads": [
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7"
+    ],
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.7"
+  }
+}

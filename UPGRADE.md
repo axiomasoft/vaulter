@@ -6,6 +6,26 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Independent host keys and migration №3 (AD25)
+
+Before: host owner, subject, author, tenant and actor columns inherited Vaulter's
+entity-ID strategy (`char(26)` for ULID or bigint). After: all 27 columns use
+`vaulter.ids.host_keys`, default `string` (`varchar(64)`), so UUID users and bigint
+projects/roles can coexist with ULID Vaulter IDs. `VaulterSchema::hostKey()` is new;
+`actor()` and `tenant()` use the host setting. Entity keys and references keep their strategy.
+
+Run `php artisan migrate --force` in a maintenance window after a database backup.
+Migration `2026_10_01_000003_host_key_columns` preserves existing values, column
+nullability and indexes, uses `vaulter.connection` and legacy table names, and is
+idempotent. PostgreSQL casts values with `USING`; MySQL/MariaDB modifies column types;
+SQLite requires no type upgrade. The migration does not rename the tenant column.
+
+Set `VAULTER_HOST_KEYS` to `bigint`, `uuid` or `ulid` only when every existing host
+key fits that type. Incompatible data raises the database driver's error. Rollback
+restores the current Vaulter ID strategy; host keys inserted after upgrading (for
+example UUIDs into an old ULID installation) can prevent rollback. Do not assume a
+structural rollback can accept every new host key.
+
 ### Runtime Drive dependencies (AD02)
 
 Documents and Filament now declare `axioma-studio/vaulter-drive` in `require`

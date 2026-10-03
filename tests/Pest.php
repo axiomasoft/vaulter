@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
 use Vaulter\Tests\BrokenPanelBootTestCase;
+use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
@@ -110,3 +111,8 @@ uses(LoadTestCase::class)->in(
     dirname(__DIR__).'/load/tests/Observability',
     dirname(__DIR__).'/load/tests/Feature',
 );
+
+// Upgrade tests own the fixture schema; no wrapping transaction or automatic migrations.
+uses(TestCase::class)->in($core.'/Upgrade');
+
+uses(HostKeyMysqlTestCase::class)->in($core.'/HostKeyMysql');

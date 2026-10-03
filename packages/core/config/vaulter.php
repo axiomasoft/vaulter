@@ -131,6 +131,8 @@ return [
     */
     'ids' => [
         'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint (D9)
+        // Keys owned by the host are independent of Vaulter entity IDs.
+        'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string|bigint|uuid|ulid
         'strategies' => [
             'bigint' => AutoIncrementIds::class,
             'ulid' => UlidIds::class,

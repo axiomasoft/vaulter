@@ -1,0 +1,72 @@
+[
+  {
+    "name": "drive-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pint-final.log",
+    "executed_at": "2026-10-03T19:49:16.952656+00:00"
+  },
+  {
+    "name": "drive-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-phpstan-final.log",
+    "executed_at": "2026-10-03T19:49:20.813982+00:00"
+  },
+  {
+    "name": "drive-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pest-final.log",
+    "executed_at": "2026-10-03T19:49:53.653325+00:00"
+  },
+  {
+    "name": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pint-final.log",
+    "executed_at": "2026-10-03T19:49:53.920984+00:00"
+  },
+  {
+    "name": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-phpstan-final.log",
+    "executed_at": "2026-10-03T19:49:57.318887+00:00"
+  },
+  {
+    "name": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pest-final.log",
+    "executed_at": "2026-10-03T19:50:16.598523+00:00"
+  }
+]

@@ -744,6 +744,20 @@ final class Config
         return is_string($value) ? $value : 'id';
     }
 
+    /** @return 'string'|'bigint'|'uuid'|'ulid' */
+    public static function hostKeyType(): string
+    {
+        $value = config('vaulter.ids.host_keys', 'string');
+
+        if (!is_string($value) || !in_array($value, ['string', 'bigint', 'uuid', 'ulid'], true)) {
+            $label = is_scalar($value) || $value === null ? (string) $value : get_debug_type($value);
+
+            throw new \InvalidArgumentException('[Vaulter] Unknown vaulter.ids.host_keys ['.$label.']; expected string|bigint|uuid|ulid.');
+        }
+
+        return $value;
+    }
+
     /**
      * The active id-strategy key (ulid|uuid7|bigint), default ulid (D9).
      *

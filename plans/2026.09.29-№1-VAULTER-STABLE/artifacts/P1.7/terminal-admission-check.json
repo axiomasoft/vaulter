@@ -1,0 +1,23 @@
+{
+  "final_allowed": true,
+  "reason": "NO_OPEN_SESSION_RUN",
+  "observed": [
+    {
+      "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+      "item_id": "P1.7",
+      "run_id": "15f6cba310588a4a6e056a4f6f2ee59bef0acfc13f62ba0c4342c24c20cd2a02",
+      "state": "closed-deviations"
+    }
+  ],
+  "worksets": [
+    {
+      "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+      "batch_id": "solo",
+      "membership": [
+        "P1.7"
+      ],
+      "remaining": [],
+      "terminal_boundary": null
+    }
+  ]
+}
