@@ -6,6 +6,28 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Domain HTTP error codes and statuses (AD29)
+
+Domain exceptions now implement `Vaulter\Exceptions\Contracts\ProblemException`
+with `problemCode(): string` and `httpStatus(): int`. JSON requests and paths under
+`vaulter.route_prefix` receive `{message, code}` plus the existing error fields.
+PHP callers continue receiving the same exception classes and messages. Host HTML
+routes and configuration/infrastructure failures retain Laravel's default handling.
+
+Update HTTP clients for these changes:
+
+- `NodeNameConflictException`: 422 → 409, `code: node_name_conflict`; `errors.name` remains.
+- `UploadContentMismatchException`: 415 → 422, `code: upload_rejected`, `reason: mime_mismatch`.
+- Document, move and lookup exceptions that previously returned 500 now return the
+  4xx statuses listed in [the error reference](docs/guide/errors.md#domain-http-errors).
+
+`OffsetMismatchException` still returns 409 and the authoritative `Upload-Offset`
+plus `Tus-Resumable: 1.0.0`. New `NodeNotFoundException::forId()` and
+`StorageNotFoundException::forId()` provide 404 codes for resource resolvers.
+Custom domain exceptions should implement `ProblemException`; additional JSON fields
+can be returned from `protected renderExtras(): array`. RFC 9457 formatting follows
+in a later release.
+
 ### Dedicated database transactions (AD25)
 
 Transactions, locks and after-commit callbacks previously used the host default connection;

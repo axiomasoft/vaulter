@@ -1,0 +1,17 @@
+{
+  "command": [
+    "rg",
+    "-n",
+    "assertStatus\\(500\\)|assertServerError|assertInternalServerError",
+    "packages/media/tests",
+    "packages/core/tests",
+    "packages/drive/tests",
+    "packages/azgard/tests",
+    "packages/filament/tests",
+    "packages/documents/tests",
+    "packages/vue/tests"
+  ],
+  "exit": 1,
+  "matches": 0,
+  "result": "green"
+}

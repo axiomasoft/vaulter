@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -12,8 +13,12 @@ use Vaulter\Exceptions\VaulterException;
  * re-homing the whole subtree, so the operation is rejected explicitly rather
  * than corrupting the tree.
  */
-final class CrossStorageMoveException extends VaulterException
+final class CrossStorageMoveException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'cross_drive_operation';
+
+    private const int HTTP_STATUS = 409;
+
     public static function between(int|string $fromStorageId, int|string $toStorageId): self
     {
         return new self(
@@ -21,5 +26,15 @@ final class CrossStorageMoveException extends VaulterException
             'Fix: a move stays within one storage tree — copy across storages or re-home explicitly instead. '.
             'Docs: '.self::docs('cross-storage-move'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

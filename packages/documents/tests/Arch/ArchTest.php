@@ -129,3 +129,11 @@ test('layers group classes under a domain sub-namespace, not flat (ADR-0017 Law 
 arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Documents')
     ->not->toUse('Illuminate\Support\Facades\DB');
+
+arch('domain exceptions implement the HTTP problem contract')
+    ->expect('Vaulter\Documents\Exceptions')
+    ->classes()
+    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
+    ->ignoring([
+        'Vaulter\Documents\Exceptions\CollaborationConfigException',
+    ]);

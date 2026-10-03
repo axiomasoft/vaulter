@@ -336,7 +336,11 @@ test('split technical roots keep classes in domain subfolders', function (): voi
  * structural, not domains, so only `Http` itself is a layer segment here.
  */
 test('technical layers are never nested under a domain module (ADR-0017 Law 1)', function (): void {
-    expect(layersNestedUnderDomain(__DIR__.'/../../src'))->toBe([]);
+    $nested = layersNestedUnderDomain(__DIR__.'/../../src');
+
+    // The public error contract intentionally lives alongside its exception family.
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts'])))->toBe([])
+        ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php']);
 });
 
 /**
@@ -628,3 +632,17 @@ arch('DB facade only in Database and Schema (AD25)')
     ->expect('Illuminate\Support\Facades\DB')
     ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
     ->ignoring(['Vaulter\Tests', 'Vaulter\Load']);
+
+arch('domain exceptions implement the HTTP problem contract')
+    ->expect('Vaulter\Exceptions')
+    ->classes()
+    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
+    ->ignoring([
+        'Vaulter\Exceptions\VaulterException',
+        'Vaulter\Exceptions\Access\MissingHostRoleDriverException',
+        'Vaulter\Exceptions\Panels\InvalidPanelException',
+        'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
+        'Vaulter\Exceptions\Support\MissingPackageException',
+        'Vaulter\Exceptions\Support\TenantIsolationNotConfiguredException',
+        'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',
+    ]);

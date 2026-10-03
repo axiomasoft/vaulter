@@ -1,0 +1,5 @@
+The review is limited to the frozen P1.8 contract, the supplied diff, the new files, and the validation evidence. I'll check those against the current exception types and the render contract.GREEN
+
+The P1.8 implementation matches the frozen contract. All 20 domain exceptions implement `ProblemException` with the table codes and HTTP statuses. `VaulterException::render()` returns `{message, code}` plus `renderExtras()` for JSON requests and paths under the Vaulter prefix, and returns `false` otherwise. `OffsetMismatchException` still adds `Upload-Offset` and `Tus-Resumable: 1.0.0` after `parent::render()`. The seven non-domain exceptions stay outside the contract.
+
+`NodeNotFoundException::forId()` and `StorageNotFoundException::forId()` are present. Name conflicts are 409 `node_name_conflict` with `errors.name`. MIME mismatches are 422 `upload_rejected` with `reason: mime_mismatch`. The V24 dataset, architecture ignores, error guide, changelog, and upgrade note cover that set. The supplied gates exit 0, V24 reports 20 passed, and the negative controls go red and then green.

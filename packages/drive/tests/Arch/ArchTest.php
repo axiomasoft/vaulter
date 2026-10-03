@@ -123,3 +123,8 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
 arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Drive')
     ->not->toUse('Illuminate\Support\Facades\DB');
+
+arch('domain exceptions implement the HTTP problem contract')
+    ->expect('Vaulter\Drive\Exceptions')
+    ->classes()
+    ->toImplement('Vaulter\Exceptions\Contracts\ProblemException');

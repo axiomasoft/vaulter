@@ -133,6 +133,19 @@ Vaulter\Database\VaulterDatabase
   lockTree(int|string $storageId): void
   transaction(\Closure $callback, int $attempts = 3): mixed
 
+Vaulter\Exceptions\Contracts\ProblemException
+  httpStatus(): int
+  problemCode(): string
+
+Vaulter\Exceptions\Nodes\NodeNotFoundException
+  forId(int|string $id): \self
+
+Vaulter\Exceptions\Nodes\StorageNotFoundException
+  forId(int|string $id): \self
+
+Vaulter\Exceptions\VaulterException
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
 FACADE Vaulter\Facades\Vaulter
   static \Vaulter\Contracts\Drive\DriveHandle for(\Illuminate\Database\Eloquent\Model $entity, ?string $panel = null)
   static \Vaulter\Contracts\Drive\DriveHandle forStorage(\Vaulter\Models\Drive\Storage $storage)

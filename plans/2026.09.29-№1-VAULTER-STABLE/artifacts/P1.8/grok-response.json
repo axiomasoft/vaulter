@@ -1,0 +1,27 @@
+{
+  "text": "The review is limited to the frozen P1.8 contract, the supplied diff, the new files, and the validation evidence. I'll check those against the current exception types and the render contract.GREEN\n\nThe P1.8 implementation matches the frozen contract. All 20 domain exceptions implement `ProblemException` with the table codes and HTTP statuses. `VaulterException::render()` returns `{message, code}` plus `renderExtras()` for JSON requests and paths under the Vaulter prefix, and returns `false` otherwise. `OffsetMismatchException` still adds `Upload-Offset` and `Tus-Resumable: 1.0.0` after `parent::render()`. The seven non-domain exceptions stay outside the contract.\n\n`NodeNotFoundException::forId()` and `StorageNotFoundException::forId()` are present. Name conflicts are 409 `node_name_conflict` with `errors.name`. MIME mismatches are 422 `upload_rejected` with `reason: mime_mismatch`. The V24 dataset, architecture ignores, error guide, changelog, and upgrade note cover that set. The supplied gates exit 0, V24 reports 20 passed, and the negative controls go red and then green.",
+  "stopReason": "end_turn",
+  "sessionId": "855f6154-2e5b-443a-a345-3ab2108008e1",
+  "requestId": "a253366d-20bd-4bb5-b3ae-ee1f4541ad88",
+  "usage": {
+    "input_tokens": 109941,
+    "cache_read_input_tokens": 2476288,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 40111,
+    "reasoning_tokens": 37319,
+    "total_tokens": 2626340
+  },
+  "num_turns": 31,
+  "total_cost_usd": 0.57755528,
+  "total_cost_usd_ticks": 5775552800,
+  "modelUsage": {
+    "grok-4.7-build": {
+      "inputTokens": 109941,
+      "outputTokens": 40111,
+      "cacheReadInputTokens": 2476288,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 31,
+      "costUSD": 0.57755528
+    }
+  }
+}

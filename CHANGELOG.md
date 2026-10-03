@@ -8,11 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Domain HTTP errors include a stable `code` through `ProblemException` (AD29).
+  Name conflicts now return 409 `node_name_conflict` (previously 422); assembled
+  upload MIME mismatches return 422 `upload_rejected` with `reason: mime_mismatch`
+  (previously 415). Existing validation fields and tus headers are preserved.
 - `vaulter-azgard` now follows the public AzGuard 0.3 line and its widened
   `BackedEnum` panel/role contracts; CI checks out the latest public AzGuard commit
   directly from GitHub without a private repository token.
 
 ### Fixed
+- All domain exceptions now return their documented 4xx status instead of HTTP 500
+  on JSON requests and Vaulter routes (N11, AD29); configuration and infrastructure
+  errors retain Laravel's default handling.
 - Vaulter transactions, CAS/tree locks, raw queries and after-commit callbacks now use
   `vaulter.connection` through the new `Vaulter\Database\VaulterDatabase` singleton,
   preserving atomicity when the host default connection differs (N01, AD25).

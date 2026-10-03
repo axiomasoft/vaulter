@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -13,8 +12,12 @@ use Vaulter\Exceptions\VaulterException;
  * eager quota). Checked BEFORE the blob is committed so we never store bytes we
  * must immediately reject. A null quota means unlimited and never throws.
  */
-final class QuotaExceededException extends VaulterException
+final class QuotaExceededException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'quota_exceeded';
+
+    private const int HTTP_STATUS = 413;
+
     public static function forStorage(int|string $storageId, int $quotaBytes, int $usedBytes, int $incomingBytes): self
     {
         return new self(
@@ -25,12 +28,13 @@ final class QuotaExceededException extends VaulterException
         );
     }
 
-    /**
-     * Surface a quota overflow as 413 Payload Too Large — the upload simply does
-     * not fit, which is exactly what 413 means.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(['message' => $this->getMessage()], 413);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

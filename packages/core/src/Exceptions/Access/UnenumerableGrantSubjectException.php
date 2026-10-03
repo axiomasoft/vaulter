@@ -6,6 +6,7 @@ namespace Vaulter\Exceptions\Access;
 
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -15,8 +16,12 @@ use Vaulter\Exceptions\VaulterException;
  * loud; in production the write is only logged (the direction of failure is safe —
  * an inert grant grants nothing).
  */
-final class UnenumerableGrantSubjectException extends VaulterException
+final class UnenumerableGrantSubjectException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'validation_failed';
+
+    private const int HTTP_STATUS = 422;
+
     /**
      * @param class-string $driverClass
      */
@@ -37,5 +42,23 @@ final class UnenumerableGrantSubjectException extends VaulterException
             .EnumeratesRoleSubjects::class.' to advertise the capability explicitly). '
             .'Docs: '.self::docs('unenumerable-grant-subject'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['errors' => ['subject_type' => [$this->getMessage()]]];
     }
 }

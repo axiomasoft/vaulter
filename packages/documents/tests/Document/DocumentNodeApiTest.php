@@ -95,7 +95,7 @@ it('rejects a content write on a non-document node', function (): void {
 
     $this->patchJson('api/vaulter/nodes/'.$folderId.'/content', [
         'content' => ['type' => 'doc', 'content' => []],
-    ])->assertStatus(500); // NotADocumentNodeException (no domain HTTP handler in test app)
+    ])->assertStatus(409)->assertJsonPath('code', 'not_a_document');
 });
 
 it('rejects invalid document-create boundaries without persisting a node', function (): void {

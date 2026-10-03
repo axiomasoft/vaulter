@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -15,8 +16,12 @@ use Vaulter\Exceptions\VaulterException;
  * The barrier lives on the DELIVERY path (DeliverWebhook), not just registration, so a
  * DNS record that flips to an internal address between the two is still refused.
  */
-final class BlockedOutboundUrlException extends VaulterException
+final class BlockedOutboundUrlException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'validation_failed';
+
+    private const int HTTP_STATUS = 422;
+
     public static function scheme(string $scheme): self
     {
         return new self(
@@ -55,5 +60,23 @@ final class BlockedOutboundUrlException extends VaulterException
             .'Fix: use a public endpoint, or widen vaulter.webhooks.delivery.allowed_ip_ranges for a trusted internal receiver. '
             .'Docs: '.self::docs('webhook-ssrf'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['errors' => ['url' => [$this->getMessage()]]];
     }
 }

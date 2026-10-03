@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -12,8 +13,12 @@ use Vaulter\Exceptions\VaulterException;
  * guard checks the destination against the moved node's subtree before the single
  * parent_id UPDATE.
  */
-final class CycleException extends VaulterException
+final class CycleException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'node_move_cycle';
+
+    private const int HTTP_STATUS = 409;
+
     public static function forMove(int|string $nodeId, int|string $intoId): self
     {
         return new self(
@@ -22,5 +27,15 @@ final class CycleException extends VaulterException
             'Fix: choose a destination outside the moved node\'s own subtree. '.
             'Docs: '.self::docs('move-cycle'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

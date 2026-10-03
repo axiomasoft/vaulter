@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -14,8 +13,12 @@ use Vaulter\Exceptions\VaulterException;
  * a ZIP archive. The server recomputes the type from the bytes it holds and refuses
  * to commit a type-confused object rather than trust the client's claim.
  */
-final class UploadContentMismatchException extends VaulterException
+final class UploadContentMismatchException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'upload_rejected';
+
+    private const int HTTP_STATUS = 422;
+
     public static function forSession(string $uploadId, string $declaredMime): self
     {
         return new self(
@@ -26,12 +29,21 @@ final class UploadContentMismatchException extends VaulterException
         );
     }
 
-    /**
-     * Surface a type mismatch as 415 Unsupported Media Type — the declared type is
-     * not the type of the bytes.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(['message' => $this->getMessage()], 415);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['reason' => 'mime_mismatch'];
     }
 }

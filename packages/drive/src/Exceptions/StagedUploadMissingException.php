@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -23,8 +22,12 @@ use Vaulter\Exceptions\VaulterException;
  * a loud 409 that forces the client to re-read HEAD (or restart the upload) than a
  * quietly broken file.
  */
-final class StagedUploadMissingException extends VaulterException
+final class StagedUploadMissingException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'upload_conflict';
+
+    private const int HTTP_STATUS = 409;
+
     public static function forSession(string $uploadId, int $offset): self
     {
         return new self(
@@ -35,11 +38,13 @@ final class StagedUploadMissingException extends VaulterException
         );
     }
 
-    /**
-     * 409 Conflict: the client's view of the upload no longer matches the server's.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(['message' => $this->getMessage()], 409);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

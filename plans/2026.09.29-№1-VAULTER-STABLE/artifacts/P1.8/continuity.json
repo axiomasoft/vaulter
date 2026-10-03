@@ -1,0 +1,32 @@
+{
+  "estimate": {
+    "route_attested": true,
+    "capabilities_attested": true,
+    "capabilities_sufficient": true,
+    "context_attested": false,
+    "context_health": "unavailable",
+    "batch_receipt_valid": true,
+    "remaining_batch_digest": "a0a33583f5b56aae2a1e3a052ffffb27c3a1f49ad24225a4ccf19283bf48c270",
+    "loaded_inputs_reusable": true,
+    "cold_start_cost": 0,
+    "lifecycle": "scope-complete",
+    "isolated_review": false,
+    "reviewer_task": null,
+    "checkpoint": "artifacts/P1.8/completion.md",
+    "external_pause": null,
+    "schema_version": "session-work-estimate/v1"
+  },
+  "decision": {
+    "outcome": "continue-root",
+    "reason": "authorized-scope-complete",
+    "evidence": [
+      "batch:a0a33583f5b56aae2a1e3a052ffffb27c3a1f49ad24225a4ccf19283bf48c270",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "lifecycle:scope-complete",
+      "checkpoint:artifacts/P1.8/completion.md"
+    ],
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  }
+}

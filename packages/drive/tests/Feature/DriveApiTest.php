@@ -152,14 +152,15 @@ it('rejects an invalid name with 422', function (): void {
         ->assertJsonValidationErrors('name');
 });
 
-it('surfaces a sibling-name conflict as a clean 422', function (): void {
+it('surfaces a sibling-name conflict as a clean 409', function (): void {
     $storage = driveStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
 
     $this->postJson($base, ['name' => 'Twin'])->assertCreated();
 
     $this->postJson($base, ['name' => 'Twin'])
-        ->assertStatus(422)
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_name_conflict')
         ->assertJsonValidationErrors('name');
 });
 

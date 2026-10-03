@@ -4,6 +4,52 @@ Every Vaulter exception extends `Vaulter\Exceptions\VaulterException` and carrie
 message in the form `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
 points at the matching anchor below.
 
+## domain-http-errors
+
+Domain exceptions implement `Vaulter\Exceptions\Contracts\ProblemException`.
+For JSON requests or routes under the configured Vaulter prefix, the response is
+`{message, code}` with the following HTTP status. HTML requests to host routes and
+configuration/infrastructure exceptions use Laravel's normal exception handler.
+Codes are a stable public contract (AD29).
+
+| Code | HTTP | Exception |
+|:--|:--|:--|
+| `permission_denied` | 403 | `Vaulter\Exceptions\Access\PermissionDeniedException` |
+| `node_name_conflict` | 409 | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
+| `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\CycleException` |
+| `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\CrossStorageMoveException` |
+| `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\QuotaExceededException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\UploadConflictException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\StagedUploadMissingException` |
+| `upload_offset_mismatch` | 409 | `Vaulter\Drive\Exceptions\OffsetMismatchException` |
+| `upload_rejected` | 422 | `Vaulter\Drive\Exceptions\UploadContentMismatchException` |
+| `not_a_document` | 409 | `Vaulter\Documents\Exceptions\NotADocumentNodeException` |
+| `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
+| `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidTipTapContentException` |
+| `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException` |
+| `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
+| `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
+| `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
+| `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
+| `unknown_profile` | 422 | `Vaulter\Exceptions\Panels\UnknownPanelException` |
+| `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
+| `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
+
+The response also preserves `errors.name` for name conflicts, `errors.url` for blocked
+outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
+include `reason`: `mime_mismatch`, `invalid_tiptap` or `unsupported_content`.
+Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
+
+## node-not-found
+
+`NodeNotFoundException::forId()` — the node does not exist or is not visible to the
+current actor in the current drive/tenant. These cases use the same 404 response.
+
+## storage-not-found
+
+`StorageNotFoundException::forId()` — the storage does not exist or is not visible
+to the current actor. Use an accessible storage; the response is 404 `drive_not_found`.
+
 ## permission-denied
 
 `PermissionDeniedException` — either the legacy document path's authorization hook, or

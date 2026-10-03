@@ -1,0 +1,24 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Arch\ArchTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mdomain exceptions implement the HTTP problem contract[39m[90m               [39m [90m0.05s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Arch\ArchTest[22m [90m>[39m domain exce… [41;1m ArchExpectationFailedException [49;22m  
+[39;1m  Expecting 'src/Exceptions/CycleException.php' to implement 'Vaulter\Exceptions\Contracts\ProblemException'.[39;22m
+
+  at [32msrc/Exceptions/CycleException.php[39m:[32m16[39m
+     12▕  * H.4 cycle guard), which would orphan a cycle out of the adjacency tree. The
+     13▕  * guard checks the destination against the moved node's subtree before the single
+     14▕  * parent_id UPDATE.
+     15▕  */
+  ➜  16▕ final class CycleException extends VaulterException
+     17▕ {
+     18▕     private const string PROBLEM_CODE = 'node_move_cycle';
+     19▕ 
+     20▕     private const int HTTP_STATUS = 409;
+
+  [33m1   [39m[39;1msrc/Exceptions/CycleException.php[39;22m:[39;1m16[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (1 assertions)[39m
+  [90mDuration:[39m [39m0.08s[39m
+

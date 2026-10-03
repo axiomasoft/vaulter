@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 
 /**
@@ -272,6 +276,10 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
+    $blocks[] = vaulterSnapshotInterface(ProblemException::class);
+    foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
+        $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
+    }
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
