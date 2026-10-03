@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
 - HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
   stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides
   only the authenticated stack, and metrics are appended to all stacks (AD31).
@@ -23,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Filament Move filters destinations and checks workspace creation and destination
+  Create access at action time, notifying the actor on denial (N14).
 - Vaulter resource resolution no longer registers global `node`/`storage` bindings
   that interfere with host routes. Missing resources return their 404 problem code (N10, AD31).
 - Outbox deduplication no longer loses repeated rename or trash/restore operations

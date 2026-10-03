@@ -62,7 +62,7 @@ and `vaulter-drive` also pulls in `vaulter-media`, automatically):
 # Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
 composer require axioma-studio/vaulter-drive
 
-# Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
+# Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive
 composer require axioma-studio/vaulter-documents
 
 php artisan vaulter:install   # publishes config + migrations, asks to run them

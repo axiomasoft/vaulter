@@ -25,7 +25,7 @@ your app actually needs:
 # Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
 composer require axioma-studio/vaulter-drive
 
-# Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
+# Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive
 composer require axioma-studio/vaulter-documents
 ```
 

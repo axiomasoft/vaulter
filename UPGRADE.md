@@ -6,6 +6,14 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Runtime Drive dependencies (AD02)
+
+Documents and Filament now declare `axioma-studio/vaulter-drive` in `require`
+rather than `require-dev`; installing either also installs Drive and its Media
+backend. Update your Composer lock accordingly. Filament Move now requires
+workspace creation access and Create on the destination, including the storage
+root. A denied move leaves the node in place and shows "Move not allowed".
+
 ### HTTP middleware and route parameters (AD31)
 
 Replace `vaulter.middleware` with `vaulter.routes.middleware.authenticated` and

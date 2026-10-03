@@ -1,0 +1,10 @@
+{
+  "packages/documents/composer.json": "4b0bb4ccdbe4ef3ec756a0393b43b0c36d207b31aa1301750df5883c63adc868",
+  "packages/filament/composer.json": "0d85c9f85b1a43c2291156c294e92f3395c32717bae69e765d17bad4ea08b1de",
+  "packages/filament/src/Resources/NodeResource.php": "36dd926991c156d2b324f39cffc526fabcfbb29f437d0e69e24ba95bf8e2ba6b",
+  "packages/filament/tests/Feature/NodeResourceMoveAuthorizationTest.php": "02039ac62e850c852d512b88622751df5053c7576ab2f5204d19fa31badab1ac",
+  "README.md": "a96756843325dbfe92dec1203e15aaf29fc79b80af29fb2907d437e2a5c9bf5c",
+  "docs/guide/installation.md": "b1a7b4bdc468f27621cebc150dc8e03c398f761a105a76c7d7451eb74cf1aeb5",
+  "CHANGELOG.md": "6b5ef646e2cb724c4806206659f555b50b7d1a47825d7a72e90e6439a30868eb",
+  "UPGRADE.md": "d0d8df8e6861188d5453f3f5047c14f340748b7f35ca91923ee0302a9be2c5e8"
+}
