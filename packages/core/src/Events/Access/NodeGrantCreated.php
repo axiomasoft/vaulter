@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Access;
 
+use Illuminate\Support\Str;
 use Vaulter\Models\Access\NodeGrant;
 
 /**
@@ -22,8 +23,13 @@ use Vaulter\Models\Access\NodeGrant;
  */
 final readonly class NodeGrantCreated
 {
+    public string $eventId;
+
     public function __construct(
         public NodeGrant $grant,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

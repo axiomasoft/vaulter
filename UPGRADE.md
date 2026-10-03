@@ -6,6 +6,19 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Webhook event occurrence ids (AD22, E8)
+
+Webhook `event_id` values are now 26-character ULIDs generated when a domain event
+is constructed. Consumers should deduplicate by the complete `event_id`, without
+parsing a topic or node id from it. Repeated operations producing the same state
+have different ids; retries of one occurrence keep its original id. Existing queued
+rows retain their stored ids, so accept both formats while the backlog drains.
+
+All domain events expose readonly `eventId` and accept an optional final
+`?string $eventId = null` constructor argument. Preserve this value when reconstructing
+an event for replay. Custom callers of `OutboxRecorder::stage()` using named arguments
+must replace `key:` with `eventId:` and pass the originating event's id.
+
 ### Domain HTTP error codes and statuses (AD29)
 
 Domain exceptions now implement `Vaulter\Exceptions\Contracts\ProblemException`

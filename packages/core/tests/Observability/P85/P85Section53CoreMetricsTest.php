@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -43,7 +44,7 @@ it('records vaulter_outbox_backlog from pending outbox rows', function (): void 
 it('records vaulter_outbox_stage_duration_seconds when staging a new row', function (): void {
     app(OutboxRecorder::class)->stage(
         event: WebhookEvent::GrantCreated,
-        key: 'grant.created:metrics-1',
+        eventId: (string) Str::ulid(),
         panel: 'default',
         topic: 'node-1',
         payload: ['grant_id' => 'g-1'],

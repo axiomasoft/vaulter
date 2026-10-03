@@ -282,5 +282,16 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     }
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
 
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Events') as $eventClass) {
+        $reflection = new ReflectionClass($eventClass);
+        $properties = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '')
+                .vaulterSnapshotType($property->getType()).' $'.$property->getName();
+        }
+        sort($properties);
+        $blocks[] = vaulterSnapshotInterface($eventClass)."\n".implode("\n", $properties);
+    }
+
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

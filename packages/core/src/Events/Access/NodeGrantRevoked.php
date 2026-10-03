@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Access;
 
+use Illuminate\Support\Str;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Models\Drive\Node;
 
@@ -21,10 +22,15 @@ use Vaulter\Models\Drive\Node;
  */
 final readonly class NodeGrantRevoked
 {
+    public string $eventId;
+
     public function __construct(
         public Node $node,
         public Subject $subject,
         public int $revoked,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Support\Str;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 
@@ -17,8 +18,13 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
  */
 final readonly class UploadSessionExpired implements ShouldDispatchAfterCommit
 {
+    public string $eventId;
+
     public function __construct(
         public UploadSession $session,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

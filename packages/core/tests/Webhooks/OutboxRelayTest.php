@@ -5,12 +5,19 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Drive\Events\NodeCreated;
+use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\OutboxRecorder;
 use Vaulter\Webhooks\OutboxRelay;
+use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * The transactional-outbox RELAY (§2.11 / D14 / M3b), ported from chatom: process()
@@ -24,6 +31,49 @@ function relay(): OutboxRelay
 {
     return app(OutboxRelay::class);
 }
+
+it('sends the same occurrence id on the original delivery and a relay retry', function (): void {
+    Queue::fake();
+    Bus::fake();
+    Http::fake(['https://hooks.test/*' => Http::sequence()->push('', 500)->push('', 200)]);
+
+    WebhookTestHelpers::endpoint();
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'Retry');
+    Outbox::query()->delete();
+    $event = new NodeCreated(node: $node, actorId: 7);
+    $message = app(OutboxRecorder::class)->stage(
+        event: WebhookEvent::NodeCreated,
+        eventId: $event->eventId,
+        panel: $node->panel,
+        topic: (string) $node->getKey(),
+        payload: ['node_id' => (string) $node->getKey()],
+        actorId: 7,
+    );
+
+    expect(relay()->process())->toBe(1);
+    $delivery = WebhookDelivery::query()->sole();
+    $job = new DeliverWebhook(deliveryId: (string) $delivery->getKey());
+    $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+    $delivery->refresh();
+    expect($delivery->status)->toBe('failed');
+
+    $delivery->forceFill(['next_retry_at' => now()->subSecond()])->save();
+    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
+    Bus::assertDispatched(DeliverWebhook::class, function (DeliverWebhook $retry) use ($delivery): bool {
+        return (new ReflectionProperty($retry, 'deliveryId'))->getValue($retry) === (string) $delivery->getKey();
+    });
+    $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+
+    expect($delivery->refresh()->status)->toBe('delivered')
+        ->and($delivery->attempts)->toBe(2)
+        ->and($message->refresh()->event_id)->toBe($event->eventId)
+        ->and(WebhookDelivery::query()->count())->toBe(1);
+    Http::assertSentCount(2);
+    foreach (Http::recorded() as [$request]) {
+        expect($request->data()['event_id'])->toBe($event->eventId);
+    }
+});
 
 // ─────────────────────── process() — fan-out ───────────────────────
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Sharing;
 
+use Illuminate\Support\Str;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
@@ -20,8 +21,13 @@ use Vaulter\Models\Sharing\NodeShare;
  */
 final readonly class NodeShareRevoked
 {
+    public string $eventId;
+
     public function __construct(
         public NodeShare $share,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

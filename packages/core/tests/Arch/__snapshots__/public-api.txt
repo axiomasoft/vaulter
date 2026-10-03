@@ -159,3 +159,29 @@ FACADE Vaulter\Facades\Vaulter
   static void registerExporter(\Vaulter\Contracts\Handlers\DocumentExporter|class-string<\Vaulter\Contracts\Handlers\DocumentExporter> $exporter)
   static void registerHandler(\Vaulter\Contracts\Handlers\FileHandler|class-string<\Vaulter\Contracts\Handlers\FileHandler> $handler)
   static void registerPanel(\Vaulter\Panels\StoragePanelProvider|\Vaulter\Panels\Panel $panel)
+
+Vaulter\Events\Access\NodeGrantCreated
+  __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Access\NodeGrant $grant
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Access\NodeGrantRevoked
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int $revoked
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareCreated
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareRevoked
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly int|null|string $actorId
+  readonly string $eventId

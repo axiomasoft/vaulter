@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Documents;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Support\Str;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Models\Drive\Node;
 
@@ -14,9 +15,14 @@ use Vaulter\Models\Drive\Node;
  */
 final readonly class DocumentNodeCreated implements ShouldDispatchAfterCommit
 {
+    public string $eventId;
+
     public function __construct(
         public Node $node,
         public NodeDocumentVersion $version,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

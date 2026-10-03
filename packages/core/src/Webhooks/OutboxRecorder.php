@@ -24,7 +24,7 @@ use Vaulter\Support\Identity;
  * Kernel domains (Access grants, Sharing links) map their own events here; the Drive
  * behaviour package (P2 #5 / ADR-0015) maps its file/folder/upload events through the
  * PUBLIC {@see stage()} seam, so core no longer references any Vaulter\Drive\Events\*
- * class while the outbox payloads/keys stay byte-for-byte identical.
+ * class while the outbox payloads retain their domain fields.
  *
  * Slim payloads (HARDENING): only ids, names, sizes and enum values travel — never
  * blob bytes or secrets (a share's token_hash/secret is never serialized; only the
@@ -47,7 +47,7 @@ class OutboxRecorder
 
         return $this->stage(
             event: WebhookEvent::GrantCreated,
-            key: "grant.created:{$this->id($event->grant->getKey())}",
+            eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
             payload: [
@@ -68,7 +68,7 @@ class OutboxRecorder
     {
         return $this->stage(
             event: WebhookEvent::GrantRevoked,
-            key: "grant.revoked:{$this->id($event->node->getKey())}:{$event->subject->type}:{$this->id($event->subject->id)}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->id($event->node->getKey()),
             payload: [
@@ -88,7 +88,7 @@ class OutboxRecorder
 
         return $this->stage(
             event: WebhookEvent::ShareCreated,
-            key: "share.created:{$this->id($event->share->getKey())}",
+            eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
             // The raw token / token_hash is NEVER serialized — only the non-secret
@@ -112,7 +112,7 @@ class OutboxRecorder
 
         return $this->stage(
             event: WebhookEvent::ShareRevoked,
-            key: "share.revoked:{$this->id($event->share->getKey())}",
+            eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
             payload: [
@@ -128,14 +128,14 @@ class OutboxRecorder
     /**
      * Stage ONE outbox row for an event — the PUBLIC seam the kernel handlers above
      * and the vaulter-drive subscriber both map through. Idempotent by event_id: when
-     * a row for this key already exists (a retried send, a re-fired event), this is a
+     * a row for this occurrence id already exists (a retried send, a re-fired event), this is a
      * no-op and returns null, so the relay never fans the same event out twice.
      *
      * @param array<string, mixed> $payload
      */
     public function stage(
         WebhookEvent $event,
-        string $key,
+        string $eventId,
         string $panel,
         ?string $topic,
         array $payload,
@@ -144,16 +144,16 @@ class OutboxRecorder
         /** @var class-string<Outbox> $outboxClass */
         $outboxClass = Config::outboxModel();
 
-        if ($outboxClass::query()->where('event_id', $key)->exists()) {
+        if ($outboxClass::query()->where('event_id', $eventId)->exists()) {
             return null;
         }
 
         return $this->metrics->timing(
             name: 'vaulter_outbox_stage_duration_seconds',
-            operation: function () use ($outboxClass, $key, $panel, $topic, $event, $payload, $actorId): Outbox {
+            operation: function () use ($outboxClass, $eventId, $panel, $topic, $event, $payload, $actorId): Outbox {
                 // The actor id rides inside the payload so consumers see who caused the event
                 // without a separate column on the wire.
-                $payload['event_id'] = $key;
+                $payload['event_id'] = $eventId;
                 $payload['actor_id'] = Identity::key($actorId);
 
                 // forceFill (P1.4/F-P1.8-02): Outbox is intentionally fully guarded — this
@@ -161,7 +161,7 @@ class OutboxRecorder
                 /** @var Outbox $outbox */
                 $outbox = new $outboxClass;
                 $outbox->forceFill([
-                    'event_id' => $key,
+                    'event_id' => $eventId,
                     'panel' => $panel,
                     'topic' => $topic,
                     'event' => $event->value,
@@ -179,7 +179,7 @@ class OutboxRecorder
 
     /**
      * Stringify an id for a slim payload/topic, mapping the empty string to null. The
-     * PUBLIC helper the vaulter-drive subscriber reuses so its keys/payloads match the
+     * PUBLIC helper the vaulter-drive subscriber reuses so its payload ids match the
      * kernel handlers' exactly.
      */
     public function id(mixed $value): ?string

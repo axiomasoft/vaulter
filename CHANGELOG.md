@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Domain events carry a readonly `eventId` ULID with an optional final constructor
+  argument for replay. Webhook `event_id` now identifies an event occurrence rather
+  than its resulting state; retries retain the same id (AD22).
 - Domain HTTP errors include a stable `code` through `ProblemException` (AD29).
   Name conflicts now return 409 `node_name_conflict` (previously 422); assembled
   upload MIME mismatches return 422 `upload_rejected` with `reason: mime_mismatch`
@@ -17,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Outbox deduplication no longer loses repeated rename or trash/restore operations
+  returning to the same state; only a replay of the same event id is deduplicated (E8).
 - All domain exceptions now return their documented 4xx status instead of HTTP 500
   on JSON requests and Vaulter routes (N11, AD29); configuration and infrastructure
   errors retain Laravel's default handling.
