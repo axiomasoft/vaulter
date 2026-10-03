@@ -75,7 +75,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub('axioma-studio/vaulter');
+                    ->askToStarRepoOnGitHub('axiomasoft/vaulter');
             });
     }
 

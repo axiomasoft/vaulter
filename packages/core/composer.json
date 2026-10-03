@@ -13,7 +13,7 @@
         "editor",
         "file-manager"
     ],
-    "homepage": "https://github.com/axioma-studio/vaulter",
+    "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
@@ -21,8 +21,8 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/axioma-studio/vaulter/issues",
-        "source": "https://github.com/axioma-studio/vaulter"
+        "issues": "https://github.com/axiomasoft/vaulter/issues",
+        "source": "https://github.com/axiomasoft/vaulter"
     },
     "require": {
         "php": "^8.4",

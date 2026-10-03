@@ -22,7 +22,7 @@ beforeEach(function (): void {
 
 function r07ErrorDocs(string $anchor): string
 {
-    return 'https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+    return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
 }
 
 it('R07Exception keeps UploadConflictException forSession message and 409 render body', function (): void {

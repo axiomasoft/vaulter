@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "{\"final_allowed\": true, \"observed\": [{\"item_id\": \"P1.10\", \"plan_id\": \"2026.09.29-\u21161-VAULTER-STABLE\", \"run_id\": \"97d6ce3d179b256e0195c32fa1fba06b7853185581017279324306d2b671f08e\", \"state\": \"closed-green\"}, {\"item_id\": \"P1.11\", \"plan_id\": \"2026.09.29-\u21161-VAULTER-STABLE\", \"run_id\": \"442302bf493c6f87a536071a9100bbda7f420357c15cb232cb7510d9f791cfe5\", \"state\": \"closed-green\"}, {\"item_id\": \"P1.9\", \"plan_id\": \"2026.09.29-\u21161-VAULTER-STABLE\", \"run_id\": \"0bff21529ae478f5e124f97b909b500d84350742c1692046cc3aeaad1d79838c\", \"state\": \"closed-green\"}], \"reason\": \"NO_OPEN_SESSION_RUN\", \"worksets\": [{\"batch_id\": \"B1-B\", \"membership\": [\"P1.9\", \"P1.10\", \"P1.11\"], \"plan_id\": \"2026.09.29-\u21161-VAULTER-STABLE\", \"remaining\": [], \"terminal_boundary\": null}]}\n",
+  "stderr": ""
+}

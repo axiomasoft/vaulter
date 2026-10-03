@@ -1,0 +1,45 @@
+{
+  "command": "for f in composer.json packages/*/composer.json; do scripts/php84 composer validate --no-check-publish \"$f\" || exit 1; done",
+  "cwd": "/tmp/vaulter-p111-metadata-d1ogb_12",
+  "exit": 0,
+  "members": [
+    {
+      "path": "composer.json",
+      "sha256": "99c787a7daf8158b59a48ee5bb37cae3a66314bf42d5f56997282b8730193cc1",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/azgard/composer.json",
+      "sha256": "b56602ef88523afd6b64664ecd9a8d80ca493ca347f729247f15b0e916c542be",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/core/composer.json",
+      "sha256": "204a7dc50d4ccff0323c38458ab278106b05114bddf6dd3e9f542a64c910087d",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/documents/composer.json",
+      "sha256": "636441972cdf3dff5ca5415bb608c0201321160e0d3009fcb55c3fb801a703e3",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/drive/composer.json",
+      "sha256": "8ea3d46fa47916f93d9a2b4d94972f6039eeb3817be7a885dab78c1820841e08",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/filament/composer.json",
+      "sha256": "66c221ce3e3d23f3c6f4e363a9bf48b9529677a153a53aa91632d486193ed8e9",
+      "byte_equal": true
+    },
+    {
+      "path": "packages/media/composer.json",
+      "sha256": "c95e5217d18b52781c32c0981a3ff55dcf19fc12adfa25a33e7aa35974152bd2",
+      "byte_equal": true
+    }
+  ],
+  "scope": "byte-identical current library manifests; ignored locks excluded",
+  "azgard_baseline_delta": "only homepage/support URLs; existing ignored lock and missing local AzGuard context repository are unchanged",
+  "azgard_lock_sha256": "867d2c81b91e118a11b90d7794ab7ead5f4242e7634756acf018274c072157d8"
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "file": "composer.json",
+    "exit": 0,
+    "stdout": "",
+    "stderr": "composer.json is valid, but with a few warnings\nSee https://getcomposer.org/doc/04-schema.md for details on the schema\n# General warnings\n- require.axioma-studio/vaulter-core : unbound version constraints (@dev) should be avoided\n- require.axioma-studio/vaulter-media : unbound version constraints (@dev) should be avoided\n- require.axioma-studio/vaulter-drive : unbound version constraints (@dev) should be avoided\n- require.axioma-studio/vaulter-documents : unbound version constraints (@dev) should be avoided\n"
+  },
+  {
+    "file": "packages/azgard/composer.json",
+    "exit": 2,
+    "stdout": "packages/azgard/composer.json is valid but your composer.lock has some errors\n",
+    "stderr": "# Lock file errors\n- The lock file is not up to date with the latest changes in composer.json, it is recommended that you run `composer update` or `composer update <package name>`.\n"
+  },
+  {
+    "file": "packages/core/composer.json",
+    "exit": 0,
+    "stdout": "packages/core/composer.json is valid\n",
+    "stderr": ""
+  },
+  {
+    "file": "packages/documents/composer.json",
+    "exit": 0,
+    "stdout": "packages/documents/composer.json is valid\n",
+    "stderr": ""
+  },
+  {
+    "file": "packages/drive/composer.json",
+    "exit": 0,
+    "stdout": "packages/drive/composer.json is valid\n",
+    "stderr": ""
+  },
+  {
+    "file": "packages/filament/composer.json",
+    "exit": 0,
+    "stdout": "packages/filament/composer.json is valid\n",
+    "stderr": ""
+  },
+  {
+    "file": "packages/media/composer.json",
+    "exit": 0,
+    "stdout": "packages/media/composer.json is valid\n",
+    "stderr": ""
+  }
+]

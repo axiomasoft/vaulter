@@ -1,0 +1,289 @@
+Fresh independent read-only review of the narrow mechanical P1.11 diff. Use only this inline packet, no tool calls, no repairs. Return GREEN or concrete findings. Check exact URL owner substitutions, preserved suffixes, unchanged vendor/package identity and install prompt/test alignment. Keep analysis proportional to this simple replacement. Specification follows.
+
+### P1.11 — Метаданные и URL
+
+**Intent:** Все ссылки на репозиторий в метаданных пакетов, сообщениях ошибок и install-команде ведут на
+фактический репозиторий `github.com/axiomasoft/vaulter`; vendor `axioma-studio/*` (имена пакетов) не меняется.
+
+**Why:** OPUS 13 P1.11 (сужен D02 п.2: README переписывается в P7.6), 01 §2 («Ссылки homepage/support/docs — да;
+vendor `axioma-studio/*` не менять … `VaulterException::docs()` и `askToStarRepoOnGitHub` ведут на неверный owner»).
+`git remote -v` → `https://github.com/axiomasoft/vaulter.git`; `packages/vue/package.json` уже указывает `axiomasoft`.
+
+**Scope Included:**
+1. Заменить `https://github.com/axioma-studio/vaulter` → `https://github.com/axiomasoft/vaulter` (с сохранением
+   суффиксов `/issues`, `/blob/main/...`) ровно в 9 файлах:
+   `composer.json` (корень, `homepage`), `packages/{core,drive,documents,media,filament,azgard}/composer.json`
+   (`homepage`, `support.issues`, `support.source`), `packages/core/src/Exceptions/VaulterException.php:16` (`docs()`),
+   `packages/documents/src/Collaboration/NodeCollaborationDriverManager.php:49`.
+2. `packages/core/src/VaulterServiceProvider.php:76`: `->askToStarRepoOnGitHub('axiomasoft/vaulter')`.
+3. Тест, сверяющий URL: `packages/drive/tests/Feature/R07ExceptionContractsTest.php:25` → новый owner (других тестов с этим URL нет — Code Guidance).
+4. `CHANGELOG.md [Unreleased]` (Fixed: repository URLs — N20/E6, D02 п.2).
+
+**Scope Excluded:** README и docs-сайт (P7.6, D02 п.2); vendor-имена `axioma-studio/vaulter-*`, текстовые упоминания
+пакетов в сообщениях (`owned by axioma-studio/vaulter-documents` — это имена пакетов, не URL); `docs/reference/errors.md`
+и ссылки RFC 9457 `type` (P6.2).
+
+**Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.11-opus.md`;
+`plans/2026.09.29-№1-VAULTER-STABLE/decisions/D02-owner-questions.md`; `packages/core/src/Exceptions/VaulterException.php`
+
+**Files:** `composer.json`, `packages/{core,drive,documents,media,filament,azgard}/composer.json`,
+`packages/core/src/Exceptions/VaulterException.php`, `packages/documents/src/Collaboration/NodeCollaborationDriverManager.php`,
+`packages/core/src/VaulterServiceProvider.php`, `packages/drive/tests/Feature/R07ExceptionContractsTest.php`, `CHANGELOG.md`.
+
+**Required Reads:** 0) `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.11-opus.md` (дословные требования OPUS — исполнить все);
+1) `plans/2026.09.29-№1-VAULTER-STABLE/decisions/D02-owner-questions.md` п.2.
+
+**Authority:** routine
+
+**Implementation Rules:**
+- Меняются только URL `github.com/axioma-studio/vaulter…`; строки вида `axioma-studio/vaulter-<pkg>` (имя пакета) не трогаются.
+- Репозиторий приватный (`gh repo view axiomasoft/vaulter --json visibility` → `PRIVATE`), поэтому анонимный HTTP 404 —
+  не дефект; существование цели проверяется аутентифицированным `gh api`.
+
+**Code Guidance:** инвентарь до правки: `grep -rln "github.com/axioma-studio/vaulter" --include=*.php --include=*.json . | grep -v -e vendor -e node_modules -e '^./plans/' -e '^./audits/'`
+→ ровно 10 путей (9 файлов п.1 + `packages/drive/tests/Feature/R07ExceptionContractsTest.php`); после правки → пусто.
+
+**Validation:**
+- Code Guidance после правки → пустой вывод.
+- `grep -n "askToStarRepoOnGitHub('axiomasoft/vaulter')" packages/core/src/VaulterServiceProvider.php` → 1 строка.
+- `gh api repos/axiomasoft/vaulter/contents/docs/guide/errors.md --jq .path` → `docs/guide/errors.md` (цель `docs()` существует).
+- `for f in composer.json packages/*/composer.json; do scripts/php84 composer validate --no-check-publish "$f" || exit 1; done` → exit 0.
+- Гейт core и гейты drive, documents → exit 0.
+
+**Deliverables:** корректные URL в metadata, `docs()`, install-команде и тестах.
+
+diff --git a/composer.json b/composer.json
+index d5402ca..5c18fce 100644
+--- a/composer.json
++++ b/composer.json
+@@ -3,7 +3,7 @@
+     "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
+     "type": "project",
+     "license": "MIT",
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+
+diff --git a/packages/media/composer.json b/packages/media/composer.json
+index ce10097..4bd920a 100644
+--- a/packages/media/composer.json
++++ b/packages/media/composer.json
+@@ -4,7 +4,7 @@
+     "type": "library",
+     "license": "MIT",
+     "keywords": ["laravel", "cas", "content-addressed", "blob", "storage", "dedup", "vaulter"],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -12,8 +12,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/core/composer.json b/packages/core/composer.json
+index 2496105..b0be5ad 100644
+--- a/packages/core/composer.json
++++ b/packages/core/composer.json
+@@ -13,7 +13,7 @@
+         "editor",
+         "file-manager"
+     ],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -21,8 +21,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/drive/composer.json b/packages/drive/composer.json
+index 42c0580..adbbcf3 100644
+--- a/packages/drive/composer.json
++++ b/packages/drive/composer.json
+@@ -4,7 +4,7 @@
+     "type": "library",
+     "license": "MIT",
+     "keywords": ["laravel", "drive", "file-manager", "uploads", "tus", "s3-multipart", "vaulter"],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -12,8 +12,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/azgard/composer.json b/packages/azgard/composer.json
+index 2be8ffc..f886b63 100644
+--- a/packages/azgard/composer.json
++++ b/packages/azgard/composer.json
+@@ -4,7 +4,7 @@
+     "type": "library",
+     "license": "MIT",
+     "keywords": ["laravel", "authorization", "permissions", "azguard", "corex", "vaulter"],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -12,8 +12,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/filament/composer.json b/packages/filament/composer.json
+index 04f43cd..84ec4cd 100644
+--- a/packages/filament/composer.json
++++ b/packages/filament/composer.json
+@@ -4,7 +4,7 @@
+     "type": "library",
+     "license": "MIT",
+     "keywords": ["laravel", "filament", "documents", "admin", "vaulter"],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -12,8 +12,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/documents/composer.json b/packages/documents/composer.json
+index 3be6e95..11c6e5d 100644
+--- a/packages/documents/composer.json
++++ b/packages/documents/composer.json
+@@ -4,7 +4,7 @@
+     "type": "library",
+     "license": "MIT",
+     "keywords": ["laravel", "documents", "tiptap", "collaboration", "yjs", "versioning", "editor", "vaulter"],
+-    "homepage": "https://github.com/axioma-studio/vaulter",
++    "homepage": "https://github.com/axiomasoft/vaulter",
+     "authors": [
+         {
+             "name": "Dmitry Vostrikov",
+@@ -12,8 +12,8 @@
+         }
+     ],
+     "support": {
+-        "issues": "https://github.com/axioma-studio/vaulter/issues",
+-        "source": "https://github.com/axioma-studio/vaulter"
++        "issues": "https://github.com/axiomasoft/vaulter/issues",
++        "source": "https://github.com/axiomasoft/vaulter"
+     },
+     "require": {
+         "php": "^8.4",
+
+diff --git a/packages/core/src/Exceptions/VaulterException.php b/packages/core/src/Exceptions/VaulterException.php
+index f75edb1..5ebc2d4 100644
+--- a/packages/core/src/Exceptions/VaulterException.php
++++ b/packages/core/src/Exceptions/VaulterException.php
+@@ -41,6 +41,6 @@ class VaulterException extends RuntimeException
+ 
+     protected static function docs(string $anchor): string
+     {
+-        return 'https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
++        return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+     }
+ }
+
+diff --git a/packages/documents/src/Collaboration/NodeCollaborationDriverManager.php b/packages/documents/src/Collaboration/NodeCollaborationDriverManager.php
+index b916f95..5cb097e 100644
+--- a/packages/documents/src/Collaboration/NodeCollaborationDriverManager.php
++++ b/packages/documents/src/Collaboration/NodeCollaborationDriverManager.php
+@@ -46,7 +46,7 @@ final readonly class NodeCollaborationDriverManager
+             throw new VaulterException(
+                 sprintf('[Vaulter] Unknown collaboration driver [%s]. ', $name)
+                 .'Fix: set config(vaulter.collaboration.driver) to one of: reverb, hocuspocus. '
+-                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
++                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
+             );
+         }
+ 
+
+diff --git a/packages/drive/tests/Feature/R07ExceptionContractsTest.php b/packages/drive/tests/Feature/R07ExceptionContractsTest.php
+index a28cd0e..f73c6f0 100644
+--- a/packages/drive/tests/Feature/R07ExceptionContractsTest.php
++++ b/packages/drive/tests/Feature/R07ExceptionContractsTest.php
+@@ -22,7 +22,7 @@ beforeEach(function (): void {
+ 
+ function r07ErrorDocs(string $anchor): string
+ {
+-    return 'https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
++    return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+ }
+ 
+ it('R07Exception keeps UploadConflictException forSession message and 409 render body', function (): void {
+
+diff --git a/packages/core/src/VaulterServiceProvider.php b/packages/core/src/VaulterServiceProvider.php
+index edaf49e..ac2fabb 100644
+--- a/packages/core/src/VaulterServiceProvider.php
++++ b/packages/core/src/VaulterServiceProvider.php
+@@ -75,7 +75,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
+                     ->publishConfigFile()
+                     ->publishMigrations()
+                     ->askToRunMigrations()
+-                    ->askToStarRepoOnGitHub('axioma-studio/vaulter');
++                    ->askToStarRepoOnGitHub('axiomasoft/vaulter');
+             });
+     }
+ 
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 149f2f7..55a661e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+   directly from GitHub without a private repository token.
+ 
+ ### Fixed
++- Repository metadata, exception documentation, collaboration errors and install
++  star prompt now point to `axiomasoft/vaulter`; package vendor names stay
++  `axioma-studio/vaulter-*` (N20/E6, AD02).
+ - Filament Move filters destinations and checks workspace creation and destination
+   Create access at action time, notifying the actor on denial (N14).
+ - Vaulter resource resolution no longer registers global `node`/`storage` bindings
+
+VALIDATION: original URL inventory exactly 10 files, now zero residues in PHP/JSON outside vendor/node_modules/plans/audits; star prompt exactly once. Authenticated gh api target docs/guide/errors.md exists. All 9 Pint/PHPStan/Pest package gates GREEN: core596 passed/11 skipped/17 risky, drive454 passed/8 skipped/2 risky, documents249 passed/1 skipped. Metadata loop passes on a clean materialization of all 7 current composer manifests, each proven byte-equal to source, excluding ignored developer locks. Root checkout loop initially red on pre-existing ignored AzGard lock; a --lock refresh cannot run because its pre-existing path dependency ../../../azguard/packages/context is absent. Baseline-vs-candidate proves AzGard changes only homepage/support URLs, so no dependency/config edit was made. Existing lock is preserved with SHA witness. Other 6 manifest checks green in checkout.

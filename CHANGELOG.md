@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Repository metadata, exception documentation, collaboration errors and install
+  star prompt now point to `axiomasoft/vaulter`; package vendor names stay
+  `axioma-studio/vaulter-*` (N20/E6, AD02).
 - Filament Move filters destinations and checks workspace creation and destination
   Create access at action time, notifying the actor on denial (N14).
 - Vaulter resource resolution no longer registers global `node`/`storage` bindings

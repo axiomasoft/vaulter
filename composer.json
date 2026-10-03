@@ -3,7 +3,7 @@
     "description": "Vaulter — embeddable document management for Laravel: file manager, TipTap editor, versioning and real-time collaboration (monorepo dev workspace).",
     "type": "project",
     "license": "MIT",
-    "homepage": "https://github.com/axioma-studio/vaulter",
+    "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
