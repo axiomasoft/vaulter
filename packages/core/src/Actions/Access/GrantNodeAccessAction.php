@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Access;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
@@ -30,6 +30,7 @@ final readonly class GrantNodeAccessAction
     public function __construct(
         private GrantStoreRepository $grants,
         private HostRoleDriverManager $drivers,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, GrantNodeAccessData $data): NodeGrant
@@ -42,7 +43,7 @@ final readonly class GrantNodeAccessAction
         // stage in the SAME commit as the grant — no crash window between commit and
         // staging. The subscribers swallow their own failures, so staging still never
         // rolls the grant back.
-        return DB::transaction(function () use ($node, $data): NodeGrant {
+        return $this->database->transaction(function () use ($node, $data): NodeGrant {
             $grant = $this->grants->grant(node: $node, data: $data);
 
             event(new NodeGrantCreated(grant: $grant, actorId: $data->grantedBy));

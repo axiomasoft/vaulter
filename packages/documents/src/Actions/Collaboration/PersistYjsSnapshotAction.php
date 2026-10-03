@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Collaboration;
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Collaboration\PersistYjsSnapshotData;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -42,6 +42,7 @@ final readonly class PersistYjsSnapshotAction
         private NodeDocumentVersionStoreRepository $store,
         private NodeStoreRepository $nodes,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(PersistYjsSnapshotData $data): NodeDocumentVersion
@@ -59,7 +60,7 @@ final readonly class PersistYjsSnapshotAction
 
         return $this->metrics->timing(
             name: 'vaulter_collab_snapshot_duration_seconds',
-            operation: fn (): NodeDocumentVersion => DB::transaction(function () use ($node, $data): NodeDocumentVersion {
+            operation: fn (): NodeDocumentVersion => $this->database->transaction(function () use ($node, $data): NodeDocumentVersion {
                 $head = $this->read->head($node);
 
                 if ($head !== null && $this->shouldOverwrite($head)) {

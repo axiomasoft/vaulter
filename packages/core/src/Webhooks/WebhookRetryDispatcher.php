@@ -6,9 +6,9 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Observability\TracingAttributes;
@@ -39,6 +39,7 @@ final class WebhookRetryDispatcher
     public function __construct(
         private readonly MetricsRecorder $metrics,
         private readonly TraceRecorder $tracer,
+        private readonly VaulterDatabase $database,
     ) {}
 
     /**
@@ -81,7 +82,7 @@ final class WebhookRetryDispatcher
         /** @var class-string<WebhookDelivery> $deliveryClass */
         $deliveryClass = Config::webhookDeliveryModel();
 
-        return DB::transaction(function () use ($deliveryClass): Collection {
+        return $this->database->transaction(function () use ($deliveryClass): Collection {
             $query = $deliveryClass::query()->dueForRetry();
 
             /** @var Collection<int, WebhookDelivery> $deliveries */

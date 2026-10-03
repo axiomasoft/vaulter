@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
@@ -20,10 +20,11 @@ final readonly class DeactivateWebhookEndpointAction
 {
     public function __construct(
         private WebhookEndpointStoreRepository $endpoints,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(WebhookEndpoint $endpoint): WebhookEndpoint
     {
-        return DB::transaction(fn (): WebhookEndpoint => $this->endpoints->deactivate($endpoint));
+        return $this->database->transaction(fn (): WebhookEndpoint => $this->endpoints->deactivate($endpoint));
     }
 }

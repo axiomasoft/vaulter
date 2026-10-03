@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\UploadConflictException;
@@ -48,6 +48,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private UploadPartStoreRepository $parts,
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -127,7 +128,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
     {
         $bytes = $this->readPartWithinLimit($chunk);
 
-        return DB::transaction(function () use ($session, $partNo, $byteOffset, $bytes): array {
+        return $this->database->transaction(function () use ($session, $partNo, $byteOffset, $bytes): array {
             $locked = $this->sessions->acquireForPatch($session);
 
             if (!$locked->status->isOpen()) {

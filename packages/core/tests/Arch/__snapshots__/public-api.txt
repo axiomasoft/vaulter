@@ -124,6 +124,15 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
   isAllowed(string $url): void
   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
+Vaulter\Database\VaulterDatabase
+  __construct(\Illuminate\Database\DatabaseManager $db)
+  advisoryLock(string $key): void
+  afterCommit(\Closure $callback): void
+  connection(): \Illuminate\Database\Connection
+  driver(): string
+  lockTree(int|string $storageId): void
+  transaction(\Closure $callback, int $attempts = 3): mixed
+
 FACADE Vaulter\Facades\Vaulter
   static \Vaulter\Contracts\Drive\DriveHandle for(\Illuminate\Database\Eloquent\Model $entity, ?string $panel = null)
   static \Vaulter\Contracts\Drive\DriveHandle forStorage(\Vaulter\Models\Drive\Storage $storage)

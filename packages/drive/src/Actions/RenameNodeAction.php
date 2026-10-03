@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\RenameNodeData;
 use Vaulter\Drive\Events\NodeRenamed;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -24,6 +24,7 @@ final readonly class RenameNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(RenameNodeData $data): Node
@@ -47,7 +48,7 @@ final readonly class RenameNodeAction
             throw NodeNameConflictException::forName(name: $data->name, parentId: $node->parent_id);
         }
 
-        return DB::transaction(function () use ($node, $fromName, $data): Node {
+        return $this->database->transaction(function () use ($node, $fromName, $data): Node {
             $renamed = $this->store->rename(node: $node, name: $data->name);
 
             event(new NodeRenamed(

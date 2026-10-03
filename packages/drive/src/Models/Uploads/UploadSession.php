@@ -15,6 +15,7 @@ use Vaulter\Drive\Support\Uploads\UploadModels;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 
@@ -55,6 +56,7 @@ class UploadSession extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Closed allow-list (F-P1.8-02): upload metadata a caller may legitimately

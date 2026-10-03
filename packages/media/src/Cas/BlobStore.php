@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
@@ -44,6 +44,7 @@ final readonly class BlobStore implements BlobStoreContract
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
         private FileVersionBlobStoreRepository $edges,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -61,7 +62,7 @@ final readonly class BlobStore implements BlobStoreContract
         $storageKey = $this->content->keyFor(scope: $scopeSegment, sha256: $staged->sha256());
 
         try {
-            return DB::transaction(function () use (
+            return $this->database->transaction(function () use (
                 $staged, $dedupScope, $tenantId, $storageId, $disk, $storageKey
             ): Blob {
                 // H.3 invariant: the lock is the FIRST statement; every liveness

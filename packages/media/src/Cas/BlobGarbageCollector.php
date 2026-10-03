@@ -7,11 +7,11 @@ namespace Vaulter\Media\Cas;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
@@ -52,6 +52,7 @@ final readonly class BlobGarbageCollector
         private BlobStoreRepository $blobs,
         private FileVersionBlobStoreRepository $edges,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -245,9 +246,9 @@ final readonly class BlobGarbageCollector
      */
     private function lockedTransaction(Blob $candidate, \Closure $work, bool $serializable = false): bool
     {
-        return DB::transaction(function () use ($candidate, $work, $serializable): bool {
-            if ($serializable && $this->lock->isPostgres() && DB::connection()->transactionLevel() <= 1) {
-                DB::statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+        return $this->database->transaction(function () use ($candidate, $work, $serializable): bool {
+            if ($serializable && $this->lock->isPostgres() && $this->database->connection()->transactionLevel() <= 1) {
+                $this->database->connection()->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
             }
 
             $this->lock->acquire(scope: $this->scopeFor($candidate), sha256: $candidate->sha256);
@@ -338,13 +339,13 @@ final readonly class BlobGarbageCollector
             return $marked;
         }
 
-        return DB::transaction(function () use ($batch, $graceHours): int {
+        return $this->database->transaction(function () use ($batch, $graceHours): int {
             if ($this->lock->isPostgres()) {
                 $keys = $batch->map(fn (Blob $blob): string => $this->scopeFor($blob).'|'.$blob->sha256)->all();
 
                 // The same hashtext namespace as BlobLock. Acquire distinct locks
                 // in hash order (including collisions), before any data read.
-                DB::select(
+                $this->database->connection()->select(
                     'SELECT pg_advisory_xact_lock(lock_key) FROM '
                     .'(SELECT DISTINCT hashtext(value) AS lock_key '
                     .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',

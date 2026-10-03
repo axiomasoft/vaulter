@@ -6,7 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 
 /**
  * One-shot, IDEMPOTENT migration of webhook signing secrets between plaintext and
@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class SigningSecretEncryptor
 {
+    public function __construct(private readonly VaulterDatabase $database) {}
+
     /**
      * Encrypt every plaintext signing_secret in $table in place. Returns how many rows
      * were changed — 0 on a table that is already fully encrypted (idempotent).
@@ -28,7 +30,7 @@ final class SigningSecretEncryptor
     {
         $changed = 0;
 
-        DB::table($table)->orderBy('id')->each(function (object $row) use ($table, &$changed): void {
+        $this->database->connection()->table($table)->orderBy('id')->each(function (object $row) use ($table, &$changed): void {
             /** @var array<string, mixed> $data */
             $data = (array) $row;
 
@@ -46,7 +48,7 @@ final class SigningSecretEncryptor
                 // plaintext — encrypt it below
             }
 
-            DB::table($table)
+            $this->database->connection()->table($table)
                 ->where('id', $data['id'] ?? null)
                 ->update(['signing_secret' => Crypt::encryptString($secret)]);
 
@@ -65,7 +67,7 @@ final class SigningSecretEncryptor
     {
         $changed = 0;
 
-        DB::table($table)->orderBy('id')->each(function (object $row) use ($table, &$changed): void {
+        $this->database->connection()->table($table)->orderBy('id')->each(function (object $row) use ($table, &$changed): void {
             /** @var array<string, mixed> $data */
             $data = (array) $row;
 
@@ -81,7 +83,7 @@ final class SigningSecretEncryptor
                 return; // already plaintext
             }
 
-            DB::table($table)
+            $this->database->connection()->table($table)
                 ->where('id', $data['id'] ?? null)
                 ->update(['signing_secret' => $plain]);
 

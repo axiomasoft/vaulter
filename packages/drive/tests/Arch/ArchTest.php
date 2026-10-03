@@ -119,3 +119,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
 
     expect(array_values(array_unique($offenders)))->toBe([]);
 });
+
+arch('DB facade is routed through VaulterDatabase (AD25)')
+    ->expect('Vaulter\Drive')
+    ->not->toUse('Illuminate\Support\Facades\DB');

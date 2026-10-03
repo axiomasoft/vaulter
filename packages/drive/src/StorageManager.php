@@ -6,7 +6,7 @@ namespace Vaulter\Drive;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
@@ -35,6 +35,7 @@ final readonly class StorageManager
         private StorageReadRepository $read,
         private StorageStoreRepository $store,
         private NodeStoreRepository $nodes,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -72,7 +73,7 @@ final readonly class StorageManager
      */
     private function provision(Model $owner, string $panel): Storage
     {
-        return DB::transaction(function () use ($owner, $panel): Storage {
+        return $this->database->transaction(function () use ($owner, $panel): Storage {
             $storage = $this->store->create([
                 'panel' => $panel,
                 'owner_type' => $owner->getMorphClass(),
@@ -111,7 +112,7 @@ final readonly class StorageManager
             return $root;
         }
 
-        return DB::transaction(function () use ($storage): Node {
+        return $this->database->transaction(function () use ($storage): Node {
             $root = $this->nodes->create([
                 'storage_id' => $storage->id,
                 'parent_id' => null,

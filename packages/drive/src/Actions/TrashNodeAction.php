@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeTrashed;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -28,6 +28,7 @@ final readonly class TrashNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, int|string|null $actorId = null): Node
@@ -39,7 +40,7 @@ final readonly class TrashNodeAction
 
         $ids = $this->nodes->subtree($node)->modelKeys();
 
-        return DB::transaction(function () use ($node, $ids, $actorId): Node {
+        return $this->database->transaction(function () use ($node, $ids, $actorId): Node {
             $this->store->trashSubtree(
                 ids: collect($ids),
                 root: $node,

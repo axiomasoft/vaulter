@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CopyNodeData;
 use Vaulter\Drive\Events\NodeCopied;
 use Vaulter\Enums\Drive\NodeKind;
@@ -44,6 +44,7 @@ final readonly class CopyNodeAction
         private FileVersionStoreRepository $versions,
         private StorageStoreRepository $storageStore,
         private BlobStore $blobs,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(CopyNodeData $data): Node
@@ -63,7 +64,7 @@ final readonly class CopyNodeAction
             throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
         }
 
-        return DB::transaction(function () use ($source, $destParentId, $name, $data): Node {
+        return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
             $addedBytes = 0;
             $copy = $this->copyNode(source: $source, parentId: $destParentId, name: $name, data: $data, addedBytes: $addedBytes);
 

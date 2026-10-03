@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CreateDriveFolderData;
 use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Drive\NodeKind;
@@ -28,6 +28,7 @@ final readonly class CreateFolderAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(CreateDriveFolderData $data): Node
@@ -38,7 +39,7 @@ final readonly class CreateFolderAction
             throw NodeNameConflictException::forName(name: $data->name, parentId: $parentId);
         }
 
-        return DB::transaction(function () use ($data, $parentId): Node {
+        return $this->database->transaction(function () use ($data, $parentId): Node {
             $node = $this->store->create([
                 'storage_id' => $data->storage->id,
                 'parent_id' => $parentId,

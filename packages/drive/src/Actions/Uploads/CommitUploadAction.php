@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\UploadFileAction;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Exceptions\UploadContentMismatchException;
@@ -45,6 +45,7 @@ final readonly class CommitUploadAction
         private UploadSessionStoreRepository $sessions,
         private StagedUpload $staged,
         private MagicByteSniffer $sniffer,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -64,7 +65,7 @@ final readonly class CommitUploadAction
         $this->assertContentMatchesDeclaredMime($session);
 
         try {
-            $node = DB::transaction(function () use ($session, $stream): Node {
+            $node = $this->database->transaction(function () use ($session, $stream): Node {
                 $committed = $this->uploadFile->execute($this->dataFor(session: $session, stream: $stream));
 
                 // current_version_id is the head pointer; the version's blob_id is the

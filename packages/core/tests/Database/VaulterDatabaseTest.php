@@ -1,0 +1,119 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Str;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
+
+uses(P83DocumentsTestCase::class);
+
+afterEach(function (): void {
+    config()->set('vaulter.connection', null);
+});
+
+it('resolves the same dedicated connection as Vaulter models', function (string $modelClass): void {
+    config()->set('database.connections.vaulter', config('database.connections.testing'));
+    config()->set('vaulter.connection', 'vaulter');
+
+    $database = app(VaulterDatabase::class);
+
+    expect($database)->toBe(app(VaulterDatabase::class))
+        ->and($database->connection())->toBe((new $modelClass)->getConnection())
+        ->and($database->driver())->toBe($database->connection()->getDriverName());
+})->with([
+    Node::class,
+    UploadSession::class,
+    UploadPart::class,
+    NodeComment::class,
+    NodeDocumentVersion::class,
+]);
+
+it('refuses locks without a transaction on its connection', function (string $method): void {
+    app(VaulterDatabase::class)->{$method}('1');
+})->with(['lockTree', 'advisoryLock'])->throws(LogicException::class);
+
+it('retries serialization failures up to the configured attempts', function (): void {
+    $attempts = 0;
+
+    $result = app(VaulterDatabase::class)->transaction(function () use (&$attempts): int {
+        if (++$attempts < 3) {
+            throw new QueryException('testing', 'select 1', [], new PDOException('serialization failure', 40001));
+        }
+
+        return $attempts;
+    });
+
+    expect($result)->toBe(3)->and($attempts)->toBe(3);
+});
+
+it('runs after-commit callbacks only when its outer transaction commits', function (): void {
+    $database = app(VaulterDatabase::class);
+    $called = false;
+
+    $database->transaction(function () use ($database, &$called): void {
+        $database->transaction(function () use ($database, &$called): void {
+            $database->afterCommit(function () use (&$called): void {
+                $called = true;
+            });
+        });
+
+        expect($called)->toBeFalse();
+    });
+
+    expect($called)->toBeTrue();
+});
+
+it('rolls back uploads and document model inserts on the dedicated connection', function (string $modelClass): void {
+    ForkRace::skipUnlessSupported($this);
+    $storage = Storage::forceCreate([
+        'owner_type' => 'team', 'owner_id' => 1, 'name' => 'test', 'disk' => 'local',
+    ]);
+    $node = Node::forceCreate([
+        'storage_id' => $storage->getKey(), 'name' => 'fixture', 'kind' => 'folder',
+    ]);
+    $session = UploadSession::forceCreate([
+        'storage_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
+        'protocol' => 'tus', 'status' => 'initiated', 'total_size_bytes' => 1,
+    ]);
+    config()->set('database.connections.vaulter', config('database.connections.testing'));
+    config()->set('vaulter.connection', 'vaulter');
+
+    $attributes = match ($modelClass) {
+        UploadSession::class => [
+            'storage_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
+            'protocol' => 'tus', 'status' => 'initiated', 'total_size_bytes' => 1,
+        ],
+        UploadPart::class => [
+            'upload_session_id' => $session->getKey(), 'part_no' => 1, 'size_bytes' => 1,
+        ],
+        NodeComment::class => [
+            'node_id' => $node->getKey(), 'author_type' => 'user', 'author_id' => 1, 'body' => 'test',
+        ],
+        NodeDocumentVersion::class => [
+            'node_id' => $node->getKey(), 'version_no' => 1, 'format' => 'tiptap',
+        ],
+    };
+    $before = $modelClass::query()->count();
+
+    expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($modelClass, $attributes): never {
+        (new $modelClass)->forceFill($attributes)->save();
+
+        throw new RuntimeException('failure after model insertion');
+    }))->toThrow(RuntimeException::class, 'failure after model insertion');
+
+    expect($modelClass::query()->count())->toBe($before);
+})->with([
+    UploadSession::class,
+    UploadPart::class,
+    NodeComment::class,
+    NodeDocumentVersion::class,
+]);

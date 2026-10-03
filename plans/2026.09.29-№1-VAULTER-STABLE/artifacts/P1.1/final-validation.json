@@ -1,0 +1,281 @@
+[
+  {
+    "name": "core-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 27.63,
+    "log": "core-pint.log"
+  },
+  {
+    "name": "core-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G",
+      "-c",
+      "phpstan.neon"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 4.59,
+    "log": "core-phpstan-recheck.log",
+    "previous_log": "core-phpstan.log"
+  },
+  {
+    "name": "core-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 68.3,
+    "log": "core-pest-recheck.log",
+    "previous_log": "core-pest.log"
+  },
+  {
+    "name": "drive-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 16.28,
+    "log": "drive-pint.log"
+  },
+  {
+    "name": "drive-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 5.39,
+    "log": "drive-phpstan.log"
+  },
+  {
+    "name": "drive-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 31.48,
+    "log": "drive-pest.log"
+  },
+  {
+    "name": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 9.19,
+    "log": "documents-pint.log"
+  },
+  {
+    "name": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 5.03,
+    "log": "documents-phpstan.log"
+  },
+  {
+    "name": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 16.95,
+    "log": "documents-pest.log"
+  },
+  {
+    "name": "media-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 5.03,
+    "log": "media-pint.log"
+  },
+  {
+    "name": "media-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 5.54,
+    "log": "media-phpstan.log"
+  },
+  {
+    "name": "media-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 24.25,
+    "log": "media-pest.log"
+  },
+  {
+    "name": "filament-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 3.35,
+    "log": "filament-pint.log"
+  },
+  {
+    "name": "filament-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 6.25,
+    "log": "filament-phpstan.log"
+  },
+  {
+    "name": "filament-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "database": ":memory:",
+    "driver": "sqlite",
+    "exit": 0,
+    "duration_s": 9.19,
+    "log": "filament-pest.log"
+  },
+  {
+    "name": "database-pgsql",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Database"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "database": "vaulter_test",
+    "driver": "pgsql",
+    "exit": 0,
+    "duration_s": 1.64,
+    "log": "model-rollback-pgsql.log",
+    "post_review_repair": true
+  },
+  {
+    "name": "drive-uploads-concurrency-pgsql",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Uploads",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "database": "vaulter_test",
+    "driver": "pgsql",
+    "exit": 0,
+    "duration_s": 33.37,
+    "log": "drive-models-pgsql.log",
+    "post_review_repair": true
+  },
+  {
+    "name": "media-cas-pgsql",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "database": "vaulter_test",
+    "driver": "pgsql",
+    "exit": 0,
+    "duration_s": 43.1,
+    "log": "media-cas-pgsql.log"
+  },
+  {
+    "name": "core-pint-delta",
+    "exit": 0,
+    "log": "core-pint-delta-recheck.log"
+  }
+]

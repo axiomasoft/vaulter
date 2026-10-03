@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -115,7 +116,7 @@ it('swallows + logs a staging failure so the originating action is unaffected', 
     $recorder = Mockery::mock(OutboxRecorder::class);
     $recorder->shouldReceive('recordGrantCreated')->andThrow(new RuntimeException('boom'));
 
-    $subscriber = new RecordsOutbox($recorder);
+    $subscriber = new RecordsOutbox($recorder, app(VaulterDatabase::class));
 
     // Must NOT throw — the failure is logged and swallowed.
     $subscriber->handleGrantCreated(new NodeGrantCreated(grant: new NodeGrant, actorId: 7));

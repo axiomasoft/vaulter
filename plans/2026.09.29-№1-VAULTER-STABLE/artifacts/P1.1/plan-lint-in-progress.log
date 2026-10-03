@@ -1,0 +1,4 @@
+ERROR: plans/2026.09.29-№1-VAULTER-STABLE/handoff.md:1: header does not match either of the two forms (SKILL §8): «# HANDOFF — … — after Pn.m» (item) · «# HANDOFF — … — after Pn» (phase)
+ERROR: plans/2026.09.29-№1-VAULTER-STABLE/handoff.md:3: handoff.Next: CONTINUITY_CONTEXT_INVALID (CONTINUITY_CONTEXT_INVALID: typed continuity block damaged)
+ERROR: plans/2026.09.29-№1-VAULTER-STABLE/handoff.md:3: Next does not match any of the valid forms (SKILL §8): `<kind>: task:<plan-command> <arguments>` (provider-neutral canon) · /task:plan-run <ID> Pn.a[-Pn.b] (legacy: /task:plan-exec) · /task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · /task:plan-design <ID> finish · /task:plan-design <ID> roadmap · /task:plan-audit <ID> Pn · /task:plan-audit <ID> design · /task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · «plan closed» · «MANUAL START: <model/effort>» · «WAITING: <condition> → <target form>»
+plan-lint: FAILURE (1 plan(ov), 3 errors, 0 warnings)

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Uploads;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\OffsetMismatchException;
@@ -42,6 +42,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         private StagedUpload $staged,
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -118,7 +119,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         // The lock is held until advanceReceived() so the window is indivisible; the
         // acquire is NOWAIT so a concurrent PATCH is rejected as a conflict, never
         // left to pile up waiting.
-        return DB::transaction(function () use ($session, $chunk, $offset): array {
+        return $this->database->transaction(function () use ($session, $chunk, $offset): array {
             $locked = $this->sessions->acquireForPatch($session);
 
             if (!$locked->status->isOpen()) {

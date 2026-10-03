@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobStore;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
@@ -67,6 +68,7 @@ it('rollback не оставляет висящей строки blob', function
         lock: app(BlobLock::class),
         blobs: app(BlobStoreRepository::class),
         edges: app(FileVersionBlobStoreRepository::class),
+        database: app(VaulterDatabase::class),
     );
 
     expect(fn () => $store->commit(stringStream('boom bytes'), tenantId: 1))

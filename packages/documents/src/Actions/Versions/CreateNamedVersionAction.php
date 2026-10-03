@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Versions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Versions\CreateNamedVersionData;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Versions\DocumentVersionCreated;
@@ -32,6 +32,7 @@ final readonly class CreateNamedVersionAction
         private NodeDocumentVersionReadRepository $read,
         private NodeDocumentVersionStoreRepository $store,
         private NodeStoreRepository $nodes,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(CreateNamedVersionData $data): NodeDocumentVersion
@@ -42,7 +43,7 @@ final readonly class CreateNamedVersionAction
             throw NotADocumentNodeException::forNode($node->getKey());
         }
 
-        return DB::transaction(function () use ($node, $data): NodeDocumentVersion {
+        return $this->database->transaction(function () use ($node, $data): NodeDocumentVersion {
             $head = $this->read->head($node) ?? $this->read->latest($node);
 
             $version = $this->store->create([

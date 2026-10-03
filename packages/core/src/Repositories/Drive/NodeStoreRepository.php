@@ -14,7 +14,7 @@ use Vaulter\Support\Config;
  * Write-side row work for v_nodes (§2.2). Bare mutations only: create/update,
  * the single-UPDATE move, and the bulk subtree state changes (trash, restore,
  * permanent soft-delete). It opens NO transactions and dispatches NO events — the
- * Drive Actions wrap every call in DB::transaction and emit the domain event. The
+ * Drive Actions wrap every call in VaulterDatabase::transaction and emit the domain event. The
  * subtree helpers take an already-materialised id list (the caller resolved it
  * via NodeReadRepository::subtree with withMaxDepth) and issue ONE bulk UPDATE.
  */

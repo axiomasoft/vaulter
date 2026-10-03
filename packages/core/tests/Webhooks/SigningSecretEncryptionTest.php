@@ -44,7 +44,7 @@ it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', funct
         'updated_at' => now(),
     ]);
 
-    $encryptor = new SigningSecretEncryptor;
+    $encryptor = app(SigningSecretEncryptor::class);
 
     // First run encrypts the one plaintext row…
     expect($encryptor->encryptPlaintext($table))->toBe(1);

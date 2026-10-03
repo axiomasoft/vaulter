@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Media\Cas;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\ListableContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
@@ -75,6 +75,7 @@ final readonly class BlobReconciler
         private FileVersionBlobStoreRepository $edges,
         private BlobLock $lock,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -266,7 +267,7 @@ final readonly class BlobReconciler
      */
     private function pruneOrphan(ContentStore&ListableContentStore $content, string $path, string $disk, string $scope, string $sha256, int $graceHours): bool
     {
-        return DB::transaction(function () use ($content, $path, $disk, $scope, $sha256, $graceHours): bool {
+        return $this->database->transaction(function () use ($content, $path, $disk, $scope, $sha256, $graceHours): bool {
             $this->lock->acquire(scope: $scope, sha256: $sha256);
 
             // A commit that won the lock between the cheap scan and here has now

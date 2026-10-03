@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeForceDeleted;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\File;
@@ -36,6 +36,7 @@ final readonly class ForceDeleteNodeAction
         private NodeStoreRepository $store,
         private StorageStoreRepository $storageStore,
         private BlobStore $blobs,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, int|string|null $actorId = null): void
@@ -45,7 +46,7 @@ final readonly class ForceDeleteNodeAction
         $ids = $subtree->modelKeys();
         $storage = $node->storage;
 
-        DB::transaction(function () use ($subtree, $ids, $node, $storage, $actorId): void {
+        $this->database->transaction(function () use ($subtree, $ids, $node, $storage, $actorId): void {
             $freedBytes = 0;
 
             foreach ($subtree as $member) {

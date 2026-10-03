@@ -6,6 +6,18 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Dedicated database transactions (AD25)
+
+Transactions, locks and after-commit callbacks previously used the host default connection;
+they now follow `vaulter.connection` via `Vaulter\Database\VaulterDatabase`. The config
+key is unchanged. Actions, upload repositories, CAS services and webhook/activity subscribers
+now receive this singleton through constructor injection. Resolve them through Laravel's
+container, or provide `database: app(VaulterDatabase::class)` when constructing them directly.
+Custom transaction code can use the same singleton; acquire tree/CAS locks inside its
+`transaction()` callback. The shipped UploadSession, UploadPart, NodeComment and NodeDocumentVersion models
+now also follow this key, so their Eloquent writes participate in the same transaction.
+A custom replacement model must resolve the same connection to preserve atomicity.
+
 ### CI: mutation testing runs on native Pest, Infection is gone (VLT-CANON Open risk #4)
 
 Not consumer-facing — a contributor/CI note; no published API, config key or schema changes.

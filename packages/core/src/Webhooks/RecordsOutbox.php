@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -42,6 +42,7 @@ final readonly class RecordsOutbox
 {
     public function __construct(
         private OutboxRecorder $recorder,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -79,7 +80,7 @@ final readonly class RecordsOutbox
     /**
      * Run a recorder call, swallowing + logging any failure. Staging must never break
      * the originating action. The handler fires INSIDE the mutation transaction
-     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested DB::transaction): a
+     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested VaulterDatabase::transaction): a
      * failed staging statement rolls back to the savepoint — un-poisoning the outer
      * transaction on PostgreSQL — instead of aborting the mutation's COMMIT. A missed
      * outbox row is then a logged degradation, not a mutation rollback.
@@ -89,7 +90,7 @@ final readonly class RecordsOutbox
     private function safely(callable $record, string $event): void
     {
         try {
-            DB::transaction(fn (): mixed => $record());
+            $this->database->transaction(fn (): mixed => $record());
         } catch (Throwable $exception) {
             Log::warning('Vaulter outbox staging failed; the originating action is unaffected.', [
                 'event' => $event,

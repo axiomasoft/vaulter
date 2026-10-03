@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeRestored;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
@@ -29,6 +29,7 @@ final readonly class RestoreNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, int|string|null $actorId = null): Node
@@ -46,7 +47,7 @@ final readonly class RestoreNodeAction
 
         $ids = $this->nodes->subtree($node)->modelKeys();
 
-        return DB::transaction(function () use ($node, $ids, $destinationParentId, $actorId): Node {
+        return $this->database->transaction(function () use ($node, $ids, $destinationParentId, $actorId): Node {
             // Re-home the subtree root first (so the cleared triplet lands on a
             // node already hung at its restored destination), then clear trash.
             if ($node->parent_id !== $destinationParentId) {

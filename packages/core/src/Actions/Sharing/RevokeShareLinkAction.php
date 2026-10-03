@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Sharing;
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
@@ -22,13 +22,14 @@ final readonly class RevokeShareLinkAction
 {
     public function __construct(
         private NodeShareStoreRepository $shares,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(NodeShare $share, int|string|null $actorId = null): bool
     {
         // The event fires INSIDE the transaction (F-P1.7-03) so the outbox/activity
         // rows stage atomically with the revoke — no crash window after commit.
-        return DB::transaction(function () use ($share, $actorId): bool {
+        return $this->database->transaction(function () use ($share, $actorId): bool {
             $revoked = $this->shares->revoke(share: $share, now: Carbon::now());
 
             if ($revoked) {

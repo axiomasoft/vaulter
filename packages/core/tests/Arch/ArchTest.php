@@ -623,3 +623,8 @@ test('core source never references a concrete TipTap class (VLT-CANON P0.3)', fu
 arch('the FileHandler contract seam is kind-neutral and never depends on vaulter-documents (D7)')
     ->expect('Vaulter\Contracts\Handlers')
     ->not->toUse('Vaulter\Documents');
+
+arch('DB facade only in Database and Schema (AD25)')
+    ->expect('Illuminate\Support\Facades\DB')
+    ->toOnlyBeUsedIn(['Vaulter\Database', 'Vaulter\Schema'])
+    ->ignoring(['Vaulter\Tests', 'Vaulter\Load']);

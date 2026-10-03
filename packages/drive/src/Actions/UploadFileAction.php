@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Events\FileUploaded;
 use Vaulter\Drive\Events\NodeVersionCommitted;
@@ -52,6 +52,7 @@ final readonly class UploadFileAction
         private NodeReadRepository $nodeRead,
         private StorageStoreRepository $storageStore,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(UploadFileData $data): Node
@@ -81,7 +82,7 @@ final readonly class UploadFileAction
             $this->assertNameAvailable($data);
         }
 
-        return DB::transaction(function () use ($data, $previousSize): Node {
+        return $this->database->transaction(function () use ($data, $previousSize): Node {
             $blob = $this->blobs->commit(
                 stream: $data->stream,
                 tenantId: $this->tenantId($data),

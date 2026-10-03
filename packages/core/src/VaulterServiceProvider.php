@@ -32,6 +32,7 @@ use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;
@@ -79,6 +80,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app->singleton(VaulterDatabase::class);
         $this->app->singleton(IdStrategyResolver::class);
 
         // Container-owned, scoped (F-P2.1-05 / P4.6 review): the enum-attribute

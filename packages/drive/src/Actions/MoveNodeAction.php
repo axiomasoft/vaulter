@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\MoveNodeData;
 use Vaulter\Drive\Events\NodeMoved;
 use Vaulter\Drive\Exceptions\CrossStorageMoveException;
@@ -32,6 +32,7 @@ final readonly class MoveNodeAction
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(MoveNodeData $data): Node
@@ -51,7 +52,7 @@ final readonly class MoveNodeAction
             return $node;
         }
 
-        return DB::transaction(function () use ($node, $fromParentId, $toParentId, $data): Node {
+        return $this->database->transaction(function () use ($node, $fromParentId, $toParentId, $data): Node {
             $moved = $this->store->move(node: $node, parentId: $toParentId);
 
             event(new NodeMoved(

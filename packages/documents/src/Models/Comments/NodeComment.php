@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Documents\DocumentsModels;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
@@ -44,6 +45,7 @@ class NodeComment extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     /**
      * Closed allow-list (F-P1.8-02): the comment's own user-authored content.

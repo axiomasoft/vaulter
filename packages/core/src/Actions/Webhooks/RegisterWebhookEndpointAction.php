@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Vaulter\Data\Webhooks\RegisteredWebhookEndpoint;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointData;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
@@ -24,13 +24,14 @@ final readonly class RegisterWebhookEndpointAction
 {
     public function __construct(
         private WebhookEndpointStoreRepository $endpoints,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(RegisterWebhookEndpointData $data): RegisteredWebhookEndpoint
     {
         $secret = $this->generateSecret();
 
-        return DB::transaction(function () use ($data, $secret): RegisteredWebhookEndpoint {
+        return $this->database->transaction(function () use ($data, $secret): RegisteredWebhookEndpoint {
             $endpoint = $this->endpoints->create(
                 url: $data->url,
                 events: $data->events,

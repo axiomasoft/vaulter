@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Events\Comments\NodeCommentDeleted;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
@@ -18,11 +18,12 @@ final readonly class DeleteNodeCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(NodeComment $comment, int|string|null $actorId = null): void
     {
-        DB::transaction(fn () => $this->comments->delete($comment));
+        $this->database->transaction(fn () => $this->comments->delete($comment));
 
         event(new NodeCommentDeleted($comment, $actorId));
     }

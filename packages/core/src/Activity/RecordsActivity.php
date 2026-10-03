@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Activity;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -36,6 +36,7 @@ final readonly class RecordsActivity
 {
     public function __construct(
         private ActivityRecorder $recorder,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -73,7 +74,7 @@ final readonly class RecordsActivity
     /**
      * Run a recorder call, swallowing + logging any failure. Audit must never break
      * the originating action. The handler fires INSIDE the mutation transaction
-     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested DB::transaction): a
+     * (F-P1.7-03), so the call is wrapped in a SAVEPOINT (a nested VaulterDatabase::transaction): a
      * failed recording rolls back to the savepoint — un-poisoning the outer transaction
      * on PostgreSQL — instead of aborting the mutation's COMMIT. A missed row is then a
      * logged degradation, not a mutation rollback.
@@ -83,7 +84,7 @@ final readonly class RecordsActivity
     private function safely(callable $record, string $event): void
     {
         try {
-            DB::transaction(fn (): mixed => $record());
+            $this->database->transaction(fn (): mixed => $record());
         } catch (Throwable $exception) {
             Log::warning('Vaulter activity recording failed; the originating action is unaffected.', [
                 'event' => $event,

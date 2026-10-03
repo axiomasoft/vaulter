@@ -14,7 +14,7 @@ use Vaulter\Models\Drive\Node;
  * Write-side row work for the append-only v_node_document_versions (§2.5 / M4a):
  * create a version, update the head autosave in place (the debounce path), and the
  * prune that keeps the history bounded. Opens NO transactions and dispatches NO
- * events — the document-node Actions wrap every call in DB::transaction and emit the
+ * events — the document-node Actions wrap every call in VaulterDatabase::transaction and emit the
  * domain event.
  *
  * version_no is monotonic per node (the unique (node_id, version_no) index is the

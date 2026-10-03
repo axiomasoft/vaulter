@@ -12,6 +12,7 @@ use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobReconciler;
@@ -40,6 +41,7 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(BlobStoreRepository::class),
         app(FileVersionBlobStoreRepository::class),
         $metrics,
+        app(VaulterDatabase::class),
     );
 }
 
@@ -51,6 +53,7 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
         app(FileVersionBlobStoreRepository::class),
         app(BlobLock::class),
         $metrics,
+        app(VaulterDatabase::class),
     );
 }
 

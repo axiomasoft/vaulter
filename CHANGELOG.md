@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Vaulter transactions, CAS/tree locks, raw queries and after-commit callbacks now use
+  `vaulter.connection` through the new `Vaulter\Database\VaulterDatabase` singleton,
+  preserving atomicity when the host default connection differs (N01, AD25).
+  UploadSession, UploadPart, NodeComment and NodeDocumentVersion also resolve that
+  connection so their writes cannot autocommit outside those transactions.
 - Release workflows now keep the root npm lockfile, test the npm workspace before
   publishing, pass the PHP split token through the action's supported environment,
   reject tags whose exact SHA lacks the ordinary CI checks, and publish the GHCR

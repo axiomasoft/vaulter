@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -20,6 +20,8 @@ use Vaulter\Drive\Support\Uploads\UploadModels;
  */
 final class UploadSessionStoreRepository
 {
+    public function __construct(private readonly VaulterDatabase $database) {}
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -79,7 +81,7 @@ final class UploadSessionStoreRepository
      */
     public function acquireForPatch(UploadSession $session): UploadSession
     {
-        $connection = DB::connection();
+        $connection = $this->database->connection();
         $driver = $connection->getDriverName();
 
         if ($driver === 'pgsql') {

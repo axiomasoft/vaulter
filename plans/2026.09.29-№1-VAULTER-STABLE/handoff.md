@@ -1,25 +1,29 @@
-# HANDOFF — 2026-10-03 — P0 closed
+# HANDOFF — 2026-10-03 — after P1.1
 
-**Next:** P0 закрыта. Исполнение P1 не начато (D12 п.2: только после этого закрытия, отдельным запросом).
+**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8
 
 | Parameter | Meaning |
 |:--|:--|
-| Batch | P0 |
+| Batch | solo |
 | Model class | implementation |
-| Model | grok-4.7 |
-| Effort | medium |
-| Thinking | medium |
+| Model | gpt-6-sol |
+| Effort | low |
+| Thinking | low |
 | Context | continue-root |
-| The bottom line | P0 closed. Mutation follow-up stopped (D14). Two review minors fixed. |
+| The bottom line | P1.1 complete; P1.8 introduces the domain exception contract. |
 
 ```session-continuity-decision/v1
-{"outcome": "scope-complete", "reason": "authorized-scope-complete", "evidence": ["decision:D14", "review:artifacts/P0-grok/grok-review.md", "hosted:37120372889 harness 4 passed"], "runnable": false, "schema_version": "session-continuity-decision/v1"}
+{"evidence": ["batch:ffc43961dd6b5d237290736caa0459afc8e7bb7919c824a44fbfb2b55ec35c29", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.1/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** P0.1 закрыт с записанным отклонением по mutation, и это отклонение больше не долг (D14). P0.2/P0.3/P0.4 закрыты. Независимое ревью 2026-10-03: два Minor, оба исправлены (шаг CI харнесса не зелёный при skip; provenance E15/E16/E18). Hosted tests.yml на зеркале, SHA `a5d8792`, run 37120372889: Postgres job success, harness 4 passed / 0 skipped; L12/L13 только B-01.
+```bash
+codex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8'
+```
 
-**Remaining:** нет по P0. Mutation-score не добирается.
+**Done:** VaulterDatabase; dedicated transaction/query/lock routing; arch guards; V17 and negative controls; package gates; public API golden and upgrade docs. review: grok/grok-4.7 GREEN. Evidence: artifacts/P1.1/completion.md.
 
-**Open risks:** PR/merge не разрешены. P1 не стартовала.
+**Remaining:** P1.8 and the remaining P1 items. This invocation admitted P1.1 only; no successor executed.
 
-**Sources of truth:** decisions/D14-mutation-follow-up-stopped.md; artifacts/P0-grok/grok-review.md; findings/baseline.md B-12 и B-16.
+**Open risks:** Upload/Document model connection gap fixed after Grok finding; four additional model files and rollback tests documented. P0 mutation follow-up remains stopped by D14. Original unrelated dirty plan changes preserved. Owner requires reviews only on Grok 4.7. Push/release not authorized.
+
+**Sources of truth:** phases/P1/P1.1.md; phases/P1/P1.1.state.md; artifacts/P1.1/completion.md; artifacts/P1.1/grok-review.md; artifacts/P1.1/plan-format-repair.json.

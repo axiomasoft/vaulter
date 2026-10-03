@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Facades\Vaulter;
 
 /**
@@ -270,6 +271,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     expect($contracts)->not->toBe([]);
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
+    $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');

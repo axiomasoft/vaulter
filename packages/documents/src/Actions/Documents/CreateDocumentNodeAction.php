@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Events\Documents\DocumentNodeCreated;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
@@ -38,6 +38,7 @@ final readonly class CreateDocumentNodeAction
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
         private NodeDocumentVersionStoreRepository $versions,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(CreateDocumentNodeData $data): Node
@@ -56,7 +57,7 @@ final readonly class CreateDocumentNodeAction
             $data->content->ensureWithin(Config::maxDocumentSizeKb());
         }
 
-        return DB::transaction(function () use ($data, $parentId): Node {
+        return $this->database->transaction(function () use ($data, $parentId): Node {
             $node = $this->store->create([
                 'storage_id' => $data->storage->id,
                 'parent_id' => $parentId,

@@ -6,12 +6,12 @@ namespace Vaulter\Actions\Sharing;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Data\Sharing\CreateShareLinkData;
 use Vaulter\Data\Sharing\MintedShareLink;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
@@ -48,6 +48,7 @@ final readonly class CreateShareLinkAction
     public function __construct(
         private ShareTokenGenerator $tokens,
         private NodeShareStoreRepository $shares,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, CreateShareLinkData $data): MintedShareLink
@@ -62,7 +63,7 @@ final readonly class CreateShareLinkAction
             ? $data->expiresAt
             : Carbon::now()->addHours(Config::shareDefaultTtlHours());
 
-        return DB::transaction(function () use ($node, $data, $passwordHash, $expiresAt): MintedShareLink {
+        return $this->database->transaction(function () use ($node, $data, $passwordHash, $expiresAt): MintedShareLink {
             $minted = $this->mint(
                 node: $node,
                 data: $data,

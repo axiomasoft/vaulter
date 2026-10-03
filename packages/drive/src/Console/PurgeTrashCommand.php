@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\ForceDeleteNodeAction;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -39,6 +39,11 @@ use Vaulter\Support\Identity;
  */
 final class PurgeTrashCommand extends Command
 {
+    public function __construct(private readonly VaulterDatabase $database)
+    {
+        parent::__construct();
+    }
+
     protected $signature = 'vaulter:purge-trash
         {--days= : Override the retention window (config vaulter.trash.retention_days)}';
 
@@ -71,7 +76,7 @@ final class PurgeTrashCommand extends Command
                 $candidates = $nodes->trashedBefore($threshold)->get();
 
                 foreach ($candidates as $node) {
-                    $purged = DB::transaction(function () use ($node, $threshold, $nodes, $forceDelete, $store, $metrics): int {
+                    $purged = $this->database->transaction(function () use ($node, $threshold, $nodes, $forceDelete, $store, $metrics): int {
                         // Re-verify + row-lock under the SAME transaction that performs the
                         // physical delete (TOCTOU guard, P2.2 review fix): the candidate
                         // above may be stale by the time this transaction actually runs. A

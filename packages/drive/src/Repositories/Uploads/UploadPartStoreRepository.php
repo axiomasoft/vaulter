@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Support\Config;
@@ -17,6 +17,8 @@ use Vaulter\Support\Config;
  */
 final class UploadPartStoreRepository
 {
+    public function __construct(private readonly VaulterDatabase $database) {}
+
     /**
      * Record (or REPLACE) a part for a session (§2.8). A re-upload of part N
      * overwrites its etag/size/offset — keyed on the (upload_session_id, part_no)
@@ -49,18 +51,18 @@ final class UploadPartStoreRepository
         // (§2.8) is a query-builder upsert keyed on the composite: a matching part is
         // UPDATEd in place, otherwise INSERTed. (Eloquent's updateOrCreate keys on
         // getKeyName(), which a composite-PK pivot lacks.)
-        $existing = DB::table($table)
+        $existing = $this->database->connection()->table($table)
             ->where('upload_session_id', $session->getKey())
             ->where('part_no', $partNo)
             ->exists();
 
         if ($existing) {
-            DB::table($table)
+            $this->database->connection()->table($table)
                 ->where('upload_session_id', $session->getKey())
                 ->where('part_no', $partNo)
                 ->update($values);
         } else {
-            DB::table($table)->insert([
+            $this->database->connection()->table($table)->insert([
                 'upload_session_id' => $session->getKey(),
                 'part_no' => $partNo,
                 ...$values,
