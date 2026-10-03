@@ -8,7 +8,6 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;
-use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -709,9 +708,14 @@ return [
     |--------------------------------------------------------------------------
     */
     'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-    'middleware' => [
-        'api',
-        RecordVaulterRequestMetrics::class,
+    // Keep actor authentication separate from bearer shares and signed hub calls.
+    // Request metrics are appended automatically to each stack.
+    'routes' => [
+        'middleware' => [
+            'authenticated' => ['api', 'auth:sanctum'],
+            'public' => ['api'],
+            'hub' => ['api'],
+        ],
     ],
 
     /*

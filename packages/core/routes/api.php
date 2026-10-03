@@ -10,6 +10,7 @@ use Vaulter\Http\Controllers\Sharing\PublicShareController;
 use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
 use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
 use Vaulter\Http\Middleware\ResolveShareToken;
+use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Support\Config;
 
 /*
@@ -20,17 +21,14 @@ use Vaulter\Support\Config;
 */
 
 Route::prefix(Config::routePrefix())
-    ->middleware(Config::middleware())
+    ->middleware(Config::authenticatedMiddleware())
     ->group(static function (): void {
         /*
         |----------------------------------------------------------------------
         | Node sub-resources — kernel (Access/Sharing/Activity)
         |----------------------------------------------------------------------
-        | {storage} and {node} resolve the swappable Node/Storage models via the
-        | Route::bind registered in the service provider (config('vaulter.models.*')).
-        | SubstituteBindings is applied explicitly so the route-model binding runs
-        | even when a host trims its api middleware group (it is idempotent when the
-        | host's group already includes it).
+        | {storage} and {node} resolve locally through the swappable repositories
+        | before SubstituteBindings. Host route parameters retain their own bindings.
         |
         | The Drive file/folder tree + resumable uploads (the storage/{storage} listing,
         | node CRUD, download, tus/S3 endpoints) live in the vaulter-drive package's
@@ -40,7 +38,7 @@ Route::prefix(Config::routePrefix())
         | from both packages' catch-all /{node}, so cross-file registration order never
         | shadows them.
         */
-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
+        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
             // Append-only activity feed (§2.9 / M2c-activity). Recipients resolved at
             // READ by scoping to the storage/node — no notification rows. Authorized
             // via AccessResolver Ability::View on the storage root / node. The fixed
@@ -89,25 +87,12 @@ Route::prefix(Config::routePrefix())
             Route::delete('webhook-endpoints/{endpoint}', [WebhookEndpointsController::class, 'destroy']);
         }
 
-        /*
-        |----------------------------------------------------------------------
-        | Bearer share-links — the PUBLIC, token-resolved surface (§2.7 / M2c)
-        |----------------------------------------------------------------------
-        | The SEPARATE sharing channel. These routes carry NO auth middleware —
-        | only ResolveShareToken, which hashes the {token}, resolves the LIVE
-        | share, runs the timing-safe compare + password / require-login gates,
-        | intersects with item-safety and stashes a ShareContext. A share grants
-        | EXACTLY its bitmask on its node-set — the identity ACL is never consulted
-        | here. An optional already-authenticated host user satisfies require_login.
-        |
-        | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-public` named
-        | limiter (config('vaulter.rate_limits.public'), keyed by requester IP) —
-        | throttle runs BEFORE ResolveShareToken so an over-budget requester never
-        | pays the token-hash + password-compare cost.
-        */
-        Route::middleware(['throttle:vaulter-public', ResolveShareToken::class])->group(static function (): void {
-            Route::get('share/{token}', [PublicShareController::class, 'show']);
-            Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
-            Route::get('share/{token}/download', [PublicShareController::class, 'download']);
-        });
+    });
+
+Route::prefix(Config::routePrefix())
+    ->middleware([...Config::publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])
+    ->group(static function (): void {
+        Route::get('share/{token}', [PublicShareController::class, 'show']);
+        Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
+        Route::get('share/{token}/download', [PublicShareController::class, 'download']);
     });

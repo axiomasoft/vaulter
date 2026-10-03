@@ -1,0 +1,211 @@
+[
+  {
+    "id": "core-pint",
+    "exit": 0,
+    "seconds": 2.89,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/core-pint-final.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "core-phpstan",
+    "exit": 0,
+    "seconds": 1.76,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "-c",
+      "phpstan.neon",
+      "--memory-limit=1G",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/core-phpstan-final.log",
+    "summary": "{\"tool\":\"phpstan\",\"result\":\"passed\",\"errors\":0}"
+  },
+  {
+    "id": "core-pest",
+    "exit": 0,
+    "seconds": 71.27,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/core-pest-final.log",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":607,\"passed\":596,\"assertions\":1951,\"duration_ms\":71015,\"skipped\":11,\"risky\":17}"
+  },
+  {
+    "id": "drive-pint",
+    "exit": 0,
+    "seconds": 0.56,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/drive-pint.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "drive-phpstan",
+    "exit": 0,
+    "seconds": 4.17,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/drive-phpstan.log",
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/drive/phpstan.neon.   [OK] No errors                                                                  "
+  },
+  {
+    "id": "drive-pest",
+    "exit": 0,
+    "seconds": 32.76,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/drive-pest.log",
+    "summary": "  \u2713 it acquireForPatch \u043d\u0430 MySQL \u0431\u0435\u0440\u0451\u0442 \u041d\u0415\u0431\u043b\u043e\u043a\u0438\u0440\u0443\u044e\u0449\u0438\u0439 \u043b\u043e\u043a \u2014 FOR UPDATE NO\u2026 0.06s     \u2713 it acquireForPatch \u043d\u0430 MySQL \u0431\u0435\u0440\u0451\u0442 \u041d\u0415\u0431\u043b\u043e\u043a\u0438\u0440\u0443\u044e\u0449\u0438\u0439 \u043b\u043e\u043a \u2014 FOR UPDATE NO\u2026 0.05s      Tests:    2 risky, 8 skipped, 454 passed (1358 assertions)   Duration: 32.70s "
+  },
+  {
+    "id": "documents-pint",
+    "exit": 0,
+    "seconds": 0.79,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/documents-pint.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "documents-phpstan",
+    "exit": 0,
+    "seconds": 4.47,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/documents-phpstan.log",
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/documents/phpstan.neon.   [OK] No errors                                                                  "
+  },
+  {
+    "id": "documents-pest",
+    "exit": 0,
+    "seconds": 19.01,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/documents-pest.log",
+    "summary": "  \u2713 it markdown-\u044d\u043a\u0441\u043f\u043e\u0440\u0442: \"|\" \u0432 \u0426\u0415\u041b\u0418 \u0441\u0441\u044b\u043b\u043a\u0438/\u043a\u0430\u0440\u0442\u0438\u043d\u043a\u0438 \u043d\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u0442 \u0442\u0430\u0431\u043b\u0438\u0446\u2026 0.05s     \u2713 it markdown-\u044d\u043a\u0441\u043f\u043e\u0440\u0442: \"|\" \u0432 \u0426\u0415\u041b\u0418 \u0441\u0441\u044b\u043b\u043a\u0438/\u043a\u0430\u0440\u0442\u0438\u043d\u043a\u0438 \u043d\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u0442 \u0442\u0430\u0431\u043b\u0438\u0446\u2026 0.05s      Tests:    1 skipped, 249 passed (819 assertions)   Duration: 18.95s "
+  },
+  {
+    "id": "media-pint",
+    "exit": 0,
+    "seconds": 0.18,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/media-pint.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "media-phpstan",
+    "exit": 0,
+    "seconds": 3.83,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/media-phpstan.log",
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/media/phpstan.neon.   [OK] No errors                                                                  "
+  },
+  {
+    "id": "media-pest",
+    "exit": 0,
+    "seconds": 24.68,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/media-pest.log",
+    "summary": "  ! it records gc metrics via vaulter:gc-blobs command \u2192 This test did\u2026  0.05s     ! it records reconcile metrics via vaulter:reconcile-blobs command \u2192\u2026  0.05s      Tests:    4 risky, 9 skipped, 128 passed (449 assertions)   Duration: 24.64s "
+  },
+  {
+    "id": "filament-pint",
+    "exit": 0,
+    "seconds": 0.18,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/filament-pint.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "filament-phpstan",
+    "exit": 0,
+    "seconds": 3.71,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/filament-phpstan.log",
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/filament/phpstan.neon.   [OK] No errors                                                                  "
+  },
+  {
+    "id": "filament-pest",
+    "exit": 0,
+    "seconds": 9.25,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.9/filament-pest.log",
+    "summary": "  \u2713 it drops ActivityResource when the core activity feature is off, ev\u2026 0.08s     \u2713 it control: ActivityResource registers when the core activity featu\u2026 0.07s      Tests:    1 skipped, 76 passed (215 assertions)   Duration: 9.19s "
+  }
+]

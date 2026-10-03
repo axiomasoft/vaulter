@@ -6,6 +6,21 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### HTTP middleware and route parameters (AD31)
+
+Replace `vaulter.middleware` with `vaulter.routes.middleware.authenticated` and
+remove the legacy key to adopt the default `['api', 'auth:sanctum']`. Install and
+configure Sanctum or choose your own host guard. A non-null legacy list still
+wins for protected routes, including an empty list. Public shares and signed hub
+callbacks use their own `public` and `hub` stacks; metrics are appended once to
+all stacks. Replace PHP calls to `Config::middleware()` with the corresponding
+`authenticatedMiddleware()`, `publicMiddleware()` or `hubMiddleware()`.
+
+Global route bindings for `node` and `storage` have been removed. Vaulter's middleware
+resolves its own parameters through swappable repositories before Laravel's
+`SubstituteBindings`; host routes retain their own model bindings. Controller
+model signatures and existing route paths are preserved.
+
 ### Webhook event occurrence ids (AD22, E8)
 
 Webhook `event_id` values are now 26-character ULIDs generated when a domain event

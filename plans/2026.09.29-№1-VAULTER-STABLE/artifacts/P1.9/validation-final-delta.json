@@ -1,0 +1,47 @@
+[
+  {
+    "id": "core-pint",
+    "exit": 0,
+    "seconds": 2.89,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.9/core-pint-final.log",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "core-phpstan",
+    "exit": 0,
+    "seconds": 1.76,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "-c",
+      "phpstan.neon",
+      "--memory-limit=1G",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.9/core-phpstan-final.log",
+    "summary": "{\"tool\":\"phpstan\",\"result\":\"passed\",\"errors\":0}"
+  },
+  {
+    "id": "core-pest",
+    "exit": 0,
+    "seconds": 71.27,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.9/core-pest-final.log",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":607,\"passed\":596,\"assertions\":1951,\"duration_ms\":71015,\"skipped\":11,\"risky\":17}"
+  }
+]

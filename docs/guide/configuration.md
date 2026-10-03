@@ -321,8 +321,28 @@ See [Export](/guide/export) and the [custom-export recipe](/guide/recipes).
 
 ```php
 'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-'middleware'   => ['api'],
+'routes' => [
+    'middleware' => [
+        'authenticated' => ['api', 'auth:sanctum'],
+        'public' => ['api'],
+        'hub' => ['api'],
+    ],
+],
 ```
+
+Protected routes use the `authenticated` stack. Public `share/{token}*` routes use
+`public` plus the token resolver; signed `collab/authenticate` and `collab/store`
+callbacks use `hub`. Both public surfaces retain `throttle:vaulter-public`, and
+resumable uploads retain `throttle:vaulter-uploads`. Request metrics are appended
+once to every stack automatically.
+
+Install Laravel Sanctum for the default `auth:sanctum` guard, or replace that entry
+with your application's authentication middleware. The legacy `vaulter.middleware`
+key overrides only `authenticated` when non-null, including an explicit empty list;
+remove it to enable the new default. `Config::middleware()` is replaced by
+`authenticatedMiddleware()`, `publicMiddleware()` and `hubMiddleware()` (AD31).
+Resource resolution applies only to Vaulter routes; host `{node}` and `{storage}`
+parameters keep their own bindings.
 
 ## Collaboration
 

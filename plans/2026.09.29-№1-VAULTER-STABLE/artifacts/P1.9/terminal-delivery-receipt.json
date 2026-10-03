@@ -1,0 +1,78 @@
+{
+  "schema_version": "terminal-delivery-receipt/v1",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "subject": "P1.9",
+  "status": "🟢 Done",
+  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10 P1.11",
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10 P1.11\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | B1-B |\n| Model class | implementation |\n| Model | gpt-6-sol |\n| Effort | medium |\n| Context | continue-root |\n| Essence | Continue the admitted B1-B workset. |\n\n```session-continuity-decision/v1\n{\"outcome\": \"continue-root\", \"reason\": \"context-telemetry-unavailable\", \"evidence\": [\"batch:e388fe884169f7a710da1b201de77ca1a47257772df835ecba096605e4794529\", \"loaded-inputs:reusable\", \"cold-start-cost:0\"], \"runnable\": true, \"schema_version\": \"session-continuity-decision/v1\"}\n```",
+  "route": {
+    "batch": "B1-B",
+    "model": "gpt-6-sol",
+    "thinking": null,
+    "context": "continue-root",
+    "command": null,
+    "continuity": {
+      "outcome": "continue-root",
+      "reason": "context-telemetry-unavailable",
+      "evidence": [
+        "batch:e388fe884169f7a710da1b201de77ca1a47257772df835ecba096605e4794529",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0"
+      ],
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    }
+  },
+  "continuity": {
+    "outcome": "continue-root",
+    "reason": "context-telemetry-unavailable",
+    "evidence": [
+      "batch:e388fe884169f7a710da1b201de77ca1a47257772df835ecba096605e4794529",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0"
+    ],
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "rationale": {
+    "remaining": "Continue P1.10 P1.11 in this root under the admitted owner scope.",
+    "open_risks": "Conditional SQLite skips/risky retained; no push/release. Prior dirty owner carriers preserved."
+  },
+  "commit_sha": "d67f1e3966be391ec2c0c1460a1f2f1574fb86f6",
+  "journal": {
+    "line": 47,
+    "sha256": "sha256:200ea25bc8247cc74a3c4e71fa9673f67affd84b4872a684a3d520fd354d0512",
+    "run_id": "0bff21529ae478f5e124f97b909b500d84350742c1692046cc3aeaad1d79838c",
+    "result": "closed-green",
+    "command": "plan-run",
+    "batch_receipt": {
+      "batch_id": "B1-B",
+      "completed_prefix": [
+        "P1.9"
+      ],
+      "handoff_digest": "4ac80402848a1694eea73e9efbdf4cc8b3253164e2c06d9b113dc7c370b1070d",
+      "invocation_digest": "f8ab1630fc65382e057ff67951f7d0a89f0661bdabf0e87f25a935942eddb7a9",
+      "membership": [
+        "P1.9",
+        "P1.10",
+        "P1.11"
+      ],
+      "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "92bba16244718fb172bf8580f67b4c28c5e74734b26b9ee22083de1571cff80c",
+      "stop_disposition": "continue"
+    }
+  },
+  "adapter_attestation": {
+    "package": "task",
+    "version": "0.27.0",
+    "command_id": "task:plan-run",
+    "canonical_command_sha256": "sha256:21a20c3b12eb6966dcb6139dc24fa9ab321f52e80cb51ca2820f46618954dd1f"
+  },
+  "digests": {
+    "plan": "sha256:84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+    "handoff": "sha256:3c8d00dcd6a6449ddaca3386aad5e572126494daf152f5fc793164d23b185224",
+    "state": "sha256:5271bef4132a75d6186bc7a55ec6944fccc39e5102b2e42c6030d02548fa6673",
+    "closure": null
+  }
+}

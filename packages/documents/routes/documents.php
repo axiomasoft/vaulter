@@ -8,6 +8,7 @@ use Vaulter\Documents\Http\Controllers\DocumentNodeController;
 use Vaulter\Documents\Http\Controllers\NodeCollaborationController;
 use Vaulter\Documents\Http\Controllers\NodeCommentController;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
+use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Support\Config;
 
 /*
@@ -17,17 +18,16 @@ use Vaulter\Support\Config;
 | The document-node surface, extracted from core's routes/api.php into the
 | vaulter-documents package. Mounted under the SAME configured prefix (default:
 | api/vaulter) and middleware as the kernel routes — Laravel merges the group
-| registrations across files. {storage} and {node} route-model bindings are
-| registered by the CORE provider (Node/Storage are kernel models); these routes
-| reuse them. The fixed sub-segments (content/versions/handler/export/collab/
+| registrations across files. Local resource middleware resolves {storage} and
+| {node} through swappable core repositories before SubstituteBindings. The fixed sub-segments (content/versions/handler/export/collab/
 | comments) differ in segment count from core's and vaulter-drive's catch-all
 | /{node}, so cross-file registration order never shadows them.
 */
 
 Route::prefix(Config::routePrefix())
-    ->middleware(Config::middleware())
+    ->middleware(Config::authenticatedMiddleware())
     ->group(static function (): void {
-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
+        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
             /*
             |------------------------------------------------------------------
             | Documents — document nodes (§2.5 / §7 / M4a)
@@ -80,27 +80,13 @@ Route::prefix(Config::routePrefix())
             }
         });
 
-        /*
-        |----------------------------------------------------------------------
-        | Realtime collaboration webhooks (§7 / ADR-0001 / M4b)
-        |----------------------------------------------------------------------
-        | The SERVER-TO-SERVER surface the Node Hocuspocus hub calls back into:
-        | onAuthenticate → collab/authenticate, onStoreDocument → collab/store.
-        | These carry NO auth middleware — only ResolveCollaborationCall, which
-        | authenticates the caller via the shared webhook secret OR a valid signed
-        | room JWT (never open) and stashes the resolved call. The node is resolved
-        | from the BODY (room/node_id), not route-model bound, and a JWT call may
-        | only address its own room (a token for node A cannot store to node B).
-        | Gated on the 'document_versions' feature. Rate-limited (P1.3 / F-P1.8-01) by
-        | the package's own `vaulter-public` named limiter (keyed by requester IP) —
-        | throttle runs BEFORE ResolveCollaborationCall.
-        | Gated on BOTH 'document_versions' AND 'collaboration' (VLT-REMED P3.1 /
-        | F-P1.6-01, D13/D20) — see the collab/token gate above for why.
-        */
-        if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
-            Route::middleware(['throttle:vaulter-public', ResolveCollaborationCall::class])->group(static function (): void {
-                Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
-                Route::post('collab/store', [NodeCollaborationController::class, 'store']);
-            });
-        }
     });
+
+if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
+    Route::prefix(Config::routePrefix())
+        ->middleware([...Config::hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
+        ->group(static function (): void {
+            Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
+            Route::post('collab/store', [NodeCollaborationController::class, 'store']);
+        });
+}

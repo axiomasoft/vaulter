@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
+  stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides
+  only the authenticated stack, and metrics are appended to all stacks (AD31).
 - Domain events carry a readonly `eventId` ULID with an optional final constructor
   argument for replay. Webhook `event_id` now identifies an event occurrence rather
   than its resulting state; retries retain the same id (AD22).
@@ -20,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Vaulter resource resolution no longer registers global `node`/`storage` bindings
+  that interfere with host routes. Missing resources return their 404 problem code (N10, AD31).
 - Outbox deduplication no longer loses repeated rename or trash/restore operations
   returning to the same state; only a replay of the same event id is deduplicated (E8).
 - All domain exceptions now return their documented 4xx status instead of HTTP 500

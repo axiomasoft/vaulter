@@ -1,0 +1,447 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.29-№1-vaulter-stable-p1-9",
+  "version": {
+    "revision": 1,
+    "content_hash": "838726e6a8b992b5a7adea204102e030c6bbc9731e7d767e725d78f6931b7372",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Защищённые маршруты, публичные share-ссылки и server-to-server колбэки хаба получают три независимых стека\nmiddleware, а параметры `{storage}`/`{node}` резолвятся только внутри маршрутов Vaulter — хост может добавить\n`auth:sanctum`, не ломая публичные ссылки и хаб, и его собственные маршруты `{node}` не задеваются (N09, N10).",
+    "non_goals": [
+      "пути `/v1`, `shares/{token}`, `collaboration/hub/*`, скалярные параметры в сигнатурах и\nоднодейственные контроллеры, `AssignCorrelationId` (P6.1)",
+      "фильтр тенанта в резолвере (P3.8)",
+      "нормализатор и\ndeprecation-лог устаревших ключей (P2.5)",
+      "`route:cache`-матрица (P8.1)."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "1. Конфиг `packages/core/config/vaulter.php`: удалить ключ `'middleware' => ['api', RecordVaulterRequestMetrics::class]`\n   (строки 712–715) и добавить\n   `'routes' => ['middleware' => ['authenticated' => ['api', 'auth:sanctum'], 'public' => ['api'], 'hub' => ['api']]]` (R7)\n   с комментарием-блоком в стиле файла. `core/src/Support/Config.php`: `middleware()` удаляется",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M2",
+      "requirement": "новые\n   `authenticatedMiddleware(): array`, `publicMiddleware(): array`, `hubMiddleware(): array`. `authenticatedMiddleware()`:\n   если `config('vaulter.middleware')` не null (опубликованный конфиг 0.2) — это значение, иначе\n   `vaulter.routes.middleware.authenticated`. Каждый метод возвращает `stringList(...)` с добавленным в конец\n   `RecordVaulterRequestMetrics::class`, если хост его не перечислил (дубликат не добавляется).\n2. Маршруты (пути не меняются до P6.1):\n   - `packages/core/routes/api.php`: группа `Route::prefix(Config::routePrefix())->middleware(Config::authenticatedMiddleware())`\n     для grants/shares(owner)/activity/webhooks",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M3",
+      "requirement": "отдельная группа `Route::prefix(Config::routePrefix())->middleware([...Config::publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])`\n     для `share/{token}`, `share/{token}/nodes`, `share/{token}/download`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M4",
+      "requirement": "- `packages/drive/routes/drive.php`: группа с `Config::authenticatedMiddleware()`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M5",
+      "requirement": "`throttle:vaulter-uploads` для\n     загрузок сохраняется",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M6",
+      "requirement": "- `packages/documents/routes/documents.php`: защищённые маршруты — `Config::authenticatedMiddleware()`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M7",
+      "requirement": "`collab/authenticate`,\n     `collab/store` — отдельная группа `[...Config::hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class]`\n     с тем же условием `featureEnabled('document_versions') && collaborationEnabled()`.\n3. Резолв параметров (R6):\n   - `packages/core/src/Http/Support/HttpResourceResolver.php` (new, `final readonly`): `storage(int|string $id): Storage`\n     (`StorageReadRepository` → не найдено → `StorageNotFoundException::forId`), `node(int|string $id): Node`\n     (`NodeReadRepository::find` → не найдено → `NodeNotFoundException::forId`). Исключения — из P1.8. Ни один текущий\n     маршрут не содержит одновременно `{storage}` и `{node}` (пути — `storages/{storage}/…` или `nodes/{node}/…`), поэтому\n     проверка вложенности не нужна до P6.1.\n   - `packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php` (new): для текущего маршрута, если параметр\n     `storage` скалярный → `setParameter('storage', $resolver->storage(...))`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M8",
+      "requirement": "если `node` скалярный →\n     `setParameter('node', $resolver->node(...))`. Добавляется во все группы п.2, где есть `SubstituteBindings`.\n   - `VaulterServiceProvider`: удалить `registerRouteBindings()` и его вызов (строка 276)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M9",
+      "requirement": "в `boot()` —\n     `$kernel = $this->app->make(\\Illuminate\\Contracts\\Http\\Kernel::class)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M10",
+      "requirement": "if ($kernel instanceof \\Illuminate\\Foundation\\Http\\Kernel) { $kernel->addToMiddlewarePriorityBefore(SubstituteBindings::class, ResolveVaulterRouteParameters::class)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M11",
+      "requirement": "}`.\n   - Сигнатуры контроллеров (`Storage $storage`, `Node $node`) не меняются: параметр уже модель, `SubstituteBindings` его не трогает.\n4. Тесты:\n   - V25 — `packages/documents/tests/Feature/MiddlewareStacksTest.php` (documents видит core-share и hub-маршруты):\n     `laravel/sanctum` в `require-dev` `packages/documents/composer.json` (`^4.0`)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M12",
+      "requirement": "конфиг\n     `vaulter.middleware = null`, `vaulter.routes.middleware.authenticated = ['api', 'auth:sanctum']`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M13",
+      "requirement": "(а) `GET storages/{id}/nodes`\n     без токена → 401",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M14",
+      "requirement": "с `Sanctum::actingAs($user)` → 200",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M15",
+      "requirement": "(б) `GET share/{token}` действующей ссылки без токена → 200",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M16",
+      "requirement": "(в) `POST collab/authenticate` с валидным hub-JWT без токена → не 401 (ответ контроллера). Негативный контроль:\n     временно добавить `Config::authenticatedMiddleware()` в группу share → (б) 401.\n   - V26 — `packages/drive/tests/Feature/HostRouteBindingTest.php`: тестовая модель хоста `HostProject` (таблица\n     `host_projects` создаётся в тесте) и маршрут `Route::get('/projects/{node}', fn (HostProject $node) => $node->getKey())`\n     с `SubstituteBindings` → ответ — ключ `HostProject`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M17",
+      "requirement": "негативный контроль — временно вернуть `Route::bind('node', …)` → красный.\n   - Резолвер (`packages/drive/tests/Feature/HostRouteBindingTest.php`): `GET storages/{несуществующий}/nodes` → 404,\n     `json('code') = 'drive_not_found'`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M18",
+      "requirement": "`GET nodes/{несуществующий}` → 404, `json('code') = 'node_not_found'`.\n   - Наследие: конфиг с `vaulter.middleware = ['api']` → применяется к защищённым маршрутам (`Config::authenticatedMiddleware()`\n     = `['api', RecordVaulterRequestMetrics::class]`).\n5. Документация: `docs/guide/configuration.md` и `docs/guide/installation.md` — три стека, `auth:sanctum` по умолчанию,\n   legacy `middleware`",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M19",
+      "requirement": "`UPGRADE.md` (`middleware` → `routes.middleware.authenticated`, глобальные биндинги удалены — AD31)",
+      "source_ref": "phases/P1.md:12"
+    },
+    {
+      "id": "M20",
+      "requirement": "`CHANGELOG.md [Unreleased]`.",
+      "source_ref": "phases/P1.md:12"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "пути `/v1`, `shares/{token}`, `collaboration/hub/*`, скалярные параметры в сигнатурах и\nоднодейственные контроллеры, `AssignCorrelationId` (P6.1)",
+      "source_ref": "phases/P1.md:60"
+    },
+    {
+      "id": "N2",
+      "prohibition": "фильтр тенанта в резолвере (P3.8)",
+      "source_ref": "phases/P1.md:60"
+    },
+    {
+      "id": "N3",
+      "prohibition": "нормализатор и\ndeprecation-лог устаревших ключей (P2.5)",
+      "source_ref": "phases/P1.md:60"
+    },
+    {
+      "id": "N4",
+      "prohibition": "`route:cache`-матрица (P8.1).",
+      "source_ref": "phases/P1.md:60"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.",
+        "scope": "public",
+        "check": "- Code Guidance → оба пустые.",
+        "evidence_ref": "E7"
+      },
+      {
+        "id": "A2",
+        "predicate": "три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.",
+        "scope": "public",
+        "check": "- `(cd packages/documents && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/MiddlewareStacksTest.php)` → passed, 0 failed.",
+        "evidence_ref": "E8"
+      },
+      {
+        "id": "A3",
+        "predicate": "три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.",
+        "scope": "public",
+        "check": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/HostRouteBindingTest.php)` → passed.",
+        "evidence_ref": "E9"
+      },
+      {
+        "id": "A4",
+        "predicate": "три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.",
+        "scope": "public",
+        "check": "- Негативные контроли V25 и V26 (Scope п.4) → красные, после возврата зелёные (в Completion Notes).",
+        "evidence_ref": "E10"
+      },
+      {
+        "id": "A5",
+        "predicate": "три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.",
+        "scope": "public",
+        "check": "- Гейт core и гейты drive, documents, media, filament → exit 0.",
+        "evidence_ref": "E11"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P1/P1.9.md:P1.9",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "run-items",
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.9",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "implementation",
+      "effort": "medium"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": []
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "packages/core/routes/api.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "packages/documents/routes/documents.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "packages/core/src/Support/Config.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E7",
+      "path": "- Code Guidance → оба пустые.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E8",
+      "path": "- `(cd packages/documents && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/MiddlewareStacksTest.php)` → passed, 0 failed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E9",
+      "path": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/HostRouteBindingTest.php)` → passed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E10",
+      "path": "- Негативные контроли V25 и V26 (Scope п.4) → красные, после возврата зелёные (в Completion Notes).",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E11",
+      "path": "- Гейт core и гейты drive, documents, media, filament → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/10-http-api-v1.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/10-http-api-v1.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/10-http-api-v1.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/routes/api.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/routes/api.php",
+        "normalized": "packages/core/routes/api.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/routes/drive.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/routes/drive.php",
+        "normalized": "packages/drive/routes/drive.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/documents/routes/documents.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/documents/routes/documents.php",
+        "normalized": "packages/documents/routes/documents.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/VaulterServiceProvider.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/VaulterServiceProvider.php",
+        "normalized": "packages/core/src/VaulterServiceProvider.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Support/Config.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Support/Config.php",
+        "normalized": "packages/core/src/Support/Config.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/routes/api.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/routes/api.php",
+        "normalized": "packages/core/routes/api.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/documents/routes/documents.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/documents/routes/documents.php",
+        "normalized": "packages/documents/routes/documents.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/VaulterServiceProvider.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/VaulterServiceProvider.php",
+        "normalized": "packages/core/src/VaulterServiceProvider.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Support/Config.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Support/Config.php",
+        "normalized": "packages/core/src/Support/Config.php",
+        "path_kind": "internal",
+        "rejection": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "chain-of-thought",
+        "raw-transcript-bodies",
+        "secrets",
+        "tool-payloads"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.9",
+      "codex": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.9"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P1.9",
+    "reads": [
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6"
+    ],
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.9"
+  }
+}

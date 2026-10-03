@@ -133,6 +133,116 @@ Vaulter\Database\VaulterDatabase
   lockTree(int|string $storageId): void
   transaction(\Closure $callback, int $attempts = 3): mixed
 
+Vaulter\Support\Config
+  activityModel(): string
+  allowedUploadMimes(): array
+  authenticatedMiddleware(): array
+  autosaveDebounceSeconds(): int
+  blobModel(): string
+  blobStoreClass(): string
+  channelPrefix(): string
+  collaborationDriverName(): string
+  collaborationEnabled(): bool
+  collaborationHubUrl(): ?string
+  collaborationJwtSecret(): ?string
+  collaborationRoom(mixed $nodeId): string
+  collaborationTokenTtl(): int
+  collaborationWebhookSecret(): ?string
+  collaborationWebhookTimestampTolerance(): int
+  connection(): ?string
+  contentStoreClass(): string
+  dedupScope(): string
+  defaultDisk(): string
+  defaultPanel(): string
+  documentHandlers(): array
+  downloadInlineMimeWhitelist(): array
+  driveNameMaxLength(): int
+  driveNameSeparatorsPattern(): string
+  driverConfig(string $name): array
+  enabledDocumentTypes(): array
+  exporters(): array
+  extraDataEnabled(): bool
+  featureEnabled(string $feature, ?string $panel = null): bool
+  fileModel(): string
+  fileVersionBlobModel(): string
+  fileVersionModel(): string
+  gcGraceHours(int $override = 0): int
+  grantModel(): string
+  hubMiddleware(): array
+  idStrategies(): array
+  idStrategy(): string
+  idType(): string
+  maxActiveUploadSessions(): int
+  maxDocumentSizeKb(): int
+  maxDocumentVersions(): int
+  maxUploadKb(): int
+  maxVersions(): int
+  nodeCommentModel(): string
+  nodeDocumentVersionModel(): string
+  nodeIdFromRoom(string $room): string
+  nodeModel(): string
+  nodeShareModel(): string
+  nodeShareTokenGeneratorClass(): string
+  orphanGraceHours(int $override = 0): int
+  outboxModel(): string
+  panels(): array
+  permissionDriver(): string
+  permissionDrivers(): array
+  publicMiddleware(): array
+  publicRateLimitPerMinute(): int
+  reverbConnection(): string
+  routePrefix(): string
+  shareDefaultTtlHours(): int
+  shareMaxTtlHours(): int
+  sharePrefixLength(): int
+  shareTokenGeneratorClass(): string
+  shareUrlBase(): string
+  storageDriverClass(): string
+  storageModel(): string
+  table(string $name): string
+  tablePrefix(): string
+  tenantColumn(): string
+  tenantEnabled(): bool
+  tiptapExtraAttributes(): array
+  tiptapExtraMarks(): array
+  tiptapExtraNodes(): array
+  tiptapUrlAttributes(): array
+  trashRetentionDays(): int
+  tusEnabled(): bool
+  uploadChunkSize(): int
+  uploadMaxBytes(): int
+  uploadMaxChunkBytes(): int
+  uploadMetadataAllowedKeys(): array
+  uploadMetadataMaxValueLength(): int
+  uploadPartModel(): string
+  uploadSessionModel(): string
+  uploadSessionTtlHours(): int
+  uploadsRateLimitPerMinute(): int
+  usesUlids(): bool
+  webhookAllowedIpRanges(): array
+  webhookAllowedSchemes(): array
+  webhookBackoff(int $attempt): int
+  webhookBlockedIpRanges(): array
+  webhookConnectTimeout(): int
+  webhookDeliveryModel(): string
+  webhookDisableAfterFailures(): int
+  webhookEndpointModel(): string
+  webhookEventHeader(): string
+  webhookManageAbility(): ?string
+  webhookMaxAttempts(): int
+  webhookMaxResponseBytes(): int
+  webhookRetentionDays(): int
+  webhookRetryClaimSeconds(): int
+  webhookSignatureHeader(): string
+  webhookTimeout(): int
+  webhookTimestampHeader(): string
+  webhookUrlGuardClass(): string
+
+Vaulter\Http\Support\HttpResourceResolver
+  __construct(\Vaulter\Repositories\Drive\StorageReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
+  node(int|string $id): \Vaulter\Models\Drive\Node
+  storage(int|string $id): \Vaulter\Models\Drive\Storage
+
 Vaulter\Exceptions\Contracts\ProblemException
   httpStatus(): int
   problemCode(): string
