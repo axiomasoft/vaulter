@@ -98,3 +98,5 @@ load/*.json
 load/results/
 # load/gates/*.py bytecode cache — never a repo artifact.
 load/gates/__pycache__/
+.grok/config.toml
+/:memory:

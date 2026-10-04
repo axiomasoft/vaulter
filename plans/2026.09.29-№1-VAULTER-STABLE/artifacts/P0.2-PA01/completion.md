@@ -19,3 +19,10 @@ P0.2 remains In progress; PA01 is fixed locally but closure awaits review. P0.1 
 write-site: pre_mutation: allow · pre_final: block:VALIDATION_RECEIPT_MISSING
 
 Plan metadata validation: plan-lint exit 0, 0 errors / 0 warnings (plan-lint.txt). Previous audit-handoff frontier lint mismatch is resolved while P0.2 is now actually In progress. Local checkpoint commit is a real external-quota boundary, not an item terminal close.
+
+## Closure (2026-10-03)
+
+E23 closed: `review-gpt61.md` — codex/gpt-6.1-sol/high, GREEN, 0 findings (same-model, D13; input-only review, no test reruns). The waiting-external gate is resolved; the earlier claude-sonnet-5-5 attempt (HTTP 429) produced no verdict and is not counted.
+Receipts E15–E22 re-bound to the current contract hash without re-execution; E23 fresh (`validation-provenance.json`). Hosted CI was not touched.
+
+write-site: pre_mutation: allow · pre_final: allow — terminal `closed-green` journal event 2026-10-03T12:06:14Z; `plan-work finalize` exit 0, plan-lint 0 errors.

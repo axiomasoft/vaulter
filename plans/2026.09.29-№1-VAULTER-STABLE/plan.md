@@ -96,7 +96,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 ## 3. Routing
 
-Детализирована: P0. Фазы P1–P8 — skeleton в `backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
+Детализированы: P0, P1 (P1 — до закрытия P0 по D12; исполнение P1 — после `task:plan-close … P0`). Фазы P2–P8 — skeleton в
+`backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
 окончательная — execution-sheet в `roadmap.md`.
 
 | Batch | Items | Model class/effort | Exec | Review | Why |
@@ -105,6 +106,17 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | B0-A | P0.2 | implementation/medium | manual | full | recommended: харнесс конкурентности — фундамент доказательств T0 (V02, V03, V13, V17, V19–V21); первым в B0-A. |
 | B0-A | P0.3 | implementation/medium | manual | full | recommended: фикстура 0.2 на том же окружении PG/MySQL; вторым в B0-A; O-2 до старта. |
 | solo | P0.4 | frontier/medium | manual | light | recommended: ADR 0019–0024 — перенос решений OPUS; потребляет baseline P0.1; после него независим от B0-A, frontier не смешивается с implementation. |
+| solo | P1.1 | implementation/medium | manual | full | recommended: `VaulterDatabase` — основа P1.2/P1.5/P1.6; первым в фазе после закрытия P0 (D12). |
+| solo | P1.8 | implementation/low | manual | light | recommended: контракт `ProblemException` и коды — нужны новым исключениям P1.2/P1.9; сразу после P1.1 (батч с P1.4 невозможен — номера не смежны). |
+| solo | P1.4 | implementation/medium | manual | light | recommended: `eventId` в событиях — независимый механический пакет; после P1.8. |
+| B1-B | P1.9 | implementation/medium | manual | full | recommended: стеки middleware и резолвер — граница аутентификации, full-ревью; использует исключения P1.8; первым в B1-B. |
+| B1-B | P1.10 | implementation/low | manual | full | recommended: авторизация Filament (N14, S1) — full-ревью; вторым в B1-B. |
+| B1-B | P1.11 | economy/low | manual | light | recommended: URL-метаданные — механическая правка; третьим в B1-B (economy в implementation-батче допустим). |
+| solo | P1.7 | implementation/high | manual | full | recommended: HK-колонки и миграция №3 меняют `PanelTablesBuilder` до P1.2/P1.5 и дают хелпер фикстуры; миграция — full-ревью frontier-уровня. |
+| solo | P1.2 | frontier/high | manual | full | recommended: инварианты дерева, `lockTree`, ремонт N04 — миграция данных и блокировки; frontier не смешивается с implementation. |
+| solo | P1.3 | frontier/high | manual | full | recommended: `evaluateMany` + точный курсорный листинг — алгоритм доступа; отдельная сессия из-за объёма контекста. |
+| solo | P1.5 | frontier/high | manual | full | recommended: `BlobScope`/`scope_key`/repair-scopes — миграция данных CAS; после P1.7 (HK `v_blobs.tenant_id`). |
+| solo | P1.6 | implementation/high | manual | full | recommended: квота и номер ревизии под блокировками D21 — последним: опирается на `lockTree` (P1.2) и `advisoryLock` CAS (P1.5). |
 
 ## 4. Update Log
 
@@ -114,6 +126,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | 2026-09-29 | Уточнение владельца (B6, B7) → D06: реестр единиц OPUS (1438/254), владельцы секций, ledger P0 (92 единицы), гейт `opus-coverage.py`, дословные входы `artifacts/P0-design/P0.m-opus.md`; P0 дополнена (полный CI в baseline, MySQL-ulid дамп, AD → mAInd, поправки ADR строго по OPUS) | claude-opus-5-5/high |
 | 2026-09-29 | По поручению владельца исправлены DA01–DA06 (D07): owner IDs исходной схемы, явный PG-job харнесса, O-3-CI до аудита, bootstrap, дословный render/manifest/негативные контроли, producer baseline P0.4; повторная финализация, без исполнения P0 | gpt-6-sol/high |
 | 2026-09-29 | D08: владелец разрешил завершить перепроверку исправлений дизайна P0 до GREEN в текущей sol-сессии; same-author recheck явно обозначен, фазовая приёмка реализации сохранена | gpt-6-sol/high |
+| 2026-10-02 | D12: дизайн P1 до закрытия P0 по выбору владельца; P1 детализирована (P1.1–P1.11, ledger 360 единиц, решения R1–R10); `backlog/P1.md` перенесён в `phases/P1/` | claude-opus-5-5/high |
 
 ## 5. Decision Log
 

@@ -24,3 +24,25 @@ Not covered by this item (not claimed GREEN here):
   not authorised hosted CI (handoff after P0.1). Phase-level acceptance, pending.
 - Independent review `full` (Routing B0-A, D09 п.3): **GREEN** — `findings/B0-A-review.md`; R6/R8 fixed in ForkRace,
   re-validated: PG 4 passed, SQLite 4 skipped, pint exit 0 (`*-after-review.log`).
+
+## PA01 owning repair and E23 (run `d447c95f…`, attempt 2)
+
+P0 phase audit (D11) finding PA01 (Major): the no-barrier mutant survived. Repaired in `packages/core/tests/Concurrency/ForkRaceTest.php` only
+(commit `731cbb8`); harness source, production code, media and CI untouched. The connection test now forces exactly one child to fail
+reconnect before readiness (atomic `fopen(..., 'x')`); its sibling must return `ForkRace\BarrierTimeout` and no task may write its started marker.
+
+| Validation | Result | Evidence |
+|:--|:--|:--|
+| PG serial ×5 | 5/5 exit 0, each 4 passed / 17 assertions | `P0.2-PA01/serial-pgsql-{1..5}.log` |
+| SQLite | exit 0, 4 skipped | `P0.2-PA01/sqlite.log` |
+| Pint | exit 0 | `P0.2-PA01/pint.log` |
+| Barrier-only mutant | RED: only readiness test fails (`null` instead of `BarrierTimeout`) | `P0.2-PA01/barrier-bypass-final.log` |
+| Sequential mutant | RED: lost-update `[0, 1]` and readiness | `P0.2-PA01/sequential.log` |
+| E19/E20 media + root PG | reused (unchanged inputs, original `executed_at`) | `P0.2-PA01/validation-provenance.json` |
+
+review: codex/gpt-6.1-sol/high GREEN, findings:0 (same-model, D13) — `P0.2-PA01/review-gpt61.md`. Input-only review of the saved prompt; the reviewer did not rerun tests.
+It closes E23 for PA01/P0.2 only and is not an independent phase acceptance.
+Receipts: E15–E22 re-bound to this session's contract hash with original `executed_at` (no re-execution, product tree `84084cef…` unchanged); E23 fresh.
+Gates: pre_mutation allow · pre_final allow.
+
+Not covered (unchanged, not claimed GREEN): hosted O-3-CI on the changed candidate stays a phase gate; no CI configuration or dispatch was made in this run (owner: «CI пока не настраивай»).

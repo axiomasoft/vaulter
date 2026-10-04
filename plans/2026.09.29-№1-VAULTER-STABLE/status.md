@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-10-02
-inputs_sha256: 11e8cbfd0827f656379e5f8a387c190f32145b383412145793b94800263c3e9f
+through: 2026-10-04
+inputs_sha256: a1caf58bc60de678594b333e2548f8732f74121b2d3df88cfb1b06d2eed6b35c
 generated_by: task plan-views status
 -->
 
@@ -16,23 +16,40 @@ generated_by: task plan-views status
 | Field | Meaning |
 |:--|:--|
 | Version | — |
-| Status | 🟡 In progress |
-| Last Updated | 2026-10-02 |
+| Status | 🟠 Done with deviations |
+| Last Updated | 2026-10-04 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 2/4 | 🟡 In progress |
+| P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
+| P1 | Исправления T0 на текущих именах | 10/11 | 🟠 Done with deviations |
 
 ## Phase P0
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P0.1 | Окружение и базовая линия | 🟠 Done with deviations | 2026-09-29 |
-| P0.2 | Харнесс конкурентности PostgreSQL | 🟡 In progress | 2026-10-02 |
+| P0.2 | Харнесс конкурентности PostgreSQL | 🟢 Done | 2026-10-03 |
 | P0.3 | Фикстура данных 0.2 | 🟢 Done | 2026-10-02 |
 | P0.4 | ADR 0019–0024 | 🟢 Done | 2026-10-02 |
+
+## Phase P1
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P1.1 | Соединение Vaulter для транзакций и блокировок | 🟢 Done | 2026-10-03 |
+| P1.2 | Инварианты дерева | 🟢 Done | 2026-10-04 |
+| P1.3 | Точная видимость листинга и поиска | 🟢 Done | 2026-10-04 |
+| P1.4 | Идентичность событий в outbox | 🟢 Done | 2026-10-03 |
+| P1.5 | Беспотерьная область CAS | 🟢 Done | 2026-10-04 |
+| P1.6 | Атомарная квота и счётчик ревизий | 🟢 Done | 2026-10-04 |
+| P1.7 | Типы колонок ключей хоста | 🟠 Done with deviations | 2026-10-03 |
+| P1.8 | Нет HTTP 500 для доменных ошибок | 🟢 Done | 2026-10-03 |
+| P1.9 | Стеки middleware и отказ от глобальных биндингов | 🟢 Done | 2026-10-03 |
+| P1.10 | Честные зависимости и авторизация Filament | 🟢 Done | 2026-10-03 |
+| P1.11 | Метаданные и URL | 🟢 Done | 2026-10-03 |
 
 ## 6. Update Log
 
@@ -79,7 +96,44 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-02 | codex/gpt-6.1-sol/high | plan-audit · audit-attention · ATTENTION PA01 (Major): no-barrier mutant survives 4 tests; return P0.2. Fixture/ADR/baseline checks have no finding. Product bytes unchanged. D11 mutation deviation retained. See findings/P0-phase-audit.md. |
 | 2026-10-02 | codex/gpt-6.1-sol/high | plan-run · in-progress · — |
 | 2026-10-02 | codex/gpt-6.1-sol/high | plan-run · decision-pending · PA01 strengthened; serial PG 5/5 GREEN, barrier-only/sequential RED, SQLite/Pint OK. E23 unavailable: Claude quota resets 13:20 Volgograd. Saved waiting-external checkpoint; no terminal GREEN. See artifacts/P0.2-PA01/completion.md. |
+| 2026-10-02 | claude-code/claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
+| 2026-10-03 | claude-code/claude-sonnet-5-5/xhigh | plan-run · closed-green · PA01 repaired: PG 5/5, mutants RED, SQLite/Pint OK; E23 review GREEN (gpt-6.1-sol, same-model D13). Hosted O-3-CI on changed candidate stays phase gate. Evidence: artifacts/P0.2/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex/gpt-6 | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-green · Database/model routing, package gates, V17 and negative controls GREEN. See artifacts/P1.1/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-green · V24 20 passed, negative controls and 15 package gates GREEN. See artifacts/P1.8/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex/gpt-6.1-sol | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol | plan-run · closed-green · V06 3 passed; 9 package gates GREEN. See artifacts/P1.4/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex/gpt-6.1-sol | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-green · P1.9 acceptance GREEN. See artifacts/P1.9/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex/gpt-6.1-sol | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-green · P1.10 acceptance GREEN. See artifacts/P1.10/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex/gpt-6.1-sol | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-green · P1.11 acceptance GREEN. See artifacts/P1.11/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | codex | plan-run · in-progress · — |
+| 2026-10-03 | codex/gpt-6.1-sol/high | plan-run · closed-deviations · P1.7 implemented and validated; known MySQL fresh-install baseline deviation retained for PLAN2.P8.1. See artifacts/P1.7/completion.md. review: grok/grok-4.7 GREEN
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-03 | claude-code | plan-run · in-progress · — |
+| 2026-10-04 | claude-code/claude-opus-5-5/high | plan-run · closed-green · P1.2 green under a global lock matrix; review grok-4.7 not GREEN: 11 findings fixed, 2 quota findings deferred to PLAN2.P1.6. See artifacts/P1.2/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-04 | codex/gpt-6 | plan-run · in-progress · — |
+| 2026-10-04 | codex/gpt-6 | plan-run · closed-green · Exact View listings, scan cursors, batch ACL/abilities and Filament; owner approved Vue fix. All gates GREEN; review: cursor/grok-4.7 GREEN (2 fixed, 1 recheck; 500k unattested). artifacts/P1.3/completion.md. |
+| 2026-10-04 | codex/gpt-6 | plan-run · no-op · write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-04 | executor/codex | plan-run · in-progress · — |
+| 2026-10-04 | codex/gpt-6.1-sol/high | plan-run · closed-green · Lossless BlobScope and scope_key, legacy-preserving migration, repair command and V01/V13/V14 delivered. 12 validation carriers, negative control and whole-work Grok review GREEN. See artifacts/P1.5/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-04 | codex | plan-run · in-progress · — |
+| 2026-10-04 | codex/gpt-6.1-sol/high | plan-run · closed-green · note abbreviated; full text: journal.jsonl:62 |
 
 ## Owner Gates
 
 - P0.1: known deviation
+- P1.2: known deviation
+- P1.7: known deviation

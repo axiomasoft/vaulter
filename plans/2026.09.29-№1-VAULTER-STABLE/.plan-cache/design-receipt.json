@@ -1,37 +1,66 @@
 {
   "adapter_attestation": null,
-  "commit_sha": "a572121a84ac95e86f767a2f104d896bd4b9a017",
+  "commit_sha": "a5d879243720e97b6dd7f1f82d9bf15e4fcf1a4a",
   "continuity": {
     "evidence": [
-      "persisted-context:continue-root"
+      "batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "reason:Claude Code session quota; mandatory D09 independent review unavailable",
+      "started_at:2026-10-02T08:17:07Z",
+      "resume_at:2026-10-02T10:20:00Z",
+      "observed_at:2026-10-02T08:37:59Z",
+      "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+      "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+      "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
+      "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"
     ],
-    "outcome": "continue-root",
-    "reason": "compatible-active-work",
-    "runnable": true,
+    "outcome": "waiting-external",
+    "reason": "external-wait",
+    "runnable": false,
     "schema_version": "session-continuity-decision/v1"
   },
   "digests": {
     "closure": null,
-    "handoff": "sha256:b3c80de588f83c096a894fed120d38dcb387da60f1144a2dc7082a1dea234da9",
-    "plan": "sha256:f727d29f4a9dbb2c2aaea68f25a63f701948ad389cf5767ea5b064eb53b4ff27",
+    "handoff": "sha256:541018a80f4301ac156b06d6a2b8f929555843f5051032da7596dafa0bfe179b",
+    "plan": "sha256:84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
     "state": null
   },
   "journal": null,
-  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1",
+  "next_exact": "waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
   "plan_id": "2026.09.29-№1-VAULTER-STABLE",
   "rationale": {
-    "open_risks": "Повторная проверка исправлений выполнена автором по D08. Роли БД",
-    "remaining": "P0.1 → B0-A (P0.2 → P0.3) и P0.4 → O-3-CI/hosted CI итогового SHA →"
+    "open_risks": "P0.2 In progress, not GREEN. PA01 audit finding pending formal closure until E23. P0.1 mutation scores remain accepted unknowns (D11). No adjacent package, workflow or .gitignore change.",
+    "remaining": "E23 independent full review. Claude Code session quota; no verdict. Resume existing run after actual availability, execute saved review-prompt.txt once, add truthful E23 receipt, pre_final, terminal GREEN and finalize. Unaffected media/root proof reused. Hosted changed-candidate O-3-CI and accepted P0.1 deviations remain phase gates; no automatic repeat audit."
   },
-  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model class | implementation |\n| Effort | medium |\n| Capabilities | — |\n| Context | continue-root |\n| Суть | Дизайн P0 GREEN: перейти к P0.1 по execution-sheet, bootstrap скриптов → --check/PG-preflight → baseline. |\n\n**Native command:**\n\n```text\n$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1\n```",
+  "recommendation": "**Next:** waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | B0-A |\n| Model class | implementation |\n| Model | gpt-6-sol |\n| Effort | medium |\n| Thinking | medium |\n| Context | waiting-external |\n| The bottom line | Resume mandatory D09 review; reuse completed affected validation. |\n\n```session-continuity-decision/v1\n{\"outcome\": \"waiting-external\", \"reason\": \"external-wait\", \"evidence\": [\"batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90\", \"loaded-inputs:reusable\", \"cold-start-cost:0\", \"reason:Claude Code session quota; mandatory D09 independent review unavailable\", \"started_at:2026-10-02T08:17:07Z\", \"resume_at:2026-10-02T10:20:00Z\", \"observed_at:2026-10-02T08:37:59Z\", \"fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e\", \"runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request\", \"continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\", \"checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json\"], \"runnable\": false, \"schema_version\": \"session-continuity-decision/v1\"}\n```\n\n```text\n$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\nMODE: resume PA01 owning repair; mandatory independent full review pending\nENTRANCE: artifacts/P0.2-PA01/checkpoint.json; artifacts/P0.2-PA01/completion.md; findings/P0.2-PA01-review.md\nSCORE: one fresh read-only D09 review GREEN; pre_final allow; terminal journal and finalize\nDO NOT TOUCH: P0.1 mutation scores; P0.3/P0.4; unrelated .gitignore; unchanged validated source\n```",
   "route": {
-    "batch": "solo",
+    "batch": "B0-A",
     "command": null,
-    "context": "continue-root",
-    "model": null,
-    "thinking": null
+    "context": "waiting-external",
+    "continuity": {
+      "evidence": [
+        "batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "reason:Claude Code session quota; mandatory D09 independent review unavailable",
+        "started_at:2026-10-02T08:17:07Z",
+        "resume_at:2026-10-02T10:20:00Z",
+        "observed_at:2026-10-02T08:37:59Z",
+        "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+        "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+        "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
+        "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"
+      ],
+      "outcome": "waiting-external",
+      "reason": "external-wait",
+      "runnable": false,
+      "schema_version": "session-continuity-decision/v1"
+    },
+    "model": "gpt-6-sol",
+    "thinking": "medium"
   },
   "schema_version": "handoff-recommendation-receipt/v1",
   "status": "handoff-persisted",
-  "subject": "P0"
+  "subject": "P1"
 }

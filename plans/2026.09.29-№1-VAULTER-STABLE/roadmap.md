@@ -1,7 +1,7 @@
 # Roadmap — 2026.09.29-№1-VAULTER-STABLE
 
-**Обновлён:** 2026-09-29 · **Соответствует plan.md:** P0 детализирована (P0.1–P0.4), завершение исправлений — bounded recheck по D08; P1–P8 —
-skeleton в `backlog/` (катящийся дизайн, D03)
+**Обновлён:** 2026-10-02 · **Соответствует plan.md:** P0 детализирована (P0.1–P0.4), завершение исправлений — bounded recheck по D08;
+P1 детализирована до закрытия P0 (D12; исполнение — после `task:plan-close … P0`); P2–P8 — skeleton в `backlog/` (катящийся дизайн, D03)
 
 ## Жизненный цикл плана (D03, уточнения P0 — D07/D08)
 
@@ -22,7 +22,7 @@ design audit не требуется; фазовая проверка реали
 | Фаза | Суть | Маршрут (детали — execution-sheet) | Зависимости | Owner gate | Релиз |
 |:--|:--|:--|:--|:--|:--|
 | P0 | окружение, baseline, харнесс конкурентности, фикстура 0.2, ADR 0019–0024 | impl/medium, fr/medium | — | O-1 роль PG, O-2 MySQL | — |
-| P1 | исправления T0 на текущих именах | fr/high, impl/low–high | P0 | O-3 push/PR | 0.3.0 (D02) |
+| P1 | исправления T0 на текущих именах (детализирована, D12) | fr/high, impl/low–high, eco/low | P0 закрыта (D12) | O-3-CI, O-3-PR | 0.3.0 (D02) |
 | P2 | канон имён, миграции, конфиг | impl/low–high (xhigh для переноса — при дизайне) | P1 | O-3 | 0.3.0 |
 | P3 | авторизованный публичный API, профили, ingest, tenancy | fr/high, impl/medium–high | P2 | O-3 | 0.3.0 |
 | P4 | агрегат Document, реестр типов, коллаборация, удаление, sequence | fr/high, impl/low–high | P3 | Docker для хаба (P4.5) | 0.3.0 |
@@ -57,13 +57,23 @@ design audit не требуется; фазовая проверка реали
 Эта таблица — **единственное конкретное per-admission execution-расписание**. Finish 2026-09-29 подтвердил три запуска
 P0 (зависимости P0.1 → B0-A и P0.1 → P0.4) и записал fingerprint дизайна. Исправления D07 требуют повторного finish; перед исполнением нужен GREEN design audit текущего fingerprint.
 Строка 1 — первая (bootstrap скриптов, затем --check/O-1); строки 2 и 3 после P0.1 независимы друг от друга; строка 2 требует GREEN P0.1 и O-2
-до P0.3.
+до P0.3. Строки 4–12 (P1) допускаются только после `task:plan-close … P0`, `task:plan-design … finish` и GREEN
+`task:plan-audit … design` для P1 (D03, D12); порядок 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12.
 
 | Admission | Command | Route | Review | Executor (provider/model + effort) | Independent Reviewer + effort or self-check | Auto-fix executor + effort/limit | Checkpoint | Order / short risk reason |
 |:--|:--|:--|:--|:--|:--|:--|:--|:--|
 | 1 · solo P0.1 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.1` | `implementation/medium` | `light` | `codex/gpt-6-sol/medium` | self-check + affected checks | `codex/gpt-6-sol/medium`, ≤2 rounds | design audit GREEN; bootstrap, затем O-1 preflight | Первым; окружение и baseline — предусловие P0.2/P0.3/P0.4 |
 | 2 · B0-A | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2 P0.3` | `implementation/medium` | `full` | `codex/gpt-6-sol/medium` | `cursor/grok-4.7/high`, fresh | `codex/gpt-6-sol/medium`, ≤2 rounds | P0.1 GREEN; O-2 до P0.3 | P0.2 → P0.3; харнесс и фикстура — доказательная база T0 и upgrade |
 | 3 · solo P0.4 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.4` | `frontier/medium` | `light` | `claude-code/claude-opus-5-5/medium` | self-check + docs build | `claude-code/claude-opus-5-5/medium`, ≤2 rounds | design audit GREEN; P0.1 GREEN и baseline | После P0.1 независим от B0-A; перенос AD в ADR без переосмысления |
+| 4 · solo P1.1 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.1` | `implementation/medium` | `full` | `codex/gpt-6-sol/medium` | `cursor/grok-4.7/high`, fresh | `codex/gpt-6-sol/medium`, ≤2 rounds | P0 закрыта (D12); P1 finish + design audit GREEN | Первым в P1: `VaulterDatabase` нужен P1.2/P1.5/P1.6 |
+| 5 · solo P1.8 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8` | `implementation/low` | `light` | `codex/gpt-6-sol/low` | self-check + affected checks | `codex/gpt-6-sol/low`, ≤2 rounds | P1.1 GREEN | Контракт исключений до P1.2/P1.9 |
+| 6 · solo P1.4 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.4` | `implementation/medium` | `light` | `codex/gpt-6-sol/medium` | self-check + affected checks | `codex/gpt-6-sol/medium`, ≤2 rounds | P1.8 GREEN | `eventId`; независим от остальных |
+| 7 · B1-B | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.9 P1.10 P1.11` | `implementation/medium` | `full` | `codex/gpt-6-sol/medium` | `cursor/grok-4.7/high`, fresh | `codex/gpt-6-sol/medium`, ≤2 rounds | P1.8 GREEN | P1.9 → P1.10 → P1.11; граница аутентификации и авторизация Filament |
+| 8 · solo P1.7 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.7` | `implementation/high` | `full` | `codex/gpt-6-sol/high` | `cursor/grok-4.7/high`, fresh | `codex/gpt-6-sol/high`, ≤2 rounds | P1.1 GREEN; O-2 (MySQL) | До P1.2/P1.5: `PanelTablesBuilder`, хелпер фикстуры, миграция №3 |
+| 9 · solo P1.2 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2` | `frontier/high` | `full` | `claude-code/claude-opus-5-5/high` | `cursor/grok-4.7/high`, fresh | `claude-code/claude-opus-5-5/high`, ≤2 rounds | P1.1, P1.7, P1.8 GREEN | Блокировки дерева, ремонт N04 |
+| 10 · solo P1.3 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.3` | `frontier/high` | `full` | `claude-code/claude-opus-5-5/high` | `cursor/grok-4.7/high`, fresh | `claude-code/claude-opus-5-5/high`, ≤2 rounds | P1.1, P1.8 GREEN | Алгоритм доступа; отдельная сессия по объёму |
+| 11 · solo P1.5 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.5` | `frontier/high` | `full` | `claude-code/claude-opus-5-5/high` | `cursor/grok-4.7/high`, fresh | `claude-code/claude-opus-5-5/high`, ≤2 rounds | P1.1, P1.7 GREEN | Миграция данных CAS, repair-scopes |
+| 12 · solo P1.6 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.6` | `implementation/high` | `full` | `codex/gpt-6-sol/high` | `cursor/grok-4.7/high`, fresh | `codex/gpt-6-sol/high`, ≤2 rounds | P1.2, P1.5 GREEN | Последним: порядок блокировок D21 |
 
 ## P0 — последовательность команд
 
@@ -99,3 +109,16 @@ Failure workflow/job допустим только из-за тех же кла�
 `gh run view <RUN-ID> --log` сохраняется как evidence: в этом шаге `4 passed`, `0 skipped`.
 URL, run ID, SHA, JSON и лог передаются фазовому reviewer. Другой SHA, skipped/failure харнесса или отсутствующий шаг
 не допускают audit GREEN/phase close; отказ разрешения — точное ожидание O-3-CI. Новый product commit требует новый run.
+
+## P1 — последовательность команд (D12)
+
+| # | Шаг | Команда | Кто (provider/model + effort) | Условие старта |
+|:--|:--|:--|:--|:--|
+| 0 | Дизайн фазы (записан 2026-10-02) | `task:plan-design 2026.09.29-№1-VAULTER-STABLE P1` | `claude-code/claude-opus-5-5/high` | — (D12) |
+| 1 | Закрытие P0 | `task:plan-run … P0.2` (ревью PA01) → `task:plan-close 2026.09.29-№1-VAULTER-STABLE P0` | по `handoff.md` | P0.2 GREEN |
+| 2 | Finish дизайна | `task:plan-design 2026.09.29-№1-VAULTER-STABLE finish` | `claude-code/claude-opus-5-5/high` | P0 закрыта; delta assessment при изменении продукта (D12 п.2) |
+| 3 | Design audit | `task:plan-audit 2026.09.29-№1-VAULTER-STABLE design` | `codex/gpt-6.1-sol/high` (не автор дизайна) | finish записан |
+| 4 | Исполнение | строки 4–12 execution-sheet | по строкам | design audit GREEN |
+| 5 | Hosted CI | O-3-CI: `git push -u origin plan2/P1`, `gh workflow run <tests|drive|media|documents|filament>.yml --ref plan2/P1` | владелец/разрешённый агент | локальная Validation всех items; отдельный явный запрос владельца |
+| 6 | Фазовый аудит | `task:plan-audit 2026.09.29-№1-VAULTER-STABLE P1` | не исполнитель P1 | `audit-admission/v2` consent |
+| 7 | Закрытие | `task:plan-close 2026.09.29-№1-VAULTER-STABLE P1` | `claude-code/claude-opus-5-5/high` | аудит GREEN |

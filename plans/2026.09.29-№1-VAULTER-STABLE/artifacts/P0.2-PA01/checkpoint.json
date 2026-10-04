@@ -3,10 +3,10 @@
   "run_id": "d447c95f3c67ef01d7fbfa2f5f18d32b78cd30bc66ad10066c8af395f1f85319",
   "attempt": 2,
   "route": "codex/gpt-6.1-sol/high",
-  "status": "implementation and affected validation complete; mandatory independent review pending",
+  "status": "closed-green: implementation, affected validation and E23 review (GREEN, same-model D13) complete",
   "pre_mutation": "allow (prepare admitted owning repair)",
-  "pre_final": "block:VALIDATION_RECEIPT_MISSING",
-  "missing_evidence": "E23 independent full review under D09",
+  "pre_final": "allow",
+  "missing_evidence": null,
   "changed_file": "packages/core/tests/Concurrency/ForkRaceTest.php",
   "changed_sha256": "8b34fcb19b28aad8b0d0c513c8c6a71ce0472400f1296be2acb87933c4ef02e7",
   "results": [
@@ -227,5 +227,6 @@
     "When quota allows, run one fresh read-only D09 reviewer with saved review-prompt.txt. No DB reruns for unchanged source SHA.",
     "GREEN: add E23, pre_final, closed-green for existing run, finalize. Findings: repair only affected delta and validate it.",
     "Changed-candidate hosted O-3-CI and accepted P0.1 deviations remain phase gates. No automatic repeat audit."
-  ]
+  ],
+  "closed_at": "2026-10-03T12:06:14Z"
 }
