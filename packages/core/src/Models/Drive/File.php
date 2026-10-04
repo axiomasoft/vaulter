@@ -7,7 +7,6 @@ namespace Vaulter\Models\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -22,10 +21,10 @@ use Vaulter\Support\Config;
  * @property int|string      $id
  * @property int|string|null $tenant_id
  * @property int|string      $node_id
- * @property int|string|null $current_version_id
+ * @property int|string|null $current_revision_id
  * @property string|null     $mime_type
  * @property int             $size_bytes
- * @property int             $version_count
+ * @property int             $revision_count
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
@@ -36,11 +35,10 @@ class File extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
-    use SoftDeletes;
 
     /**
-     * Closed guard-list (F-P1.8-02): id/tenant_id/node_id/current_version_id/
-     * size_bytes/version_count/created_by/timestamps are structural or
+     * Closed guard-list (F-P1.8-02): id/tenant_id/node_id/current_revision_id/
+     * size_bytes/revision_count/created_by/timestamps are structural or
      * server-computed bookkeeping — every write path that sets them already uses
      * forceFill() (FileStoreRepository). Only mime_type is a plain scalar left
      * mass-assignable.
@@ -51,9 +49,9 @@ class File extends Model
         'id',
         'tenant_id',
         'node_id',
-        'current_version_id',
+        'current_revision_id',
         'size_bytes',
-        'version_count',
+        'revision_count',
         'created_by',
         'created_at',
         'updated_at',
@@ -86,7 +84,7 @@ class File extends Model
      */
     public function currentVersion(): BelongsTo
     {
-        return $this->belongsTo(Config::fileVersionModel(), 'current_version_id');
+        return $this->belongsTo(Config::fileVersionModel(), 'current_revision_id');
     }
 
     /**
@@ -97,7 +95,7 @@ class File extends Model
     {
         return [
             'size_bytes' => 'integer',
-            'version_count' => 'integer',
+            'revision_count' => 'integer',
         ];
     }
 }

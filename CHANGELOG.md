@@ -9,16 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Canonical 0.3 schema and upgrade migrations №1, №2, №4, №8, №9: drives,
+  file revisions, ordinary grant uniqueness, event and subscription conversion;
+  fresh tables are independent of runtime features (P2.7; see UPGRADE.md).
+
 - Canonical core API: Storage → Drive, FileVersion → FileRevision, Panels → Profiles,
   HostRoleDriver/PermissionResolver → PermissionDriver, Engines → Handlers; no PHP aliases
   (AD03, AD04; see UPGRADE.md for the complete FQN map).
 - File handlers use vendor/name `key()` and `viewer()`; viewer descriptors expose key/props,
   and `NodePresenter::present()` replaces `describe()` (AD14).
-- Activity and webhook enums merged into EventType while preserving 0.2 stored values;
+- Activity and webhook enums merged into EventType with canonical 0.3 values;
   webhook subscriptions exclude upload lifecycle events (AD03, AD04).
 - Core provider delegates to five registrars; own-tables profile API and hooks, including
   the previously invoked booted(), removed. Profile scaffolding is vaulter:make:profile
-  (AD05, AD11). Table names, columns and configuration keys are unchanged in this step.
+  (AD05, AD11). Configuration key normalization follows in P2.5.
 
 
 ### Added

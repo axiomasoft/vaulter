@@ -20,7 +20,6 @@ it('разводит storage по разным панелям одного вл�
     $team = Vaulter::for($host, 'team')->storage();
 
     expect($team->getKey())->not->toEqual($default->getKey())
-        ->and($team->panel)->toBe('team')
-        ->and($team->storage_type)->toBe('public')
+        ->and($team->profile)->toBe('team')
         ->and(Drive::query()->count())->toBe(2);
 });

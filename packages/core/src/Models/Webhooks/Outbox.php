@@ -22,7 +22,7 @@ use Vaulter\Support\Config;
  *
  * @property int|string           $id
  * @property string               $event_id
- * @property string               $panel
+ * @property string               $profile
  * @property string|null          $topic
  * @property string               $event
  * @property array<string, mixed> $payload

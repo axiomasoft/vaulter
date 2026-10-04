@@ -44,7 +44,7 @@ final readonly class RestoreNodeAction
         $rootId = $this->tree->destinationId(storage: $node->storage, into: null);
 
         return $this->database->transaction(function () use ($node, $rootId, $actorId): Node {
-            $this->database->lockTree($node->storage_id);
+            $this->database->lockTree($node->drive_id);
 
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id, $rootId]), $node->id));
 
@@ -98,7 +98,7 @@ final readonly class RestoreNodeAction
 
         $parent = $locked->get(Identity::stringify($originalParentId));
 
-        if (!$parent instanceof Node || !$this->tree->sameStorage($parent, $node->storage_id)) {
+        if (!$parent instanceof Node || !$this->tree->sameStorage($parent, $node->drive_id)) {
             return $rootId;
         }
 

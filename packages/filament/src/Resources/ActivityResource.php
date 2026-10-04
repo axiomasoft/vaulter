@@ -51,7 +51,7 @@ final class ActivityResource extends Resource
     /**
      * Access-aware listing (F-P1.10-01): narrow to activity rows whose target is a
      * node in the acting admin's grant-reachable candidate set. Every recorded verb
-     * targets a node (storage.created targets its root folder — see
+     * targets a node (drive.created targets its root folder — see
      * ActivityRecorder), so `target_type = <node model>` + `target_id IN
      * (candidates)` covers the feed; there is no target-less row a candidate-based
      * narrowing would need to special-case. Empty candidate set (no actor, or an
@@ -89,7 +89,7 @@ final class ActivityResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (EventType $state): string => $state->label()),
                 TextEntry::make('created_at')->dateTime('d.m.Y H:i:s'),
-                TextEntry::make('storage_id')->label('Storage')->placeholder('—'),
+                TextEntry::make('drive_id')->label('Storage')->placeholder('—'),
             ])->columns(3),
 
             Section::make('Actor')->schema([
@@ -131,7 +131,7 @@ final class ActivityResource extends Resource
                     ->formatStateUsing(fn (?string $state, Activity $record): string => $state === null ? '—' : $state.' #'.$record->target_id)
                     ->toggleable(),
 
-                TextColumn::make('storage_id')
+                TextColumn::make('drive_id')
                     ->label('Storage')
                     ->placeholder('—')
                     ->sortable()

@@ -110,7 +110,7 @@ it('resume после разрыва: второй клиент читает HEA
     // The reassembled bytes are intact (server-stitched at the authoritative offset).
     $version = $node->currentVersion()->first();
     expect($version->size_bytes)->toBe(16)
-        ->and($version->content_sha256)->toBe(hash('sha256', $bytes));
+        ->and($version->sha256)->toBe(hash('sha256', $bytes));
 });
 
 it('отвергает PATCH с offset, не совпадающим с серверным — байты расходятся (tus 409, F-P1.4-02)', function (): void {
@@ -181,8 +181,8 @@ it('лживый client sha256 игнорируется — адрес счит�
 
     // The committed version's hash is the REAL content hash, not the client's lie.
     $version = $node->currentVersion()->first();
-    expect($version->content_sha256)->toBe(hash('sha256', $bytes))
-        ->and($version->content_sha256)->not->toBe(str_repeat('f', 64));
+    expect($version->sha256)->toBe(hash('sha256', $bytes))
+        ->and($version->sha256)->not->toBe(str_repeat('f', 64));
 });
 
 it('квота: сборка сверх квоты отклоняется на commit', function (): void {
@@ -237,7 +237,7 @@ it('abort чистит staged temp и помечает aborted', function (): vo
     expect($session->refresh()->status)->toBe(UploadStatus::Aborted);
 });
 
-it('новая версия: резюмируемая загрузка на существующий узел бампит version_no', function (): void {
+it('новая версия: резюмируемая загрузка на существующий узел бампит number', function (): void {
     // Seed a v1 file via a first resumable upload.
     $storage = UploadTestHelpers::storage();
     $v1 = app(UploadSessionManager::class)->initiate(new UploadInitData(
@@ -266,7 +266,7 @@ it('новая версия: резюмируемая загрузка на су
 
     $file = $updated->file;
 
-    expect($file->version_count)->toBe(2)
+    expect($file->revision_count)->toBe(2)
         ->and($updated->current_version_id)->not->toEqual($firstVersionId)
-        ->and($file->currentVersion->version_no)->toBe(2);
+        ->and($file->currentVersion->number)->toBe(2);
 });

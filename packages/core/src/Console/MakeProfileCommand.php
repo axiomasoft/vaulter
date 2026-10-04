@@ -50,14 +50,14 @@ final class MakeProfileCommand extends Command
     private function writeProvider(string $studly, string $id, bool $force): ?string
     {
         $namespace = 'App\\Vaulter\\Profiles';
-        $class = "{$studly}Profile";
+        $class = $studly.'Profile';
         $directory = app_path('Vaulter/Profiles');
         $this->files->ensureDirectoryExists($directory);
 
-        $path = "{$directory}/{$class}.php";
+        $path = sprintf('%s/%s.php', $directory, $class);
 
         if (!$force && $this->files->exists($path)) {
-            $this->components->error("Profile provider [{$namespace}\\{$class}] already exists. Pass --force to overwrite.");
+            $this->components->error(sprintf('Profile provider [%s\%s] already exists. Pass --force to overwrite.', $namespace, $class));
 
             return null;
         }
@@ -68,7 +68,7 @@ final class MakeProfileCommand extends Command
             id: $id,
         ));
 
-        $this->components->task("Profile provider app/Vaulter/Profiles/{$class}.php");
+        $this->components->task(sprintf('Profile provider app/Vaulter/Profiles/%s.php', $class));
 
         return $path;
     }
@@ -78,8 +78,8 @@ final class MakeProfileCommand extends Command
         $stub = $this->files->get($this->stubPath('profile-provider'));
 
         return str_replace(
-            ['{{ namespace }}', '{{ class }}', '{{ id }}', '{{ storage_type }}', '{{ host }}', '{{ grants }}'],
-            [$namespace, $class, $id, $this->resolveStorageType(), $this->renderHost(), $this->renderGrants()],
+            ['{{ namespace }}', '{{ class }}', '{{ id }}', '{{ host }}', '{{ grants }}'],
+            [$namespace, $class, $id, $this->renderHost(), $this->renderGrants()],
             $stub,
         );
     }
@@ -102,24 +102,19 @@ final class MakeProfileCommand extends Command
             : '';
     }
 
-    private function resolveStorageType(): string
-    {
-        return 'private';
-    }
-
     private function printNextSteps(string $studly, string $id): void
     {
-        $providerFqcn = "App\\Vaulter\\Profiles\\{$studly}Profile";
+        $providerFqcn = sprintf('App\Vaulter\Profiles\%sProfile', $studly);
 
         $this->newLine();
-        $this->components->info("Profile [{$id}] scaffolded.");
+        $this->components->info(sprintf('Profile [%s] scaffolded.', $id));
         $this->line('Next steps:');
         $this->line("  1. Register the provider in <info>config/vaulter.php</info> under 'panels':");
-        $this->line("         \\{$providerFqcn}::class,");
+        $this->line(sprintf('         \%s::class,', $providerFqcn));
     }
 
     private function stubPath(string $name): string
     {
-        return __DIR__."/../../stubs/profile/{$name}.stub";
+        return __DIR__.sprintf('/../../stubs/profile/%s.stub', $name);
     }
 }

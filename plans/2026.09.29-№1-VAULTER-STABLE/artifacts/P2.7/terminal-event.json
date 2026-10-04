@@ -1,0 +1,115 @@
+{
+  "ts": "2026-10-04T18:29:35Z",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P2.7",
+  "command": "plan-run",
+  "session_id": "01a107c3-d4c5-7b02-afda-3c592a7fd983",
+  "run_id": "e9170bf0bf7e19bfba10a5c68dd9258681adfaa3a982d15102bced6a0cbeb990",
+  "attempt": 1,
+  "actor": "codex/gpt-6.1-sol/high",
+  "friction": [
+    "deviation"
+  ],
+  "result": "closed-deviations",
+  "cost_usd": null,
+  "num_turns": null,
+  "duration_ms": null,
+  "note": "P2.7 complete. D18: actual migration order. D19: no new audits; Grok FINDINGS fixed, targeted checks green. MySQL baseline: P8.1. Evidence: artifacts/P2.7/completion.md.\nwrite-site: pre_mutation: allow · pre_final: allow",
+  "decision": {
+    "signal_class": "acceptance",
+    "scope_class": "item",
+    "action": "close-deviations",
+    "recovered": true,
+    "terminal": true,
+    "terminal_evidence": {
+      "schema_version": "terminal-evidence/v1",
+      "spec_sha256": "3d0286467ea18f3253a464407abe4a3680e60dfff949e93b6a2b8568db7940d6",
+      "validation": [
+        {
+          "carrier": "- Code Guidance → пусто (кроме перечисленных исключений).",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/code-guidance.txt",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/self-check.md",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade packages/core/tests/Schema` → 0 failed, 0 skipped.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/postgresql-grid.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-upgrade-schema.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/review-fix-validation.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/review-fix-pg-upgrade-schema.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/CanonicalSchemaTest.php` → 0 failed (падение,\n  воспроизводимое на дереве P2.1 без изменений P2.7, — finding с владельцем P8.1, как правило MySQL P1.7).",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-baseline-classification.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-p21-baseline.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-candidate.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Сетка P1 на PG → 0 failed, 0 skipped; гейт всех пакетов → exit 0.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/postgresql-grid.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/postgresql-applicability.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/package-gates.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Негативные контроли: (1) убрать `UPDATE … v_webhook_endpoints` из №9 → `Canon03UpgradeTest` красный (старое значение в\n  подписке); (2) убрать проверку (a) из preflight → `UpgradePreflightTest` красный; вернуть оба.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/negative-controls.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/negative-subscriptions.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/restored-subscriptions.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/negative-preflight.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/restored-preflight.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/completion.md"
+          ]
+        }
+      ],
+      "repair_exhausted": {
+        "classifier": "recoverable-validation-gap/v1",
+        "failed_carrier": "- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/CanonicalSchemaTest.php` → 0 failed (падение,\n  воспроизводимое на дереве P2.1 без изменений P2.7, — finding с владельцем P8.1, как правило MySQL P1.7).",
+        "verdict": "outside-scope",
+        "reason": "The declared MySQL fresh-install command and archived P2.1 baseline both reproduce error 1215 for sibling_active STORED over cascading parent_id FK. P2.7 explicitly allows this baseline finding with owner P8.1; fixing the tree-generated-index contract is outside this item.",
+        "continuation": "PLAN2.P8.1: resolve the MySQL fresh-install conflict and repeat the complete installation carrier.",
+        "evidence_ids": [
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-baseline-classification.json",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-p21-baseline.log",
+          "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/mysql-candidate.log"
+        ]
+      }
+    }
+  },
+  "batch_receipt": {
+    "batch_id": "solo",
+    "completed_prefix": [
+      "P2.7"
+    ],
+    "handoff_digest": "e00ca15a786a98e44694a2ecb3e7f6aa2bea9b8c6752dcbaa9e1a47cc35575d8",
+    "invocation_digest": "ac54af1430b3d8db7f419e8eafcace23d1f3b64bc6c1751bba294c862f4630e8",
+    "membership": [
+      "P2.7"
+    ],
+    "routing_digest": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+    "schema_version": "batch-receipt/v1",
+    "spec_digest": "3d0286467ea18f3253a464407abe4a3680e60dfff949e93b6a2b8568db7940d6",
+    "stop_disposition": "continue"
+  }
+}

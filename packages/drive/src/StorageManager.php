@@ -11,7 +11,6 @@ use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -75,17 +74,16 @@ final readonly class StorageManager
     {
         return $this->database->transaction(function () use ($owner, $panel): Drive {
             $storage = $this->store->create([
-                'panel' => $panel,
+                'profile' => $panel,
                 'owner_type' => $owner->getMorphClass(),
                 'owner_id' => $owner->getKey(),
                 'name' => $this->defaultName($owner),
                 'disk' => Config::defaultDisk(),
-                'storage_type' => $this->storageType($panel),
                 'used_bytes' => 0,
             ]);
 
             $root = $this->nodes->create([
-                'storage_id' => $storage->id,
+                'drive_id' => $storage->id,
                 'parent_id' => null,
                 'kind' => NodeKind::Folder,
                 'name' => '',
@@ -114,7 +112,7 @@ final readonly class StorageManager
 
         return $this->database->transaction(function () use ($storage): Node {
             $root = $this->nodes->create([
-                'storage_id' => $storage->id,
+                'drive_id' => $storage->id,
                 'parent_id' => null,
                 'kind' => NodeKind::Folder,
                 'name' => '',
@@ -125,11 +123,6 @@ final readonly class StorageManager
 
             return $root;
         });
-    }
-
-    private function storageType(string $panel): string
-    {
-        return app(ProfileRegistry::class)->get($panel)->storageTypeKey();
     }
 
     private function defaultName(Model $owner): string

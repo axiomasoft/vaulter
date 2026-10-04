@@ -10,6 +10,10 @@ use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 uses(LoadsV02Fixture::class);
 
 afterEach(function (): void {
+    $db = app(VaulterDatabase::class)->connection();
+    if ($db->getDriverName() === 'pgsql' && str_ends_with($db->getDatabaseName(), '_test') && $db->transactionLevel() === 0) {
+        $db->getSchemaBuilder()->dropAllTables();
+    }
     RefreshDatabaseState::$migrated = false;
 });
 

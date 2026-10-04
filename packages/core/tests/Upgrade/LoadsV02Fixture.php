@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 
 trait LoadsV02Fixture
 {
-    protected function loadV02Fixture(string $strategy): void
+    protected function loadV02Fixture(string $strategy, bool $preflightRed = false): void
     {
         if (!in_array($strategy, ['bigint', 'ulid'], true)) {
             throw new RuntimeException('Unknown v0.2 fixture strategy.');
@@ -26,7 +26,7 @@ trait LoadsV02Fixture
             throw new RuntimeException('Fixture loading requires an unwrapped PostgreSQL *_test database in APP_ENV=testing.');
         }
 
-        $path = dirname(__DIR__, 4).'/tests/fixtures/v0.2.0/pgsql-'.$strategy.'.sql';
+        $path = dirname(__DIR__, 4).'/tests/fixtures/v0.2.0/pgsql-'.$strategy.($preflightRed ? '-preflight-red' : '').'.sql';
         if (!is_file($path)) {
             throw new RuntimeException('Missing committed fixture: '.$path);
         }

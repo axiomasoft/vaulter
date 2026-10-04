@@ -841,16 +841,16 @@ final class Config
         return is_string($value) ? $value : 'v_';
     }
 
-    /**
-     * Resolve a Vaulter table name: the configured prefix plus the base name, or
-     * the base name mapped through config('vaulter.table_names') when present, so
-     * an install may rename a single entity's table without a prefix change.
-     */
     public static function table(string $name): string
     {
-        $mapped = config("vaulter.table_names.{$name}");
+        return self::tablePrefix().$name;
+    }
 
-        $base = is_string($mapped) && $mapped !== '' ? $mapped : $name;
+    /** Resolve a 0.2 physical table name for upgrade migrations only. */
+    public static function legacyTable(string $legacyEntity): string
+    {
+        $mapped = config('vaulter.table_names.'.$legacyEntity);
+        $base = is_string($mapped) && $mapped !== '' ? $mapped : $legacyEntity;
 
         return self::tablePrefix().$base;
     }
@@ -1507,11 +1507,13 @@ final class Config
         $attributes = [];
 
         foreach ($value as $type => $keys) {
-            if (!is_string($type) || !is_array($keys)) {
+            if (!is_string($type)) {
                 continue;
             }
-
-            $attributes[$type] = array_values(array_filter($keys, 'is_string'));
+            if (!is_array($keys)) {
+                continue;
+            }
+            $attributes[$type] = array_values(array_filter($keys, is_string(...)));
         }
 
         return $attributes;
@@ -1572,9 +1574,9 @@ final class Config
             return app(ProfileRegistry::class)->get($panel)->featureEnabled($feature);
         }
 
-        $value = config("vaulter.features.{$feature}");
+        $value = config('vaulter.features.'.$feature);
 
-        return is_bool($value) ? $value : false;
+        return is_bool($value) && $value;
     }
 
     /**

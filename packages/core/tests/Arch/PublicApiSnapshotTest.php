@@ -7,9 +7,11 @@ use Vaulter\Access\AclFolder;
 use Vaulter\Access\ExactListing;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
@@ -67,14 +69,14 @@ if (!function_exists('vaulterSnapshotType')) {
         }
 
         if ($type instanceof ReflectionUnionType) {
-            $parts = array_map('vaulterSnapshotType', $type->getTypes());
+            $parts = array_map(vaulterSnapshotType(...), $type->getTypes());
             sort($parts);
 
             return implode('|', $parts);
         }
 
         if ($type instanceof ReflectionIntersectionType) {
-            $parts = array_map('vaulterSnapshotType', $type->getTypes());
+            $parts = array_map(vaulterSnapshotType(...), $type->getTypes());
             sort($parts);
 
             return implode('&', $parts);
@@ -109,7 +111,7 @@ if (!function_exists('vaulterSnapshotValue')) {
         }
 
         if (is_array($value)) {
-            return '['.implode(', ', array_map('vaulterSnapshotValue', $value)).']';
+            return '['.implode(', ', array_map(vaulterSnapshotValue(...), $value)).']';
         }
 
         if (is_int($value) || is_float($value)) {
@@ -232,7 +234,7 @@ if (!function_exists('vaulterSnapshotFacade')) {
     /** Freeze the facade by its `@method` docblock (surface over the resolved manager). */
     function vaulterSnapshotFacade(string $facadeFqcn): string
     {
-        $doc = (new ReflectionClass($facadeFqcn))->getDocComment() ?: '';
+        $doc = new ReflectionClass($facadeFqcn)->getDocComment() ?: '';
         preg_match_all('/@method\s+(.+)$/m', $doc, $matches);
 
         $methods = array_map(
@@ -283,10 +285,11 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     // would make the whole freeze an inert no-op.
     expect($contracts)->not->toBe([]);
 
-    $blocks = array_map('vaulterSnapshotInterface', $contracts);
+    $blocks = array_map(vaulterSnapshotInterface(...), $contracts);
     foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
         $blocks[] = vaulterSnapshotInterface($class);
     }
+
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotInterface(BlobScope::class);
     $blocks[] = vaulterSnapshotInterface(Config::class);
@@ -297,6 +300,12 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
         $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
     }
+
+    $blocks[] = vaulterSnapshotInterface(UpgradePreflightException::class);
+    $blocks[] = EventType::class."\n".implode("\n", array_map(
+        static fn (EventType $case): string => '  '.$case->name.' = '.$case->value,
+        EventType::cases(),
+    ));
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
 
     foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Events') as $eventClass) {
@@ -306,6 +315,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
             $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '')
                 .vaulterSnapshotType($property->getType()).' $'.$property->getName();
         }
+
         sort($properties);
         $blocks[] = vaulterSnapshotInterface($eventClass)."\n".implode("\n", $properties);
     }

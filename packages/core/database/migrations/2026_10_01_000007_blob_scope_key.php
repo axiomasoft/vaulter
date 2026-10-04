@@ -27,7 +27,7 @@ return new class extends Migration
                 $key = match ($row->dedup_scope) {
                     'global' => 'global',
                     'tenant' => $row->tenant_id === null ? 'legacy:tnull' : 'tenant:'.$this->identifier($row->tenant_id),
-                    'storage' => $row->storage_id === null ? 'legacy:snull' : 'drive:'.$this->identifier($row->storage_id),
+                    'storage' => $row->drive_id === null ? 'legacy:snull' : 'drive:'.$this->identifier($row->drive_id),
                     default => throw new RuntimeException('Unknown legacy blob dedup scope.'),
                 };
                 $db->table($name)->where('id', $row->id)->update(['scope_key' => $key]);
@@ -67,7 +67,7 @@ return new class extends Migration
 
         if (!$schema->hasIndex($name, $name.'_dedup_uniq')) {
             $columns = match (Config::dedupScope()) {
-                'storage' => ['storage_id', 'sha256'],
+                'storage' => ['drive_id', 'sha256'],
                 'tenant' => ['tenant_id', 'sha256'],
                 default => ['sha256'],
             };

@@ -29,9 +29,9 @@ use Vaulter\Support\Config;
  * subclass for tenant scoping.
  *
  * @property int|string      $id
- * @property string          $panel
+ * @property string          $profile
  * @property int|string|null $tenant_id
- * @property int|string      $storage_id
+ * @property int|string      $drive_id
  * @property int|string|null $parent_id
  * @property NodeKind        $kind
  * @property string          $name
@@ -66,7 +66,7 @@ class Node extends Model
     /**
      * Closed allow-list (F-P1.8-02): only the handful of columns a caller
      * legitimately mass-assigns through fill()/create() with untrusted-shaped
-     * arrays. Everything structural/security (id, tenant_id, storage_id,
+     * arrays. Everything structural/security (id, tenant_id, drive_id,
      * parent_id, current_version_id, file_id, owner_id, shortcut_target_id, the
      * trashed_* triplet, timestamps) is excluded — every write path that sets
      * those columns already uses forceFill() (NodeStoreRepository) and is
@@ -133,7 +133,7 @@ class Node extends Model
      */
     public function scopeTreeOf(Builder $query, int|string $storageId): Builder
     {
-        return $query->where('storage_id', $storageId);
+        return $query->where('drive_id', $storageId);
     }
 
     /**
@@ -157,7 +157,7 @@ class Node extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(Config::storageModel(), 'storage_id');
+        return $this->belongsTo(Config::storageModel(), 'drive_id');
     }
 
     /**

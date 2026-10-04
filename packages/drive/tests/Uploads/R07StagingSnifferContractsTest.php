@@ -23,7 +23,7 @@ function r07PngBytes(): string
     return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAD0lEQVR42mP8z5BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', true) ?: '';
 }
 
-it('resolves the staging disk from storage_id when the storage relation is not loaded', function (): void {
+it('resolves the staging disk from drive_id when the storage relation is not loaded', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage);
     $session->unsetRelation('storage');

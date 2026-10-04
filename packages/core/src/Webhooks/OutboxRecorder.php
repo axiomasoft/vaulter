@@ -48,12 +48,12 @@ class OutboxRecorder
         return $this->stage(
             event: EventType::GrantCreated,
             eventId: $event->eventId,
-            panel: $node->panel,
+            panel: $node->profile,
             topic: $this->id($node->getKey()),
             payload: [
                 'grant_id' => $this->id($event->grant->getKey()),
                 'node_id' => $this->id($node->getKey()),
-                'storage_id' => $this->id($node->storage_id),
+                'drive_id' => $this->id($node->drive_id),
                 'subject_type' => $event->grant->subject_type,
                 'subject_id' => $this->id($event->grant->subject_id),
                 'level' => $event->grant->level->value,
@@ -69,11 +69,11 @@ class OutboxRecorder
         return $this->stage(
             event: EventType::GrantRevoked,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->id($event->node->getKey()),
-                'storage_id' => $this->id($event->node->storage_id),
+                'drive_id' => $this->id($event->node->drive_id),
                 'subject_type' => $event->subject->type,
                 'subject_id' => $this->id($event->subject->id),
                 'revoked' => $event->revoked,
@@ -89,14 +89,14 @@ class OutboxRecorder
         return $this->stage(
             event: EventType::ShareCreated,
             eventId: $event->eventId,
-            panel: $node->panel,
+            panel: $node->profile,
             topic: $this->id($node->getKey()),
             // The raw token / token_hash is NEVER serialized — only the non-secret
             // token_prefix travels (slim-payload hardening).
             payload: [
                 'share_id' => $this->id($event->share->getKey()),
                 'node_id' => $this->id($node->getKey()),
-                'storage_id' => $this->id($node->storage_id),
+                'drive_id' => $this->id($node->drive_id),
                 'token_prefix' => $event->share->token_prefix,
                 'level' => $event->share->level->value,
                 'scope' => $event->share->scope->value,
@@ -113,12 +113,12 @@ class OutboxRecorder
         return $this->stage(
             event: EventType::ShareRevoked,
             eventId: $event->eventId,
-            panel: $node->panel,
+            panel: $node->profile,
             topic: $this->id($node->getKey()),
             payload: [
                 'share_id' => $this->id($event->share->getKey()),
                 'node_id' => $this->id($node->getKey()),
-                'storage_id' => $this->id($node->storage_id),
+                'drive_id' => $this->id($node->drive_id),
                 'token_prefix' => $event->share->token_prefix,
             ],
             actorId: $event->actorId,
@@ -162,7 +162,7 @@ class OutboxRecorder
                 $outbox = new $outboxClass;
                 $outbox->forceFill([
                     'event_id' => $eventId,
-                    'panel' => $panel,
+                    'profile' => $panel,
                     'topic' => $topic,
                     'event' => $event->value,
                     'payload' => $payload,

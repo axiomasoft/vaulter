@@ -12,7 +12,6 @@ final class Profile
         private string $id = '',
         private ?string $hostModel = null,
         private bool $hasGrants = true,
-        private string $storageType = 'private',
         private array $features = [],
     ) {}
 
@@ -44,13 +43,6 @@ final class Profile
         return $this;
     }
 
-    public function storageType(string $type): self
-    {
-        $this->storageType = $type;
-
-        return $this;
-    }
-
     /** @param array<string, bool> $flags */
     public function features(array $flags): self
     {
@@ -74,11 +66,6 @@ final class Profile
     public function hostModel(): ?string
     {
         return $this->hostModel;
-    }
-
-    public function storageTypeKey(): string
-    {
-        return $this->storageType;
     }
 
     public function hasGrants(): bool

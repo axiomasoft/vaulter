@@ -78,7 +78,7 @@ it('R07Exception keeps QuotaExceededException forStorage message and 413 render 
 
     expect($exception->getMessage())->toBe(
         '[Vaulter] Upload of 20 bytes exceeds the quota for storage [7] (used 90 of 100). '.
-        'Fix: raise v_storages.quota_bytes, free space, or set quota_bytes to null for unlimited. '.
+        'Fix: raise v_drives.quota_bytes, free space, or set quota_bytes to null for unlimited. '.
         'Docs: '.r07ErrorDocs('quota-exceeded'),
     );
 

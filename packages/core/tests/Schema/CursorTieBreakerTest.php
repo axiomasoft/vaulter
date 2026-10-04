@@ -41,11 +41,11 @@ it('search() cursor pagination does not skip a same-name row across the page bou
     // scoped per-parent (ADR-0005), so this is a legitimate, common shape:
     // two files named identically in two different folders.
     $file1 = ForceCreates::make(Node::class, [
-        'storage_id' => $storage->id, 'parent_id' => $folderA->id,
+        'drive_id' => $storage->id, 'parent_id' => $folderA->id,
         'kind' => NodeKind::File, 'name' => 'duplicate-name',
     ]);
     $file2 = ForceCreates::make(Node::class, [
-        'storage_id' => $storage->id, 'parent_id' => $folderB->id,
+        'drive_id' => $storage->id, 'parent_id' => $folderB->id,
         'kind' => NodeKind::File, 'name' => 'duplicate-name',
     ]);
 
@@ -68,11 +68,11 @@ it('trashed() cursor pagination does not skip a same-timestamp row across the pa
     $table = Config::table('nodes');
 
     $file1 = ForceCreates::make(Node::class, [
-        'storage_id' => $storage->id, 'parent_id' => $root->id,
+        'drive_id' => $storage->id, 'parent_id' => $root->id,
         'kind' => NodeKind::File, 'name' => 'trashed-1',
     ]);
     $file2 = ForceCreates::make(Node::class, [
-        'storage_id' => $storage->id, 'parent_id' => $root->id,
+        'drive_id' => $storage->id, 'parent_id' => $root->id,
         'kind' => NodeKind::File, 'name' => 'trashed-2',
     ]);
 

@@ -33,7 +33,7 @@ class ActivityStoreRepository
         $activity = new $model;
         $activity->forceFill([
             'tenant_id' => $command->tenantId,
-            'storage_id' => $command->storageId,
+            'drive_id' => $command->storageId,
             'actor_type' => $command->actorType,
             'actor_id' => $command->actorId,
             'verb' => $command->verb->value,

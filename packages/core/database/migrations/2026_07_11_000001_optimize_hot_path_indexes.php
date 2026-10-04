@@ -30,14 +30,14 @@ return new class extends Migration
     public function up(): void
     {
         $this->addTrashedAtIndexIfMissing();
-        $this->dropIndexByColumnsIfPresent(table: Config::table('nodes'), columns: ['storage_id', 'parent_id']);
+        $this->dropIndexByColumnsIfPresent(table: Config::table('nodes'), columns: ['drive_id', 'parent_id']);
         $this->dropIndexByColumnsIfPresent(table: Config::table('blobs'), columns: ['status']);
         $this->dropDuplicateActivityCreatedAtIndex();
     }
 
     public function down(): void
     {
-        $this->restoreIndexByColumnsIfMissing(table: Config::table('nodes'), columns: ['storage_id', 'parent_id']);
+        $this->restoreIndexByColumnsIfMissing(table: Config::table('nodes'), columns: ['drive_id', 'parent_id']);
         $this->restoreIndexByColumnsIfMissing(table: Config::table('blobs'), columns: ['status']);
         $this->restoreActivityCreatedAtIndexIfMissing();
         $this->dropTrashedAtIndexIfPresent();
@@ -51,11 +51,11 @@ return new class extends Migration
             return;
         }
 
-        $name = "{$table}_trashed_idx";
+        $name = $table.'_trashed_idx';
         $driver = Schema::getConnection()->getDriverName();
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
-            DB::statement("CREATE INDEX {$name} ON {$table} (trashed_at) WHERE trashed_at IS NOT NULL");
+            DB::statement(sprintf('CREATE INDEX %s ON %s (trashed_at) WHERE trashed_at IS NOT NULL', $name, $table));
 
             return;
         }
@@ -128,7 +128,7 @@ return new class extends Migration
             return;
         }
 
-        $keep = "{$table}_created_idx";
+        $keep = $table.'_created_idx';
 
         foreach ($this->indexesOnColumns($table, ['created_at']) as $index) {
             if ($index['name'] === $keep) {

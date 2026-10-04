@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 /**
  * v_upload_parts — the normalised per-part record (master plan §2.8 / D16 / M3a).
@@ -17,10 +16,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Config::featureEnabled('uploads')) {
-            return;
-        }
-
         (new SchemaBuilder)->createTable(
 
             entity: 'upload_parts',

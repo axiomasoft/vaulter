@@ -120,7 +120,7 @@ it('create into a non-root folder stores that folder as target_parent_id', funct
     $root = $storage->rootNode()->first();
     $folder = new Node;
     $folder->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => 'nested',
@@ -245,10 +245,10 @@ it('404s when the session storage row is missing on HEAD', function (): void {
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 17);
     if (DB::connection()->getDriverName() === 'pgsql') {
         $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_storage_id_foreign"');
+        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
     }
 
-    UploadSession::query()->whereKey($session->getKey())->update(['storage_id' => 9_999_999]);
+    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => 9_999_999]);
 
     $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$session->upload_id, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNotFound();
@@ -259,7 +259,7 @@ it('404s when parent_id belongs to another storage on create', function (): void
     $other = Vaulter::for(DriveTestHelpers::host())->storage();
     $foreignFolder = new Node;
     $foreignFolder->forceFill([
-        'storage_id' => $other->getKey(),
+        'drive_id' => $other->getKey(),
         'parent_id' => $other->root_node_id,
         'kind' => NodeKind::Folder,
         'name' => 'foreign',

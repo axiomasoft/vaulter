@@ -45,7 +45,7 @@ it('claims at most 1000 oldest due deliveries per tick and drains the rest witho
     for ($index = 0; $index < 1003; $index++) {
         $rows[] = [
             'endpoint_id' => $endpoint->getKey(),
-            'event' => 'node.created',
+            'event' => 'folder.created',
             'payload' => json_encode(['event_id' => 'retry-'.$index], JSON_THROW_ON_ERROR),
             'status' => 'failed',
             'attempts' => 1,

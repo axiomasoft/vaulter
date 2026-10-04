@@ -42,7 +42,7 @@ trait ExercisesWideNodeListing
             for ($i = $start; $i <= min($start + 499, $count); $i++) {
                 $rows[] = [
                     'id' => $this->wideNodeKey($i),
-                    'storage_id' => $storage->getKey(),
+                    'drive_id' => $storage->getKey(),
                     'parent_id' => $anchor->getKey(),
                     'kind' => NodeKind::Folder->value,
                     'name' => 'leaf-'.str_pad((string) $i, 6, '0', STR_PAD_LEFT),

@@ -7,7 +7,6 @@ namespace Vaulter\Models\Access;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
@@ -41,8 +40,6 @@ use Vaulter\Support\Config;
  * @property int             $permissions
  * @property Effect          $effect
  * @property GrantScope      $scope
- * @property bool            $inherited
- * @property int|string|null $inherited_from_node_id
  * @property Carbon|null     $expires_at
  * @property int|string|null $granted_by
  * @property Carbon|null     $created_at
@@ -54,7 +51,6 @@ class NodeGrant extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
-    use SoftDeletes;
 
     /**
      * Fully guarded (F-P1.8-02): an ACL row — every column (subject, level,
@@ -139,7 +135,6 @@ class NodeGrant extends Model
             'effect' => Effect::class,
             'scope' => GrantScope::class,
             'permissions' => 'integer',
-            'inherited' => 'boolean',
             'expires_at' => 'datetime',
         ];
     }

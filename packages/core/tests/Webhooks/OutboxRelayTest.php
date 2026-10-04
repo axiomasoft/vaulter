@@ -45,7 +45,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     $message = app(OutboxRecorder::class)->stage(
         event: EventType::FolderCreated,
         eventId: $event->eventId,
-        panel: $node->panel,
+        panel: $node->profile,
         topic: (string) $node->getKey(),
         payload: ['node_id' => (string) $node->getKey()],
         actorId: 7,
@@ -55,14 +55,13 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     $delivery = WebhookDelivery::query()->sole();
     $job = new DeliverWebhook(deliveryId: (string) $delivery->getKey());
     $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+
     $delivery->refresh();
     expect($delivery->status)->toBe('failed');
 
     $delivery->forceFill(['next_retry_at' => now()->subSecond()])->save();
     $this->artisan('vaulter:relay-outbox')->assertSuccessful();
-    Bus::assertDispatched(DeliverWebhook::class, function (DeliverWebhook $retry) use ($delivery): bool {
-        return (new ReflectionProperty($retry, 'deliveryId'))->getValue($retry) === (string) $delivery->getKey();
-    });
+    Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $retry): bool => new ReflectionProperty($retry, 'deliveryId')->getValue($retry) === (string) $delivery->getKey());
     $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
 
     expect($delivery->refresh()->status)->toBe('delivered')
@@ -91,7 +90,7 @@ it('fans a pending outbox row out to a subscribed active endpoint and dispatches
 
     expect($deliveries)->toHaveCount(1)
         ->and((string) $deliveries->first()->endpoint_id)->toBe((string) $endpoint->getKey())
-        ->and($deliveries->first()->event)->toBe('node.created')
+        ->and($deliveries->first()->event)->toBe('folder.created')
         ->and($deliveries->first()->status)->toBe('pending')
         ->and($deliveries->first()->attempts)->toBe(0)
         ->and($deliveries->first()->payload['node_id'])->toBe('node-1');
@@ -128,7 +127,7 @@ it('does not double fan out when a second relay tick starts after the first clai
 
     $overlapResult = null;
     DB::listen(static function ($query) use (&$overlapResult): void {
-        if ($overlapResult === null && str_contains($query->sql, 'webhook_endpoints')) {
+        if ($overlapResult === null && str_contains((string) $query->sql, 'webhook_endpoints')) {
             $overlapResult = relay()->process();
         }
     });
@@ -144,7 +143,7 @@ it('does not create a delivery for an endpoint not subscribed to the event', fun
     Queue::fake();
 
     WebhookTestHelpers::endpoint(['events' => ['share.created']]);
-    WebhookTestHelpers::outbox(['event' => 'node.created']);
+    WebhookTestHelpers::outbox(['event' => 'folder.created']);
 
     $processed = relay()->process();
 
@@ -172,11 +171,11 @@ it('fans out to every subscribed active endpoint and skips the unsubscribed/inac
     Queue::fake();
 
     $a = WebhookTestHelpers::endpoint(['url' => 'https://a.test/hook']);
-    $b = WebhookTestHelpers::endpoint(['url' => 'https://b.test/hook', 'events' => ['node.created', 'share.created']]);
+    $b = WebhookTestHelpers::endpoint(['url' => 'https://b.test/hook', 'events' => ['folder.created', 'share.created']]);
     WebhookTestHelpers::endpoint(['url' => 'https://c.test/hook', 'events' => ['share.created']]); // unsubscribed
     WebhookTestHelpers::endpoint(['url' => 'https://d.test/hook', 'is_active' => false]);          // inactive
 
-    WebhookTestHelpers::outbox(['event' => 'node.created']);
+    WebhookTestHelpers::outbox(['event' => 'folder.created']);
 
     relay()->process();
 
@@ -207,7 +206,7 @@ it('filters subscriptions in SQL and fans out in bounded key-ordered pages', fun
 
     $endpointQueries = [];
     DB::listen(static function ($query) use (&$endpointQueries): void {
-        if (str_contains($query->sql, 'webhook_endpoints')) {
+        if (str_contains((string) $query->sql, 'webhook_endpoints')) {
             $endpointQueries[] = $query->sql;
         }
     });
@@ -273,9 +272,7 @@ it('vaulter:relay-outbox re-dispatches a due failed retry but skips a not-yet-du
 
     $this->artisan('vaulter:relay-outbox')->assertSuccessful();
 
-    Bus::assertDispatched(DeliverWebhook::class, function (DeliverWebhook $job) use ($due): bool {
-        return (new ReflectionProperty($job, 'deliveryId'))->getValue($job) === (string) $due->getKey();
-    });
+    Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $job): bool => new ReflectionProperty($job, 'deliveryId')->getValue($job) === (string) $due->getKey());
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });
 
@@ -320,8 +317,6 @@ it('vaulter:retry-webhooks re-queues only due failed deliveries', function (): v
 
     $this->artisan('vaulter:retry-webhooks')->assertSuccessful();
 
-    Bus::assertDispatched(DeliverWebhook::class, function (DeliverWebhook $job) use ($due): bool {
-        return (new ReflectionProperty($job, 'deliveryId'))->getValue($job) === (string) $due->getKey();
-    });
+    Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $job): bool => new ReflectionProperty($job, 'deliveryId')->getValue($job) === (string) $due->getKey());
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });

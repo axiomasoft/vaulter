@@ -43,7 +43,7 @@ final readonly class DriveManager implements DriveHandleFactory
     {
         return new DriveContext(
             storage: $storage,
-            panel: $storage->panel,
+            panel: $storage->profile,
             storages: $this->container->make(StorageManager::class),
             nodes: $this->container->make(NodeReadRepository::class),
             createFolder: $this->container->make(CreateFolderAction::class),

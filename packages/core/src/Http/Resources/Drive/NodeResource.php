@@ -104,7 +104,7 @@ final class NodeResource extends JsonResource
             'mime' => $node->mime_type,
             'extension' => $node->extension,
             'size_bytes' => $node->size_bytes,
-            'storage_id' => $node->storage_id,
+            'storage_id' => $node->drive_id,
             'parent_id' => $node->parent_id,
             'file_id' => $node->file_id,
             'current_version_id' => $node->current_version_id,

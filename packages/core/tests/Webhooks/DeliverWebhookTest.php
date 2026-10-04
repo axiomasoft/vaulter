@@ -61,7 +61,7 @@ it('marks the delivery delivered and sends the signed POST on a 2xx', function (
 
         return $request->url() === 'https://hooks.test/receive'
             && $request->method() === 'POST'
-            && $request->header('X-Vaulter-Event')[0] === 'node.created'
+            && $request->header('X-Vaulter-Event')[0] === 'folder.created'
             && $signature === $expected;
     });
 

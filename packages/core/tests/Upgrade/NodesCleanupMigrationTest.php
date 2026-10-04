@@ -17,6 +17,10 @@ beforeEach(function (): void {
     }
 });
 afterEach(function (): void {
+    $db = app(VaulterDatabase::class)->connection();
+    if ($db->getDriverName() === 'pgsql' && str_ends_with($db->getDatabaseName(), '_test') && $db->transactionLevel() === 0) {
+        $db->getSchemaBuilder()->dropAllTables();
+    }
     RefreshDatabaseState::$migrated = false;
 });
 
@@ -29,7 +33,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
     $nodes = Config::table('nodes');
-    $roots = $db->table(Config::table('storages'))->pluck('root_node_id', 'id')->map(static fn ($id): string => (string) $id);
+    $roots = $db->table(Config::legacyTable('storages'))->pluck('root_node_id', 'id')->map(static fn ($id): string => (string) $id);
     $orphans = $db->table($nodes)->whereNull('parent_id')->whereNotIn('id', $roots->values())->orderBy('id')->get();
 
     expect($db->table($nodes)->whereNull('parent_id')->count())->toBeGreaterThan($roots->count())
@@ -37,10 +41,10 @@ it('moves every second root under its drive root, logs each move and adds the ro
 
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
 
-    $parentless = $db->table($nodes)->whereNull('parent_id')->get(['id', 'storage_id']);
+    $parentless = $db->table($nodes)->whereNull('parent_id')->get(['id', 'drive_id']);
     expect($parentless)->toHaveCount($roots->count());
     foreach ($parentless as $root) {
-        expect((string) $root->id)->toBe($roots[$root->storage_id]);
+        expect((string) $root->id)->toBe($roots[$root->drive_id]);
     }
 
     foreach ($orphans as $orphan) {
@@ -59,7 +63,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
     expect($row->verb)->toBe('node.moved')
         ->and($row->actor_type)->toBe('vaulter:system')
         ->and($row->actor_id)->toBeNull()
-        ->and((string) $row->storage_id)->toBe('1')
+        ->and((string) $row->drive_id)->toBe('1')
         ->and($row->created_at)->not->toBeNull()
         ->and(json_decode($row->context, true))->toEqual([
             'from_parent_id' => null,
@@ -78,8 +82,8 @@ it('moves every second root under its drive root, logs each move and adds the ro
         ->and($db->table(Config::table('activity'))->count())->toBe($activityCount);
 
     expect(fn () => $db->table($nodes)->insert([
-        'panel' => 'default',
-        'storage_id' => 1,
+        'profile' => 'default',
+        'drive_id' => 1,
         'parent_id' => null,
         'kind' => 'folder',
         'name' => 'Second root',
@@ -106,8 +110,9 @@ it('refuses to guess the root of a drive without root_node_id', function (): voi
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
     $nodes = Config::table('nodes');
-    $storages = $db->table(Config::table('storages'));
+    $storages = $db->table(Config::legacyTable('storages'));
     $storages->clone()->where('id', 1)->update(['root_node_id' => null]);
+    (require __DIR__.'/../../database/migrations/2026_10_01_000002_rename_storages_to_drives.php')->up();
     $before = $db->table($nodes)->orderBy('id')->get()->all();
 
     try {
@@ -117,7 +122,7 @@ it('refuses to guess the root of a drive without root_node_id', function (): voi
         expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before);
     } finally {
         // The next test's setUp migrates whatever schema is left behind.
-        $storages->clone()->where('id', 1)->update(['root_node_id' => 1]);
+        $db->table(Config::table('drives'))->where('id', 1)->update(['root_node_id' => 1]);
     }
 });
 

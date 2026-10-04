@@ -16,7 +16,7 @@ it('creates the v_activity table with every §2.9 column', function (): void {
     $table = Config::table('activity');
 
     expect(Schema::hasColumns($table, [
-        'id', 'tenant_id', 'storage_id', 'actor_type', 'actor_id', 'verb',
+        'id', 'tenant_id', 'drive_id', 'actor_type', 'actor_id', 'verb',
         'target_type', 'target_id', 'context', 'ip', 'user_agent', 'request_id',
         'created_at',
     ]))->toBeTrue();

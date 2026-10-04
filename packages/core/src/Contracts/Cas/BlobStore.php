@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * transaction, resurrecting a tombstoned match and promoting bytes only when the
  * row is newly created (a dedup hit skips the physical write). There is NO
  * synchronous ref_count++ — liveness truth is the existence of an edge in
- * v_file_version_blobs, and ref_count is a reconciled cache.
+ * v_file_revision_blobs, and ref_count is a reconciled cache.
  *
  * attach()/detach() manage those version↔blob edges.
  */
@@ -37,7 +37,7 @@ interface BlobStore
     public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob;
 
     /**
-     * Create the version↔blob edge in v_file_version_blobs. The edge — not
+     * Create the version↔blob edge in v_file_revision_blobs. The edge — not
      * ref_count — is the liveness truth (H.3).
      *
      * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes

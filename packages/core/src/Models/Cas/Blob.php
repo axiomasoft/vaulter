@@ -20,14 +20,14 @@ use Vaulter\Support\Config;
  * A content-addressable, immutable payload (master plan §2.3): identified by its
  * sha256 within a dedup scope and stored once on the Flysystem disk under a
  * scope-qualified storage_key. ref_count is a reconciled cache; the liveness
- * truth is the existence of a v_file_version_blobs edge (H.3). The byte handling
+ * truth is the existence of a v_file_revision_blobs edge (H.3). The byte handling
  * and GC commit-flow are M1b — this is the schema + model only.
  *
  * Swappable via config('vaulter.models.blob').
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id
- * @property int|string|null $storage_id
+ * @property int|string|null $drive_id
  * @property string          $hash_algo
  * @property string          $sha256
  * @property int             $size_bytes
@@ -80,9 +80,9 @@ class Blob extends Model
     {
         return $this->belongsToMany(
             related: Config::fileVersionModel(),
-            table: Config::table('file_version_blobs'),
+            table: Config::table('file_revision_blobs'),
             foreignPivotKey: 'blob_id',
-            relatedPivotKey: 'file_version_id',
+            relatedPivotKey: 'file_revision_id',
         )
             ->using(Config::fileVersionBlobModel())
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);

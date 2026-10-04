@@ -82,10 +82,10 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
 
     // The node AND every row that FK-cascades off it are physically gone — not
     // just the version↔blob edge (already covered by the GC-eligibility test
-    // above), the v_files/v_file_versions rows themselves.
+    // above), the v_files/v_file_revisions rows themselves.
     expect(Node::withTrashed()->whereKey($fileNode->getKey())->exists())->toBeFalse()
         ->and(DB::table('v_files')->where('id', $fileId)->exists())->toBeFalse()
-        ->and(DB::table('v_file_versions')->where('file_id', $fileId)->exists())->toBeFalse();
+        ->and(DB::table('v_file_revisions')->where('file_id', $fileId)->exists())->toBeFalse();
 });
 
 it('does not physically purge a node restored between candidate materialisation and the purge transaction, TOCTOU guard (P2.2 review fix)', function (): void {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +23,7 @@ it('creates the v_node_shares table with every §2.7 column', function (): void 
         'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'permissions',
         'level', 'scope', 'password_hash', 'require_login', 'allow_discovery',
         'expires_at', 'max_uses', 'use_count', 'revoked_at', 'granted_by',
-        'created_at', 'updated_at', 'deleted_at',
+        'created_at', 'updated_at',
     ]))->toBeTrue();
 });
 
@@ -46,7 +47,7 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(static fn () => DB::transaction(fn () => ForceCreates::make($model, $base)))
+    expect(static fn () => DB::transaction(fn (): Model => ForceCreates::make($model, $base)))
         ->toThrow(QueryException::class);
 });
 

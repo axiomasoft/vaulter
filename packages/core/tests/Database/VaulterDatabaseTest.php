@@ -78,10 +78,10 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
         'owner_type' => 'team', 'owner_id' => 1, 'name' => 'test', 'disk' => 'local',
     ]);
     $node = Node::forceCreate([
-        'storage_id' => $storage->getKey(), 'name' => 'fixture', 'kind' => 'folder',
+        'drive_id' => $storage->getKey(), 'name' => 'fixture', 'kind' => 'folder',
     ]);
     $session = UploadSession::forceCreate([
-        'storage_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
+        'drive_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
         'protocol' => 'tus', 'status' => 'initiated', 'total_size_bytes' => 1,
     ]);
     config()->set('database.connections.vaulter', config('database.connections.testing'));
@@ -89,7 +89,7 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
 
     $attributes = match ($modelClass) {
         UploadSession::class => [
-            'storage_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
+            'drive_id' => $storage->getKey(), 'upload_id' => (string) Str::uuid(),
             'protocol' => 'tus', 'status' => 'initiated', 'total_size_bytes' => 1,
         ],
         UploadPart::class => [
@@ -99,7 +99,7 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
             'node_id' => $node->getKey(), 'author_type' => 'user', 'author_id' => 1, 'body' => 'test',
         ],
         NodeDocumentVersion::class => [
-            'node_id' => $node->getKey(), 'version_no' => 1, 'format' => 'tiptap',
+            'node_id' => $node->getKey(), 'number' => 1, 'format' => 'tiptap',
         ],
     };
     $before = $modelClass::query()->count();

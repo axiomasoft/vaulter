@@ -37,7 +37,7 @@ final readonly class RenameNodeAction
         $name = NodeName::normalize($data->name);
 
         return $this->database->transaction(function () use ($node, $name, $data): Node {
-            $this->database->lockTreeShared($node->storage_id);
+            $this->database->lockTreeShared($node->drive_id);
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
 
             // The parent row is locked too, so a create into the same folder cannot claim

@@ -217,7 +217,7 @@ final class DocumentNodeController extends Controller
 
         $node = $this->nodes->find($parentId);
 
-        if (!$node instanceof Node || $node->storage_id !== $storage->getKey()) {
+        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
             abort(404);
         }
 

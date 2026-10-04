@@ -41,7 +41,7 @@ final readonly class TrashNodeAction
             // The subtree UPDATE locks every descendant row after the node row, in no
             // particular id order; the tree lock keeps that from crossing a concurrent
             // move or restore that holds a descendant and waits for an ancestor.
-            $this->database->lockTree($node->storage_id);
+            $this->database->lockTree($node->drive_id);
 
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
 

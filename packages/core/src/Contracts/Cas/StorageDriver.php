@@ -8,7 +8,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 
 /**
  * A thin abstraction over a Flysystem disk (H.3): the byte plane under the CAS.
- * The disk to use is resolved per storage (v_storages.disk) or the install
+ * The disk to use is resolved per storage (v_drives.disk) or the install
  * default; everything else is a straight Flysystem call. Swap the implementation
  * to add object-store specifics (x-amz-checksum-sha256, If-None-Match: *) while
  * keeping the local/sqlite test disk working unchanged.

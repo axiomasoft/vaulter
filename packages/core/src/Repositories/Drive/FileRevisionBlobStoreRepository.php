@@ -11,7 +11,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Support\Config;
 
 /**
- * Write-side row work for the v_file_version_blobs edge table — the GC liveness
+ * Write-side row work for the v_file_revision_blobs edge table — the GC liveness
  * truth (H.3). A blob is live iff an edge here references it, so attaching /
  * detaching an edge is what actually changes liveness; ref_count is only a
  * reconciled cache. Opens no transactions (the caller wraps it). Idempotent
@@ -31,7 +31,7 @@ final readonly class FileRevisionBlobStoreRepository
 
         $this->query()->updateOrInsert(
             [
-                'file_version_id' => $version->getKey(),
+                'file_revision_id' => $version->getKey(),
                 'blob_id' => $blob->getKey(),
                 'role' => $role,
                 'ordinal' => $ordinal,
@@ -50,7 +50,7 @@ final readonly class FileRevisionBlobStoreRepository
     public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void
     {
         $this->query()
-            ->where('file_version_id', $version->getKey())
+            ->where('file_revision_id', $version->getKey())
             ->where('blob_id', $blob->getKey())
             ->where('role', $role)
             ->where('ordinal', $ordinal)

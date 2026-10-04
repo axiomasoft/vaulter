@@ -269,7 +269,7 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24)['tombstoned'])->toBe(3);
     $lockIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'pg_advisory_xact_lock'));
-    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, Config::table('file_version_blobs')));
+    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, Config::table('file_revision_blobs')));
     expect($lockIndex)->not->toBeNull()->and($lockIndex)->toBeLessThan($edgeIndex);
 
     config()->set('database.connections.r21_probe', config('database.connections.testing'));

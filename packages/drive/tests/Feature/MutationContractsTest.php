@@ -23,21 +23,21 @@ it('keeps the complete storage and folder event contracts', function (): void {
     $storageOutbox = Outbox::query()->where('event', EventType::DriveCreated->value)->sole();
     $storagePayload = $storageOutbox->payload;
 
-    expect($storageOutbox->panel)->toBe($storage->panel)
+    expect($storageOutbox->profile)->toBe($storage->profile)
         ->and($storageOutbox->topic)->toBe((string) $storage->getKey())
         ->and($storagePayload['event_id'])->toBe($storageOutbox->event_id)
         ->and($storagePayload['actor_id'])->toBeNull();
 
     unset($storagePayload['event_id'], $storagePayload['actor_id']);
     expect($storagePayload)->toEqual([
-        'storage_id' => (string) $storage->getKey(),
+        'drive_id' => (string) $storage->getKey(),
         'root_node_id' => (string) $root->getKey(),
         'name' => $storage->name,
     ]);
 
     $storageActivity = Activity::query()->where('verb', EventType::DriveCreated->value)->sole();
     expect($storageActivity->context)->toEqual([
-        'storage_id' => (string) $storage->getKey(),
+        'drive_id' => (string) $storage->getKey(),
         'owner_type' => $storage->owner_type,
         'owner_id' => (string) $storage->owner_id,
         'name' => $storage->name,
@@ -51,7 +51,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
     expect($created->topic)->toBe((string) $folder->getKey())
         ->and($createdPayload)->toEqual([
             'node_id' => (string) $folder->getKey(),
-            'storage_id' => (string) $storage->getKey(),
+            'drive_id' => (string) $storage->getKey(),
             'parent_id' => (string) $root->getKey(),
             'kind' => 'folder',
             'name' => 'Contract folder',
@@ -126,7 +126,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     unset($movePayload['event_id'], $movePayload['actor_id']);
     expect($movePayload)->toEqual([
         'node_id' => (string) $node->getKey(),
-        'storage_id' => (string) $node->storage_id,
+        'drive_id' => (string) $node->drive_id,
         'from_parent_id' => (string) $from->getKey(),
         'to_parent_id' => (string) $to->getKey(),
     ]);
@@ -141,7 +141,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     unset($renamePayload['event_id'], $renamePayload['actor_id']);
     expect($renamePayload)->toEqual([
         'node_id' => (string) $node->getKey(),
-        'storage_id' => (string) $node->storage_id,
+        'drive_id' => (string) $node->drive_id,
         'from' => 'Old',
         'to' => 'New',
     ]);
@@ -157,7 +157,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     expect($copied->topic)->toBe((string) $copy->getKey())
         ->and($copyPayload)->toEqual([
             'node_id' => (string) $copy->getKey(),
-            'storage_id' => (string) $copy->storage_id,
+            'drive_id' => (string) $copy->drive_id,
             'source_id' => (string) $node->getKey(),
             'name' => 'Copied',
         ]);
@@ -182,7 +182,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
     unset($uploadPayload['event_id'], $uploadPayload['actor_id']);
     expect($uploadPayload)->toEqual([
         'node_id' => (string) $node->getKey(),
-        'storage_id' => (string) $node->storage_id,
+        'drive_id' => (string) $node->drive_id,
         'version_id' => (string) $firstVersion->getKey(),
         'name' => 'report.txt',
         'size_bytes' => 11,
@@ -203,13 +203,13 @@ it('preserves file upload and version payloads with their actual byte counts', f
 
     expect($versionPayload)->toEqual([
         'node_id' => (string) $node->getKey(),
-        'storage_id' => (string) $node->storage_id,
+        'drive_id' => (string) $node->drive_id,
         'version_id' => (string) $secondVersion->getKey(),
-        'version_no' => 2,
+        'number' => 2,
         'size_bytes' => 14,
     ]);
     expect(Activity::query()->where('verb', EventType::FileRevisionAdded->value)->sole()->context)->toEqual([
-        'version_no' => 2,
+        'number' => 2,
         'version_id' => (string) $secondVersion->getKey(),
         'size_bytes' => 14,
     ]);
@@ -222,13 +222,13 @@ it('preserves trash and restore payloads including actor and destination', funct
 
     $drive->trash($node, actorId: 17);
     $trashed = Outbox::query()->where('event', EventType::NodeTrashed->value)->sole();
-    expect($trashed->panel)->toBe($node->panel)
+    expect($trashed->profile)->toBe($node->profile)
         ->and($trashed->topic)->toBe((string) $node->getKey())
         ->and($trashed->payload)->toEqual([
             'event_id' => $trashed->event_id,
             'actor_id' => '17',
             'node_id' => (string) $node->getKey(),
-            'storage_id' => (string) $node->storage_id,
+            'drive_id' => (string) $node->drive_id,
             'name' => 'Child',
         ]);
     $activity = Activity::query()->where('verb', EventType::NodeTrashed->value)->sole();
@@ -238,13 +238,13 @@ it('preserves trash and restore payloads including actor and destination', funct
 
     $drive->restore($node->refresh(), actorId: 17);
     $restored = Outbox::query()->where('event', EventType::NodeRestored->value)->sole();
-    expect($restored->panel)->toBe($node->panel)
+    expect($restored->profile)->toBe($node->profile)
         ->and($restored->topic)->toBe((string) $node->getKey())
         ->and($restored->payload)->toEqual([
             'event_id' => $restored->event_id,
             'actor_id' => '17',
             'node_id' => (string) $node->getKey(),
-            'storage_id' => (string) $node->storage_id,
+            'drive_id' => (string) $node->drive_id,
             'parent_id' => (string) $parent->getKey(),
             'name' => 'Child',
         ]);
@@ -271,17 +271,17 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
     $payload = $outbox->payload;
     expect($payload['node_ids'])->toEqualCanonicalizing($ids);
     unset($payload['node_ids']);
-    expect($outbox->panel)->toBe('default')
+    expect($outbox->profile)->toBe('default')
         ->and($outbox->topic)->toBe((string) $drive->storage()->getKey())
         ->and($payload)->toEqual([
             'event_id' => $outbox->event_id,
             'actor_id' => '17',
-            'storage_id' => (string) $drive->storage()->getKey(),
+            'drive_id' => (string) $drive->storage()->getKey(),
             'freed_bytes' => 5,
         ]);
     $activity = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
     expect($activity->actor_id)->toEqual(17)
-        ->and($activity->storage_id)->toEqual($drive->storage()->getKey())
+        ->and($activity->drive_id)->toEqual($drive->storage()->getKey())
         ->and($activity->context['node_ids'])->toEqualCanonicalizing($ids)
         ->and(array_keys($activity->context))->toEqualCanonicalizing(['node_ids', 'freed_bytes'])
         ->and($activity->context['freed_bytes'])->toBe(5);

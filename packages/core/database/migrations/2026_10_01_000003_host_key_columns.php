@@ -13,11 +13,11 @@ return new class extends Migration
 {
     /** @var array<string, array<string, bool>> */
     private const array COLUMNS = [
-        'storages' => ['tenant_id' => true, 'owner_id' => false, 'created_by' => true],
+        'drives' => ['tenant_id' => true, 'owner_id' => false, 'created_by' => true],
         'nodes' => ['tenant_id' => true, 'owner_id' => true, 'trashed_by' => true, 'created_by' => true, 'updated_by' => true],
         'blobs' => ['tenant_id' => true],
         'files' => ['tenant_id' => true, 'created_by' => true],
-        'file_versions' => ['tenant_id' => true, 'created_by' => true],
+        'file_revisions' => ['tenant_id' => true, 'created_by' => true],
         'node_grants' => ['tenant_id' => true, 'subject_id' => false, 'granted_by' => true],
         'node_shares' => ['tenant_id' => true, 'granted_by' => true],
         'node_comments' => ['tenant_id' => true, 'author_id' => false, 'resolved_by' => true],
@@ -50,6 +50,10 @@ return new class extends Migration
 
         foreach (self::COLUMNS as $entity => $columns) {
             $table = Config::table($entity);
+            // #3 precedes the revision-table rename in #4, including on rollback.
+            if ($entity === 'file_revisions' && !$schema->hasTable($table)) {
+                $table = $schema->hasTable(Config::table('file_versions')) ? Config::table('file_versions') : Config::legacyTable('file_versions');
+            }
 
             if (!$schema->hasTable($table)) {
                 continue;
@@ -95,7 +99,7 @@ return new class extends Migration
     {
         $strategy = app(IdStrategyResolver::class)->resolve();
         $reference = $column === 'tenant_id'
-            || ($entity === 'storages' && $column === 'owner_id')
+            || ($entity === 'drives' && $column === 'owner_id')
             || $column === 'subject_id'
             || $column === 'author_id';
 

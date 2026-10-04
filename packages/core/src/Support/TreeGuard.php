@@ -90,7 +90,7 @@ final readonly class TreeGuard
 
     public function sameStorage(Node $destination, int|string $storageId): bool
     {
-        return Identity::stringify($destination->storage_id) === Identity::stringify($storageId);
+        return Identity::stringify($destination->drive_id) === Identity::stringify($storageId);
     }
 
     public function assertActiveFolder(Node $destination): void

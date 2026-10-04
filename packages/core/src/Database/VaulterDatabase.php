@@ -51,7 +51,7 @@ final class VaulterDatabase
             return;
         }
 
-        $this->connection()->table(Config::table('storages'))
+        $this->connection()->table(Config::table('drives'))
             ->where('id', $storageId)->lockForUpdate()->first(['id']);
     }
 

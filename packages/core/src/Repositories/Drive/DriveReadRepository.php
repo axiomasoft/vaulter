@@ -10,7 +10,7 @@ use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
- * Read-side lookups over v_storages (§2.1). The get-or-create entry point is the
+ * Read-side lookups over v_drives (§2.1). The get-or-create entry point is the
  * StorageManager; this repository just resolves the existing row for a host
  * entity within a panel (the idempotency key behind the partial-unique index on
  * owner_type/owner_id/panel).
@@ -52,7 +52,7 @@ final class DriveReadRepository
         return $model::query()
             ->where('owner_type', $owner->getMorphClass())
             ->where('owner_id', $owner->getKey())
-            ->where('panel', $panel)
+            ->where('profile', $panel)
             ->first();
     }
 }

@@ -17,7 +17,7 @@ final class TeamProfile extends ProfileProvider
     {
         return $panel
             ->id('team')
-            ->storageType('public')
+
             ->withoutGrants()
             ->feature('share_links', true);
     }

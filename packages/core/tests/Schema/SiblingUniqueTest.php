@@ -32,7 +32,7 @@ function makeNode(Drive $storage, string $name, array $overrides = []): Node
 {
     $node = new Node;
     $node->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $overrides['parent_id'] ?? null,
         'kind' => NodeKind::Folder,
         'name' => $name,
@@ -51,7 +51,7 @@ it('отвергает дубль имени живого сиблинга в т
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(fn () => DB::transaction(fn () => makeNode($storage, 'report', ['parent_id' => $parent->getKey()])))
+    expect(fn () => DB::transaction(fn (): Node => makeNode($storage, 'report', ['parent_id' => $parent->getKey()])))
         ->toThrow(QueryException::class);
 });
 

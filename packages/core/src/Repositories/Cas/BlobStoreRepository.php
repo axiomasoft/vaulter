@@ -210,7 +210,7 @@ final readonly class BlobStoreRepository
         $blob = new (Config::blobModel());
         $blob->forceFill([
             'tenant_id' => $scope->dedupScope() === 'storage' ? null : $tenantId,
-            'storage_id' => $scope->dedupScope() === 'storage' ? $storageId : null,
+            'drive_id' => $scope->dedupScope() === 'storage' ? $storageId : null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => $sizeBytes,

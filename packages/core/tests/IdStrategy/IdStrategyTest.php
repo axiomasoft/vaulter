@@ -48,7 +48,7 @@ it('emits char(26) keys, string cast, HasUlids concern and a ulid for ulid', fun
     $strategy = new UlidIds;
 
     $key = columnFor(fn (Blueprint $t) => $strategy->key($t));
-    $reference = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'storage_id'));
+    $reference = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'drive_id'));
     $actor = columnFor(fn (Blueprint $t) => $strategy->actor($t, 'created_by'));
 
     expect($key->get('type'))->toBe('char')
@@ -67,7 +67,7 @@ it('emits uuid keys, string cast, HasUuids concern and a uuid7 for uuid7', funct
     $strategy = new Uuid7Ids;
 
     $key = columnFor(fn (Blueprint $t) => $strategy->key($t));
-    $reference = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'storage_id'));
+    $reference = columnFor(fn (Blueprint $t) => $strategy->reference($t, 'drive_id'));
     $actor = columnFor(fn (Blueprint $t) => $strategy->actor($t, 'created_by'));
 
     expect($key->get('type'))->toBe('uuid')

@@ -28,13 +28,15 @@ it('creates a panel\'s tables on the connection named by vaulter.connection, not
     $builder = new SchemaBuilder;
     config()->set('vaulter.table_prefix', 'conntest_');
 
-    $builder->createTable(entity: 'storages');
+    $builder->createTable(entity: 'drives');
 
     try {
-        expect(Schema::connection('vaulter_other')->hasTable('conntest_storages'))->toBeTrue()
-            ->and(Schema::hasTable('conntest_storages'))->toBeFalse();
+        expect(Schema::connection('vaulter_other')->hasTable('conntest_drives'))->toBeTrue()
+            ->and(Schema::hasTable('conntest_drives'))->toBeFalse();
     } finally {
-        $builder->dropTable(entity: 'storages');
+        $builder->dropTable(entity: 'drives');
+        config()->set('vaulter.connection', null);
+        config()->set('vaulter.table_prefix', 'v_');
     }
 });
 
@@ -47,6 +49,7 @@ it('routes a default Vaulter model\'s connection through vaulter.connection [F-P
     config()->set('vaulter.connection', 'vaulter_other');
 
     expect((new Node)->getConnectionName())->toBe('vaulter_other');
+    config()->set('vaulter.connection', null);
 });
 
 it('control: vaulter.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
@@ -55,12 +58,14 @@ it('control: vaulter.connection=null (the default) leaves every write on the hos
     $builder = new SchemaBuilder;
     config()->set('vaulter.table_prefix', 'conntestctrl_');
 
-    $builder->createTable(entity: 'storages');
+    $builder->createTable(entity: 'drives');
 
     try {
-        expect(Schema::hasTable('conntestctrl_storages'))->toBeTrue()
+        expect(Schema::hasTable('conntestctrl_drives'))->toBeTrue()
             ->and((new Node)->getConnectionName())->toBeNull();
     } finally {
-        $builder->dropTable(entity: 'storages');
+        $builder->dropTable(entity: 'drives');
+        config()->set('vaulter.connection', null);
+        config()->set('vaulter.table_prefix', 'v_');
     }
 });

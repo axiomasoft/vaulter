@@ -31,7 +31,7 @@ use Vaulter\Support\Config;
  *
  * @property int|string               $id
  * @property int|string|null          $tenant_id
- * @property int|string|null          $storage_id
+ * @property int|string|null          $drive_id
  * @property string|null              $actor_type
  * @property int|string|null          $actor_id
  * @property EventType                $verb

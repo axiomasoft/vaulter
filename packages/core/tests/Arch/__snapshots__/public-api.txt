@@ -217,6 +217,7 @@ Vaulter\Support\Config
   idStrategies(): array
   idStrategy(): string
   idType(): string
+  legacyTable(string $legacyEntity): string
   listingScanBudget(): int
   maxActiveUploadSessions(): int
   maxDocumentSizeKb(): int
@@ -317,6 +318,40 @@ Vaulter\Exceptions\Nodes\StorageNotFoundException
 
 Vaulter\Exceptions\VaulterException
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
+Vaulter\Exceptions\Schema\UpgradePreflightException
+  __construct(array $problems)
+  __toString(): string
+  __wakeup()
+  getCode()
+  getFile(): string
+  getLine(): int
+  getMessage(): string
+  getPrevious(): ?\Throwable
+  getTrace(): array
+  getTraceAsString(): string
+  httpStatus(): int
+  problemCode(): string
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
+Vaulter\Enums\Events\EventType
+  DriveCreated = drive.created
+  FolderCreated = folder.created
+  FileUploaded = file.uploaded
+  FileRevisionAdded = file.revision_added
+  UploadInitiated = upload.initiated
+  UploadAborted = upload.aborted
+  UploadExpired = upload.expired
+  NodeMoved = node.moved
+  NodeRenamed = node.renamed
+  NodeCopied = node.copied
+  NodeTrashed = node.trashed
+  NodeRestored = node.restored
+  NodePurged = node.purged
+  GrantCreated = grant.created
+  GrantRevoked = grant.revoked
+  ShareCreated = share.created
+  ShareRevoked = share.revoked
 
 FACADE Vaulter\Facades\Vaulter
   static DocumentExporter exporter(string $format)

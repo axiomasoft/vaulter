@@ -35,7 +35,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
     $root = $storage->rootNode()->first();
     $folder = new Node;
     $folder->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => 'inbox',
@@ -57,8 +57,8 @@ it('initiate persists the full server-built session shape from UploadInitData', 
 
     expect([
         'tenant_id' => $session->tenant_id,
-        'storage_id' => $session->storage_id,
-        'node_id' => $session->node_id,
+        'drive_id' => $session->drive_id,
+        'node_id' => $session->target_node_id,
         'target_parent_id' => $session->target_parent_id,
         'target_name' => $session->target_name,
         'protocol' => $session->protocol,
@@ -72,7 +72,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
         'created_by' => $session->created_by,
     ])->toBe([
         'tenant_id' => $storage->tenant_id,
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'node_id' => null,
         'target_parent_id' => $folder->getKey(),
         'target_name' => 'shape.bin',
@@ -158,7 +158,7 @@ it('active-session cap allows max minus one and rejects at the ceiling', functio
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
-    $data = fn (string $name) => new UploadInitData(
+    $data = fn (string $name): UploadInitData => new UploadInitData(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $root,
@@ -216,6 +216,7 @@ it('commit commits PNG bytes when declared mime matches and discards staged temp
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
+
     $node = app(CommitUploadAction::class)->execute($session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
@@ -230,7 +231,7 @@ it('commit places a new file under the session target_parent_id, not implicit ro
     $root = $storage->rootNode()->first();
     $folder = new Node;
     $folder->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => 'dest',
@@ -242,12 +243,13 @@ it('commit places a new file under the session target_parent_id, not implicit ro
     $session = UploadTestHelpers::session(
         $storage,
         totalSizeBytes: strlen($bytes),
-        parentId: $folder->getKey(),
         targetName: 'nested.bin',
+        parentId: $folder->getKey(),
     );
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
+
     $node = app(CommitUploadAction::class)->execute($session->refresh());
 
     expect($node->parent_id)->toEqual($folder->getKey())
@@ -264,10 +266,10 @@ it('commit fails loud when the session storage row is missing', function (): voi
 
     if (DB::connection()->getDriverName() === 'pgsql') {
         $table = $session->getTable();
-        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_storage_id_foreign"');
+        DB::statement('ALTER TABLE "'.$table.'" DROP CONSTRAINT "'.$table.'_drive_id_foreign"');
     }
 
-    UploadSession::query()->whereKey($session->getKey())->update(['storage_id' => $missingStorageId]);
+    UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingStorageId]);
     $session = $session->fresh();
 
     expect(fn () => app(CommitUploadAction::class)->execute($session))

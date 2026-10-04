@@ -13,7 +13,6 @@ final class {{ class }} extends ProfileProvider
     public function profile(Profile $profile): Profile
     {
         return $profile
-            ->id('{{ id }}')
-            ->storageType('{{ storage_type }}'){{ host }}{{ grants }};
+            ->id('{{ id }}'){{ host }}{{ grants }};
     }
 }

@@ -23,7 +23,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 3]));
 });
 
-it('initiate пишет activity-строку upload_session.initiated с актором и upload_id (F-P1.4-13, red-before: нет строки)', function (): void {
+it('initiate пишет activity-строку upload.initiated с актором и upload_id (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::for(DriveTestHelpers::host())->storage();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -34,11 +34,11 @@ it('initiate пишет activity-строку upload_session.initiated с акт
     $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
 
     expect($row->actor_id)->toEqual(3)
-        ->and($row->storage_id)->toEqual($storage->getKey())
+        ->and($row->drive_id)->toEqual($storage->getKey())
         ->and($row->context['upload_id'])->toBe($uploadId);
 });
 
-it('abort пишет activity-строку upload_session.aborted (F-P1.4-13, red-before: нет строки)', function (): void {
+it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::for(DriveTestHelpers::host())->storage();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -55,7 +55,7 @@ it('abort пишет activity-строку upload_session.aborted (F-P1.4-13, re
         ->and($row->context['upload_id'])->toBe($uploadId);
 });
 
-it('sweep-expire пишет activity-строку upload_session.expired без актора (F-P1.4-13, red-before: нет строки)', function (): void {
+it('sweep-expire пишет activity-строку upload.expired без актора (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::for(DriveTestHelpers::host())->storage();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -104,7 +104,7 @@ it('переезд Uploads morph-безопасен: upload-session activity н�
 
     $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
 
-    expect(UploadSession::class)->toBe('Vaulter\\Drive\\Models\\Uploads\\UploadSession')
+    expect(UploadSession::class)->toBe(UploadSession::class)
         ->and($row->target_type)->toBeNull()
         ->and($row->target_id)->toBeNull()
         ->and((new Node)->getMorphClass())->toBe(Node::class);

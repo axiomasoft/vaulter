@@ -69,12 +69,12 @@ return new class extends Migration
     private function refuseUnknownRoots(Connection $connection, string $nodes): void
     {
         $ambiguous = $connection->table($nodes.' as n')
-            ->join(Config::table('storages').' as s', 's.id', '=', 'n.storage_id')
+            ->join(Config::table('drives').' as s', 's.id', '=', 'n.drive_id')
             ->whereNull('n.parent_id')
             ->whereNull('s.root_node_id')
-            ->groupBy('n.storage_id')
+            ->groupBy('n.drive_id')
             ->havingRaw('count(*) > 1')
-            ->pluck('n.storage_id')
+            ->pluck('n.drive_id')
             ->all();
 
         if ($ambiguous !== []) {
@@ -88,13 +88,13 @@ return new class extends Migration
     private function repairSecondRoots(Connection $connection, string $nodes): void
     {
         $orphans = $connection->table($nodes.' as n')
-            ->join(Config::table('storages').' as s', 's.id', '=', 'n.storage_id')
+            ->join(Config::table('drives').' as s', 's.id', '=', 'n.drive_id')
             ->whereNull('n.parent_id')
             ->whereNotNull('s.root_node_id')
             ->whereColumn('n.id', '<>', 's.root_node_id')
-            ->orderBy('n.storage_id')
+            ->orderBy('n.drive_id')
             ->orderBy('n.id')
-            ->get(['n.id', 'n.tenant_id', 'n.storage_id', 'n.name', 'n.trashed_at', 'n.deleted_at', 's.root_node_id']);
+            ->get(['n.id', 'n.tenant_id', 'n.drive_id', 'n.name', 'n.trashed_at', 'n.deleted_at', 's.root_node_id']);
 
         $nodeModel = Config::nodeModel();
         $targetType = (new $nodeModel)->getMorphClass();
@@ -117,7 +117,7 @@ return new class extends Migration
             $activity = new $activityModel;
             $activity->forceFill([
                 'tenant_id' => Identity::key($orphan->tenant_id),
-                'storage_id' => $this->key($orphan->storage_id),
+                'drive_id' => $this->key($orphan->drive_id),
                 'actor_type' => 'vaulter:system',
                 'actor_id' => null,
                 'verb' => 'node.moved',
@@ -146,7 +146,7 @@ return new class extends Migration
         $candidate = $name;
 
         for ($n = 1; $this->nameTaken($connection, $nodes, $id, $rootId, $candidate); $n++) {
-            $marker = " (legacy {$n})";
+            $marker = sprintf(' (legacy %d)', $n);
             // An extension too long to keep beside the marker is shortened with the base.
             [$head, $tail] = strlen($marker.$extension) < self::NAME_MAX_BYTES ? [$base, $extension] : [$name, ''];
             $candidate = mb_strcut($head, 0, self::NAME_MAX_BYTES - strlen($marker.$tail), 'UTF-8').$marker.$tail;
@@ -176,6 +176,6 @@ return new class extends Migration
 
     private function indexName(string $nodes): string
     {
-        return "{$nodes}_root_uniq";
+        return $nodes.'_root_uniq';
     }
 };

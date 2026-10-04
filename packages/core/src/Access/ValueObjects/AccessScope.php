@@ -32,7 +32,7 @@ final readonly class AccessScope
     public static function forStorage(Drive $storage, ?Subject $nodeOwner = null): self
     {
         return new self(
-            panel: $storage->panel,
+            panel: $storage->profile,
             workspaceType: $storage->owner_type,
             workspaceId: $storage->owner_id,
             nodeOwner: $nodeOwner,

@@ -49,7 +49,7 @@ final readonly class ForceDeleteNodeAction
         $storage = $node->storage;
 
         $this->database->transaction(function () use ($node, $storage, $actorId): void {
-            $this->database->lockTree($node->storage_id);
+            $this->database->lockTree($node->drive_id);
 
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
 
@@ -78,7 +78,7 @@ final readonly class ForceDeleteNodeAction
             }
 
             event(new NodeForceDeleted(
-                storageId: $current->storage_id,
+                storageId: $current->drive_id,
                 nodeIds: array_values($ids),
                 freedBytes: $freedBytes,
                 actorId: $actorId,

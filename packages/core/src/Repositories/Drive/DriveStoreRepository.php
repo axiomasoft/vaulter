@@ -10,7 +10,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 
 /**
- * Write-side row work for v_storages (§2.1). Bare create + the byte-accounting
+ * Write-side row work for v_drives (§2.1). Bare create + the byte-accounting
  * mutations (used_bytes delta, root pointer). Opens NO transactions — the
  * StorageManager / Drive Actions wrap it. used_bytes is the EAGER quota cache
  * (§1.5): incremented within the upload transaction, decremented only on

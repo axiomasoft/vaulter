@@ -10,6 +10,7 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
@@ -30,11 +31,12 @@ it('V03 serializes revisions and accounts for their actual preceding heads', fun
     foreach ($outcomes as $outcome) {
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
+
     $file = $node->file()->firstOrFail();
     $head = $file->currentVersion;
-    expect($file->versions()->orderBy('version_no')->pluck('version_no')->all())->toBe([1, 2, 3])
-        ->and($file->version_count)->toBe(3)
-        ->and($head->version_no)->toBe(3)
+    expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 2, 3])
+        ->and($file->revision_count)->toBe(3)
+        ->and($head->number)->toBe(3)
         ->and($node->refresh()->current_version_id)->toBe($head->id)
         ->and($drive->storage()->refresh()->used_bytes)->toBe($head->size_bytes)
         ->and($node->size_bytes)->toBe($head->size_bytes);
@@ -53,10 +55,10 @@ it('V03 aggregate lock protects counter allocation even without a caller node lo
             $head = $locked->currentVersion;
             // Widen the read/write overlap: an unlocked reader also sees counter 1.
             usleep(100_000);
-            $versionNo = $locked->version_count + 1;
+            $versionNo = $locked->revision_count + 1;
             $attributes = $head->getAttributes();
             unset($attributes[$head->getKeyName()]);
-            $attributes['version_no'] = $versionNo;
+            $attributes['number'] = $versionNo;
             $version = app(FileRevisionStoreRepository::class)->create($attributes);
             $files->repointHead($locked, $version->id, $head->mime_type, $head->size_bytes, $versionNo);
 
@@ -67,11 +69,12 @@ it('V03 aggregate lock protects counter allocation even without a caller node lo
     foreach ($outcomes as $outcome) {
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
-    $numbers = array_map(static fn ($o): int => $o->value, $outcomes);
+
+    $numbers = array_map(static fn (RaceOutcome $o): int => $o->value, $outcomes);
     sort($numbers);
     expect($numbers)->toBe([2, 3])
-        ->and(File::query()->findOrFail($file->id)->version_count)->toBe(3)
-        ->and(FileRevision::query()->where('file_id', $file->id)->orderBy('version_no')->pluck('version_no')->all())->toBe([1, 2, 3]);
+        ->and(File::query()->findOrFail($file->id)->revision_count)->toBe(3)
+        ->and(FileRevision::query()->where('file_id', $file->id)->orderBy('number')->pluck('number')->all())->toBe([1, 2, 3]);
 });
 
 it('reuses prepared bytes on a serialization retry and discards the temp file', function (): void {
@@ -79,7 +82,7 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
     $before = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
     $injected = false;
     app(VaulterDatabase::class)->connection()->listen(function ($query) use (&$injected): void {
-        if (!$injected && str_starts_with($query->sql, 'insert into "v_files"')) {
+        if (!$injected && str_starts_with((string) $query->sql, 'insert into "v_files"')) {
             $injected = true;
             throw new PDOException('serialization failure', 40001);
         }
@@ -94,10 +97,11 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
     } finally {
         fclose($reader);
     }
+
     expect($injected)->toBeTrue()
         ->and($drive->storage()->refresh()->used_bytes)->toBe(20)
         ->and(File::query()->count())->toBe(1)
-        ->and(FileRevision::query()->sole()->version_no)->toBe(1)
+        ->and(FileRevision::query()->sole()->number)->toBe(1)
         ->and(Blob::query()->count())->toBe(1)
         ->and(Blob::query()->sole()->sha256)->toBe(hash('sha256', 'retry the same bytes'))
         ->and(glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [])->toBe($before);

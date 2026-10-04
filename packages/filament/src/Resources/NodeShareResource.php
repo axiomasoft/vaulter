@@ -369,11 +369,11 @@ final class NodeShareResource extends Resource
         /** @var array<int|string, string> $options */
         $options = $model::query()
             ->whereNull('trashed_at')
-            ->orderBy('storage_id')
+            ->orderBy('drive_id')
             ->orderBy('name')
             ->get()
             ->mapWithKeys(fn (Node $node): array => [
-                $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->storage_id),
+                $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
             ])
             ->all();
 

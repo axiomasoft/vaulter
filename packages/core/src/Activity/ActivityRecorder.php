@@ -52,7 +52,7 @@ final readonly class ActivityRecorder
 
         return $this->record(
             verb: EventType::GrantCreated,
-            storageId: $node->storage_id,
+            storageId: $node->drive_id,
             tenantId: $event->grant->tenant_id,
             actorId: $event->actorId,
             target: $node,
@@ -87,7 +87,7 @@ final readonly class ActivityRecorder
 
         return $this->record(
             verb: EventType::ShareCreated,
-            storageId: $node->storage_id,
+            storageId: $node->drive_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
             target: $node,
@@ -107,7 +107,7 @@ final readonly class ActivityRecorder
 
         return $this->record(
             verb: EventType::ShareRevoked,
-            storageId: $node->storage_id,
+            storageId: $node->drive_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
             target: $node,
@@ -133,7 +133,7 @@ final readonly class ActivityRecorder
     ): Activity {
         return $this->record(
             verb: $verb,
-            storageId: $node->storage_id,
+            storageId: $node->drive_id,
             tenantId: $node->tenant_id,
             actorId: $actorId,
             target: $node,
@@ -143,8 +143,8 @@ final readonly class ActivityRecorder
 
     /**
      * Resolve the actor morph + request context, then persist EXACTLY ONE row. The
-     * PUBLIC low-level seam: callers that have no node target (storage.created — the
-     * target is the root folder; node.force_deleted — the nodes are gone) pass the
+     * PUBLIC low-level seam: callers that have no node target (drive.created — the
+     * target is the root folder; node.purged — the nodes are gone) pass the
      * scope scalars + optional target model directly.
      *
      * @param array<string, mixed>|null $context

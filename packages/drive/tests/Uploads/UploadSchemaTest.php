@@ -20,7 +20,7 @@ it('creates v_upload_sessions with every §2.8 column', function (): void {
     $table = Config::table('upload_sessions');
 
     expect(Schema::hasColumns($table, [
-        'id', 'tenant_id', 'storage_id', 'upload_id', 'node_id', 'target_parent_id',
+        'id', 'tenant_id', 'drive_id', 'upload_id', 'target_node_id', 'result_node_id', 'result_revision_id', 'target_parent_id',
         'target_name', 'protocol', 'status', 'expected_sha256', 'total_size_bytes',
         'received_bytes', 'chunk_size', 'mime_type', 'parts', 'assembled_blob_id',
         'metadata', 'extra_data', 'expires_at', 'created_by', 'created_at', 'updated_at',
@@ -41,13 +41,13 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
     $model = Config::uploadSessionModel();
 
     $base = [
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'upload_id' => '0193a5f0-9a3b-7c2d-8e4f-0000000000aa',
         'protocol' => UploadProtocol::Tus,
         'status' => UploadStatus::Initiated,
     ];
 
-    // forceFill (P1.4/F-P1.8-02): storage_id/protocol/status are excluded from
+    // forceFill (P1.4/F-P1.8-02): drive_id/protocol/status are excluded from
     // UploadSession's closed $fillable list — bypassed here exactly like
     // UploadSessionManager::initiate() does.
     $create = static function () use ($model, $base): void {

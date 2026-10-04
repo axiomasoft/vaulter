@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 /**
  * v_outbox — the transactional-outbox staging table (master plan §2.11 / D14 / M3b),
@@ -18,10 +17,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Config::featureEnabled('reliability')) {
-            return;
-        }
-
         (new SchemaBuilder)->createTable(
 
             entity: 'outbox',

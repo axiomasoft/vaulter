@@ -55,20 +55,17 @@ keeps resolving. See [Multi-tenancy](/guide/multi-tenancy) for the tenant-aware-
 
 ## Table names & prefix
 
-Every table is named `{table_prefix}{base}`. Override the prefix globally, or rename a single
-entity's table in `table_names`:
+Every table is named `{table_prefix}{canonical_entity}`. Configure a global prefix:
 
 ```php
-'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'), // → v_storages, v_nodes, …
-'table_names' => [
-    'storages' => 'storages',
-    'nodes'    => 'nodes',
-    'blobs'    => 'blobs',
-    // …one base name per entity
-],
+'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'), // v_drives, v_nodes, …
 ```
 
-So `storages` with prefix `v_` becomes the table `v_storages`.
+`Config::table('drives')` returns `v_drives`. Per-entity `table_names` overrides
+are legacy upgrade inputs only: `Config::legacyTable()` reads them while migrations
+normalize old physical names. Fresh installs ignore them. All core tables exist
+regardless of feature flags; runtime routes and behavior still honor those flags.
+Back up before upgrading; see [UPGRADE.md](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
 ## Primary key strategy (`ids`)
 
@@ -280,7 +277,7 @@ through the same race-free `BlobStore.commit`:
 ],
 ```
 
-The `uploads` feature flag gates the schema **and** the route group. Details in
+The `uploads` feature flag gates the route group; upload tables always exist. Details in
 [Uploads](/guide/uploads).
 
 ## Reliability — outbox & webhooks

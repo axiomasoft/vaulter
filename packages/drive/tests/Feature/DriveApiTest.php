@@ -319,7 +319,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
         $this->postJson($base.'/folders', ['name' => 'Sib'.$i])->assertCreated();
     }
 
-    $storageTable = Config::table('storages');
+    $storageTable = Config::table('drives');
     $storageQueries = 0;
 
     DB::listen(function (object $query) use (&$storageQueries, $storageTable): void {

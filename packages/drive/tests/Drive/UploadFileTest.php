@@ -21,7 +21,7 @@ beforeEach(function (): void {
 it('загружает файл: node kind=file + File + FileRevision + ребро', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('hello drive'), originalName: 'hello.txt', mimeType: 'text/plain');
+    $node = $drive->upload(DriveTestHelpers::streamFor('hello drive'), mimeType: 'text/plain', originalName: 'hello.txt');
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->name)->toBe('hello.txt')
@@ -61,7 +61,7 @@ it('квота: загрузка сверх квоты отклоняется Д
     $drive = DriveTestHelpers::drive();
     $drive->storage()->forceFill(['quota_bytes' => 5])->save();
 
-    expect(fn () => $drive->upload(DriveTestHelpers::streamFor('too many bytes'), originalName: 'x.bin'))
+    expect(fn (): Node => $drive->upload(DriveTestHelpers::streamFor('too many bytes'), originalName: 'x.bin'))
         ->toThrow(QuotaExceededException::class);
 
     expect(Blob::query()->count())->toBe(0)
@@ -69,7 +69,7 @@ it('квота: загрузка сверх квоты отклоняется Д
         ->and($drive->storage()->refresh()->used_bytes)->toBe(0);
 });
 
-it('новая версия: бамп version_no, перенаведение head, прежняя superseded', function (): void {
+it('новая версия: бамп number, перенаведение head, прежняя superseded', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(DriveTestHelpers::streamFor('v1'), originalName: 'doc.txt');
@@ -79,10 +79,10 @@ it('новая версия: бамп version_no, перенаведение hea
 
     $file = $updated->file;
 
-    expect($file->version_count)->toBe(2)
+    expect($file->revision_count)->toBe(2)
         ->and($updated->current_version_id)->not->toEqual($firstVersionId)
         ->and(FileRevision::query()->find($firstVersionId)->status)->toBe('superseded')
-        ->and($file->currentVersion->version_no)->toBe(2);
+        ->and($file->currentVersion->number)->toBe(2);
 });
 
 it('новая версия корректирует used_bytes на дельту размера', function (): void {

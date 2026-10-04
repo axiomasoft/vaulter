@@ -27,7 +27,7 @@ it('preserves values, nullability and indexes when upgrading and restoring MySQL
         'nodes' => ['tenant_id' => true, 'owner_id' => true, 'trashed_by' => true, 'created_by' => true, 'updated_by' => true],
         'blobs' => ['tenant_id' => true],
         'files' => ['tenant_id' => true, 'created_by' => true],
-        'file_versions' => ['tenant_id' => true, 'created_by' => true],
+        'file_revisions' => ['tenant_id' => true, 'created_by' => true],
         'node_grants' => ['tenant_id' => true, 'subject_id' => false, 'granted_by' => true],
         'node_shares' => ['tenant_id' => true, 'granted_by' => true],
         'node_comments' => ['tenant_id' => true, 'author_id' => false, 'resolved_by' => true],

@@ -1,0 +1,46 @@
+[
+  {
+    "package": "documents",
+    "check": "pint",
+    "cwd": "packages/documents",
+    "command": [
+      "vendor/bin/pint",
+      "--test",
+      "src",
+      "tests"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/documents-pint-final.log",
+    "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2",
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "package": "documents",
+    "check": "phpstan",
+    "cwd": "packages/documents",
+    "command": [
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--error-format=json"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/documents-phpstan-final.log",
+    "sha256": "3e51e450516f8bc8d8c5ca1cdb3ec169b9f3b1d7898f08919138363f8b921a4b",
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/documents/phpstan.neon.\n  0/72 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%\n 72/72 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%\n\n{\"totals\":{\"errors\":0,\"file_errors\":0},\"files\":{},\"errors\":[]}"
+  },
+  {
+    "package": "documents",
+    "check": "tests",
+    "cwd": "packages/documents",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/documents-tests-final.log",
+    "sha256": "c708094f6b3a88ec0f8698e1124dc925255c5271ba7c6936296d17d6514d322c",
+    "summary": "\n  ............................................................................\n  ..........................................................s.................\n  ............................................................................\n  .............................\n\n  Tests:    1 skipped, 256 passed (833 assertions)\n  Duration: 24.30s\n\n"
+  }
+]

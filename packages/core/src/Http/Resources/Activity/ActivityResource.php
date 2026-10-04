@@ -30,7 +30,7 @@ final class ActivityResource extends JsonResource
         return [
             'id' => $activity->getKey(),
             'verb' => $activity->verb->value,
-            'storage_id' => $activity->storage_id,
+            'storage_id' => $activity->drive_id,
             'actor_type' => $activity->actor_type,
             'actor_id' => $activity->actor_id,
             'target_type' => $activity->target_type,

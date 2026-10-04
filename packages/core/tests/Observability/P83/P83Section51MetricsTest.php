@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Jobs\SyncJob;
@@ -28,6 +29,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 beforeEach(function (): void {
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
+
     $this->app->forgetInstance(MetricsRecorder::class);
 });
 
@@ -104,7 +106,7 @@ it('records vaulter_activity_write_total when activity is persisted', function (
 
     app(MetricsRecorder::class)->assertCounter(
         name: 'vaulter_activity_write_total',
-        labels: ['verb' => 'storage.created'],
+        labels: ['verb' => 'drive.created'],
     );
 });
 
@@ -114,7 +116,7 @@ it('records vaulter_broadcast_queue_wait_seconds for queued broadcast jobs', fun
 
     $payload = [
         'uuid' => 'job-1',
-        'displayName' => 'Illuminate\\Broadcasting\\BroadcastEvent',
+        'displayName' => BroadcastEvent::class,
         'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
         'pushedAt' => microtime(true) - 0.05,
     ];
@@ -150,7 +152,7 @@ it('records vaulter_collab_room_active from hub stats', function (): void {
     putenv('VAULTER_COLLAB_STATS_URL=http://collab.test/stats');
 
     $fake = app(MetricsRecorder::class);
-    (new CollaborationRoomMetrics($fake))->observeActiveRooms();
+    new CollaborationRoomMetrics($fake)->observeActiveRooms();
 
     $fake->assertGauge(name: 'vaulter_collab_room_active');
 });

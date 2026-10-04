@@ -1,0 +1,20 @@
+{
+  "baseline_head": "0df7704ee66155934708ce6e8e26703ad031d71b",
+  "baseline_exit": 2,
+  "candidate_exit": 2,
+  "fingerprint": [
+    "SQLSTATE[HY000]",
+    "1215",
+    "sibling_active",
+    "STORED",
+    "parent_id"
+  ],
+  "classification": "pre-existing P2.1 fresh-MySQL defect explicitly excepted by P2.7",
+  "owner": "PLAN2.P8.1",
+  "baseline_product": "git archive HEAD with baseline-first PSR4 paths; unchanged product and TestCase; test-only RefreshDatabase probe and bootstrap vendor transport",
+  "baseline_builder_sha256": "50a7c64b0f058c65287adb723ca5902459b75cd41912423b1c3b94eeb872e2c1",
+  "evidence": [
+    "mysql-p21-baseline.log",
+    "mysql-candidate.log"
+  ]
+}

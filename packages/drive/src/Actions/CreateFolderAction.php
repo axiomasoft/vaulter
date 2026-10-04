@@ -46,7 +46,7 @@ final readonly class CreateFolderAction
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
             if (!$this->tree->sameStorage($parent, $data->storage->id)) {
-                throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
+                throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->drive_id);
             }
 
             $this->tree->assertActiveFolder($parent);
@@ -56,7 +56,7 @@ final readonly class CreateFolderAction
             }
 
             $node = $this->store->create([
-                'storage_id' => $data->storage->id,
+                'drive_id' => $data->storage->id,
                 'parent_id' => $parentId,
                 'kind' => NodeKind::Folder,
                 'name' => $name,

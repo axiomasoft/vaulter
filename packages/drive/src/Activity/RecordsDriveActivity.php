@@ -69,7 +69,7 @@ final readonly class RecordsDriveActivity
             actorId: $event->actorId,
             target: $event->root,
             context: [
-                'storage_id' => Identity::stringify($event->storage->getKey()),
+                'drive_id' => Identity::stringify($event->storage->getKey()),
                 'owner_type' => $event->storage->owner_type,
                 'owner_id' => Identity::stringify($event->storage->owner_id),
                 'name' => $event->storage->name,
@@ -113,7 +113,7 @@ final readonly class RecordsDriveActivity
             node: $event->node,
             actorId: $event->actorId,
             context: [
-                'version_no' => $event->versionNo,
+                'number' => $event->versionNo,
                 'version_id' => Identity::stringify($event->version->getKey()),
                 'size_bytes' => $event->version->size_bytes,
             ],
@@ -214,7 +214,7 @@ final readonly class RecordsDriveActivity
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadInitiated,
-            storageId: $event->session->storage_id,
+            storageId: $event->session->drive_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,
             context: [
@@ -229,7 +229,7 @@ final readonly class RecordsDriveActivity
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadAborted,
-            storageId: $event->session->storage_id,
+            storageId: $event->session->drive_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,
             context: [
@@ -244,7 +244,7 @@ final readonly class RecordsDriveActivity
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadExpired,
-            storageId: $event->session->storage_id,
+            storageId: $event->session->drive_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,
             context: [

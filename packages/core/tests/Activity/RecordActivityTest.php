@@ -36,26 +36,26 @@ beforeEach(function (): void {
 
 // ─────────────────────────────── one event ⇒ one row ──────────────────────────
 
-it('writes one storage.created row with the storage scope and root target', function (): void {
+it('writes one drive.created row with the storage scope and root target', function (): void {
     $storage = DriveTestHelpers::drive()->storage();
 
     $row = ActivityTestHelpers::only(EventType::DriveCreated->value);
 
-    expect($row->storage_id)->toEqual($storage->getKey())
+    expect($row->drive_id)->toEqual($storage->getKey())
         ->and($row->target_id)->toEqual($storage->root_node_id)
         ->and($row->context['name'])->toBe($storage->name);
 });
 
-it('writes one node.created row carrying the actor and the kind/name context', function (): void {
+it('writes one folder.created row carrying the actor and the kind/name context', function (): void {
     $drive = DriveTestHelpers::drive();
-    // The storage root already fired a node.created; isolate this folder's row.
+    // The storage root already fired a folder.created; isolate this folder's row.
     Activity::query()->delete();
     $folder = $drive->createFolder('reports', actorId: 7);
 
     $row = ActivityTestHelpers::only(EventType::FolderCreated->value);
 
     expect($row->target_id)->toEqual($folder->getKey())
-        ->and($row->storage_id)->toEqual($folder->storage_id)
+        ->and($row->drive_id)->toEqual($folder->drive_id)
         ->and($row->actor_id)->toEqual(7)
         ->and($row->actor_type)->toBe((new TestUser)->getMorphClass())
         ->and($row->context['name'])->toBe('reports')
@@ -73,7 +73,7 @@ it('writes one file.uploaded row with size + version context', function (): void
         ->and($row->context['size_bytes'])->toBe(7);
 });
 
-it('writes one version.created row when a new version is committed', function (): void {
+it('writes one file.revision_added row when a new version is committed', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('v1'), originalName: 'doc.txt');
 
@@ -82,7 +82,7 @@ it('writes one version.created row when a new version is committed', function ()
     $row = ActivityTestHelpers::only(EventType::FileRevisionAdded->value);
 
     expect($row->target_id)->toEqual($node->getKey())
-        ->and($row->context['version_no'])->toBe(2);
+        ->and($row->context['number'])->toBe(2);
 });
 
 it('writes one node.moved row with from/to parent context', function (): void {
@@ -136,7 +136,7 @@ it('writes one node.trashed and one node.restored row across the lifecycle', fun
         ->and(ActivityTestHelpers::only(EventType::NodeRestored->value)->target_id)->toEqual($folder->getKey());
 });
 
-it('writes one node.force_deleted row with the freed bytes and ids (no target)', function (): void {
+it('writes one node.purged row with the freed bytes and ids (no target)', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('to-delete'), originalName: 'gone.txt');
     $drive->trash($node, actorId: 7);
@@ -146,7 +146,7 @@ it('writes one node.force_deleted row with the freed bytes and ids (no target)',
     $row = ActivityTestHelpers::only(EventType::NodePurged->value);
 
     expect($row->target_id)->toBeNull()
-        ->and($row->storage_id)->toEqual($node->storage_id)
+        ->and($row->drive_id)->toEqual($node->drive_id)
         ->and($row->context['freed_bytes'])->toBeGreaterThan(0)
         ->and($row->context['node_ids'])->toContain((string) $node->getKey());
 });

@@ -97,7 +97,7 @@ final class NodeResource extends Resource
                     ->formatStateUsing(fn (NodeKind $state): string => $state->label())
                     ->sortable(),
 
-                TextColumn::make('storage_id')
+                TextColumn::make('drive_id')
                     ->label('Storage')
                     ->sortable()
                     ->toggleable(),
@@ -128,7 +128,7 @@ final class NodeResource extends Resource
                 SelectFilter::make('kind')
                     ->options(self::kindOptions()),
 
-                SelectFilter::make('storage_id')
+                SelectFilter::make('drive_id')
                     ->label('Storage')
                     ->options(fn (): array => self::storageOptions()),
 
@@ -367,7 +367,7 @@ final class NodeResource extends Resource
         $model = Config::nodeModel();
 
         return $model::query()
-            ->where('storage_id', $record->storage_id)
+            ->where('drive_id', $record->drive_id)
             ->where('kind', NodeKind::Folder->value)
             ->whereNull('trashed_at')
             ->whereKeyNot($record->getKey())
@@ -405,7 +405,7 @@ final class NodeResource extends Resource
 
         /** @var Node|null $folder */
         $folder = $model::query()
-            ->where('storage_id', $record->storage_id)
+            ->where('drive_id', $record->drive_id)
             ->whereKey($parentId)
             ->first();
 

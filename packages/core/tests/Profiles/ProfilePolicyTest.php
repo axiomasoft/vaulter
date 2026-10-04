@@ -26,11 +26,10 @@ it('применяет дефолты фич Vaulter с override панели', 
 });
 
 it('хранит host, storage type и grants', function (): void {
-    $panel = (new Profile)->id('p')->host(FakeProject::class)->storageType('team');
+    $panel = (new Profile)->id('p')->host(FakeProject::class);
 
     expect($panel->getId())->toBe('p')
         ->and($panel->hostModel())->toBe(FakeProject::class)
-        ->and($panel->storageTypeKey())->toBe('team')
         ->and($panel->hasGrants())->toBeTrue()
         ->and((new Profile)->withoutGrants()->hasGrants())->toBeFalse();
 });

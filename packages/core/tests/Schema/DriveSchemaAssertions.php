@@ -19,14 +19,14 @@ final class DriveSchemaAssertions
     public static function columnExpectations(): array
     {
         return [
-            ['v_storages', [
-                'id', 'panel', 'tenant_id', 'owner_type', 'owner_id', 'name', 'slug',
-                'root_node_id', 'disk', 'storage_type', 'quota_bytes', 'used_bytes',
-                'status', 'default_node_permissions', 'extra_data', 'created_by',
-                'deleted_at', 'created_at', 'updated_at',
+            ['v_drives', [
+                'id', 'profile', 'tenant_id', 'owner_type', 'owner_id', 'name',
+                'root_node_id', 'disk', 'quota_bytes', 'used_bytes',
+                'status', 'extra_data', 'created_by',
+                'created_at', 'updated_at',
             ]],
             ['v_nodes', [
-                'id', 'panel', 'tenant_id', 'storage_id', 'parent_id', 'kind', 'name',
+                'id', 'profile', 'tenant_id', 'drive_id', 'parent_id', 'kind', 'name',
                 'mime_type', 'extension', 'size_bytes', 'current_version_id', 'file_id',
                 'position', 'is_pinned', 'inherit_grants', 'shortcut_target_id',
                 'owner_id', 'extra_data', 'trashed_at', 'trashed_by',
@@ -34,30 +34,30 @@ final class DriveSchemaAssertions
                 'created_at', 'updated_at',
             ]],
             ['v_blobs', [
-                'id', 'tenant_id', 'storage_id', 'hash_algo', 'sha256', 'size_bytes',
+                'id', 'tenant_id', 'drive_id', 'hash_algo', 'sha256', 'size_bytes',
                 'disk', 'storage_key', 'status', 'ref_count', 'dedup_scope', 'etag',
                 'md5', 'crc32c', 'chunked', 'encryption_key_id', 'first_seen_at',
                 'committed_at', 'delete_after_at', 'extra_data',
             ]],
             ['v_files', [
-                'id', 'tenant_id', 'node_id', 'current_version_id', 'mime_type',
-                'size_bytes', 'version_count', 'extra_data', 'created_by',
-                'deleted_at', 'created_at', 'updated_at',
+                'id', 'tenant_id', 'node_id', 'current_revision_id', 'mime_type',
+                'size_bytes', 'revision_count', 'extra_data', 'created_by',
+                'created_at', 'updated_at',
             ]],
-            ['v_file_versions', [
-                'id', 'tenant_id', 'file_id', 'version_no', 'blob_id',
-                'manifest_blob_id', 'content_sha256', 'size_bytes', 'mime_type',
+            ['v_file_revisions', [
+                'id', 'tenant_id', 'file_id', 'number', 'blob_id',
+                'manifest_blob_id', 'sha256', 'size_bytes', 'mime_type',
                 'original_name', 'status', 'keep_forever', 'extra_data', 'created_by',
                 'created_at', 'committed_at',
             ]],
-            ['v_file_version_blobs', [
-                'file_version_id', 'blob_id', 'role', 'ordinal', 'offset_bytes',
+            ['v_file_revision_blobs', [
+                'file_revision_id', 'blob_id', 'role', 'ordinal', 'offset_bytes',
                 'length_bytes',
             ]],
             ['v_node_grants', [
                 'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'level',
-                'permissions', 'effect', 'scope', 'inherited', 'inherited_from_node_id',
-                'expires_at', 'granted_by', 'extra_data', 'deleted_at', 'created_at',
+                'permissions', 'effect', 'scope',
+                'expires_at', 'granted_by', 'extra_data', 'created_at',
                 'updated_at',
             ]],
         ];

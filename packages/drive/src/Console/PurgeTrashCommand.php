@@ -84,7 +84,7 @@ final class PurgeTrashCommand extends Command
                         // and this subtree is skipped instead of being purged out from
                         // under a user who just restored it.
                         // Tree lock first, as every tree write takes it before node rows.
-                        $this->database->lockTree($node->storage_id);
+                        $this->database->lockTree($node->drive_id);
                         $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
 
                         if ($locked === null) {

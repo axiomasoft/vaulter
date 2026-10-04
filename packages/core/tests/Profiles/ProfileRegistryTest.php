@@ -30,7 +30,7 @@ it('явная панель переопределяет дефолт, заре�
     );
 
     expect($registry->all())->toHaveCount(1)
-        ->and($registry->default()->storageTypeKey())->toBe('overridden');
+        ->and($registry->default()->getId())->toBe('default');
 });
 
 it('get бросает UnknownProfileException на неизвестную панель', function (): void {

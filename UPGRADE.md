@@ -6,6 +6,61 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Canonical schema 0.3 (P2.7)
+
+Back up the database and object store before running `php artisan migrate --force`
+in production. Stop application writes during the code/schema upgrade; deploy the
+canonical code and migrate stored events together. Migration №1 refuses soft-deleted
+nodes, drives or files, documents without revisions, and own-tables installations.
+It lists offending rows/tables and recommends `vaulter:upgrade:inspect` (planned for
+P7; it is not shipped yet). Resolve these conditions before retrying.
+
+The existing base migration filenames stay unchanged. Fresh installs create all
+core tables regardless of feature flags; those flags still control runtime behavior.
+The upgrade sequence includes the existing №3 host keys, №6 second-root repair and
+№7 blob scopes between these new steps:
+
+| Migration | Change |
+|---|---|
+| №1 `2026_10_01_000001_vaulter_preflight` | Read-only safety checks before any rename. |
+| №2 `…000002_rename_storages_to_drives` | Normalize legacy table overrides, rename `storages` to `drives`, `panel` to `profile` and `storage_id` to `drive_id`; create missing core tables. |
+| №4 `…000004_file_revisions` | `file_versions` / `file_version_blobs` become `file_revisions` / `file_revision_blobs`; `version_no` → `number`, `content_sha256` → `sha256`, `file_version_id` → `file_revision_id`. File handles use `current_revision_id` / `revision_count`. Upload sessions use `target_node_id` and nullable result references. |
+| №8 `…000008_grants_shares_cleanup` | Hard-delete soft-deleted grants; preserve share revocation as `COALESCE(revoked_at, deleted_at)`; remove deleted/inherited columns and use an ordinary grant UNIQUE. |
+| №9 `…000009_events` | Convert activity/outbox/delivery events and endpoint subscription lists; add activity occurrence ID and nullable outbox aggregate columns. |
+
+`Config::table()` now always returns prefix + canonical entity name. Old
+`vaulter.table_names` is read only by `Config::legacyTable()` during upgrade.
+Drive/File/NodeGrant/NodeShare models no longer use Eloquent `SoftDeletes`.
+`Profile::storageType()` and `storageTypeKey()` are removed. HTTP JSON keys such as
+`storage_id`, `version_no`, `content_sha256` and `panel` stay unchanged until P6.1;
+removed drive metadata `slug` and `storage_type` return null.
+
+Rollback restores historical names, structure and event values, but cannot recover
+hard-deleted grants, deleted drive metadata (`slug`, `storage_type`,
+`default_node_permissions`), or the original grant inheritance fields. Reintroduced
+columns use defaults (`storage_type=private`, permissions=31, inherited=false,
+nullable fields=null). Share revocation and №6 tree repairs remain in effect. Tables
+created for previously disabled features remain. Roll back the full upgrade batch to
+reach migration №2: `--step=5` only reaches №4 when all eight upgrade migrations run.
+Fresh-install rollback leaves canonical names for the base migrations to drop.
+
+Webhook consumers must update these event names. Subscription conversion preserves
+order, duplicates, wildcards and third-party names:
+
+| 0.2 | 0.3 |
+|---|---|
+| `storage.created` | `drive.created` |
+| `node.created` | `folder.created` |
+| `version.created` | `file.revision_added` |
+| `node.force_deleted` | `node.purged` |
+| `upload_session.initiated/aborted/expired` | `upload.initiated/aborted/expired` |
+
+Node document versions and the node's `current_version_id`, `file_id`, `deleted_at`
+remain until P4.1. Historical PostgreSQL bigint and ULID fixtures are supported;
+MySQL fresh installation still has the known generated-column/FK blocker owned by
+P8.1 (see [database compatibility](docs/guide/database-compatibility.md)).
+
+
 ### Prepared CAS commit and atomic quota (AD21)
 
 Custom implementations of `Vaulter\Contracts\Cas\BlobStore` must add

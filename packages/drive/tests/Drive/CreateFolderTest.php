@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 it('создаёт папку в корне хранилища (под root-узлом)', function (): void {
@@ -18,7 +19,7 @@ it('создаёт папку в корне хранилища (под root-уз
     expect($folder->kind)->toBe(NodeKind::Folder)
         ->and($folder->name)->toBe('Docs')
         ->and($folder->parent_id)->toEqual($drive->root()->getKey())
-        ->and($folder->storage_id)->toEqual($drive->storage()->getKey());
+        ->and($folder->drive_id)->toEqual($drive->storage()->getKey());
 });
 
 it('создаёт вложенную папку под родителем', function (): void {
@@ -35,7 +36,7 @@ it('детерминированно отклоняет конфликт имё�
 
     $drive->createFolder('Docs');
 
-    expect(fn () => $drive->createFolder('Docs'))
+    expect(fn (): Node => $drive->createFolder('Docs'))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -44,7 +45,7 @@ it('игнорирует регистр при проверке сиблинго
 
     $drive->createFolder('Docs');
 
-    expect(fn () => $drive->createFolder('DOCS'))
+    expect(fn (): Node => $drive->createFolder('DOCS'))
         ->toThrow(NodeNameConflictException::class);
 });
 

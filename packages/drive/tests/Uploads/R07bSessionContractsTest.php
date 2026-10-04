@@ -53,7 +53,7 @@ function r07bReqTenantStorage(int $tenantId): Drive
 
     $root = new Node;
     $root->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => null,
         'kind' => NodeKind::Folder,
         'name' => '',
@@ -117,7 +117,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
 
     $node = new Node;
     $node->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $root->getKey(),
         'kind' => NodeKind::File,
         'name' => 'versioned.bin',
@@ -128,13 +128,11 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
     $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
         storage: $storage,
         protocol: UploadProtocol::Tus,
-        targetParent: null,
-        targetName: null,
         targetNode: $node,
         totalSizeBytes: 4,
     ));
 
-    expect($session->node_id)->toEqual($node->getKey());
+    expect($session->target_node_id)->toEqual($node->getKey());
 });
 
 it('R07b: initiate metadata=[] stores null not empty-array (L77 RemoveArrayItem metadata coalesce)', function (): void {
@@ -231,7 +229,6 @@ it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem act
             targetParent: $root,
             targetName: $name,
             totalSizeBytes: 4,
-            actorId: null,
         ));
     }
 
@@ -249,7 +246,7 @@ it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArr
             storage: $storage,
             protocol: UploadProtocol::Tus,
             targetParent: $root,
-            targetName: "unlimited-{$i}.bin",
+            targetName: sprintf('unlimited-%s.bin', $i),
             totalSizeBytes: 4,
             actorId: 88,
         ));
@@ -267,8 +264,8 @@ it('R07b: guardTransition ValidationException carries the "status" field in erro
     try {
         app(UploadSessionManager::class)->markAssembled($session->refresh());
         expect(false)->toBeTrue('Expected ValidationException was not thrown');
-    } catch (ValidationException $e) {
-        expect(array_keys($e->errors()))->toContain('status');
+    } catch (ValidationException $validationException) {
+        expect(array_keys($validationException->errors()))->toContain('status');
     }
 });
 
@@ -375,7 +372,7 @@ it('R07b: handleUploadSessionAborted upload_id context is the session upload_id 
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(RecordsDriveActivity::class)->handleUploadSessionAborted(
-        new UploadSessionAborted($session->refresh(), actorId: null),
+        new UploadSessionAborted($session->refresh()),
     );
 
     $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
@@ -430,7 +427,7 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
     // Use integer node ids (SQLite auto-increment) so UnwrapArrayMap would leave ints
     $node1 = new Node;
     $node1->forceFill([
-        'storage_id' => $storage->getKey(),
+        'drive_id' => $storage->getKey(),
         'parent_id' => $root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => 'str-check',
@@ -475,9 +472,7 @@ it('R07b: acquireForPatch pgsql advisory lock key includes upload: prefix (L90 C
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4);
 
     // On pgsql, acquireForPatch inside a transaction should succeed (no one else holds the lock)
-    $locked = DB::transaction(function () use ($session): UploadSession {
-        return app(UploadSessionStoreRepository::class)->acquireForPatch($session);
-    });
+    $locked = DB::transaction(fn (): UploadSession => app(UploadSessionStoreRepository::class)->acquireForPatch($session));
 
     expect($locked->upload_id)->toBe($session->upload_id);
-})->skip(fn () => DB::connection()->getDriverName() !== 'pgsql', 'advisory lock observable on pgsql only');
+})->skip(fn (): bool => DB::connection()->getDriverName() !== 'pgsql', 'advisory lock observable on pgsql only');

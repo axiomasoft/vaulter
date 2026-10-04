@@ -1,0 +1,111 @@
+{
+  "schema_version": "plan-terminal-reconciliation/v1",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P2.7",
+  "terminal": {
+    "line": 71,
+    "sha256": "sha256:faa7345dc2c7b6b8a95ad346e6206528e5281cab12fd4f308a37cad05bb4e7cc",
+    "run_id": "e9170bf0bf7e19bfba10a5c68dd9258681adfaa3a982d15102bced6a0cbeb990",
+    "result": "closed-deviations",
+    "command": "plan-run",
+    "batch_receipt": {
+      "batch_id": "solo",
+      "completed_prefix": [
+        "P2.7"
+      ],
+      "handoff_digest": "e00ca15a786a98e44694a2ecb3e7f6aa2bea9b8c6752dcbaa9e1a47cc35575d8",
+      "invocation_digest": "ac54af1430b3d8db7f419e8eafcace23d1f3b64bc6c1751bba294c862f4630e8",
+      "membership": [
+        "P2.7"
+      ],
+      "routing_digest": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "3d0286467ea18f3253a464407abe4a3680e60dfff949e93b6a2b8568db7940d6",
+      "stop_disposition": "continue"
+    }
+  },
+  "reconciled_items": [
+    "P2.7"
+  ],
+  "next_bundle": "bundles/P2.2.json",
+  "receipt": {
+    "schema_version": "terminal-delivery-receipt/v1",
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "subject": "P2.7",
+    "status": "🟠 Done with deviations",
+    "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.2 P2.3",
+    "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.2 P2.3\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | B2-A |\n| Model class | implementation |\n| Model | gpt-6-sol |\n| Effort | medium |\n| Context | continue-root |\n| Essence | Rename Drive and Documents module APIs against the canonical schema. |\n\n```session-continuity-decision/v1\n{\"evidence\": [\"batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\", \"loaded-inputs:reusable\", \"cold-start-cost:0\", \"lifecycle:scope-complete\", \"checkpoint:artifacts/P2.7/completion.md\"], \"outcome\": \"continue-root\", \"reason\": \"authorized-scope-complete\", \"runnable\": true, \"schema_version\": \"session-continuity-decision/v1\"}\n```",
+    "route": {
+      "batch": "B2-A",
+      "model": "gpt-6-sol",
+      "thinking": null,
+      "context": "continue-root",
+      "command": null,
+      "continuity": {
+        "outcome": "continue-root",
+        "reason": "authorized-scope-complete",
+        "evidence": [
+          "batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "loaded-inputs:reusable",
+          "cold-start-cost:0",
+          "lifecycle:scope-complete",
+          "checkpoint:artifacts/P2.7/completion.md"
+        ],
+        "runnable": true,
+        "schema_version": "session-continuity-decision/v1"
+      }
+    },
+    "continuity": {
+      "outcome": "continue-root",
+      "reason": "authorized-scope-complete",
+      "evidence": [
+        "batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "lifecycle:scope-complete",
+        "checkpoint:artifacts/P2.7/completion.md"
+      ],
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    },
+    "rationale": {
+      "remaining": "P2.2–P2.6; P2 remains open. B2-A is outside this invocation.",
+      "open_risks": "MySQL fresh-install error 1215 belongs to P8.1 and is reproduced on unchanged P2.1. SQLite conditional skips/risky remain visible. Azgard uses the unchanged qualified P0 dependency; qualification of new dev-main belongs to P2.4."
+    },
+    "commit_sha": "0df7704ee66155934708ce6e8e26703ad031d71b",
+    "journal": {
+      "line": 71,
+      "sha256": "sha256:faa7345dc2c7b6b8a95ad346e6206528e5281cab12fd4f308a37cad05bb4e7cc",
+      "run_id": "e9170bf0bf7e19bfba10a5c68dd9258681adfaa3a982d15102bced6a0cbeb990",
+      "result": "closed-deviations",
+      "command": "plan-run",
+      "batch_receipt": {
+        "batch_id": "solo",
+        "completed_prefix": [
+          "P2.7"
+        ],
+        "handoff_digest": "e00ca15a786a98e44694a2ecb3e7f6aa2bea9b8c6752dcbaa9e1a47cc35575d8",
+        "invocation_digest": "ac54af1430b3d8db7f419e8eafcace23d1f3b64bc6c1751bba294c862f4630e8",
+        "membership": [
+          "P2.7"
+        ],
+        "routing_digest": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+        "schema_version": "batch-receipt/v1",
+        "spec_digest": "3d0286467ea18f3253a464407abe4a3680e60dfff949e93b6a2b8568db7940d6",
+        "stop_disposition": "continue"
+      }
+    },
+    "adapter_attestation": {
+      "package": "task",
+      "version": "0.28.0",
+      "command_id": "task:plan-run",
+      "canonical_command_sha256": "sha256:c8e9c5f9179827994fdc31a95d10b55d49c0042a2b893b6f16f421488db5cbcb"
+    },
+    "digests": {
+      "plan": "sha256:e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+      "handoff": "sha256:a3b13f995ce0add98620584d6eecafb84308bbe204e2dc1cd26b0f713b4dbe50",
+      "state": "sha256:6ed653b670e03b76fe7ea3982279b74aaccd2349b800dfb36ede84a804cfc72f",
+      "closure": null
+    }
+  }
+}

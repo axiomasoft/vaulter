@@ -1,0 +1,179 @@
+[
+  {
+    "check": "upgrade-schema",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/Upgrade",
+      "packages/core/tests/Schema"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-upgrade-schema.log",
+    "sha256": "6a8f80eacf1a2c4558a6d8930c692f9a62773b6ea5c41e0a8f2a80f9b15baeb4",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":100,\"passed\":100,\"assertions\":611,\"duration_ms\":133987}\n"
+  },
+  {
+    "check": "p1-core",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/Unit/NodeNameTest.php",
+      "packages/core/tests/Unit/BlobScopeTest.php",
+      "packages/core/tests/Access/WideNodeListingTest.php",
+      "packages/core/tests/Access/AccessAwareListingTest.php",
+      "packages/core/tests/Webhooks/OutboxStagingTest.php",
+      "packages/core/tests/Webhooks/OutboxRelayTest.php",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-core.log",
+    "sha256": "f19821b65b2bfecbb8a385165283e33be584d9d8ce20596fca257c07c04272b0",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":86,\"passed\":86,\"assertions\":266,\"duration_ms\":188269}\n"
+  },
+  {
+    "check": "p1-bigint",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/IdStrategy/IdStrategyTest.php",
+      "packages/core/tests/IdStrategy/IdStrategyResolverTest.php",
+      "packages/core/tests/IdStrategy/Bigint"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-bigint.log",
+    "sha256": "addbbfbbf3dffa5dbcdc45ee3d9d5ffcdeeb9091f435e581ef084f207d1cf31b",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":13,\"passed\":13,\"assertions\":62,\"duration_ms\":12339}\n"
+  },
+  {
+    "check": "p1-ulid",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/IdStrategy/Ulid"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-ulid.log",
+    "sha256": "bc4917d662aff0d674c128772d5aeb8c0333ca4aa4afe6b369337ef2fec5847a",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":6,\"passed\":6,\"assertions\":43,\"duration_ms\":13092}\n"
+  },
+  {
+    "check": "p1-uuid7",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/IdStrategy/Uuid7"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-uuid7.log",
+    "sha256": "ff214e02a0b92febaf6786b8c3848164a4402f45f812d353ee4f255bb3027274",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":4,\"passed\":4,\"assertions\":22,\"duration_ms\":6493}\n"
+  },
+  {
+    "check": "p1-prefix",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/TablePrefix"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-prefix.log",
+    "sha256": "00a446f2ea66738d0c466bf6851b5de8f12a6a3337c1b228f937cbda3e352098",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":2,\"passed\":2,\"assertions\":9,\"duration_ms\":2826}\n"
+  },
+  {
+    "check": "p1-activity-off",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/ActivityGate"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-activity-off.log",
+    "sha256": "c2a1506a6fb4bd75ca1f854be5ad151aeea7156623db648fbac894c1a8bab3e6",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":1,\"passed\":1,\"assertions\":1,\"duration_ms\":1179}\n"
+  },
+  {
+    "check": "p1-spatie",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": ".",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "packages/core/tests/Spatie"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-spatie.log",
+    "sha256": "5ea1866a5f540ea4ccd88a63a8e1879b49be2daa026d0297f71727ec283f9535",
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":9,\"passed\":9,\"assertions\":16,\"duration_ms\":14019}\n"
+  },
+  {
+    "check": "p1-drive",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": "packages/drive",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "tests/Concurrency",
+      "tests/Feature/ExactListingTest.php",
+      "tests/Feature/OutboxEventIdentityTest.php",
+      "tests/Feature/HostRouteBindingTest.php",
+      "tests/Feature/QuotaReserveTest.php",
+      "tests/Uploads/R07SessionManagerContractsTest.php",
+      "tests/Uploads/R07bSessionContractsTest.php",
+      "tests/Feature/R07TusControllerContractsTest.php",
+      "tests/Uploads/R07StagingSnifferContractsTest.php"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-drive.log",
+    "sha256": "a8dd16af29a9b2849fdd48f55c1d4f9c81f15f61efcac608d58035bcc5484496",
+    "summary": "\n  ............................................................................\n  ......................................\n\n  Tests:    114 passed (865 assertions)\n  Duration: 227.38s\n\n"
+  },
+  {
+    "check": "p1-media",
+    "driver": "pgsql",
+    "database": "vaulter_test",
+    "cwd": "packages/media",
+    "command": [
+      "vendor/bin/pest",
+      "--ci",
+      "--compact",
+      "tests/Cas"
+    ],
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/pg-p1-media.log",
+    "sha256": "b36bbc31114e5ce25bbb2c34098fa8582eb26c4994491322fc9ecef4b30b485e",
+    "summary": "\n  ...................s.............................................s..........\n  .......................................s..................s...........\n\n  Tests:    4 skipped, 142 passed (620 assertions)\n  Duration: 301.07s\n\n"
+  }
+]

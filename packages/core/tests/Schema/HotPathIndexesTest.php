@@ -15,7 +15,7 @@ use Vaulter\Support\Config;
  *
  * Red-before (F-P4.1-01): before this item, `v_nodes` carried no index with
  * `columns === ['trashed_at']` — the first assertion below failed. Red-before
- * (F-P4.1-02): before this item, `v_nodes` carried `['storage_id','parent_id']`
+ * (F-P4.1-02): before this item, `v_nodes` carried `['drive_id','parent_id']`
  * as its OWN index (inline, alongside the composite), `v_blobs` carried
  * `['status']` as its own index (inline, alongside `_gc_idx`), and `v_activity`
  * carried TWO indexes with `columns === ['created_at']` (the inline one and
@@ -33,11 +33,11 @@ it('v_nodes carries a (trashed_at) scan index for the purge-trash predicate (F-P
     expect(hotPathIndexColumnSets('v_nodes'))->toContain(['trashed_at']);
 });
 
-it('v_nodes does not carry a redundant (storage_id, parent_id) index — a strict prefix of (storage_id, parent_id, position) (F-P4.1-02)', function (): void {
+it('v_nodes does not carry a redundant (drive_id, parent_id) index — a strict prefix of (drive_id, parent_id, position) (F-P4.1-02)', function (): void {
     $columnSets = hotPathIndexColumnSets('v_nodes');
 
-    expect($columnSets)->not->toContain(['storage_id', 'parent_id'])
-        ->and($columnSets)->toContain(['storage_id', 'parent_id', 'position']);
+    expect($columnSets)->not->toContain(['drive_id', 'parent_id'])
+        ->and($columnSets)->toContain(['drive_id', 'parent_id', 'position']);
 });
 
 it('v_blobs does not carry a redundant single-column status index — a strict prefix of the GC index (F-P4.1-02)', function (): void {

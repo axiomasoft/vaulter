@@ -60,10 +60,10 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::DriveCreated,
             eventId: $event->eventId,
-            panel: $event->storage->panel,
+            panel: $event->storage->profile,
             topic: $this->recorder->id($event->storage->getKey()),
             payload: [
-                'storage_id' => $this->recorder->id($event->storage->getKey()),
+                'drive_id' => $this->recorder->id($event->storage->getKey()),
                 'root_node_id' => $this->recorder->id($event->root->getKey()),
                 'name' => $event->storage->name,
             ],
@@ -76,11 +76,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::FolderCreated,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'parent_id' => $this->recorder->id($event->node->parent_id),
                 'kind' => $event->node->kind->value,
                 'name' => $event->node->name,
@@ -94,11 +94,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::FileUploaded,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'version_id' => $this->recorder->id($event->version->getKey()),
                 'name' => $event->node->name,
                 'size_bytes' => $event->version->size_bytes,
@@ -113,13 +113,13 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::FileRevisionAdded,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'version_id' => $this->recorder->id($event->version->getKey()),
-                'version_no' => $event->versionNo,
+                'number' => $event->versionNo,
                 'size_bytes' => $event->version->size_bytes,
             ],
             actorId: $event->actorId,
@@ -131,11 +131,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodeMoved,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'from_parent_id' => $this->recorder->id($event->fromParentId),
                 'to_parent_id' => $this->recorder->id($event->toParentId),
             ],
@@ -148,11 +148,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodeRenamed,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'from' => $event->fromName,
                 'to' => $event->toName,
             ],
@@ -165,11 +165,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodeCopied,
             eventId: $event->eventId,
-            panel: $event->copy->panel,
+            panel: $event->copy->profile,
             topic: $this->recorder->id($event->copy->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->copy->getKey()),
-                'storage_id' => $this->recorder->id($event->copy->storage_id),
+                'drive_id' => $this->recorder->id($event->copy->drive_id),
                 'source_id' => $this->recorder->id($event->source->getKey()),
                 'name' => $event->copy->name,
             ],
@@ -182,11 +182,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodeTrashed,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'name' => $event->node->name,
             ],
             actorId: $event->actorId,
@@ -198,11 +198,11 @@ final readonly class RecordsDriveOutbox
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodeRestored,
             eventId: $event->eventId,
-            panel: $event->node->panel,
+            panel: $event->node->profile,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
                 'node_id' => $this->recorder->id($event->node->getKey()),
-                'storage_id' => $this->recorder->id($event->node->storage_id),
+                'drive_id' => $this->recorder->id($event->node->drive_id),
                 'parent_id' => $this->recorder->id($event->node->parent_id),
                 'name' => $event->node->name,
             ],
@@ -224,7 +224,7 @@ final readonly class RecordsDriveOutbox
             panel: 'default',
             topic: $this->recorder->id($event->storageId),
             payload: [
-                'storage_id' => $this->recorder->id($event->storageId),
+                'drive_id' => $this->recorder->id($event->storageId),
                 'node_ids' => array_map(Identity::stringify(...), $event->nodeIds),
                 'freed_bytes' => $event->freedBytes,
             ],

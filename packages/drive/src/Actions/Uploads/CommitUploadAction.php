@@ -30,7 +30,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  * BlobStore.commitStaged (the client's expected_sha256 / the S3 multipart ETag is NEVER
  * the content address — H.3). The session's target shapes UploadFileData:
  *   - new file    → a Node(kind=file) under target_parent (null = root);
- *   - new version → a new version of node_id (version_no bumps, head repoints).
+ *   - new version → a new version of node_id (number bumps, head repoints).
  *
  * On success the session is marked Committed with assembled_blob_id, and the staged
  * temp is discarded (commit-or-abort cleanup, H.3). The whole thing is one outer
@@ -68,7 +68,7 @@ final readonly class CommitUploadAction
             $node = $this->database->transaction(function () use ($session, $stream): Node {
                 $committed = $this->uploadFile->execute($this->dataFor(session: $session, stream: $stream));
 
-                // current_version_id is the head pointer; the version's blob_id is the
+                // current_revision_id is the head pointer; the version's blob_id is the
                 // assembled blob the bytes deduped into (H.3 — set from the committed
                 // version, never the client claim).
                 $blobId = $this->assembledBlobId($committed);
@@ -160,11 +160,11 @@ final readonly class CommitUploadAction
      */
     private function storageOf(UploadSession $session): Drive
     {
-        $storage = $this->storages->find($session->storage_id);
+        $storage = $this->storages->find($session->drive_id);
 
         if (!$storage instanceof Drive) {
             throw new RuntimeException(
-                "Cannot commit upload session [{$session->upload_id}]: its storage [{$session->storage_id}] is missing.",
+                "Cannot commit upload session [{$session->upload_id}]: its storage [{$session->drive_id}] is missing.",
             );
         }
 
@@ -182,11 +182,11 @@ final readonly class CommitUploadAction
 
     private function targetNode(UploadSession $session): ?Node
     {
-        if ($session->node_id === null) {
+        if ($session->target_node_id === null) {
             return null;
         }
 
-        return $this->nodes->find($session->node_id);
+        return $this->nodes->find($session->target_node_id);
     }
 
     private function targetNodeName(UploadSession $session): ?string

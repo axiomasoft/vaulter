@@ -42,7 +42,7 @@ it('stages exactly one outbox row when a storage is provisioned', function (): v
         ->and($rows->first()->payload['name'])->not->toBeNull();
 });
 
-it('stages a node.created row carrying the actor and a slim payload', function (): void {
+it('stages a folder.created row carrying the actor and a slim payload', function (): void {
     $storage = AccessTestHelpers::storage();
 
     // Clear the provisioning rows so we assert the one we cause below.
@@ -78,7 +78,7 @@ it('is idempotent by event_id: re-staging the same occurrence stages no duplicat
     $stage = fn (): ?Outbox => $recorder->stage(
         event: EventType::FolderCreated,
         eventId: $eventId,
-        panel: $folder->panel,
+        panel: $folder->profile,
         topic: (string) $folder->getKey(),
         payload: ['node_id' => $folder->getKey(), 'name' => 'dup'],
         actorId: 7,

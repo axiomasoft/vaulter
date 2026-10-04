@@ -25,7 +25,7 @@ beforeEach(function (): void {
 it('registers an endpoint and returns the signing_secret exactly once', function (): void {
     $response = $this->postJson('api/vaulter/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
-        'events' => ['node.created', 'share.created'],
+        'events' => ['folder.created', 'share.created'],
     ])->assertCreated();
 
     $secret = $response->json('data.signing_secret');
@@ -33,7 +33,7 @@ it('registers an endpoint and returns the signing_secret exactly once', function
     expect($secret)->toBeString()
         ->and(strlen((string) $secret))->toBe(64)
         ->and($response->json('data.url'))->toBe('https://hooks.test/receive')
-        ->and($response->json('data.events'))->toBe(['node.created', 'share.created'])
+        ->and($response->json('data.events'))->toBe(['folder.created', 'share.created'])
         ->and($response->json('data.is_active'))->toBeTrue();
 
     // The stored secret matches what was returned — and it is NEVER re-serialized.
@@ -73,7 +73,7 @@ it('lists registered endpoints without ever exposing the secret', function (): v
 });
 
 it('updates an endpoint url, events and active flag (partial)', function (): void {
-    $endpoint = WebhookTestHelpers::endpoint(['events' => ['node.created']]);
+    $endpoint = WebhookTestHelpers::endpoint(['events' => ['folder.created']]);
 
     $this->patchJson('api/vaulter/webhook-endpoints/'.$endpoint->getKey(), [
         'events' => ['node.moved', 'node.trashed'],
@@ -122,7 +122,7 @@ it('forbids management when the configured manage ability denies', function (): 
 
     $this->postJson('api/vaulter/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
-        'events' => ['node.created'],
+        'events' => ['folder.created'],
     ])->assertForbidden();
 
     $this->getJson('api/vaulter/webhook-endpoints')->assertForbidden();
@@ -134,6 +134,6 @@ it('allows management when the configured manage ability grants', function (): v
 
     $this->postJson('api/vaulter/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
-        'events' => ['node.created'],
+        'events' => ['folder.created'],
     ])->assertCreated();
 });

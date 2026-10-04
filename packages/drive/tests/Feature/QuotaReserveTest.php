@@ -58,7 +58,7 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
     $drive->storage()->forceFill(['quota_bytes' => 19])->save();
     $counts = [Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()];
 
-    expect(fn () => $drive->copy($folder, name: 'copy'))->toThrow(QuotaExceededException::class);
+    expect(fn (): Node => $drive->copy($folder, name: 'copy'))->toThrow(QuotaExceededException::class);
 
     expect([Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()])->toBe($counts)
         ->and(Node::query()->where('name', 'copy')->exists())->toBeFalse()
@@ -76,7 +76,7 @@ it('uses the locked file head despite stale node size and stale quota snapshots'
     // with 8 bytes releases 2, rather than reserving 4 and rejecting the upload.
     $drive->uploadVersion($stale, DriveTestHelpers::streamFor('abcdefgh'), originalName: 'a.txt');
     expect($drive->storage()->refresh()->used_bytes)->toBe(8)
-        ->and($stale->fresh()->file->version_count)->toBe(3);
+        ->and($stale->fresh()->file->revision_count)->toBe(3);
 });
 
 it('copies a stale file from its current head and reserves that exact size', function (): void {

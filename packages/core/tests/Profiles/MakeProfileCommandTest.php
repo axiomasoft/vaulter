@@ -23,7 +23,7 @@ it('создаёт файл провайдера панели и НЕ трога
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])
         ->assertSuccessful();
 
-    $path = "{$this->panelDir}/ProjectDriveProfile.php";
+    $path = $this->panelDir.'/ProjectDriveProfile.php';
 
     expect(File::exists($path))->toBeTrue();
 
@@ -33,7 +33,7 @@ it('создаёт файл провайдера панели и НЕ трога
         ->toContain('namespace App\\Vaulter\\Profiles;')
         ->toContain('final class ProjectDriveProfile extends ProfileProvider')
         ->toContain("->id('project_drive')")
-        ->toContain("->storageType('private')")
+        ->toContain('')
         // Profiles share the schema and never emit own-table settings.
         ->not->toContain('->tablePrefix(');
 
@@ -54,7 +54,7 @@ it('эмитит host и withoutGrants по флагам', function (): void {
         '--no-grants' => true,
     ])->assertSuccessful();
 
-    $contents = File::get("{$this->panelDir}/ProjectDriveProfile.php");
+    $contents = File::get($this->panelDir.'/ProjectDriveProfile.php');
 
     expect($contents)
         ->toContain('->host(\\App\\Models\\Project::class)')

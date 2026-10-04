@@ -124,7 +124,7 @@ it('never mass-assigns signing_secret on WebhookEndpoint via fill() or create() 
     expect(fn () => DB::transaction(
         fn (): WebhookEndpoint => WebhookEndpoint::query()->create([
             'url' => 'https://hooks.test/receive-2',
-            'events' => ['node.created'],
+            'events' => ['folder.created'],
             'signing_secret' => 'ATTACKER-CHOSEN-SECRET-2',
         ]),
     ))->toThrow(QueryException::class);

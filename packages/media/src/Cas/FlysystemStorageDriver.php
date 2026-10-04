@@ -15,7 +15,7 @@ use Vaulter\Support\Config;
 
 /**
  * The default StorageDriver (H.3): a thin Flysystem-disk abstraction. The disk is
- * resolved per call (a blob's v_storages.disk, else the install default); writes
+ * resolved per call (a blob's v_drives.disk, else the install default); writes
  * are stream writes; the conditional-create / object-store checksum specifics are
  * applied only when the underlying disk is an object store, degrading gracefully
  * to a best-effort exists() guard on the local / sqlite-test disk.

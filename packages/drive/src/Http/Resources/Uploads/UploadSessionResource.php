@@ -33,7 +33,7 @@ final class UploadSessionResource extends JsonResource
             'total_size_bytes' => $this->total_size_bytes,
             'chunk_size' => $this->chunk_size,
             'mime_type' => $this->mime_type,
-            'node_id' => $this->node_id,
+            'node_id' => $this->target_node_id,
             'target_parent_id' => $this->target_parent_id,
             'target_name' => $this->target_name,
             // Set only once the assembled bytes committed through BlobStore.commit.

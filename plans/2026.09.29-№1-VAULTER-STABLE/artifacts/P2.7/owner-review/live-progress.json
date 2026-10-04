@@ -1,0 +1,10 @@
+{
+  "activity_events": 4343,
+  "elapsed_seconds": 735.007,
+  "idle_seconds": 5.262,
+  "phase": "session/prompt",
+  "process_alive": true,
+  "responses": 29,
+  "schema_version": "review-heartbeat/v1",
+  "session_id": "01a1081a-8622-7b81-ab41-567e80aec24b"
+}

@@ -1,0 +1,8 @@
+{
+  "effort": "high",
+  "executor_session": "01a107c3-d4c5-7b02-afda-3c592a7fd983",
+  "invocation": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.7 --reviewer=grok/grok-4.7/500k",
+  "item_id": "P2.7",
+  "reviewer": "grok/grok-4.7/500000",
+  "schema_version": "owner-review-request/v1"
+}

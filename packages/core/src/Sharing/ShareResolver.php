@@ -130,7 +130,7 @@ final class ShareResolver
 
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
-        if (!$this->storages->find($node->storage_id) instanceof Drive) {
+        if (!$this->storages->find($node->drive_id) instanceof Drive) {
             return null;
         }
 

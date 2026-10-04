@@ -19,7 +19,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            // Core owns the schema (v_nodes/v_storages/v_files/... + v_upload_*),
+            // Core owns the schema (v_nodes/v_drives/v_files/... + v_upload_*),
             // the Node/Storage models, Access/Sharing/Activity and Support\Config.
             VaulterServiceProvider::class,
             // Media binds the concrete CAS engine behind the Contracts\Cas seam —

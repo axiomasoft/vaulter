@@ -81,7 +81,7 @@ final class StorageResource extends Resource
         return $schema->components([
             Section::make('Storage')->schema([
                 TextEntry::make('name'),
-                TextEntry::make('panel')->badge(),
+                TextEntry::make('profile')->badge(),
                 TextEntry::make('disk'),
                 TextEntry::make('storage_type')->label('Type'),
                 TextEntry::make('status')->badge(),

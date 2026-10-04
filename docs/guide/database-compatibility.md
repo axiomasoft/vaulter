@@ -11,6 +11,17 @@ shared `v_*` set of tables (see [Storage Panels](/guide/storage-panels)); nothin
 is engine-locked, but a few features light up only on a real server. This page states what
 each engine gives you and the handful of Postgres specifics the schema depends on.
 
+## Canonical schema and upgrade
+
+Fresh migrations create `v_drives`, `v_file_revisions`, `v_file_revision_blobs`
+and every other core table regardless of enabled modules/features. The global
+prefix is supported; per-table overrides are historical upgrade inputs only.
+PostgreSQL 0.2 bigint and ULID dumps upgrade to the same schema as a fresh install,
+including index names, partial predicates and foreign keys. Preflight refuses
+unsafe soft-deleted rows, missing document revisions and own-tables deployments.
+Back up and stop writes before changing code/schema. See
+[the upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
+
 ## Supported engines
 
 | Engine | Status | Use it for |

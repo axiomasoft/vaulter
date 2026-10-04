@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 /**
  * v_node_document_versions — the NODE-attached, append-only document version
@@ -16,10 +15,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Config::featureEnabled('document_versions')) {
-            return;
-        }
-
         (new SchemaBuilder)->createTable(
 
             entity: 'node_document_versions',

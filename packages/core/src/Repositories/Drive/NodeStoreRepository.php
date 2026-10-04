@@ -149,7 +149,7 @@ final class NodeStoreRepository
      * edges are detached and GC-eligible before the rows disappear); the query
      * builder's `forceDelete()` then bypasses the SoftDeletes scope for the
      * statement itself, issuing a real `DELETE`, so FK `cascadeOnDelete` on every
-     * dependent table (files → file_versions → file_version_blobs, node_document_
+     * dependent table (files → file_revisions → file_revision_blobs, node_document_
      * versions, node_grants, node_shares, …) physically removes their rows too —
      * this is what makes "purge" actually purge, instead of leaving inline
      * document content live in the database forever.

@@ -20,8 +20,8 @@ it('creates the v_node_grants table with every column', function (): void {
     expect(Schema::hasTable('v_node_grants'))->toBeTrue()
         ->and(Schema::hasColumns('v_node_grants', [
             'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'level',
-            'permissions', 'effect', 'scope', 'inherited', 'inherited_from_node_id',
-            'expires_at', 'granted_by', 'extra_data', 'deleted_at',
+            'permissions', 'effect', 'scope',
+            'expires_at', 'granted_by', 'extra_data',
         ]))->toBeTrue();
 });
 
@@ -34,7 +34,7 @@ it('rejects a duplicate live grant on the same (node, subject, scope, effect)', 
     // SAVEPOINT the violating grant: on PostgreSQL the UNIQUE violation would otherwise
     // abort the enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
     expect(fn (): mixed => DB::transaction(
-        fn () => AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item),
+        fn (): NodeGrant => AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item),
     ))->toThrow(UniqueConstraintViolationException::class);
 });
 
@@ -48,7 +48,7 @@ it('allows an allow AND a deny for the same subject/scope (distinct effect)', fu
     expect(NodeGrant::query()->where('node_id', $folder->id)->count())->toBe(2);
 });
 
-it('re-grants after a soft-delete (the partial unique exempts trashed rows)', function (): void {
+it('re-grants after a hard delete', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'resurrect');
 

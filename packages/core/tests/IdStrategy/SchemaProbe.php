@@ -30,7 +30,7 @@ final class SchemaProbe
             VaulterSchema::key($table);
             VaulterSchema::panel($table);
             VaulterSchema::tenant($table);
-            VaulterSchema::reference($table, 'storage_id');
+            VaulterSchema::reference($table, 'drive_id');
             VaulterSchema::reference($table, 'parent_id', nullable: true);
             VaulterSchema::morphs($table, 'owner');
             VaulterSchema::actor($table, 'created_by');

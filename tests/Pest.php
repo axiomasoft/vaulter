@@ -15,6 +15,7 @@ use Vaulter\Tests\SpatieTestCase;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\UlidTestCase;
+use Vaulter\Tests\Upgrade\FixtureTestCase;
 
 $core = dirname(__DIR__).'/packages/core/tests';
 
@@ -104,6 +105,6 @@ uses(LoadTestCase::class)->in(
 );
 
 // Upgrade tests own the fixture schema; no wrapping transaction or automatic migrations.
-uses(TestCase::class)->in($core.'/Upgrade');
+uses(FixtureTestCase::class)->in($core.'/Upgrade');
 
 uses(HostKeyMysqlTestCase::class)->in($core.'/HostKeyMysql');

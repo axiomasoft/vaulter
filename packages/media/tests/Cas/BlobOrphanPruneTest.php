@@ -75,7 +75,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
     $winningBlob = new Blob;
     $winningBlob->forceFill([
         'tenant_id' => 1,
-        'storage_id' => null,
+        'drive_id' => null,
         'hash_algo' => 'sha256',
         'sha256' => hash('sha256', 'commit won'),
         'size_bytes' => strlen('commit won'),

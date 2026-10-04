@@ -26,13 +26,13 @@ final class ActivityReadRepository
 {
     /**
      * The activity feed for a whole storage tree, newest-first. Optionally narrowed
-     * to a single verb. (verb, created_at) and (storage_id, created_at) are indexed.
+     * to a single verb. (verb, created_at) and (drive_id, created_at) are indexed.
      *
      * @return Builder<Activity>
      */
     public function forStorage(Drive $storage, ?EventType $verb = null): Builder
     {
-        return $this->base($verb)->where('storage_id', $storage->getKey());
+        return $this->base($verb)->where('drive_id', $storage->getKey());
     }
 
     /**

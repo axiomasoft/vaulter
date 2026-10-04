@@ -32,10 +32,12 @@ use Vaulter\Support\Config;
  *
  * @property int|string                $id
  * @property int|string|null           $tenant_id
- * @property int|string                $storage_id
+ * @property int|string                $drive_id
  * @property string                    $upload_id
- * @property int|string|null           $node_id
+ * @property int|string|null           $target_node_id
  * @property int|string|null           $target_parent_id
+ * @property int|string|null           $result_node_id
+ * @property int|string|null           $result_revision_id
  * @property string|null               $target_name
  * @property UploadProtocol            $protocol
  * @property UploadStatus              $status
@@ -61,7 +63,7 @@ class UploadSession extends Model
     /**
      * Closed allow-list (F-P1.8-02): upload metadata a caller may legitimately
      * declare. received_bytes (the AUTHORITATIVE tus offset, F-P1.4-01),
-     * status/protocol/assembled_blob_id/storage_id/tenant_id/upload_id are
+     * status/protocol/assembled_blob_id/drive_id/tenant_id/upload_id are
      * lifecycle/security state — every write path that sets them already uses
      * forceFill() (UploadSessionStoreRepository/UploadSessionManager).
      *
@@ -87,7 +89,7 @@ class UploadSession extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(Config::storageModel(), 'storage_id');
+        return $this->belongsTo(Config::storageModel(), 'drive_id');
     }
 
     /**
@@ -115,7 +117,7 @@ class UploadSession extends Model
      */
     public function isNewVersion(): bool
     {
-        return $this->node_id !== null;
+        return $this->target_node_id !== null;
     }
 
     /**

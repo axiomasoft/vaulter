@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Models\Drive\FileRevision;
 
 /**
- * The read shape of an immutable file version (§2.4): the monotonic version_no,
+ * The read shape of an immutable file version (§2.4): the monotonic number,
  * its content address and the upload metadata. Read-only — it transforms an
  * already-loaded FileRevision, never queries.
  *
@@ -29,8 +29,8 @@ final class FileVersionResource extends JsonResource
         return [
             'id' => $version->getKey(),
             'file_id' => $version->file_id,
-            'version_no' => $version->version_no,
-            'content_sha256' => $version->content_sha256,
+            'version_no' => $version->number,
+            'content_sha256' => $version->sha256,
             'size_bytes' => $version->size_bytes,
             'mime_type' => $version->mime_type,
             'original_name' => $version->original_name,

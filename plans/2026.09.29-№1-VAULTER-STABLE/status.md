@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-04
-inputs_sha256: 4c8fef0ed40a1e8eb99535b4c58aea95f1c066e703bd92a438eb736418a8ca3e
+inputs_sha256: 35905b9fb64361a68b422200577c55c2895f53775200d16b17ca0e9ceb77d7a1
 generated_by: task plan-views status
 -->
 
@@ -62,7 +62,7 @@ generated_by: task plan-views status
 | P2.4 | AzGuard из core в vaulter-azgard; media и filament | ⬜ Not started | — |
 | P2.5 | Канонический конфиг и типизированный доступ | ⬜ Not started | — |
 | P2.6 | Типы новых и переименованных колонок | ⬜ Not started | — |
-| P2.7 | Схема 0.3 и upgrade-миграции №1, №2, №4, №8, №9 | ⬜ Not started | — |
+| P2.7 | Схема 0.3 и upgrade-миграции №1, №2, №4, №8, №9 | 🟠 Done with deviations | 2026-10-04 |
 
 ## 6. Update Log
 
@@ -151,9 +151,13 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-04 | codex/current-session | plan-run · in-progress · Owner-directed P2.1 under D17; reconciling implementation and validation already performed. No design audit or independent review launched. Details: artifacts/P2.1/completion.md. |
 | 2026-10-04 | codex/current-session | plan-run · in-progress · Reconciliation run identity recorded for completed owner-directed P2.1. Validation evidence: artifacts/P2.1/validation-final.json. No route/model admission is asserted. |
 | 2026-10-04 | codex/current-session | plan-run · closed-green · P2.1 implemented; all 6 PHP package gates GREEN; PG 203 passed, no skips; negative control verified. No audit/review per D17. Azgard qualified on P0 dependency. Details: artifacts/P2.1/completion.md. Changes uncommitted; next P2.7. |
+| 2026-10-04 | codex | plan-run · in-progress · — |
+| 2026-10-04 | codex/gpt-6.1-sol/high | plan-run · closed-deviations · P2.7 complete. D18: actual migration order. D19: no new audits; Grok FINDINGS fixed, targeted checks green. MySQL baseline: P8.1. Evidence: artifacts/P2.7/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 
 - P0.1: known deviation
 - P1.2: known deviation
 - P1.7: known deviation
+- P2.7: known deviation

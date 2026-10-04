@@ -75,7 +75,7 @@ final readonly class CreateDocumentNodeAction
             }
 
             $node = $this->store->create([
-                'storage_id' => $data->storage->id,
+                'drive_id' => $data->storage->id,
                 'parent_id' => $parentId,
                 'kind' => NodeKind::Document,
                 'name' => $name,

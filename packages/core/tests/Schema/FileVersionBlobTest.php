@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Drive\NodeKind;
@@ -14,7 +15,7 @@ use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**
- * The file ↔ version ↔ blob chain and the v_file_version_blobs edge (the GC
+ * The file ↔ version ↔ blob chain and the v_file_revision_blobs edge (the GC
  * truth, §2.4): relations resolve through the swappable model map.
  */
 beforeEach(function (): void {
@@ -23,7 +24,7 @@ beforeEach(function (): void {
     ]);
 
     $node = ForceCreates::make(Node::class, [
-        'storage_id' => $storage->getKey(), 'kind' => NodeKind::File, 'name' => 'a.pdf',
+        'drive_id' => $storage->getKey(), 'kind' => NodeKind::File, 'name' => 'a.pdf',
     ]);
 
     $this->file = ForceCreates::make(File::class, [
@@ -42,15 +43,15 @@ beforeEach(function (): void {
 
     $this->version = ForceCreates::make(FileRevision::class, [
         'file_id' => $this->file->getKey(),
-        'version_no' => 1,
+        'number' => 1,
         'blob_id' => $this->blob->getKey(),
-        'content_sha256' => str_repeat('b', 64),
+        'sha256' => str_repeat('b', 64),
         'size_bytes' => 100,
         'original_name' => 'a.pdf',
         'status' => 'committed',
     ]);
 
-    $this->file->forceFill(['current_version_id' => $this->version->getKey()])->save();
+    $this->file->forceFill(['current_revision_id' => $this->version->getKey()])->save();
 });
 
 it('file -> versions -> blob связаны', function (): void {
@@ -74,15 +75,15 @@ it('ребро version<->blob — это GC-истина через pivot', func
         ->and($this->version->blobs()->first()->pivot->role)->toBe('data');
 });
 
-it('version_no монотонно уникален на файл', function (): void {
+it('number монотонно уникален на файл', function (): void {
     // SAVEPOINT the violating insert: on PostgreSQL a UNIQUE violation aborts the whole
     // enclosing RefreshDatabase transaction, poisoning the connection for the rest of the
     // suite; the nested DB::transaction rolls back only the failed insert. SQLite tolerates
     // either form (see BlobDedupScopeTest for the reference rationale).
-    expect(fn () => DB::transaction(fn () => ForceCreates::make(FileRevision::class, [
+    expect(fn () => DB::transaction(fn (): Model => ForceCreates::make(FileRevision::class, [
         'file_id' => $this->file->getKey(),
-        'version_no' => 1,
-        'content_sha256' => str_repeat('c', 64),
+        'number' => 1,
+        'sha256' => str_repeat('c', 64),
         'size_bytes' => 1,
         'original_name' => 'a.pdf',
     ])))->toThrow(QueryException::class);

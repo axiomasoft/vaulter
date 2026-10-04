@@ -17,17 +17,21 @@ beforeEach(function (): void {
     }
 });
 afterEach(function (): void {
+    $db = app(VaulterDatabase::class)->connection();
+    if ($db->getDriverName() === 'pgsql' && str_ends_with($db->getDatabaseName(), '_test') && $db->transactionLevel() === 0) {
+        $db->getSchemaBuilder()->dropAllTables();
+    }
     RefreshDatabaseState::$migrated = false;
 });
 
 function hostKeyFixtureColumns(): array
 {
     return [
-        'storages' => ['tenant_id', 'owner_id', 'created_by'],
+        'drives' => ['tenant_id', 'owner_id', 'created_by'],
         'nodes' => ['tenant_id', 'owner_id', 'trashed_by', 'created_by', 'updated_by'],
         'blobs' => ['tenant_id'],
         'files' => ['tenant_id', 'created_by'],
-        'file_versions' => ['tenant_id', 'created_by'],
+        'file_revisions' => ['tenant_id', 'created_by'],
         'node_grants' => ['tenant_id', 'subject_id', 'granted_by'],
         'node_shares' => ['tenant_id', 'granted_by'],
         'node_comments' => ['tenant_id', 'author_id', 'resolved_by'],
@@ -44,7 +48,14 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
         // Only the host-key columns: later upgrade steps in the same batch legitimately
         // change other columns (the N04 repair re-parents nodes) and add activity rows.
-        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get(['id', ...$columns])->map(static function ($row) use ($columns): array {
+        $legacy = Config::legacyTable(match ($entity) {
+            'drives' => 'storages', 'file_revisions' => 'file_versions', default => $entity,
+        });
+        $query = $db->table($legacy);
+        if ($entity === 'node_grants') {
+            $query->whereNull('deleted_at');
+        }
+        $before[$entity] = $query->orderBy('id')->get(['id', ...$columns])->map(static function ($row) use ($columns): array {
             $values = (array) $row;
             foreach ($columns as $column) {
                 $values[$column] = $values[$column] === null ? null : (string) $values[$column];
@@ -68,7 +79,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
         }
     }
     expect($count)->toBe(27);
-    $owners = $db->table(Config::table('storages'))->orderBy('owner_id')->pluck('owner_id')->all();
+    $owners = $db->table(Config::table('drives'))->orderBy('owner_id')->pluck('owner_id')->all();
     expect($owners)->toBe($strategy === 'bigint' ? ['1', '2', '3'] : [
         '01ARZ3NDEKTSV4RRFFQ69G5FAV', '01ARZ3NDEKTSV4RRFFQ69G5FAW', '01ARZ3NDEKTSV4RRFFQ69G5FAX',
     ]);
@@ -86,7 +97,9 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
-                ->where('table_name', Config::table($entity))->where('column_name', $column)->first();
+                ->where('table_name', Config::legacyTable(match ($entity) {
+                    'drives' => 'storages', 'file_revisions' => 'file_versions', default => $entity,
+                }))->where('column_name', $column)->first();
             expect($metadata->data_type)->toBe($strategy === 'bigint' ? 'bigint' : 'character');
         }
     }
@@ -95,9 +108,10 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
 it('refuses a nonnumeric host-key conversion without changing fixture rows', function (): void {
     $this->loadV02Fixture('ulid');
     $db = app(VaulterDatabase::class)->connection();
-    $owners = $db->table(Config::table('storages'))->orderBy('id')->pluck('owner_id')->all();
+    (require __DIR__.'/../../database/migrations/2026_10_01_000002_rename_storages_to_drives.php')->up();
+    $owners = $db->table(Config::table('drives'))->orderBy('id')->pluck('owner_id')->all();
     config()->set('vaulter.ids.host_keys', 'bigint');
     $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
     expect(fn () => $db->transaction(fn () => $migration->up()))->toThrow(QueryException::class);
-    expect($db->table(Config::table('storages'))->orderBy('id')->pluck('owner_id')->all())->toBe($owners);
+    expect($db->table(Config::table('drives'))->orderBy('id')->pluck('owner_id')->all())->toBe($owners);
 });

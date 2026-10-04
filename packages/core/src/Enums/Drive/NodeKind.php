@@ -16,7 +16,7 @@ use Vaulter\Support\Concerns\HasLabel;
  * given file/document can actually do (H.5).
  *
  *  - folder   — a virtual directory, no payload, holds children.
- *  - file     — a binary leaf, payload lives in v_files/v_file_versions/v_blobs.
+ *  - file     — a binary leaf, payload lives in v_files/v_file_revisions/v_blobs.
  *  - document — a Documents leaf (TipTap/Yjs), payload in v_document_versions.
  *  - shortcut — a pointer to another node (shortcut_target_id).
  */

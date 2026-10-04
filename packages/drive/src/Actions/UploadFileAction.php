@@ -34,17 +34,17 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → quota → BlobStore.commitStaged
- * (content-addressed dedup) → File + FileRevision(version_no) + version↔blob edge
- * → file node (current_version_id, mime, size, extension).
+ * (content-addressed dedup) → File + FileRevision(number) + version↔blob edge
+ * → file node (current_revision_id, mime, size, extension).
  *
  * Quota (§1.5 eager): the incoming size is checked against the storage's
  * quota_bytes by a conditional UPDATE WITHIN the transaction, before CAS promotion.
  * Preparation happens once outside SQL so transaction retries reuse the same bytes.
  *
  * Two paths share one Action:
- *   - new file → create Node(kind=file) + File + FileRevision(version_no=1);
- *   - new version (upload onto an existing file node) → bump version_no, repoint
- *     current_version_id, mark the prior head superseded, and adjust used_bytes by
+ *   - new file → create Node(kind=file) + File + FileRevision(number=1);
+ *   - new version (upload onto an existing file node) → bump number, repoint
+ *     current_revision_id, mark the prior head superseded, and adjust used_bytes by
  *     the SIZE DELTA (new size − previous head size), not the full size.
  *
  * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
@@ -153,12 +153,12 @@ final readonly class UploadFileAction
     }
 
     /**
-     * New-file path (§2.4): node(kind=file) → file → version_no=1 → edge → repoint.
+     * New-file path (§2.4): node(kind=file) → file → number=1 → edge → repoint.
      */
     private function commitNewFile(UploadFileData $data, Blob $blob, int $size, string $name, int|string $parentId): Node
     {
         $node = $this->nodeStore->create([
-            'storage_id' => $data->storage->id,
+            'drive_id' => $data->storage->id,
             'parent_id' => $parentId,
             'kind' => NodeKind::File,
             'name' => $name,
@@ -173,7 +173,7 @@ final readonly class UploadFileAction
             'node_id' => $node->id,
             'mime_type' => $data->mimeType,
             'size_bytes' => $size,
-            'version_count' => 0,
+            'revision_count' => 0,
         ]);
 
         $version = $this->makeVersion(data: $data, file: $file, blob: $blob, size: $size, versionNo: 1);
@@ -185,7 +185,7 @@ final readonly class UploadFileAction
             currentVersionId: $version->id,
             mimeType: $data->mimeType,
             sizeBytes: $size,
-            versionNo: $version->version_no,
+            versionNo: $version->number,
         );
 
         $this->nodeStore->update($node, [
@@ -199,7 +199,7 @@ final readonly class UploadFileAction
     }
 
     /**
-     * New-version path (§2.4): bump version_no, new version + edge against the
+     * New-version path (§2.4): bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
     private function commitNewVersion(UploadFileData $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size): Node
@@ -216,7 +216,7 @@ final readonly class UploadFileAction
             file: $file,
             blob: $blob,
             size: $size,
-            versionNo: $file->version_count + 1,
+            versionNo: $file->revision_count + 1,
         );
 
         $this->blobs->attach($version, $blob);
@@ -230,7 +230,7 @@ final readonly class UploadFileAction
             currentVersionId: $version->id,
             mimeType: $data->mimeType ?? $file->mime_type,
             sizeBytes: $size,
-            versionNo: $version->version_no,
+            versionNo: $version->number,
         );
 
         $this->nodeStore->repointHead(
@@ -245,7 +245,7 @@ final readonly class UploadFileAction
             node: $node->refresh(),
             file: $file,
             version: $version,
-            versionNo: $version->version_no,
+            versionNo: $version->number,
             actorId: $data->actorId,
         ));
 
@@ -261,9 +261,9 @@ final readonly class UploadFileAction
     ): FileRevision {
         return $this->versions->create([
             'file_id' => $file->getKey(),
-            'version_no' => $versionNo,
+            'number' => $versionNo,
             'blob_id' => $blob->getKey(),
-            'content_sha256' => $blob->sha256,
+            'sha256' => $blob->sha256,
             'size_bytes' => $size,
             'mime_type' => $data->mimeType,
             'original_name' => $data->originalName,
@@ -304,7 +304,7 @@ final readonly class UploadFileAction
     {
         $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
         if (!$this->tree->sameStorage($parent, $data->storage->id)) {
-            throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
+            throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->drive_id);
         }
 
         $this->tree->assertActiveFolder($parent);

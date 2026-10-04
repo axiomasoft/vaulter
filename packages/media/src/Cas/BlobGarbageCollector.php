@@ -26,7 +26,7 @@ use Vaulter\Support\Config;
  *  PHASE 1 (mark): scan committed ∧ ref_count(cache)=0 (reconciliation rebuilds
  *  that cache from the edge table, so a blob qualifies once its last edge is
  *  detached and reconciled), then under the per-(scope,sha256) lock RE-VERIFY no
- *  live edge exists in v_file_version_blobs before tombstoning (grace deadline =
+ *  live edge exists in v_file_revision_blobs before tombstoning (grace deadline =
  *  now + grace, armed here so the sweep cannot delete within the grace window).
  *
  *  PHASE 2 (sweep): take tombstoned blobs past grace, RE-VERIFY under the lock

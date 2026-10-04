@@ -30,7 +30,7 @@ use Vaulter\Support\TreeGuard;
  * Copy a node into a destination (§2.4) — the locked destination must be a live
  * folder of the source's storage, and the root itself is never copied:
  *   - folder → deep-copy the whole subtree (new node rows, same shape);
- *   - file   → new File + new FileRevision(version_no=1) whose version↔blob edge
+ *   - file   → new File + new FileRevision(number=1) whose version↔blob edge
  *     references the SAME blob, so content-addressed dedup keeps ONE physical
  *     object — a copy costs a row, not bytes.
  *
@@ -65,7 +65,7 @@ final readonly class CopyNodeAction
 
         try {
             return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
-                $this->database->lockTreeShared($source->storage_id);
+                $this->database->lockTreeShared($source->drive_id);
 
                 // Freeze the source membership before inserting any copies, then lock
                 // every source node with the destination in ascending id order.
@@ -74,8 +74,8 @@ final readonly class CopyNodeAction
                 $current = $this->tree->locked($locked, $source->id);
                 $destination = $this->tree->locked($locked, $destParentId);
                 $resolvedName = $data->name === null ? $current->name : $name;
-                if (!$this->tree->sameStorage($destination, $source->storage_id)) {
-                    throw CrossStorageMoveException::between(fromStorageId: $source->storage_id, toStorageId: $destination->storage_id);
+                if (!$this->tree->sameStorage($destination, $source->drive_id)) {
+                    throw CrossStorageMoveException::between(fromStorageId: $source->drive_id, toStorageId: $destination->drive_id);
                 }
 
                 $this->tree->assertActiveFolder($destination);
@@ -115,7 +115,7 @@ final readonly class CopyNodeAction
     private function copyNode(Node $source, int|string $parentId, string $name, CopyNodeData $data, int &$addedBytes, array $sourceIds): Node
     {
         $copy = $this->nodeStore->create([
-            'storage_id' => $source->storage_id,
+            'drive_id' => $source->drive_id,
             'parent_id' => $parentId,
             'kind' => $source->kind,
             'name' => $name,
@@ -168,14 +168,14 @@ final readonly class CopyNodeAction
             'node_id' => $copy->id,
             'mime_type' => $sourceFile->mime_type,
             'size_bytes' => $sourceFile->size_bytes,
-            'version_count' => 0,
+            'revision_count' => 0,
         ]);
 
         $version = $this->versions->create([
             'file_id' => $file->id,
-            'version_no' => 1,
+            'number' => 1,
             'blob_id' => $head->blob_id,
-            'content_sha256' => $head->content_sha256,
+            'sha256' => $head->sha256,
             'size_bytes' => $head->size_bytes,
             'mime_type' => $head->mime_type,
             'original_name' => $head->original_name,

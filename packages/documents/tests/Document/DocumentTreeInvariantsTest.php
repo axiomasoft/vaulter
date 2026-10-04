@@ -36,7 +36,7 @@ it('places a document without a parent under the drive root and lists it there',
     $node = createDocumentUnder($drive, 'Rootless', null);
 
     expect($node->parent_id)->toEqual($drive->storage()->root_node_id)
-        ->and(Node::query()->where('storage_id', $drive->storage()->getKey())->whereNull('parent_id')->count())->toBe(1);
+        ->and(Node::query()->where('drive_id', $drive->storage()->getKey())->whereNull('parent_id')->count())->toBe(1);
 
     $this->getJson('api/vaulter/storages/'.$drive->storage()->getKey().'/nodes')
         ->assertOk()
@@ -52,7 +52,7 @@ it('rejects a document under a file, a document or a trashed folder', function (
         'trashed folder' => $drive->trash($drive->createFolder('Gone')),
     };
 
-    expect(fn () => createDocumentUnder($drive, 'Child', $parent))
+    expect(fn (): Node => createDocumentUnder($drive, 'Child', $parent))
         ->toThrow(InvalidDestinationException::class);
 })->with(['file', 'document', 'trashed folder']);
 
@@ -60,7 +60,7 @@ it('rejects a parent folder of another drive', function (): void {
     $drive = DocumentTestHelpers::drive();
     $foreign = DocumentTestHelpers::drive()->createFolder('Elsewhere');
 
-    expect(fn () => createDocumentUnder($drive, 'Child', $foreign))
+    expect(fn (): Node => createDocumentUnder($drive, 'Child', $foreign))
         ->toThrow(InvalidDestinationException::class, 'belongs to drive');
 });
 
@@ -68,7 +68,7 @@ it('normalizes the document name and rejects an invalid one', function (): void 
     $drive = DocumentTestHelpers::drive();
 
     expect(createDocumentUnder($drive, "  Caf\u{0065}\u{0301}  ", null)->name)->toBe("Caf\u{00E9}")
-        ->and(fn () => createDocumentUnder($drive, 'a/b', null))->toThrow(InvalidNodeNameException::class);
+        ->and(fn (): Node => createDocumentUnder($drive, 'a/b', null))->toThrow(InvalidNodeNameException::class);
 });
 
 it('takes the storage row before the parent row, as every node insert does', function (): void {
@@ -82,7 +82,7 @@ it('takes the storage row before the parent row, as every node insert does', fun
 
     createDocumentUnder($drive, 'Ordered', $folder);
 
-    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_storages"')));
+    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_drives"')));
     $nodeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, 'order by')));
 
     // SQLite (like MySQL) implements the tree lock as the storage row.

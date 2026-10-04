@@ -14,7 +14,6 @@ final class DefaultProfile extends ProfileProvider
     public function profile(Profile $panel): Profile
     {
         return $panel
-            ->id('default')
-            ->storageType('private');
+            ->id('default');
     }
 }

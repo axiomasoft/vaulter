@@ -68,7 +68,7 @@ final readonly class ShareContext
         }
 
         // A subtree share never crosses the storage boundary (item-safety §2.7).
-        if (Identity::stringify($candidate->storage_id) !== Identity::stringify($this->node->storage_id)) {
+        if (Identity::stringify($candidate->drive_id) !== Identity::stringify($this->node->drive_id)) {
             return false;
         }
 
@@ -90,7 +90,7 @@ final readonly class ShareContext
         $targetKey = Identity::stringify($this->node->getKey());
 
         foreach ($candidate->ancestors()->get() as $ancestor) {
-            if (Identity::stringify($ancestor->storage_id) !== Identity::stringify($this->node->storage_id)) {
+            if (Identity::stringify($ancestor->drive_id) !== Identity::stringify($this->node->drive_id)) {
                 break;
             }
 

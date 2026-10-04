@@ -70,7 +70,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
 
     // The committed content hash is recomputed from the STITCHED bytes, not any ETag.
     $version = $node->currentVersion()->first();
-    expect($version->content_sha256)->toBe(hash('sha256', $whole))
+    expect($version->sha256)->toBe(hash('sha256', $whole))
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed);
 });
 
@@ -91,7 +91,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
 
     // The committed bytes are the REPLACEMENT (bbbbb), not the original.
     $version = $node->currentVersion()->first();
-    expect($version->content_sha256)->toBe(hash('sha256', 'bbbbb'));
+    expect($version->sha256)->toBe(hash('sha256', 'bbbbb'));
 });
 
 it('лживый ETag не используется как адрес — сервер пересчитывает sha256', function (): void {
@@ -108,8 +108,8 @@ it('лживый ETag не используется как адрес — сер
     $node = app(CommitUploadAction::class)->execute($session->refresh());
 
     $version = $node->currentVersion()->first();
-    expect($version->content_sha256)->toBe(hash('sha256', $bytes))
-        ->and($version->content_sha256)->not->toBe(trim($result['etag'], '"'));
+    expect($version->sha256)->toBe(hash('sha256', $bytes))
+        ->and($version->sha256)->not->toBe(trim($result['etag'], '"'));
 });
 
 it('complete без частей отклоняется', function (): void {

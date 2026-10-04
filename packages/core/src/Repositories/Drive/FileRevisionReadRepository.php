@@ -11,7 +11,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
 /**
- * Read-side lookups over the immutable v_file_versions (§2.4) for the HTTP layer:
+ * Read-side lookups over the immutable v_file_revisions (§2.4) for the HTTP layer:
  * resolve the head version a file node points at, or a specific historical
  * version by its key — both scoped to the node's own file so a version id from a
  * different file can never be streamed through another node.
@@ -22,7 +22,7 @@ use Vaulter\Support\Config;
 final class FileRevisionReadRepository
 {
     /**
-     * The current head version a file node points at (its current_version_id), or
+     * The current head version a file node points at (its current_revision_id), or
      * null when the node is not a committed file.
      */
     public function head(Node $node): ?FileRevision
@@ -50,7 +50,7 @@ final class FileRevisionReadRepository
     }
 
     /**
-     * Every version of a file, newest version_no first (the history listing).
+     * Every version of a file, newest number first (the history listing).
      *
      * @return Builder<FileRevision>
      */
@@ -58,7 +58,7 @@ final class FileRevisionReadRepository
     {
         return $this->query()
             ->where('file_id', $file->getKey())
-            ->orderByDesc('version_no');
+            ->orderByDesc('number');
     }
 
     /**

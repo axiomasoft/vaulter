@@ -28,14 +28,14 @@ beforeEach(function (): void {
     ]);
 
     $this->root = ForceCreates::make(Node::class, [
-        'storage_id' => $this->storage->getKey(),
+        'drive_id' => $this->storage->getKey(),
         'parent_id' => null,
         'kind' => NodeKind::Folder,
         'name' => 'root',
     ]);
 
     $this->child = ForceCreates::make(Node::class, [
-        'storage_id' => $this->storage->getKey(),
+        'drive_id' => $this->storage->getKey(),
         'parent_id' => $this->root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => 'child',

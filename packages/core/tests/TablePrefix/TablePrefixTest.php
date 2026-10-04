@@ -8,7 +8,7 @@ use Vaulter\Support\Config;
 
 it('creates every table with the configured prefix', function (): void {
     expect(Schema::hasTable('custom_nodes'))->toBeTrue()
-        ->and(Schema::hasTable('custom_storages'))->toBeTrue()
+        ->and(Schema::hasTable('custom_drives'))->toBeTrue()
         ->and(Schema::hasTable('custom_blobs'))->toBeTrue()
         ->and(Schema::hasTable('custom_files'))->toBeTrue()
         ->and(Schema::hasTable('custom_node_grants'))->toBeTrue()

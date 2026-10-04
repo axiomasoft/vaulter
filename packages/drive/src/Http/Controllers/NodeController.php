@@ -283,7 +283,7 @@ final class NodeController extends Controller
      */
     private function storageOf(Node $node): Drive
     {
-        $storage = $this->storages->find($node->storage_id);
+        $storage = $this->storages->find($node->drive_id);
 
         if (!$storage instanceof Drive) {
             abort(404);
@@ -312,7 +312,7 @@ final class NodeController extends Controller
     {
         $node = $this->nodes->find($nodeId);
 
-        if (!$node instanceof Node || $node->storage_id !== $storage->getKey()) {
+        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
             abort(404);
         }
 

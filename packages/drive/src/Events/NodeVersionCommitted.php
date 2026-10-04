@@ -11,8 +11,8 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 
 /**
- * A new version was committed onto an existing file node (§2.4): version_no
- * bumped, current_version_id repointed, the prior head marked superseded.
+ * A new version was committed onto an existing file node (§2.4): number
+ * bumped, current_revision_id repointed, the prior head marked superseded.
  */
 final readonly class NodeVersionCommitted implements ShouldDispatchAfterCommit
 {

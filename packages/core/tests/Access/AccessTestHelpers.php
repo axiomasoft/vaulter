@@ -54,7 +54,7 @@ final class AccessTestHelpers
         /** @var Node $node */
         $node = new $model;
         $node->forceFill([
-            'storage_id' => $storage->id,
+            'drive_id' => $storage->id,
             'parent_id' => $parent?->id ?? $storage->root_node_id,
             'kind' => NodeKind::Folder,
             'name' => $name,

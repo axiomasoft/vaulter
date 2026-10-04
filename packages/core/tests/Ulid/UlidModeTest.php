@@ -22,7 +22,7 @@ it('uses ULID keys when configured', function (): void {
     expect($storage->getKey())->toBeString()
         ->and(strlen((string) $storage->getKey()))->toBe(26);
 
-    $this->assertDatabaseHas('v_storages', ['id' => $storage->getKey()]);
+    $this->assertDatabaseHas('v_drives', ['id' => $storage->getKey()]);
 });
 
 it('adds the tenant column when tenancy is enabled', function (): void {

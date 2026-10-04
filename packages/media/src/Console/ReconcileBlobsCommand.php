@@ -9,7 +9,7 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Support\Config;
 
 /**
- * Rebuild the ref_count cache from the v_file_version_blobs edge counts — the real
+ * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
  * liveness truth (H.3) — and report integrity hazards: dangling rows (a committed
  * blob whose canonical object is missing on disk). With --orphans it ALSO walks the
  * disk for the inverse hazard — orphan objects (bytes on disk with no blob row),

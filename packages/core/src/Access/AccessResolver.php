@@ -37,7 +37,7 @@ use Vaulter\Support\Identity;
  * THE ALGORITHM (H.2 — implemented EXACTLY):
  *   1. Host override (super-admin) — absolute, both directions.
  *   2. Walk ancestors nearest-first, BOUNDED to the workspace/storage root (never
- *      cross storage_id), collecting direct + scope=subtree grants for the
+ *      cross drive_id), collecting direct + scope=subtree grants for the
  *      subject-set (from PermissionDriver::subjectsFor); STOP at the first ancestor
  *      with inherit_grants=false.
  *   3. aclAllow = max(allow levels/bits); deniedBits = OR of deny bits (a deny
@@ -137,7 +137,7 @@ final class AccessResolver
         $driver = $this->drivers->driver();
         $groups = [];
         foreach ($nodes as $node) {
-            $key = json_encode([Identity::stringify($node->storage_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
+            $key = json_encode([Identity::stringify($node->drive_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
             $groups[$key][] = $node;
         }
         $sets = [];
@@ -201,7 +201,7 @@ final class AccessResolver
         foreach ($pending as [$node, $key]) {
             $parentKey = Identity::stringify($node->parent_id);
             $chain = $chains[$parentKey] ?? [];
-            $sameStorage = $chain !== [] && Identity::stringify($chain[0]->storage_id) === Identity::stringify($node->storage_id);
+            $sameStorage = $chain !== [] && Identity::stringify($chain[0]->drive_id) === Identity::stringify($node->drive_id);
             $parent = $node->inherit_grants && $sameStorage ? $inherited[$parentKey] : AclMask::none();
             $own = $this->grantMask($byNode[Identity::stringify($node->id)] ?? [], false);
             $mask = $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level']);
@@ -417,7 +417,7 @@ final class AccessResolver
 
         // The bounded ancestor chain, nearest-first: node, parent, …, root. The
         // staudenmeir ancestor relation is storage-scoped already (the tree lives
-        // in one storage_id), so the walk never crosses workspaces.
+        // in one drive_id), so the walk never crosses workspaces.
         $chain = $this->ancestorChain($node);
 
         $nodeIds = array_map(static fn (Node $n): int|string => $n->id, $chain);
@@ -671,7 +671,7 @@ final class AccessResolver
         // a misconfigured tree can never escape the workspace (defence-in-depth on
         // top of the storage-scoped relation).
         foreach ($ancestors as $ancestor) {
-            if ($ancestor->storage_id !== $node->storage_id) {
+            if ($ancestor->drive_id !== $node->drive_id) {
                 break;
             }
 
@@ -701,7 +701,7 @@ final class AccessResolver
             : new Subject(type: $storage->owner_type, id: $node->owner_id);
 
         return new AccessScope(
-            panel: $storage->panel,
+            panel: $storage->profile,
             workspaceType: $storage->owner_type,
             workspaceId: $storage->owner_id,
             nodeOwner: $owner,
@@ -715,7 +715,7 @@ final class AccessResolver
         // to the read repository for a node loaded without it.
         $storage = $node->relationLoaded('storage')
             ? $node->getRelation('storage')
-            : $this->storages->find($node->storage_id);
+            : $this->storages->find($node->drive_id);
 
         if (!$storage instanceof Drive) {
             // A node always belongs to a storage (FK cascade); a missing storage is
@@ -723,7 +723,7 @@ final class AccessResolver
             // so we fail loud rather than silently open.
             throw new \RuntimeException(sprintf(
                 'Vaulter could not resolve the storage [%s] for node [%s].',
-                Identity::stringify($node->storage_id),
+                Identity::stringify($node->drive_id),
                 Identity::stringify($node->id),
             ));
         }

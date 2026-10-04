@@ -36,7 +36,7 @@ it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', funct
     // Seed a legacy plaintext row through the query builder (bypassing the cast).
     DB::table($table)->insert([
         'url' => 'https://legacy.test/hook',
-        'events' => json_encode(['node.created']),
+        'events' => json_encode(['folder.created']),
         'signing_secret' => 'legacy-plaintext',
         'is_active' => true,
         'failure_count' => 0,

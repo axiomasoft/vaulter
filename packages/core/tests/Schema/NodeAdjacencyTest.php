@@ -24,7 +24,7 @@ beforeEach(function (): void {
     ]);
 
     $make = fn (string $name, ?Node $parent): Node => ForceCreates::make(Node::class, [
-        'storage_id' => $this->storage->getKey(),
+        'drive_id' => $this->storage->getKey(),
         'parent_id' => $parent?->getKey(),
         'kind' => NodeKind::Folder,
         'name' => $name,
@@ -61,7 +61,7 @@ it('scope treeOf ограничивает выборку одним хранил
         'owner_type' => 'team', 'owner_id' => 2, 'name' => 'Other',
     ]);
     ForceCreates::make(Node::class, [
-        'storage_id' => $other->getKey(), 'kind' => NodeKind::Folder, 'name' => 'alien',
+        'drive_id' => $other->getKey(), 'kind' => NodeKind::Folder, 'name' => 'alien',
     ]);
 
     $count = Node::query()->treeOf($this->storage->getKey())->count();

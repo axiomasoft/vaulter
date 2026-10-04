@@ -39,7 +39,7 @@ final class VaulterManager
 
     /**
      * Open a Drive handle bound to a host entity's storage within a panel (§2.1).
-     * Get-or-creates the v_storages row (idempotent, root folder auto-provisioned)
+     * Get-or-creates the v_drives row (idempotent, root folder auto-provisioned)
      * and returns an ergonomic {@see DriveHandle} whose methods delegate to the Drive
      * Actions/repositories. This is the package's primary integration entry point.
      *

@@ -39,9 +39,7 @@ final class RepairBlobScopesCommand extends Command
             $rows = [];
             foreach ($batch as $blob) {
                 $references = $this->referenceRows($database, $blob);
-                $groups = $references->groupBy(function ($ref) use ($blob): string {
-                    return $this->target($blob, (string) $ref->storage_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key();
-                });
+                $groups = $references->groupBy(fn ($ref): string => $this->target($blob, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key());
                 if ($groups->isEmpty()) {
                     $rows[] = [$blob->getKey(), $blob->sha256, $blob->scope_key, '—', 0, '—', 'unreferenced'];
                     $skipped++;
@@ -49,11 +47,11 @@ final class RepairBlobScopesCommand extends Command
 
                 foreach ($groups as $refs) {
                     $first = $refs->first() ?? throw new RuntimeException('Missing scope repair reference.');
-                    $scope = $this->target($blob, (string) $first->storage_id, $first->tenant_id === null ? null : (string) $first->tenant_id);
+                    $scope = $this->target($blob, (string) $first->drive_id, $first->tenant_id === null ? null : (string) $first->tenant_id);
                     $action = 'move';
                     try {
                         if ($this->option('execute')) {
-                            $action = $this->repair($database, $content, $blobs, $lock, $blob, $scope, array_values(array_unique($refs->map(static fn ($ref): string => (string) $ref->storage_id)->all())));
+                            $action = $this->repair($database, $content, $blobs, $lock, $blob, $scope, array_values(array_unique($refs->map(static fn ($ref): string => (string) $ref->drive_id)->all())));
                             $action === 'move' ? $repaired++ : $skipped++;
                         } elseif (!$this->validObject($content, $blob->storage_key, $blob->disk, $blob->sha256)) {
                             $action = 'hash_mismatch';
@@ -65,19 +63,21 @@ final class RepairBlobScopesCommand extends Command
                         $skipped++;
                         $this->error($exception->getMessage());
                     }
-                    $rows[] = [$blob->getKey(), $blob->sha256, $blob->scope_key, $refs->pluck('storage_id')->unique()->implode(','), $refs->count(), $scope->key(), $action];
+
+                    $rows[] = [$blob->getKey(), $blob->sha256, $blob->scope_key, $refs->pluck('drive_id')->unique()->implode(','), $refs->count(), $scope->key(), $action];
                 }
             }
-            $this->table(['blob_id', 'sha256', 'scope_key', 'storage_id', 'refs', 'target', 'action'], $rows);
+
+            $this->table(['blob_id', 'sha256', 'scope_key', 'drive_id', 'refs', 'target', 'action'], $rows);
         });
-        $this->info("Repaired: {$repaired}, skipped: {$skipped}");
+        $this->info(sprintf('Repaired: %d, skipped: %d', $repaired, $skipped));
 
         return $failed ? self::FAILURE : self::SUCCESS;
     }
 
     /**
-     * @param  list<string>|null                                                                                   $storageIds
-     * @return Collection<int, object{version_id: int|string, storage_id: int|string, tenant_id: int|string|null}>
+     * @param  list<string>|null                                                                                 $storageIds
+     * @return Collection<int, object{version_id: int|string, drive_id: int|string, tenant_id: int|string|null}>
      */
     private function referenceRows(VaulterDatabase $database, Blob $blob, ?array $storageIds = null): Collection
     {
@@ -85,7 +85,8 @@ final class RepairBlobScopesCommand extends Command
         if ($storageIds !== null) {
             $query->whereIn('storages.id', $storageIds);
         }
-        /** @var Collection<int, object{version_id: int|string, storage_id: int|string, tenant_id: int|string|null}> $rows */
+
+        /** @var Collection<int, object{version_id: int|string, drive_id: int|string, tenant_id: int|string|null}> $rows */
         $rows = $query->get();
 
         return $rows;
@@ -93,13 +94,13 @@ final class RepairBlobScopesCommand extends Command
 
     private function references(VaulterDatabase $database, Blob $blob): Builder
     {
-        return $database->connection()->table(Config::table('file_version_blobs').' as edges')
-            ->join(Config::table('file_versions').' as versions', 'versions.id', '=', 'edges.file_version_id')
+        return $database->connection()->table(Config::table('file_revision_blobs').' as edges')
+            ->join(Config::table('file_revisions').' as versions', 'versions.id', '=', 'edges.file_revision_id')
             ->join(Config::table('files').' as files', 'files.id', '=', 'versions.file_id')
             ->join(Config::table('nodes').' as nodes', 'nodes.id', '=', 'files.node_id')
-            ->join(Config::table('storages').' as storages', 'storages.id', '=', 'nodes.storage_id')
+            ->join(Config::table('drives').' as storages', 'storages.id', '=', 'nodes.drive_id')
             ->where('edges.blob_id', $blob->getKey())
-            ->select(['versions.id as version_id', 'storages.id as storage_id', 'storages.tenant_id']);
+            ->select(['versions.id as version_id', 'storages.id as drive_id', 'storages.tenant_id']);
     }
 
     private function target(Blob $blob, string $storageId, ?string $tenantId): BlobScope
@@ -118,6 +119,7 @@ final class RepairBlobScopesCommand extends Command
             foreach ($storageIds as $id) {
                 $database->lockTree($id);
             }
+
             $keys = ['cas:'.$candidate->scope_key.':'.$candidate->sha256, 'cas:'.$scope->key().':'.$candidate->sha256];
             $lock->acquireMany($keys);
             if ($lock->usesRowLock()) {
@@ -128,9 +130,10 @@ final class RepairBlobScopesCommand extends Command
                     ->whereIn('scope_key', [$candidate->scope_key, $scope->key()])
                     ->orderBy((new $model)->getKeyName())->forceIndex('PRIMARY')->lockForUpdate()->get();
             }
+
             $old = $blobs->lockForUpdate($candidate);
             $refs = $this->referenceRows($database, $old, $storageIds)
-                ->filter(fn ($ref): bool => $this->target($old, (string) $ref->storage_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key() === $scope->key());
+                ->filter(fn ($ref): bool => $this->target($old, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key() === $scope->key());
             if ($refs->isEmpty()) {
                 return 'unreferenced';
             }
@@ -139,37 +142,43 @@ final class RepairBlobScopesCommand extends Command
             if (!is_resource($stream)) {
                 return 'hash_mismatch';
             }
+
             try {
                 $staged = $content->stage($stream);
             } finally {
                 fclose($stream);
             }
+
             try {
                 if (!hash_equals($old->sha256, $staged->sha256())) {
                     return 'hash_mismatch';
                 }
+
                 $result = $blobs->findOrCreate($old->sha256, $staged->sizeBytes(), $content->keyFor($scope, $old->sha256), $old->disk, $scope, $scope->tenantId(), $scope->storageId());
                 $target = $result['blob'];
                 $content->promote($staged, $target->storage_key, $target->disk);
                 if (!$this->validObject($content, $target->storage_key, $target->disk, $old->sha256)) {
                     throw new RuntimeException('Repair target bytes failed SHA-256 verification.');
                 }
+
                 $db = $database->connection();
-                $edges = $db->table(Config::table('file_version_blobs'));
-                $count = $edges->whereIn('file_version_id', $refs->pluck('version_id')->unique()->all())->where('blob_id', $old->getKey())->update(['blob_id' => $target->getKey()]);
-                $db->table(Config::table('file_versions'))->whereIn('id', $refs->pluck('version_id')->unique()->all())
+                $edges = $db->table(Config::table('file_revision_blobs'));
+                $count = $edges->whereIn('file_revision_id', $refs->pluck('version_id')->unique()->all())->where('blob_id', $old->getKey())->update(['blob_id' => $target->getKey()]);
+                $db->table(Config::table('file_revisions'))->whereIn('id', $refs->pluck('version_id')->unique()->all())
                     ->where('blob_id', $old->getKey())->update(['blob_id' => $target->getKey()]);
                 // ref_count is a cache: repair from live edges rather than decrement
                 // a possibly stale cache below zero.
                 foreach ([$old, $target] as $blob) {
-                    $blobs->setRefCount($blob, $db->table(Config::table('file_version_blobs'))->where('blob_id', $blob->getKey())->count());
+                    $blobs->setRefCount($blob, $db->table(Config::table('file_revision_blobs'))->where('blob_id', $blob->getKey())->count());
                 }
+
                 $entry = json_encode(['ts' => now()->toIso8601String(), 'blob_id' => $old->getKey(), 'target' => $scope->key(), 'action' => 'move', 'edges' => $count], JSON_THROW_ON_ERROR)."\n";
                 $database->afterCommit(static function () use ($entry): void {
                     $dir = storage_path('logs');
                     if (!is_dir($dir) && !mkdir($dir, 0o755, true) && !is_dir($dir)) {
                         throw new RuntimeException('Cannot create scope repair log directory.');
                     }
+
                     if (file_put_contents($dir.'/vaulter-repair-scopes.log', $entry, FILE_APPEND | LOCK_EX) === false) {
                         throw new RuntimeException('Cannot append scope repair log.');
                     }
@@ -188,6 +197,7 @@ final class RepairBlobScopesCommand extends Command
         if (!is_resource($stream)) {
             return false;
         }
+
         try {
             $hash = hash_init('sha256');
             while (!feof($stream)) {
@@ -195,6 +205,7 @@ final class RepairBlobScopesCommand extends Command
                 if ($buffer === false) {
                     return false;
                 }
+
                 hash_update($hash, $buffer);
             }
 

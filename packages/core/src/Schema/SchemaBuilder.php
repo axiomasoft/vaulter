@@ -13,25 +13,7 @@ use InvalidArgumentException;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Support\Config;
 
-/**
- * The single source of truth for a storage panel's per-panel table definitions
- * (master plan §4.2). Every table is parameterised by a Panel: physical names
- * come from the panel table map (or its prefix, or the shared default), the
- * key/reference column shape comes from the panel's IdStrategy, and feature flags
- * decide which tables exist at all.
- *
- * The shipped default-panel migrations (one thin shell per entity) delegate here,
- * so there is ONE definition for both the shipped v_* schema and any generated
- * per-panel schema — no drift. This is the only file carrying real domain schema.
- *
- * M1a scope (6 entities): storages, nodes, blobs, files, file_versions and the
- * file_version_blobs edge table. The remaining entities (grants, shares, uploads,
- * document_versions, activity, reliability) land in later slices.
- *
- * Foreign keys are explicit and point at the panel's OWN resolved tables
- * (`Config::table(...)`), so a prefixed own-tables panel never references the
- * shared schema by mistake.
- */
+/** The shared Vaulter schema. Runtime features never control table existence. */
 final class SchemaBuilder
 {
     /**
@@ -56,17 +38,17 @@ final class SchemaBuilder
 
     /**
      * The base entity keys this builder owns, in dependency order. The generator
-     * and createAll()/dropAll() iterate this list; gating is applied per entity.
+     * and createAll()/dropAll() iterate this list independently of runtime features.
      *
      * @var list<string>
      */
     private const array ENTITIES = [
-        'storages',
+        'drives',
         'nodes',
         'blobs',
         'files',
-        'file_versions',
-        'file_version_blobs',
+        'file_revisions',
+        'file_revision_blobs',
         'node_grants',
         'node_shares',
         'node_comments',
@@ -80,17 +62,12 @@ final class SchemaBuilder
     ];
 
     /**
-     * Create every table this panel needs, in dependency order, honouring its
-     * feature flags. storages and nodes are always present; blobs is gated on the
-     * 'blobs' feature; files/file_versions/file_version_blobs on 'versions'.
+     * Create every table this panel needs in dependency order, independently of
+     * runtime feature flags.
      */
     public function createAll(): void
     {
         foreach (self::ENTITIES as $entity) {
-            if (!$this->entityEnabled(entity: $entity)) {
-                continue;
-            }
-
             $this->createTable(entity: $entity);
         }
     }
@@ -118,12 +95,12 @@ final class SchemaBuilder
 
         $this->schemaConnection()->create(Config::table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
-                'storages' => $this->defineStorages(table: $table, ids: $ids),
+                'drives' => $this->defineDrives(table: $table, ids: $ids),
                 'nodes' => $this->defineNodes(table: $table, ids: $ids),
                 'blobs' => $this->defineBlobs(table: $table, ids: $ids),
                 'files' => $this->defineFiles(table: $table, ids: $ids),
-                'file_versions' => $this->defineFileVersions(table: $table, ids: $ids),
-                'file_version_blobs' => $this->defineFileVersionBlobs(table: $table, ids: $ids),
+                'file_revisions' => $this->defineFileRevisions(table: $table, ids: $ids),
+                'file_revision_blobs' => $this->defineFileRevisionBlobs(table: $table, ids: $ids),
                 'node_grants' => $this->defineNodeGrants(table: $table, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, ids: $ids),
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
@@ -134,7 +111,7 @@ final class SchemaBuilder
                 'outbox' => $this->defineOutbox(table: $table, ids: $ids),
                 'webhook_endpoints' => $this->defineWebhookEndpoints(table: $table, ids: $ids),
                 'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, ids: $ids),
-                default => throw new InvalidArgumentException("Unknown Vaulter panel entity [{$entity}]."),
+                default => throw new InvalidArgumentException(sprintf('Unknown Vaulter panel entity [%s].', $entity)),
             };
         });
 
@@ -151,10 +128,10 @@ final class SchemaBuilder
     }
 
     /**
-     * v_storages — the ownable polymorphic disk container (§2.1). Always created;
+     * v_drives — the ownable polymorphic disk container (§2.1). Always created;
      * carries the panel discriminator.
      */
-    private function defineStorages(Blueprint $table, IdStrategy $ids): void
+    private function defineDrives(Blueprint $table, IdStrategy $ids): void
     {
         $ids->key(table: $table);
         $this->panelDiscriminator(table: $table);
@@ -164,28 +141,25 @@ final class SchemaBuilder
         $table->string('owner_type');
 
         $table->string('name');
-        $table->string('slug', 160)->nullable();
+
         $ids->reference(table: $table, column: 'root_node_id', nullable: true);
         $table->string('disk', 64)->default('default');
-        $table->string('storage_type', 32)->default('private')->index();
         $table->bigInteger('quota_bytes')->nullable();
         $table->bigInteger('used_bytes')->default(0);
         $table->string('status', 16)->default('active')->index();
-        $table->unsignedInteger('default_node_permissions')->default(31);
         $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
-        $table->softDeletes();
         $table->timestamps();
 
         $table->index(['owner_type', 'owner_id']);
-        $table->index(['panel', 'status']);
+        $table->index(['profile', 'status']);
 
         // Idempotency backbone for get-or-create (M1c): one live storage per
         // (owner_type, owner_id, panel). A partial unique (driver-aware, added in
         // afterCreate) lets a soft-deleted row's owner be re-provisioned while a
         // concurrent first-touch converges on one row via this constraint.
 
-        // root_node_id is NOT a DB foreign key: v_storages and v_nodes reference
+        // root_node_id is NOT a DB foreign key: v_drives and v_nodes reference
         // each other (the storage points at its root, every node points at its
         // storage), so a hard FK here would create a chicken-and-egg insert order.
     }
@@ -200,7 +174,7 @@ final class SchemaBuilder
         $ids->key(table: $table);
         $this->panelDiscriminator(table: $table);
         $this->tenant(table: $table);
-        $ids->reference(table: $table, column: 'storage_id');
+        $ids->reference(table: $table, column: 'drive_id');
         $ids->reference(table: $table, column: 'parent_id', nullable: true);
 
         $table->string('kind', 16)->index();
@@ -227,17 +201,17 @@ final class SchemaBuilder
         $table->softDeletes();
         $table->timestamps();
 
-        // Hot listing indexes (§2.2 index plan). (storage_id, parent_id) is NOT
+        // Hot listing indexes (§2.2 index plan). (drive_id, parent_id) is NOT
         // repeated as its own index (F-P4.1-02, VLT-REMED P4.3): it is a strict
         // column-prefix of the composite below, so it never wins over it and only
         // pays extra write cost. The purge-trash scan index (trashed_at, driver-aware
         // partial) is emitted in afterCreate() — F-P4.1-01.
-        $table->index(['storage_id', 'parent_id', 'position']);
-        $table->index(['storage_id', 'kind', 'trashed_at']);
+        $table->index(['drive_id', 'parent_id', 'position']);
+        $table->index(['drive_id', 'kind', 'trashed_at']);
 
-        $table->foreign('storage_id')
+        $table->foreign('drive_id')
             ->references('id')
-            ->on(Config::table('storages'))
+            ->on(Config::table('drives'))
             ->cascadeOnDelete();
 
         $table->foreign('parent_id')
@@ -255,7 +229,7 @@ final class SchemaBuilder
     {
         $ids->key(table: $table);
         $this->tenant(table: $table);
-        $ids->reference(table: $table, column: 'storage_id', nullable: true);
+        $ids->reference(table: $table, column: 'drive_id', nullable: true);
 
         $table->string('hash_algo', 16)->default('sha256');
         $table->char('sha256', 64);
@@ -287,11 +261,11 @@ final class SchemaBuilder
 
         $table->string('scope_key', 191);
         $name = $table->getTable();
-        $table->unique(['scope_key', 'sha256'], "{$name}_scope_sha_uniq");
-        $table->unique('storage_key', "{$name}_storage_key_uniq");
+        $table->unique(['scope_key', 'sha256'], $name.'_scope_sha_uniq');
+        $table->unique('storage_key', $name.'_storage_key_uniq');
 
         // GC scan support (§2.3): committed orphans past their grace deadline.
-        $table->index(['status', 'ref_count', 'delete_after_at'], "{$name}_gc_idx");
+        $table->index(['status', 'ref_count', 'delete_after_at'], $name.'_gc_idx');
     }
 
     /**
@@ -303,17 +277,16 @@ final class SchemaBuilder
         $ids->key(table: $table);
         $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
-        $ids->reference(table: $table, column: 'current_version_id', nullable: true);
+        $ids->reference(table: $table, column: 'current_revision_id', nullable: true);
 
         $table->string('mime_type', 191)->nullable();
         $table->bigInteger('size_bytes')->default(0);
-        $table->unsignedInteger('version_count')->default(0);
+        $table->unsignedInteger('revision_count')->default(0);
         $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
-        $table->softDeletes();
         $table->timestamps();
 
-        $table->unique('node_id', "{$table->getTable()}_node_uniq");
+        $table->unique('node_id', $table->getTable().'_node_uniq');
 
         $table->foreign('node_id')
             ->references('id')
@@ -322,20 +295,22 @@ final class SchemaBuilder
     }
 
     /**
-     * v_file_versions — the immutable file ↔ blob version (§2.4). Gated on
-     * 'versions'. version_no is monotonic per file (unique).
+     * v_file_revisions — the immutable file ↔ blob version (§2.4). Gated on
+     * 'versions'. number is monotonic per file (unique).
      */
-    private function defineFileVersions(Blueprint $table, IdStrategy $ids): void
+    private function defineFileRevisions(Blueprint $table, IdStrategy $ids): void
     {
         $ids->key(table: $table);
         $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'file_id');
-        $table->integer('version_no');
+        $table->integer('number');
         $ids->reference(table: $table, column: 'blob_id', nullable: true);
         $ids->reference(table: $table, column: 'manifest_blob_id', nullable: true);
-        $table->char('content_sha256', 64)->index();
+        $table->char('sha256', 64)->index();
         $table->bigInteger('size_bytes');
         $table->string('mime_type', 191)->nullable();
+        $table->string('declared_mime_type', 191)->nullable();
+        $table->string('scan_status', 16)->default('not_required');
         $table->string('original_name');
         $table->string('status', 12)->default('pending')->index();
         $table->boolean('keep_forever')->default(false);
@@ -344,7 +319,7 @@ final class SchemaBuilder
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
 
-        $table->unique(['file_id', 'version_no'], "{$table->getTable()}_no_uniq");
+        $table->unique(['file_id', 'number'], $table->getTable().'_no_uniq');
         $table->index(['file_id', 'status']);
 
         $table->foreign('file_id')
@@ -354,24 +329,24 @@ final class SchemaBuilder
     }
 
     /**
-     * v_file_version_blobs — the edge table that is the GC truth (§2.4). Gated on
+     * v_file_revision_blobs — the edge table that is the GC truth (§2.4). Gated on
      * 'versions'. Composite primary key; liveness of a blob = existence of an edge
      * here, so it is never soft-deleted.
      */
-    private function defineFileVersionBlobs(Blueprint $table, IdStrategy $ids): void
+    private function defineFileRevisionBlobs(Blueprint $table, IdStrategy $ids): void
     {
-        $ids->reference(table: $table, column: 'file_version_id');
+        $ids->reference(table: $table, column: 'file_revision_id');
         $ids->reference(table: $table, column: 'blob_id');
         $table->string('role', 12)->default('data');
         $table->integer('ordinal')->default(0);
         $table->bigInteger('offset_bytes')->nullable();
         $table->bigInteger('length_bytes')->nullable();
 
-        $table->primary(['file_version_id', 'blob_id', 'role', 'ordinal'], "{$table->getTable()}_pk");
+        $table->primary(['file_revision_id', 'blob_id', 'role', 'ordinal'], $table->getTable().'_pk');
 
-        $table->foreign('file_version_id')
+        $table->foreign('file_revision_id')
             ->references('id')
-            ->on(Config::table('file_versions'))
+            ->on(Config::table('file_revisions'))
             ->cascadeOnDelete();
 
         $table->foreign('blob_id')
@@ -405,20 +380,17 @@ final class SchemaBuilder
         // Reserved for the OPTIONAL materialised effective-grants read-model — the
         // source of truth in M2a is the direct rows + the tree, so these stay
         // false/null (the inherited walk is computed, not stored).
-        $table->boolean('inherited')->default(false)->index();
-        $ids->reference(table: $table, column: 'inherited_from_node_id', nullable: true);
 
         $table->timestamp('expires_at')->nullable()->index();
         HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
         $this->extraData(table: $table);
-        $table->softDeletes();
         $table->timestamps();
 
         $name = $table->getTable();
 
         // "Shared with me": every node a subject is granted access to (§2.6).
-        $table->index(['subject_type', 'subject_id'], "{$name}_subject_idx");
-        $table->index(['node_id', 'effect'], "{$name}_node_effect_idx");
+        $table->index(['subject_type', 'subject_id'], $name.'_subject_idx');
+        $table->index(['node_id', 'effect'], $name.'_node_effect_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -468,17 +440,16 @@ final class SchemaBuilder
 
         HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
         $this->extraData(table: $table);
-        $table->softDeletes();
         $table->timestamps();
 
         $name = $table->getTable();
 
         // token_hash is the bearer lookup key — UNIQUE so two shares can never
         // collide on a token (the loser of a mint race retries with a fresh token).
-        $table->unique('token_hash', "{$name}_token_hash_uniq");
+        $table->unique('token_hash', $name.'_token_hash_uniq');
 
         // Owner-side "shares on this node" listing (§2.7).
-        $table->index(['node_id', 'revoked_at'], "{$name}_node_revoked_idx");
+        $table->index(['node_id', 'revoked_at'], $name.'_node_revoked_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -529,10 +500,10 @@ final class SchemaBuilder
         // The per-node comment feed (oldest-first listing): node_id is the scope,
         // created_at the cursor. Index names are derived from the table so a per-panel
         // prefixed table never collides.
-        $table->index(['node_id', 'created_at'], "{$name}_node_created_idx");
+        $table->index(['node_id', 'created_at'], $name.'_node_created_idx');
 
         // Threading lookup: a parent's replies.
-        $table->index('parent_id', "{$name}_parent_idx");
+        $table->index('parent_id', $name.'_parent_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -593,11 +564,11 @@ final class SchemaBuilder
 
         // version_no is monotonic per node — the unique index is the append-only
         // backbone (two concurrent commits serialise on it).
-        $table->unique(['node_id', 'version_no'], "{$name}_no_uniq");
+        $table->unique(['node_id', 'version_no'], $name.'_no_uniq');
 
         // The autosave-vs-named history cursor (§2.5): the head autosave lookup and
         // the named-version listing both scan this.
-        $table->index(['node_id', 'is_autosave', 'created_at'], "{$name}_history_idx");
+        $table->index(['node_id', 'is_autosave', 'created_at'], $name.'_history_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -620,7 +591,7 @@ final class SchemaBuilder
     {
         $ids->key(table: $table);
         $this->tenant(table: $table);
-        $ids->reference(table: $table, column: 'storage_id');
+        $ids->reference(table: $table, column: 'drive_id');
 
         // The client handle: a UUID (S3 uploadId / tus resource id) the resumable
         // endpoints address the session by. UNIQUE — the resume key.
@@ -630,9 +601,11 @@ final class SchemaBuilder
         // target_parent_id (null = storage root) + target_name. No DB FK on node_id /
         // target_parent_id: a session may outlive a concurrently-moved node and the
         // sweeper must still reclaim it.
-        $ids->reference(table: $table, column: 'node_id', nullable: true);
+        $ids->reference(table: $table, column: 'target_node_id', nullable: true);
         $ids->reference(table: $table, column: 'target_parent_id', nullable: true);
         $table->string('target_name')->nullable();
+        $ids->reference(table: $table, column: 'result_node_id', nullable: true);
+        $ids->reference(table: $table, column: 'result_revision_id', nullable: true);
 
         $table->string('protocol', 16)->default('tus');
         $table->string('status', 16)->default('initiated');
@@ -669,16 +642,16 @@ final class SchemaBuilder
 
         // upload_id is the resume key — UNIQUE so two sessions can never collide on a
         // handle (the loser of a mint race retries with a fresh uuid).
-        $table->unique('upload_id', "{$name}_upload_id_uniq");
+        $table->unique('upload_id', $name.'_upload_id_uniq');
 
         // The sweeper scan axis (§2.8): stale OPEN sessions past expires_at. The
         // (status, expires_at) composite is added driver-aware in afterCreate so the
         // index name stays distinct per prefixed panel table.
-        $table->index('storage_id', "{$name}_storage_idx");
+        $table->index('drive_id', $name.'_drive_idx');
 
-        $table->foreign('storage_id')
+        $table->foreign('drive_id')
             ->references('id')
-            ->on(Config::table('storages'))
+            ->on(Config::table('drives'))
             ->cascadeOnDelete();
     }
 
@@ -702,7 +675,7 @@ final class SchemaBuilder
 
         // Re-upload REPLACES (S3 semantics): the (session, part_no) pair is the
         // primary key, so a second PUT of part N updates the same row.
-        $table->primary(['upload_session_id', 'part_no'], "{$table->getTable()}_pk");
+        $table->primary(['upload_session_id', 'part_no'], $table->getTable().'_pk');
 
         $table->foreign('upload_session_id')
             ->references('id')
@@ -719,14 +692,14 @@ final class SchemaBuilder
      * Append-only: NO updated_at, NO soft-delete. The id honours the panel id
      * strategy (recommend uuid7 — time-ordered — but bigint/ulid all keep the
      * (created_at desc) index canonical). The actor and target are nullable morphs
-     * (a console/queue write may have no actor; a storage.created row has no node
+     * (a console/queue write may have no actor; a drive.created row has no node
      * target). ip is inet on Postgres, a portable varchar(45) elsewhere.
      */
     private function defineActivity(Blueprint $table, IdStrategy $ids): void
     {
         $ids->key(table: $table);
         $this->tenant(table: $table);
-        $ids->reference(table: $table, column: 'storage_id', nullable: true);
+        $ids->reference(table: $table, column: 'drive_id', nullable: true);
 
         // Actor morph — the acting host user (nullable: a system/console write has
         // no actor). actor_id is an actor reference (no DB FK to the host's table).
@@ -734,6 +707,7 @@ final class SchemaBuilder
         $table->string('actor_type')->nullable();
 
         $table->string('verb')->index();
+        $table->string('event_id', 26)->nullable()->index();
 
         // Target morph — the subject of the verb (nullable: e.g. nothing for a
         // storage-level row). No DB FK: the target may be any model, swappable.
@@ -767,10 +741,10 @@ final class SchemaBuilder
 
         // §2.9 feed indexes — every read axis is newest-first. The leading column is
         // the scope/filter; created_at is the cursor tail.
-        $table->index(['actor_type', 'actor_id', 'created_at'], "{$name}_actor_idx");
-        $table->index(['target_type', 'target_id', 'created_at'], "{$name}_target_idx");
-        $table->index(['verb', 'created_at'], "{$name}_verb_idx");
-        $table->index(['storage_id', 'created_at'], "{$name}_storage_idx");
+        $table->index(['actor_type', 'actor_id', 'created_at'], $name.'_actor_idx');
+        $table->index(['target_type', 'target_id', 'created_at'], $name.'_target_idx');
+        $table->index(['verb', 'created_at'], $name.'_verb_idx');
+        $table->index(['drive_id', 'created_at'], $name.'_drive_idx');
     }
 
     /**
@@ -794,6 +768,10 @@ final class SchemaBuilder
         // of the panel id strategy.
         $table->string('event_id')->unique();
         $this->panelDiscriminator(table: $table);
+        $ids->reference(table: $table, column: 'drive_id', nullable: true);
+        $table->string('aggregate_type', 32)->nullable();
+        $table->string('aggregate_id', 64)->nullable();
+        $table->bigInteger('sequence')->nullable();
         $table->string('topic')->nullable();
         $table->string('event');
         $table->json('payload');
@@ -805,10 +783,10 @@ final class SchemaBuilder
 
         $name = $table->getTable();
 
-        $table->index(['status', 'available_at'], "{$name}_drain_idx");
+        $table->index(['status', 'available_at'], $name.'_drain_idx');
         // The retention sweep (vaulter:prune-webhooks) deletes settled rows by
         // (status='dispatched', dispatched_at <= threshold) — its own scan cursor.
-        $table->index(['status', 'dispatched_at'], "{$name}_prune_idx");
+        $table->index(['status', 'dispatched_at'], $name.'_prune_idx');
     }
 
     /**
@@ -856,10 +834,10 @@ final class SchemaBuilder
 
         $name = $table->getTable();
 
-        $table->index(['status', 'next_retry_at'], "{$name}_retry_idx");
+        $table->index(['status', 'next_retry_at'], $name.'_retry_idx');
         // The retention sweep (vaulter:prune-webhooks) deletes terminal rows by
         // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
-        $table->index(['status', 'updated_at'], "{$name}_prune_idx");
+        $table->index(['status', 'updated_at'], $name.'_prune_idx');
 
         $table->foreign('endpoint_id')
             ->references('id')
@@ -873,8 +851,8 @@ final class SchemaBuilder
      */
     private function afterCreate(string $entity): void
     {
-        if ($entity === 'storages') {
-            $this->addOwnerUniqueIndex(table: Config::table('storages'));
+        if ($entity === 'drives') {
+            $this->addOwnerUniqueIndex(table: Config::table('drives'));
         }
 
         if ($entity === 'nodes') {
@@ -913,7 +891,7 @@ final class SchemaBuilder
     private function addActivityCreatedAtIndex(string $table): void
     {
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
-            $blueprint->index('created_at', "{$table}_created_idx");
+            $blueprint->index('created_at', $table.'_created_idx');
         });
     }
 
@@ -929,7 +907,7 @@ final class SchemaBuilder
             return;
         }
 
-        $this->dbConnection()->statement("CREATE INDEX {$table}_context_gin ON {$table} USING gin (context jsonb_path_ops)");
+        $this->dbConnection()->statement(sprintf('CREATE INDEX %s_context_gin ON %s USING gin (context jsonb_path_ops)', $table, $table));
     }
 
     /**
@@ -944,7 +922,7 @@ final class SchemaBuilder
             return;
         }
 
-        $this->dbConnection()->statement("CREATE INDEX {$table}_content_gin ON {$table} USING gin (content jsonb_path_ops)");
+        $this->dbConnection()->statement(sprintf('CREATE INDEX %s_content_gin ON %s USING gin (content jsonb_path_ops)', $table, $table));
     }
 
     /**
@@ -956,11 +934,11 @@ final class SchemaBuilder
     private function addShareExpiryIndex(string $table): void
     {
         $driver = $this->schemaConnection()->getConnection()->getDriverName();
-        $name = "{$table}_expiry_live_idx";
+        $name = $table.'_expiry_live_idx';
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
             $this->dbConnection()->statement(
-                "CREATE INDEX {$name} ON {$table} (expires_at) WHERE revoked_at IS NULL",
+                sprintf('CREATE INDEX %s ON %s (expires_at) WHERE revoked_at IS NULL', $name, $table),
             );
 
             return;
@@ -976,8 +954,8 @@ final class SchemaBuilder
      * predicate needs — trashedBefore() filters `whereNotNull('trashed_at')
      * ->where('trashed_at', '<=', $threshold)`, and without a leading-column index
      * on trashed_at that scan is a full v_nodes seq-scan on every scheduled run
-     * (the only existing index touching this column, (storage_id, kind,
-     * trashed_at), never wins for a query that filters neither storage_id nor
+     * (the only existing index touching this column, (drive_id, kind,
+     * trashed_at), never wins for a query that filters neither drive_id nor
      * kind — leftmost-prefix rule). Driver-aware like every other partial index
      * in this file: a real partial index `WHERE trashed_at IS NOT NULL` on
      * Postgres/SQLite (the predicate already excludes NULLs, so the partial index
@@ -986,11 +964,11 @@ final class SchemaBuilder
     private function addTrashedAtIndex(string $table): void
     {
         $driver = $this->schemaConnection()->getConnection()->getDriverName();
-        $name = "{$table}_trashed_idx";
+        $name = $table.'_trashed_idx';
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
             $this->dbConnection()->statement(
-                "CREATE INDEX {$name} ON {$table} (trashed_at) WHERE trashed_at IS NOT NULL",
+                sprintf('CREATE INDEX %s ON %s (trashed_at) WHERE trashed_at IS NOT NULL', $name, $table),
             );
 
             return;
@@ -1010,7 +988,7 @@ final class SchemaBuilder
     private function addUploadSweeperIndex(string $table): void
     {
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
-            $blueprint->index(['status', 'expires_at'], "{$table}_sweeper_idx");
+            $blueprint->index(['status', 'expires_at'], $table.'_sweeper_idx');
         });
     }
 
@@ -1021,34 +999,8 @@ final class SchemaBuilder
      */
     private function addGrantUniqueIndex(string $table): void
     {
-        $driver = $this->schemaConnection()->getConnection()->getDriverName();
-        $name = "{$table}_grant_uniq";
-
-        if ($driver === 'pgsql' || $driver === 'sqlite') {
-            $this->dbConnection()->statement(
-                "CREATE UNIQUE INDEX {$name} ON {$table} ".
-                '(node_id, subject_type, subject_id, scope, effect) '.
-                'WHERE deleted_at IS NULL',
-            );
-
-            return;
-        }
-
-        if ($driver === 'mysql' || $driver === 'mariadb') {
-            $this->dbConnection()->statement(
-                "ALTER TABLE `{$table}` ADD COLUMN `grant_active` VARCHAR(700) ".
-                'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
-                "THEN CONCAT(`node_id`, ':', `subject_type`, ':', `subject_id`, ':', `scope`, ':', `effect`) ".
-                'ELSE NULL END) STORED',
-            );
-
-            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`grant_active`)");
-
-            return;
-        }
-
-        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
-            $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $name);
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $table.'_grant_uniq');
         });
     }
 
@@ -1060,32 +1012,8 @@ final class SchemaBuilder
      */
     private function addOwnerUniqueIndex(string $table): void
     {
-        $driver = $this->schemaConnection()->getConnection()->getDriverName();
-        $name = "{$table}_owner_panel_uniq";
-
-        if ($driver === 'pgsql' || $driver === 'sqlite') {
-            $this->dbConnection()->statement(
-                "CREATE UNIQUE INDEX {$name} ON {$table} (owner_type, owner_id, panel) ".
-                'WHERE deleted_at IS NULL',
-            );
-
-            return;
-        }
-
-        if ($driver === 'mysql' || $driver === 'mariadb') {
-            $this->dbConnection()->statement(
-                "ALTER TABLE `{$table}` ADD COLUMN `owner_active` VARCHAR(600) ".
-                'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL '.
-                "THEN CONCAT(`owner_type`, ':', COALESCE(`owner_id`, ''), ':', `panel`) ELSE NULL END) STORED",
-            );
-
-            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`owner_active`)");
-
-            return;
-        }
-
-        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
-            $blueprint->unique(['owner_type', 'owner_id', 'panel'], $name);
+        $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
+            $blueprint->unique(['owner_type', 'owner_id', 'profile'], $table.'_owner_profile_uniq');
         });
     }
 
@@ -1104,11 +1032,11 @@ final class SchemaBuilder
         $driver = $this->schemaConnection()->getConnection()->getDriverName();
         // Derive the index name from the table so a per-panel prefixed table gets
         // its own index name (index names are global on SQLite/PG, not per-table).
-        $name = "{$table}_sibling_uniq";
+        $name = $table.'_sibling_uniq';
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
             $this->dbConnection()->statement(
-                "CREATE UNIQUE INDEX {$name} ON {$table} (parent_id, lower(name)) ".
+                sprintf('CREATE UNIQUE INDEX %s ON %s (parent_id, lower(name)) ', $name, $table).
                 'WHERE deleted_at IS NULL AND trashed_at IS NULL',
             );
 
@@ -1117,12 +1045,12 @@ final class SchemaBuilder
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
             $this->dbConnection()->statement(
-                "ALTER TABLE `{$table}` ADD COLUMN `sibling_active` VARCHAR(512) ".
+                sprintf('ALTER TABLE `%s` ADD COLUMN `sibling_active` VARCHAR(512) ', $table).
                 'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL '.
                 "THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED",
             );
 
-            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`sibling_active`)");
+            $this->dbConnection()->statement(sprintf('ALTER TABLE `%s` ADD UNIQUE INDEX `%s` (`sibling_active`)', $table, $name));
 
             return;
         }
@@ -1139,8 +1067,8 @@ final class SchemaBuilder
      * written with a NULL parent becomes a second root that the root listing never
      * shows, and sibling-unique cannot catch duplicates because NULL parents differ.
      *
-     *  - PostgreSQL / SQLite: a PARTIAL unique index on (storage_id) WHERE parent_id IS NULL.
-     *  - MySQL/MariaDB: a stored generated column carries storage_id only for a
+     *  - PostgreSQL / SQLite: a PARTIAL unique index on (drive_id) WHERE parent_id IS NULL.
+     *  - MySQL/MariaDB: a stored generated column carries drive_id only for a
      *    parentless row (NULL otherwise, exempt from UNIQUE) under a plain unique index.
      *
      * Public so the upgrade migration adds the same index to an existing table.
@@ -1148,11 +1076,11 @@ final class SchemaBuilder
     public function addSingleRootIndex(string $table): void
     {
         $driver = $this->schemaConnection()->getConnection()->getDriverName();
-        $name = "{$table}_root_uniq";
+        $name = $table.'_root_uniq';
 
         if ($driver === 'pgsql' || $driver === 'sqlite') {
             $this->dbConnection()->statement(
-                "CREATE UNIQUE INDEX {$name} ON {$table} (storage_id) WHERE parent_id IS NULL",
+                sprintf('CREATE UNIQUE INDEX %s ON %s (drive_id) WHERE parent_id IS NULL', $name, $table),
             );
 
             return;
@@ -1161,15 +1089,15 @@ final class SchemaBuilder
         if ($driver === 'mysql' || $driver === 'mariadb') {
             // Two auto-committing DDL statements: each step is skipped when already
             // applied, so an upgrade interrupted between them can simply be re-run.
-            if (!$this->schemaConnection()->hasColumn($table, 'root_storage')) {
+            if (!$this->schemaConnection()->hasColumn($table, 'root_drive')) {
                 $this->dbConnection()->statement(
-                    "ALTER TABLE `{$table}` ADD COLUMN `root_storage` VARCHAR(64) ".
-                    'GENERATED ALWAYS AS (CASE WHEN `parent_id` IS NULL THEN `storage_id` ELSE NULL END) STORED',
+                    sprintf('ALTER TABLE `%s` ADD COLUMN `root_drive` VARCHAR(64) ', $table).
+                    'GENERATED ALWAYS AS (CASE WHEN `parent_id` IS NULL THEN `drive_id` ELSE NULL END) STORED',
                 );
             }
 
             if (!$this->schemaConnection()->hasIndex($table, $name)) {
-                $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`root_storage`)");
+                $this->dbConnection()->statement(sprintf('ALTER TABLE `%s` ADD UNIQUE INDEX `%s` (`root_drive`)', $table, $name));
             }
         }
     }
@@ -1180,7 +1108,7 @@ final class SchemaBuilder
      */
     private function panelDiscriminator(Blueprint $table): void
     {
-        $table->string(column: 'panel')->default(value: 'default')->index();
+        $table->string(column: 'profile', length: 64)->default(value: 'default')->index();
     }
 
     /**
@@ -1230,32 +1158,12 @@ final class SchemaBuilder
      */
     private function extraData(Blueprint $table): void
     {
-        if (!Config::extraDataEnabled()) {
+        // The node extra-data flag remains until P4.1; it never gates a table.
+        if ($table->getTable() === Config::table('nodes') && !Config::extraDataEnabled()) {
             return;
         }
 
         $table->json(column: 'extra_data')->nullable();
-    }
-
-    /**
-     * Whether a per-panel entity's table should be created given the panel's
-     * feature flags. storages + nodes are unconditional roots.
-     */
-    private function entityEnabled(string $entity): bool
-    {
-        return match ($entity) {
-            'storages', 'nodes' => true,
-            'blobs' => Config::featureEnabled('blobs'),
-            'files', 'file_versions', 'file_version_blobs' => Config::featureEnabled('versions'),
-            'node_grants' => Config::featureEnabled('grants'),
-            'node_shares' => Config::featureEnabled('share_links'),
-            'node_comments' => Config::featureEnabled('comments'),
-            'node_document_versions' => Config::featureEnabled('document_versions'),
-            'upload_sessions', 'upload_parts' => Config::featureEnabled('uploads'),
-            'activity' => Config::featureEnabled('activity'),
-            'outbox', 'webhook_endpoints', 'webhook_deliveries' => Config::featureEnabled('reliability'),
-            default => false,
-        };
     }
 
     private function ids(): IdStrategy

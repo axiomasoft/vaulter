@@ -26,9 +26,9 @@ final class WebhookTestHelpers
         $outbox = new Outbox;
         $outbox->forceFill(array_merge([
             'event_id' => 'evt-'.Str::uuid7()->toString(),
-            'panel' => 'default',
+            'profile' => 'default',
             'topic' => 'node-1',
-            'event' => 'node.created',
+            'event' => 'folder.created',
             'payload' => ['node_id' => 'node-1', 'event_id' => 'evt-1'],
             'available_at' => now(),
             'status' => 'pending',
@@ -50,7 +50,7 @@ final class WebhookTestHelpers
         $endpoint = new WebhookEndpoint;
         $endpoint->forceFill(array_merge([
             'url' => 'https://hooks.test/receive',
-            'events' => ['node.created'],
+            'events' => ['folder.created'],
             'signing_secret' => 'topsecret',
             'is_active' => true,
             'failure_count' => 0,
@@ -70,7 +70,7 @@ final class WebhookTestHelpers
         $delivery = new WebhookDelivery;
         $delivery->forceFill(array_merge([
             'endpoint_id' => $endpoint->getKey(),
-            'event' => 'node.created',
+            'event' => 'folder.created',
             'payload' => ['node_id' => 'node-1', 'event_id' => 'evt-1'],
             'status' => 'pending',
             'attempts' => 0,

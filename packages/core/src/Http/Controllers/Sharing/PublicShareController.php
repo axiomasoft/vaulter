@@ -116,7 +116,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('This share link does not point at a downloadable file.');
         }
 
-        $storage = $this->storages->find($node->storage_id);
+        $storage = $this->storages->find($node->drive_id);
 
         if (!$storage instanceof Drive) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
@@ -153,7 +153,7 @@ final class PublicShareController extends Controller
      */
     private function inScopeChildren(ShareContext $context, Node $parent): Collection
     {
-        $storage = $this->storages->find($parent->storage_id);
+        $storage = $this->storages->find($parent->drive_id);
 
         if (!$storage instanceof Drive) {
             /** @var Collection<int, Node> $empty */

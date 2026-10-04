@@ -16,7 +16,6 @@ final class OverrideDefaultProfile extends ProfileProvider
     public function profile(Profile $panel): Profile
     {
         return $panel
-            ->id('default')
-            ->storageType('overridden');
+            ->id('default');
     }
 }

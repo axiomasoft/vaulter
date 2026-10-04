@@ -7,7 +7,6 @@ namespace Vaulter\Models\Sharing;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -57,7 +56,6 @@ class NodeShare extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
-    use SoftDeletes;
 
     /**
      * Closed allow-list (F-P1.8-02): the share's own permission/lifecycle

@@ -174,14 +174,14 @@ final class NodeReadRepository
         $separator = $query->getModel()->getPathSeparator();
         $initialPath = $grammar->compileInitialPath('id', '__acl_path');
         $seed = $this->whereKeyInBounded($query, $parentIds)
-            ->select(['id', 'parent_id', 'storage_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
+            ->select(['id', 'parent_id', 'drive_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
         // Match ancestors()'s ascend semantics, including its database-specific
         // cycle guard. withMaxDepth(+64) does not limit negative ancestor depths.
         $path = $grammar->compileRecursivePath('n.id', 'c.__acl_path');
         $cycle = $grammar->compileCycleDetection('n.id', 'c.__acl_path');
         $sql = 'WITH RECURSIVE chain AS (SELECT seed.*, '.$initialPath.' FROM ('.$seed->toSql().') seed
-            UNION ALL SELECT n.id, n.parent_id, n.storage_id, n.inherit_grants, c.origin, c.depth + 1, '.$path.'
-            FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.storage_id = c.storage_id
+            UNION ALL SELECT n.id, n.parent_id, n.drive_id, n.inherit_grants, c.origin, c.depth + 1, '.$path.'
+            FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.drive_id = c.drive_id
             WHERE c.inherit_grants = ? AND NOT ('.$cycle.') AND n.deleted_at IS NULL)
             SELECT * FROM chain ORDER BY origin, depth';
         $rows = $connection->select($sql, [

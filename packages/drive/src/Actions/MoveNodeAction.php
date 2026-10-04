@@ -50,15 +50,15 @@ final readonly class MoveNodeAction
         $intoId = $this->tree->destinationId(storage: $node->storage, into: $data->into);
 
         return $this->database->transaction(function () use ($node, $intoId, $data): Node {
-            $this->database->lockTree($node->storage_id);
+            $this->database->lockTree($node->drive_id);
 
             $locked = $this->tree->lock([$node->id, $intoId]);
             $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));
             $into = $this->tree->locked($locked, $intoId);
 
             $this->tree->assertNotRoot(node: $current, operation: 'move');
-            if (!$this->tree->sameStorage($into, $current->storage_id)) {
-                throw CrossStorageMoveException::between(fromStorageId: $current->storage_id, toStorageId: $into->storage_id);
+            if (!$this->tree->sameStorage($into, $current->drive_id)) {
+                throw CrossStorageMoveException::between(fromStorageId: $current->drive_id, toStorageId: $into->drive_id);
             }
 
             $this->tree->assertActiveFolder($into);

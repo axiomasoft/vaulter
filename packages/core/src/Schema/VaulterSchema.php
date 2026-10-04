@@ -52,9 +52,10 @@ final class VaulterSchema
     {
         $strategy = self::strategy();
 
-        $strategy->reference(table: $table, column: "{$name}_id", nullable: false);
-        $table->string(column: "{$name}_type");
-        $table->index(columns: ["{$name}_type", "{$name}_id"]);
+        $strategy->reference(table: $table, column: $name.'_id', nullable: false);
+
+        $table->string(column: $name.'_type');
+        $table->index(columns: [$name.'_type', $name.'_id']);
     }
 
     /**
@@ -89,7 +90,7 @@ final class VaulterSchema
      */
     public static function panel(Blueprint $table): void
     {
-        $table->string(column: 'panel')->default(value: 'default')->index();
+        $table->string(column: 'profile')->default(value: 'default')->index();
     }
 
     /**

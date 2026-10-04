@@ -54,7 +54,7 @@ it('splits mixed storage edges without losing bytes and resumes a partial failur
     foreach ([$a, $b] as $version) {
         $blob = Blob::query()->where('scope_key', 'drive:'.$version->file->node->storage->getKey())->sole();
         expect($version->fresh()->blob_id)->toBe($blob->getKey())
-            ->and(FileRevisionBlob::query()->where('file_version_id', $version->getKey())->sole()->blob_id)->toBe($blob->getKey())
+            ->and(FileRevisionBlob::query()->where('file_revision_id', $version->getKey())->sole()->blob_id)->toBe($blob->getKey())
             ->and($blob->ref_count)->toBe(1)->and(stream_get_contents($store->read($blob)))->toBe('legacy shared');
     }
     expect($old->fresh()->ref_count)->toBe(0)->and(Blob::query()->count())->toBe(3);

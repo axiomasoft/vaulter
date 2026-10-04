@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Vaulter\Schema\SchemaBuilder;
 
 /**
- * v_storages — the ownable polymorphic disk container (master plan §2.1).
+ * v_drives — the ownable polymorphic disk container (master plan §2.1).
  *
  * Thin shell by design: the column definitions live in SchemaBuilder so the
  * shipped default-panel schema and any generated per-panel schema share ONE
@@ -18,7 +18,7 @@ return new class extends Migration
     {
         (new SchemaBuilder)->createTable(
 
-            entity: 'storages',
+            entity: 'drives',
         );
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     {
         (new SchemaBuilder)->dropTable(
 
-            entity: 'storages',
+            entity: 'drives',
         );
     }
 };

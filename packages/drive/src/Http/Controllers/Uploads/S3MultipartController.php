@@ -122,7 +122,7 @@ final class S3MultipartController extends Controller
         $storage = $this->storageOf($session);
 
         if ($session->isNewVersion()) {
-            $node = $this->findNodeInStorage($session->node_id ?? '', $storage);
+            $node = $this->findNodeInStorage($session->target_node_id ?? '', $storage);
             $this->guard($request, Ability::Edit, $node);
         } else {
             $parent = $session->target_parent_id === null
@@ -155,7 +155,7 @@ final class S3MultipartController extends Controller
 
     private function storageOf(UploadSession $session): Drive
     {
-        $storage = $this->storages->find($session->storage_id);
+        $storage = $this->storages->find($session->drive_id);
 
         if (!$storage instanceof Drive) {
             abort(404);
@@ -179,7 +179,7 @@ final class S3MultipartController extends Controller
     {
         $node = $this->nodes->find($nodeId);
 
-        if (!$node instanceof Node || $node->storage_id !== $storage->getKey()) {
+        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
             abort(404);
         }
 

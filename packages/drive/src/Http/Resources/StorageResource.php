@@ -34,16 +34,16 @@ final class StorageResource extends JsonResource
 
         return [
             'id' => $storage->getKey(),
-            'panel' => $storage->panel,
+            'panel' => $storage->profile,
             'owner' => [
                 'type' => $storage->owner_type,
                 'id' => $storage->owner_id,
             ],
             'name' => $storage->name,
-            'slug' => $storage->slug,
+            'slug' => null,
             'root_node_id' => $storage->root_node_id,
             'disk' => $storage->disk,
-            'storage_type' => $storage->storage_type,
+            'storage_type' => null,
             'used_bytes' => $storage->used_bytes,
             'quota_bytes' => $storage->quota_bytes,
             'status' => $storage->status,

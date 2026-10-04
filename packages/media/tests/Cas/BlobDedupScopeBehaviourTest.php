@@ -10,7 +10,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The dedup scope (D18 / H.3) decides what shares one physical object: global
- * (sha256 alone), tenant (tenant_id + sha256) or storage (storage_id + sha256).
+ * (sha256 alone), tenant (tenant_id + sha256) or storage (drive_id + sha256).
  * The scope-qualified storage_key keeps two scopes from ever colliding on one
  * object, so one scope's GC can never touch another's bytes.
  */
@@ -60,7 +60,7 @@ it('storage: одинаковые байты в разных хранилища�
         ->and($a->dedup_scope)->toBe('storage');
 });
 
-it('storage-scope ключит на storage_id, не на tenant_id', function (): void {
+it('storage-scope ключит на drive_id, не на tenant_id', function (): void {
     config()->set('vaulter.dedup.scope', 'storage');
     $store = app(BlobStore::class);
 

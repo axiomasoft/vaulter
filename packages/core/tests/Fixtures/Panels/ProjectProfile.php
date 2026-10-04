@@ -18,7 +18,6 @@ final class ProjectProfile extends ProfileProvider
     {
         return $panel
             ->id('project')
-            ->host(FakeProject::class)
-            ->storageType('team');
+            ->host(FakeProject::class);
     }
 }

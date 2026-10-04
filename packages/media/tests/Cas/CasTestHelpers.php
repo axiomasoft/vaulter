@@ -47,7 +47,7 @@ final class CasTestHelpers
 
         $node = new Node;
         $node->forceFill([
-            'storage_id' => $storage->getKey(),
+            'drive_id' => $storage->getKey(),
             'kind' => NodeKind::File,
             'name' => $name,
         ]);
@@ -64,8 +64,8 @@ final class CasTestHelpers
         $version = new FileRevision;
         $version->forceFill([
             'file_id' => $file->getKey(),
-            'version_no' => $versionNo,
-            'content_sha256' => str_repeat('0', 64),
+            'number' => $versionNo,
+            'sha256' => str_repeat('0', 64),
             'size_bytes' => 0,
             'original_name' => $name,
             'status' => 'committed',
@@ -151,7 +151,7 @@ final class CasTestHelpers
         $blob = new Blob;
         $blob->forceFill([
             'tenant_id' => null,
-            'storage_id' => null,
+            'drive_id' => null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => strlen($bytes),

@@ -27,7 +27,7 @@ it('surfaces the append-only feed recorded by the core Drive Actions', function 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Logged');
 
-    // Creating the folder recorded a node.created activity row.
+    // Creating the folder recorded a folder.created activity row.
     $feed = app(ActivityReadRepository::class)->forStorage($storage)->get();
 
     expect($feed)->not->toBeEmpty()

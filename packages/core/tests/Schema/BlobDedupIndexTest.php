@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\DB;
-use Vaulter\Profiles\Profile;
+use Illuminate\Support\Facades\Schema;
 use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 
@@ -11,18 +10,17 @@ use Vaulter\Support\Config;
 function dedupIndexColumns(): array
 {
     $table = Config::table('blobs');
-    $name = "{$table}_scope_sha_uniq";
+    $name = $table.'_scope_sha_uniq';
 
-    /** @var list<object{name: string}> $columns */
-    $columns = DB::select("PRAGMA index_info('{$name}')");
+    $indexes = array_column(Schema::getIndexes($table), null, 'name');
 
-    return array_map(static fn (object $column): string => $column->name, $columns);
+    return $indexes[$name]['columns'];
 }
 
 function rebuildBlobsTable(): void
 {
     $builder = new SchemaBuilder;
-    $panel = (new Profile)->id('default');
+    config()->set('vaulter.table_prefix', 'dedup_test_');
 
     $builder->dropTable(entity: 'blobs');
     $builder->createTable(entity: 'blobs');
@@ -31,12 +29,11 @@ function rebuildBlobsTable(): void
 function storageKeyIndexColumns(): array
 {
     $table = Config::table('blobs');
-    $name = "{$table}_storage_key_uniq";
+    $name = $table.'_storage_key_uniq';
 
-    /** @var list<object{name: string}> $columns */
-    $columns = DB::select("PRAGMA index_info('{$name}')");
+    $indexes = array_column(Schema::getIndexes($table), null, 'name');
 
-    return array_map(static fn (object $column): string => $column->name, $columns);
+    return $indexes[$name]['columns'];
 }
 
 it('global scope → UNIQUE (scope_key, sha256)', function (): void {
@@ -44,30 +41,21 @@ it('global scope → UNIQUE (scope_key, sha256)', function (): void {
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
-})->skip(
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
-);
+});
 
 it('tenant scope → UNIQUE (scope_key, sha256)', function (): void {
     config()->set('vaulter.dedup.scope', 'tenant');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
-})->skip(
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
-);
+});
 
 it('storage scope → UNIQUE (scope_key, sha256)', function (): void {
     config()->set('vaulter.dedup.scope', 'storage');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
-})->skip(
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the dedup UNIQUE is exercised live on PG by the Cas suite.',
-);
+});
 
 // The physical object address remains independently unique across disks.
 it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbone)', function (): void {
@@ -75,7 +63,10 @@ it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbo
     rebuildBlobsTable();
 
     expect(storageKeyIndexColumns())->toBe(['storage_key']);
-})->skip(
-    fn (): bool => DB::connection()->getDriverName() !== 'sqlite',
-    'PRAGMA index introspection + dropTable(no CASCADE) are SQLite-only; the storage_key UNIQUE is exercised live on PG by the Cas suite.',
-);
+});
+
+afterEach(function (): void {
+    config()->set('vaulter.table_prefix', 'dedup_test_');
+    (new SchemaBuilder)->dropTable('blobs');
+    config()->set('vaulter.table_prefix', 'v_');
+});

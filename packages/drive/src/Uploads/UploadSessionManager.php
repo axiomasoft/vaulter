@@ -63,9 +63,9 @@ final readonly class UploadSessionManager
 
         $session = $this->sessions->create([
             'tenant_id' => $this->tenantId($data),
-            'storage_id' => $data->storage->getKey(),
+            'drive_id' => $data->storage->getKey(),
             'upload_id' => (string) Str::uuid(),
-            'node_id' => $data->targetNode?->getKey(),
+            'target_node_id' => $data->targetNode?->getKey(),
             'target_parent_id' => $data->targetParent?->getKey(),
             'target_name' => $data->targetName,
             'protocol' => $data->protocol,

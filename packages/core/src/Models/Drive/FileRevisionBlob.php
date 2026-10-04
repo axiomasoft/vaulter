@@ -11,10 +11,10 @@ use Vaulter\Support\Config;
 /**
  * The version ↔ blob edge (master plan §2.4): the GC truth. A blob is live iff an
  * edge here references it, so this table is never soft-deleted and its composite
- * primary key is (file_version_id, blob_id, role, ordinal). Swappable via
+ * primary key is (file_revision_id, blob_id, role, ordinal). Swappable via
  * config('vaulter.models.file_version_blob').
  *
- * @property int|string $file_version_id
+ * @property int|string $file_revision_id
  * @property int|string $blob_id
  * @property string     $role
  * @property int        $ordinal
@@ -42,7 +42,7 @@ class FileRevisionBlob extends Pivot
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('file_version_blobs');
+        return Config::table('file_revision_blobs');
     }
 
     /**

@@ -39,7 +39,7 @@ final class FileStoreRepository
 
     /**
      * Repoint the file head to a new current version and refresh the cached
-     * mime/size, setting version_count to the allocated number (§2.4 commit flow).
+     * mime/size, setting revision_count to the allocated number (§2.4 commit flow).
      */
     public function repointHead(
         File $file,
@@ -49,10 +49,10 @@ final class FileStoreRepository
         int $versionNo,
     ): File {
         $file->forceFill([
-            'current_version_id' => $currentVersionId,
+            'current_revision_id' => $currentVersionId,
             'mime_type' => $mimeType,
             'size_bytes' => $sizeBytes,
-            'version_count' => $versionNo,
+            'revision_count' => $versionNo,
         ])->save();
 
         return $file;

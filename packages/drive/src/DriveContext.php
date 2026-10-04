@@ -112,7 +112,7 @@ final readonly class DriveContext implements DriveHandle
     }
 
     /**
-     * Upload a NEW VERSION onto an existing file node (§2.4): version_no bumps,
+     * Upload a NEW VERSION onto an existing file node (§2.4): number bumps,
      * the head repoints, the prior version is superseded.
      */
     public function uploadVersion(

@@ -44,7 +44,7 @@ final class UploadTestHelpers
 
         $root = new Node;
         $root->forceFill([
-            'storage_id' => $storage->getKey(),
+            'drive_id' => $storage->getKey(),
             'parent_id' => null,
             'kind' => NodeKind::Folder,
             'name' => '',
@@ -69,14 +69,14 @@ final class UploadTestHelpers
         int|string|null $nodeId = null,
         int|string|null $createdBy = null,
     ): UploadSession {
-        // forceFill (P1.4/F-P1.8-02): storage_id/status/received_bytes/… are
+        // forceFill (P1.4/F-P1.8-02): drive_id/status/received_bytes/… are
         // excluded from UploadSession's $fillable — bypassed here exactly like
         // UploadSessionManager::initiate() does.
         $session = new UploadSession;
         $session->forceFill([
-            'storage_id' => $storage->getKey(),
+            'drive_id' => $storage->getKey(),
             'upload_id' => (string) Str::uuid(),
-            'node_id' => $nodeId,
+            'target_node_id' => $nodeId,
             'target_parent_id' => $parentId,
             'target_name' => $targetName,
             'protocol' => $protocol,

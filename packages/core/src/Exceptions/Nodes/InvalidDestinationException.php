@@ -47,7 +47,7 @@ final class InvalidDestinationException extends VaulterException implements Prob
     public static function otherDrive(Node $destination, int|string $storageId): self
     {
         return new self(
-            "[Vaulter] Node [{$destination->id}] belongs to drive [{$destination->storage_id}], not [{$storageId}]. "
+            "[Vaulter] Node [{$destination->id}] belongs to drive [{$destination->drive_id}], not [{$storageId}]. "
             .'Why: a node can only be placed under a folder of its own drive. '
             .'Fix: pick a folder of the same drive as the destination. '
             .'Docs: '.self::docs('invalid-destination'),

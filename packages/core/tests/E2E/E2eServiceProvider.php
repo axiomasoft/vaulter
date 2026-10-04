@@ -99,12 +99,12 @@ final class E2eServiceProvider extends ServiceProvider
         Route::get('/e2e/snapshot/{node}', static function (int|string $node) {
             $latest = NodeDocumentVersion::query()
                 ->where('node_id', $node)
-                ->orderByDesc('version_no')
+                ->orderByDesc('number')
                 ->first();
 
             return response()->json([
                 'node_id' => $node,
-                'version_no' => $latest?->version_no,
+                'number' => $latest?->number,
                 'yjs_state_size' => $latest?->yjs_state_size,
                 'has_state' => $latest !== null
                     && $latest->yjs_state_size !== null

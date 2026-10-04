@@ -70,7 +70,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
     /** @var Node $node */
     $node = new $model;
     $node->forceFill([
-        'storage_id' => $drive->storage()->id,
+        'drive_id' => $drive->storage()->id,
         'parent_id' => $drive->root()->id,
         'kind' => NodeKind::File,
         'name' => 'scan.pdf',

@@ -83,7 +83,7 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
             static function () use ($drive, $uploadParent, $barrier, $wait): string {
                 $db = app(VaulterDatabase::class)->connection();
                 $db->listen(static function ($query) use ($db, $barrier, $wait): void {
-                    if (!str_starts_with($query->sql, 'update "v_storages" set used_bytes = used_bytes +')) {
+                    if (!str_starts_with($query->sql, 'update "v_drives" set used_bytes = used_bytes +')) {
                         return;
                     }
                     file_put_contents($barrier.'/quota-held', '1');
@@ -93,7 +93,7 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
                         $db->select('SELECT pg_stat_clear_snapshot()');
 
                         return $db->table('pg_stat_activity')->where('pid', $pid)
-                            ->where('wait_event_type', 'Lock')->where('query', 'like', 'update "v_storages" set used_bytes%')->exists();
+                            ->where('wait_event_type', 'Lock')->where('query', 'like', 'update "v_drives" set used_bytes%')->exists();
                     });
                 });
 

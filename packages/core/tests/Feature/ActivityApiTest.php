@@ -113,7 +113,7 @@ function activityRow(int|string $storageId, EventType $verb, string $name): Acti
 {
     $activity = new Activity;
     $activity->forceFill([
-        'storage_id' => $storageId,
+        'drive_id' => $storageId,
         'verb' => $verb->value,
         'context' => ['name' => $name],
         'created_at' => now(),
@@ -129,7 +129,7 @@ function targetedRow(int|string $storageId, Node $node, EventType $verb): Activi
 {
     $activity = new Activity;
     $activity->forceFill([
-        'storage_id' => $storageId,
+        'drive_id' => $storageId,
         'verb' => $verb->value,
         'target_type' => $node->getMorphClass(),
         'target_id' => $node->getKey(),

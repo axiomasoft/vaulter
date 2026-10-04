@@ -1,0 +1,1 @@
+Initial broad P1 lane stopped without a verdict after detecting redundant Testbench per-test migration/rollback processors. No successful result is claimed for that incomplete run. Core and Spatie RefreshDatabase harnesses now register migration paths only; repeated final grid is authoritative.

@@ -19,7 +19,7 @@ it('creates v_outbox with every §2.11 column', function (): void {
     $table = Config::table('outbox');
 
     expect(Schema::hasColumns($table, [
-        'id', 'event_id', 'panel', 'topic', 'event', 'payload',
+        'id', 'event_id', 'profile', 'topic', 'event', 'payload',
         'available_at', 'dispatched_at', 'attempts', 'status',
         'created_at', 'updated_at',
     ]))->toBeTrue();
@@ -48,7 +48,7 @@ it('enforces the event_id UNIQUE idempotency key on v_outbox', function (): void
 
     // SAVEPOINT the duplicate: on PostgreSQL the UNIQUE violation would otherwise abort the
     // enclosing RefreshDatabase transaction (see BlobDedupScopeTest).
-    expect(fn () => DB::transaction(fn () => WebhookTestHelpers::outbox(['event_id' => 'dup'])))
+    expect(fn () => DB::transaction(fn (): Outbox => WebhookTestHelpers::outbox(['event_id' => 'dup'])))
         ->toThrow(QueryException::class);
 });
 
