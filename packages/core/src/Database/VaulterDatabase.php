@@ -36,6 +36,11 @@ final class VaulterDatabase
         return $this->connection()->transaction($callback, $attempts);
     }
 
+    /**
+     * The storage's tree lock, exclusive: for operations that change the shape of the
+     * tree or touch many node rows (move, restore, trash, purge). Taken before any
+     * node row lock.
+     */
     public function lockTree(int|string $storageId): void
     {
         $this->requireTransaction('lockTree');
@@ -48,6 +53,26 @@ final class VaulterDatabase
 
         $this->connection()->table(Config::table('storages'))
             ->where('id', $storageId)->lockForUpdate()->first(['id']);
+    }
+
+    /**
+     * The storage's tree lock, shared: for writes under a single locked parent
+     * (create, upload, copy, rename). On PostgreSQL they run concurrently with each
+     * other and wait only for an exclusive holder. Elsewhere the lock is the storage
+     * row, which these writes update (quota) or reference (foreign-key check) anyway,
+     * so it is taken exclusively.
+     */
+    public function lockTreeShared(int|string $storageId): void
+    {
+        $this->requireTransaction('lockTreeShared');
+
+        if ($this->driver() === 'pgsql') {
+            $this->connection()->statement('SELECT pg_advisory_xact_lock_shared(hashtext(?))', ['vaulter:tree:'.$storageId]);
+
+            return;
+        }
+
+        $this->lockTree($storageId);
     }
 
     public function advisoryLock(string $key): void

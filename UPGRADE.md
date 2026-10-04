@@ -6,6 +6,49 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Tree invariants, second-root repair and migration №6 (AD13)
+
+Before: Actions accepted any node of the drive as a parent, so a folder, upload, move,
+copy or document could land inside a file, a document or a trashed folder; a `null`
+parent in `CreateDocumentNodeAction` (and in Drive Actions called directly) wrote a
+second parentless node that the root listing never showed; the root could be renamed,
+moved or trashed; two concurrent moves could form a cycle; `forceDelete` purged live
+nodes; restoring or trashing twice was a silent no-op. After:
+
+- A parent or destination must be a live folder of the same drive, checked under row
+  locks inside the transaction: otherwise `InvalidDestinationException`
+  (409, `invalid_destination`); a folder of another drive raises
+  `CrossStorageMoveException` (409, `cross_drive_operation`) from Drive Actions and
+  `InvalidDestinationException` from `CreateDocumentNodeAction`.
+- A `null` destination always means the drive root (`root_node_id`).
+- The root cannot be renamed, moved, copied, trashed or force-deleted (409, `invalid_destination`).
+- Trashing a node already in the trash raises `InvalidDestinationException`; restoring or
+  force-deleting a node that is not in the trash raises `NodeNotTrashedException`
+  (409, `node_not_trashed`). Delete a live node by trashing it first.
+- Every tree write takes the drive tree lock as its first statement: moves, restores, trashes
+  and force deletes exclusively (`VaulterDatabase::lockTree()`), creates, uploads, copies and
+  renames shared (`VaulterDatabase::lockTreeShared()`, new). Concurrent moves can no longer form a
+  cycle (`CycleException`, 409, `node_move_cycle`) and a create cannot slip under a folder being
+  trashed. On PostgreSQL the shared lock keeps uploads concurrent with each other but a structural
+  operation waits for in-flight uploads of its drive; on MySQL/MariaDB and SQLite the lock is the
+  storage row and tree writes of one drive run one at a time. Custom Actions that change the
+  tree should take the same locks before locking node rows.
+- Names written by create, upload, rename, copy (explicit name) and document creation are
+  trimmed, NFC-normalized when ext-intl is installed, and rejected with
+  `InvalidNodeNameException` (422, `validation_failed`, `errors.name`) when empty, `.`/`..`,
+  longer than `vaulter.drive.name_rules.max_length` UTF-8 bytes, or containing `/`, `\`
+  or a control character.
+
+Run `php artisan migrate --force` after a database backup. Migration
+`2026_10_01_000006_nodes_cleanup` moves every parentless node other than a drive's
+`root_node_id` under that root, renaming it `"<base> (legacy N)<.ext>"` when a live root
+child already owns the name, writes a `node.moved` activity row (`actor_type`
+`vaulter:system`, `context.reason` `n04_repair`, `context.renamed_from`) per move, and then
+adds the unique one-root-per-drive index (`{nodes}_root_uniq`; a generated `root_storage`
+column on MySQL/MariaDB). It stops without changes when a drive has several parentless
+nodes and no `root_node_id`: set the real root first. The repair is irreversible —
+rollback only drops the index. Re-running the migration changes nothing.
+
 ### Independent host keys and migration №3 (AD25)
 
 Before: host owner, subject, author, tenant and actor columns inherited Vaulter's

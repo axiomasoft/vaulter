@@ -264,6 +264,8 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
     $file = $drive->upload(DriveTestHelpers::streamFor('bytes'), into: $folder, originalName: 'f.bin');
     $ids = [(string) $folder->getKey(), (string) $file->getKey()];
 
+    $drive->trash($folder);
+
     $drive->forceDelete($folder, actorId: 17);
 
     $outbox = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole();

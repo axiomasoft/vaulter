@@ -42,7 +42,9 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     $db = app(VaulterDatabase::class)->connection();
     $before = [];
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
-        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get()->map(static function ($row) use ($columns): array {
+        // Only the host-key columns: later upgrade steps in the same batch legitimately
+        // change other columns (the N04 repair re-parents nodes) and add activity rows.
+        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get(['id', ...$columns])->map(static function ($row) use ($columns): array {
             $values = (array) $row;
             foreach ($columns as $column) {
                 $values[$column] = $values[$column] === null ? null : (string) $values[$column];
@@ -55,7 +57,8 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $count = 0;
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
-        expect($db->table(Config::table($entity))->orderBy('id')->get()->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
+        expect($db->table(Config::table($entity))->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
+            ->get(['id', ...$columns])->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
                 ->where('table_name', Config::table($entity))->where('column_name', $column)->first();
@@ -77,7 +80,9 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     $migration->up();
     expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
-    $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertSuccessful();
+    // The upgrade migrations run as one batch; rolling the batch back reaches this one
+    // whatever later upgrade steps were added after it.
+    $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')

@@ -901,6 +901,7 @@ final class PanelTablesBuilder
 
         if ($entity === 'nodes') {
             $this->addSiblingUniqueIndex(table: $panel->table('nodes'));
+            $this->addSingleRootIndex(table: $panel->table('nodes'));
             $this->addTrashedAtIndex(table: $panel->table('nodes'));
         }
 
@@ -1153,6 +1154,46 @@ final class PanelTablesBuilder
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
             $blueprint->unique(['parent_id', 'name'], $name);
         });
+    }
+
+    /**
+     * Only the drive root may have no parent (one per storage). Without it a node
+     * written with a NULL parent becomes a second root that the root listing never
+     * shows, and sibling-unique cannot catch duplicates because NULL parents differ.
+     *
+     *  - PostgreSQL / SQLite: a PARTIAL unique index on (storage_id) WHERE parent_id IS NULL.
+     *  - MySQL/MariaDB: a stored generated column carries storage_id only for a
+     *    parentless row (NULL otherwise, exempt from UNIQUE) under a plain unique index.
+     *
+     * Public so the upgrade migration adds the same index to an existing table.
+     */
+    public function addSingleRootIndex(string $table): void
+    {
+        $driver = $this->schemaConnection()->getConnection()->getDriverName();
+        $name = "{$table}_root_uniq";
+
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            $this->dbConnection()->statement(
+                "CREATE UNIQUE INDEX {$name} ON {$table} (storage_id) WHERE parent_id IS NULL",
+            );
+
+            return;
+        }
+
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            // Two auto-committing DDL statements: each step is skipped when already
+            // applied, so an upgrade interrupted between them can simply be re-run.
+            if (!$this->schemaConnection()->hasColumn($table, 'root_storage')) {
+                $this->dbConnection()->statement(
+                    "ALTER TABLE `{$table}` ADD COLUMN `root_storage` VARCHAR(64) ".
+                    'GENERATED ALWAYS AS (CASE WHEN `parent_id` IS NULL THEN `storage_id` ELSE NULL END) STORED',
+                );
+            }
+
+            if (!$this->schemaConnection()->hasIndex($table, $name)) {
+                $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`root_storage`)");
+            }
+        }
     }
 
     /**

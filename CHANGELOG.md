@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
   and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
+- `InvalidDestinationException` (409 `invalid_destination`), `NodeNotTrashedException`
+  (409 `node_not_trashed`), `InvalidNodeNameException` (422 `validation_failed`) and
+  `Vaulter\Support\NodeName::normalize()` for tree and name invariants (AD13).
+- `VaulterDatabase::lockTreeShared()`: the shared mode of the drive tree lock, taken by
+  creates, uploads, copies and renames (AD13, D21).
 
 ### Changed
 - `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
@@ -28,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- A node created with no parent (notably documents) is placed under the drive root
+  instead of becoming a hidden second root; upgrade migration №6 moves existing second
+  roots under their root (renaming clashes ` (legacy N)`, logged as `node.moved`) and
+  adds a unique one-root-per-drive index. The repair is irreversible (N04, AD13).
+- Create, upload, move, copy and restore only target live folders of the same drive,
+  checked under row locks; the root can no longer be renamed, moved, copied, trashed
+  or deleted; moves take the drive tree lock so concurrent moves cannot form a cycle;
+  `forceDelete` only purges trashed nodes and node names are normalized (N05, AD13).
 - Host owner, subject, author, tenant and actor columns now use `ids.host_keys`
   instead of Vaulter's entity-ID strategy. Upgrade migration №3 preserves existing
   values and restores the strategy's types on rollback (N02, AD25).

@@ -1,0 +1,32 @@
+{
+  "schema_version": "p1.2-acceptance/v1",
+  "validation_evidence": {
+    "E10": [
+      "v18.log"
+    ],
+    "E11": [
+      "v19.log"
+    ],
+    "E12": [
+      "v19-negative.log",
+      "v19.log"
+    ],
+    "E13": [
+      "migration-nodename-pgsql.log"
+    ],
+    "E14": [
+      "core-pint.log",
+      "core-stan.log",
+      "core-pest.log",
+      "drive-pint.log",
+      "drive-stan.log",
+      "drive-pest.log",
+      "documents-pint.log",
+      "documents-stan.log",
+      "documents-pest.log",
+      "filament-pint.log",
+      "filament-stan.log",
+      "filament-pest.log"
+    ]
+  }
+}

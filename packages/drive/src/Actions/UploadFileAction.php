@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
+use LogicException;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Events\FileUploaded;
 use Vaulter\Drive\Events\NodeVersionCommitted;
+use Vaulter\Drive\Exceptions\CrossStorageMoveException;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -23,6 +25,8 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\LoadTier;
+use Vaulter\Support\NodeName;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit
@@ -53,6 +57,7 @@ final readonly class UploadFileAction
         private StorageStoreRepository $storageStore,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(UploadFileData $data): Node
@@ -78,11 +83,28 @@ final readonly class UploadFileAction
         // adjustment below uses the committed blob's authoritative size.
         $this->assertWithinQuota(data: $data, delta: $probedSize - $previousSize);
 
-        if (!$data->isNewVersion()) {
-            $this->assertNameAvailable($data);
-        }
+        // A new file gets a normalized name under a resolved folder (the root when no
+        // destination is given); a new version keeps the node's place and name.
+        $name = $data->isNewVersion() ? null : NodeName::normalize($data->resolvedName());
+        $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
 
-        return $this->database->transaction(function () use ($data, $previousSize): Node {
+        return $this->database->transaction(function () use ($data, $previousSize, $name, $parentId): Node {
+            $this->database->lockTreeShared($data->storage->id);
+
+            if ($name !== null && $parentId !== null) {
+                $this->assertDestination(data: $data, parentId: $parentId, name: $name);
+            }
+
+            // A new version locks its target before the CAS lock, as every writer takes its
+            // node row before CAS, and measures the delta from the locked row; a target
+            // deleted meanwhile is not found rather than given new blob edges.
+            $target = $data->targetNode;
+
+            if ($target instanceof Node) {
+                $this->tree->sync($target, $this->tree->locked($this->tree->lock([$target->id]), $target->id));
+                $previousSize = $target->size_bytes;
+            }
+
             $blob = $this->blobs->commit(
                 stream: $data->stream,
                 tenantId: $this->tenantId($data),
@@ -98,9 +120,9 @@ final readonly class UploadFileAction
                 labels: ['protocol' => 'single'],
             );
 
-            $node = $data->isNewVersion()
+            $node = $name === null || $parentId === null
                 ? $this->commitNewVersion(data: $data, blob: $blob, size: $size)
-                : $this->commitNewFile(data: $data, blob: $blob, size: $size);
+                : $this->commitNewFile(data: $data, blob: $blob, size: $size, name: $name, parentId: $parentId);
 
             $delta = $size - $previousSize;
 
@@ -115,13 +137,11 @@ final readonly class UploadFileAction
     /**
      * New-file path (§2.4): node(kind=file) → file → version_no=1 → edge → repoint.
      */
-    private function commitNewFile(UploadFileData $data, Blob $blob, int $size): Node
+    private function commitNewFile(UploadFileData $data, Blob $blob, int $size, string $name, int|string $parentId): Node
     {
-        $name = $data->resolvedName();
-
         $node = $this->nodeStore->create([
-            'storage_id' => $data->storage->getKey(),
-            'parent_id' => $data->into?->getKey(),
+            'storage_id' => $data->storage->id,
+            'parent_id' => $parentId,
             'kind' => NodeKind::File,
             'name' => $name,
             'mime_type' => $data->mimeType,
@@ -169,7 +189,7 @@ final readonly class UploadFileAction
 
         if (!$node instanceof Node) {
             // Defensive: isNewVersion() already guaranteed this; keeps PHPStan honest.
-            return $this->commitNewFile(data: $data, blob: $blob, size: $size);
+            throw new LogicException('[Vaulter] A new-version upload requires a target node.');
         }
 
         /** @var File $file */
@@ -261,10 +281,18 @@ final readonly class UploadFileAction
         }
     }
 
-    private function assertNameAvailable(UploadFileData $data): void
+    /**
+     * The destination folder is locked before the bytes are committed, so it cannot
+     * be trashed or replaced by a file between the check and the insert.
+     */
+    private function assertDestination(UploadFileData $data, int|string $parentId, string $name): void
     {
-        $parentId = $data->into?->id;
-        $name = $data->resolvedName();
+        $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
+        if (!$this->tree->sameStorage($parent, $data->storage->id)) {
+            throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
+        }
+
+        $this->tree->assertActiveFolder($parent);
 
         if ($this->nodeRead->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
             throw NodeNameConflictException::forName(name: $name, parentId: $parentId);

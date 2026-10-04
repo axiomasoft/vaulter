@@ -119,6 +119,8 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
     $folder = $drive->createFolder('Empty tree');
     $used = $drive->storage()->refresh()->used_bytes;
 
+    $drive->trash($folder);
+
     $drive->forceDelete($folder, actorId: 17);
 
     expect($drive->storage()->refresh()->used_bytes)->toBe($used)
@@ -133,8 +135,8 @@ it('restore re-homes to the storage root when the original parent was trashed', 
     $parent = $drive->createFolder('Parent');
     $child = $drive->createFolder('Child', $parent);
 
-    $drive->trash($parent);
     $drive->trash($child);
+    $drive->trash($parent);
 
     $restored = $drive->restore($child->refresh(), actorId: 17);
 
@@ -172,10 +174,12 @@ it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     Outbox::query()->delete();
 
     $first = $drive->createFolder('One');
+    $drive->trash($first);
     $drive->forceDelete($first, actorId: 9);
     $firstKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole()->event_id;
 
     $second = $drive->createFolder('Two');
+    $drive->trash($second);
     $drive->forceDelete($second, actorId: 9);
     $secondKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->orderByDesc('id')->firstOrFail()->event_id;
 
@@ -198,8 +202,10 @@ it('StorageManager root() provisions a missing root with an empty name', functio
     $storage = $drive->storage();
     $oldRootId = $storage->root_node_id;
 
+    // The root row must be gone for good: even a soft-deleted parentless row is the
+    // drive's one parentless node under the single-root index.
     $storage->forceFill(['root_node_id' => null])->save();
-    Node::query()->whereKey($oldRootId)->delete();
+    Node::query()->whereKey($oldRootId)->forceDelete();
 
     $root = app(StorageManager::class)->root($storage->refresh());
 

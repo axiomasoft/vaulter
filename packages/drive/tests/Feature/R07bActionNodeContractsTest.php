@@ -459,6 +459,8 @@ it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte
     $node = $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'tiny.bin'); // 1 byte
     expect($drive->storage()->refresh()->used_bytes)->toBe(1);
 
+    $drive->trash($node);
+
     $drive->forceDelete($node);
 
     // Increment mutant: freedBytes > 1 → skip adjustUsedBytes → used_bytes stays at 1.
@@ -474,6 +476,8 @@ it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds 
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'f.bin');
     $nodeId = $node->getKey();
+
+    $drive->trash($node);
 
     $drive->forceDelete($node);
 

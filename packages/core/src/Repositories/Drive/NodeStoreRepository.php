@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
 
 /**
  * Write-side row work for v_nodes (§2.2). Bare mutations only: create/update,
@@ -201,6 +202,38 @@ final class NodeStoreRepository
             ->first();
 
         return $node;
+    }
+
+    /**
+     * Lock live node rows for the rest of the transaction, in ascending id order so
+     * two operations over overlapping nodes queue instead of deadlocking (D21 level 2:
+     * after lockTree, before aggregate and quota locks). SQLite has no row locks and
+     * serialises writers, so the grammar drops FOR UPDATE there. Soft-deleted rows are
+     * not returned — a missing id means the node is gone.
+     *
+     * @param  list<int|string|null>    $ids
+     * @return Collection<string, Node> keyed by the stringified id
+     */
+    public function lockForUpdate(array $ids): Collection
+    {
+        $ids = array_values(array_unique(
+            array_filter($ids, static fn (int|string|null $id): bool => $id !== null),
+        ));
+
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        $model = Config::nodeModel();
+        $node = new $model;
+
+        return $model::query()
+            ->whereKey($ids)
+            ->orderBy($node->getKeyName())
+            ->lockForUpdate()
+            ->get()
+            ->keyBy(static fn (Node $locked): string => Identity::stringify($locked->getKey()))
+            ->toBase();
     }
 
     /**

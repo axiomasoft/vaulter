@@ -39,7 +39,9 @@ $drive->trash($node);          // soft-delete — dispatches NodeTrashed
 ```
 
 Trashing a folder trashes its whole subtree. The node disappears from `list()` and
-search but remains in the trash view.
+search but remains in the trash view. The drive root cannot be trashed, and trashing a
+node that is already in the trash raises `InvalidDestinationException`
+(409 `invalid_destination`).
 
 ### Restoring
 
@@ -47,13 +49,20 @@ search but remains in the trash view.
 $drive->restore($node);        // back to live — dispatches NodeRestored
 ```
 
+The node returns to the folder it was trashed from when that folder is still a live
+folder of the drive; otherwise it is restored under the root. If a live sibling already
+uses its name there, `NodeNameConflictException` is raised — rename and retry. Only a
+trashed node can be restored: anything else raises `NodeNotTrashedException`
+(409 `node_not_trashed`).
+
 ### Force-deleting
 
 ```php
 $drive->forceDelete($node);    // permanent — dispatches NodeForceDeleted
 ```
 
-Force-delete detaches every version↔blob edge in the subtree (the bytes become
+Force-delete only purges from the trash: a live node raises `NodeNotTrashedException`
+(trash it first), and the root is never deleted. It detaches every version↔blob edge in the subtree (the bytes become
 [GC](/guide/recipes)-eligible) and releases the storage quota.
 
 ::: danger Irreversible

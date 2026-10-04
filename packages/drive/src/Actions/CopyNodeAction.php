@@ -8,6 +8,7 @@ use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CopyNodeData;
 use Vaulter\Drive\Events\NodeCopied;
+use Vaulter\Drive\Exceptions\CrossStorageMoveException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
@@ -20,9 +21,12 @@ use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Support\NodeName;
+use Vaulter\Support\TreeGuard;
 
 /**
- * Copy a node into a destination (§2.4):
+ * Copy a node into a destination (§2.4) — the locked destination must be a live
+ * folder of the source's storage, and the root itself is never copied:
  *   - folder → deep-copy the whole subtree (new node rows, same shape);
  *   - file   → new File + new FileVersion(version_no=1) whose version↔blob edge
  *     references the SAME blob, so content-addressed dedup keeps ONE physical
@@ -45,26 +49,38 @@ final readonly class CopyNodeAction
         private StorageStoreRepository $storageStore,
         private BlobStore $blobs,
         private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(CopyNodeData $data): Node
     {
-
         $source = $data->node;
-        $destParentId = $data->into?->id;
-        $name = $data->name ?? $source->name;
+        // An explicit name is new input; the source name was validated when it was written.
+        $name = $data->name === null ? $source->name : NodeName::normalize($data->name);
+        $destParentId = $this->tree->destinationId(storage: $source->storage, into: $data->into);
 
-        $exists = $this->nodes->siblingNameExists(
-            storage: $source->storage,
-            parentId: $destParentId,
-            name: $name,
-        );
-
-        if ($exists) {
-            throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
-        }
+        $this->tree->assertNotRoot(node: $source, operation: 'copy');
 
         return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
+            $this->database->lockTreeShared($source->storage_id);
+
+            $destination = $this->tree->locked($this->tree->lock([$destParentId]), $destParentId);
+            if (!$this->tree->sameStorage($destination, $source->storage_id)) {
+                throw CrossStorageMoveException::between(fromStorageId: $source->storage_id, toStorageId: $destination->storage_id);
+            }
+
+            $this->tree->assertActiveFolder($destination);
+
+            $exists = $this->nodes->siblingNameExists(
+                storage: $source->storage,
+                parentId: $destParentId,
+                name: $name,
+            );
+
+            if ($exists) {
+                throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
+            }
+
             $addedBytes = 0;
             $copy = $this->copyNode(source: $source, parentId: $destParentId, name: $name, data: $data, addedBytes: $addedBytes);
 
@@ -82,7 +98,7 @@ final readonly class CopyNodeAction
      * Copy one node (recursing into a folder's children). $addedBytes accumulates
      * the live logical size the copy adds, for the used_bytes adjustment.
      */
-    private function copyNode(Node $source, int|string|null $parentId, string $name, CopyNodeData $data, int &$addedBytes): Node
+    private function copyNode(Node $source, int|string $parentId, string $name, CopyNodeData $data, int &$addedBytes): Node
     {
         $copy = $this->nodeStore->create([
             'storage_id' => $source->storage_id,

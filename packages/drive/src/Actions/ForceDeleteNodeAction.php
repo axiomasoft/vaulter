@@ -8,6 +8,7 @@ use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeForceDeleted;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\FileVersionBlob;
@@ -15,10 +16,13 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Support\TreeGuard;
 
 /**
- * Permanently soft-delete a node and its subtree (§2.10 stage 2). The order
- * matters and is the GC contract (§2.3 / §2.4):
+ * Permanently soft-delete a trashed node and its subtree (§2.10 stage 2). Only a
+ * node already in the trash qualifies (a live node goes through the trash first)
+ * and the root never does; the subtree is read under the storage tree lock. The
+ * order matters and is the GC contract (§2.3 / §2.4):
  *   1. detach every version↔blob edge in the subtree — the edge IS the liveness
  *      truth (H.3), so dropping it makes the blob GC-eligible; the bytes are
  *      NEVER deleted here (M1b's two-phase GC reclaims them);
@@ -37,16 +41,26 @@ final readonly class ForceDeleteNodeAction
         private StorageStoreRepository $storageStore,
         private BlobStore $blobs,
         private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(Node $node, int|string|null $actorId = null): void
     {
-
-        $subtree = $this->nodes->subtree($node);
-        $ids = $subtree->modelKeys();
         $storage = $node->storage;
 
-        $this->database->transaction(function () use ($subtree, $ids, $node, $storage, $actorId): void {
+        $this->database->transaction(function () use ($node, $storage, $actorId): void {
+            $this->database->lockTree($node->storage_id);
+
+            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
+
+            $this->tree->assertNotRoot(node: $current, operation: 'delete');
+
+            if ($current->trashed_at === null) {
+                throw NodeNotTrashedException::forNode($current);
+            }
+
+            $subtree = $this->nodes->subtree($current);
+            $ids = $subtree->modelKeys();
             $freedBytes = 0;
 
             foreach ($subtree as $member) {
@@ -64,7 +78,7 @@ final readonly class ForceDeleteNodeAction
             }
 
             event(new NodeForceDeleted(
-                storageId: $node->storage_id,
+                storageId: $current->storage_id,
                 nodeIds: array_values($ids),
                 freedBytes: $freedBytes,
                 actorId: $actorId,

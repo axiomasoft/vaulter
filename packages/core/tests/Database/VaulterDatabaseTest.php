@@ -39,7 +39,7 @@ it('resolves the same dedicated connection as Vaulter models', function (string 
 
 it('refuses locks without a transaction on its connection', function (string $method): void {
     app(VaulterDatabase::class)->{$method}('1');
-})->with(['lockTree', 'advisoryLock'])->throws(LogicException::class);
+})->with(['lockTree', 'lockTreeShared', 'advisoryLock'])->throws(LogicException::class);
 
 it('retries serialization failures up to the configured attempts', function (): void {
     $attempts = 0;
@@ -117,3 +117,20 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
     NodeComment::class,
     NodeDocumentVersion::class,
 ]);
+
+it('takes the tree lock in shared mode for single-parent writes on PostgreSQL', function (): void {
+    ForkRace::skipUnlessSupported($this);
+    $database = app(VaulterDatabase::class);
+    $modes = "SELECT mode FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid() ORDER BY mode";
+
+    $database->transaction(function () use ($database, $modes): void {
+        $database->lockTreeShared('7');
+        $database->lockTreeShared('7');
+
+        expect(array_column($database->connection()->select($modes), 'mode'))->toBe(['ShareLock']);
+
+        $database->lockTree('8');
+
+        expect(array_column($database->connection()->select($modes), 'mode'))->toBe(['ExclusiveLock', 'ShareLock']);
+    });
+});

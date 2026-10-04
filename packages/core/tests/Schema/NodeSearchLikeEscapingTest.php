@@ -22,9 +22,17 @@ beforeEach(function (): void {
         'name' => 'Disk',
     ]);
 
-    $make = fn (string $name): Node => ForceCreates::make(Node::class, [
+    // Only the root may be parentless (one per storage); the searched nodes are its children.
+    $root = ForceCreates::make(Node::class, [
         'storage_id' => $this->storage->getKey(),
         'parent_id' => null,
+        'kind' => NodeKind::Folder,
+        'name' => '',
+    ]);
+
+    $make = fn (string $name): Node => ForceCreates::make(Node::class, [
+        'storage_id' => $this->storage->getKey(),
+        'parent_id' => $root->getKey(),
         'kind' => NodeKind::Folder,
         'name' => $name,
     ]);

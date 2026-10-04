@@ -106,6 +106,17 @@ final class NodeReadRepository
     }
 
     /**
+     * Whether the node is its drive's root — the one node without a parent, which
+     * tree operations never take as an operand.
+     */
+    public function isRoot(Node $node): bool
+    {
+        $rootId = $node->storage->root_node_id;
+
+        return $rootId !== null && Identity::stringify($node->getKey()) === Identity::stringify($rootId);
+    }
+
+    /**
      * The whole subtree below a node via the recursive CTE, bounded by
      * withMaxDepth so the descent never runs unbounded (H.4). The node itself is
      * NOT part of descendants() — callers add it when needed.

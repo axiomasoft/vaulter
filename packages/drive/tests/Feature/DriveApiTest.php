@@ -97,8 +97,13 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     $this->postJson('api/vaulter/nodes/'.$copy.'/restore')->assertOk();
     expect(Node::query()->find($copy)->trashed_at)->toBeNull();
 
-    // forceDelete soft-deletes the rows (deleted_at) and frees the bytes; the
-    // physical blob is reclaimed later by GC (§2.10).
+    // forceDelete only purges from the trash: a live node is refused, a trashed one
+    // is soft-deleted (deleted_at) and frees the bytes; the physical blob is
+    // reclaimed later by GC (§2.10).
+    $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_not_trashed');
+    $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
     expect(Node::query()->find($copy))->toBeNull()
         ->and(Node::withTrashed()->find($copy)?->deleted_at)->not->toBeNull();

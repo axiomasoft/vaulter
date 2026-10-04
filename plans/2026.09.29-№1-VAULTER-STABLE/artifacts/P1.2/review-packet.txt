@@ -1,0 +1,2436 @@
+Read-only independent full review of PLAN2.P1.2. Owner explicitly requires Grok 4.7. You are the reviewer, not the executor. Do not edit, repair, commit, run DB writes or start subagents. Local tools may be blocked by hooks: everything you need is inlined below (item spec, OPUS requirements, full candidate diff including new files, relevant unchanged context, observed validation evidence). Focus on demonstrated correctness defects: tree invariants (live folder of same storage, root immutability, null destination = root), lock order D21 (lockTree -> node rows ascending id -> aggregates/quota -> CAS advisory), race/deadlock risk, transaction misuse, migration data safety (idempotency, PG/MySQL/MariaDB/SQLite, down()), public API/BC, missing spec items, and test effectiveness (tests that would pass on broken code). File count and bookkeeping are not findings. Report actionable defects with file:line and a concrete failure scenario; avoid speculative nits.
+If no material defect, output exactly: review: grok/grok-4.7 GREEN
+If defects, output: review: grok/grok-4.7 findings:N and list each (severity, file:line, defect, failure scenario, fix).
+
+Known intentional deviations (report only if wrong):
+- TreeGuard lives in core (Vaulter\Support\TreeGuard): documents may not depend on drive (arch test).
+- CreateDocumentNodeAction reports a parent from another drive as InvalidDestinationException::otherDrive (documents cannot use drive's CrossStorageMoveException).
+- Over HTTP a foreign-storage parent_id is 404 (existing controller scoping), not 409.
+- V19 adds a second race shape (A->B1 || B->A1): with the spec's A<->B shape, row locks on node+destination already serialise; negative control without lockTree: A<->B stays green 5/5, cross shape red 4/5.
+- Trash/Copy/Create/Upload do not take lockTree (spec table: only Move/Restore/ForceDelete do).
+- The CreateDocumentNodeAction parent=null test lives in documents tests (drive tests cannot load documents).
+- Restore has no destination input yet (RestoreOptions::destination is P3.3); its rule is original parent if live folder else root.
+
+Note: the packet is complete and self-contained; do not spend turns re-reading files unless strictly necessary. Docs/UPGRADE/CHANGELOG diffs are omitted (they only describe the same contract).
+
+## Item spec
+**Scope Included:**
+1. Исключения (контракт P1.8, `ProblemException`):
+   - `packages/core/src/Exceptions/Nodes/InvalidDestinationException.php` — код `invalid_destination`, 409; фабрики
+     `notAFolder(Node $destination)`, `trashed(Node $node)`, `rootIsImmutable(Node $root, string $operation)`;
+   - `packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php` — `node_not_trashed`, 409, `forNode(Node $node)`;
+   - `packages/core/src/Exceptions/Nodes/InvalidNodeNameException.php` — `validation_failed`, 422,
+     `renderExtras()` = `['errors' => ['name' => [$this->getMessage()]]]`, фабрика `forName(string $name, string $reason)`.
+   Межстораджевые операции бросают существующий `CrossStorageMoveException` (`cross_drive_operation`, 409).
+2. `packages/core/src/Support/NodeName.php` — `final class NodeName { public static function normalize(string $name): string }`:
+   trim пробелов по краям; NFC через `\Normalizer::normalize($name, \Normalizer::FORM_C)`; отказ (`InvalidNodeNameException`)
+   при пустом результате, `/`, `\`, NUL, символах C0 (`\x00-\x1F`), DEL и C1 (`\x{7F}-\x{9F}`), именах `.` и `..`, длине
+   `strlen($name) > Config::driveNameMaxLength()` (байты UTF-8, по умолчанию 255). Все Actions п.4 нормализуют имя до проверок.
+3. `packages/core/src/Repositories/Drive/NodeStoreRepository.php`: `lockForUpdate(array $ids): Collection` — `SELECT … FOR UPDATE`
+   строк узлов по возрастанию `id` (уровень 2 порядка D21; SQLite — без `FOR UPDATE`); `packages/core/src/Repositories/Drive/NodeReadRepository.php`:
+   `isRoot(Node $node): bool` (`Identity::stringify($node->getKey()) === Identity::stringify($node->storage->root_node_id)`).
+4. Проверки в Actions (внутри `VaulterDatabase::transaction()`, после блокировок; `null` назначение = корень storage
+   `$storage->root_node_id`, ни одно Action больше не пишет `parent_id = NULL`):
+
+   | Action (текущее имя) | Блокировки | Проверки |
+   |:--|:--|:--|
+   | `drive/src/Actions/CreateFolderAction.php`, `documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `drive/src/Actions/UploadFileAction.php` (новый файл) | `lockForUpdate([parent])` | родитель: тот же storage (`CrossStorageMoveException`), `kind=folder` (`notAFolder`), `trashed_at IS NULL` (`trashed`); `NodeName::normalize`; конфликт имени (`NodeNameConflictException`) |
+   | `drive/src/Actions/RenameNodeAction.php` | `lockForUpdate([node])` | не корень (`rootIsImmutable`); `normalize`; конфликт с соседями |
+   | `drive/src/Actions/MoveNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, into])` | не корень; назначение — активная папка того же storage; назначение ≠ узел и не потомок (CTE `subtree()` **после** `lockTree`); конфликт имени |
+   | `drive/src/Actions/CopyNodeAction.php` | `lockForUpdate([into])` | источник не корень; назначение — активная папка того же storage; копия поддерева без узлов в корзине (как сейчас) |
+   | `drive/src/Actions/TrashNodeAction.php` | `lockForUpdate([node])` | не корень; не уже в корзине (`trashed`); поддерево — одним UPDATE по CTE (как сейчас) |
+   | `drive/src/Actions/RestoreNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, parent])` | узел в корзине (иначе `NodeNotTrashedException`); исходный родитель активен → туда, иначе корень (как сейчас, `resolveDestinationParent`); конфликт имени — `NodeNameConflictException` (как сейчас) |
+   | `drive/src/Actions/ForceDeleteNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node])` | не корень; узел в корзине (`NodeNotTrashedException`); освобождение квоты — как сейчас |
+
+   Проверки «до транзакции» в `MoveNodeAction`/`CreateFolderAction`/`RenameNodeAction`/`CopyNodeAction`/`RestoreNodeAction`/
+   `CreateDocumentNodeAction` переносятся внутрь транзакции после блокировок (быстрый отказ до транзакции можно оставить
+   только как дубль). `CycleException` (`node_move_cycle`) остаётся исключением цикла.
+5. Схема и миграция (R3):
+   - `core/src/Schema/PanelTablesBuilder.php` `afterCreate()` для `nodes`: новый `addSingleRootIndex($table)` — PG/SQLite
+     `CREATE UNIQUE INDEX {t}_root_uniq ON {t} (storage_id) WHERE parent_id IS NULL`; MySQL/MariaDB — сгенерированная колонка
+     `root_storage` `VARCHAR(64) GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN storage_id ELSE NULL END) STORED` +
+     `UNIQUE INDEX {t}_root_uniq (root_storage)` (как `addSiblingUniqueIndex`, строки 1123–1156).
+   - `core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (только эти шаги №6; остальные — P4.1):
+     для каждого storage — узлы с `parent_id IS NULL` и `id <> storages.root_node_id` переносятся под корень;
+     конфликт имени с активным соседом корня (без учёта регистра) → имя `"<base> (legacy N)<.ext>"`, N = 1, 2, … до
+     свободного; на каждый перенос — строка `Config::table('activity')`: `verb = 'node.moved'`, `actor_type = 'vaulter:system'`,
+     `actor_id = NULL`, `target_type` = morph-класс модели узла (`(new (Config::nodeModel()))->getMorphClass()`),
+     `target_id` = id узла, `storage_id`, `context = {"from_parent_id": null, "to_parent_id": <root>, "reason": "n04_repair", "renamed_from": <старое имя|null>}`,
+     `created_at = now()`; затем индекс корня (п.5, если его нет). Идемпотентна: повтор — 0 переносов, индекс уже есть.
+     `down()` удаляет индекс корня; перенос необратим — `UPGRADE.md` (08 §3 «Откат»).
+6. Тесты:
+   - V18 — `packages/drive/tests/Feature/TreeInvariantsTest.php` (SQLite): для create folder / upload (`DriveContext::upload`) /
+     move / copy / restore с назначением: файл, документ (узел `kind=document`), папка в корзине → `InvalidDestinationException`
+     (HTTP-вариант каждого — 409 `code = invalid_destination`); назначение — папка другого storage → 409 `cross_drive_operation`;
+     корень: rename / move / trash / forceDelete → `invalid_destination`; forceDelete живого узла → 409 `node_not_trashed`;
+     `CreateDocumentNodeAction` с `parent = null` → `parent_id = root_node_id` и документ виден в `GET storages/{id}/nodes`.
+   - V19 — `packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (PG, `ForkRace`, `DatabaseMigrations`): две папки A, B под
+     корнем; задачи `move(A→B)` ‖ `move(B→A)` → ровно одна `RaceOutcome` успешна, другая `failedWith(CycleException::class)`;
+     в БД нет цикла (рекурсивный подъём от A и от B достигает корня). Повтор 5 раз подряд. Негативный контроль: временно
+     убрать `lockTree` из `MoveNodeAction` → хотя бы в одном из 5 прогонов обе задачи успешны (цикл) — тест красный.
+   - `NodeName` — `packages/core/tests/Unit/NodeNameTest.php`: dataset из всех правил п.2 (вкл. `"e\u{0301}"` → `"é"` NFC,
+     256-байтное имя, `"a\u{0085}b"`).
+   - Миграция — `packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (хелпер `LoadsV02Fixture` из P1.7): на
+     `pgsql-bigint.sql` до миграции `count(parent_id IS NULL) > count(storages)` (P0.3); после — по одному узлу без родителя
+     на storage; документ с конфликтующим именем получил суффикс ` (legacy 1)`; число новых строк activity
+     `reason = n04_repair` = числу перенесённых узлов; повторный `migrate` → 0 изменений; вставка второго корня → ошибка
+     уникальности.
+7. `UPGRADE.md` (ремонт N04 необратим; forceDelete только из корзины; коды ошибок), `CHANGELOG.md [Unreleased]`
+   (Fixed: N04, N05; AD13), `docs/guide/{drive,trash}.md` (правила назначения, корень), golden `PublicApiSnapshotTest`.
+
+**Scope Excluded:** `OnNameConflict` (`Rename`/`AddRevision`) и `RestoreOptions::destination` (P3.2/P3.3);
+`NodeContentLifecycle` для copy/purge документов (P4.2); квота копии одним условным UPDATE (P1.6); переименование
+`owner_id` → `owned_by`, `sequence`, удаление `current_version_id/file_id/deleted_at` (P4.1, P4.7); индекс sibling-unique
+без `deleted_at` (P4.1); `IngestFileAction`/`CreateDocumentAction` (канонические имена — P3).
+
+**Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md`;
+`audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` (§4); `audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` (§1, §3 №6, §5);
+`packages/drive/src/Actions/MoveNodeAction.php`; `packages/drive/src/Actions/RestoreNodeAction.php`;
+`packages/core/src/Schema/PanelTablesBuilder.php` (1123–1156); `packages/core/src/Database/VaulterDatabase.php` (producer: P1.1);
+`packages/core/src/Exceptions/Contracts/ProblemException.php` (producer: P1.8); `packages/core/tests/Upgrade/LoadsV02Fixture.php` (producer: P1.7)
+
+**Files:** `packages/core/src/Exceptions/Nodes/{InvalidDestinationException,NodeNotTrashedException,InvalidNodeNameException}.php` (new),
+`packages/core/src/Support/NodeName.php` (new), `packages/core/src/Repositories/Drive/{NodeStoreRepository,NodeReadRepository}.php`,
+`packages/drive/src/Actions/{CreateFolderAction,UploadFileAction,RenameNodeAction,MoveNodeAction,CopyNodeAction,TrashNodeAction,RestoreNodeAction,ForceDeleteNodeAction}.php`,
+`packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `packages/core/src/Schema/PanelTablesBuilder.php`,
+`packages/core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (new), `packages/drive/tests/Feature/TreeInvariantsTest.php` (new),
+`packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (new), `packages/core/tests/Unit/NodeNameTest.php` (new),
+`packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (new), тесты пакетов, закреплявшие `parent_id = NULL` у
+не-корня или forceDelete живого узла, `packages/core/tests/Arch/__snapshots__/*`, `docs/guide/{drive,trash}.md`, `UPGRADE.md`, `CHANGELOG.md`.
+
+**Required Reads:** 0) `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md` (дословные требования OPUS — исполнить все);
+1) `audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` §4; 2) `packages/drive/src/Actions/MoveNodeAction.php`;
+3) `packages/drive/src/Actions/RestoreNodeAction.php`; 4) `packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php`;
+5) `packages/core/src/Schema/PanelTablesBuilder.php` (896–930, 1123–1156); 6) `packages/core/tests/Concurrency/ForkRace.php`;
+7) `packages/drive/src/Activity/RecordsDriveActivity.php` (форма строки activity для `NodeMoved`).
+
+**Authority:** routine
+
+**Implementation Rules:**
+- Порядок блокировок D21: `lockTree` → узлы по возрастанию id → (агрегат/квота/CAS — P1.6). Ни одно Action не берёт
+  `lockTree` после блокировки строки узла.
+- Проверки, зависящие от состояния (тип/корзина назначения, цикл, имя), выполняются после блокировок в той же транзакции.
+- Тест, ожидавший `parent_id = NULL` у не-корня, forceDelete живого узла или прежний статус конфликта, переписывается под
+  контракт п.4; иное падение — стоп и описание.
+- Если в фикстуре встречается storage с `root_node_id IS NULL` — стоп и эскалация (ремонт не угадывает корень).
+
+**Code Guidance:** контроль «нет записи NULL-родителя»: `grep -nE "'parent_id' => (null|\\\$parentId)" packages/drive/src/Actions packages/documents/src/Actions -r`
+→ каждое оставшееся вхождение получает `$parentId` от разрешённого назначения (не `null`); проверка — V18.
+
+**Validation:**
+- `(cd packages/drive && env $SQ "$R/scripts/php84" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.
+- `(cd packages/drive && env $PG "$R/scripts/php84" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.
+- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).
+- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.
+- Гейт core и гейты drive, documents, filament → exit 0.
+
+**Deliverables:** проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.
+
+## VaulterDatabase (unchanged)
+    public function transaction(Closure $callback, int $attempts = 3): mixed
+    {
+        return $this->connection()->transaction($callback, $attempts);
+    }
+
+    public function lockTree(int|string $storageId): void
+    {
+        $this->requireTransaction('lockTree');
+
+        if ($this->driver() === 'pgsql') {
+            $this->advisoryLock('vaulter:tree:'.$storageId);
+
+            return;
+        }
+
+        $this->connection()->table(Config::table('storages'))
+            ->where('id', $storageId)->lockForUpdate()->first(['id']);
+    }
+
+    public function advisoryLock(string $key): void
+    {
+        $this->requireTransaction('advisoryLock');
+
+        if ($this->driver() === 'pgsql') {
+            $this->connection()->statement('SELECT pg_advisory_xact_lock(hashtext(?))', [$key]);
+        }
+    }
+
+    public function afterCommit(Closure $callback): void
+    {
+        $this->connection()->afterCommit($callback);
+    }
+
+    private function requireTransaction(string $method): void
+    {
+        if ($this->connection()->transactionLevel() === 0) {
+            throw new LogicException('[Vaulter] '.$method.'() must run inside VaulterDatabase::transaction().');
+        }
+    }
+}
+
+## Source diff
+diff --git a/packages/core/src/Repositories/Drive/NodeReadRepository.php b/packages/core/src/Repositories/Drive/NodeReadRepository.php
+index 2e83056..8a30466 100644
+--- a/packages/core/src/Repositories/Drive/NodeReadRepository.php
++++ b/packages/core/src/Repositories/Drive/NodeReadRepository.php
+@@ -105,6 +105,17 @@ final class NodeReadRepository
+         );
+     }
+ 
++    /**
++     * Whether the node is its drive's root — the one node without a parent, which
++     * tree operations never take as an operand.
++     */
++    public function isRoot(Node $node): bool
++    {
++        $rootId = $node->storage->root_node_id;
++
++        return $rootId !== null && Identity::stringify($node->getKey()) === Identity::stringify($rootId);
++    }
++
+     /**
+      * The whole subtree below a node via the recursive CTE, bounded by
+      * withMaxDepth so the descent never runs unbounded (H.4). The node itself is
+diff --git a/packages/core/src/Repositories/Drive/NodeStoreRepository.php b/packages/core/src/Repositories/Drive/NodeStoreRepository.php
+index 485bc0c..d949742 100644
+--- a/packages/core/src/Repositories/Drive/NodeStoreRepository.php
++++ b/packages/core/src/Repositories/Drive/NodeStoreRepository.php
+@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
+ use Illuminate\Support\Collection;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Support\Config;
++use Vaulter\Support\Identity;
+ 
+ /**
+  * Write-side row work for v_nodes (§2.2). Bare mutations only: create/update,
+@@ -203,6 +204,38 @@ final class NodeStoreRepository
+         return $node;
+     }
+ 
++    /**
++     * Lock live node rows for the rest of the transaction, in ascending id order so
++     * two operations over overlapping nodes queue instead of deadlocking (D21 level 2:
++     * after lockTree, before aggregate and quota locks). SQLite has no row locks and
++     * serialises writers, so the grammar drops FOR UPDATE there. Soft-deleted rows are
++     * not returned — a missing id means the node is gone.
++     *
++     * @param  list<int|string|null>    $ids
++     * @return Collection<string, Node> keyed by the stringified id
++     */
++    public function lockForUpdate(array $ids): Collection
++    {
++        $ids = array_values(array_unique(
++            array_filter($ids, static fn (int|string|null $id): bool => $id !== null),
++        ));
++
++        if ($ids === []) {
++            return new Collection;
++        }
++
++        $model = Config::nodeModel();
++        $node = new $model;
++
++        return $model::query()
++            ->whereKey($ids)
++            ->orderBy($node->getKeyName())
++            ->lockForUpdate()
++            ->get()
++            ->keyBy(static fn (Node $locked): string => Identity::stringify($locked->getKey()))
++            ->toBase();
++    }
++
+     /**
+      * Repoint a file node's head after a new version is committed (§2.4): update
+      * the head pointer plus the cached mime/size/extension in one write.
+diff --git a/packages/core/src/Schema/PanelTablesBuilder.php b/packages/core/src/Schema/PanelTablesBuilder.php
+index 269af00..ca47708 100644
+--- a/packages/core/src/Schema/PanelTablesBuilder.php
++++ b/packages/core/src/Schema/PanelTablesBuilder.php
+@@ -901,6 +901,7 @@ final class PanelTablesBuilder
+ 
+         if ($entity === 'nodes') {
+             $this->addSiblingUniqueIndex(table: $panel->table('nodes'));
++            $this->addSingleRootIndex(table: $panel->table('nodes'));
+             $this->addTrashedAtIndex(table: $panel->table('nodes'));
+         }
+ 
+@@ -1155,6 +1156,40 @@ final class PanelTablesBuilder
+         });
+     }
+ 
++    /**
++     * Only the drive root may have no parent (one per storage). Without it a node
++     * written with a NULL parent becomes a second root that the root listing never
++     * shows, and sibling-unique cannot catch duplicates because NULL parents differ.
++     *
++     *  - PostgreSQL / SQLite: a PARTIAL unique index on (storage_id) WHERE parent_id IS NULL.
++     *  - MySQL/MariaDB: a stored generated column carries storage_id only for a
++     *    parentless row (NULL otherwise, exempt from UNIQUE) under a plain unique index.
++     *
++     * Public so the upgrade migration adds the same index to an existing table.
++     */
++    public function addSingleRootIndex(string $table): void
++    {
++        $driver = $this->schemaConnection()->getConnection()->getDriverName();
++        $name = "{$table}_root_uniq";
++
++        if ($driver === 'pgsql' || $driver === 'sqlite') {
++            $this->dbConnection()->statement(
++                "CREATE UNIQUE INDEX {$name} ON {$table} (storage_id) WHERE parent_id IS NULL",
++            );
++
++            return;
++        }
++
++        if ($driver === 'mysql' || $driver === 'mariadb') {
++            $this->dbConnection()->statement(
++                "ALTER TABLE `{$table}` ADD COLUMN `root_storage` VARCHAR(64) ".
++                'GENERATED ALWAYS AS (CASE WHEN `parent_id` IS NULL THEN `storage_id` ELSE NULL END) STORED',
++            );
++
++            $this->dbConnection()->statement("ALTER TABLE `{$table}` ADD UNIQUE INDEX `{$name}` (`root_storage`)");
++        }
++    }
++
+     /**
+      * The default-panel discriminator column. Only emitted on the panel roots
+      * (storages + nodes); other entities resolve their panel via their parent FK.
+diff --git a/packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php b/packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php
+index c1a550f..35e512e 100644
+--- a/packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php
++++ b/packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php
+@@ -11,15 +11,20 @@ use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+ use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionStoreRepository;
+ use Vaulter\Documents\ValueObjects\TipTapContent;
+ use Vaulter\Enums\Drive\NodeKind;
++use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
+ use Vaulter\Support\Config;
++use Vaulter\Support\NodeName;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Create a kind=document node under a folder (or the storage root) with its initial
+- * v1 document version from the given content (§2.5 / M4a). One outer transaction: the
++ * v1 document version from the given content (§2.5 / M4a). The parent row is locked
++ * and must be a live folder of the same storage; no parent means the root folder,
++ * never a parentless node. One outer transaction: the
+  * node row, the v1 version and the head repoint commit atomically, then a single
+  * after-commit event fires.
+  *
+@@ -39,15 +44,13 @@ final readonly class CreateDocumentNodeAction
+         private NodeStoreRepository $store,
+         private NodeDocumentVersionStoreRepository $versions,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(CreateDocumentNodeData $data): Node
+     {
+-        $parentId = $data->parent?->id;
+-
+-        if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $data->name)) {
+-            throw NodeNameConflictException::forName(name: $data->name, parentId: $parentId);
+-        }
++        $name = NodeName::normalize($data->name);
++        $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
+ 
+         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
+         // time — check it before the transaction, not just at the UI layer. Content
+@@ -57,12 +60,23 @@ final readonly class CreateDocumentNodeAction
+             $data->content->ensureWithin(Config::maxDocumentSizeKb());
+         }
+ 
+-        return $this->database->transaction(function () use ($data, $parentId): Node {
++        return $this->database->transaction(function () use ($data, $name, $parentId): Node {
++            $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
++            if (!$this->tree->sameStorage($parent, $data->storage->id)) {
++                throw InvalidDestinationException::otherDrive(destination: $parent, storageId: $data->storage->id);
++            }
++
++            $this->tree->assertActiveFolder($parent);
++
++            if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
++                throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
++            }
++
+             $node = $this->store->create([
+                 'storage_id' => $data->storage->id,
+                 'parent_id' => $parentId,
+                 'kind' => NodeKind::Document,
+-                'name' => $data->name,
++                'name' => $name,
+                 'mime_type' => $data->mimeType,
+                 'size_bytes' => $data->content->sizeInBytes(),
+                 'owner_id' => $data->actorId,
+@@ -86,7 +100,7 @@ final readonly class CreateDocumentNodeAction
+     private function commitInitialVersion(Node $node, CreateDocumentNodeData $data): NodeDocumentVersion
+     {
+         return $this->versions->create([
+-            'node_id' => $node->getKey(),
++            'node_id' => $node->id,
+             'version_no' => 1,
+             'content' => $data->content->toArray(),
+             'format' => $data->format,
+diff --git a/packages/drive/src/Actions/CopyNodeAction.php b/packages/drive/src/Actions/CopyNodeAction.php
+index 724a8ae..058ff72 100644
+--- a/packages/drive/src/Actions/CopyNodeAction.php
++++ b/packages/drive/src/Actions/CopyNodeAction.php
+@@ -8,6 +8,7 @@ use Vaulter\Contracts\Cas\BlobStore;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Data\CopyNodeData;
+ use Vaulter\Drive\Events\NodeCopied;
++use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+ use Vaulter\Enums\Drive\NodeKind;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Cas\Blob;
+@@ -20,9 +21,12 @@ use Vaulter\Repositories\Drive\FileVersionStoreRepository;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
+ use Vaulter\Repositories\Drive\StorageStoreRepository;
++use Vaulter\Support\NodeName;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+- * Copy a node into a destination (§2.4):
++ * Copy a node into a destination (§2.4) — the locked destination must be a live
++ * folder of the source's storage, and the root itself is never copied:
+  *   - folder → deep-copy the whole subtree (new node rows, same shape);
+  *   - file   → new File + new FileVersion(version_no=1) whose version↔blob edge
+  *     references the SAME blob, so content-addressed dedup keeps ONE physical
+@@ -45,26 +49,36 @@ final readonly class CopyNodeAction
+         private StorageStoreRepository $storageStore,
+         private BlobStore $blobs,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(CopyNodeData $data): Node
+     {
+-
+         $source = $data->node;
+-        $destParentId = $data->into?->id;
+-        $name = $data->name ?? $source->name;
++        // An explicit name is new input; the source name was validated when it was written.
++        $name = $data->name === null ? $source->name : NodeName::normalize($data->name);
++        $destParentId = $this->tree->destinationId(storage: $source->storage, into: $data->into);
+ 
+-        $exists = $this->nodes->siblingNameExists(
+-            storage: $source->storage,
+-            parentId: $destParentId,
+-            name: $name,
+-        );
+-
+-        if ($exists) {
+-            throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
+-        }
++        $this->tree->assertNotRoot(node: $source, operation: 'copy');
+ 
+         return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
++            $destination = $this->tree->locked($this->tree->lock([$destParentId]), $destParentId);
++            if (!$this->tree->sameStorage($destination, $source->storage_id)) {
++                throw CrossStorageMoveException::between(fromStorageId: $source->storage_id, toStorageId: $destination->storage_id);
++            }
++
++            $this->tree->assertActiveFolder($destination);
++
++            $exists = $this->nodes->siblingNameExists(
++                storage: $source->storage,
++                parentId: $destParentId,
++                name: $name,
++            );
++
++            if ($exists) {
++                throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
++            }
++
+             $addedBytes = 0;
+             $copy = $this->copyNode(source: $source, parentId: $destParentId, name: $name, data: $data, addedBytes: $addedBytes);
+ 
+@@ -82,7 +96,7 @@ final readonly class CopyNodeAction
+      * Copy one node (recursing into a folder's children). $addedBytes accumulates
+      * the live logical size the copy adds, for the used_bytes adjustment.
+      */
+-    private function copyNode(Node $source, int|string|null $parentId, string $name, CopyNodeData $data, int &$addedBytes): Node
++    private function copyNode(Node $source, int|string $parentId, string $name, CopyNodeData $data, int &$addedBytes): Node
+     {
+         $copy = $this->nodeStore->create([
+             'storage_id' => $source->storage_id,
+diff --git a/packages/drive/src/Actions/CreateFolderAction.php b/packages/drive/src/Actions/CreateFolderAction.php
+index eacd4cc..7bcbb0b 100644
+--- a/packages/drive/src/Actions/CreateFolderAction.php
++++ b/packages/drive/src/Actions/CreateFolderAction.php
+@@ -7,14 +7,18 @@ namespace Vaulter\Drive\Actions;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Data\CreateDriveFolderData;
+ use Vaulter\Drive\Events\NodeCreated;
++use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+ use Vaulter\Enums\Drive\NodeKind;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
++use Vaulter\Support\NodeName;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Create a kind=folder node under a parent (or the storage root) — §2.2. The
++ * parent row is locked and must be a live folder of the same storage; the
+  * sibling-name conflict is surfaced deterministically (NodeNameConflictException)
+  * rather than silently auto-renamed: Drive never invents a name behind the
+  * caller's back.
+@@ -29,22 +33,31 @@ final readonly class CreateFolderAction
+         private NodeReadRepository $nodes,
+         private NodeStoreRepository $store,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(CreateDriveFolderData $data): Node
+     {
+-        $parentId = $data->parent?->id;
++        $name = NodeName::normalize($data->name);
++        $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
+ 
+-        if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $data->name)) {
+-            throw NodeNameConflictException::forName(name: $data->name, parentId: $parentId);
+-        }
++        return $this->database->transaction(function () use ($data, $name, $parentId): Node {
++            $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
++            if (!$this->tree->sameStorage($parent, $data->storage->id)) {
++                throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
++            }
++
++            $this->tree->assertActiveFolder($parent);
++
++            if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
++                throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
++            }
+ 
+-        return $this->database->transaction(function () use ($data, $parentId): Node {
+             $node = $this->store->create([
+                 'storage_id' => $data->storage->id,
+                 'parent_id' => $parentId,
+                 'kind' => NodeKind::Folder,
+-                'name' => $data->name,
++                'name' => $name,
+                 'size_bytes' => 0,
+                 'owner_id' => $data->actorId,
+                 'created_by' => $data->actorId,
+diff --git a/packages/drive/src/Actions/ForceDeleteNodeAction.php b/packages/drive/src/Actions/ForceDeleteNodeAction.php
+index b1a5668..d6cf3ec 100644
+--- a/packages/drive/src/Actions/ForceDeleteNodeAction.php
++++ b/packages/drive/src/Actions/ForceDeleteNodeAction.php
+@@ -8,6 +8,7 @@ use Vaulter\Contracts\Cas\BlobStore;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Events\NodeForceDeleted;
+ use Vaulter\Enums\Drive\NodeKind;
++use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+ use Vaulter\Models\Drive\File;
+ use Vaulter\Models\Drive\FileVersion;
+ use Vaulter\Models\Drive\FileVersionBlob;
+@@ -15,10 +16,13 @@ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
+ use Vaulter\Repositories\Drive\StorageStoreRepository;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+- * Permanently soft-delete a node and its subtree (§2.10 stage 2). The order
+- * matters and is the GC contract (§2.3 / §2.4):
++ * Permanently soft-delete a trashed node and its subtree (§2.10 stage 2). Only a
++ * node already in the trash qualifies (a live node goes through the trash first)
++ * and the root never does; the subtree is read under the storage tree lock. The
++ * order matters and is the GC contract (§2.3 / §2.4):
+  *   1. detach every version↔blob edge in the subtree — the edge IS the liveness
+  *      truth (H.3), so dropping it makes the blob GC-eligible; the bytes are
+  *      NEVER deleted here (M1b's two-phase GC reclaims them);
+@@ -37,16 +41,26 @@ final readonly class ForceDeleteNodeAction
+         private StorageStoreRepository $storageStore,
+         private BlobStore $blobs,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(Node $node, int|string|null $actorId = null): void
+     {
+-
+-        $subtree = $this->nodes->subtree($node);
+-        $ids = $subtree->modelKeys();
+         $storage = $node->storage;
+ 
+-        $this->database->transaction(function () use ($subtree, $ids, $node, $storage, $actorId): void {
++        $this->database->transaction(function () use ($node, $storage, $actorId): void {
++            $this->database->lockTree($node->storage_id);
++
++            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
++
++            $this->tree->assertNotRoot(node: $current, operation: 'delete');
++
++            if ($current->trashed_at === null) {
++                throw NodeNotTrashedException::forNode($current);
++            }
++
++            $subtree = $this->nodes->subtree($current);
++            $ids = $subtree->modelKeys();
+             $freedBytes = 0;
+ 
+             foreach ($subtree as $member) {
+@@ -64,7 +78,7 @@ final readonly class ForceDeleteNodeAction
+             }
+ 
+             event(new NodeForceDeleted(
+-                storageId: $node->storage_id,
++                storageId: $current->storage_id,
+                 nodeIds: array_values($ids),
+                 freedBytes: $freedBytes,
+                 actorId: $actorId,
+diff --git a/packages/drive/src/Actions/MoveNodeAction.php b/packages/drive/src/Actions/MoveNodeAction.php
+index 34d46fb..d33e7f1 100644
+--- a/packages/drive/src/Actions/MoveNodeAction.php
++++ b/packages/drive/src/Actions/MoveNodeAction.php
+@@ -14,14 +14,22 @@ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
++use Vaulter\Support\Identity;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Re-parent a node within its storage tree — the §2.2 / H.4 single parent_id
+- * UPDATE. Three guards run BEFORE the write:
+- *   1. cross-storage — a move never crosses storage_id (the tree boundary);
+- *   2. cycle — the destination must not be the node itself or one of its own
++ * UPDATE. Every guard runs inside the transaction, after the storage tree lock and
++ * the row locks on the node and its destination:
++ *   1. the root never moves;
++ *   2. the destination is a live folder of the same storage (no destination = root);
++ *   3. cycle — the destination must not be the node itself or one of its own
+  *      descendants (checked via the bounded subtree, NOT whereHas('descendants'));
+- *   3. sibling-name conflict at the destination.
++ *   4. sibling-name conflict at the destination.
++ *
++ * The tree lock is what makes the cycle check sound: row locks on the node and the
++ * destination alone do not cover the ancestor chain, so two moves over disjoint rows
++ * (A into B's child, B into A's child) could both pass and close a loop.
+  *
+  * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+  * boundary (NodeController + AccessResolver); this Action stays pure.
+@@ -33,27 +41,39 @@ final readonly class MoveNodeAction
+         private NodeStoreRepository $store,
+         private MetricsRecorder $metrics,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(MoveNodeData $data): Node
+     {
+-
+         $node = $data->node;
+-        $into = $data->into;
++        $intoId = $this->tree->destinationId(storage: $node->storage, into: $data->into);
+ 
+-        $this->assertSameStorage(node: $node, into: $into);
+-        $this->assertNoCycle(node: $node, into: $into);
+-        $this->assertNameAvailable(node: $node, into: $into);
++        return $this->database->transaction(function () use ($node, $intoId, $data): Node {
++            $this->database->lockTree($node->storage_id);
+ 
+-        $fromParentId = $node->parent_id;
+-        $toParentId = $into?->id;
++            $locked = $this->tree->lock([$node->id, $intoId]);
++            $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));
++            $into = $this->tree->locked($locked, $intoId);
+ 
+-        if ($fromParentId === $toParentId) {
+-            return $node;
+-        }
++            $this->tree->assertNotRoot(node: $current, operation: 'move');
++            if (!$this->tree->sameStorage($into, $current->storage_id)) {
++                throw CrossStorageMoveException::between(fromStorageId: $current->storage_id, toStorageId: $into->storage_id);
++            }
++
++            $this->tree->assertActiveFolder($into);
++            $this->assertNoCycle(node: $current, into: $into);
++
++            $fromParentId = $current->parent_id;
++            $toParentId = $into->id;
+ 
+-        return $this->database->transaction(function () use ($node, $fromParentId, $toParentId, $data): Node {
+-            $moved = $this->store->move(node: $node, parentId: $toParentId);
++            if (Identity::stringify($fromParentId) === Identity::stringify($toParentId)) {
++                return $current;
++            }
++
++            $this->assertNameAvailable(node: $current, into: $into);
++
++            $moved = $this->store->move(node: $current, parentId: $toParentId);
+ 
+             event(new NodeMoved(
+                 node: $moved,
+@@ -66,36 +86,21 @@ final readonly class MoveNodeAction
+         });
+     }
+ 
+-    private function assertSameStorage(Node $node, ?Node $into): void
+-    {
+-        if ($into === null) {
+-            return;
+-        }
+-
+-        if ($node->storage_id !== $into->storage_id) {
+-            throw CrossStorageMoveException::between(
+-                fromStorageId: $node->storage_id,
+-                toStorageId: $into->storage_id,
+-            );
+-        }
+-    }
+-
+     /**
+      * The cycle guard (H.4): a node cannot move into itself nor any node in its
+      * own subtree. We materialise the bounded subtree once and test membership —
+      * never a recursive correlated aggregate in the request path.
+      */
+-    private function assertNoCycle(Node $node, ?Node $into): void
++    private function assertNoCycle(Node $node, Node $into): void
+     {
+-        if ($into === null) {
+-            return;
+-        }
+-
+-        if ($into->id === $node->id) {
++        if (Identity::stringify($into->id) === Identity::stringify($node->id)) {
+             throw CycleException::forMove(nodeId: $node->id, intoId: $into->id);
+         }
+ 
+-        $descendantIds = $this->nodes->subtree($node)->modelKeys();
++        $descendantIds = array_map(
++            Identity::stringify(...),
++            $this->nodes->subtree($node)->modelKeys(),
++        );
+ 
+         $this->metrics->histogram(
+             name: 'vaulter_subtree_nodes_touched',
+@@ -103,24 +108,22 @@ final readonly class MoveNodeAction
+             labels: ['operation' => 'subtree_mutate'],
+         );
+ 
+-        if (in_array($into->id, $descendantIds, strict: false)) {
++        if (in_array(Identity::stringify($into->id), $descendantIds, strict: true)) {
+             throw CycleException::forMove(nodeId: $node->id, intoId: $into->id);
+         }
+     }
+ 
+-    private function assertNameAvailable(Node $node, ?Node $into): void
++    private function assertNameAvailable(Node $node, Node $into): void
+     {
+-        $parentId = $into?->id;
+-
+         $exists = $this->nodes->siblingNameExists(
+             storage: $node->storage,
+-            parentId: $parentId,
++            parentId: $into->id,
+             name: $node->name,
+             ignoreId: $node->id,
+         );
+ 
+         if ($exists) {
+-            throw NodeNameConflictException::forName(name: $node->name, parentId: $parentId);
++            throw NodeNameConflictException::forName(name: $node->name, parentId: $into->id);
+         }
+     }
+ }
+diff --git a/packages/drive/src/Actions/RenameNodeAction.php b/packages/drive/src/Actions/RenameNodeAction.php
+index e8437ab..4192f4d 100644
+--- a/packages/drive/src/Actions/RenameNodeAction.php
++++ b/packages/drive/src/Actions/RenameNodeAction.php
+@@ -11,10 +11,13 @@ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
++use Vaulter\Support\NodeName;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Rename a node in place (§2.2), subject to the sibling-name conflict check at
+- * its current parent (the node itself is excluded from the check).
++ * its current parent (the node itself is excluded from the check). The root is
++ * never renamed; the check runs against the locked row.
+  *
+  * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
+  * boundary (NodeController + AccessResolver); this Action stays pure.
+@@ -25,36 +28,41 @@ final readonly class RenameNodeAction
+         private NodeReadRepository $nodes,
+         private NodeStoreRepository $store,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(RenameNodeData $data): Node
+     {
+-
+         $node = $data->node;
+-        $fromName = $node->name;
++        $name = NodeName::normalize($data->name);
++
++        return $this->database->transaction(function () use ($node, $name, $data): Node {
++            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
++            $this->tree->assertNotRoot(node: $current, operation: 'rename');
++
++            $fromName = $current->name;
+ 
+-        if ($fromName === $data->name) {
+-            return $node;
+-        }
++            if ($fromName === $name) {
++                return $current;
++            }
+ 
+-        $exists = $this->nodes->siblingNameExists(
+-            storage: $node->storage,
+-            parentId: $node->parent_id,
+-            name: $data->name,
+-            ignoreId: $node->id,
+-        );
++            $exists = $this->nodes->siblingNameExists(
++                storage: $current->storage,
++                parentId: $current->parent_id,
++                name: $name,
++                ignoreId: $current->id,
++            );
+ 
+-        if ($exists) {
+-            throw NodeNameConflictException::forName(name: $data->name, parentId: $node->parent_id);
+-        }
++            if ($exists) {
++                throw NodeNameConflictException::forName(name: $name, parentId: $current->parent_id);
++            }
+ 
+-        return $this->database->transaction(function () use ($node, $fromName, $data): Node {
+-            $renamed = $this->store->rename(node: $node, name: $data->name);
++            $renamed = $this->store->rename(node: $current, name: $name);
+ 
+             event(new NodeRenamed(
+                 node: $renamed,
+                 fromName: $fromName,
+-                toName: $data->name,
++                toName: $name,
+                 actorId: $data->actorId,
+             ));
+ 
+diff --git a/packages/drive/src/Actions/RestoreNodeAction.php b/packages/drive/src/Actions/RestoreNodeAction.php
+index 09c6ea8..b7efd71 100644
+--- a/packages/drive/src/Actions/RestoreNodeAction.php
++++ b/packages/drive/src/Actions/RestoreNodeAction.php
+@@ -4,20 +4,26 @@ declare(strict_types=1);
+ 
+ namespace Vaulter\Drive\Actions;
+ 
++use Illuminate\Support\Collection;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Events\NodeRestored;
++use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
++use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
+-use Vaulter\Support\Config;
++use Vaulter\Support\Identity;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Restore a trashed node and its subtree (§2.10). Clears the trashed triplet
+- * across the bounded subtree in one bulk UPDATE. Two deterministic destination
++ * across the bounded subtree in one bulk UPDATE. Runs under the storage tree lock
++ * (it re-parents) with the node, its original parent and the root locked, and only
++ * accepts a node that is actually in the trash. Two deterministic destination
+  * rules (§2.10 restore-collision):
+- *   - if the original parent is gone (deleted / itself trashed), re-home the node
+- *     to the storage root (parent_id = null) rather than dangling it;
++ *   - if the original parent is gone (deleted / itself trashed / no longer a
++ *     folder), re-home the node to the storage root rather than dangling it;
+  *   - if a LIVE sibling now owns the node's name at the resolved destination,
+  *     throw NodeNameConflictException — the caller renames then retries.
+  *
+@@ -30,33 +36,41 @@ final readonly class RestoreNodeAction
+         private NodeReadRepository $nodes,
+         private NodeStoreRepository $store,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(Node $node, int|string|null $actorId = null): Node
+     {
++        $rootId = $this->tree->destinationId(storage: $node->storage, into: null);
+ 
+-        if ($node->trashed_at === null) {
+-            return $node;
+-        }
++        return $this->database->transaction(function () use ($node, $rootId, $actorId): Node {
++            $this->database->lockTree($node->storage_id);
+ 
+-        $destinationParentId = $this->resolveDestinationParent($node);
++            $originalParentId = $node->trashed_from_parent_id ?? $node->parent_id;
++            $locked = $this->tree->lock([$node->id, $originalParentId, $rootId]);
++            $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));
+ 
+-        if ($this->liveSiblingOwnsName(node: $node, parentId: $destinationParentId)) {
+-            throw NodeNameConflictException::forName(name: $node->name, parentId: $destinationParentId);
+-        }
++            if ($current->trashed_at === null) {
++                throw NodeNotTrashedException::forNode($current);
++            }
++
++            $destinationParentId = $this->resolveDestinationParent(node: $current, locked: $locked, rootId: $rootId);
++
++            if ($this->liveSiblingOwnsName(node: $current, parentId: $destinationParentId)) {
++                throw NodeNameConflictException::forName(name: $current->name, parentId: $destinationParentId);
++            }
+ 
+-        $ids = $this->nodes->subtree($node)->modelKeys();
++            $ids = $this->nodes->subtree($current)->modelKeys();
+ 
+-        return $this->database->transaction(function () use ($node, $ids, $destinationParentId, $actorId): Node {
+             // Re-home the subtree root first (so the cleared triplet lands on a
+             // node already hung at its restored destination), then clear trash.
+-            if ($node->parent_id !== $destinationParentId) {
+-                $this->store->move(node: $node, parentId: $destinationParentId);
++            if (Identity::stringify($current->parent_id) !== Identity::stringify($destinationParentId)) {
++                $this->store->move(node: $current, parentId: $destinationParentId);
+             }
+ 
+             $this->store->restoreSubtree(collect($ids));
+ 
+-            $fresh = $node->refresh();
++            $fresh = $current->refresh();
+ 
+             event(new NodeRestored(node: $fresh, actorId: $actorId));
+ 
+@@ -66,32 +80,35 @@ final readonly class RestoreNodeAction
+ 
+     /**
+      * The destination parent for the restored node: its recorded original parent
+-     * when that parent is still live, else the storage root (null).
++     * when that row is still a live folder of the same storage, else the root. The
++     * row was locked with the node, so it cannot be trashed or moved meanwhile.
++     *
++     * @param Collection<string, Node> $locked
+      */
+-    private function resolveDestinationParent(Node $node): int|string|null
++    private function resolveDestinationParent(Node $node, Collection $locked, int|string $rootId): int|string
+     {
+         $originalParentId = $node->trashed_from_parent_id ?? $node->parent_id;
+ 
+-        // No recorded parent (or it was the very top) → the storage root node.
+-        $rootId = $node->storage->root_node_id;
+-
+         if ($originalParentId === null) {
+             return $rootId;
+         }
+ 
+-        $model = Config::nodeModel();
++        $parent = $locked->get(Identity::stringify($originalParentId));
++
++        if (!$parent instanceof Node || !$this->tree->sameStorage($parent, $node->storage_id)) {
++            return $rootId;
++        }
+ 
+-        $parentIsLive = $model::query()
+-            ->whereKey($originalParentId)
+-            ->whereNull('trashed_at')
+-            ->whereNull('deleted_at')
+-            ->exists();
++        try {
++            $this->tree->assertActiveFolder($parent);
++        } catch (InvalidDestinationException) {
++            return $rootId;
++        }
+ 
+-        // The original home vanished → re-home to root deterministically.
+-        return $parentIsLive ? $originalParentId : $rootId;
++        return $parent->id;
+     }
+ 
+-    private function liveSiblingOwnsName(Node $node, int|string|null $parentId): bool
++    private function liveSiblingOwnsName(Node $node, int|string $parentId): bool
+     {
+         return $this->nodes->siblingNameExists(
+             storage: $node->storage,
+diff --git a/packages/drive/src/Actions/TrashNodeAction.php b/packages/drive/src/Actions/TrashNodeAction.php
+index 50ad674..4a0b956 100644
+--- a/packages/drive/src/Actions/TrashNodeAction.php
++++ b/packages/drive/src/Actions/TrashNodeAction.php
+@@ -6,12 +6,15 @@ namespace Vaulter\Drive\Actions;
+ 
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Events\NodeTrashed;
++use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+- * Soft-trash a node and its whole subtree atomically (§2.10 / D17). The trashed
++ * Soft-trash a node and its whole subtree atomically (§2.10 / D17). The root is
++ * never trashed and a node already in the trash is rejected. The trashed
+  * triplet (trashed_at, trashed_by, and trashed_from_parent_id on the root) is
+  * stamped across the bounded subtree in one bulk UPDATE; the sibling-unique index
+  * excludes trashed rows so the name frees up for a new sibling.
+@@ -29,26 +32,30 @@ final readonly class TrashNodeAction
+         private NodeReadRepository $nodes,
+         private NodeStoreRepository $store,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(Node $node, int|string|null $actorId = null): Node
+     {
++        return $this->database->transaction(function () use ($node, $actorId): Node {
++            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
+ 
+-        if ($node->trashed_at !== null) {
+-            return $node;
+-        }
++            $this->tree->assertNotRoot(node: $current, operation: 'trash');
+ 
+-        $ids = $this->nodes->subtree($node)->modelKeys();
++            if ($current->trashed_at !== null) {
++                throw InvalidDestinationException::trashed($current);
++            }
++
++            $ids = $this->nodes->subtree($current)->modelKeys();
+ 
+-        return $this->database->transaction(function () use ($node, $ids, $actorId): Node {
+             $this->store->trashSubtree(
+                 ids: collect($ids),
+-                root: $node,
++                root: $current,
+                 actorId: $actorId,
+                 at: now(),
+             );
+ 
+-            $fresh = $node->refresh();
++            $fresh = $current->refresh();
+ 
+             event(new NodeTrashed(node: $fresh, actorId: $actorId));
+ 
+diff --git a/packages/drive/src/Actions/UploadFileAction.php b/packages/drive/src/Actions/UploadFileAction.php
+index 910b43f..fa7a423 100644
+--- a/packages/drive/src/Actions/UploadFileAction.php
++++ b/packages/drive/src/Actions/UploadFileAction.php
+@@ -4,12 +4,14 @@ declare(strict_types=1);
+ 
+ namespace Vaulter\Drive\Actions;
+ 
++use LogicException;
+ use Vaulter\Contracts\Cas\BlobStore;
+ use Vaulter\Contracts\Observability\MetricsRecorder;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Data\UploadFileData;
+ use Vaulter\Drive\Events\FileUploaded;
+ use Vaulter\Drive\Events\NodeVersionCommitted;
++use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+ use Vaulter\Drive\Exceptions\QuotaExceededException;
+ use Vaulter\Enums\Drive\NodeKind;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+@@ -23,6 +25,8 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\NodeStoreRepository;
+ use Vaulter\Repositories\Drive\StorageStoreRepository;
+ use Vaulter\Support\LoadTier;
++use Vaulter\Support\NodeName;
++use Vaulter\Support\TreeGuard;
+ 
+ /**
+  * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit
+@@ -53,6 +57,7 @@ final readonly class UploadFileAction
+         private StorageStoreRepository $storageStore,
+         private MetricsRecorder $metrics,
+         private VaulterDatabase $database,
++        private TreeGuard $tree,
+     ) {}
+ 
+     public function execute(UploadFileData $data): Node
+@@ -78,11 +83,16 @@ final readonly class UploadFileAction
+         // adjustment below uses the committed blob's authoritative size.
+         $this->assertWithinQuota(data: $data, delta: $probedSize - $previousSize);
+ 
+-        if (!$data->isNewVersion()) {
+-            $this->assertNameAvailable($data);
+-        }
++        // A new file gets a normalized name under a resolved folder (the root when no
++        // destination is given); a new version keeps the node's place and name.
++        $name = $data->isNewVersion() ? null : NodeName::normalize($data->resolvedName());
++        $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
++
++        return $this->database->transaction(function () use ($data, $previousSize, $name, $parentId): Node {
++            if ($name !== null && $parentId !== null) {
++                $this->assertDestination(data: $data, parentId: $parentId, name: $name);
++            }
+ 
+-        return $this->database->transaction(function () use ($data, $previousSize): Node {
+             $blob = $this->blobs->commit(
+                 stream: $data->stream,
+                 tenantId: $this->tenantId($data),
+@@ -98,9 +108,9 @@ final readonly class UploadFileAction
+                 labels: ['protocol' => 'single'],
+             );
+ 
+-            $node = $data->isNewVersion()
++            $node = $name === null || $parentId === null
+                 ? $this->commitNewVersion(data: $data, blob: $blob, size: $size)
+-                : $this->commitNewFile(data: $data, blob: $blob, size: $size);
++                : $this->commitNewFile(data: $data, blob: $blob, size: $size, name: $name, parentId: $parentId);
+ 
+             $delta = $size - $previousSize;
+ 
+@@ -115,13 +125,11 @@ final readonly class UploadFileAction
+     /**
+      * New-file path (§2.4): node(kind=file) → file → version_no=1 → edge → repoint.
+      */
+-    private function commitNewFile(UploadFileData $data, Blob $blob, int $size): Node
++    private function commitNewFile(UploadFileData $data, Blob $blob, int $size, string $name, int|string $parentId): Node
+     {
+-        $name = $data->resolvedName();
+-
+         $node = $this->nodeStore->create([
+-            'storage_id' => $data->storage->getKey(),
+-            'parent_id' => $data->into?->getKey(),
++            'storage_id' => $data->storage->id,
++            'parent_id' => $parentId,
+             'kind' => NodeKind::File,
+             'name' => $name,
+             'mime_type' => $data->mimeType,
+@@ -169,7 +177,7 @@ final readonly class UploadFileAction
+ 
+         if (!$node instanceof Node) {
+             // Defensive: isNewVersion() already guaranteed this; keeps PHPStan honest.
+-            return $this->commitNewFile(data: $data, blob: $blob, size: $size);
++            throw new LogicException('[Vaulter] A new-version upload requires a target node.');
+         }
+ 
+         /** @var File $file */
+@@ -261,10 +269,18 @@ final readonly class UploadFileAction
+         }
+     }
+ 
+-    private function assertNameAvailable(UploadFileData $data): void
++    /**
++     * The destination folder is locked before the bytes are committed, so it cannot
++     * be trashed or replaced by a file between the check and the insert.
++     */
++    private function assertDestination(UploadFileData $data, int|string $parentId, string $name): void
+     {
+-        $parentId = $data->into?->id;
+-        $name = $data->resolvedName();
++        $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
++        if (!$this->tree->sameStorage($parent, $data->storage->id)) {
++            throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
++        }
++
++        $this->tree->assertActiveFolder($parent);
+ 
+         if ($this->nodeRead->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
+             throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
+
+## New file packages/core/database/migrations/2026_10_01_000006_nodes_cleanup.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Connection;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Models\Activity\Activity;
+use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
+
+/**
+ * Before 0.3 an Action could write a node with no parent outside the drive root: a
+ * second root, missing from the root listing and outside sibling-name uniqueness.
+ * Each such node is moved under its drive's root (renamed "<base> (legacy N)<.ext>"
+ * when a live root child already owns the name), every move is written to the
+ * activity log, and the one-root-per-drive index is added. Idempotent: a re-run
+ * finds nothing to move and the index in place. The moves are not undone by down().
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $connection = app(VaulterDatabase::class)->connection();
+        $nodes = Config::table('nodes');
+
+        if (!$connection->getSchemaBuilder()->hasTable($nodes)) {
+            return;
+        }
+
+        $connection->transaction(function () use ($connection, $nodes): void {
+            $this->refuseUnknownRoots($connection, $nodes);
+            $this->repairSecondRoots($connection, $nodes);
+        });
+
+        if (!$connection->getSchemaBuilder()->hasIndex($nodes, $this->indexName($nodes))) {
+            app(PanelTablesBuilder::class)->addSingleRootIndex(table: $nodes);
+        }
+    }
+
+    public function down(): void
+    {
+        $connection = app(VaulterDatabase::class)->connection();
+        $nodes = Config::table('nodes');
+        $schema = $connection->getSchemaBuilder();
+
+        if (!$schema->hasTable($nodes)) {
+            return;
+        }
+
+        if ($schema->hasIndex($nodes, $this->indexName($nodes))) {
+            $schema->table($nodes, fn (Blueprint $table) => $table->dropIndex($this->indexName($nodes)));
+        }
+
+        if ($schema->hasColumn($nodes, 'root_storage')) {
+            $schema->table($nodes, static fn (Blueprint $table) => $table->dropColumn('root_storage'));
+        }
+    }
+
+    /**
+     * A drive without a recorded root cannot be repaired by guessing which of its
+     * parentless nodes is the root; stop before changing anything.
+     */
+    private function refuseUnknownRoots(Connection $connection, string $nodes): void
+    {
+        $ambiguous = $connection->table($nodes.' as n')
+            ->join(Config::table('storages').' as s', 's.id', '=', 'n.storage_id')
+            ->whereNull('n.parent_id')
+            ->whereNull('s.root_node_id')
+            ->groupBy('n.storage_id')
+            ->havingRaw('count(*) > 1')
+            ->pluck('n.storage_id')
+            ->all();
+
+        if ($ambiguous !== []) {
+            throw new RuntimeException(
+                '[Vaulter] Storages ['.implode(', ', array_map(Identity::stringify(...), $ambiguous)).'] have several parentless nodes '
+                .'and no root_node_id. Fix: set root_node_id to the real root folder of each, then run the migration again.',
+            );
+        }
+    }
+
+    private function repairSecondRoots(Connection $connection, string $nodes): void
+    {
+        $orphans = $connection->table($nodes.' as n')
+            ->join(Config::table('storages').' as s', 's.id', '=', 'n.storage_id')
+            ->whereNull('n.parent_id')
+            ->whereNotNull('s.root_node_id')
+            ->whereColumn('n.id', '<>', 's.root_node_id')
+            ->orderBy('n.storage_id')
+            ->orderBy('n.id')
+            ->get(['n.id', 'n.tenant_id', 'n.storage_id', 'n.name', 'n.trashed_at', 'n.deleted_at', 's.root_node_id']);
+
+        $nodeModel = Config::nodeModel();
+        $targetType = (new $nodeModel)->getMorphClass();
+
+        foreach ($orphans as $orphan) {
+            $id = $this->key($orphan->id);
+            $rootId = $this->key($orphan->root_node_id);
+            $original = is_string($orphan->name) ? $orphan->name : '';
+            $live = $orphan->trashed_at === null && $orphan->deleted_at === null;
+            $name = $live ? $this->freeName($connection, $nodes, $id, $rootId, $original) : $original;
+
+            $connection->table($nodes)->where('id', $id)->update([
+                'parent_id' => $rootId,
+                'name' => $name,
+            ]);
+
+            $activityModel = Config::activityModel();
+
+            /** @var Activity $activity */
+            $activity = new $activityModel;
+            $activity->forceFill([
+                'tenant_id' => Identity::key($orphan->tenant_id),
+                'storage_id' => $this->key($orphan->storage_id),
+                'actor_type' => 'vaulter:system',
+                'actor_id' => null,
+                'verb' => 'node.moved',
+                'target_type' => $targetType,
+                'target_id' => $id,
+                'context' => [
+                    'from_parent_id' => null,
+                    'to_parent_id' => Identity::stringify($rootId),
+                    'reason' => 'n04_repair',
+                    'renamed_from' => $name === $original ? null : $original,
+                ],
+                'created_at' => now(),
+            ])->save();
+        }
+    }
+
+    /**
+     * The name, or the first "<base> (legacy N)<.ext>" no live child of the root owns
+     * (case-insensitive, like sibling-unique).
+     */
+    private function freeName(Connection $connection, string $nodes, int|string $id, int|string $rootId, string $name): string
+    {
+        $dot = strrpos($name, '.');
+        [$base, $extension] = $dot === false || $dot === 0 ? [$name, ''] : [substr($name, 0, $dot), substr($name, $dot)];
+        $candidate = $name;
+
+        for ($n = 1; $this->nameTaken($connection, $nodes, $id, $rootId, $candidate); $n++) {
+            $candidate = "{$base} (legacy {$n}){$extension}";
+        }
+
+        return $candidate;
+    }
+
+    private function nameTaken(Connection $connection, string $nodes, int|string $id, int|string $rootId, string $name): bool
+    {
+        return $connection->table($nodes)
+            ->where('parent_id', $rootId)
+            ->where('id', '<>', $id)
+            ->whereNull('trashed_at')
+            ->whereNull('deleted_at')
+            ->whereRaw('lower(name) = ?', [mb_strtolower($name)])
+            ->exists();
+    }
+
+    /**
+     * Ids selected from a NOT NULL key column are always int or string.
+     */
+    private function key(mixed $value): int|string
+    {
+        return Identity::key($value) ?? throw new UnexpectedValueException('[Vaulter] Unexpected node key '.get_debug_type($value).'.');
+    }
+
+    private function indexName(string $nodes): string
+    {
+        return "{$nodes}_root_uniq";
+    }
+};
+
+## New file packages/core/src/Exceptions/Nodes/InvalidDestinationException.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions\Nodes;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Models\Drive\Node;
+
+/**
+ * A tree operation targeted a node that cannot take part in it: the destination is
+ * not a folder, belongs to another drive, the destination (or the node itself) sits
+ * in the trash, or the operation would rename, move, trash, copy or delete the drive
+ * root. Drive operations report another drive as `cross_drive_operation` instead.
+ * The tree only stays well-formed if every parent is a live folder of the same drive
+ * and the root is never an operand.
+ */
+final class InvalidDestinationException extends VaulterException implements ProblemException
+{
+    private const string PROBLEM_CODE = 'invalid_destination';
+
+    private const int HTTP_STATUS = 409;
+
+    public static function notAFolder(Node $destination): self
+    {
+        $kind = $destination->kind->value;
+
+        return new self(
+            "[Vaulter] Node [{$destination->id}] is a {$kind}, not a folder. "
+            .'Why: only a folder can hold child nodes. '
+            .'Fix: pick a folder (or the drive root) as the destination. '
+            .'Docs: '.self::docs('invalid-destination'),
+        );
+    }
+
+    public static function trashed(Node $node): self
+    {
+        return new self(
+            "[Vaulter] Node [{$node->id}] is in the trash. "
+            .'Why: a trashed node can neither hold new children nor be trashed again. '
+            .'Fix: restore it first, or pick a live folder as the destination. '
+            .'Docs: '.self::docs('invalid-destination'),
+        );
+    }
+
+    public static function otherDrive(Node $destination, int|string $storageId): self
+    {
+        return new self(
+            "[Vaulter] Node [{$destination->id}] belongs to drive [{$destination->storage_id}], not [{$storageId}]. "
+            .'Why: a node can only be placed under a folder of its own drive. '
+            .'Fix: pick a folder of the same drive as the destination. '
+            .'Docs: '.self::docs('invalid-destination'),
+        );
+    }
+
+    public static function rootIsImmutable(Node $root, string $operation): self
+    {
+        return new self(
+            "[Vaulter] Cannot {$operation} the drive root [{$root->id}]. "
+            .'Why: the root anchors the drive tree and is never an operand of a tree operation. '
+            .'Fix: operate on its children instead. '
+            .'Docs: '.self::docs('invalid-destination'),
+        );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+}
+
+## New file packages/core/src/Exceptions/Nodes/InvalidNodeNameException.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions\Nodes;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+
+/**
+ * A node name is a single path segment: non-empty after trimming, free of separators
+ * and control characters, not `.` or `..`, and bounded in UTF-8 bytes. Rendered as a
+ * validation error on `name` so API clients handle it like a form-request failure.
+ */
+final class InvalidNodeNameException extends VaulterException implements ProblemException
+{
+    private const string PROBLEM_CODE = 'validation_failed';
+
+    private const int HTTP_STATUS = 422;
+
+    public static function forName(string $name, string $reason): self
+    {
+        $printable = json_encode($name, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+        return new self(
+            "[Vaulter] The node name {$printable} is invalid: {$reason}. "
+            .'Fix: use a single non-empty segment without separators or control characters. '
+            .'Docs: '.self::docs('invalid-node-name'),
+        );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['errors' => ['name' => [$this->getMessage()]]];
+    }
+}
+
+## New file packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions\Nodes;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Models\Drive\Node;
+
+/**
+ * Restore and permanent delete only operate on a trashed node: deleting a live node
+ * must go through the trash so it stays recoverable until it is purged.
+ */
+final class NodeNotTrashedException extends VaulterException implements ProblemException
+{
+    private const string PROBLEM_CODE = 'node_not_trashed';
+
+    private const int HTTP_STATUS = 409;
+
+    public static function forNode(Node $node): self
+    {
+        return new self(
+            "[Vaulter] Node [{$node->id}] is not in the trash. "
+            .'Why: restore and permanent delete only apply to trashed nodes. '
+            .'Fix: trash the node first. '
+            .'Docs: '.self::docs('node-not-trashed'),
+        );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+}
+
+## New file packages/core/src/Support/NodeName.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Support;
+
+use Normalizer;
+use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
+
+/**
+ * The canonical form of a node name, applied by every Action that writes one. A name
+ * is a single tree segment, so separators, control characters and the `.`/`..` path
+ * aliases are rejected rather than escaped. NFC keeps visually identical names (a
+ * precomposed `é` and `e` + combining accent) from coexisting as siblings; without
+ * ext-intl the name is kept as given.
+ */
+final class NodeName
+{
+    public static function normalize(string $name): string
+    {
+        if (!mb_check_encoding($name, 'UTF-8')) {
+            throw InvalidNodeNameException::forName($name, 'it is not valid UTF-8');
+        }
+
+        $name = trim($name, " \t\n\r\x0B");
+
+        if (class_exists(Normalizer::class)) {
+            $normalized = Normalizer::normalize($name, Normalizer::FORM_C);
+            $name = is_string($normalized) ? $normalized : $name;
+        }
+
+        if ($name === '') {
+            throw InvalidNodeNameException::forName($name, 'it is empty');
+        }
+
+        if ($name === '.' || $name === '..') {
+            throw InvalidNodeNameException::forName($name, 'it is a path alias');
+        }
+
+        if (preg_match('~[/\\\\]~', $name) === 1) {
+            throw InvalidNodeNameException::forName($name, 'it contains a path separator');
+        }
+
+        if (preg_match('/[\x{00}-\x{1F}\x{7F}-\x{9F}]/u', $name) === 1) {
+            throw InvalidNodeNameException::forName($name, 'it contains a control character');
+        }
+
+        $maxLength = Config::driveNameMaxLength();
+
+        if (strlen($name) > $maxLength) {
+            throw InvalidNodeNameException::forName($name, "it is longer than {$maxLength} bytes");
+        }
+
+        return $name;
+    }
+}
+
+## New file packages/core/src/Support/TreeGuard.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Support;
+
+use Illuminate\Support\Collection;
+use LogicException;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+
+/**
+ * The tree invariants every structural Action enforces: a parent is a live folder of
+ * the same drive, and the root is never an operand. The checks read rows locked by
+ * {@see lock()} inside the Action's transaction — checking the caller's possibly
+ * stale model instead would let two concurrent operations both pass. The caller
+ * picks the exception for a destination in another drive, since Drive and Documents
+ * report it under different public codes.
+ *
+ * @internal shared by the Drive and Documents Actions; not a public extension point
+ */
+final readonly class TreeGuard
+{
+    public function __construct(
+        private NodeReadRepository $nodes,
+        private NodeStoreRepository $store,
+    ) {}
+
+    /**
+     * The destination folder id; no destination means the drive root, so no Action
+     * ever writes a second parentless node.
+     */
+    public function destinationId(Storage $storage, ?Node $into): int|string
+    {
+        if ($into instanceof Node) {
+            return $into->id;
+        }
+
+        $rootId = $storage->root_node_id;
+
+        if ($rootId === null) {
+            throw new LogicException(
+                "[Vaulter] Storage [{$storage->id}] has no root node. "
+                .'Fix: provision it through StorageManager::root() before writing nodes.',
+            );
+        }
+
+        return $rootId;
+    }
+
+    /**
+     * @param  list<int|string|null>    $ids
+     * @return Collection<string, Node>
+     */
+    public function lock(array $ids): Collection
+    {
+        return $this->store->lockForUpdate($ids);
+    }
+
+    /**
+     * @param Collection<string, Node> $locked
+     */
+    public function locked(Collection $locked, int|string $id): Node
+    {
+        $node = $locked->get(Identity::stringify($id));
+
+        if (!$node instanceof Node) {
+            throw NodeNotFoundException::forId($id);
+        }
+
+        return $node;
+    }
+
+    /**
+     * Bring the caller's instance up to the locked row, so the write diffs against
+     * the current state (a stale attribute equal to the new value would otherwise not
+     * be saved) and the caller keeps holding the instance it passed in.
+     */
+    public function sync(Node $node, Node $locked): Node
+    {
+        $node->setRawAttributes($locked->getAttributes(), sync: true);
+
+        return $node;
+    }
+
+    public function sameStorage(Node $destination, int|string $storageId): bool
+    {
+        return Identity::stringify($destination->storage_id) === Identity::stringify($storageId);
+    }
+
+    public function assertActiveFolder(Node $destination): void
+    {
+        if ($destination->kind !== NodeKind::Folder) {
+            throw InvalidDestinationException::notAFolder($destination);
+        }
+
+        if ($destination->trashed_at !== null) {
+            throw InvalidDestinationException::trashed($destination);
+        }
+    }
+
+    public function assertNotRoot(Node $node, string $operation): void
+    {
+        if ($this->nodes->isRoot($node)) {
+            throw InvalidDestinationException::rootIsImmutable(root: $node, operation: $operation);
+        }
+    }
+}
+
+## Test diff (existing tests)
+diff --git a/packages/core/tests/Schema/NodeSearchLikeEscapingTest.php b/packages/core/tests/Schema/NodeSearchLikeEscapingTest.php
+index 282f932..728739a 100644
+--- a/packages/core/tests/Schema/NodeSearchLikeEscapingTest.php
++++ b/packages/core/tests/Schema/NodeSearchLikeEscapingTest.php
+@@ -23,8 +23,16 @@ beforeEach(function (): void {
+     ]);
+ 
+-    $make = fn (string $name): Node => ForceCreates::make(Node::class, [
++    // Only the root may be parentless (one per storage); the searched nodes are its children.
++    $root = ForceCreates::make(Node::class, [
+         'storage_id' => $this->storage->getKey(),
+         'parent_id' => null,
+         'kind' => NodeKind::Folder,
++        'name' => '',
++    ]);
++
++    $make = fn (string $name): Node => ForceCreates::make(Node::class, [
++        'storage_id' => $this->storage->getKey(),
++        'parent_id' => $root->getKey(),
++        'kind' => NodeKind::Folder,
+         'name' => $name,
+     ]);
+diff --git a/packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php b/packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php
+index 915f1fc..5bb8ecd 100644
+--- a/packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php
++++ b/packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php
+@@ -43,5 +43,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
+     $before = [];
+     foreach (hostKeyFixtureColumns() as $entity => $columns) {
+-        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get()->map(static function ($row) use ($columns): array {
++        // Only the host-key columns: later upgrade steps in the same batch legitimately
++        // change other columns (the N04 repair re-parents nodes) and add activity rows.
++        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get(['id', ...$columns])->map(static function ($row) use ($columns): array {
+             $values = (array) $row;
+             foreach ($columns as $column) {
+@@ -56,5 +58,6 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
+     $count = 0;
+     foreach (hostKeyFixtureColumns() as $entity => $columns) {
+-        expect($db->table(Config::table($entity))->orderBy('id')->get()->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
++        expect($db->table(Config::table($entity))->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
++            ->get(['id', ...$columns])->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
+         foreach ($columns as $column) {
+             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
+@@ -78,5 +81,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
+     expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
+     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+-    $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertSuccessful();
++    // The upgrade migrations run as one batch; rolling the batch back reaches this one
++    // whatever later upgrade steps were added after it.
++    $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
+     foreach (hostKeyFixtureColumns() as $entity => $columns) {
+         foreach ($columns as $column) {
+diff --git a/packages/drive/tests/Drive/ForceDeleteTest.php b/packages/drive/tests/Drive/ForceDeleteTest.php
+index a6749fd..26194af 100644
+--- a/packages/drive/tests/Drive/ForceDeleteTest.php
++++ b/packages/drive/tests/Drive/ForceDeleteTest.php
+@@ -21,4 +21,6 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
+     expect(FileVersionBlob::query()->count())->toBe(1);
+ 
++    $drive->trash($node);
++
+     $drive->forceDelete($node);
+ 
+@@ -38,4 +40,6 @@ it('forceDelete уменьшает used_bytes на освобождённый р
+     expect($drive->storage()->refresh()->used_bytes)->toBe(10);
+ 
++    $drive->trash($node);
++
+     $drive->forceDelete($node);
+ 
+@@ -50,4 +54,6 @@ it('forceDelete тумбстонит всё поддерево (deleted_at)', fu
+     $drive->upload(DriveTestHelpers::streamFor('aa'), into: $sub, originalName: 'a.bin');
+ 
++    $drive->trash($folder);
++
+     $drive->forceDelete($folder);
+ 
+@@ -63,4 +69,6 @@ it('forceDelete не трогает байты на диске (GC отдель
+     $blob = Blob::query()->first();
+ 
++    $drive->trash($node);
++
+     $drive->forceDelete($node);
+ 
+diff --git a/packages/drive/tests/Drive/R07CommandActivityContractsTest.php b/packages/drive/tests/Drive/R07CommandActivityContractsTest.php
+index a3d6632..865cd00 100644
+--- a/packages/drive/tests/Drive/R07CommandActivityContractsTest.php
++++ b/packages/drive/tests/Drive/R07CommandActivityContractsTest.php
+@@ -120,4 +120,6 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
+     $used = $drive->storage()->refresh()->used_bytes;
+ 
++    $drive->trash($folder);
++
+     $drive->forceDelete($folder, actorId: 17);
+ 
+@@ -134,6 +136,6 @@ it('restore re-homes to the storage root when the original parent was trashed',
+     $child = $drive->createFolder('Child', $parent);
+ 
+-    $drive->trash($parent);
+     $drive->trash($child);
++    $drive->trash($parent);
+ 
+     $restored = $drive->restore($child->refresh(), actorId: 17);
+@@ -173,8 +175,10 @@ it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
+ 
+     $first = $drive->createFolder('One');
++    $drive->trash($first);
+     $drive->forceDelete($first, actorId: 9);
+     $firstKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole()->event_id;
+ 
+     $second = $drive->createFolder('Two');
++    $drive->trash($second);
+     $drive->forceDelete($second, actorId: 9);
+     $secondKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->orderByDesc('id')->firstOrFail()->event_id;
+@@ -199,6 +203,8 @@ it('StorageManager root() provisions a missing root with an empty name', functio
+     $oldRootId = $storage->root_node_id;
+ 
++    // The root row must be gone for good: even a soft-deleted parentless row is the
++    // drive's one parentless node under the single-root index.
+     $storage->forceFill(['root_node_id' => null])->save();
+-    Node::query()->whereKey($oldRootId)->delete();
++    Node::query()->whereKey($oldRootId)->forceDelete();
+ 
+     $root = app(StorageManager::class)->root($storage->refresh());
+diff --git a/packages/drive/tests/Feature/DriveApiTest.php b/packages/drive/tests/Feature/DriveApiTest.php
+index 1612be2..0457e96 100644
+--- a/packages/drive/tests/Feature/DriveApiTest.php
++++ b/packages/drive/tests/Feature/DriveApiTest.php
+@@ -98,6 +98,11 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
+     expect(Node::query()->find($copy)->trashed_at)->toBeNull();
+ 
+-    // forceDelete soft-deletes the rows (deleted_at) and frees the bytes; the
+-    // physical blob is reclaimed later by GC (§2.10).
++    // forceDelete only purges from the trash: a live node is refused, a trashed one
++    // is soft-deleted (deleted_at) and frees the bytes; the physical blob is
++    // reclaimed later by GC (§2.10).
++    $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')
++        ->assertStatus(409)
++        ->assertJsonPath('code', 'node_not_trashed');
++    $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
+     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
+     expect(Node::query()->find($copy))->toBeNull()
+diff --git a/packages/drive/tests/Feature/MutationContractsTest.php b/packages/drive/tests/Feature/MutationContractsTest.php
+index c5c7874..d5bec73 100644
+--- a/packages/drive/tests/Feature/MutationContractsTest.php
++++ b/packages/drive/tests/Feature/MutationContractsTest.php
+@@ -265,4 +265,6 @@ it('records every force-deleted subtree id and the exact freed bytes', function
+     $ids = [(string) $folder->getKey(), (string) $file->getKey()];
+ 
++    $drive->trash($folder);
++
+     $drive->forceDelete($folder, actorId: 17);
+ 
+diff --git a/packages/drive/tests/Feature/R07bActionNodeContractsTest.php b/packages/drive/tests/Feature/R07bActionNodeContractsTest.php
+index 8cd8f9a..77b82ec 100644
+--- a/packages/drive/tests/Feature/R07bActionNodeContractsTest.php
++++ b/packages/drive/tests/Feature/R07bActionNodeContractsTest.php
+@@ -460,4 +460,6 @@ it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte
+     expect($drive->storage()->refresh()->used_bytes)->toBe(1);
+ 
++    $drive->trash($node);
++
+     $drive->forceDelete($node);
+ 
+@@ -476,4 +478,6 @@ it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds
+     $nodeId = $node->getKey();
+ 
++    $drive->trash($node);
++
+     $drive->forceDelete($node);
+ 
+
+## New test packages/core/tests/Unit/NodeNameTest.php
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Support\NodeName;
+use Vaulter\Tests\TestCase;
+
+// NodeName reads the configured byte limit, so it needs the application container.
+uses(TestCase::class);
+
+it('normalizes a valid name', function (string $given, string $expected): void {
+    expect(NodeName::normalize($given))->toBe($expected);
+})->with([
+    'unchanged' => ['Report.pdf', 'Report.pdf'],
+    'edge whitespace trimmed' => ["  \tPlan 2026 \n", 'Plan 2026'],
+    'inner whitespace kept' => ['a  b', 'a  b'],
+    'NFC composition' => ["e\u{0301}", "\u{00E9}"],
+    'dots inside a name' => ['...hidden..', '...hidden..'],
+    'exactly 255 bytes' => [str_repeat('a', 255), str_repeat('a', 255)],
+    'multibyte within the byte limit' => [str_repeat('я', 127), str_repeat('я', 127)],
+]);
+
+it('rejects an invalid name', function (string $given, string $reason): void {
+    expect(fn () => NodeName::normalize($given))->toThrow(InvalidNodeNameException::class, $reason);
+})->with([
+    'empty' => ['', 'it is empty'],
+    'whitespace only' => ["  \t ", 'it is empty'],
+    'dot' => ['.', 'it is a path alias'],
+    'dot dot' => [' .. ', 'it is a path alias'],
+    'slash' => ['a/b', 'it contains a path separator'],
+    'backslash' => ['a\\b', 'it contains a path separator'],
+    'NUL' => ["a\0b", 'it contains a control character'],
+    'leading NUL is not trimmed away' => ["\0a", 'it contains a control character'],
+    'C0 control' => ["a\x07b", 'it contains a control character'],
+    'DEL' => ["a\x7Fb", 'it contains a control character'],
+    'C1 control (NEL)' => ["a\u{0085}b", 'it contains a control character'],
+    '256 bytes' => [str_repeat('a', 256), 'longer than 255 bytes'],
+    '256 bytes of two-byte characters' => [str_repeat('я', 128), 'longer than 255 bytes'],
+    'invalid UTF-8' => ["a\xC3", 'not valid UTF-8'],
+]);
+
+it('measures the limit against the configured byte length', function (): void {
+    config()->set('vaulter.drive.name_rules.max_length', 4);
+
+    expect(NodeName::normalize('abcd'))->toBe('abcd')
+        ->and(fn () => NodeName::normalize('abcde'))->toThrow(InvalidNodeNameException::class, 'longer than 4 bytes');
+});
+
+it('renders as a 422 validation error on the name field', function (): void {
+    $exception = InvalidNodeNameException::forName('a/b', 'it contains a path separator');
+    $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
+
+    expect($response->getStatusCode())->toBe(422)
+        ->and($response->getData(true))->toMatchArray([
+            'code' => 'validation_failed',
+            'errors' => ['name' => [$exception->getMessage()]],
+        ]);
+});
+
+## New test packages/core/tests/Upgrade/NodesCleanupMigrationTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Symfony\Component\Process\ExecutableFinder;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Support\Config;
+use Vaulter\Tests\Upgrade\LoadsV02Fixture;
+
+uses(LoadsV02Fixture::class);
+
+beforeEach(function (): void {
+    if (app(VaulterDatabase::class)->driver() !== 'pgsql' || (new ExecutableFinder)->find('psql') === null) {
+        $this->markTestSkipped('Upgrade fixture requires PostgreSQL and psql.');
+    }
+});
+afterEach(function (): void {
+    RefreshDatabaseState::$migrated = false;
+});
+
+function nodesCleanupMigration(): object
+{
+    return require __DIR__.'/../../database/migrations/2026_10_01_000006_nodes_cleanup.php';
+}
+
+it('moves every second root under its drive root, logs each move and adds the root index', function (): void {
+    $this->loadV02Fixture('bigint');
+    $db = app(VaulterDatabase::class)->connection();
+    $nodes = Config::table('nodes');
+    $roots = $db->table(Config::table('storages'))->pluck('root_node_id', 'id')->map(static fn ($id): string => (string) $id);
+    $orphans = $db->table($nodes)->whereNull('parent_id')->whereNotIn('id', $roots->values())->orderBy('id')->get();
+
+    expect($db->table($nodes)->whereNull('parent_id')->count())->toBeGreaterThan($roots->count())
+        ->and($orphans)->not->toBeEmpty();
+
+    $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+
+    $parentless = $db->table($nodes)->whereNull('parent_id')->get(['id', 'storage_id']);
+    expect($parentless)->toHaveCount($roots->count());
+    foreach ($parentless as $root) {
+        expect((string) $root->id)->toBe($roots[$root->storage_id]);
+    }
+
+    foreach ($orphans as $orphan) {
+        expect((string) $db->table($nodes)->where('id', $orphan->id)->value('parent_id'))->toBe($roots[$orphan->storage_id]);
+    }
+
+    // The fixture's "Projects" document clashed with the live "Projects" folder under the root.
+    $renamed = $db->table($nodes)->where('id', 40)->first();
+    expect($renamed->name)->toBe('Projects (legacy 1)')
+        ->and($db->table($nodes)->where('id', 39)->value('name'))->toBe('Loose note');
+
+    $activity = $db->table(Config::table('activity'))->whereRaw("context->>'reason' = 'n04_repair'")->orderBy('target_id')->get();
+    expect($activity)->toHaveCount($orphans->count());
+
+    $row = $activity->firstWhere('target_id', 40);
+    expect($row->verb)->toBe('node.moved')
+        ->and($row->actor_type)->toBe('vaulter:system')
+        ->and($row->actor_id)->toBeNull()
+        ->and((string) $row->storage_id)->toBe('1')
+        ->and($row->created_at)->not->toBeNull()
+        ->and(json_decode($row->context, true))->toEqual([
+            'from_parent_id' => null,
+            'to_parent_id' => '1',
+            'reason' => 'n04_repair',
+            'renamed_from' => 'Projects',
+        ]);
+
+    $before = $db->table($nodes)->orderBy('id')->get()->all();
+    $activityCount = $db->table(Config::table('activity'))->count();
+
+    nodesCleanupMigration()->up();
+    $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+
+    expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before)
+        ->and($db->table(Config::table('activity'))->count())->toBe($activityCount);
+
+    expect(fn () => $db->table($nodes)->insert([
+        'panel' => 'default',
+        'storage_id' => 1,
+        'parent_id' => null,
+        'kind' => 'folder',
+        'name' => 'Second root',
+    ]))->toThrow(QueryException::class, 'v_nodes_root_uniq');
+});
+
+it('drops the root index on rollback and keeps the repaired tree', function (): void {
+    $this->loadV02Fixture('bigint');
+    $db = app(VaulterDatabase::class)->connection();
+    $nodes = Config::table('nodes');
+
+    $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+    nodesCleanupMigration()->down();
+
+    expect($db->getSchemaBuilder()->hasIndex($nodes, $nodes.'_root_uniq'))->toBeFalse()
+        ->and($db->table($nodes)->where('id', 40)->value('name'))->toBe('Projects (legacy 1)');
+
+    nodesCleanupMigration()->up();
+
+    expect($db->getSchemaBuilder()->hasIndex($nodes, $nodes.'_root_uniq'))->toBeTrue();
+});
+
+it('refuses to guess the root of a drive without root_node_id', function (): void {
+    $this->loadV02Fixture('bigint');
+    $db = app(VaulterDatabase::class)->connection();
+    $nodes = Config::table('nodes');
+    $storages = $db->table(Config::table('storages'));
+    $storages->clone()->where('id', 1)->update(['root_node_id' => null]);
+    $before = $db->table($nodes)->orderBy('id')->get()->all();
+
+    try {
+        expect(fn () => $this->artisan('migrate', ['--force' => true])->run())
+            ->toThrow(RuntimeException::class, 'Storages [1] have several parentless nodes');
+
+        expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before);
+    } finally {
+        // The next test's setUp migrates whatever schema is left behind.
+        $storages->clone()->where('id', 1)->update(['root_node_id' => 1]);
+    }
+});
+
+## New test packages/documents/tests/Document/DocumentTreeInvariantsTest.php
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Drive\DriveContext;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\TestUser;
+
+/**
+ * A document node is placed like any other node: no parent means the drive root
+ * folder (never a second parentless node), and an explicit parent must be a live
+ * folder of the same drive.
+ */
+function createDocumentUnder(DriveContext $drive, string $name, ?Node $parent): Node
+{
+    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+        storage: $drive->storage(),
+        name: $name,
+        content: DocumentTestHelpers::content(),
+        parent: $parent,
+    ));
+}
+
+it('places a document without a parent under the drive root and lists it there', function (): void {
+    $this->actingAs((new TestUser)->forceFill(['id' => 1]));
+    $drive = DocumentTestHelpers::drive();
+
+    $node = createDocumentUnder($drive, 'Rootless', null);
+
+    expect($node->parent_id)->toEqual($drive->storage()->root_node_id)
+        ->and(Node::query()->where('storage_id', $drive->storage()->getKey())->whereNull('parent_id')->count())->toBe(1);
+
+    $this->getJson('api/vaulter/storages/'.$drive->storage()->getKey().'/nodes')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $node->getKey());
+});
+
+it('rejects a document under a file, a document or a trashed folder', function (string $kind): void {
+    $drive = DocumentTestHelpers::drive();
+
+    $parent = match ($kind) {
+        'file' => $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'f.bin'),
+        'document' => createDocumentUnder($drive, 'Doc', null),
+        'trashed folder' => $drive->trash($drive->createFolder('Gone')),
+    };
+
+    expect(fn () => createDocumentUnder($drive, 'Child', $parent))
+        ->toThrow(InvalidDestinationException::class);
+})->with(['file', 'document', 'trashed folder']);
+
+it('rejects a parent folder of another drive', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    $foreign = DocumentTestHelpers::drive()->createFolder('Elsewhere');
+
+    expect(fn () => createDocumentUnder($drive, 'Child', $foreign))
+        ->toThrow(InvalidDestinationException::class, 'belongs to drive');
+});
+
+it('normalizes the document name and rejects an invalid one', function (): void {
+    $drive = DocumentTestHelpers::drive();
+
+    expect(createDocumentUnder($drive, "  Caf\u{0065}\u{0301}  ", null)->name)->toBe("Caf\u{00E9}")
+        ->and(fn () => createDocumentUnder($drive, 'a/b', null))->toThrow(InvalidNodeNameException::class);
+});
+
+## New test packages/drive/tests/Concurrency/MoveCycleRaceTest.php
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Drive\Actions\MoveNodeAction;
+use Vaulter\Drive\Data\MoveNodeData;
+use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Tests\Concurrency\RaceOutcome;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+/**
+ * Two concurrent moves that would each be legal alone but together close a loop.
+ * The cycle check reads the subtree, so it is only sound if no other structural
+ * change of the same drive commits between that read and the UPDATE — the drive
+ * tree lock provides that. Real concurrency needs PostgreSQL (ForkRace).
+ */
+beforeEach(function (): void {
+    ForkRace::skipUnlessSupported($this);
+});
+
+function raceMove(int|string $nodeId, int|string $intoId): Closure
+{
+    return static fn (): string => (string) app(MoveNodeAction::class)->execute(new MoveNodeData(
+        node: Node::query()->findOrFail($nodeId),
+        into: Node::query()->findOrFail($intoId),
+    ))->getKey();
+}
+
+/**
+ * Walk parent links up from the node; a tree reaches the root within the node count.
+ */
+function reachesRoot(int|string $nodeId, int|string $rootId): bool
+{
+    $current = $nodeId;
+
+    for ($step = 0; $step <= Node::query()->count(); $step++) {
+        if ((string) $current === (string) $rootId) {
+            return true;
+        }
+
+        $current = Node::query()->whereKey($current)->value('parent_id');
+
+        if ($current === null) {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @param list<RaceOutcome> $outcomes
+ */
+function assertOneMoveWins(array $outcomes): void
+{
+    $won = array_values(array_filter($outcomes, static fn (RaceOutcome $outcome): bool => $outcome->ok));
+    $lost = array_values(array_filter($outcomes, static fn (RaceOutcome $outcome): bool => !$outcome->ok));
+
+    expect($won)->toHaveCount(1)
+        ->and($lost)->toHaveCount(1)
+        ->and($lost[0]->failedWith(CycleException::class))->toBeTrue("the losing move failed with {$lost[0]->exception}: {$lost[0]->message}");
+}
+
+it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $rootId = $drive->root()->getKey();
+    $a = $drive->createFolder('A')->getKey();
+    $b = $drive->createFolder('B')->getKey();
+
+    assertOneMoveWins(ForkRace::run([raceMove($a, $b), raceMove($b, $a)]));
+
+    expect(reachesRoot($a, $rootId))->toBeTrue()
+        ->and(reachesRoot($b, $rootId))->toBeTrue();
+});
+
+// Row locks on the moved node and its destination alone serialise the two-node race
+// above; here the two moves lock disjoint rows, so only the tree lock keeps the
+// second cycle check from reading a subtree the first move is about to change.
+it('lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycle', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $rootId = $drive->root()->getKey();
+    $a = $drive->createFolder('A');
+    $b = $drive->createFolder('B');
+    $a1 = $drive->createFolder('A1', $a)->getKey();
+    $b1 = $drive->createFolder('B1', $b)->getKey();
+
+    assertOneMoveWins(ForkRace::run([raceMove($a->getKey(), $b1), raceMove($b->getKey(), $a1)]));
+
+    expect(reachesRoot($a1, $rootId))->toBeTrue()
+        ->and(reachesRoot($b1, $rootId))->toBeTrue();
+});
+
+## New test packages/drive/tests/Feature/TreeInvariantsTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Drive\DriveContext;
+use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\TestUser;
+
+/**
+ * The tree invariants (D13): every parent is a live folder of the same drive, the
+ * root is never an operand, only the root has no parent, and deletion goes through
+ * the trash. Exercised through the PHP API and the REST surface.
+ */
+beforeEach(function (): void {
+    StorageFacade::fake('local');
+    $this->actingAs((new TestUser)->forceFill(['id' => 1]));
+});
+
+/**
+ * A destination that is not a live folder of the drive.
+ */
+function invalidDestination(DriveContext $drive, string $kind): Node
+{
+    return match ($kind) {
+        'file' => $drive->upload(DriveTestHelpers::streamFor('bytes'), originalName: 'target.bin'),
+        // Drive cannot depend on documents; a document node is a plain kind=document row.
+        'document' => app(NodeStoreRepository::class)->create([
+            'storage_id' => $drive->storage()->getKey(),
+            'parent_id' => $drive->root()->getKey(),
+            'kind' => NodeKind::Document,
+            'name' => 'Spec',
+            'size_bytes' => 0,
+        ]),
+        'trashed folder' => $drive->trash($drive->createFolder('Gone')),
+    };
+}
+
+$destinations = ['file', 'document', 'trashed folder'];
+
+it('rejects creating a folder under a non-folder or trashed destination', function (string $kind): void {
+    $drive = DriveTestHelpers::drive();
+    $destination = invalidDestination($drive, $kind);
+
+    expect(fn () => $drive->createFolder('Child', $destination))->toThrow(InvalidDestinationException::class);
+
+    $this->postJson('api/vaulter/storages/'.$drive->storage()->getKey().'/folders', [
+        'name' => 'Child',
+        'parent_id' => $destination->getKey(),
+    ])->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
+})->with($destinations);
+
+it('rejects uploading a file into a non-folder or trashed destination', function (string $kind): void {
+    $drive = DriveTestHelpers::drive();
+    $destination = invalidDestination($drive, $kind);
+
+    expect(fn () => $drive->upload(DriveTestHelpers::streamFor('x'), into: $destination, originalName: 'x.bin'))
+        ->toThrow(InvalidDestinationException::class);
+
+    $this->postJson('api/vaulter/storages/'.$drive->storage()->getKey().'/uploads', [
+        'parent_id' => $destination->getKey(),
+        'file' => UploadedFile::fake()->createWithContent('x.txt', 'x'),
+    ])->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
+})->with($destinations);
+
+it('rejects moving a node into a non-folder or trashed destination', function (string $kind): void {
+    $drive = DriveTestHelpers::drive();
+    $destination = invalidDestination($drive, $kind);
+    $node = $drive->createFolder('Mover');
+
+    expect(fn () => $drive->move($node, $destination))->toThrow(InvalidDestinationException::class);
+
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => $destination->getKey()])
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'invalid_destination');
+})->with($destinations);
+
+it('rejects copying a node into a non-folder or trashed destination', function (string $kind): void {
+    $drive = DriveTestHelpers::drive();
+    $destination = invalidDestination($drive, $kind);
+    $node = $drive->createFolder('Source');
+
+    expect(fn () => $drive->copy($node, $destination))->toThrow(InvalidDestinationException::class);
+
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/copy', ['parent_id' => $destination->getKey()])
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'invalid_destination');
+})->with($destinations);
+
+it('re-homes a restore to the root when the original parent is no longer a live folder', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $parent = $drive->createFolder('Parent');
+    $child = $drive->createFolder('Child', $parent);
+
+    $drive->trash($child);
+    $drive->trash($parent);
+
+    $this->postJson('api/vaulter/nodes/'.$child->getKey().'/restore')
+        ->assertOk()
+        ->assertJsonPath('data.parent_id', $drive->storage()->root_node_id);
+});
+
+it('refuses to restore a node that is not in the trash', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $node = $drive->createFolder('Live');
+
+    expect(fn () => $drive->restore($node))->toThrow(NodeNotTrashedException::class);
+
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/restore')
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_not_trashed');
+});
+
+it('rejects a folder of another drive as the destination', function (string $operation): void {
+    $drive = DriveTestHelpers::drive();
+    $foreign = DriveTestHelpers::drive()->createFolder('Elsewhere');
+    $node = $drive->createFolder('Local');
+
+    $run = match ($operation) {
+        'create folder' => fn () => $drive->createFolder('Child', $foreign),
+        'upload' => fn () => $drive->upload(DriveTestHelpers::streamFor('x'), into: $foreign, originalName: 'x.bin'),
+        'move' => fn () => $drive->move($node, $foreign),
+        'copy' => fn () => $drive->copy($node, $foreign),
+    };
+
+    expect($run)->toThrow(CrossStorageMoveException::class);
+
+    // Over HTTP a foreign node id is not addressable through this drive at all.
+    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => $foreign->getKey()])
+        ->assertNotFound();
+})->with(['create folder', 'upload', 'move', 'copy']);
+
+it('renders a cross-drive operation as 409 cross_drive_operation', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $foreign = DriveTestHelpers::drive()->createFolder('Elsewhere');
+
+    $exception = rescue(fn () => $drive->createFolder('Child', $foreign), fn (Throwable $e): Throwable => $e, report: false);
+
+    expect($exception)->toBeInstanceOf(CrossStorageMoveException::class);
+
+    $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
+
+    expect($response->getStatusCode())->toBe(409)
+        ->and($response->getData(true)['code'])->toBe('cross_drive_operation');
+});
+
+it('never renames, moves, trashes or deletes the root', function (string $operation): void {
+    $drive = DriveTestHelpers::drive();
+    $root = $drive->root();
+    $folder = $drive->createFolder('Folder');
+
+    $run = match ($operation) {
+        'rename' => fn () => $drive->rename($root, 'Renamed'),
+        'move' => fn () => $drive->move($root, $folder),
+        'trash' => fn () => $drive->trash($root),
+        'force delete' => fn () => $drive->forceDelete($root),
+        'copy' => fn () => $drive->copy($root, $folder),
+    };
+
+    expect($run)->toThrow(InvalidDestinationException::class, 'drive root');
+
+    $request = match ($operation) {
+        'rename' => fn () => $this->patchJson('api/vaulter/nodes/'.$root->getKey(), ['name' => 'Renamed']),
+        'move' => fn () => $this->postJson('api/vaulter/nodes/'.$root->getKey().'/move', ['parent_id' => $folder->getKey()]),
+        'trash' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->getKey()),
+        'force delete' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->getKey().'/force'),
+        'copy' => fn () => $this->postJson('api/vaulter/nodes/'.$root->getKey().'/copy', ['parent_id' => $folder->getKey()]),
+    };
+
+    $request()->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
+
+    expect($root->refresh()->parent_id)->toBeNull()
+        ->and($root->trashed_at)->toBeNull()
+        ->and($root->name)->toBe('');
+})->with(['rename', 'move', 'trash', 'force delete', 'copy']);
+
+it('only force-deletes from the trash', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $node = $drive->createFolder('Live');
+
+    expect(fn () => $drive->forceDelete($node))->toThrow(NodeNotTrashedException::class);
+
+    $this->deleteJson('api/vaulter/nodes/'.$node->getKey().'/force')
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_not_trashed');
+
+    expect(Node::query()->find($node->getKey()))->not->toBeNull();
+});
+
+it('refuses to trash a node that is already in the trash', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $node = $drive->trash($drive->createFolder('Twice'));
+
+    expect(fn () => $drive->trash($node))->toThrow(InvalidDestinationException::class, 'is in the trash');
+});
+
+it('rejects moving a folder into its own subtree', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $parent = $drive->createFolder('Parent');
+    $child = $drive->createFolder('Child', $parent);
+
+    expect(fn () => $drive->move($parent, $child))->toThrow(CycleException::class)
+        ->and(fn () => $drive->move($parent, $parent))->toThrow(CycleException::class);
+});
+
+it('resolves a missing destination to the root instead of a parentless node', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $folder = $drive->createFolder('Nested', $drive->createFolder('Top'));
+    $storageId = $drive->storage()->getKey();
+    $rootId = $drive->storage()->root_node_id;
+
+    $this->postJson('api/vaulter/storages/'.$storageId.'/folders', ['name' => 'Created'])
+        ->assertJsonPath('data.parent_id', $rootId);
+    $this->postJson('api/vaulter/storages/'.$storageId.'/uploads', ['file' => UploadedFile::fake()->createWithContent('u.txt', 'u')])
+        ->assertJsonPath('data.parent_id', $rootId);
+    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/copy', ['parent_id' => null, 'name' => 'Copied'])
+        ->assertJsonPath('data.parent_id', $rootId);
+    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/move', ['parent_id' => null])
+        ->assertJsonPath('data.parent_id', $rootId);
+
+    expect(Node::withTrashed()->where('storage_id', $storageId)->whereNull('parent_id')->pluck('id')->all())
+        ->toEqual([$rootId]);
+});
+
+it('allows exactly one parentless node per drive', function (): void {
+    $drive = DriveTestHelpers::drive();
+
+    expect(fn () => app(NodeStoreRepository::class)->create([
+        'storage_id' => $drive->storage()->getKey(),
+        'parent_id' => null,
+        'kind' => NodeKind::Folder,
+        'name' => 'Second root',
+        'size_bytes' => 0,
+    ]))->toThrow(UniqueConstraintViolationException::class);
+});
+## Observed validation evidence (final tree)
+- V18 drive TreeInvariantsTest (SQLite): 29 passed, 101 assertions.
+- V19 drive MoveCycleRaceTest (PG 16, ForkRace) x5: each 2 passed, 0 skipped.
+- V19 negative control (lockTree removed from MoveNodeAction): A<->B green 5/5; A->B1||B->A1 red 4/5; restored -> green.
+- core NodesCleanupMigrationTest + NodeNameTest (PG): 26 passed, 0 skipped. HostKeyColumnsMigrationTest (PG): 3 passed.
+- documents DocumentTreeInvariantsTest: 6 passed.
+- Gates: core pint 0 / phpstan 0 errors / pest 634 passed 23 skipped 0 failed; drive pint 0 / phpstan 0 / pest 483 passed 10 skipped; documents pint 0 / phpstan 0 / pest 255 passed; filament pint 0 / phpstan 0 / pest 79 passed. drive Concurrency on PG: 9 passed.

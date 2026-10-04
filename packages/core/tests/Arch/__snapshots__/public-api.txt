@@ -131,6 +131,7 @@ Vaulter\Database\VaulterDatabase
   connection(): \Illuminate\Database\Connection
   driver(): string
   lockTree(int|string $storageId): void
+  lockTreeShared(int|string $storageId): void
   transaction(\Closure $callback, int $attempts = 3): mixed
 
 Vaulter\Support\Config
