@@ -1,25 +1,29 @@
-# HANDOFF — 2026-10-04 — after P1.6
+# HANDOFF — 2026-10-04 — P1 closed, P2 next
 
-**Next:** close: task:plan-close 2026.09.29-№1-VAULTER-STABLE P1
+**Next:** design: task:plan-design 2026.09.29-№1-VAULTER-STABLE finish
 
 | Parameter | Meaning |
 |:--|:--|
 | Batch | solo |
 | Model class | frontier |
-| Model | gpt-6-astra |
-| Effort | high |
-| Thinking | high |
+| Model | haiku-4.5 |
+| Effort | lean |
+| Thinking | minimal |
 | Context | continue-root |
-| The bottom line | P1.6 complete; reconcile phase-level evidence and existing P1.7 deviation before phase closure. |
+| The bottom line | P1 closed (direct, no hosted CI); P2 design ready for finish and audit. |
 
-```session-continuity-decision/v1
-{"evidence": ["batch:63f5ff28b8d368edbdccc0b1fdf57d4bc3e431a5a056dffd7109053e9ed3dd76", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.6/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
-```
+**Done:** P1 closed on 2026-10-04 (10/11 ✓, P1.7 deviation classified). All item deliverables integrated.
+P2 designed on `main` @ `938f0ea` by owner choice (D15): `phases/P2/P2.md` + item contracts P2.1–P2.7; D16 splits OPUS
+P2.1 into class renames (P2.1) and schema/upgrade migrations (P2.7); ledger P2 — 556 OPUS units, `opus-coverage.py check`
+OK; verbatim inputs `artifacts/P2-design/P2.m-opus.md`; config dossier `artifacts/P2-design/P2.5-config-map.md`;
+execution-sheet rows 13–18 and the P2 command sequence in `roadmap.md`.
 
-**Done:** Atomic quota, current locked head/counter, reusable commitStaged, fresh copied heads and V02/V03/V20/V21. Five final PG concurrency runs: 17 passed each with zero skips; negative controls RED after deliberate mutation and GREEN after restoration. All five package gates GREEN. Whole-item review and same-session correction verification: grok-4.7/high/500000 GREEN. Evidence: artifacts/P1.6/completion.md.
+**Remaining:** `task:plan-design 2026.09.29-№1-VAULTER-STABLE finish` (regenerate views, update roadmap) 
+→ `task:plan-audit 2026.09.29-№1-VAULTER-STABLE design` (if audit required) → P2 execution rows 13–18.
 
-**Remaining:** This invocation authorized P1.6 and its whole-item review. P1 phase closure was not performed: its phase-level validation includes hosted CI behind owner gate O-3-CI, and P1.7 retains a classified MySQL installation deviation. P2 remains outside the invocation.
+**Open risks:** No MySQL concurrency run is claimed for P1. P2 assumes `composer install` before execution (no `vendor/`
+in the design working copy). P2.4 depends on `axioma-studio/azguard-core: dev-main` being installable (O-4). No push,
+hosted CI trigger or release was authorized.
 
-**Open risks:** No MySQL concurrency run is claimed. Existing SQLite/PG-specific suite skips and risky annotations remain visible. Shared preexisting plan/configuration work remains unstaged. No push, hosted CI trigger or release was authorized.
-
-**Sources of truth:** phases/P1/P1.6.md; phases/P1/P1.6.state.md; artifacts/P1.6/completion.md; artifacts/P1.6/validation.json; artifacts/P1.6/grok-review.md.
+**Sources of truth:** phases/P1/P1.md; phases/P2/P2.md; decisions/D15-p2-design-before-p1-close.md;
+decisions/D16-p2-schema-item-split.md; artifacts/coverage/ledger-P2.tsv; roadmap.md (execution-sheet).
