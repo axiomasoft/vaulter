@@ -1,34 +1,25 @@
-# HANDOFF — 2026-09-29 — after P0
+# HANDOFF — 2026-10-04 — after P1.6
 
-**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design
+**Next:** close: task:plan-close 2026.09.29-№1-VAULTER-STABLE P1
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
-| Batch | n/a |
+| Batch | solo |
 | Model class | frontier |
+| Model | gpt-6-astra |
 | Effort | high |
-| Capabilities | — |
-| Context | cold-start-root: whole-plan-independent-audit |
-| Суть | Независимый аудит дизайна (не автор плана): проверить P0 и execution-sheet против fingerprint из `finalize-design --finish` и записать вердикт (`roadmap.md` §P0, шаг 2). Исполнение P0 — только после GREEN. |
+| Thinking | high |
+| Context | continue-root |
+| The bottom line | P1.6 complete; reconcile phase-level evidence and existing P1.7 deviation before phase closure. |
 
-**Provider-native command:**
-
-```text
-codex -C "$(git rev-parse --show-toplevel)" -m gpt-6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE design'
+```session-continuity-decision/v1
+{"evidence": ["batch:63f5ff28b8d368edbdccc0b1fdf57d4bc3e431a5a056dffd7109053e9ed3dd76", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.6/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** План создан по OPUS (D01); уточнение владельца → D06 (реестр 1438 единиц OPUS, владельцы 254 секций, ledger P0,
-гейт `opus-coverage.py check` OK, дословные входы `artifacts/P0-design/P0.m-opus.md`); brief, D01–D06; plan.md, roadmap,
-session-routing; P0 детализирована (P0.1–P0.4), P1–P8 — skeleton в `backlog/`. Дизайн P0 финализирован
-(`finalize-design --phase P0`, dry-render bundles); finish: execution-sheet подтверждён (3 запуска: solo P0.1 → B0-A
-P0.2+P0.3; solo P0.4 независим), `opus-coverage OK: 1438 единиц, 254 секций, 0 нарушений`, fingerprint записан в journal.
+**Done:** Atomic quota, current locked head/counter, reusable commitStaged, fresh copied heads and V02/V03/V20/V21. Five final PG concurrency runs: 17 passed each with zero skips; negative controls RED after deliberate mutation and GREEN after restoration. All five package gates GREEN. Whole-item review and same-session correction verification: grok-4.7/high/500000 GREEN. Evidence: artifacts/P1.6/completion.md.
 
-**Remaining:** design audit (codex, не автор) → owner gates O-1/O-2 → исполнение строк 1–3 execution-sheet → фазовый
-аудит P0 → закрытие → дизайн P1.
+**Remaining:** This invocation authorized P1.6 and its whole-item review. P1 phase closure was not performed: its phase-level validation includes hosted CI behind owner gate O-3-CI, and P1.7 retains a classified MySQL installation deviation. P2 remains outside the invocation.
 
-**Sources of truth:** plan.md; roadmap.md (`execution-sheet/v1`); phases/P0/P0.md; phases/P0/P0.1.md–P0.4.md;
-decisions/D01–D06; `audits/2026-09-29-stable-audit/opus/`.
+**Open risks:** No MySQL concurrency run is claimed. Existing SQLite/PG-specific suite skips and risky annotations remain visible. Shared preexisting plan/configuration work remains unstaged. No push, hosted CI trigger or release was authorized.
 
-**Open risks:** роли БД на хосте отсутствуют (O-1, O-2).
-
-**Workarounds/Deferred/Open questions:** ADR 0019–0024 переводит в `accepted` владелец после P0.4.
+**Sources of truth:** phases/P1/P1.6.md; phases/P1/P1.6.state.md; artifacts/P1.6/completion.md; artifacts/P1.6/validation.json; artifacts/P1.6/grok-review.md.

@@ -10,6 +10,7 @@ use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * A listable {@see ContentStore} whose {@see lastModified()} ALWAYS reports null —
@@ -78,7 +79,7 @@ final readonly class NullMtimeContentStore implements ContentStore, ListableCont
         $this->inner->delete($key, $disk);
     }
 
-    public function keyFor(string $scope, string $sha256): string
+    public function keyFor(BlobScope $scope, string $sha256): string
     {
         return $this->inner->keyFor($scope, $sha256);
     }

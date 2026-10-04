@@ -12,6 +12,7 @@ use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
 
@@ -49,6 +50,7 @@ class NodeDocumentVersion extends Model
 {
     use HasExtraData;
     use HasVaulterKeys;
+    use ResolvesVaulterConnection;
 
     public const UPDATED_AT = null;
 

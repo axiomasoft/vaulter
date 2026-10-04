@@ -2,15 +2,15 @@
 projection: decision-archive
 projection_version: v1
 source_scope: decisions/
-through: 2026-09-29/D06
-inputs_sha256: 39ddf9633571b5939d6c29dfa1fbefc120b25d71d73a26a6dcf2ecbbbb97805a
+through: 2026-10-03/D14
+inputs_sha256: 56d59ac433306b16ffb0a0f9b65d434666fdd5342ca4f655ae924996d205db42
 generated_by: task plan-views decisions
 -->
 
-# Архив решений
+# Solutions archive
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
-| ID | Date | Status | Items | Решение |
+| ID | Date | Status | Items | Solution |
 |:--|:--|:--|:--|:--|
-| — | — | — | — | Нет записей |
+| — | — | — | — | No entries |

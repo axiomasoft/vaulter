@@ -27,7 +27,7 @@ use Vaulter\Webhooks\OutboxRecorder;
  * seam, staging ONE slim v_outbox row per event (idempotent by event_id). The kernel
  * (Access/Sharing) events are staged by core's own RecordsOutbox; splitting the
  * subscriber by owning package is what lets core stop referencing Vaulter\Drive\Events\*
- * while the outbox keys/payloads stay byte-for-byte identical.
+ * while the outbox payloads retain their domain fields.
  *
  * Registered by VaulterDriveServiceProvider ONLY when the 'reliability' feature is on.
  * The Drive events are ShouldDispatchAfterCommit (after-commit boundary — same
@@ -59,7 +59,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::StorageCreated,
-            key: "storage.created:{$this->recorder->id($event->storage->getKey())}",
+            eventId: $event->eventId,
             panel: $event->storage->panel,
             topic: $this->recorder->id($event->storage->getKey()),
             payload: [
@@ -75,7 +75,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeCreated,
-            key: "node.created:{$this->recorder->id($event->node->getKey())}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -93,7 +93,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::FileUploaded,
-            key: "file.uploaded:{$this->recorder->id($event->version->getKey())}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -112,7 +112,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::VersionCreated,
-            key: "version.created:{$this->recorder->id($event->version->getKey())}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -130,8 +130,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeMoved,
-            // The move target+destination uniquely identify this move event.
-            key: "node.moved:{$this->recorder->id($event->node->getKey())}:{$this->recorder->id($event->toParentId)}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -148,7 +147,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeRenamed,
-            key: "node.renamed:{$this->recorder->id($event->node->getKey())}:{$event->toName}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -165,7 +164,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeCopied,
-            key: "node.copied:{$this->recorder->id($event->copy->getKey())}",
+            eventId: $event->eventId,
             panel: $event->copy->panel,
             topic: $this->recorder->id($event->copy->getKey()),
             payload: [
@@ -182,7 +181,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeTrashed,
-            key: "node.trashed:{$this->recorder->id($event->node->getKey())}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -198,7 +197,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeRestored,
-            key: "node.restored:{$this->recorder->id($event->node->getKey())}",
+            eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
             payload: [
@@ -221,7 +220,7 @@ final readonly class RecordsDriveOutbox
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: WebhookEvent::NodeForceDeleted,
-            key: "node.force_deleted:{$this->recorder->id($event->storageId)}:".md5(implode(',', array_map(Identity::stringify(...), $event->nodeIds))),
+            eventId: $event->eventId,
             panel: 'default',
             topic: $this->recorder->id($event->storageId),
             payload: [

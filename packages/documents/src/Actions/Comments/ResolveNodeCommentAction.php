@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Events\Comments\NodeCommentResolved;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
@@ -18,11 +18,12 @@ final readonly class ResolveNodeCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(NodeComment $comment, int|string|null $resolvedBy = null): NodeComment
     {
-        $resolved = DB::transaction(
+        $resolved = $this->database->transaction(
             fn (): NodeComment => $this->comments->resolve($comment, $resolvedBy),
         );
 

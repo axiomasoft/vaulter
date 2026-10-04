@@ -6,10 +6,10 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -38,6 +38,7 @@ final class OutboxRelay
     public function __construct(
         private readonly MetricsRecorder $metrics,
         private readonly TraceRecorder $tracer,
+        private readonly VaulterDatabase $database,
     ) {}
 
     /**
@@ -79,7 +80,7 @@ final class OutboxRelay
         /** @var class-string<Outbox> $outboxClass */
         $outboxClass = Config::outboxModel();
 
-        return DB::transaction(function () use ($outboxClass, $limit): Collection {
+        return $this->database->transaction(function () use ($outboxClass, $limit): Collection {
             /** @var Collection<int, Outbox> $messages */
             $messages = $outboxClass::query()
                 ->due()

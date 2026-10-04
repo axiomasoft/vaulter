@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-final class InvalidTipTapContentException extends VaulterException
+final class InvalidTipTapContentException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'invalid_document_content';
+
+    private const int HTTP_STATUS = 422;
+
     public static function missingDocNode(): self
     {
         return new self(
@@ -68,5 +73,23 @@ final class InvalidTipTapContentException extends VaulterException
             .'Fix: use an http(s)/mailto link. '
             .'Docs: '.self::docs('invalid-tiptap-content'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['reason' => 'invalid_tiptap'];
     }
 }

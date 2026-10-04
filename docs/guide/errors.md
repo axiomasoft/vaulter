@@ -4,6 +4,55 @@ Every Vaulter exception extends `Vaulter\Exceptions\VaulterException` and carrie
 message in the form `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
 points at the matching anchor below.
 
+## domain-http-errors
+
+Domain exceptions implement `Vaulter\Exceptions\Contracts\ProblemException`.
+For JSON requests or routes under the configured Vaulter prefix, the response is
+`{message, code}` with the following HTTP status. HTML requests to host routes and
+configuration/infrastructure exceptions use Laravel's normal exception handler.
+Codes are a stable public contract (AD29).
+
+| Code | HTTP | Exception |
+|:--|:--|:--|
+| `permission_denied` | 403 | `Vaulter\Exceptions\Access\PermissionDeniedException` |
+| `node_name_conflict` | 409 | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
+| `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\CycleException` |
+| `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\CrossStorageMoveException` |
+| `invalid_destination` | 409 | `Vaulter\Exceptions\Nodes\InvalidDestinationException` |
+| `node_not_trashed` | 409 | `Vaulter\Exceptions\Nodes\NodeNotTrashedException` |
+| `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\QuotaExceededException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\UploadConflictException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\StagedUploadMissingException` |
+| `upload_offset_mismatch` | 409 | `Vaulter\Drive\Exceptions\OffsetMismatchException` |
+| `upload_rejected` | 422 | `Vaulter\Drive\Exceptions\UploadContentMismatchException` |
+| `not_a_document` | 409 | `Vaulter\Documents\Exceptions\NotADocumentNodeException` |
+| `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
+| `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidTipTapContentException` |
+| `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException` |
+| `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
+| `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
+| `validation_failed` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
+| `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
+| `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
+| `unknown_profile` | 422 | `Vaulter\Exceptions\Panels\UnknownPanelException` |
+| `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
+| `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
+
+The response also preserves `errors.name` for name conflicts and invalid names, `errors.url` for blocked
+outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
+include `reason`: `mime_mismatch`, `invalid_tiptap` or `unsupported_content`.
+Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
+
+## node-not-found
+
+`NodeNotFoundException::forId()` — the node does not exist or is not visible to the
+current actor in the current drive/tenant. These cases use the same 404 response.
+
+## storage-not-found
+
+`StorageNotFoundException::forId()` — the storage does not exist or is not visible
+to the current actor. Use an accessible storage; the response is 404 `drive_not_found`.
+
 ## permission-denied
 
 `PermissionDeniedException` — either the legacy document path's authorization hook, or
@@ -15,6 +64,23 @@ the required level/scope on the node or an ancestor. The API maps this to `403`.
 `UnknownDocumentTypeException` — the supplied `type` is not in
 `config('vaulter.enabled_document_types')`. Enable it, or register a custom type via
 `Vaulter::registerDocumentType()`.
+
+## invalid-destination
+
+`InvalidDestinationException` — the destination of a create, upload, move, copy or
+document creation is not a folder, is in the trash, or (for documents) belongs to
+another drive; or the operation targets the drive root, which is never renamed, moved,
+copied, trashed or deleted; or the node is already in the trash. Pick a live folder of
+the same drive (no destination means the root). Drive operations report a folder of
+another drive as `cross_drive_operation`.
+
+## invalid-node-name
+
+`InvalidNodeNameException` — a node name must be non-empty after trimming, not `.` or
+`..`, free of `/`, `\` and control characters, and at most
+`vaulter.drive.name_rules.max_length` UTF-8 bytes (default 255). Names are stored in
+Unicode NFC when ext-intl is installed. Rendered as 422 `validation_failed` with
+`errors.name`.
 
 ## invalid-tiptap-content
 
@@ -83,6 +149,11 @@ subtree.
 `NodeNameConflictException` — a node with that name already exists under the same parent
 (or storage root). Pick a different name, or move/trash the existing sibling first.
 
+## node-not-trashed
+
+`NodeNotTrashedException` — restore and permanent delete only apply to a node in the
+trash. Trash the node first; a live node is never purged directly.
+
 ## not-a-document-node
 
 `NotADocumentNodeException` — document content/version operations require a
@@ -150,3 +221,8 @@ empty) body, or raise the limit.
 `BlockedOutboundUrlException` — the outbound webhook URL was refused: a disallowed
 scheme, a malformed URL, or a host resolving to a blocked network (SSRF protection).
 Register the endpoint with a public http(s) URL.
+
+## invalid-cursor
+
+`InvalidCursorException`: 422 `validation_failed`, with `errors.cursor`. Restart the
+listing without a cursor; the signature, listing scope or ordering did not match.

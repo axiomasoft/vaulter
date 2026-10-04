@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Uploads\UploadInitData;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -46,6 +46,7 @@ final readonly class UploadSessionManager
         private UploadSessionStoreRepository $sessions,
         private UploadSessionReadRepository $sessionsRead,
         private StagedUpload $staged,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -149,7 +150,7 @@ final readonly class UploadSessionManager
      */
     public function commitAssembled(UploadSession $session, callable $commit): mixed
     {
-        return DB::transaction(function () use ($session, $commit): mixed {
+        return $this->database->transaction(function () use ($session, $commit): mixed {
             $locked = $this->sessions->acquireForPatch($session);
 
             if ($locked->status !== UploadStatus::Assembled) {
@@ -230,7 +231,7 @@ final readonly class UploadSessionManager
      */
     private function reclaim(UploadSession $session, UploadStatus $terminal, callable $audit): UploadSession
     {
-        return DB::transaction(function () use ($session, $terminal, $audit): UploadSession {
+        return $this->database->transaction(function () use ($session, $terminal, $audit): UploadSession {
             $locked = $this->sessions->acquireForPatch($session);
 
             // Re-read under the lock: another actor may have reclaimed/committed it

@@ -1,0 +1,43 @@
+$ scripts/php84 --check
+{}
+php84 OK: 8.4.26
+actual exit: 0; expected: 0
+
+$ scripts/php84 --check
+{'PHP84_BIN': '/usr/bin/php8.3'}
+php84: expected PHP 8.4.x, got 8.3.33
+actual exit: 1; expected: 1
+
+$ scripts/php84 --check
+{}
+php84 OK: 8.4.26
+actual exit: 0; expected: 0
+
+$ scripts/db-preflight.sh pgsql
+{}
+db-preflight OK: pgsql vaulter_test (PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit)
+actual exit: 0; expected: 0
+
+$ scripts/db-preflight.sh pgsql
+{'DB_DATABASE': 'vaulter'}
+db-preflight: database must end with _test: vaulter
+actual exit: 1; expected: 1
+
+$ bash -n scripts/php84 scripts/db-preflight.sh
+{}
+actual exit: 0; expected: 0
+
+$ git status --porcelain composer.json packages/media/composer.json packages/core/composer.json packages/drive/composer.json packages/azgard/composer.json packages/filament/composer.json packages/documents/composer.json
+{}
+actual exit: 0; expected: 0
+
+$ git diff --check
+{}
+actual exit: 0; expected: 0
+
+E17: all required jobs accounted; 95 completed commands + 4 owner-accepted interrupted mutations (-15), all exit/class/log links verified. Native mutation scores for interrupted lanes UNKNOWN. Structural baseline criterion GREEN; mutation gates NOT claimed GREEN.
+
+$ python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan-lint.py /home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE
+{}
+plan-lint: OK (1 план(ов), 0 ошибок, 0 предупреждений)
+actual exit: 0; expected: 0

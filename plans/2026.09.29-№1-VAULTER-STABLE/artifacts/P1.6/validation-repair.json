@@ -1,0 +1,131 @@
+[
+  {
+    "label": "drive-phpstan",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-phpstan-final.log",
+    "seconds": 17.23
+  },
+  {
+    "label": "drive-pint",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-pint-final.log",
+    "seconds": 1.26
+  },
+  {
+    "label": "media-pint",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-pint-final.log",
+    "seconds": 0.46
+  },
+  {
+    "label": "media-staged-sqlite",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas/BlobCommitAtomicityTest.php"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-staged-sqlite-final.log",
+    "seconds": 0.58
+  },
+  {
+    "label": "drive-concurrency-1",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-1-final.log",
+    "seconds": 27.59
+  },
+  {
+    "label": "drive-concurrency-2",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-2-final.log",
+    "seconds": 26.46
+  },
+  {
+    "label": "drive-concurrency-3",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-3-final.log",
+    "seconds": 29.02
+  },
+  {
+    "label": "drive-concurrency-4",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-4-final.log",
+    "seconds": 25.28
+  },
+  {
+    "label": "drive-concurrency-5",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-5-final.log",
+    "seconds": 29.12
+  },
+  {
+    "label": "media-cas-pg",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-cas-pg-final.log",
+    "seconds": 131.06
+  }
+]

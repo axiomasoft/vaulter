@@ -1,0 +1,13 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ExactListingTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V09 reaches the 301st candidate across empty pages and hides den[39m[90m…[39m [90m1.49s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V22 enforces a child deny after the Gate role lane allows the wo[39m[90m…[39m [90m0.43s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses at most five Vaulter queries for 50 visible nodes including[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects forged signatures and a cursor from another parent[39m[90m       [39m [90m0.44s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the last inspected key when a full page ends inside an ove[39m[90m…[39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not skip equal sort values during descending trash paginati[39m[90m…[39m [90m0.42s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit scans shared candidates across storages without totals or denied[39m[90m…[39m [90m0.36s[39m  
+
+  [90mTests:[39m    [32;1m7 passed[39;22m[90m (106 assertions)[39m
+  [90mDuration:[39m [39m3.90s[39m
+

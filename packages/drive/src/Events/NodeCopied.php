@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Support\Str;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -14,9 +15,14 @@ use Vaulter\Models\Drive\Node;
  */
 final readonly class NodeCopied implements ShouldDispatchAfterCommit
 {
+    public string $eventId;
+
     public function __construct(
         public Node $source,
         public Node $copy,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

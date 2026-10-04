@@ -1,0 +1,10 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12/packages/documents
+source: documents.yml:documents / Static analysis (PHPStan max)
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/build/baseline-l12/packages/documents/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+
+exit: 0
+elapsed_seconds: 3.749

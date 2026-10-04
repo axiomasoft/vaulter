@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Exceptions;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -20,8 +21,12 @@ use Vaulter\Exceptions\VaulterException;
  * one fires when the lock WAS acquired but the client's declared offset disagrees
  * with the server's.
  */
-final class OffsetMismatchException extends VaulterException
+final class OffsetMismatchException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'upload_offset_mismatch';
+
+    private const int HTTP_STATUS = 409;
+
     public function __construct(
         private readonly int $serverOffset,
     ) {
@@ -32,23 +37,28 @@ final class OffsetMismatchException extends VaulterException
         );
     }
 
-    /**
-     * Surface the offset mismatch as tus 409 — the client must re-read HEAD and
-     * resume from the authoritative offset carried in this same response.
-     *
-     * Tus-Resumable MUST be present on every response, error paths included
-     * (C1/U1.1) — a strict tus client verifies the server's protocol version on
-     * each reply, not only on success.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(
-            ['message' => $this->getMessage()],
-            409,
-            [
-                'Upload-Offset' => (string) $this->serverOffset,
-                'Tus-Resumable' => '1.0.0',
-            ],
-        );
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    public function render(Request $request): JsonResponse|false
+    {
+        $response = parent::render($request);
+
+        if ($response === false) {
+            return false;
+        }
+
+        // A tus client needs the authoritative offset and protocol version to resume.
+        $response->headers->set('Upload-Offset', (string) $this->serverOffset);
+        $response->headers->set('Tus-Resumable', '1.0.0');
+
+        return $response;
     }
 }

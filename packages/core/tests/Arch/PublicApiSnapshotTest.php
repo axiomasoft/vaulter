@@ -2,7 +2,21 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\AccessResolver;
+use Vaulter\Access\AclFolder;
+use Vaulter\Access\ExactListing;
+use Vaulter\Data\Drive\NodePage;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Schema\HostKeyColumns;
+use Vaulter\Support\Config;
+use Vaulter\Support\VaulterSchema;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
@@ -270,7 +284,31 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     expect($contracts)->not->toBe([]);
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
+    foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
+        $blocks[] = vaulterSnapshotInterface($class);
+    }
+    $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
+    $blocks[] = vaulterSnapshotInterface(BlobScope::class);
+    $blocks[] = vaulterSnapshotInterface(Config::class);
+    $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
+    $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
+    $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);
+    $blocks[] = vaulterSnapshotInterface(ProblemException::class);
+    foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
+        $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
+    }
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
+
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Events') as $eventClass) {
+        $reflection = new ReflectionClass($eventClass);
+        $properties = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '')
+                .vaulterSnapshotType($property->getType()).' $'.$property->getName();
+        }
+        sort($properties);
+        $blocks[] = vaulterSnapshotInterface($eventClass)."\n".implode("\n", $properties);
+    }
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

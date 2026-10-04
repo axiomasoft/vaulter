@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "documents", "tiptap", "collaboration", "yjs", "versioning", "editor", "vaulter"],
-    "homepage": "https://github.com/axioma-studio/vaulter",
+    "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
@@ -12,12 +12,13 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/axioma-studio/vaulter/issues",
-        "source": "https://github.com/axioma-studio/vaulter"
+        "issues": "https://github.com/axiomasoft/vaulter/issues",
+        "source": "https://github.com/axiomasoft/vaulter"
     },
     "require": {
         "php": "^8.4",
         "axioma-studio/vaulter-core": "self.version",
+        "axioma-studio/vaulter-drive": "self.version",
         "spatie/laravel-package-tools": "^1.92",
         "symfony/html-sanitizer": "^6.4 || ^7.0 || ^8.0"
     },
@@ -25,11 +26,11 @@
         "firebase/php-jwt": "Required by the Hocuspocus collaboration driver to mint room JWTs (^7.0)."
     },
     "require-dev": {
-        "axioma-studio/vaulter-drive": "self.version",
         "axioma-studio/vaulter-media": "self.version",
         "firebase/php-jwt": "^7.0",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.13",
+        "laravel/sanctum": "^4.0",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",

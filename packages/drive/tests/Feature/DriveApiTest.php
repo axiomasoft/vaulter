@@ -97,8 +97,13 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     $this->postJson('api/vaulter/nodes/'.$copy.'/restore')->assertOk();
     expect(Node::query()->find($copy)->trashed_at)->toBeNull();
 
-    // forceDelete soft-deletes the rows (deleted_at) and frees the bytes; the
-    // physical blob is reclaimed later by GC (§2.10).
+    // forceDelete only purges from the trash: a live node is refused, a trashed one
+    // is soft-deleted (deleted_at) and frees the bytes; the physical blob is
+    // reclaimed later by GC (§2.10).
+    $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_not_trashed');
+    $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
     expect(Node::query()->find($copy))->toBeNull()
         ->and(Node::withTrashed()->find($copy)?->deleted_at)->not->toBeNull();
@@ -152,14 +157,15 @@ it('rejects an invalid name with 422', function (): void {
         ->assertJsonValidationErrors('name');
 });
 
-it('surfaces a sibling-name conflict as a clean 422', function (): void {
+it('surfaces a sibling-name conflict as a clean 409', function (): void {
     $storage = driveStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
 
     $this->postJson($base, ['name' => 'Twin'])->assertCreated();
 
     $this->postJson($base, ['name' => 'Twin'])
-        ->assertStatus(422)
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_name_conflict')
         ->assertJsonValidationErrors('name');
 });
 

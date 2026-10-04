@@ -1,0 +1,31 @@
+[
+  {
+    "check": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0
+  },
+  {
+    "check": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "exit_code": 0
+  },
+  {
+    "check": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0
+  }
+]

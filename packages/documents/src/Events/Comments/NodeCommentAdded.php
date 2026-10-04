@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Events\Comments;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Support\Str;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
@@ -19,9 +20,14 @@ use Vaulter\Support\Identity;
  */
 final readonly class NodeCommentAdded implements ShouldBroadcast
 {
+    public string $eventId;
+
     public function __construct(
         public NodeComment $comment,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 
     /**
      * @return array<int, Channel>

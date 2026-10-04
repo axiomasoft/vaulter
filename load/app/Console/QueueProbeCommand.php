@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Load\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
-use Throwable;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Throwable;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;

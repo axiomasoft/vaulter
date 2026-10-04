@@ -1,0 +1,11 @@
+--- plans/2026.09.29-№1-VAULTER-STABLE/phases/P1/P1.5.md
++++ plans/2026.09.29-№1-VAULTER-STABLE/phases/P1/P1.5.md
+@@ -81,7 +81,7 @@
+ удаление drive и GC его рёбер (P4.6); переименования прочих команд (P7.2).
+ 
+ **Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.5-opus.md`;
+-`audits/2026-09-29-stable-audit/opus/02-decisions.md` (D20); `audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` (§7);
++`audits/2026-09-29-stable-audit/opus/02-decisions.md` (OPUS AD20); `audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` (§7);
+ `packages/media/src/Cas/{BlobStore,BlobReconciler,BlobGarbageCollector,Sha256ContentStore}.php`; `packages/core/src/Repositories/Cas/BlobStoreRepository.php`;
+ `packages/core/src/Database/VaulterDatabase.php` (producer: P1.1); `packages/core/tests/Upgrade/LoadsV02Fixture.php` (producer: P1.7)
+ 

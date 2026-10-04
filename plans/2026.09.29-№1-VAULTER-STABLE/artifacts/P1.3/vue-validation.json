@@ -1,0 +1,25 @@
+{
+  "package": "vue",
+  "tests": 113,
+  "files": 11,
+  "commands": [
+    {
+      "command": "pnpm test",
+      "exit_code": 0,
+      "log": "vue-test.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "log": "vue-typecheck.log"
+    },
+    {
+      "command": "pnpm build",
+      "exit_code": 0,
+      "log": "vue-build.log"
+    }
+  ],
+  "candidate_equivalence": "vue-applied-proof.json",
+  "owner_scope_grant": "owner-scope-extension.json",
+  "negative_control": "vue-negative-result.json"
+}

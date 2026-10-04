@@ -1,0 +1,14 @@
+{
+  "php": "8.4.26",
+  "test_databases": [
+    "sqlite::memory:",
+    "pgsql:127.0.0.1:5432/vaulter_test"
+  ],
+  "commands_use": "scripts/php84",
+  "locks": {
+    "composer.lock": "6b25bd97aabc0b9d9f231c5d28114bbd61031a168faf274e61591cf3bfadfa20",
+    "packages/drive/composer.lock": "f68259cb631d1cd8eff916493169250b216d2c99052be68c1cfd085d2f4aa4fb",
+    "packages/documents/composer.lock": "b8bcc6062cdd457bbc14f12b5c314d0b132a7d4bc7c91c7e9bfcd326e8cd44e6",
+    "packages/filament/composer.lock": "e57bfbbdd8ce82bd6b138082ed0da1aac37ad6c3103ad7c572144596a5780d5a"
+  }
+}

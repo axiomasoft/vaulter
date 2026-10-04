@@ -1,0 +1,111 @@
+{
+  "schema_version": "plan-terminal-reconciliation/v1",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P1.7",
+  "terminal": {
+    "line": 53,
+    "sha256": "sha256:643a48f2274156554c61cf8af034cd8beea0d53cc0e3d838b1a43ad1c86cb1e1",
+    "run_id": "15f6cba310588a4a6e056a4f6f2ee59bef0acfc13f62ba0c4342c24c20cd2a02",
+    "result": "closed-deviations",
+    "command": "plan-run",
+    "batch_receipt": {
+      "batch_id": "solo",
+      "completed_prefix": [
+        "P1.7"
+      ],
+      "handoff_digest": "8143e53aa3da501ea91626d885eb4ae83ed1978b5947cbd5cb6d87f0b37dd66c",
+      "invocation_digest": "ebf5a51fac44a7e0dc811314a38caa4ab2ae15dda957e4c7f92533faa082a469",
+      "membership": [
+        "P1.7"
+      ],
+      "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "9eada71c44147cdd7c5e1de6abcbc41d44d80ec50324084aec0dffde7c6f7f10",
+      "stop_disposition": "continue"
+    }
+  },
+  "reconciled_items": [
+    "P1.7"
+  ],
+  "next_bundle": null,
+  "receipt": {
+    "schema_version": "terminal-delivery-receipt/v1",
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "subject": "P1.7",
+    "status": "🟠 Done with deviations",
+    "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2",
+    "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | solo |\n| Model class | frontier |\n| Model | gpt-6-astra |\n| Effort | high |\n| Context | continue-root |\n| Essence | P1.2: tree invariants, locking and root repair. |\n\n```session-continuity-decision/v1\n{\"evidence\": [\"batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\", \"loaded-inputs:reusable\", \"cold-start-cost:0\", \"lifecycle:scope-complete\", \"checkpoint:artifacts/P1.7/completion.md\"], \"outcome\": \"continue-root\", \"reason\": \"authorized-scope-complete\", \"runnable\": true, \"schema_version\": \"session-continuity-decision/v1\"}\n```",
+    "route": {
+      "batch": "solo",
+      "model": "gpt-6-astra",
+      "thinking": null,
+      "context": "continue-root",
+      "command": null,
+      "continuity": {
+        "outcome": "continue-root",
+        "reason": "authorized-scope-complete",
+        "evidence": [
+          "batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "loaded-inputs:reusable",
+          "cold-start-cost:0",
+          "lifecycle:scope-complete",
+          "checkpoint:artifacts/P1.7/completion.md"
+        ],
+        "runnable": true,
+        "schema_version": "session-continuity-decision/v1"
+      }
+    },
+    "continuity": {
+      "outcome": "continue-root",
+      "reason": "authorized-scope-complete",
+      "evidence": [
+        "batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "lifecycle:scope-complete",
+        "checkpoint:artifacts/P1.7/completion.md"
+      ],
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    },
+    "rationale": {
+      "remaining": "P1.2, P1.3, P1.5, P1.6. P1.2 is a recommendation outside this invocation.",
+      "open_risks": "MySQL full-install error 1215 remains owned by P8.1. Conditional SQLite skips/risky retained. Prior owner dirty plan/configuration carriers remain unstaged. No push or release."
+    },
+    "commit_sha": "f04f374490c65dabb3a3b83a440642157d68f0fd",
+    "journal": {
+      "line": 53,
+      "sha256": "sha256:643a48f2274156554c61cf8af034cd8beea0d53cc0e3d838b1a43ad1c86cb1e1",
+      "run_id": "15f6cba310588a4a6e056a4f6f2ee59bef0acfc13f62ba0c4342c24c20cd2a02",
+      "result": "closed-deviations",
+      "command": "plan-run",
+      "batch_receipt": {
+        "batch_id": "solo",
+        "completed_prefix": [
+          "P1.7"
+        ],
+        "handoff_digest": "8143e53aa3da501ea91626d885eb4ae83ed1978b5947cbd5cb6d87f0b37dd66c",
+        "invocation_digest": "ebf5a51fac44a7e0dc811314a38caa4ab2ae15dda957e4c7f92533faa082a469",
+        "membership": [
+          "P1.7"
+        ],
+        "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+        "schema_version": "batch-receipt/v1",
+        "spec_digest": "9eada71c44147cdd7c5e1de6abcbc41d44d80ec50324084aec0dffde7c6f7f10",
+        "stop_disposition": "continue"
+      }
+    },
+    "adapter_attestation": {
+      "package": "task",
+      "version": "0.27.0",
+      "command_id": "task:plan-run",
+      "canonical_command_sha256": "sha256:21a20c3b12eb6966dcb6139dc24fa9ab321f52e80cb51ca2820f46618954dd1f"
+    },
+    "digests": {
+      "plan": "sha256:84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+      "handoff": "sha256:8d474429c20dbd3baa74174c990b589e0fe992468fa13eac9ece17d33bb7f31f",
+      "state": "sha256:e4bb528e264258610ccaa67d07ea36050305675f4720de9d80c52c5071f85a3d",
+      "closure": null
+    }
+  }
+}

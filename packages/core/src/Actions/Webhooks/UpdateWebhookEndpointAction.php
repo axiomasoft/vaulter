@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
-use Illuminate\Support\Facades\DB;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointData;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
@@ -21,11 +21,12 @@ final readonly class UpdateWebhookEndpointAction
 {
     public function __construct(
         private WebhookEndpointStoreRepository $endpoints,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(WebhookEndpoint $endpoint, UpdateWebhookEndpointData $data): WebhookEndpoint
     {
-        return DB::transaction(fn (): WebhookEndpoint => $this->endpoints->update(
+        return $this->database->transaction(fn (): WebhookEndpoint => $this->endpoints->update(
             endpoint: $endpoint,
             url: $data->url,
             events: $data->events,

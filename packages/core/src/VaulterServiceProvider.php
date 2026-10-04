@@ -7,13 +7,13 @@ namespace Vaulter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -32,10 +32,12 @@ use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Engines\NodeHandlerResolver;
+use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Observability\NullMetricsRecorder;
@@ -73,12 +75,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub('axioma-studio/vaulter');
+                    ->askToStarRepoOnGitHub('axiomasoft/vaulter');
             });
     }
 
     public function packageRegistered(): void
     {
+        $this->app->singleton(VaulterDatabase::class);
         $this->app->singleton(IdStrategyResolver::class);
 
         // Container-owned, scoped (F-P2.1-05 / P4.6 review): the enum-attribute
@@ -273,7 +276,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
-        $this->registerRouteBindings();
+        $this->registerResourceMiddlewarePriority($this->app->make(Kernel::class));
         $this->registerPolicies();
         $this->registerActivitySubscriber();
         $this->registerOutboxSubscriber();
@@ -294,6 +297,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
         // ADR and InvalidPanelException's own docblock already claimed. class_exists/
         // is_a() checks only — no I/O, safe under config:cache (service-provider.md).
         $this->app->make(PanelRegistry::class);
+    }
+
+    private function registerResourceMiddlewarePriority(Kernel $kernel): void
+    {
+        if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
+            $kernel->addToMiddlewarePriorityBefore(SubstituteBindings::class, ResolveVaulterRouteParameters::class);
+        }
     }
 
     /**
@@ -383,27 +393,5 @@ final class VaulterServiceProvider extends PackageServiceProvider
         if (Config::webhookEndpointModel() !== WebhookEndpoint::class) {
             Gate::policy(Config::webhookEndpointModel(), WebhookEndpointPolicy::class);
         }
-    }
-
-    /**
-     * Bind the Drive REST route parameters {storage} and {node} to the SWAPPABLE
-     * models (config('vaulter.models.*')) so the binding keeps resolving when a
-     * host points the config at a subclass. A miss 404s (findOrFail). Node uses
-     * the Drive trash (a trashed_at column), not the SoftDeletes deleted_at, so a
-     * trashed node still resolves by default — restore/force/download need it.
-     */
-    private function registerRouteBindings(): void
-    {
-        Route::bind('storage', static function (string $value): Model {
-            $model = Config::storageModel();
-
-            return $model::query()->findOrFail($value);
-        });
-
-        Route::bind('node', static function (string $value): Model {
-            $model = Config::nodeModel();
-
-            return $model::query()->findOrFail($value);
-        });
     }
 }

@@ -1,0 +1,7 @@
+{
+  "current_model_id": "grok-4.7",
+  "reasoning_effort": "high",
+  "context_window": 500000,
+  "head_commit": "9ac0d8ee59197003f1c4fbfa24cf7e8feab7e2f0",
+  "created_at": "2026-10-04T13:10:24.181106312Z"
+}

@@ -1,0 +1,41 @@
+{
+  "actor": "codex/gpt-6",
+  "attempt": 1,
+  "batch_receipt": {
+    "batch_id": "solo",
+    "completed_prefix": [
+      "P1.3"
+    ],
+    "handoff_digest": "4cd2501fa6c239e37bc4b937f77a88edfda4ba2f54e82f51751fff464d827024",
+    "invocation_digest": "3ca120e51de28139f27d48c00b9e764383733968e04a31291d101a2e33fae6bf",
+    "membership": [
+      "P1.3"
+    ],
+    "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+    "schema_version": "batch-receipt/v1",
+    "spec_digest": "724ceb7e9382fbb6c2e590cceeacf5c89af28d54db0f4d3a8fc80b5cbcdbbc00",
+    "stop_disposition": "continue"
+  },
+  "command": "plan-run",
+  "cost_usd": null,
+  "decision": {
+    "signal_class": "validation",
+    "scope_class": "item",
+    "action": "record-write-site",
+    "recovered": true,
+    "terminal": false
+  },
+  "duration_ms": null,
+  "friction": [
+    "local-repair"
+  ],
+  "item_id": "P1.3",
+  "note": "write-site: pre_mutation: allow · pre_final: allow",
+  "num_turns": null,
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "result": "no-op",
+  "run_id": "988204d84b3f89bf3149a29dac77ce9c9271a785b100e5032f3889c6111d6665",
+  "session_id": "01a10664-59d2-7a21-8a61-26c736e9840f",
+  "ts": "2026-10-04T11:24:32Z",
+  "fingerprint": "b21889ec5a62465645badd4df273c1f9705d94a905742726b807c7750de28b00"
+}

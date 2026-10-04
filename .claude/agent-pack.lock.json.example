@@ -2,7 +2,7 @@
   "schema": 1,
   "packs": {
     "role-maintainer": {
-      "version": "0.2.2",
+      "version": "0.2.3",
       "source": "harness:configs/claude-code/agent-packs/role-maintainer",
       "answers": {
         "PACK_PREFIX": "vaulter"
@@ -12,7 +12,7 @@
           "src": "agents/issue-triager.md",
           "target": ".claude/agents/vaulter-issue-triager.md",
           "kind": "template",
-          "base_sha256": "9bb556fbdd5b1c3a427ea65fd28cd7746ecc3f6d8eeee45d00c9baadb411e622",
+          "base_sha256": "a95c97e00f32d23ebe19e202edbc4521e5b123f4f18b56a5d80304171e45dc4d",
           "local_modified": false,
           "user_owned": false
         },
@@ -20,7 +20,7 @@
           "src": "agents/contribution-reviewer.md",
           "target": ".claude/agents/vaulter-contribution-reviewer.md",
           "kind": "template",
-          "base_sha256": "ef27de1c660c92685067d7937e86f9f508a836e186edd3cf16c7c1483e9a4a22",
+          "base_sha256": "0d3d9bd17f44e56ec670b112cf0f6814bdd750cb6c1b55be15693984dcb72d6b",
           "local_modified": false,
           "user_owned": false
         },
@@ -28,7 +28,7 @@
           "src": "agents/release-conductor.md",
           "target": ".claude/agents/vaulter-release-conductor.md",
           "kind": "template",
-          "base_sha256": "b989c80fed914362e27f4840d77f29ae420c6fd2ef5cf820ea6a5a6a47543097",
+          "base_sha256": "68273b581148e46753fb1112557a10a88615307ca1de158293b20db7eb09af1a",
           "local_modified": false,
           "user_owned": false
         }

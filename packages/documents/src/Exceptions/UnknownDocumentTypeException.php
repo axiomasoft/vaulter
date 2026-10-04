@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-final class UnknownDocumentTypeException extends VaulterException
+final class UnknownDocumentTypeException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'unknown_document_type';
+
+    private const int HTTP_STATUS = 422;
+
     /**
      * @param list<string> $allowed
      */
@@ -22,5 +27,15 @@ final class UnknownDocumentTypeException extends VaulterException
             .'via Vaulter::registerDocumentType(). '
             .'Docs: '.self::docs('unknown-document-type'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

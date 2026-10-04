@@ -8,7 +8,6 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Engines\Handlers\DownloadOnlyHandler;
 use Vaulter\Engines\Handlers\PreviewHandler;
-use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -35,6 +34,7 @@ use Vaulter\Webhooks\DefaultOutboundUrlGuard;
  * Publish: php artisan vendor:publish --tag=vaulter-config
  */
 return [
+    'listing' => ['scan_budget' => 1000],
 
     /*
     |--------------------------------------------------------------------------
@@ -132,6 +132,8 @@ return [
     */
     'ids' => [
         'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint (D9)
+        // Keys owned by the host are independent of Vaulter entity IDs.
+        'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string|bigint|uuid|ulid
         'strategies' => [
             'bigint' => AutoIncrementIds::class,
             'ulid' => UlidIds::class,
@@ -709,9 +711,14 @@ return [
     |--------------------------------------------------------------------------
     */
     'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-    'middleware' => [
-        'api',
-        RecordVaulterRequestMetrics::class,
+    // Keep actor authentication separate from bearer shares and signed hub calls.
+    // Request metrics are appended automatically to each stack.
+    'routes' => [
+        'middleware' => [
+            'authenticated' => ['api', 'auth:sanctum'],
+            'public' => ['api'],
+            'hub' => ['api'],
+        ],
     ],
 
     /*

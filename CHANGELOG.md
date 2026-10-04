@@ -7,12 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `BlobStore::commitStaged()` for quota-first uploads and reusable staging across SQL retries (AD21).
+- Lossless `BlobScope`, `scope_key`, upgrade migration №7 and resumable
+  `vaulter:blobs:repair-scopes --dry-run|--execute` (AD20).
+- Batch ACL evaluation (`AccessResolver::evaluateMany`, `AclFolder`), `NodePage`,
+  `ExactListing`, signed query-bound cursors and `listing.scan_budget` (AD12).
+- Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
+  and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
+- `InvalidDestinationException` (409 `invalid_destination`), `NodeNotTrashedException`
+  (409 `node_not_trashed`), `InvalidNodeNameException` (422 `validation_failed`) and
+  `Vaulter\Support\NodeName::normalize()` for tree and name invariants (AD13).
+- `VaulterDatabase::lockTreeShared()`: the shared mode of the drive tree lock, taken by
+  creates, uploads, copies and renames (AD13, D21).
+
 ### Changed
+- CAS commit and content-key contracts take `BlobScope`; UUID/ULID scopes use
+  NULL-free uniqueness and the same `cas:{scope_key}:{sha256}` lock in commit, GC
+  and reconcile. Existing blob paths and disks remain authoritative (AD20).
+- Children, search, trash, shared, folder children and Filament now display only nodes
+  with effective View for every driver. Shared uses cursors instead of page/total;
+  REST listings omit totals and reuse batch ACL results for abilities (AD12).
+- `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
+- HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
+  stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides
+  only the authenticated stack, and metrics are appended to all stacks (AD31).
+- Domain events carry a readonly `eventId` ULID with an optional final constructor
+  argument for replay. Webhook `event_id` now identifies an event occurrence rather
+  than its resulting state; retries retain the same id (AD22).
+- Domain HTTP errors include a stable `code` through `ProblemException` (AD29).
+  Name conflicts now return 409 `node_name_conflict` (previously 422); assembled
+  upload MIME mismatches return 422 `upload_rejected` with `reason: mime_mismatch`
+  (previously 415). Existing validation fields and tus headers are preserved.
 - `vaulter-azgard` now follows the public AzGuard 0.3 line and its widened
   `BackedEnum` panel/role contracts; CI checks out the latest public AzGuard commit
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Atomic storage quota reservations for uploads and subtree copies (E2, AD21),
+  fresh head-size deltas, file revision counters under `FOR UPDATE`, canonical
+  drive/node/file/quota/CAS lock order and three-attempt transaction retries.
+- A node created with no parent (notably documents) is placed under the drive root
+  instead of becoming a hidden second root; upgrade migration №6 moves existing second
+  roots under their root (renaming clashes ` (legacy N)`, logged as `node.moved`) and
+  adds a unique one-root-per-drive index. The repair is irreversible (N04, AD13).
+- Create, upload, move, copy and restore only target live folders of the same drive,
+  checked under row locks; the root can no longer be renamed, moved, copied, trashed
+  or deleted; moves take the drive tree lock so concurrent moves cannot form a cycle;
+  `forceDelete` only purges trashed nodes and node names are normalized (N05, AD13).
+- Host owner, subject, author, tenant and actor columns now use `ids.host_keys`
+  instead of Vaulter's entity-ID strategy. Upgrade migration №3 preserves existing
+  values and restores the strategy's types on rollback (N02, AD25).
+- Repository metadata, exception documentation, collaboration errors and install
+  star prompt now point to `axiomasoft/vaulter`; package vendor names stay
+  `axioma-studio/vaulter-*` (N20/E6, AD02).
+- Filament Move filters destinations and checks workspace creation and destination
+  Create access at action time, notifying the actor on denial (N14).
+- Vaulter resource resolution no longer registers global `node`/`storage` bindings
+  that interfere with host routes. Missing resources return their 404 problem code (N10, AD31).
+- Outbox deduplication no longer loses repeated rename or trash/restore operations
+  returning to the same state; only a replay of the same event id is deduplicated (E8).
+- All domain exceptions now return their documented 4xx status instead of HTTP 500
+  on JSON requests and Vaulter routes (N11, AD29); configuration and infrastructure
+  errors retain Laravel's default handling.
+- Vaulter transactions, CAS/tree locks, raw queries and after-commit callbacks now use
+  `vaulter.connection` through the new `Vaulter\Database\VaulterDatabase` singleton,
+  preserving atomicity when the host default connection differs (N01, AD25).
+  UploadSession, UploadPart, NodeComment and NodeDocumentVersion also resolve that
+  connection so their writes cannot autocommit outside those transactions.
 - Release workflows now keep the root npm lockfile, test the npm workspace before
   publishing, pass the PHP split token through the action's supported environment,
   reject tags whose exact SHA lacks the ordinary CI checks, and publish the GHCR

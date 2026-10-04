@@ -1,0 +1,37 @@
+{
+  "adapter_attestation": null,
+  "commit_sha": "a572121a84ac95e86f767a2f104d896bd4b9a017",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:8dd1f738166f715da07e8abffc34a01f6eb0bc08e9c955489174abb9bde49c69",
+    "plan": "sha256:b37e9fbfe3a4ee3b2af52bc4a01a0220c15b918c92f0c62a7e21baa2ca3c183d",
+    "state": null
+  },
+  "journal": null,
+  "next_exact": "audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "rationale": {
+    "open_risks": "Независимый GREEN нового дизайна ещё не получен. Роли БД по D04",
+    "remaining": "Независимый design audit текущего fingerprint GREEN → owner gates"
+  },
+  "recommendation": "**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | n/a |\n| Model class | implementation |\n| Effort | high |\n| Capabilities | — |\n| Context | continue-root |\n| Суть | Независимому reviewer проверить новый fingerprint после исправления DA01–DA06. Sol/high выбран владельцем; автор исправлений не выдаёт собственному дизайну независимый GREEN. |\n\n**Native command:**\n\n```text\n$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE design\n```",
+  "route": {
+    "batch": "n/a",
+    "command": null,
+    "context": "continue-root",
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "handoff-recommendation-receipt/v1",
+  "status": "handoff-persisted",
+  "subject": "P0"
+}

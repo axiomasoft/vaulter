@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
 use Vaulter\Tests\BrokenPanelBootTestCase;
+use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
@@ -73,6 +75,13 @@ uses(BrokenPanelBootTestCase::class)->in(
 // tests) moved to the vaulter-documents package (P2 #5 / ADR-0015, D2); they run under
 // that package's own Pest suite.
 
+// The ForkRace harness (P0.2): forked children race on their OWN PostgreSQL
+// connections, so fixtures must be committed — DatabaseMigrations, not
+// RefreshDatabase (its wrapping transaction is invisible to another connection).
+uses(TestCase::class, DatabaseMigrations::class)->in(
+    $core.'/Concurrency',
+);
+
 uses(UlidTestCase::class, RefreshDatabase::class)->in(
     $core.'/Ulid',
 );
@@ -102,3 +111,8 @@ uses(LoadTestCase::class)->in(
     dirname(__DIR__).'/load/tests/Observability',
     dirname(__DIR__).'/load/tests/Feature',
 );
+
+// Upgrade tests own the fixture schema; no wrapping transaction or automatic migrations.
+uses(TestCase::class)->in($core.'/Upgrade');
+
+uses(HostKeyMysqlTestCase::class)->in($core.'/HostKeyMysql');

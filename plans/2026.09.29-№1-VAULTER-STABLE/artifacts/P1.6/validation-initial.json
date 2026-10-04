@@ -1,0 +1,397 @@
+[
+  {
+    "label": "core-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 0.52,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/core-pint.log"
+  },
+  {
+    "label": "core-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G",
+      "-c",
+      "phpstan.neon"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 4.34,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/core-phpstan.log"
+  },
+  {
+    "label": "core-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 1,
+    "seconds": 106.22,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/core-pest.log"
+  },
+  {
+    "label": "drive-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 1.25,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-pint.log"
+  },
+  {
+    "label": "drive-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 1,
+    "seconds": 4.29,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-phpstan.log"
+  },
+  {
+    "label": "drive-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 43.19,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-pest.log"
+  },
+  {
+    "label": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 0.23,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/documents-pint.log"
+  },
+  {
+    "label": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 3.78,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/documents-phpstan.log"
+  },
+  {
+    "label": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 21.43,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/documents-pest.log"
+  },
+  {
+    "label": "media-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 0.85,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-pint.log"
+  },
+  {
+    "label": "media-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 4.93,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-phpstan.log"
+  },
+  {
+    "label": "media-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 27.63,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-pest.log"
+  },
+  {
+    "label": "filament-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 0.19,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/filament-pint.log"
+  },
+  {
+    "label": "filament-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 4.23,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/filament-phpstan.log"
+  },
+  {
+    "label": "filament-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 12.26,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/filament-pest.log"
+  },
+  {
+    "label": "drive-concurrency-1",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 0,
+    "seconds": 18.22,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-1.log"
+  },
+  {
+    "label": "drive-concurrency-2",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 0,
+    "seconds": 23.09,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-2.log"
+  },
+  {
+    "label": "drive-concurrency-3",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 0,
+    "seconds": 18.7,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-3.log"
+  },
+  {
+    "label": "drive-concurrency-4",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 0,
+    "seconds": 18.59,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-4.log"
+  },
+  {
+    "label": "drive-concurrency-5",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 0,
+    "seconds": 20.27,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-5.log"
+  },
+  {
+    "label": "media-cas-pg",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "pgsql",
+      "DB_DATABASE": "vaulter_test"
+    },
+    "exit": 1,
+    "seconds": 108.32,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/media-cas-pg.log"
+  },
+  {
+    "label": "quota-feature",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Feature/QuotaReserveTest.php"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "exit": 0,
+    "seconds": 0.72,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/quota-feature.log"
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "mutation": "restore index candidate cursor pagination",
+  "exit_code": 1,
+  "expected": "V09 and V22 fail"
+}

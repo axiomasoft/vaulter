@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The dedup scope (D18 / H.3) decides what shares one physical object: global
@@ -21,27 +22,27 @@ it('global: одинаковые байты в разных тенантах →
     config()->set('vaulter.dedup.scope', 'global');
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 1);
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 2);
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 2, 'unused'));
 
     expect($b->getKey())->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(1)
-        ->and($a->storage_key)->toStartWith('global/');
+        ->and($a->storage_key)->toStartWith('g/');
 });
 
 it('tenant: одинаковые байты в разных тенантах → ДВА блоба, два объекта', function (): void {
     config()->set('vaulter.dedup.scope', 'tenant');
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 1);
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 2);
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 2, 'unused'));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(2)
         ->and($a->sha256)->toBe($b->sha256)
         ->and($a->storage_key)->not->toBe($b->storage_key)
-        ->and($a->storage_key)->toStartWith('t1/')
-        ->and($b->storage_key)->toStartWith('t2/')
+        ->and($a->storage_key)->toStartWith('t-1/')
+        ->and($b->storage_key)->toStartWith('t-2/')
         ->and(Storage::disk('local')->allFiles())->toHaveCount(2);
 });
 
@@ -49,13 +50,13 @@ it('storage: одинаковые байты в разных хранилища�
     config()->set('vaulter.dedup.scope', 'storage');
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), storageId: 10);
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), storageId: 20);
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), null, (string) 10));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), null, (string) 20));
 
     expect($b->getKey())->not->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(2)
-        ->and($a->storage_key)->toStartWith('s10/')
-        ->and($b->storage_key)->toStartWith('s20/')
+        ->and($a->storage_key)->toStartWith('d-10/')
+        ->and($b->storage_key)->toStartWith('d-20/')
         ->and($a->dedup_scope)->toBe('storage');
 });
 
@@ -65,8 +66,8 @@ it('storage-scope ключит на storage_id, не на tenant_id', function (
 
     // Same storage, different tenants → still ONE blob (tenant is irrelevant in
     // storage scope).
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 1, storageId: 10);
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), tenantId: 2, storageId: 10);
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, (string) 10));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 2, (string) 10));
 
     expect($b->getKey())->toBe($a->getKey())
         ->and(Blob::query()->count())->toBe(1);

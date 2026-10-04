@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Documents;
 
 use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -13,8 +14,12 @@ use Vaulter\Exceptions\VaulterException;
  * host registering its own exporter through config('vaulter.exporters') must be able to
  * throw it without pulling in vaulter-documents.
  */
-final class UnsupportedDocumentContentException extends VaulterException
+final class UnsupportedDocumentContentException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'invalid_document_content';
+
+    private const int HTTP_STATUS = 422;
+
     public static function forExporter(string $exporterFormat, string $expected, string $actual): self
     {
         return new self(
@@ -24,5 +29,23 @@ final class UnsupportedDocumentContentException extends VaulterException
             .'this exporter (config(vaulter.exporters)). '
             .'Docs: '.self::docs('unsupported-document-content'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['reason' => 'unsupported_content'];
     }
 }

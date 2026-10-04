@@ -22,7 +22,7 @@ beforeEach(function (): void {
 
 function r07ErrorDocs(string $anchor): string
 {
-    return 'https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+    return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
 }
 
 it('R07Exception keeps UploadConflictException forSession message and 409 render body', function (): void {
@@ -35,9 +35,9 @@ it('R07Exception keeps UploadConflictException forSession message and 409 render
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/'));
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
     expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()]);
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
 });
 
 it('R07Exception keeps UploadConflictException forClosedSession message and 409 render body', function (): void {
@@ -50,9 +50,9 @@ it('R07Exception keeps UploadConflictException forClosedSession message and 409 
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/'));
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
     expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()]);
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
 });
 
 it('R07Exception keeps CycleException forMove message', function (): void {
@@ -82,9 +82,9 @@ it('R07Exception keeps QuotaExceededException forStorage message and 413 render 
         'Docs: '.r07ErrorDocs('quota-exceeded'),
     );
 
-    $response = $exception->render(Request::create('/'));
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
     expect($response->getStatusCode())->toBe(413)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()]);
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'quota_exceeded']);
 });
 
 it('R07Exception keeps StagedUploadMissingException forSession message and 409 render body', function (): void {
@@ -99,12 +99,12 @@ it('R07Exception keeps StagedUploadMissingException forSession message and 409 r
         'Docs: '.r07ErrorDocs('staged-upload-missing'),
     );
 
-    $response = $exception->render(Request::create('/'));
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
     expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()]);
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
 });
 
-it('R07Exception keeps UploadContentMismatchException forSession message and 415 render body', function (): void {
+it('R07Exception keeps UploadContentMismatchException forSession message and 422 render body', function (): void {
     $uploadId = '0193a5f0-9a3b-7c2d-8e4f-0000000000dd';
     $declaredMime = 'image/png';
     $exception = UploadContentMismatchException::forSession($uploadId, $declaredMime);
@@ -116,9 +116,9 @@ it('R07Exception keeps UploadContentMismatchException forSession message and 415
         'Docs: '.r07ErrorDocs('upload-content-mismatch'),
     );
 
-    $response = $exception->render(Request::create('/'));
-    expect($response->getStatusCode())->toBe(415)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()]);
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
+    expect($response->getStatusCode())->toBe(422)
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_rejected', 'reason' => 'mime_mismatch']);
 });
 
 it('R07Exception keeps CrossStorageMoveException between message', function (): void {
@@ -143,9 +143,9 @@ it('R07Exception keeps OffsetMismatchException message render headers and JSON a
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/'));
+    $response = $exception->render(Request::create('/api/vaulter/__exception'));
     expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage()])
+        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_offset_mismatch'])
         ->and($response->headers->get('Upload-Offset'))->toBe('5')
         ->and($response->headers->get('Tus-Resumable'))->toBe('1.0.0');
 });

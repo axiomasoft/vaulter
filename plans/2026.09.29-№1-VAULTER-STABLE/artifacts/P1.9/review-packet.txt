@@ -1,0 +1,760 @@
+Fresh independent read-only security review of P1.9. Use ONLY this complete inline packet, no tool calls (local telemetry blocks tools). Return GREEN or concrete findings with file:line and demonstrated impact. Do not repair. Focus authentication isolation, binding order, 404 codes, legacy fallback, metrics and tests. Full item specification follows.
+
+### P1.9 — Стеки middleware и отказ от глобальных биндингов
+
+**Intent:** Защищённые маршруты, публичные share-ссылки и server-to-server колбэки хаба получают три независимых стека
+middleware, а параметры `{storage}`/`{node}` резолвятся только внутри маршрутов Vaulter — хост может добавить
+`auth:sanctum`, не ломая публичные ссылки и хаб, и его собственные маршруты `{node}` не задеваются (N09, N10).
+
+**Why:** OPUS 13 P1.9, 10 §2–§3, AD31 (часть); V25, V26. Сегодня все маршруты оборачиваются одним
+`Config::middleware()` (`packages/core/routes/api.php:22–23`, `packages/drive/routes/drive.php:27–28`,
+`packages/documents/routes/documents.php:27–28`), а `VaulterServiceProvider::registerRouteBindings()`
+(`packages/core/src/VaulterServiceProvider.php:395–408`) регистрирует `Route::bind('storage'|'node')` для всего приложения.
+
+**Scope Included:**
+1. Конфиг `packages/core/config/vaulter.php`: удалить ключ `'middleware' => ['api', RecordVaulterRequestMetrics::class]`
+   (строки 712–715) и добавить
+   `'routes' => ['middleware' => ['authenticated' => ['api', 'auth:sanctum'], 'public' => ['api'], 'hub' => ['api']]]` (R7)
+   с комментарием-блоком в стиле файла. `core/src/Support/Config.php`: `middleware()` удаляется; новые
+   `authenticatedMiddleware(): array`, `publicMiddleware(): array`, `hubMiddleware(): array`. `authenticatedMiddleware()`:
+   если `config('vaulter.middleware')` не null (опубликованный конфиг 0.2) — это значение, иначе
+   `vaulter.routes.middleware.authenticated`. Каждый метод возвращает `stringList(...)` с добавленным в конец
+   `RecordVaulterRequestMetrics::class`, если хост его не перечислил (дубликат не добавляется).
+2. Маршруты (пути не меняются до P6.1):
+   - `packages/core/routes/api.php`: группа `Route::prefix(Config::routePrefix())->middleware(Config::authenticatedMiddleware())`
+     для grants/shares(owner)/activity/webhooks; отдельная группа `Route::prefix(Config::routePrefix())->middleware([...Config::publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])`
+     для `share/{token}`, `share/{token}/nodes`, `share/{token}/download`;
+   - `packages/drive/routes/drive.php`: группа с `Config::authenticatedMiddleware()`; `throttle:vaulter-uploads` для
+     загрузок сохраняется;
+   - `packages/documents/routes/documents.php`: защищённые маршруты — `Config::authenticatedMiddleware()`; `collab/authenticate`,
+     `collab/store` — отдельная группа `[...Config::hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class]`
+     с тем же условием `featureEnabled('document_versions') && collaborationEnabled()`.
+3. Резолв параметров (R6):
+   - `packages/core/src/Http/Support/HttpResourceResolver.php` (new, `final readonly`): `storage(int|string $id): Storage`
+     (`StorageReadRepository` → не найдено → `StorageNotFoundException::forId`), `node(int|string $id): Node`
+     (`NodeReadRepository::find` → не найдено → `NodeNotFoundException::forId`). Исключения — из P1.8. Ни один текущий
+     маршрут не содержит одновременно `{storage}` и `{node}` (пути — `storages/{storage}/…` или `nodes/{node}/…`), поэтому
+     проверка вложенности не нужна до P6.1.
+   - `packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php` (new): для текущего маршрута, если параметр
+     `storage` скалярный → `setParameter('storage', $resolver->storage(...))`; если `node` скалярный →
+     `setParameter('node', $resolver->node(...))`. Добавляется во все группы п.2, где есть `SubstituteBindings`.
+   - `VaulterServiceProvider`: удалить `registerRouteBindings()` и его вызов (строка 276); в `boot()` —
+     `$kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class); if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) { $kernel->addToMiddlewarePriorityBefore(SubstituteBindings::class, ResolveVaulterRouteParameters::class); }`.
+   - Сигнатуры контроллеров (`Storage $storage`, `Node $node`) не меняются: параметр уже модель, `SubstituteBindings` его не трогает.
+4. Тесты:
+   - V25 — `packages/documents/tests/Feature/MiddlewareStacksTest.php` (documents видит core-share и hub-маршруты):
+     `laravel/sanctum` в `require-dev` `packages/documents/composer.json` (`^4.0`); конфиг
+     `vaulter.middleware = null`, `vaulter.routes.middleware.authenticated = ['api', 'auth:sanctum']`; (а) `GET storages/{id}/nodes`
+     без токена → 401; с `Sanctum::actingAs($user)` → 200; (б) `GET share/{token}` действующей ссылки без токена → 200;
+     (в) `POST collab/authenticate` с валидным hub-JWT без токена → не 401 (ответ контроллера). Негативный контроль:
+     временно добавить `Config::authenticatedMiddleware()` в группу share → (б) 401.
+   - V26 — `packages/drive/tests/Feature/HostRouteBindingTest.php`: тестовая модель хоста `HostProject` (таблица
+     `host_projects` создаётся в тесте) и маршрут `Route::get('/projects/{node}', fn (HostProject $node) => $node->getKey())`
+     с `SubstituteBindings` → ответ — ключ `HostProject`; негативный контроль — временно вернуть `Route::bind('node', …)` → красный.
+   - Резолвер (`packages/drive/tests/Feature/HostRouteBindingTest.php`): `GET storages/{несуществующий}/nodes` → 404,
+     `json('code') = 'drive_not_found'`; `GET nodes/{несуществующий}` → 404, `json('code') = 'node_not_found'`.
+   - Наследие: конфиг с `vaulter.middleware = ['api']` → применяется к защищённым маршрутам (`Config::authenticatedMiddleware()`
+     = `['api', RecordVaulterRequestMetrics::class]`).
+5. Документация: `docs/guide/configuration.md` и `docs/guide/installation.md` — три стека, `auth:sanctum` по умолчанию,
+   legacy `middleware`; `UPGRADE.md` (`middleware` → `routes.middleware.authenticated`, глобальные биндинги удалены — AD31);
+   `CHANGELOG.md [Unreleased]`.
+
+**Scope Excluded:** пути `/v1`, `shares/{token}`, `collaboration/hub/*`, скалярные параметры в сигнатурах и
+однодейственные контроллеры, `AssignCorrelationId` (P6.1); фильтр тенанта в резолвере (P3.8); нормализатор и
+deprecation-лог устаревших ключей (P2.5); `route:cache`-матрица (P8.1).
+
+**Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md`;
+`audits/2026-09-29-stable-audit/opus/10-http-api-v1.md` (§2, §3); `packages/core/routes/api.php`; `packages/drive/routes/drive.php`;
+`packages/documents/routes/documents.php`; `packages/core/src/VaulterServiceProvider.php`; `packages/core/src/Support/Config.php` (строки 867–870)
+
+**Files:** `packages/core/config/vaulter.php`, `packages/core/src/Support/Config.php`, `packages/core/src/VaulterServiceProvider.php`,
+`packages/core/src/Http/Support/HttpResourceResolver.php` (new), `packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php` (new),
+`packages/{core/routes/api.php,drive/routes/drive.php,documents/routes/documents.php}`, `packages/documents/composer.json`,
+`packages/documents/tests/Feature/MiddlewareStacksTest.php` (new), `packages/drive/tests/Feature/HostRouteBindingTest.php` (new),
+тесты, читавшие `Config::middleware()` или `vaulter.middleware`, `packages/core/tests/Arch/__snapshots__/*`,
+`docs/guide/{configuration,installation}.md`, `UPGRADE.md`, `CHANGELOG.md`.
+
+**Required Reads:** 0) `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.9-opus.md` (дословные требования OPUS — исполнить все);
+1) `packages/core/routes/api.php`; 2) `packages/documents/routes/documents.php` (строки 20–35, 95–110);
+3) `packages/core/src/VaulterServiceProvider.php` (строки 260–410); 4) `packages/core/src/Support/Config.php` (`middleware()`, `stringList()`).
+
+**Authority:** routine
+
+**Implementation Rules:**
+- Пути маршрутов и имена контроллеров не меняются; меняется только состав групп.
+- Ни один маршрут share/hub не попадает в стек `authenticated` (проверка — негативный контроль V25).
+- Если `addToMiddlewarePriorityBefore` отсутствует в одной из версий Laravel матрицы (12/13) — стоп и эскалация.
+- Если `composer update` с `laravel/sanctum:^4.0` не разрешается на L12 или L13 — стоп и эскалация.
+
+**Code Guidance:** `grep -rn "Route::bind(" packages/*/src` → пусто; `grep -rn "Config::middleware()" packages/*/src packages/*/routes` → пусто.
+
+**Validation:**
+- Code Guidance → оба пустые.
+- `(cd packages/documents && env $SQ "$R/scripts/php84" vendor/bin/pest --ci tests/Feature/MiddlewareStacksTest.php)` → passed, 0 failed.
+- `(cd packages/drive && env $SQ "$R/scripts/php84" vendor/bin/pest --ci tests/Feature/HostRouteBindingTest.php)` → passed.
+- Негативные контроли V25 и V26 (Scope п.4) → красные, после возврата зелёные (в Completion Notes).
+- Гейт core и гейты drive, documents, media, filament → exit 0.
+
+**Deliverables:** три стека middleware, резолвер параметров, удалённые глобальные биндинги, V25, V26, документация.
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 827b208..a854963 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ ## [Unreleased]
+ 
+ ### Changed
++- HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
++  stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides
++  only the authenticated stack, and metrics are appended to all stacks (AD31).
+ - Domain events carry a readonly `eventId` ULID with an optional final constructor
+   argument for replay. Webhook `event_id` now identifies an event occurrence rather
+   than its resulting state; retries retain the same id (AD22).
+@@ -20,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+   directly from GitHub without a private repository token.
+ 
+ ### Fixed
++- Vaulter resource resolution no longer registers global `node`/`storage` bindings
++  that interfere with host routes. Missing resources return their 404 problem code (N10, AD31).
+ - Outbox deduplication no longer loses repeated rename or trash/restore operations
+   returning to the same state; only a replay of the same event id is deduplicated (E8).
+ - All domain exceptions now return their documented 4xx status instead of HTTP 500
+
+diff --git a/docs/guide/configuration.md b/docs/guide/configuration.md
+index beacbf1..f854403 100644
+--- a/docs/guide/configuration.md
++++ b/docs/guide/configuration.md
+@@ -321,9 +321,29 @@ See [Export](/guide/export) and the [custom-export recipe](/guide/recipes).
+ 
+ ```php
+ 'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
+-'middleware'   => ['api'],
++'routes' => [
++    'middleware' => [
++        'authenticated' => ['api', 'auth:sanctum'],
++        'public' => ['api'],
++        'hub' => ['api'],
++    ],
++],
+ ```
+ 
++Protected routes use the `authenticated` stack. Public `share/{token}*` routes use
++`public` plus the token resolver; signed `collab/authenticate` and `collab/store`
++callbacks use `hub`. Both public surfaces retain `throttle:vaulter-public`, and
++resumable uploads retain `throttle:vaulter-uploads`. Request metrics are appended
++once to every stack automatically.
++
++Install Laravel Sanctum for the default `auth:sanctum` guard, or replace that entry
++with your application's authentication middleware. The legacy `vaulter.middleware`
++key overrides only `authenticated` when non-null, including an explicit empty list;
++remove it to enable the new default. `Config::middleware()` is replaced by
++`authenticatedMiddleware()`, `publicMiddleware()` and `hubMiddleware()` (AD31).
++Resource resolution applies only to Vaulter routes; host `{node}` and `{storage}`
++parameters keep their own bindings.
++
+ ## Collaboration
+ 
+ Yjs is the source of truth; the transport is swappable behind `driver`:
+
+diff --git a/docs/guide/installation.md b/docs/guide/installation.md
+index 839b093..99d8dca 100644
+--- a/docs/guide/installation.md
++++ b/docs/guide/installation.md
+@@ -33,6 +33,15 @@ Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
+ plain `composer require axioma-studio/vaulter-core` alone is only useful if you plan to
+ implement every domain contract yourself without Drive or Documents.
+ 
++Protected HTTP routes require authentication through `auth:sanctum` by default.
++Install and configure Laravel Sanctum in your host (`composer require laravel/sanctum`),
++or set `vaulter.routes.middleware.authenticated` to your application's guard.
++Anonymous protected requests receive 401; public share links and signed hub callbacks
++use independent `public` and `hub` stacks and require no Sanctum token.
++Request metrics are added to all three stacks automatically. Published 0.2 configs
++with `vaulter.middleware` still override the authenticated stack; remove that legacy
++key to adopt the new default. See [Configuration](/guide/configuration#routes).
++
+ Then run the bundled install command, which publishes the config, publishes the migrations
+ and offers to run them:
+ 
+
+diff --git a/packages/core/config/vaulter.php b/packages/core/config/vaulter.php
+index 6e98f6c..73b6ccb 100644
+--- a/packages/core/config/vaulter.php
++++ b/packages/core/config/vaulter.php
+@@ -8,7 +8,6 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
+ use Vaulter\Drivers\Permission\SpatiePermissionResolver;
+ use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+ use Vaulter\Engines\Handlers\PreviewHandler;
+-use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
+ use Vaulter\Models\Access\NodeGrant;
+ use Vaulter\Models\Activity\Activity;
+ use Vaulter\Models\Cas\Blob;
+@@ -709,9 +708,14 @@ return [
+     |--------------------------------------------------------------------------
+     */
+     'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
+-    'middleware' => [
+-        'api',
+-        RecordVaulterRequestMetrics::class,
++    // Keep actor authentication separate from bearer shares and signed hub calls.
++    // Request metrics are appended automatically to each stack.
++    'routes' => [
++        'middleware' => [
++            'authenticated' => ['api', 'auth:sanctum'],
++            'public' => ['api'],
++            'hub' => ['api'],
++        ],
+     ],
+ 
+     /*
+
+diff --git a/packages/core/routes/api.php b/packages/core/routes/api.php
+index a5c8e8e..3eff43b 100644
+--- a/packages/core/routes/api.php
++++ b/packages/core/routes/api.php
+@@ -10,6 +10,7 @@ use Vaulter\Http\Controllers\Sharing\PublicShareController;
+ use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
+ use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
+ use Vaulter\Http\Middleware\ResolveShareToken;
++use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
+ use Vaulter\Support\Config;
+ 
+ /*
+@@ -20,17 +21,14 @@ use Vaulter\Support\Config;
+ */
+ 
+ Route::prefix(Config::routePrefix())
+-    ->middleware(Config::middleware())
++    ->middleware(Config::authenticatedMiddleware())
+     ->group(static function (): void {
+         /*
+         |----------------------------------------------------------------------
+         | Node sub-resources — kernel (Access/Sharing/Activity)
+         |----------------------------------------------------------------------
+-        | {storage} and {node} resolve the swappable Node/Storage models via the
+-        | Route::bind registered in the service provider (config('vaulter.models.*')).
+-        | SubstituteBindings is applied explicitly so the route-model binding runs
+-        | even when a host trims its api middleware group (it is idempotent when the
+-        | host's group already includes it).
++        | {storage} and {node} resolve locally through the swappable repositories
++        | before SubstituteBindings. Host route parameters retain their own bindings.
+         |
+         | The Drive file/folder tree + resumable uploads (the storage/{storage} listing,
+         | node CRUD, download, tus/S3 endpoints) live in the vaulter-drive package's
+@@ -40,7 +38,7 @@ Route::prefix(Config::routePrefix())
+         | from both packages' catch-all /{node}, so cross-file registration order never
+         | shadows them.
+         */
+-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
++        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
+             // Append-only activity feed (§2.9 / M2c-activity). Recipients resolved at
+             // READ by scoping to the storage/node — no notification rows. Authorized
+             // via AccessResolver Ability::View on the storage root / node. The fixed
+@@ -89,25 +87,12 @@ Route::prefix(Config::routePrefix())
+             Route::delete('webhook-endpoints/{endpoint}', [WebhookEndpointsController::class, 'destroy']);
+         }
+ 
+-        /*
+-        |----------------------------------------------------------------------
+-        | Bearer share-links — the PUBLIC, token-resolved surface (§2.7 / M2c)
+-        |----------------------------------------------------------------------
+-        | The SEPARATE sharing channel. These routes carry NO auth middleware —
+-        | only ResolveShareToken, which hashes the {token}, resolves the LIVE
+-        | share, runs the timing-safe compare + password / require-login gates,
+-        | intersects with item-safety and stashes a ShareContext. A share grants
+-        | EXACTLY its bitmask on its node-set — the identity ACL is never consulted
+-        | here. An optional already-authenticated host user satisfies require_login.
+-        |
+-        | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-public` named
+-        | limiter (config('vaulter.rate_limits.public'), keyed by requester IP) —
+-        | throttle runs BEFORE ResolveShareToken so an over-budget requester never
+-        | pays the token-hash + password-compare cost.
+-        */
+-        Route::middleware(['throttle:vaulter-public', ResolveShareToken::class])->group(static function (): void {
+-            Route::get('share/{token}', [PublicShareController::class, 'show']);
+-            Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
+-            Route::get('share/{token}/download', [PublicShareController::class, 'download']);
+-        });
++    });
++
++Route::prefix(Config::routePrefix())
++    ->middleware([...Config::publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])
++    ->group(static function (): void {
++        Route::get('share/{token}', [PublicShareController::class, 'show']);
++        Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);
++        Route::get('share/{token}/download', [PublicShareController::class, 'download']);
+     });
+
+diff --git a/packages/core/src/Support/Config.php b/packages/core/src/Support/Config.php
+index f3d87ad..0254bef 100644
+--- a/packages/core/src/Support/Config.php
++++ b/packages/core/src/Support/Config.php
+@@ -14,6 +14,7 @@ use Vaulter\Contracts\Handlers\FileHandler;
+ use Vaulter\Contracts\IdStrategy;
+ use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+ use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
++use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
+ use Vaulter\Models\Access\NodeGrant;
+ use Vaulter\Models\Activity\Activity;
+ use Vaulter\Models\Cas\Blob;
+@@ -864,9 +865,37 @@ final class Config
+     /**
+      * @return list<string>
+      */
+-    public static function middleware(): array
++    public static function authenticatedMiddleware(): array
+     {
+-        return self::stringList(config('vaulter.middleware', ['api']), ['api']);
++        return self::withRequestMetrics(self::stringList(
++            config('vaulter.middleware') ?? config('vaulter.routes.middleware.authenticated'),
++            ['api', 'auth:sanctum'],
++        ));
++    }
++
++    /** @return list<string> */
++    public static function publicMiddleware(): array
++    {
++        return self::withRequestMetrics(self::stringList(config('vaulter.routes.middleware.public'), ['api']));
++    }
++
++    /** @return list<string> */
++    public static function hubMiddleware(): array
++    {
++        return self::withRequestMetrics(self::stringList(config('vaulter.routes.middleware.hub'), ['api']));
++    }
++
++    /**
++     * @param  list<string> $middleware
++     * @return list<string>
++     */
++    private static function withRequestMetrics(array $middleware): array
++    {
++        if (!in_array(RecordVaulterRequestMetrics::class, $middleware, true)) {
++            $middleware[] = RecordVaulterRequestMetrics::class;
++        }
++
++        return $middleware;
+     }
+ 
+     /**
+
+diff --git a/packages/core/src/VaulterServiceProvider.php b/packages/core/src/VaulterServiceProvider.php
+index f6c860c..edaf49e 100644
+--- a/packages/core/src/VaulterServiceProvider.php
++++ b/packages/core/src/VaulterServiceProvider.php
+@@ -7,13 +7,13 @@ namespace Vaulter;
+ use Illuminate\Cache\RateLimiting\Limit;
+ use Illuminate\Contracts\Auth\Access\Authorizable;
+ use Illuminate\Contracts\Foundation\Application;
+-use Illuminate\Database\Eloquent\Model;
++use Illuminate\Contracts\Http\Kernel;
+ use Illuminate\Http\Request;
++use Illuminate\Routing\Middleware\SubstituteBindings;
+ use Illuminate\Support\Facades\Event;
+ use Illuminate\Support\Facades\Gate;
+ use Illuminate\Support\Facades\Log;
+ use Illuminate\Support\Facades\RateLimiter;
+-use Illuminate\Support\Facades\Route;
+ use Spatie\LaravelPackageTools\Commands\InstallCommand;
+ use Spatie\LaravelPackageTools\Package;
+ use Spatie\LaravelPackageTools\PackageServiceProvider;
+@@ -37,6 +37,7 @@ use Vaulter\Engines\DocumentHandlerRegistry;
+ use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+ use Vaulter\Engines\Handlers\PreviewHandler;
+ use Vaulter\Engines\NodeHandlerResolver;
++use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Models\Webhooks\WebhookEndpoint;
+ use Vaulter\Observability\NullMetricsRecorder;
+@@ -275,7 +276,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
+ 
+     public function packageBooted(): void
+     {
+-        $this->registerRouteBindings();
++        $this->registerResourceMiddlewarePriority($this->app->make(Kernel::class));
+         $this->registerPolicies();
+         $this->registerActivitySubscriber();
+         $this->registerOutboxSubscriber();
+@@ -298,6 +299,13 @@ final class VaulterServiceProvider extends PackageServiceProvider
+         $this->app->make(PanelRegistry::class);
+     }
+ 
++    private function registerResourceMiddlewarePriority(Kernel $kernel): void
++    {
++        if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
++            $kernel->addToMiddlewarePriorityBefore(SubstituteBindings::class, ResolveVaulterRouteParameters::class);
++        }
++    }
++
+     /**
+      * Register the package's own NAMED rate limiters (P1.3 / F-P1.8-01):
+      * `vaulter-public` (the token-resolved public share surface + the collaboration
+@@ -386,26 +394,4 @@ final class VaulterServiceProvider extends PackageServiceProvider
+             Gate::policy(Config::webhookEndpointModel(), WebhookEndpointPolicy::class);
+         }
+     }
+-
+-    /**
+-     * Bind the Drive REST route parameters {storage} and {node} to the SWAPPABLE
+-     * models (config('vaulter.models.*')) so the binding keeps resolving when a
+-     * host points the config at a subclass. A miss 404s (findOrFail). Node uses
+-     * the Drive trash (a trashed_at column), not the SoftDeletes deleted_at, so a
+-     * trashed node still resolves by default — restore/force/download need it.
+-     */
+-    private function registerRouteBindings(): void
+-    {
+-        Route::bind('storage', static function (string $value): Model {
+-            $model = Config::storageModel();
+-
+-            return $model::query()->findOrFail($value);
+-        });
+-
+-        Route::bind('node', static function (string $value): Model {
+-            $model = Config::nodeModel();
+-
+-            return $model::query()->findOrFail($value);
+-        });
+-    }
+ }
+
+diff --git a/packages/core/tests/Arch/PublicApiSnapshotTest.php b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+index f54aa4e..741a3b8 100644
+--- a/packages/core/tests/Arch/PublicApiSnapshotTest.php
++++ b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+@@ -8,6 +8,8 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+ use Vaulter\Exceptions\VaulterException;
+ use Vaulter\Facades\Vaulter;
++use Vaulter\Http\Support\HttpResourceResolver;
++use Vaulter\Support\Config;
+ 
+ /**
+  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
+@@ -276,6 +278,8 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
+ 
+     $blocks = array_map('vaulterSnapshotInterface', $contracts);
+     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
++    $blocks[] = vaulterSnapshotInterface(Config::class);
++    $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);
+     $blocks[] = vaulterSnapshotInterface(ProblemException::class);
+     foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
+         $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
+
+diff --git a/packages/documents/composer.json b/packages/documents/composer.json
+index 8a8dc1e..63f84c2 100644
+--- a/packages/documents/composer.json
++++ b/packages/documents/composer.json
+@@ -30,6 +30,7 @@
+         "firebase/php-jwt": "^7.0",
+         "larastan/larastan": "^3.0",
+         "laravel/pint": "^1.13",
++        "laravel/sanctum": "^4.0",
+         "orchestra/testbench": "^10.0|^11.0",
+         "pestphp/pest": "^4.0",
+         "pestphp/pest-plugin-laravel": "^4.0",
+
+diff --git a/packages/documents/routes/documents.php b/packages/documents/routes/documents.php
+index 9f2602b..7995435 100644
+--- a/packages/documents/routes/documents.php
++++ b/packages/documents/routes/documents.php
+@@ -8,6 +8,7 @@ use Vaulter\Documents\Http\Controllers\DocumentNodeController;
+ use Vaulter\Documents\Http\Controllers\NodeCollaborationController;
+ use Vaulter\Documents\Http\Controllers\NodeCommentController;
+ use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
++use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
+ use Vaulter\Support\Config;
+ 
+ /*
+@@ -17,17 +18,16 @@ use Vaulter\Support\Config;
+ | The document-node surface, extracted from core's routes/api.php into the
+ | vaulter-documents package. Mounted under the SAME configured prefix (default:
+ | api/vaulter) and middleware as the kernel routes — Laravel merges the group
+-| registrations across files. {storage} and {node} route-model bindings are
+-| registered by the CORE provider (Node/Storage are kernel models); these routes
+-| reuse them. The fixed sub-segments (content/versions/handler/export/collab/
++| registrations across files. Local resource middleware resolves {storage} and
++| {node} through swappable core repositories before SubstituteBindings. The fixed sub-segments (content/versions/handler/export/collab/
+ | comments) differ in segment count from core's and vaulter-drive's catch-all
+ | /{node}, so cross-file registration order never shadows them.
+ */
+ 
+ Route::prefix(Config::routePrefix())
+-    ->middleware(Config::middleware())
++    ->middleware(Config::authenticatedMiddleware())
+     ->group(static function (): void {
+-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
++        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
+             /*
+             |------------------------------------------------------------------
+             | Documents — document nodes (§2.5 / §7 / M4a)
+@@ -80,27 +80,13 @@ Route::prefix(Config::routePrefix())
+             }
+         });
+ 
+-        /*
+-        |----------------------------------------------------------------------
+-        | Realtime collaboration webhooks (§7 / ADR-0001 / M4b)
+-        |----------------------------------------------------------------------
+-        | The SERVER-TO-SERVER surface the Node Hocuspocus hub calls back into:
+-        | onAuthenticate → collab/authenticate, onStoreDocument → collab/store.
+-        | These carry NO auth middleware — only ResolveCollaborationCall, which
+-        | authenticates the caller via the shared webhook secret OR a valid signed
+-        | room JWT (never open) and stashes the resolved call. The node is resolved
+-        | from the BODY (room/node_id), not route-model bound, and a JWT call may
+-        | only address its own room (a token for node A cannot store to node B).
+-        | Gated on the 'document_versions' feature. Rate-limited (P1.3 / F-P1.8-01) by
+-        | the package's own `vaulter-public` named limiter (keyed by requester IP) —
+-        | throttle runs BEFORE ResolveCollaborationCall.
+-        | Gated on BOTH 'document_versions' AND 'collaboration' (VLT-REMED P3.1 /
+-        | F-P1.6-01, D13/D20) — see the collab/token gate above for why.
+-        */
+-        if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
+-            Route::middleware(['throttle:vaulter-public', ResolveCollaborationCall::class])->group(static function (): void {
+-                Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
+-                Route::post('collab/store', [NodeCollaborationController::class, 'store']);
+-            });
+-        }
+     });
++
++if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
++    Route::prefix(Config::routePrefix())
++        ->middleware([...Config::hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
++        ->group(static function (): void {
++            Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
++            Route::post('collab/store', [NodeCollaborationController::class, 'store']);
++        });
++}
+
+diff --git a/packages/drive/routes/drive.php b/packages/drive/routes/drive.php
+index d8210ee..e9271db 100644
+--- a/packages/drive/routes/drive.php
++++ b/packages/drive/routes/drive.php
+@@ -9,6 +9,7 @@ use Vaulter\Drive\Http\Controllers\NodeController;
+ use Vaulter\Drive\Http\Controllers\StorageController;
+ use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartController;
+ use Vaulter\Drive\Http\Controllers\Uploads\TusUploadController;
++use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
+ use Vaulter\Support\Config;
+ 
+ /*
+@@ -18,16 +19,15 @@ use Vaulter\Support\Config;
+ | The file/folder tree + resumable-upload surface, extracted from core's
+ | routes/api.php into the vaulter-drive package. Mounted under the SAME configured
+ | prefix (default: api/vaulter) and middleware as the kernel routes — Laravel merges
+-| the two group registrations. The {storage} and {node} route-model bindings are
+-| registered by the CORE provider (Node/Storage are kernel models); these routes
+-| reuse them. All paths are distinct literals / differ in segment count from the
++| the two group registrations. The local resource middleware resolves {storage}
++| and {node} through swappable core repositories before SubstituteBindings. All paths are distinct literals / differ in segment count from the
+ | kernel + documents routes, so cross-file registration order never shadows them.
+ */
+ 
+ Route::prefix(Config::routePrefix())
+-    ->middleware(Config::middleware())
++    ->middleware(Config::authenticatedMiddleware())
+     ->group(static function (): void {
+-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
++        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
+             // "Shared with me" (§2.6 / H.2) — CROSS-STORAGE: not storage-bound, so it
+             // sits at the top level. Gated on the 'grants' feature; the fixed segment
+             // sits before the catch-all /{node} routes so it never shadows them.
+
+NEW FILE packages/core/src/Http/Support/HttpResourceResolver.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Http\Support;
+
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Repositories\Drive\StorageReadRepository;
+
+final readonly class HttpResourceResolver
+{
+    public function __construct(
+        private StorageReadRepository $storages,
+        private NodeReadRepository $nodes,
+    ) {}
+
+    public function storage(int|string $id): Storage
+    {
+        return $this->storages->find($id) ?? throw StorageNotFoundException::forId($id);
+    }
+
+    public function node(int|string $id): Node
+    {
+        return $this->nodes->find($id) ?? throw NodeNotFoundException::forId($id);
+    }
+}
+
+NEW FILE packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Http\Support\HttpResourceResolver;
+
+final readonly class ResolveVaulterRouteParameters
+{
+    public function __construct(private HttpResourceResolver $resolver) {}
+
+    /** @param Closure(Request): Response $next */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $route = $request->route();
+        if ($route instanceof Route) {
+            foreach (['storage', 'node'] as $parameter) {
+                $value = $route->parameters()[$parameter] ?? null;
+                if (is_int($value) || is_string($value)) {
+                    $route->setParameter($parameter, $this->resolver->{$parameter}($value));
+                }
+            }
+        }
+
+        return $next($request);
+    }
+}
+
+NEW FILE packages/documents/tests/Feature/MiddlewareStacksTest.php
+<?php
+
+declare(strict_types=1);
+
+use Firebase\JWT\JWT;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\Sanctum;
+use Laravel\Sanctum\SanctumServiceProvider;
+use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Collaboration\CollaborationCallResolver;
+use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
+use Vaulter\Support\Config;
+use Vaulter\Tests\Fixtures\FakeHostUserResolver;
+use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\Webhooks\WebhookSigner;
+
+class MiddlewareStackUser extends User
+{
+    use HasApiTokens;
+}
+
+class MiddlewareStacksTestCase extends CollaborationEnabledTestCase
+{
+    protected function getPackageProviders($app): array
+    {
+        return [...parent::getPackageProviders($app), SanctumServiceProvider::class];
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+        $app['config']->set('vaulter.middleware', null);
+        $app['config']->set('vaulter.routes.middleware.authenticated', ['api', 'auth:sanctum']);
+        $app['config']->set('vaulter.collaboration.driver', 'hocuspocus');
+        $app['config']->set('vaulter.collaboration.webhook_secret', 'middleware-stack-webhook-secret');
+        $app['config']->set('vaulter.collaboration.drivers.hocuspocus.secret', 'middleware-stack-jwt-secret-at-least-32-bytes');
+    }
+}
+
+uses(MiddlewareStacksTestCase::class, RefreshDatabase::class);
+
+it('requires Sanctum on protected routes and accepts an authenticated actor', function (): void {
+    $storage = DocumentTestHelpers::drive()->storage();
+    $url = 'api/vaulter/storages/'.$storage->getKey().'/nodes';
+    $this->getJson($url)->assertUnauthorized();
+    Sanctum::actingAs((new MiddlewareStackUser)->forceFill(['id' => 17]));
+    $this->getJson($url)->assertOk();
+});
+
+it('serves a valid public share without a Sanctum token', function (): void {
+    $node = DocumentTestHelpers::drive()->root();
+    ShareTestHelpers::share($node, token: 'middleware-stack-public-token');
+    $this->getJson('api/vaulter/share/middleware-stack-public-token')->assertOk();
+});
+
+it('accepts a signed hub JWT without a Sanctum token', function (): void {
+    $drive = DocumentTestHelpers::drive();
+    app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
+    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+        storage: $drive->storage(), name: 'Hub', content: DocumentTestHelpers::content(), parent: $drive->root(),
+    ));
+    $body = ['node_id' => $node->getKey()];
+    $timestamp = time();
+    $jwt = JWT::encode([
+        'room' => Config::collaborationRoom($node->getKey()),
+        'sub' => '17', 'readOnly' => false, 'iat' => $timestamp, 'exp' => $timestamp + 3600,
+    ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
+    $signature = (new WebhookSigner)->sign(json_encode($body), 'middleware-stack-webhook-secret', $timestamp);
+    $response = $this->postJson('api/vaulter/collab/authenticate', $body, [
+        'Authorization' => 'Bearer '.$jwt,
+        CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
+        CollaborationCallResolver::SIGNATURE_HEADER => $signature,
+    ]);
+    $response->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('user.id', '17');
+});
+
+it('retains legacy authenticated middleware and appends metrics once in every stack', function (): void {
+    config()->set('vaulter.middleware', ['api']);
+    expect(Config::authenticatedMiddleware())->toBe(['api', RecordVaulterRequestMetrics::class]);
+    config()->set('vaulter.middleware', null);
+    foreach (['authenticated', 'public', 'hub'] as $stack) {
+        config()->set('vaulter.routes.middleware.'.$stack, ['api', RecordVaulterRequestMetrics::class]);
+    }
+    expect(Config::authenticatedMiddleware())->toBe(['api', RecordVaulterRequestMetrics::class])
+        ->and(Config::publicMiddleware())->toBe(['api', RecordVaulterRequestMetrics::class])
+        ->and(Config::hubMiddleware())->toBe(['api', RecordVaulterRequestMetrics::class]);
+});
+
+NEW FILE packages/drive/tests/Feature/HostRouteBindingTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+
+class HostProject extends Model
+{
+    protected $guarded = [];
+
+    public $timestamps = false;
+}
+
+it('resolves a host node parameter with the host model', function (): void {
+    Schema::create('host_projects', function (Blueprint $table): void {
+        $table->id();
+    });
+    $project = HostProject::create();
+    Route::get('/projects/{node}', fn (HostProject $node) => (string) $node->getKey())
+        ->middleware(SubstituteBindings::class);
+    $this->get('/projects/'.$project->getKey())->assertOk()->assertSee((string) $project->getKey());
+});
+
+it('returns the problem code for a missing Vaulter storage', function (): void {
+    $this->getJson('api/vaulter/storages/999999/nodes')->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+});
+
+it('returns the problem code for a missing Vaulter node', function (): void {
+    $this->getJson('api/vaulter/nodes/999999')->assertNotFound()->assertJsonPath('code', 'node_not_found');
+});
+
+VALIDATION: V25 4 passed, V26 3 passed. Both specified mutants exit 1, byte-exact restoration. Five package Pint checks GREEN; drive/documents/media/filament PHPStan and full Pest GREEN. Core full Pest GREEN 596 passed, 11 skipped,17 risky; initial PHPStan 3 errors repaired via precise Closure parameter type, route parameters array and contract-typed kernel helper; corrected PHPStan GREEN. Final core delta pending in parallel, verdict only static review.

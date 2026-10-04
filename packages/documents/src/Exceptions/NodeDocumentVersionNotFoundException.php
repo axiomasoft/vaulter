@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
@@ -12,8 +13,12 @@ use Vaulter\Support\Identity;
  * M4a) — either it does not exist or it belongs to another node. "Not found" and "no
  * access to another node's version" are deliberately indistinguishable to the caller.
  */
-final class NodeDocumentVersionNotFoundException extends VaulterException
+final class NodeDocumentVersionNotFoundException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'document_revision_not_found';
+
+    private const int HTTP_STATUS = 404;
+
     public static function forNode(mixed $nodeId, mixed $versionId): self
     {
         return new self(
@@ -26,5 +31,15 @@ final class NodeDocumentVersionNotFoundException extends VaulterException
             .'Fix: list the node history (GET .../versions) and restore an id from it. '
             .'Docs: '.self::docs('document-version-not-found'),
         );
+    }
+
+    public function problemCode(): string
+    {
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

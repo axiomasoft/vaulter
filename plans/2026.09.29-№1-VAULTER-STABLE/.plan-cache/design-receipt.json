@@ -1,37 +1,66 @@
 {
   "adapter_attestation": null,
-  "commit_sha": "c70bf9125f273e47a33b40839f295af71d48b6b1",
+  "commit_sha": "a5d879243720e97b6dd7f1f82d9bf15e4fcf1a4a",
   "continuity": {
     "evidence": [
-      "persisted-context:whole-plan-independent-audit"
+      "batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "reason:Claude Code session quota; mandatory D09 independent review unavailable",
+      "started_at:2026-10-02T08:17:07Z",
+      "resume_at:2026-10-02T10:20:00Z",
+      "observed_at:2026-10-02T08:37:59Z",
+      "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+      "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+      "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
+      "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"
     ],
-    "outcome": "cold-start-root",
-    "reason": "whole-plan-independent-audit",
-    "runnable": true,
+    "outcome": "waiting-external",
+    "reason": "external-wait",
+    "runnable": false,
     "schema_version": "session-continuity-decision/v1"
   },
   "digests": {
     "closure": null,
-    "handoff": "sha256:6d41e9b5c53dc6249c0ae670b6e20c7f5ca9542f3649ecfc4c442c4ffbacc4b3",
-    "plan": "sha256:bddc25eae4a594b8ffb9231c0dbcf96c349ae38faa16ea24a7a4a66aa9512a73",
+    "handoff": "sha256:541018a80f4301ac156b06d6a2b8f929555843f5051032da7596dafa0bfe179b",
+    "plan": "sha256:84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
     "state": null
   },
   "journal": null,
-  "next_exact": "audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design",
+  "next_exact": "waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
   "plan_id": "2026.09.29-№1-VAULTER-STABLE",
   "rationale": {
-    "open_risks": "роли БД на хосте отсутствуют (O-1, O-2).",
-    "remaining": "design audit (codex, не автор) → owner gates O-1/O-2 → исполнение строк 1–3 execution-sheet → фазовый"
+    "open_risks": "P0.2 In progress, not GREEN. PA01 audit finding pending formal closure until E23. P0.1 mutation scores remain accepted unknowns (D11). No adjacent package, workflow or .gitignore change.",
+    "remaining": "E23 independent full review. Claude Code session quota; no verdict. Resume existing run after actual availability, execute saved review-prompt.txt once, add truthful E23 receipt, pre_final, terminal GREEN and finalize. Unaffected media/root proof reused. Hosted changed-candidate O-3-CI and accepted P0.1 deviations remain phase gates; no automatic repeat audit."
   },
-  "recommendation": "**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | n/a |\n| Model class | frontier |\n| Effort | high |\n| Capabilities | — |\n| Context | cold-start-root: whole-plan-independent-audit |\n| Суть | Независимый аудит дизайна (не автор плана): проверить P0 и execution-sheet против fingerprint из `finalize-design --finish` и записать вердикт (`roadmap.md` §P0, шаг 2). Исполнение P0 — только после GREEN. |\n\n**Provider-native command:**\n\n```text\ncodex -C \"$(git rev-parse --show-toplevel)\" -m gpt-6-sol -c 'model_reasoning_effort=\"high\"' -a never -s danger-full-access '$ task:plan-audit 2026.09.29-№1-VAULTER-STABLE design'\n```",
+  "recommendation": "**Next:** waiting: Claude Code quota reset 2026-10-02 13:20 Europe/Volgograd and service available; then task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | B0-A |\n| Model class | implementation |\n| Model | gpt-6-sol |\n| Effort | medium |\n| Thinking | medium |\n| Context | waiting-external |\n| The bottom line | Resume mandatory D09 review; reuse completed affected validation. |\n\n```session-continuity-decision/v1\n{\"outcome\": \"waiting-external\", \"reason\": \"external-wait\", \"evidence\": [\"batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90\", \"loaded-inputs:reusable\", \"cold-start-cost:0\", \"reason:Claude Code session quota; mandatory D09 independent review unavailable\", \"started_at:2026-10-02T08:17:07Z\", \"resume_at:2026-10-02T10:20:00Z\", \"observed_at:2026-10-02T08:37:59Z\", \"fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e\", \"runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request\", \"continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\", \"checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json\"], \"runnable\": false, \"schema_version\": \"session-continuity-decision/v1\"}\n```\n\n```text\n$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2\nMODE: resume PA01 owning repair; mandatory independent full review pending\nENTRANCE: artifacts/P0.2-PA01/checkpoint.json; artifacts/P0.2-PA01/completion.md; findings/P0.2-PA01-review.md\nSCORE: one fresh read-only D09 review GREEN; pre_final allow; terminal journal and finalize\nDO NOT TOUCH: P0.1 mutation scores; P0.3/P0.4; unrelated .gitignore; unchanged validated source\n```",
   "route": {
-    "batch": "n/a",
+    "batch": "B0-A",
     "command": null,
-    "context": "cold-start-root: whole-plan-independent-audit",
-    "model": null,
-    "thinking": null
+    "context": "waiting-external",
+    "continuity": {
+      "evidence": [
+        "batch:5f42eba2b345b36cbb83cc1e948e9dd27441966fbde689a710f9d9f488b90f90",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "reason:Claude Code session quota; mandatory D09 independent review unavailable",
+        "started_at:2026-10-02T08:17:07Z",
+        "resume_at:2026-10-02T10:20:00Z",
+        "observed_at:2026-10-02T08:37:59Z",
+        "fingerprint:2b9ad6102a822ab0dd46e9838a4cf16cc11b503b52dbc0c6dee9979dcce1268e",
+        "runnable_after:2026-10-02 13:20 Europe/Volgograd AND Claude Code accepts one independent review request",
+        "continuation:task:plan-run 2026.09.29-№1-VAULTER-STABLE P0.2",
+        "checkpoint:plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/checkpoint.json"
+      ],
+      "outcome": "waiting-external",
+      "reason": "external-wait",
+      "runnable": false,
+      "schema_version": "session-continuity-decision/v1"
+    },
+    "model": "gpt-6-sol",
+    "thinking": "medium"
   },
   "schema_version": "handoff-recommendation-receipt/v1",
   "status": "handoff-persisted",
-  "subject": "P0"
+  "subject": "P1"
 }

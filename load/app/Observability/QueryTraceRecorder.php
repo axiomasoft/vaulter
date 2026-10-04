@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Load\Observability;
 
-use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Database\Events\TransactionRolledBack;

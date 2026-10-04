@@ -126,7 +126,7 @@ it('sets Content-Length to the blob size and streams the exact bytes', function 
         ->and($response->streamedContent())->toBe($payload);
 });
 
-it('422s copy when the destination already owns the requested name', function (): void {
+it('409s copy when the destination already owns the requested name', function (): void {
     $storage = r07ActionStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey();
 
@@ -142,7 +142,7 @@ it('422s copy when the destination already owns the requested name', function ()
     $this->postJson('api/vaulter/nodes/'.$source.'/copy', [
         'parent_id' => $folder,
         'name' => 'Twin',
-    ])->assertStatus(422)->assertJsonValidationErrors('name');
+    ])->assertStatus(409)->assertJsonPath('code', 'node_name_conflict')->assertJsonValidationErrors('name');
 });
 
 it('deep-copies every live descendant and charges the summed logical bytes', function (): void {

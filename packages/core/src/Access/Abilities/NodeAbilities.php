@@ -6,6 +6,7 @@ namespace Vaulter\Access\Abilities;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
@@ -37,10 +38,17 @@ final readonly class NodeAbilities
         return new self(flags: $resolver->abilitiesFor($actor, $node));
     }
 
-    /**
-     * An all-false ability map (no acting user) — keyed by every Ability so the
-     * client contract shape never shifts.
-     */
+    /** Reuse the exact batch decision when serializing a listing. */
+    public static function fromGrantSet(GrantSet $set): self
+    {
+        $flags = [];
+        foreach (Ability::cases() as $ability) {
+            $flags[$ability->value] = $set->allows($ability);
+        }
+
+        return new self(flags: $flags);
+    }
+
     public static function denied(): self
     {
         $flags = [];

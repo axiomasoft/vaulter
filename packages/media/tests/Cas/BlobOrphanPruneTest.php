@@ -12,6 +12,7 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\PhantomListingContentStore;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The DESTRUCTIVE orphan prune (master plan P4 #11 / H.3): physically deleting true
@@ -83,6 +84,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
         'status' => BlobStatus::Committed,
         'ref_count' => 0,
         'dedup_scope' => 'tenant',
+        'scope_key' => 'tenant:1',
         'committed_at' => now(),
     ]);
     $winningBlob->save();
@@ -104,7 +106,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
 //     that lists a PHANTOM key (old mtime, no bytes): detection classifies it as an
 //     orphan, then the prune's delete no-ops over the absent object.
 it('prune на pgsql идемпотентен: исчезнувший до удаления объект не бросает (phantom listing)', function (): void {
-    $phantomKey = app(ContentStore::class)->keyFor(scope: 't1', sha256: hash('sha256', 'phantom'));
+    $phantomKey = app(ContentStore::class)->keyFor(scope: BlobScope::fromSegment('t1'), sha256: hash('sha256', 'phantom'));
 
     app()->instance(ContentStore::class, new PhantomListingContentStore(
         phantomKey: $phantomKey,

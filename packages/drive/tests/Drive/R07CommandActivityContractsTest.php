@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\Uploads\UploadInitData;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -16,7 +17,6 @@ use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Support\Identity;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -119,6 +119,8 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
     $folder = $drive->createFolder('Empty tree');
     $used = $drive->storage()->refresh()->used_bytes;
 
+    $drive->trash($folder);
+
     $drive->forceDelete($folder, actorId: 17);
 
     expect($drive->storage()->refresh()->used_bytes)->toBe($used)
@@ -133,8 +135,8 @@ it('restore re-homes to the storage root when the original parent was trashed', 
     $parent = $drive->createFolder('Parent');
     $child = $drive->createFolder('Child', $parent);
 
-    $drive->trash($parent);
     $drive->trash($child);
+    $drive->trash($parent);
 
     $restored = $drive->restore($child->refresh(), actorId: 17);
 
@@ -167,23 +169,23 @@ it('upload session initiated activity carries the exact lifecycle context', func
     ]);
 });
 
-it('force-delete outbox idempotency keys differ when deleted node sets differ', function (): void {
+it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $drive = DriveTestHelpers::drive();
     Outbox::query()->delete();
 
     $first = $drive->createFolder('One');
+    $drive->trash($first);
     $drive->forceDelete($first, actorId: 9);
     $firstKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole()->event_id;
 
     $second = $drive->createFolder('Two');
+    $drive->trash($second);
     $drive->forceDelete($second, actorId: 9);
     $secondKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->orderByDesc('id')->firstOrFail()->event_id;
 
-    $expectedSecond = 'node.force_deleted:'.Identity::stringify($drive->storage()->getKey()).':'
-        .md5(Identity::stringify($second->getKey()));
-
     expect($firstKey)->not->toBe($secondKey)
-        ->and($secondKey)->toBe($expectedSecond);
+        ->and(Str::isUlid($firstKey))->toBeTrue()
+        ->and(Str::isUlid($secondKey))->toBeTrue();
 });
 
 it('DriveContext upload from a string uses the provided original name for the version row', function (): void {
@@ -200,8 +202,10 @@ it('StorageManager root() provisions a missing root with an empty name', functio
     $storage = $drive->storage();
     $oldRootId = $storage->root_node_id;
 
+    // The root row must be gone for good: even a soft-deleted parentless row is the
+    // drive's one parentless node under the single-root index.
     $storage->forceFill(['root_node_id' => null])->save();
-    Node::query()->whereKey($oldRootId)->delete();
+    Node::query()->whereKey($oldRootId)->forceDelete();
 
     $root = app(StorageManager::class)->root($storage->refresh());
 

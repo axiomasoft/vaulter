@@ -72,12 +72,13 @@ So `storages` with prefix `v_` becomes the table `v_storages`.
 
 ## Primary key strategy (`ids`)
 
-The id strategy decides the column type of every primary/morph key. **Default is `ulid`** so
-morph keys line up with the Corex/AzGuard ecosystem.
+The id strategy decides the column type of Vaulter primary keys and references.
+**Default is `ulid`**. Keys owned by the host use the separate `ids.host_keys` setting (AD25).
 
 ```php
 'ids' => [
     'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid | uuid7 | bigint
+    'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string | bigint | uuid | ulid
     'strategies' => [
         'bigint' => \Vaulter\Schema\AutoIncrementIds::class,
         'ulid'   => \Vaulter\Schema\UlidIds::class,
@@ -98,6 +99,26 @@ When `ids.default` is set, **it wins**; otherwise the strategy is derived from `
 (`id → bigint`, `ulid → ulid`) so existing installs keep working. New installs should use
 `ids.default`. See [ADR-0011](/adr/0011-id-strategy).
 :::
+
+### Host keys (`ids.host_keys`)
+
+`string` is the default and emits `varchar(64)`. It accepts UUID users, bigint projects,
+ULID actors and bigint Spatie roles together, independently of Vaulter's own ID strategy.
+The setting applies to storage owners, grant subjects, comment authors, every `tenant_id`
+and actor columns such as `created_by`, `granted_by` and `activity.actor_id`.
+
+| Host-key setting | PostgreSQL | MySQL / MariaDB |
+|---|---|---|
+| `string` | `varchar(64)` | `varchar(64)` |
+| `bigint` | `bigint` | `bigint unsigned` |
+| `uuid` | `uuid` | `char(36)` |
+| `ulid` | `char(26)` | `char(26)` |
+
+Choose a narrower type only when every host key fits it. Unknown settings throw
+`InvalidArgumentException`. Host migrations can use `VaulterSchema::hostKey($table, 'owner_id')`;
+`actor()` and `tenant()` also use this setting. `key()`, `reference()` and `morphs()`
+continue to use Vaulter's entity-ID strategy. Existing installations run upgrade migration
+`2026_10_01_000003_host_key_columns`; see `UPGRADE.md`.
 
 ## Storage Panels
 
@@ -321,8 +342,28 @@ See [Export](/guide/export) and the [custom-export recipe](/guide/recipes).
 
 ```php
 'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-'middleware'   => ['api'],
+'routes' => [
+    'middleware' => [
+        'authenticated' => ['api', 'auth:sanctum'],
+        'public' => ['api'],
+        'hub' => ['api'],
+    ],
+],
 ```
+
+Protected routes use the `authenticated` stack. Public `share/{token}*` routes use
+`public` plus the token resolver; signed `collab/authenticate` and `collab/store`
+callbacks use `hub`. Both public surfaces retain `throttle:vaulter-public`, and
+resumable uploads retain `throttle:vaulter-uploads`. Request metrics are appended
+once to every stack automatically.
+
+Install Laravel Sanctum for the default `auth:sanctum` guard, or replace that entry
+with your application's authentication middleware. The legacy `vaulter.middleware`
+key overrides only `authenticated` when non-null, including an explicit empty list;
+remove it to enable the new default. `Config::middleware()` is replaced by
+`authenticatedMiddleware()`, `publicMiddleware()` and `hubMiddleware()` (AD31).
+Resource resolution applies only to Vaulter routes; host `{node}` and `{storage}`
+parameters keep their own bindings.
 
 ## Collaboration
 

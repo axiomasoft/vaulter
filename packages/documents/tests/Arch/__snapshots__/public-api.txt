@@ -7,3 +7,52 @@ Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver
 
 Vaulter\Documents\Contracts\Export\ExportFilenameResolver
   resolve(\Vaulter\Models\Drive\Node $node, string $extension): string
+
+Vaulter\Documents\Events\Comments\NodeCommentAdded
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, ?string $eventId = null)
+  broadcastAs(): string
+  broadcastOn(): array
+  broadcastWith(): array
+  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly string $eventId
+
+Vaulter\Documents\Events\Comments\NodeCommentDeleted
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
+  broadcastAs(): string
+  broadcastOn(): array
+  broadcastWith(): array
+  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Documents\Events\Comments\NodeCommentResolved
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
+  broadcastAs(): string
+  broadcastOn(): array
+  broadcastWith(): array
+  readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Documents\Events\Documents\DocumentContentUpdated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, bool $created, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly bool $created
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Documents\Events\Documents\DocumentNodeCreated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Documents\Events\Versions\DocumentVersionCreated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly bool $restored
+  readonly int|null|string $actorId
+  readonly string $eventId

@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
+use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Support\Config;
 
 /**
@@ -28,13 +29,15 @@ use Vaulter\Support\Config;
  */
 class UploadPart extends Pivot
 {
+    use ResolvesVaulterConnection;
+
     public $incrementing = false;
 
     public $timestamps = false;
 
     /**
      * Fully guarded (F-P1.8-02): the S3-multipart part record. Every write goes
-     * through UploadPartStoreRepository via the query builder (DB::table
+     * through UploadPartStoreRepository via the query builder (the connection query builder
      * insert/update), never Eloquent mass-assignment, so this is pure
      * defense-in-depth against a future Eloquent-based write.
      *

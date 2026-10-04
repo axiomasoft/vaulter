@@ -9,11 +9,13 @@ use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * sweepPending must run its critical section through the SERIALIZABLE + retry-on-40001
@@ -83,7 +85,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
             $this->inner->delete($key, $disk);
         }
 
-        public function keyFor(string $scope, string $sha256): string
+        public function keyFor(BlobScope $scope, string $sha256): string
         {
             return $this->inner->keyFor($scope, $sha256);
         }
@@ -95,6 +97,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
         app(BlobStoreRepository::class),
         app(FileVersionBlobStoreRepository::class),
         app(MetricsRecorder::class),
+        app(VaulterDatabase::class),
     );
 
     // Pre-fix: the first 40001 propagates and aborts the pass. Post-fix: the unit is

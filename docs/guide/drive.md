@@ -63,6 +63,26 @@ Each storage opens into a `kind=folder` root node (its `name` is the empty strin
 Reach it with `root()`; pass it — or any folder node — as the destination for the
 write methods below. When you omit a destination, the root is used.
 
+The tree keeps these rules on every write, checked under row locks inside the
+operation's transaction:
+
+- **One root per drive.** Only the root has no parent (a unique index enforces it);
+  a missing destination always resolves to the root.
+- **Destinations are live folders of the same drive.** Creating, uploading, moving or
+  copying into a file, a document or a trashed folder raises
+  `InvalidDestinationException` (409 `invalid_destination`); a folder of another drive
+  raises `CrossStorageMoveException` (409 `cross_drive_operation`).
+- **The root is never an operand.** Renaming, moving, copying, trashing or
+  force-deleting it raises `InvalidDestinationException`.
+- **No cycles.** A folder cannot move into itself or its own subtree
+  (`CycleException`, 409 `node_move_cycle`), even when two moves race.
+
+Every write takes the drive's tree lock first — exclusively for move, restore, trash and
+force-delete, shared for create, upload, copy and rename — and only then locks node rows.
+On PostgreSQL uploads into one drive stay concurrent; a structural operation waits for
+them. A custom Action that changes the tree should follow the same order
+(`VaulterDatabase::lockTree()` / `lockTreeShared()`, then node rows).
+
 ```php
 $root = $drive->root();          // Vaulter\Models\Drive\Node
 $storage = $drive->storage();    // Vaulter\Models\Drive\Storage
@@ -128,7 +148,11 @@ $sub = $drive->createFolder('2026', parent: $folder, actorId: $user->id);
 ```
 
 A name is a single tree **segment** — it may not contain path separators
-(`/` or `\`). Build a path by creating folders level by level.
+(`/` or `\`). Build a path by creating folders level by level. Every write that takes a
+name (create, upload, rename, copy with `$name`) trims it, normalizes it to Unicode NFC
+(with ext-intl) and rejects an empty name, `.`/`..`, control characters or more than
+`vaulter.drive.name_rules.max_length` UTF-8 bytes with `InvalidNodeNameException`
+(422 `validation_failed`, `errors.name`).
 
 ### `upload()`
 
@@ -209,7 +233,8 @@ $node = $drive->uploadVersion($existingFile, $request->file('document'));
 
 ### `move()`
 
-Move a node under a new parent folder (null = root):
+Move a node under a new parent folder (null = root). The root itself cannot move, and
+the destination must be a live folder outside the node's own subtree:
 
 ```php
 public function move(Node $node, ?Node $into = null, int|string|null $actorId = null): Node
@@ -222,6 +247,8 @@ $drive->move($node);  // back to the root
 
 ### `rename()`
 
+Every node except the root can be renamed:
+
 ```php
 public function rename(Node $node, string $name, int|string|null $actorId = null): Node
 ```
@@ -232,8 +259,9 @@ $drive->rename($node, 'Q4 Report (final).pdf');
 
 ### `copy()`
 
-Deep-copy a node (and a folder's subtree) into a destination; `$name` overrides the
-copy's name (null keeps the source's):
+Deep-copy a node (and a folder's subtree, without its trashed nodes) into a live folder
+of the same drive; `$name` overrides the copy's name (null keeps the source's). The root
+cannot be copied:
 
 ```php
 public function copy(Node $node, ?Node $into = null, ?string $name = null, int|string|null $actorId = null): Node
@@ -246,7 +274,8 @@ $copy = $drive->copy($node, into: $templatesFolder, name: 'Template');
 ### `trash()`
 
 Soft-delete a node (sets `trashed_at`). The subtree is recoverable until it is
-either restored or purged. See [Trash](/guide/trash).
+either restored or purged. The root cannot be trashed, and trashing a node already in
+the trash raises `InvalidDestinationException`. See [Trash](/guide/trash).
 
 ```php
 public function trash(Node $node, int|string|null $actorId = null): Node
@@ -258,7 +287,9 @@ $drive->trash($node);
 
 ### `restore()`
 
-Bring a trashed node (and its subtree) back:
+Bring a trashed node (and its subtree) back — to its original parent when that is
+still a live folder, otherwise to the root. A node that is not in the trash raises
+`NodeNotTrashedException` (409 `node_not_trashed`):
 
 ```php
 public function restore(Node $node, int|string|null $actorId = null): Node
@@ -270,14 +301,16 @@ $drive->restore($node);
 
 ### `forceDelete()`
 
-Permanently delete a node and its subtree — this detaches the version↔blob edges
-(the bytes become GC-eligible) and releases the quota. Returns `void`.
+Permanently delete a **trashed** node and its subtree — this detaches the version↔blob
+edges (the bytes become GC-eligible) and releases the quota. Returns `void`. A live node
+raises `NodeNotTrashedException`: trash it first. The root is never deleted.
 
 ```php
 public function forceDelete(Node $node, int|string|null $actorId = null): void
 ```
 
 ```php
+$drive->trash($node);
 $drive->forceDelete($node);
 ```
 

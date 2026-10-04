@@ -1,0 +1,7 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/db-preflight.sh pgsql
+cwd: /home/vostrikov/projects/packages/vaulter/packages/drive
+source: drive.yml:drive-mutation preflight
+db-preflight OK: pgsql vaulter_test (PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit)
+
+exit: 0
+elapsed_seconds: 0.030

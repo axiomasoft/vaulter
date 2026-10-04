@@ -25,13 +25,22 @@ your app actually needs:
 # Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
 composer require axioma-studio/vaulter-drive
 
-# Document nodes (TipTap/Yjs editing, versions, comments) — independent of Drive
+# Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive
 composer require axioma-studio/vaulter-documents
 ```
 
 Either command also pulls in `axioma-studio/vaulter-core` as a dependency, so a
 plain `composer require axioma-studio/vaulter-core` alone is only useful if you plan to
 implement every domain contract yourself without Drive or Documents.
+
+Protected HTTP routes require authentication through `auth:sanctum` by default.
+Install and configure Laravel Sanctum in your host (`composer require laravel/sanctum`),
+or set `vaulter.routes.middleware.authenticated` to your application's guard.
+Anonymous protected requests receive 401; public share links and signed hub callbacks
+use independent `public` and `hub` stacks and require no Sanctum token.
+Request metrics are added to all three stacks automatically. Published 0.2 configs
+with `vaulter.middleware` still override the authenticated stack; remove that legacy
+key to adopt the new default. See [Configuration](/guide/configuration#routes).
 
 Then run the bundled install command, which publishes the config, publishes the migrations
 and offers to run them:

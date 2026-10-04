@@ -17,7 +17,8 @@ Vaulter\Contracts\Access\HostRoleDriver
 
 Vaulter\Contracts\Cas\BlobStore
   attach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
-  commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): \Vaulter\Models\Cas\Blob
+  commit(mixed $stream, \Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): \Vaulter\Models\Cas\Blob
+  commitStaged(\Vaulter\Contracts\Cas\StagedObject $staged, \Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): \Vaulter\Models\Cas\Blob
   detach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   read(\Vaulter\Models\Cas\Blob $blob): mixed
 
@@ -25,7 +26,7 @@ Vaulter\Contracts\Cas\ContentStore
   delete(string $key, ?string $disk = null): void
   exists(string $key, ?string $disk = null): bool
   get(string $key, ?string $disk = null): mixed
-  keyFor(string $scope, string $sha256): string
+  keyFor(\Vaulter\ValueObjects\Cas\BlobScope $scope, string $sha256): string
   promote(\Vaulter\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
   stage(mixed $stream): \Vaulter\Contracts\Cas\StagedObject
 
@@ -124,6 +125,198 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
   isAllowed(string $url): void
   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
+Vaulter\Access\AccessResolver
+  __construct(\Vaulter\Access\HostRoleDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\StorageReadRepository $storages)
+  abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
+  can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
+  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Storage $storage): bool
+  effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
+  evaluateMany(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $nodes): array
+  explain(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\AccessExplanation
+  filterSharedWith(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $candidates): array
+  sharedNodeIds(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Access\AclFolder
+  applyOwn(\Vaulter\Access\ValueObjects\AclMask $inherited, int $ownAllow, int $ownDeny, ?\Vaulter\Enums\Access\GrantLevel $ownLevel): \Vaulter\Access\ValueObjects\AclMask
+  foldChain(array $depths): \Vaulter\Access\ValueObjects\AclMask
+
+Vaulter\Access\ExactListing
+  __construct(\Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
+  grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
+  page(?\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
+
+Vaulter\Data\Drive\NodePage
+  __construct(array $items, ?string $nextCursor, int $scanned)
+  count(): int
+  getIterator(): \Traversable
+  hasMore(): bool
+  jsonSerialize(): array
+
+Vaulter\Database\VaulterDatabase
+  __construct(\Illuminate\Database\DatabaseManager $db)
+  advisoryLock(string $key): void
+  afterCommit(\Closure $callback): void
+  connection(): \Illuminate\Database\Connection
+  driver(): string
+  lockTree(int|string $storageId): void
+  lockTreeShared(int|string $storageId): void
+  transaction(\Closure $callback, int $attempts = 3): mixed
+
+Vaulter\ValueObjects\Cas\BlobScope
+  dedupScope(): string
+  drive(string $id): \self
+  forUpload(string $dedupScope, ?string $tenantId, string $storageId): \self
+  fromSegment(string $segment): \self
+  global(): \self
+  isLegacy(): bool
+  key(): string
+  legacy(string $segment): \self
+  segment(): string
+  storageId(): ?string
+  tenant(string $id): \self
+  tenantId(): ?string
+
+Vaulter\Support\Config
+  activityModel(): string
+  allowedUploadMimes(): array
+  authenticatedMiddleware(): array
+  autosaveDebounceSeconds(): int
+  blobModel(): string
+  blobStoreClass(): string
+  channelPrefix(): string
+  collaborationDriverName(): string
+  collaborationEnabled(): bool
+  collaborationHubUrl(): ?string
+  collaborationJwtSecret(): ?string
+  collaborationRoom(mixed $nodeId): string
+  collaborationTokenTtl(): int
+  collaborationWebhookSecret(): ?string
+  collaborationWebhookTimestampTolerance(): int
+  connection(): ?string
+  contentStoreClass(): string
+  dedupScope(): string
+  defaultDisk(): string
+  defaultPanel(): string
+  documentHandlers(): array
+  downloadInlineMimeWhitelist(): array
+  driveNameMaxLength(): int
+  driveNameSeparatorsPattern(): string
+  driverConfig(string $name): array
+  enabledDocumentTypes(): array
+  exporters(): array
+  extraDataEnabled(): bool
+  featureEnabled(string $feature, ?string $panel = null): bool
+  fileModel(): string
+  fileVersionBlobModel(): string
+  fileVersionModel(): string
+  gcGraceHours(int $override = 0): int
+  grantModel(): string
+  hostKeyType(): string
+  hubMiddleware(): array
+  idStrategies(): array
+  idStrategy(): string
+  idType(): string
+  listingScanBudget(): int
+  maxActiveUploadSessions(): int
+  maxDocumentSizeKb(): int
+  maxDocumentVersions(): int
+  maxUploadKb(): int
+  maxVersions(): int
+  nodeCommentModel(): string
+  nodeDocumentVersionModel(): string
+  nodeIdFromRoom(string $room): string
+  nodeModel(): string
+  nodeShareModel(): string
+  nodeShareTokenGeneratorClass(): string
+  orphanGraceHours(int $override = 0): int
+  outboxModel(): string
+  panels(): array
+  permissionDriver(): string
+  permissionDrivers(): array
+  publicMiddleware(): array
+  publicRateLimitPerMinute(): int
+  reverbConnection(): string
+  routePrefix(): string
+  shareDefaultTtlHours(): int
+  shareMaxTtlHours(): int
+  sharePrefixLength(): int
+  shareTokenGeneratorClass(): string
+  shareUrlBase(): string
+  storageDriverClass(): string
+  storageModel(): string
+  table(string $name): string
+  tablePrefix(): string
+  tenantColumn(): string
+  tenantEnabled(): bool
+  tiptapExtraAttributes(): array
+  tiptapExtraMarks(): array
+  tiptapExtraNodes(): array
+  tiptapUrlAttributes(): array
+  trashRetentionDays(): int
+  tusEnabled(): bool
+  uploadChunkSize(): int
+  uploadMaxBytes(): int
+  uploadMaxChunkBytes(): int
+  uploadMetadataAllowedKeys(): array
+  uploadMetadataMaxValueLength(): int
+  uploadPartModel(): string
+  uploadSessionModel(): string
+  uploadSessionTtlHours(): int
+  uploadsRateLimitPerMinute(): int
+  usesUlids(): bool
+  webhookAllowedIpRanges(): array
+  webhookAllowedSchemes(): array
+  webhookBackoff(int $attempt): int
+  webhookBlockedIpRanges(): array
+  webhookConnectTimeout(): int
+  webhookDeliveryModel(): string
+  webhookDisableAfterFailures(): int
+  webhookEndpointModel(): string
+  webhookEventHeader(): string
+  webhookManageAbility(): ?string
+  webhookMaxAttempts(): int
+  webhookMaxResponseBytes(): int
+  webhookRetentionDays(): int
+  webhookRetryClaimSeconds(): int
+  webhookSignatureHeader(): string
+  webhookTimeout(): int
+  webhookTimestampHeader(): string
+  webhookUrlGuardClass(): string
+
+Vaulter\Schema\HostKeyColumns
+  add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
+  sqlType(string $driver): string
+
+Vaulter\Support\VaulterSchema
+  actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
+  bits(\Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
+  extraData(\Illuminate\Database\Schema\Blueprint $table): void
+  foreignKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  hostKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  key(\Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
+  morphs(\Illuminate\Database\Schema\Blueprint $table, string $name): void
+  panel(\Illuminate\Database\Schema\Blueprint $table): void
+  reference(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
+  tenant(\Illuminate\Database\Schema\Blueprint $table): void
+
+Vaulter\Http\Support\HttpResourceResolver
+  __construct(\Vaulter\Repositories\Drive\StorageReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
+  node(int|string $id): \Vaulter\Models\Drive\Node
+  storage(int|string $id): \Vaulter\Models\Drive\Storage
+
+Vaulter\Exceptions\Contracts\ProblemException
+  httpStatus(): int
+  problemCode(): string
+
+Vaulter\Exceptions\Nodes\NodeNotFoundException
+  forId(int|string $id): \self
+
+Vaulter\Exceptions\Nodes\StorageNotFoundException
+  forId(int|string $id): \self
+
+Vaulter\Exceptions\VaulterException
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
 FACADE Vaulter\Facades\Vaulter
   static \Vaulter\Contracts\Drive\DriveHandle for(\Illuminate\Database\Eloquent\Model $entity, ?string $panel = null)
   static \Vaulter\Contracts\Drive\DriveHandle forStorage(\Vaulter\Models\Drive\Storage $storage)
@@ -137,3 +330,29 @@ FACADE Vaulter\Facades\Vaulter
   static void registerExporter(\Vaulter\Contracts\Handlers\DocumentExporter|class-string<\Vaulter\Contracts\Handlers\DocumentExporter> $exporter)
   static void registerHandler(\Vaulter\Contracts\Handlers\FileHandler|class-string<\Vaulter\Contracts\Handlers\FileHandler> $handler)
   static void registerPanel(\Vaulter\Panels\StoragePanelProvider|\Vaulter\Panels\Panel $panel)
+
+Vaulter\Events\Access\NodeGrantCreated
+  __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Access\NodeGrant $grant
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Access\NodeGrantRevoked
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int $revoked
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareCreated
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareRevoked
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly int|null|string $actorId
+  readonly string $eventId

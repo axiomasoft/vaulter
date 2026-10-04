@@ -1,0 +1,26 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Concurrency\DedicatedConnectionTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit takes the CAS advisory lock on the dedicated connection only[39m[90m     [39m [90m1.15s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Concurrency\DedicatedConnectionTest[22m [90m>[39m it takes the CAS advi…   
+[39;1m  Failed asserting that 0 is identical to 1.[39;22m
+
+  at [32mtests/Concurrency/DedicatedConnectionTest.php[39m:[32m51[39m
+     47▕ 
+     48▕     $database->transaction(function () use ($database, $sql): void {
+     49▕         app(BlobLock::class)->acquire('s1', str_repeat('a', 64));
+     50▕ 
+  ➜  51▕         expect((int) $database->connection()->selectOne($sql)->locks)->toBe(1)
+     52▕             ->and((int) DB::connection()->selectOne($sql)->locks)->toBe(0);
+     53▕     });
+     54▕ 
+     55▕     expect((int) $database->connection()->selectOne($sql)->locks)->toBe(0);
+
+  [33m1   [39m[39;1mtests/Concurrency/DedicatedConnectionTest.php[39;22m:[39;1m51[39;22m
+      [2m+1 vendor frames [22m
+  [33m3   [39m[39;1m/home/vostrikov/projects/packages/vaulter/packages/core/src/Database/VaulterDatabase.php[39;22m:[39;1m29[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (1 assertions)[39m
+  [90mDuration:[39m [39m1.19s[39m
+

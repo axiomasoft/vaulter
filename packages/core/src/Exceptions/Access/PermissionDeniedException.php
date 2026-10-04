@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Access;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-final class PermissionDeniedException extends VaulterException
+final class PermissionDeniedException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'permission_denied';
+
+    private const int HTTP_STATUS = 403;
+
     public static function forAction(string $action): self
     {
         return new self(
@@ -34,8 +37,13 @@ final class PermissionDeniedException extends VaulterException
         );
     }
 
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(['message' => $this->getMessage()], 403);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

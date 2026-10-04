@@ -84,7 +84,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
         'chunk_size' => Config::uploadChunkSize(),
         'mime_type' => 'application/octet-stream',
         'metadata' => ['filename' => 'shape.bin'],
-        'created_by' => 42,
+        'created_by' => '42',
     ])
         ->and($session->upload_id)->not->toBeEmpty()
         ->and($session->expires_at)->not->toBeNull();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Support\Str;
 
 /**
  * A node and its subtree were permanently soft-deleted (deleted_at set), their
@@ -22,6 +23,8 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
  */
 final readonly class NodeForceDeleted implements ShouldDispatchAfterCommit
 {
+    public string $eventId;
+
     /**
      * @param list<int|string> $nodeIds
      */
@@ -30,5 +33,8 @@ final readonly class NodeForceDeleted implements ShouldDispatchAfterCommit
         public array $nodeIds,
         public int $freedBytes,
         public int|string|null $actorId = null,
-    ) {}
+        ?string $eventId = null,
+    ) {
+        $this->eventId = $eventId ?? (string) Str::ulid();
+    }
 }

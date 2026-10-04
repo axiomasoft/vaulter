@@ -1,0 +1,63 @@
+{
+  "estimate": {
+    "route_attested": true,
+    "capabilities_attested": true,
+    "capabilities_sufficient": true,
+    "context_attested": false,
+    "context_health": "unavailable",
+    "batch_receipt_valid": true,
+    "remaining_batch_digest": "a4fb720f7369f63ff133d2ec410a7ace1aa73f1690451296a4db5c70813dffc6",
+    "loaded_inputs_reusable": true,
+    "cold_start_cost": 0,
+    "lifecycle": "scope-complete",
+    "isolated_review": false,
+    "reviewer_task": null,
+    "checkpoint": "artifacts/P1.4/completion.md",
+    "external_pause": null,
+    "schema_version": "session-work-estimate/v1"
+  },
+  "decision": {
+    "outcome": "continue-root",
+    "reason": "authorized-scope-complete",
+    "evidence": [
+      "batch:a4fb720f7369f63ff133d2ec410a7ace1aa73f1690451296a4db5c70813dffc6",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "lifecycle:scope-complete",
+      "checkpoint:artifacts/P1.4/completion.md"
+    ],
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "next": {
+    "kind": "run-items",
+    "command_id": "task:plan-run",
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "arguments": [
+      "2026.09.29-№1-VAULTER-STABLE",
+      "P1.9",
+      "P1.10",
+      "P1.11"
+    ],
+    "context_kind": "continue-root",
+    "item_ids": [
+      "P1.9",
+      "P1.10",
+      "P1.11"
+    ],
+    "cold_start_scope": [],
+    "continuity": {
+      "outcome": "continue-root",
+      "reason": "authorized-scope-complete",
+      "evidence": [
+        "batch:a4fb720f7369f63ff133d2ec410a7ace1aa73f1690451296a4db5c70813dffc6",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "lifecycle:scope-complete",
+        "checkpoint:artifacts/P1.4/completion.md"
+      ],
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    }
+  }
+}

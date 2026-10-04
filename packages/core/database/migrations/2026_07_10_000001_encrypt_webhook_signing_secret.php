@@ -38,7 +38,7 @@ return new class extends Migration
             });
         }
 
-        (new SigningSecretEncryptor)->encryptPlaintext($table);
+        app(SigningSecretEncryptor::class)->encryptPlaintext($table);
     }
 
     public function down(): void
@@ -53,7 +53,7 @@ return new class extends Migration
             return;
         }
 
-        (new SigningSecretEncryptor)->decryptToPlaintext($table);
+        app(SigningSecretEncryptor::class)->decryptToPlaintext($table);
 
         Schema::table($table, static function (Blueprint $blueprint): void {
             $blueprint->string('signing_secret')->change();

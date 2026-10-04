@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Comments;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\CreateNodeCommentData;
 use Vaulter\Documents\Events\Comments\NodeCommentAdded;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -20,11 +20,12 @@ final readonly class AddNodeCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, CreateNodeCommentData $data): NodeComment
     {
-        $comment = DB::transaction(fn (): NodeComment => $this->comments->create([
+        $comment = $this->database->transaction(fn (): NodeComment => $this->comments->create([
             'node_id' => $node->getKey(),
             'parent_id' => $data->parentId,
             'author_type' => $data->authorType,

@@ -6,12 +6,14 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobStore;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit atomicity (H.3): if the transaction rolls back, no blob row is left
@@ -56,7 +58,7 @@ it('rollback не оставляет висящей строки blob', function
             $this->inner->delete($key, $disk);
         }
 
-        public function keyFor(string $scope, string $sha256): string
+        public function keyFor(BlobScope $scope, string $sha256): string
         {
             return $this->inner->keyFor($scope, $sha256);
         }
@@ -67,9 +69,10 @@ it('rollback не оставляет висящей строки blob', function
         lock: app(BlobLock::class),
         blobs: app(BlobStoreRepository::class),
         edges: app(FileVersionBlobStoreRepository::class),
+        database: app(VaulterDatabase::class),
     );
 
-    expect(fn () => $store->commit(stringStream('boom bytes'), tenantId: 1))
+    expect(fn () => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused')))
         ->toThrow(RuntimeException::class, 'promote boom');
 
     // The transaction rolled back: zero rows, zero objects.
@@ -80,7 +83,7 @@ it('rollback не оставляет висящей строки blob', function
 it('staged temp-файл удаляется после успешного коммита', function (): void {
     $before = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
-    app(BlobStore::class)->commit(stringStream('temp cleanup'), tenantId: 1);
+    app(BlobStore::class)->commit(stringStream('temp cleanup'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
 
     $after = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
@@ -95,3 +98,24 @@ function stringStream(string $bytes)
 
     return $stream;
 }
+
+it('commitStaged keeps the temp file reusable across an outer SQL rollback', function (): void {
+    $content = app(ContentStore::class);
+    $staged = $content->stage(stringStream('reusable staged bytes'));
+    $scope = BlobScope::global();
+    try {
+        expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($staged, $scope): void {
+            app(BlobStore::class)->commitStaged($staged, $scope);
+            throw new RuntimeException('metadata rollback');
+        }))->toThrow(RuntimeException::class, 'metadata rollback');
+        expect(Blob::query()->count())->toBe(0)
+            ->and(is_file($staged->path()))->toBeTrue();
+        $blob = app(BlobStore::class)->commitStaged($staged, $scope);
+        expect(is_file($staged->path()))->toBeTrue()
+            ->and(stream_get_contents(app(BlobStore::class)->read($blob)))->toBe('reusable staged bytes');
+        expect(app(BlobStore::class)->commitStaged($staged, $scope)->id)->toBe($blob->id);
+    } finally {
+        $staged->discard();
+    }
+    expect(is_file($staged->path()))->toBeFalse();
+});

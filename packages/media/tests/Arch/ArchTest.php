@@ -90,3 +90,7 @@ test('the package exposes no public contract surface (VLT-REL P2.2)', function (
 
     expect($found)->toBe([]);
 });
+
+arch('DB facade is routed through VaulterDatabase (AD25)')
+    ->expect('Vaulter\Media')
+    ->not->toUse('Illuminate\Support\Facades\DB');

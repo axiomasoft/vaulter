@@ -203,6 +203,7 @@ it('advances sparse string and native UUID keys with configured models', functio
         $table->{$keyType}('blob_key')->primary();
         $table->string('sha256');
         $table->string('dedup_scope');
+        $table->string('scope_key');
         $table->string('status');
         $table->unsignedInteger('ref_count');
         $table->timestamp('delete_after_at')->nullable();
@@ -241,6 +242,7 @@ it('advances sparse string and native UUID keys with configured models', functio
             'blob_key' => $keyFor($i),
             'sha256' => hash('sha256', 'string blob '.$i),
             'dedup_scope' => 'global',
+            'scope_key' => 'global',
             'status' => BlobStatus::Committed,
             'ref_count' => 0,
         ])->save();
@@ -275,7 +277,7 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     try {
         foreach ($blobs as $blob) {
-            $key = 'tnull|'.$blob->sha256;
+            $key = 'cas:'.$blob->scope_key.':'.$blob->sha256;
             $acquired = $probe->selectOne('SELECT pg_try_advisory_lock(hashtext(?)) AS acquired', [$key])->acquired;
 
             if ($acquired) {

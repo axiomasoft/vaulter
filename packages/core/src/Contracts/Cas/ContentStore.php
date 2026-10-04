@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
+use Vaulter\ValueObjects\Cas\BlobScope;
+
 /**
  * The low-level byte side of the CAS (H.3): stage an incoming stream to a local
  * seekable temp file (hashing those durable bytes server-side), then promote the
@@ -43,9 +45,10 @@ interface ContentStore
     public function delete(string $key, ?string $disk = null): void;
 
     /**
-     * Build the scope-qualified, sharded storage key "<scope>/ab/cd/<sha256>"
+     * Build "<scope>/ab/<sha256>" for new scopes, or preserve the legacy
+     * "<scope>/ab/cd/<sha256>" layout for legacy scopes.
      * (H.3): the scope segment keeps two dedup scopes from ever sharing one
      * physical object, so one scope's GC can never delete another's live bytes.
      */
-    public function keyFor(string $scope, string $sha256): string;
+    public function keyFor(BlobScope $scope, string $sha256): string;
 }

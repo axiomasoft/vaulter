@@ -103,7 +103,7 @@ it('returns a hocuspocus descriptor with url + JWT when that driver is configure
         ->assertJsonPath('data.connection', null);
 });
 
-it('403s when the target node is a folder, not a document', function (): void {
+it('409s when the target node is a folder, not a document', function (): void {
     actAsCollaborator();
     $drive = DocumentTestHelpers::drive();
     $folder = AccessTestHelpers::folder($drive->storage(), null, 'plain-folder');
@@ -111,5 +111,5 @@ it('403s when the target node is a folder, not a document', function (): void {
 
     // A folder has no document payload — collab is document-only.
     test()->postJson('api/vaulter/nodes/'.$folder->getKey().'/collab/token')
-        ->assertStatus(500); // NotADocumentNodeException (no custom render → 500)
+        ->assertStatus(409)->assertJsonPath('code', 'not_a_document');
 });

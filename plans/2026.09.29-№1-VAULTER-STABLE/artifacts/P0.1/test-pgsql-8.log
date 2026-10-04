@@ -1,0 +1,7 @@
+$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --ci packages/core/tests/TablePrefix
+cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
+source: tests.yml:test-pgsql / Postgres: table-prefix suite
+{"tool":"pest","result":"passed","tests":2,"passed":2,"assertions":9,"duration_ms":605}
+
+exit: 0
+elapsed_seconds: 0.668

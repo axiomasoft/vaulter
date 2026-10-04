@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\UploadFileAction;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Exceptions\UploadContentMismatchException;
@@ -23,11 +23,11 @@ use Vaulter\Repositories\Drive\StorageReadRepository;
  * place the staged bytes of a tus / S3-multipart session cross into the Drive, and
  * it does so through the SAME race-free path a one-shot upload uses:
  *
- *   staged temp → UploadFileData → UploadFileAction → BlobStore.commit
+ *   staged temp → UploadFileData → UploadFileAction → BlobStore.commitStaged
  *
  * so dedup + the race-free state machine + ref accounting + quota all apply, and the
  * sha256 is RECOMPUTED server-side from the assembled staged file inside
- * BlobStore.commit (the client's expected_sha256 / the S3 multipart ETag is NEVER
+ * BlobStore.commitStaged (the client's expected_sha256 / the S3 multipart ETag is NEVER
  * the content address — H.3). The session's target shapes UploadFileData:
  *   - new file    → a Node(kind=file) under target_parent (null = root);
  *   - new version → a new version of node_id (version_no bumps, head repoints).
@@ -45,6 +45,7 @@ final readonly class CommitUploadAction
         private UploadSessionStoreRepository $sessions,
         private StagedUpload $staged,
         private MagicByteSniffer $sniffer,
+        private VaulterDatabase $database,
     ) {}
 
     /**
@@ -64,7 +65,7 @@ final readonly class CommitUploadAction
         $this->assertContentMatchesDeclaredMime($session);
 
         try {
-            $node = DB::transaction(function () use ($session, $stream): Node {
+            $node = $this->database->transaction(function () use ($session, $stream): Node {
                 $committed = $this->uploadFile->execute($this->dataFor(session: $session, stream: $stream));
 
                 // current_version_id is the head pointer; the version's blob_id is the

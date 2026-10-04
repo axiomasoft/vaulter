@@ -52,6 +52,6 @@ scope `global`. Project connections with others: `maind graph --project vaulter`
 
 <!-- swissknifeman:hub:start -->
 <!-- swissknifeman hub: stub — skills and task-commands are connected natively; index and priority rules are not duplicated here. -->
-<!-- swissknifeman:registry sha=9ea5e5679c72 skills=232 -->
+<!-- swissknifeman:registry sha=00a04505cea0 skills=232 -->
 <!-- Full index: `skiller status` or generate-hub.sh --target <dir> --full-index. -->
 <!-- swissknifeman:hub:end -->

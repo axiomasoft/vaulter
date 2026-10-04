@@ -1,0 +1,354 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.29-№1-vaulter-stable-p1-10",
+  "version": {
+    "revision": 1,
+    "content_hash": "d333fc22b08799f3cd233d9291f7c03d8f695a8d610d3b97b76e09fc3eb3ce8b",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "`vaulter-documents` и `vaulter-filament` объявляют фактическую зависимость от `vaulter-drive`, а действие\nFilament «Move» отказывает, если у пользователя нет `Create` на папке назначения (N14, N15, AD02, V27).",
+    "non_goals": [
+      "вызов через авторизующий handle `Vaulter::drive()->actingAs()` (P6.6)",
+      "metapackage и\nconsumer-установка из split-репозиториев (P7.5)",
+      "arch-тесты графа зависимостей и перенос AzGuard (P2.4)",
+      "остальные\nдействия Filament (rename/trash/restore — проверка способности на узле уже есть)."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "1. `packages/documents/composer.json` и `packages/filament/composer.json`: `\"axioma-studio/vaulter-drive\": \"self.version\"`\n   переносится из `require-dev` в `require` (path-репозиторий `../drive` уже объявлен). `vaulter-drive` по-прежнему\n   требует core и media.\n2. `packages/filament/src/Resources/NodeResource.php`:\n   - `folderOptions(Node $record)` возвращает только папки, на которых `self::actorCan(Ability::Create, $folder)` и\n     `AccessResolver::canCreateInWorkspace($actor, $record->storage)` истинны (корень — как сейчас, подпись `(root)`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M2",
+      "requirement": "- `moveAction()->action(...)`: до вызова `Vaulter::forStorage(...)->move(...)` — `$destination = $into ?? $record->storage->rootNode`\n     (корень storage через `root_node_id`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M3",
+      "requirement": "если актёра нет, или `!canCreateInWorkspace`, или `!can(actor, Ability::Create, $destination)` →\n     `throw PermissionDeniedException::forAbility(Ability::Create->value)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M4",
+      "requirement": "Filament показывает уведомление об ошибке\n     (`Notification::make()->title('Move not allowed')->danger()->send()` и `$action->halt()`), вызов move не происходит.\n   - Логика проверки — приватный статический `assertCanCreateIn(Node $record, ?Node $into): void`, повторяющий\n     `NodeController::guardCreate()`.\n3. Удалить утверждения о независимости: `README.md:65` и `docs/guide/installation.md:28` — комментарий установки\n   documents: «Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive».\n4. Тест V27 — `packages/filament/tests/Feature/NodeResourceMoveAuthorizationTest.php`: пользователь с grant `Move` на\n   узле и без `Create` на целевой папке",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M5",
+      "requirement": "(а) целевой папки нет в опциях `parent_id`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M6",
+      "requirement": "(б) вызов действия с\n   `parent_id` этой папки (Livewire `callTableAction('move', $record, ['parent_id' => $folderId])`) → узел не перемещён\n   (`parent_id` прежний), отправлено уведомление `Move not allowed`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M7",
+      "requirement": "(в) с `Create` на папке — перемещение выполнено.\n   Негативный контроль: временно убрать вызов `assertCanCreateIn` → (б) красный.\n5. Consumer-проверка зависимостей: `scripts/php84 composer validate --strict packages/documents/composer.json` и то же\n   для filament → exit 0",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M8",
+      "requirement": "`CHANGELOG.md [Unreleased]` (Changed: documents/filament require drive — AD02",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M9",
+      "requirement": "Fixed: N14)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M10",
+      "requirement": "`UPGRADE.md`.",
+      "source_ref": "phases/P1.md:13"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "вызов через авторизующий handle `Vaulter::drive()->actingAs()` (P6.6)",
+      "source_ref": "phases/P1.md:37"
+    },
+    {
+      "id": "N2",
+      "prohibition": "metapackage и\nconsumer-установка из split-репозиториев (P7.5)",
+      "source_ref": "phases/P1.md:37"
+    },
+    {
+      "id": "N3",
+      "prohibition": "arch-тесты графа зависимостей и перенос AzGuard (P2.4)",
+      "source_ref": "phases/P1.md:37"
+    },
+    {
+      "id": "N4",
+      "prohibition": "остальные\nдействия Filament (rename/trash/restore — проверка способности на узле уже есть).",
+      "source_ref": "phases/P1.md:37"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "честные `require`, проверка `Create` на назначении в Filament, V27, исправленные README/docs.",
+        "scope": "public",
+        "check": "- Code Guidance → `self.version` для обоих файлов; `scripts/php84 composer validate --strict packages/documents/composer.json` и\n  `packages/filament/composer.json` → exit 0.",
+        "evidence_ref": "E6"
+      },
+      {
+        "id": "A2",
+        "predicate": "честные `require`, проверка `Create` на назначении в Filament, V27, исправленные README/docs.",
+        "scope": "public",
+        "check": "- `(cd packages/filament && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/NodeResourceMoveAuthorizationTest.php)` → `3 passed`.",
+        "evidence_ref": "E7"
+      },
+      {
+        "id": "A3",
+        "predicate": "честные `require`, проверка `Create` на назначении в Filament, V27, исправленные README/docs.",
+        "scope": "public",
+        "check": "- Негативный контроль Scope п.4 → (б) failed; после возврата — passed.",
+        "evidence_ref": "E8"
+      },
+      {
+        "id": "A4",
+        "predicate": "честные `require`, проверка `Create` на назначении в Filament, V27, исправленные README/docs.",
+        "scope": "public",
+        "check": "- `grep -rn \"independent of Drive\" README.md docs/guide` → пусто.",
+        "evidence_ref": "E9"
+      },
+      {
+        "id": "A5",
+        "predicate": "честные `require`, проверка `Create` на назначении в Filament, V27, исправленные README/docs.",
+        "scope": "public",
+        "check": "- Гейты documents и filament → exit 0.",
+        "evidence_ref": "E10"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P1/P1.10.md:P1.10",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "run-items",
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "implementation",
+      "effort": "low"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": []
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "packages/filament/src/Resources/NodeResource.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "packages/drive/src/Http/Controllers/NodeController.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "packages/filament/tests/Feature/NodeResourceTest.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "- Code Guidance → `self.version` для обоих файлов; `scripts/php84 composer validate --strict packages/documents/composer.json` и\n  `packages/filament/composer.json` → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E7",
+      "path": "- `(cd packages/filament && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/NodeResourceMoveAuthorizationTest.php)` → `3 passed`.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E8",
+      "path": "- Негативный контроль Scope п.4 → (б) failed; после возврата — passed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E9",
+      "path": "- `grep -rn \"independent of Drive\" README.md docs/guide` → пусто.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E10",
+      "path": "- Гейты documents и filament → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/filament/src/Resources/NodeResource.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/filament/src/Resources/NodeResource.php",
+        "normalized": "packages/filament/src/Resources/NodeResource.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Http/Controllers/NodeController.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Http/Controllers/NodeController.php",
+        "normalized": "packages/drive/src/Http/Controllers/NodeController.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/filament/tests/TestCase.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/filament/tests/TestCase.php",
+        "normalized": "packages/filament/tests/TestCase.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.10-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/filament/src/Resources/NodeResource.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/filament/src/Resources/NodeResource.php",
+        "normalized": "packages/filament/src/Resources/NodeResource.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Http/Controllers/NodeController.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Http/Controllers/NodeController.php",
+        "normalized": "packages/drive/src/Http/Controllers/NodeController.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/filament/tests/Feature/NodeResourceTest.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/filament/tests/Feature/NodeResourceTest.php",
+        "normalized": "packages/filament/tests/Feature/NodeResourceTest.php",
+        "path_kind": "internal",
+        "rejection": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "chain-of-thought",
+        "raw-transcript-bodies",
+        "secrets",
+        "tool-payloads"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10",
+      "codex": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P1.10",
+    "reads": [
+      "E2",
+      "E3",
+      "E4",
+      "E5"
+    ],
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.10"
+  }
+}

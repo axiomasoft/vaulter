@@ -1,0 +1,56 @@
+{
+  "reviewer": "codex/gpt-6.1-sol/high",
+  "commands": [
+    {
+      "command": "scripts/db-preflight.sh pgsql",
+      "exit_code": 0
+    },
+    {
+      "command": "APP_ENV=testing DB_CONNECTION=pgsql DB_DATABASE=vaulter_test DB_HOST=127.0.0.1 DB_PORT=5432 DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency",
+      "exit_code": 0,
+      "passed": 4,
+      "skipped": 0,
+      "evidence": "artifacts/P0-audit/concurrency-original.log"
+    },
+    {
+      "command": "same suite with temporary barrier-bypass class, loaded via auto_prepend_file",
+      "exit_code": 0,
+      "passed": 4,
+      "skipped": 0,
+      "interpretation": "PA01 reproduced: mutant survives",
+      "evidence": "artifacts/P0-audit/concurrency-no-barrier-proven.log"
+    },
+    {
+      "command": "APP_ENV=testing scripts/fixtures/make-v0.2-dump.sh --verify",
+      "exit_code": 0,
+      "dumps_ok": 3,
+      "evidence": "artifacts/P0-audit/fixture-verify.log"
+    },
+    {
+      "command": "python3 artifacts/coverage/opus-coverage.py check (plan-qualified path)",
+      "exit_code": 0,
+      "units": 1438,
+      "sections": 254,
+      "violations": 0
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s <plan>/artifacts/coverage -p test_opus_coverage.py -v",
+      "exit_code": 0,
+      "tests": 6
+    }
+  ],
+  "evidence_sha256": {
+    "artifacts/P0-audit/concurrency-original.log": "fa4bc870744763bebc218c419ff167d2dd9fe1ca56cf6873b1cba2e7d57a716a",
+    "artifacts/P0-audit/concurrency-no-barrier-proven.log": "b7920386ac1840fd6eaa07be85daa666c72f5dba63130b177cd7283fb9a258dd",
+    "artifacts/P0-audit/concurrency-no-barrier.log": "d5573f769bf717ab465beca16f8f8b39a9f3d91328ab1857136813333ecd7b4e",
+    "artifacts/P0-audit/fixture-verify.log": "88497495145715c44585fd9591d811b34e1db3786d9288550a8146fee6b19be2"
+  },
+  "final_bookkeeping": {
+    "plan_lint": "failure: B0-A remaining suffix [] vs pending reviewer return P0.2",
+    "pending_phase_repair_P0_2": true,
+    "phase_close_gate": "PHASE_AUDIT_ATTENTION",
+    "consent": "AUDIT_CONSENT_CONSUMED",
+    "product_fingerprint_unchanged": true,
+    "commit": "not created: final plan check red"
+  }
+}

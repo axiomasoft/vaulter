@@ -1,0 +1,37 @@
+{
+  "adapter_attestation": null,
+  "commit_sha": "a572121a84ac95e86f767a2f104d896bd4b9a017",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:acbcdc2efce8c61c3314ea054ad6c6bc07e9f59e409887d0da74df3d1b486843",
+    "plan": "sha256:bddc25eae4a594b8ffb9231c0dbcf96c349ae38faa16ea24a7a4a66aa9512a73",
+    "state": null
+  },
+  "journal": null,
+  "next_exact": "manual: Исправить дизайн P0 по findings/design-audit.md, повторить finalize-design P0 и finish, затем design audit.",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "rationale": {
+    "open_risks": "DA01–DA05 блокируют допуск исполнения текущего дизайна; DA06 — скрытая зависимость baseline.",
+    "remaining": "Исправление дизайна P0 → повторная финализация P0 и finish → design audit нового fingerprint GREEN → owner gates O-1/O-2 → исполнение строк 1–3 execution-sheet → фазовый"
+  },
+  "recommendation": "**Next:** manual: Исправить дизайн P0 по findings/design-audit.md, повторить finalize-design P0 и finish, затем design audit.\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | n/a |\n| Model class | frontier |\n| Effort | high |\n| Capabilities | — |\n| Context | continue-root |\n| Суть | Автору дизайна устранить DA01–DA05 (Major), учесть DA06 (Minor); затем финализировать P0/finish и провести аудит нового fingerprint. Исполнение P0 пока не допущено. |\n\n**Manual prompt:**\n\n```text\nИсправить дизайн P0 по findings/design-audit.md, повторить finalize-design P0 и finish, затем design audit.\n```",
+  "route": {
+    "batch": "n/a",
+    "command": null,
+    "context": "continue-root",
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "handoff-recommendation-receipt/v1",
+  "status": "handoff-persisted",
+  "subject": "design"
+}

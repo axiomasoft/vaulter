@@ -1,0 +1,62 @@
+[
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E4",
+    "command": "- Code Guidance после правки → пустой вывод.",
+    "contract_sha256": "ad9076d9073f4613ca5788840a4ebcb613a0421a6b00d783cef343f7232df896",
+    "spec_sha256": "f1aa5294f440b51969df3e5de635e0a635813c7786e2d8b301cb099534e9a3f0",
+    "head": "ac1571db8e9c255ef6704e1afe743281e042096c",
+    "tree": "ffc85d3765adb6d7200a786d1273b83597b13cbb961d4a8d2bce46a256a22a7a",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-03T19:21:28Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E5",
+    "command": "- `grep -n \"askToStarRepoOnGitHub('axiomasoft/vaulter')\" packages/core/src/VaulterServiceProvider.php` → 1 строка.",
+    "contract_sha256": "ad9076d9073f4613ca5788840a4ebcb613a0421a6b00d783cef343f7232df896",
+    "spec_sha256": "f1aa5294f440b51969df3e5de635e0a635813c7786e2d8b301cb099534e9a3f0",
+    "head": "ac1571db8e9c255ef6704e1afe743281e042096c",
+    "tree": "ffc85d3765adb6d7200a786d1273b83597b13cbb961d4a8d2bce46a256a22a7a",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-03T19:21:28Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E6",
+    "command": "- `gh api repos/axiomasoft/vaulter/contents/docs/guide/errors.md --jq .path` → `docs/guide/errors.md` (цель `docs()` существует).",
+    "contract_sha256": "ad9076d9073f4613ca5788840a4ebcb613a0421a6b00d783cef343f7232df896",
+    "spec_sha256": "f1aa5294f440b51969df3e5de635e0a635813c7786e2d8b301cb099534e9a3f0",
+    "head": "ac1571db8e9c255ef6704e1afe743281e042096c",
+    "tree": "ffc85d3765adb6d7200a786d1273b83597b13cbb961d4a8d2bce46a256a22a7a",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-03T19:21:28Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E7",
+    "command": "- `for f in composer.json packages/*/composer.json; do scripts/php84 composer validate --no-check-publish \"$f\" || exit 1; done` → exit 0.",
+    "contract_sha256": "ad9076d9073f4613ca5788840a4ebcb613a0421a6b00d783cef343f7232df896",
+    "spec_sha256": "f1aa5294f440b51969df3e5de635e0a635813c7786e2d8b301cb099534e9a3f0",
+    "head": "ac1571db8e9c255ef6704e1afe743281e042096c",
+    "tree": "ffc85d3765adb6d7200a786d1273b83597b13cbb961d4a8d2bce46a256a22a7a",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-03T19:21:28Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E8",
+    "command": "- Гейт core и гейты drive, documents → exit 0.",
+    "contract_sha256": "ad9076d9073f4613ca5788840a4ebcb613a0421a6b00d783cef343f7232df896",
+    "spec_sha256": "f1aa5294f440b51969df3e5de635e0a635813c7786e2d8b301cb099534e9a3f0",
+    "head": "ac1571db8e9c255ef6704e1afe743281e042096c",
+    "tree": "ffc85d3765adb6d7200a786d1273b83597b13cbb961d4a8d2bce46a256a22a7a",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-03T19:21:28Z"
+  }
+]

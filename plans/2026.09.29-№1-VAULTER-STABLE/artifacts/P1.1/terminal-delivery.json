@@ -1,0 +1,80 @@
+{
+  "adapter_attestation": {
+    "canonical_command_sha256": "sha256:29f62c38acf16cc8167730ba7fec4c70acbd1e7c8434c918084eeaf28c23a20f",
+    "command_id": "task:plan-run",
+    "package": "task",
+    "version": "0.27.0"
+  },
+  "commit_sha": "9145bde2cf67d4a35ada7829d9b9b1d4d45122fe",
+  "continuity": {
+    "evidence": [
+      "batch:ffc43961dd6b5d237290736caa0459afc8e7bb7919c824a44fbfb2b55ec35c29",
+      "loaded-inputs:reusable",
+      "cold-start-cost:0",
+      "lifecycle:scope-complete",
+      "checkpoint:artifacts/P1.1/completion.md"
+    ],
+    "outcome": "continue-root",
+    "reason": "authorized-scope-complete",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:acf65d7df022c6c0b7933ae7a0b76f3ea817d7b3f37ffc52a65fd77bb788e966",
+    "plan": "sha256:84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+    "state": "sha256:a31a2995965990bd376cce1ca0eaa970d44459ac18c842ec861a1923ef1b2e78"
+  },
+  "journal": {
+    "batch_receipt": {
+      "batch_id": "solo",
+      "completed_prefix": [
+        "P1.1"
+      ],
+      "handoff_digest": "a3a4f388eba2c40f4ddc8a56ba222968bc6adda43dd9b6357672b565e9b0c659",
+      "invocation_digest": "ffc43961dd6b5d237290736caa0459afc8e7bb7919c824a44fbfb2b55ec35c29",
+      "membership": [
+        "P1.1"
+      ],
+      "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "9ecf434a9dc54f8c4b744201cb31cabaea4fd4d69e2d56eebc7632576b855511",
+      "stop_disposition": "continue"
+    },
+    "command": "plan-run",
+    "line": 41,
+    "result": "closed-green",
+    "run_id": "a50ce543a4811d5421f203304d07e13d363d92a6e26963134830e7acb34a7df9",
+    "sha256": "sha256:0af1cb0205293ed7cd5ded3d84777e6186a82f6e685a3cbc400d4bdf6f9de8b3"
+  },
+  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "rationale": {
+    "open_risks": "Upload/Document model connection gap fixed after Grok finding; four additional model files and rollback tests documented. P0 mutation follow-up remains stopped by D14. Original unrelated dirty plan changes preserved. Owner requires reviews only on Grok 4.7. Push/release not authorized.",
+    "remaining": "P1.8 and the remaining P1 items. This invocation admitted P1.1 only; no successor executed."
+  },
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | solo |\n| Model class | implementation |\n| Model | gpt-6-sol |\n| Effort | low |\n| Thinking | low |\n| Context | continue-root |\n| The bottom line | P1.1 complete; P1.8 introduces the domain exception contract. |\n\n```session-continuity-decision/v1\n{\"evidence\": [\"batch:ffc43961dd6b5d237290736caa0459afc8e7bb7919c824a44fbfb2b55ec35c29\", \"loaded-inputs:reusable\", \"cold-start-cost:0\", \"lifecycle:scope-complete\", \"checkpoint:artifacts/P1.1/completion.md\"], \"outcome\": \"continue-root\", \"reason\": \"authorized-scope-complete\", \"runnable\": true, \"schema_version\": \"session-continuity-decision/v1\"}\n```\n\n```bash\ncodex -C /home/vostrikov/projects/packages/vaulter -m gpt-6-sol -c 'model_reasoning_effort=\"low\"' -a never -s danger-full-access '$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.8'\n```",
+  "route": {
+    "batch": "solo",
+    "command": null,
+    "context": "continue-root",
+    "continuity": {
+      "evidence": [
+        "batch:ffc43961dd6b5d237290736caa0459afc8e7bb7919c824a44fbfb2b55ec35c29",
+        "loaded-inputs:reusable",
+        "cold-start-cost:0",
+        "lifecycle:scope-complete",
+        "checkpoint:artifacts/P1.1/completion.md"
+      ],
+      "outcome": "continue-root",
+      "reason": "authorized-scope-complete",
+      "runnable": true,
+      "schema_version": "session-continuity-decision/v1"
+    },
+    "model": "gpt-6-sol",
+    "thinking": "low"
+  },
+  "schema_version": "terminal-delivery-receipt/v1",
+  "status": "🟢 Done",
+  "subject": "P1.1"
+}

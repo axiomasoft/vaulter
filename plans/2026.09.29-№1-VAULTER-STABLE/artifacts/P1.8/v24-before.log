@@ -1,0 +1,633 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Document\DomainExceptionStatusTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.28s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.06s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.06s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit renders each domain exception with its stable code and HTTP stat[39m[90m…[39m [90m0.05s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Failed asserting that two strings are equal.
+  [39;22m[32m '{\n[39m[39;1m
+  [39;22m[31m-    "code": "permission_denied",\n[39m[39;1m
+  [39;22m[32m     "message": "[Vaulter...'[39m[39;1m
+  [39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m45[39m
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+     44▕         ->assertStatus($status)
+  ➜  45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕ 
+     49▕     // Vaulter routes render JSON even when a browser sends an HTML Accept header.
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [409] but received 422.
+Failed asserting that 422 is identical to 409.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Nodes\NodeNameConflictException: [Vaulter] A node named [duplicate] already exists under the storage root. Fix: pick a different name or move/trash the existing sibling first. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#node-name-conflict in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Nodes/NodeNameConflictException.php:22
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(69): Vaulter\Exceptions\Nodes\NodeNameConflictException::forName()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] A node named [duplicate] already exists under the storage root. Fix: pick a different name or move/trash the existing sibling first. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#node-name-conflict[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [409] but received 500.
+Failed asserting that 500 is identical to 409.
+
+The following exception occurred during the last request:
+
+Vaulter\Drive\Exceptions\CycleException: [Vaulter] Cannot move node [1] into [2] — the destination is the node itself or one of its descendants, which would create a cycle. Fix: choose a destination outside the moved node's own subtree. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#move-cycle in /home/vostrikov/projects/packages/vaulter/packages/drive/src/Exceptions/CycleException.php:19
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(70): Vaulter\Drive\Exceptions\CycleException::forMove()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Cannot move node [1] into [2] — the destination is the node itself or one of its descendants, which would create a cycle. Fix: choose a destination outside the moved node's own subtree. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#move-cycle[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [409] but received 500.
+Failed asserting that 500 is identical to 409.
+
+The following exception occurred during the last request:
+
+Vaulter\Drive\Exceptions\CrossStorageMoveException: [Vaulter] Cannot move a node from storage [1] into storage [2]. Fix: a move stays within one storage tree — copy across storages or re-home explicitly instead. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#cross-storage-move in /home/vostrikov/projects/packages/vaulter/packages/drive/src/Exceptions/CrossStorageMoveException.php:19
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(71): Vaulter\Drive\Exceptions\CrossStorageMoveException::between()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Cannot move a node from storage [1] into storage [2]. Fix: a move stays within one storage tree — copy across storages or re-home explicitly instead. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#cross-storage-move[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Failed asserting that two strings are equal.
+  [39;22m[32m '{\n[39m[39;1m
+  [39;22m[31m-    "code": "quota_exceeded",\n[39m[39;1m
+  [39;22m[32m     "message": "[Vaulter...'[39m[39;1m
+  [39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m45[39m
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+     44▕         ->assertStatus($status)
+  ➜  45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕ 
+     49▕     // Vaulter routes render JSON even when a browser sends an HTML Accept header.
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Failed asserting that two strings are equal.
+  [39;22m[32m '{\n[39m[39;1m
+  [39;22m[31m-    "code": "upload_conflict",\n[39m[39;1m
+  [39;22m[32m     "message": "[Vaulter...'[39m[39;1m
+  [39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m45[39m
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+     44▕         ->assertStatus($status)
+  ➜  45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕ 
+     49▕     // Vaulter routes render JSON even when a browser sends an HTML Accept header.
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Failed asserting that two strings are equal.
+  [39;22m[32m '{\n[39m[39;1m
+  [39;22m[31m-    "code": "upload_conflict",\n[39m[39;1m
+  [39;22m[32m     "message": "[Vaulter...'[39m[39;1m
+  [39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m45[39m
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+     44▕         ->assertStatus($status)
+  ➜  45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕ 
+     49▕     // Vaulter routes render JSON even when a browser sends an HTML Accept header.
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Failed asserting that two strings are equal.
+  [39;22m[32m '{\n[39m[39;1m
+  [39;22m[31m-    "code": "upload_offset_mismatch",\n[39m[39;1m
+  [39;22m[32m     "message": "[Vaulter...'[39m[39;1m
+  [39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m45[39m
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+     44▕         ->assertStatus($status)
+  ➜  45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕ 
+     49▕     // Vaulter routes render JSON even when a browser sends an HTML Accept header.
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 415.
+Failed asserting that 415 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Drive\Exceptions\UploadContentMismatchException: [Vaulter] Upload session [upload] declared mime [image/png] but the assembled object contents do not match it. Fix: upload a file whose contents match the declared Content-Type. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#upload-content-mismatch in /home/vostrikov/projects/packages/vaulter/packages/drive/src/Exceptions/UploadContentMismatchException.php:21
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(76): Vaulter\Drive\Exceptions\UploadContentMismatchException::forSession()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Upload session [upload] declared mime [image/png] but the assembled object contents do not match it. Fix: upload a file whose contents match the declared Content-Type. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#upload-content-mismatch[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [409] but received 500.
+Failed asserting that 500 is identical to 409.
+
+The following exception occurred during the last request:
+
+Vaulter\Documents\Exceptions\NotADocumentNodeException: [Vaulter] Node [1] is not a document node. Why: document content/version operations require a kind=document node (its payload lives in v_node_document_versions). Fix: create the document via CreateDocumentNodeAction first, or target a document node. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#not-a-document-node in /home/vostrikov/projects/packages/vaulter/packages/documents/src/Exceptions/NotADocumentNodeException.php:19
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(77): Vaulter\Documents\Exceptions\NotADocumentNodeException::forNode()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Node [1] is not a document node. Why: document content/version operations require a kind=document node (its payload lives in v_node_document_versions). Fix: create the document via CreateDocumentNodeAction first, or target a document node. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#not-a-document-node[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Documents\Exceptions\UnknownDocumentTypeException: [Vaulter] Unknown document type [unknown]. Why: it is not in the enabled types [tiptap]. Fix: enable it in config(vaulter.enabled_document_types) or register a custom type via Vaulter::registerDocumentType(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-document-type in /home/vostrikov/projects/packages/vaulter/packages/documents/src/Exceptions/UnknownDocumentTypeException.php:18
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(78): Vaulter\Documents\Exceptions\UnknownDocumentTypeException::forType()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Unknown document type [unknown]. Why: it is not in the enabled types [tiptap]. Fix: enable it in config(vaulter.enabled_document_types) or register a custom type via Vaulter::registerDocumentType(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-document-type[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Documents\Exceptions\InvalidTipTapContentException: [Vaulter] Invalid TipTap content. Why: the root node must be {"type":"doc", ...}. Fix: pass a TipTap JSON document, or use TipTapContent::empty(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#invalid-tiptap-content in /home/vostrikov/projects/packages/vaulter/packages/documents/src/Exceptions/InvalidTipTapContentException.php:13
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(79): Vaulter\Documents\Exceptions\InvalidTipTapContentException::missingDocNode()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Invalid TipTap content. Why: the root node must be {"type":"doc", ...}. Fix: pass a TipTap JSON document, or use TipTapContent::empty(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#invalid-tiptap-content[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+The following exception occurred during the last request:
+
+Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException: [Vaulter] Document version [2] was not found on node [1]. Why: the version does not exist or belongs to a different node. Fix: list the node history (GET .../versions) and restore an id from it. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#document-version-not-found in /home/vostrikov/projects/packages/vaulter/packages/documents/src/Exceptions/NodeDocumentVersionNotFoundException.php:19
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(80): Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException::forNode()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Document version [2] was not found on node [1]. Why: the version does not exist or belongs to a different node. Fix: list the node history (GET .../versions) and restore an id from it. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#document-version-not-found[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Documents\UnknownExportFormatException: [Vaulter] Unknown export format [unknown]. Why: no exporter is registered for it (available: [html]). Fix: register one via config(vaulter.exporters) or Vaulter::registerExporter(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-export-format in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Documents/UnknownExportFormatException.php:18
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(81): Vaulter\Exceptions\Documents\UnknownExportFormatException::forFormat()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Unknown export format [unknown]. Why: no exporter is registered for it (available: [html]). Fix: register one via config(vaulter.exporters) or Vaulter::registerExporter(). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-export-format[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Documents\UnsupportedDocumentContentException: [Vaulter] The [html] exporter cannot render this content. Why: it only understands [tiptap], but received [other]. Fix: only route nodes whose resolved handler produces the expected content shape to this exporter (config(vaulter.exporters)). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unsupported-document-content in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Documents/UnsupportedDocumentContentException.php:20
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(82): Vaulter\Exceptions\Documents\UnsupportedDocumentContentException::forExporter()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] The [html] exporter cannot render this content. Why: it only understands [tiptap], but received [other]. Fix: only route nodes whose resolved handler produces the expected content shape to this exporter (config(vaulter.exporters)). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unsupported-document-content[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException: [Vaulter] Webhook delivery refused: URL scheme [file] is not allowed. Why: only the configured outbound schemes (default http/https) may be dialled. Fix: register the endpoint with an http(s) URL. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#webhook-ssrf in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Webhooks/BlockedOutboundUrlException.php:22
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(83): Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException::scheme()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Webhook delivery refused: URL scheme [file] is not allowed. Why: only the configured outbound schemes (default http/https) may be dialled. Fix: register the endpoint with an http(s) URL. Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#webhook-ssrf[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Access\UnenumerableGrantSubjectException: [Vaulter] Grant addressed to subject [role:1] but the active host-role driver [Vaulter\Support\Drivers\Access\NullRoleDriver] does not enumerate role/group/team subjects, so this grant would never take effect. Why: the driver inherits subjectsFor() unchanged from a base lane that returns only the actor, so a role/team grant never joins the AccessResolver subject-set. Fix: use a driver that enumerates role subjects (spatie), or subclass your driver and OVERRIDE subjectsFor() to append the role/team Subjects (optionally marking it Vaulter\Contracts\Access\EnumeratesRoleSubjects to advertise the capability explicitly). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unenumerable-grant-subject in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Access/UnenumerableGrantSubjectException.php:25
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(84): Vaulter\Exceptions\Access\UnenumerableGrantSubjectException::for()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+[Vaulter] Grant addressed to subject [role:1] but the active host-role driver [Vaulter\Support\Drivers\Access\NullRoleDriver] does not enumerate role/group/team subjects, so this grant would never take effect. Why: the driver inherits subjectsFor() unchanged from a base lane that returns only the actor, so a role/team grant never joins the AccessResolver subject-set. Fix: use a driver that enumerates role subjects (spatie), or subclass your driver and OVERRIDE subjectsFor() to append the role/team Subjects (optionally marking it Vaulter\Contracts\Access\EnumeratesRoleSubjects to advertise the capability explicitly). Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unenumerable-grant-subject[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each domain…   
+[39;1m  Expected response status code [422] but received 500.
+Failed asserting that 500 is identical to 422.
+
+The following exception occurred during the last request:
+
+Vaulter\Exceptions\Panels\UnknownPanelException: Unknown Vaulter storage panel [unknown]. Registered: default. Fix: register a StoragePanelProvider FQCN under config('vaulter.panels'). in /home/vostrikov/projects/packages/vaulter/packages/core/src/Exceptions/Panels/UnknownPanelException.php:22
+Stack trace:
+#0 /home/vostrikov/projects/packages/vaulter/packages/documents/tests/Document/DomainExceptionStatusTest.php(85): Vaulter\Exceptions\Panels\UnknownPanelException::forName()
+#1 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(92): include_once('...')
+#2 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/overrides/Runner/TestSuiteLoader.php(98): PHPUnit\Runner\TestSuiteLoader::{closure:PHPUnit\Runner\TestSuiteLoader::load():90}()
+#3 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(119): PHPUnit\Runner\TestSuiteLoader->load()
+#4 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(58): PHPUnit\TextUI\Configuration\TestSuiteBuilder->testSuiteFromPath()
+#5 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(389): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+#6 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/phpunit/phpunit/src/TextUI/Application.php(196): PHPUnit\TextUI\Application->buildTestSuite()
+#7 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/src/Kernel.php(117): PHPUnit\TextUI\Application->run()
+#8 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(207): Pest\Kernel->handle()
+#9 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest(215): {closure:/home/vostrikov/projects/packages/vaulter/packages/documents/vendor/pestphp/pest/bin/pest:21}()
+#10 /home/vostrikov/projects/packages/vaulter/packages/documents/vendor/bin/pest(119): include('...')
+#11 {main}
+
+----------------------------------------------------------------------------------
+
+Unknown Vaulter storage panel [unknown]. Registered: default. Fix: register a StoragePanelProvider FQCN under config('vaulter.panels').[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m44[39m
+     40▕         throw $exception;
+     41▕     });
+     42▕ 
+     43▕     $response = $this->getJson($path)
+  ➜  44▕         ->assertStatus($status)
+     45▕         ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
+     46▕ 
+     47▕     expect($response->status())->not->toBe(500);
+     48▕
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each… [41;1m Error [49;22m  
+[39;1m  Class "Vaulter\Exceptions\Nodes\NodeNotFoundException" not found[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m86[39m
+     82▕     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
+     83▕     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
+     84▕     'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullRoleDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
+     85▕     'unknown panel' => [UnknownPanelException::forName('unknown', ['default']), 'unknown_profile', 422],
+  ➜  86▕     'node missing' => [fn (): VaulterException => NodeNotFoundException::forId(1), 'node_not_found', 404],
+     87▕     'storage missing' => [fn (): VaulterException => StorageNotFoundException::forId('storage'), 'drive_not_found', 404],
+     88▕ ]);
+     89▕
+
+  [33m1   [39m[39;1mtests/Document/DomainExceptionStatusTest.php[39;22m:[39;1m86[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Document\DomainExceptionStatusTest[22m [90m>[39m it renders each… [41;1m Error [49;22m  
+[39;1m  Class "Vaulter\Exceptions\Nodes\StorageNotFoundException" not found[39;22m
+
+  at [32mtests/Document/DomainExceptionStatusTest.php[39m:[32m87[39m
+     83▕     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
+     84▕     'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullRoleDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
+     85▕     'unknown panel' => [UnknownPanelException::forName('unknown', ['default']), 'unknown_profile', 422],
+     86▕     'node missing' => [fn (): VaulterException => NodeNotFoundException::forId(1), 'node_not_found', 404],
+  ➜  87▕     'storage missing' => [fn (): VaulterException => StorageNotFoundException::forId('storage'), 'drive_not_found', 404],
+     88▕ ]);
+     89▕
+
+  [33m1   [39m[39;1mtests/Document/DomainExceptionStatusTest.php[39;22m:[39;1m87[39;22m
+
+
+  [90mTests:[39m    [31;1m20 failed[39;22m[90m (23 assertions)[39m
+  [90mDuration:[39m [39m1.37s[39m
+

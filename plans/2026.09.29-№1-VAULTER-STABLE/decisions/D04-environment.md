@@ -16,7 +16,7 @@ pdo_mysql pdo_sqlite pcov gd intl`; `packages/*/composer.json` → `"php": "^8.4
 `password authentication failed`; MySQL 127.0.0.1:3306 слушает, root без пароля — `Access denied`; Docker Desktop не запущен,
 системный сокет — `permission denied`; `vendor/` в репозитории отсутствует. Образец — `corex:scripts/php84`.
 
-## Решение
+## Solution
 
 1. Все PHP-команды — через обёртку **`scripts/php84`** (кладёт php8.4 первым в `PATH`; `--check` проверяет версию и
    расширения). Запуск на 8.3 запрещён: при отсутствии 8.4 — стоп.
@@ -29,12 +29,12 @@ pdo_mysql pdo_sqlite pcov gd intl`; `packages/*/composer.json` → `"php": "^8.4
 4. Docker не обязателен до P4.5 (хаб в docker-compose); тогда — отдельный owner gate при дизайне P4.
 5. Тесты конкурентности — только PostgreSQL (OPUS 13, правило 6) через харнесс P0.2.
 
-## Почему
+## Why
 
 Хост уже содержит PHP 8.4 со всеми нужными расширениями и нативные PG/MySQL — это быстрее и детерминированнее Docker.
 Роли БД требуют прав суперпользователя, которых у агента нет.
 
-## Последствия
+## Consequences
 
 P0.1 начинается с `scripts/php84 --check` и `scripts/db-preflight.sh`; при красном preflight item останавливается с
 точной командой owner gate, не обходит его SQLite-прогоном.

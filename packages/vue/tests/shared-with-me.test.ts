@@ -6,25 +6,15 @@ import { useSharedNodes } from '../src/composables/useSharedNodes'
 import { provideVaulterClient } from '../src/plugin'
 import { docVaultClientKey } from '../src/composables/useVaulterClient'
 import type { VaulterClient } from '../src/client'
-import type { Node, NodeAbilities, Page } from '../src/types'
+import type { Node, NodeAbilities, CursorPage } from '../src/types'
 
 // ─── Fakes ──────────────────────────────────────────────────────────────────
 
-/** A length-aware (`paginate()`) page envelope, like the real `GET /shared`. */
-function sharedPage<T>(data: T[], overrides: Partial<Page<T>['meta']> = {}): Page<T> {
-  const perPage = overrides.per_page ?? 50
+/** A query-bound cursor page, including an empty scan-budget page. */
+function sharedPage<T>(data: T[], overrides: Partial<CursorPage<T>['meta']> = {}): CursorPage<T> {
   return {
     data,
-    meta: {
-      current_page: 1,
-      last_page: 1,
-      per_page: perPage,
-      total: data.length,
-      from: data.length === 0 ? null : 1,
-      to: data.length === 0 ? null : data.length,
-      path: '/api/vaulter/shared',
-      ...overrides,
-    },
+    meta: { next_cursor: null, prev_cursor: null, per_page: 50, path: '/api/vaulter/shared', ...overrides },
   }
 }
 
@@ -83,7 +73,7 @@ describe('useSharedNodes', () => {
     await vm.refresh()
 
     // Cross-storage: ids from two different storages land in one flat list.
-    expect(shared).toHaveBeenCalledWith({ page: 1, perPage: undefined })
+    expect(shared).toHaveBeenCalledWith({ cursor: null, perPage: undefined })
     expect(vm.nodes.value.map((n) => n.id)).toEqual([1, 2])
     expect(vm.nodes.value.map((n) => n.storage_id)).toEqual([7, 9])
     expect(vm.error.value).toBeNull()
@@ -103,15 +93,15 @@ describe('useSharedNodes', () => {
 
   it('pages with loadMore when more pages exist, then stops', async () => {
     const shared = vi.fn()
-      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file' })], { current_page: 1, last_page: 2, total: 2, per_page: 1 }))
-      .mockResolvedValueOnce(sharedPage([node({ id: 2, kind: 'file' })], { current_page: 2, last_page: 2, total: 2, per_page: 1 }))
+      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file' })], { next_cursor: 'next-shared', per_page: 1 }))
+      .mockResolvedValueOnce(sharedPage([node({ id: 2, kind: 'file' })], { next_cursor: null, per_page: 1 }))
     const { vm } = mountWith({ nodes: { shared } as never }, () => useSharedNodes({ perPage: 1 }))
 
     await vm.refresh()
     expect(vm.hasMore.value).toBe(true)
 
     await vm.loadMore()
-    expect(shared).toHaveBeenLastCalledWith({ page: 2, perPage: 1 })
+    expect(shared).toHaveBeenLastCalledWith({ cursor: 'next-shared', perPage: 1 })
     // Appended, not replaced.
     expect(vm.nodes.value.map((n) => n.id)).toEqual([1, 2])
     expect(vm.hasMore.value).toBe(false)
@@ -121,10 +111,24 @@ describe('useSharedNodes', () => {
     expect(shared).toHaveBeenCalledTimes(2)
   })
 
-  it('a stale earlier refresh never overwrites a later one', async () => {
-    let resolveFirst: ((page: Page<Node>) => void) | undefined
+  it('continues an empty scan-budget page to the next visible node', async () => {
     const shared = vi.fn()
-      .mockImplementationOnce(() => new Promise<Page<Node>>((resolve) => { resolveFirst = resolve }))
+      .mockResolvedValueOnce(sharedPage<Node>([], { next_cursor: 'after-denied', scanned: 1000 }))
+      .mockResolvedValueOnce(sharedPage([node({ id: 301, name: 'visible' })]))
+    const { vm } = mountWith({ nodes: { shared } as never }, () => useSharedNodes())
+    await vm.refresh()
+    expect(vm.nodes.value).toEqual([])
+    expect(vm.hasMore.value).toBe(true)
+    await vm.loadMore()
+    expect(shared).toHaveBeenLastCalledWith({ cursor: 'after-denied', perPage: undefined })
+    expect(vm.nodes.value.map((n) => n.id)).toEqual([301])
+    expect(vm.hasMore.value).toBe(false)
+  })
+
+  it('a stale earlier refresh never overwrites a later one', async () => {
+    let resolveFirst: ((page: CursorPage<Node>) => void) | undefined
+    const shared = vi.fn()
+      .mockImplementationOnce(() => new Promise<CursorPage<Node>>((resolve) => { resolveFirst = resolve }))
       .mockResolvedValueOnce(sharedPage([node({ id: 2, kind: 'file', name: 'winner' })]))
     const { vm } = mountWith({ nodes: { shared } as never }, () => useSharedNodes())
 
@@ -141,11 +145,11 @@ describe('useSharedNodes', () => {
   })
 
   it('a stale in-flight loadMore never clobbers a list a later refresh replaced', async () => {
-    let resolveMore: ((page: Page<Node>) => void) | undefined
+    let resolveMore: ((page: CursorPage<Node>) => void) | undefined
     const shared = vi.fn()
-      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file', name: 'p1' })], { current_page: 1, last_page: 2, total: 2, per_page: 1 }))
-      .mockImplementationOnce(() => new Promise<Page<Node>>((resolve) => { resolveMore = resolve })) // loadMore page 2 (slow)
-      .mockResolvedValueOnce(sharedPage([node({ id: 9, kind: 'file', name: 'fresh' })], { current_page: 1, last_page: 1, total: 1, per_page: 1 })) // refresh wins
+      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file', name: 'p1' })], { next_cursor: 'next-shared', per_page: 1 }))
+      .mockImplementationOnce(() => new Promise<CursorPage<Node>>((resolve) => { resolveMore = resolve })) // loadMore page 2 (slow)
+      .mockResolvedValueOnce(sharedPage([node({ id: 9, kind: 'file', name: 'fresh' })], { next_cursor: null, per_page: 1 })) // refresh wins
     const { vm } = mountWith({ nodes: { shared } as never }, () => useSharedNodes({ perPage: 1 }))
 
     await vm.refresh()
@@ -154,23 +158,23 @@ describe('useSharedNodes', () => {
     expect(vm.nodes.value.map((n) => n.id)).toEqual([9])
 
     // The stale page-2 resolves late — it must NOT graft onto / rewind the fresh list.
-    resolveMore?.(sharedPage([node({ id: 2, kind: 'file', name: 'stale' })], { current_page: 2, last_page: 2, total: 2, per_page: 1 }))
+    resolveMore?.(sharedPage([node({ id: 2, kind: 'file', name: 'stale' })], { next_cursor: null, per_page: 1 }))
     await more
     expect(vm.nodes.value.map((n) => n.id)).toEqual([9])
     expect(vm.hasMore.value).toBe(false)
   })
 
   it('a double-click on loadMore appends the next page only once', async () => {
-    let resolveSecond: ((page: Page<Node>) => void) | undefined
+    let resolveSecond: ((page: CursorPage<Node>) => void) | undefined
     const shared = vi.fn()
-      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file' })], { current_page: 1, last_page: 2, total: 2, per_page: 1 }))
-      .mockImplementationOnce(() => new Promise<Page<Node>>((resolve) => { resolveSecond = resolve }))
+      .mockResolvedValueOnce(sharedPage([node({ id: 1, kind: 'file' })], { next_cursor: 'next-shared', per_page: 1 }))
+      .mockImplementationOnce(() => new Promise<CursorPage<Node>>((resolve) => { resolveSecond = resolve }))
     const { vm } = mountWith({ nodes: { shared } as never }, () => useSharedNodes({ perPage: 1 }))
     await vm.refresh()
 
     const a = vm.loadMore() // page 2 in flight
     const b = vm.loadMore() // re-entry while loading → no-op (no second request)
-    resolveSecond?.(sharedPage([node({ id: 2, kind: 'file' })], { current_page: 2, last_page: 2, total: 2, per_page: 1 }))
+    resolveSecond?.(sharedPage([node({ id: 2, kind: 'file' })], { next_cursor: null, per_page: 1 }))
     await Promise.all([a, b])
 
     // Exactly two client calls (refresh + ONE loadMore); page 2 appended once, no dupes.
@@ -190,7 +194,7 @@ describe('VaulterSharedWithMe', () => {
     const wrapper = mount(VaulterSharedWithMe, { ...withClient({ nodes: { shared } as never }) })
 
     await flushAll()
-    expect(shared).toHaveBeenCalledWith({ page: 1, perPage: undefined })
+    expect(shared).toHaveBeenCalledWith({ cursor: null, perPage: undefined })
 
     const rows = wrapper.findAll('.vaulter-node-list__item')
     expect(rows).toHaveLength(2)

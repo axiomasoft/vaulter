@@ -8,6 +8,7 @@ OPUS (audits/2026-09-29-stable-audit/opus/*.md) режется на атомар
 Команды:
   units                     — пересобрать artifacts/coverage/opus-units.tsv
   check [--phase Pn]        — проверить: единицы не изменились; каждая секция имеет владельца (section-owners.tsv);
+                              OPUS совпадает побайтно с opus-sources.sha256, входы render свежие;
                               для детализированных фаз каждая единица их секций есть в ledger-Pn.tsv с item этой фазы
   render --item Pn.m        — напечатать дословный текст всех единиц item (для artifacts/Pn-design/Pn.m-opus.md)
   seed-ledger --phase Pn    — напечатать черновик ledger-Pn.tsv (владелец секции по умолчанию) для ручной доводки
@@ -19,6 +20,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import re
 import sys
 from pathlib import Path
@@ -29,6 +31,7 @@ REPO = PLAN.parent.parent
 OPUS = REPO / "audits" / "2026-09-29-stable-audit" / "opus"
 UNITS = HERE / "opus-units.tsv"
 OWNERS = HERE / "section-owners.tsv"
+SOURCES = HERE / "opus-sources.sha256"
 
 HEADING = re.compile(r"^(#{1,4})\s+(.*)$")
 LIST_ITEM = re.compile(r"^(\s*)(?:[-*]|\d+\.)\s+")
@@ -51,8 +54,9 @@ def split_units(path: Path) -> list[dict]:
     lines = path.read_text(encoding="utf-8").splitlines()
     i = 0
     seen_sections: list[str] = []
+    heading_lines: dict[str, str] = {}
 
-    def emit(kind: str, text: str) -> None:
+    def emit(kind: str, text: str, *, source_text: str | None = None) -> None:
         body = norm(text)
         if not body or body == "---":
             return
@@ -63,6 +67,8 @@ def split_units(path: Path) -> list[dict]:
             "kind": kind,
             "sha8": sha,
             "text": body,
+            # Normalization stabilizes IDs; rendering must retain executable newlines.
+            "source_text": text if source_text is None else source_text,
         })
 
     while i < len(lines):
@@ -75,6 +81,7 @@ def split_units(path: Path) -> list[dict]:
             if level > 1:
                 stack.append((level, norm(m.group(2))))
                 seen_sections.append(section_key(stack))
+                heading_lines[section_key(stack)] = line
             i += 1
             continue
         if line.startswith("```"):
@@ -83,7 +90,8 @@ def split_units(path: Path) -> list[dict]:
             while i < len(lines) and not lines[i].startswith("```"):
                 block.append(lines[i])
                 i += 1
-            block.append("```")
+            if i < len(lines):
+                block.append(lines[i])
             i += 1
             emit("code", "\n".join(block))
             continue
@@ -122,7 +130,7 @@ def split_units(path: Path) -> list[dict]:
     for key in seen_sections:
         if key not in with_body:
             stack = [(0, part) for part in key.split(" / ")]
-            emit("heading", key.split(" / ")[-1])
+            emit("heading", key.split(" / ")[-1], source_text=heading_lines[key])
     return units
 
 
@@ -147,6 +155,12 @@ def write_units(units: list[dict]) -> None:
         w.writerow(["id", "file", "section", "kind", "text"])
         for u in units:
             w.writerow([u["id"], u["file"], u["section"], u["kind"], u["text"]])
+    SOURCES.write_text(source_manifest(), encoding="utf-8")
+
+
+def source_manifest() -> str:
+    return "".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
+                   for path in sorted(OPUS.glob("*.md")))
 
 
 def read_tsv(path: Path) -> list[dict]:
@@ -193,8 +207,12 @@ def check(only_phase: str | None) -> int:
     problems: list[str] = []
     fresh = all_units()
     committed = read_tsv(UNITS) if UNITS.exists() else []
-    if [r["id"] for r in committed] != [u["id"] for u in fresh]:
+    fields = ("id", "file", "section", "kind", "text")
+    if [tuple(r.get(k) for k in fields) for r in committed] != \
+            [tuple(u[k] for k in fields) for u in fresh]:
         problems.append("opus-units.tsv устарел или OPUS изменён: `opus-coverage.py units` и разбор разницы (D06 п.5)")
+    if not SOURCES.exists() or SOURCES.read_text(encoding="utf-8") != source_manifest():
+        problems.append("opus-sources.sha256 отсутствует или OPUS изменён побайтно: стоп и эскалация владельцу (D06 п.4)")
     owners = owners_map()
     sections = {(u["file"], u["section"]) for u in fresh}
     for key in sorted(sections - owners.keys()):
@@ -254,6 +272,18 @@ def check(only_phase: str | None) -> int:
                     problems.append(f"{phase}: единица {uid} → {o}: item не объявлен")
                 elif target_phase in ledgers and uid not in ledgers[target_phase]:
                     problems.append(f"{phase}: единица {uid} передана в {o}, но её нет в ledger-{target_phase}.tsv")
+        for item in sorted(items):
+            artifact = PLAN / "artifacts" / f"{phase}-design" / f"{item}-opus.md"
+            if not artifact.exists():
+                problems.append(f"{item}: нет дословного входа {artifact.relative_to(PLAN)}")
+                continue
+            try:
+                expected_text = render_text(item, units=fresh)
+            except KeyError as exc:
+                problems.append(f"{item}: вход не генерируется: неизвестная единица {exc}")
+                continue
+            if artifact.read_text(encoding="utf-8") != expected_text:
+                problems.append(f"{item}: дословный вход устарел или повреждён; пересоберите `render --item {item}`")
     for p in problems:
         print(p)
     total = len(fresh)
@@ -262,26 +292,33 @@ def check(only_phase: str | None) -> int:
     return 1 if problems else 0
 
 
-def render(item: str) -> int:
+def render_text(item: str, *, units: list[dict] | None = None) -> str:
     phase = item.split(".")[0]
     ledger_path = HERE / f"ledger-{phase}.tsv"
-    if not ledger_path.exists():
-        print(f"нет {ledger_path.name}", file=sys.stderr)
-        return 2
-    by_id = {u["id"]: u for u in all_units()}
+    by_id = {u["id"]: u for u in (all_units() if units is None else units)}
     rows = [r for r in read_tsv(ledger_path) if item in [x.strip() for x in r["items"].split(",")]]
-    print(f"# OPUS — дословные требования для {item} ({len(rows)} единиц)\n")
-    print("> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению")
-    print("> или к явному отказу через D# плана (D06).\n")
+    out = io.StringIO()
+    print(f"# OPUS — дословные требования для {item} ({len(rows)} единиц)\n", file=out)
+    print("> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению", file=out)
+    print("> или к явному отказу через D# плана (D06).\n", file=out)
     current = None
     for r in rows:
         u = by_id[r["id"]]
         head = f"{u['file']} — {u['section']}"
         if head != current:
-            print(f"\n## {head}\n")
+            print(f"\n## {head}\n", file=out)
             current = head
         note = f" — _{r['note']}_" if r.get("note") else ""
-        print(f"- `{u['id']}`{note}\n\n  {u['text']}\n")
+        print(f"- `{u['id']}`{note}\n\n{u['source_text']}\n", file=out)
+    return out.getvalue()
+
+
+def render(item: str) -> int:
+    try:
+        print(render_text(item), end="")
+    except (FileNotFoundError, KeyError) as exc:
+        print(f"вход {item} не генерируется: {exc}", file=sys.stderr)
+        return 2
     return 0
 
 

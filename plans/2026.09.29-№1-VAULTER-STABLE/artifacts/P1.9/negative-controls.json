@@ -1,0 +1,14 @@
+[
+  {
+    "control": "share",
+    "mutant_exit": 1,
+    "restored_sha256": "88d54877696b2c989cda3c635db6712c0a482ea3096926b8827c073869f30704",
+    "restored": true
+  },
+  {
+    "control": "binding",
+    "mutant_exit": 1,
+    "restored_sha256": "653318ed6cb59c20b3c799b06e682bf3e71fa56d9d005319f782b2d59f20ad74",
+    "restored": true
+  }
+]

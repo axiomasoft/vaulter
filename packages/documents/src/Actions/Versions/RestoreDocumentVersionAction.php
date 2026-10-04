@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Versions;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Events\Versions\DocumentVersionCreated;
 use Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
@@ -32,6 +32,7 @@ final readonly class RestoreDocumentVersionAction
         private NodeDocumentVersionReadRepository $read,
         private NodeDocumentVersionStoreRepository $store,
         private NodeStoreRepository $nodes,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(Node $node, int|string $versionId, int|string|null $actorId = null): NodeDocumentVersion
@@ -46,7 +47,7 @@ final readonly class RestoreDocumentVersionAction
             throw NodeDocumentVersionNotFoundException::forNode($node->getKey(), $versionId);
         }
 
-        return DB::transaction(function () use ($node, $source, $actorId): NodeDocumentVersion {
+        return $this->database->transaction(function () use ($node, $source, $actorId): NodeDocumentVersion {
             $version = $this->store->create([
                 'node_id' => $node->getKey(),
                 'version_no' => $this->store->nextVersionNo($node),

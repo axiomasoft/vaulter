@@ -4,22 +4,27 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Events\Documents\DocumentNodeCreated;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionStoreRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
+use Vaulter\Support\NodeName;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Create a kind=document node under a folder (or the storage root) with its initial
- * v1 document version from the given content (§2.5 / M4a). One outer transaction: the
+ * v1 document version from the given content (§2.5 / M4a). The parent row is locked
+ * and must be a live folder of the same storage; no parent means the root folder,
+ * never a parentless node. One outer transaction: the
  * node row, the v1 version and the head repoint commit atomically, then a single
  * after-commit event fires.
  *
@@ -38,15 +43,14 @@ final readonly class CreateDocumentNodeAction
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
         private NodeDocumentVersionStoreRepository $versions,
+        private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(CreateDocumentNodeData $data): Node
     {
-        $parentId = $data->parent?->id;
-
-        if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $data->name)) {
-            throw NodeNameConflictException::forName(name: $data->name, parentId: $parentId);
-        }
+        $name = NodeName::normalize($data->name);
+        $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
         // time — check it before the transaction, not just at the UI layer. Content
@@ -56,12 +60,25 @@ final readonly class CreateDocumentNodeAction
             $data->content->ensureWithin(Config::maxDocumentSizeKb());
         }
 
-        return DB::transaction(function () use ($data, $parentId): Node {
+        return $this->database->transaction(function () use ($data, $name, $parentId): Node {
+            $this->database->lockTreeShared($data->storage->id);
+
+            $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
+            if (!$this->tree->sameStorage($parent, $data->storage->id)) {
+                throw InvalidDestinationException::otherDrive(destination: $parent, storageId: $data->storage->id);
+            }
+
+            $this->tree->assertActiveFolder($parent);
+
+            if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
+                throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
+            }
+
             $node = $this->store->create([
                 'storage_id' => $data->storage->id,
                 'parent_id' => $parentId,
                 'kind' => NodeKind::Document,
-                'name' => $data->name,
+                'name' => $name,
                 'mime_type' => $data->mimeType,
                 'size_bytes' => $data->content->sizeInBytes(),
                 'owner_id' => $data->actorId,
@@ -85,7 +102,7 @@ final readonly class CreateDocumentNodeAction
     private function commitInitialVersion(Node $node, CreateDocumentNodeData $data): NodeDocumentVersion
     {
         return $this->versions->create([
-            'node_id' => $node->getKey(),
+            'node_id' => $node->id,
             'version_no' => 1,
             'content' => $data->content->toArray(),
             'format' => $data->format,

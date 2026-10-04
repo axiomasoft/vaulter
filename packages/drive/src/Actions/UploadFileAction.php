@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use LogicException;
 use Vaulter\Contracts\Cas\BlobStore;
+use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\UploadFileData;
 use Vaulter\Drive\Events\FileUploaded;
 use Vaulter\Drive\Events\NodeVersionCommitted;
+use Vaulter\Drive\Exceptions\CrossStorageMoveException;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -22,16 +26,20 @@ use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
+use Vaulter\Support\NodeName;
+use Vaulter\Support\TreeGuard;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit
+ * Commit an upload into the Drive (§2.4 commit flow): stage → quota → BlobStore.commitStaged
  * (content-addressed dedup) → File + FileVersion(version_no) + version↔blob edge
  * → file node (current_version_id, mime, size, extension).
  *
  * Quota (§1.5 eager): the incoming size is checked against the storage's
- * quota_bytes BEFORE the blob is committed (we never store bytes we must reject),
- * and used_bytes is incremented WITHIN the transaction.
+ * quota_bytes by a conditional UPDATE WITHIN the transaction, before CAS promotion.
+ * Preparation happens once outside SQL so transaction retries reuse the same bytes.
  *
  * Two paths share one Action:
  *   - new file → create Node(kind=file) + File + FileVersion(version_no=1);
@@ -46,12 +54,15 @@ final readonly class UploadFileAction
 {
     public function __construct(
         private BlobStore $blobs,
+        private ContentStore $content,
         private FileStoreRepository $files,
         private FileVersionStoreRepository $versions,
         private NodeStoreRepository $nodeStore,
         private NodeReadRepository $nodeRead,
         private StorageStoreRepository $storageStore,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(UploadFileData $data): Node
@@ -68,59 +79,87 @@ final readonly class UploadFileAction
 
     private function executeUpload(UploadFileData $data): Node
     {
-        $probedSize = $this->probeSize($data->stream);
-        $previousSize = $this->previousHeadSize($data);
+        $name = $data->isNewVersion() ? null : NodeName::normalize($data->resolvedName());
+        $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
+        $staged = $this->content->stage($data->stream);
 
-        // Eager quota — the delta a new version adds is (new − old); a brand-new
-        // file adds its full size. Checked BEFORE we commit any bytes (§1.5). The
-        // probe is best-effort for non-seekable streams; the real used_bytes
-        // adjustment below uses the committed blob's authoritative size.
-        $this->assertWithinQuota(data: $data, delta: $probedSize - $previousSize);
+        try {
+            // Revision deltas must use the locked head; a stale caller cannot reject them.
+            if (!$data->isNewVersion()) {
+                $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
+            }
 
-        if (!$data->isNewVersion()) {
-            $this->assertNameAvailable($data);
-        }
+            $node = $this->database->transaction(function () use ($data, $staged, $name, $parentId): Node {
+                // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
+                $this->database->lockTreeShared($data->storage->id);
 
-        return DB::transaction(function () use ($data, $previousSize): Node {
-            $blob = $this->blobs->commit(
-                stream: $data->stream,
-                tenantId: $this->tenantId($data),
-                storageId: $this->storageIdForScope($data),
-                disk: $data->storage->disk,
-            );
+                if ($name !== null && $parentId !== null) {
+                    $this->assertDestination(data: $data, parentId: $parentId, name: $name);
+                }
 
-            $size = $blob->size_bytes;
+                $target = $data->targetNode;
+                $file = null;
+                $previousHead = null;
+
+                if ($target instanceof Node) {
+                    $this->tree->sync($target, $this->tree->locked($this->tree->lock([$target->id]), $target->id));
+                    /** @var File $currentFile */
+                    $currentFile = $target->file()->firstOrFail();
+                    $file = $this->files->lockForUpdate($currentFile);
+                    $previousHead = $file->currentVersion()->first();
+                }
+
+                $size = $staged->sizeBytes();
+                $delta = $size - ($previousHead->size_bytes ?? 0);
+
+                if ($delta > 0) {
+                    $this->storageStore->reserveBytes(storage: $data->storage, delta: $delta);
+                } elseif ($delta < 0) {
+                    $this->storageStore->adjustUsedBytes(storage: $data->storage, delta: $delta);
+                }
+
+                $storageId = $data->storage->getKey();
+                if (!is_int($storageId) && !is_string($storageId)) {
+                    throw new LogicException('An upload requires a persisted storage identifier.');
+                }
+
+                $blob = $this->blobs->commitStaged(
+                    staged: $staged,
+                    scope: BlobScope::forUpload(
+                        Config::dedupScope(),
+                        $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
+                        (string) $storageId,
+                    ),
+                    disk: $data->storage->disk,
+                );
+
+                return $file instanceof File
+                    ? $this->commitNewVersion(data: $data, file: $file, previousHead: $previousHead, blob: $blob, size: $size)
+                    : $this->commitNewFile(data: $data, blob: $blob, size: $size, name: $name ?? '', parentId: $parentId ?? throw new LogicException('An upload requires a destination.'));
+            }, 3);
 
             $this->metrics->counter(
                 name: 'vaulter_upload_bytes_total',
-                amount: $size,
+                amount: $staged->sizeBytes(),
                 labels: ['protocol' => 'single'],
             );
 
-            $node = $data->isNewVersion()
-                ? $this->commitNewVersion(data: $data, blob: $blob, size: $size)
-                : $this->commitNewFile(data: $data, blob: $blob, size: $size);
-
-            $delta = $size - $previousSize;
-
-            if ($delta !== 0) {
-                $this->storageStore->adjustUsedBytes(storage: $data->storage, delta: $delta);
-            }
-
             return $node;
-        });
+        } catch (CoreQuotaExceededException $e) {
+            throw $e instanceof QuotaExceededException ? $e : new QuotaExceededException($e->getMessage(), $e->getCode(), $e);
+        } finally {
+            $staged->discard();
+        }
     }
 
     /**
      * New-file path (§2.4): node(kind=file) → file → version_no=1 → edge → repoint.
      */
-    private function commitNewFile(UploadFileData $data, Blob $blob, int $size): Node
+    private function commitNewFile(UploadFileData $data, Blob $blob, int $size, string $name, int|string $parentId): Node
     {
-        $name = $data->resolvedName();
-
         $node = $this->nodeStore->create([
-            'storage_id' => $data->storage->getKey(),
-            'parent_id' => $data->into?->getKey(),
+            'storage_id' => $data->storage->id,
+            'parent_id' => $parentId,
             'kind' => NodeKind::File,
             'name' => $name,
             'mime_type' => $data->mimeType,
@@ -146,6 +185,7 @@ final readonly class UploadFileAction
             currentVersionId: $version->id,
             mimeType: $data->mimeType,
             sizeBytes: $size,
+            versionNo: $version->version_no,
         );
 
         $this->nodeStore->update($node, [
@@ -162,26 +202,21 @@ final readonly class UploadFileAction
      * New-version path (§2.4): bump version_no, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
-    private function commitNewVersion(UploadFileData $data, Blob $blob, int $size): Node
+    private function commitNewVersion(UploadFileData $data, File $file, ?FileVersion $previousHead, Blob $blob, int $size): Node
     {
         $node = $data->targetNode;
 
         if (!$node instanceof Node) {
             // Defensive: isNewVersion() already guaranteed this; keeps PHPStan honest.
-            return $this->commitNewFile(data: $data, blob: $blob, size: $size);
+            throw new LogicException('[Vaulter] A new-version upload requires a target node.');
         }
-
-        /** @var File $file */
-        $file = $node->file()->firstOrFail();
-
-        $previousHead = $file->currentVersion()->first();
 
         $version = $this->makeVersion(
             data: $data,
             file: $file,
             blob: $blob,
             size: $size,
-            versionNo: $this->versions->nextVersionNo($file),
+            versionNo: $file->version_count + 1,
         );
 
         $this->blobs->attach($version, $blob);
@@ -195,6 +230,7 @@ final readonly class UploadFileAction
             currentVersionId: $version->id,
             mimeType: $data->mimeType ?? $file->mime_type,
             sizeBytes: $size,
+            versionNo: $version->version_no,
         );
 
         $this->nodeStore->repointHead(
@@ -260,56 +296,22 @@ final readonly class UploadFileAction
         }
     }
 
-    private function assertNameAvailable(UploadFileData $data): void
+    /**
+     * The destination folder is locked before the bytes are committed, so it cannot
+     * be trashed or replaced by a file between the check and the insert.
+     */
+    private function assertDestination(UploadFileData $data, int|string $parentId, string $name): void
     {
-        $parentId = $data->into?->id;
-        $name = $data->resolvedName();
+        $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
+        if (!$this->tree->sameStorage($parent, $data->storage->id)) {
+            throw CrossStorageMoveException::between(fromStorageId: $data->storage->id, toStorageId: $parent->storage_id);
+        }
+
+        $this->tree->assertActiveFolder($parent);
 
         if ($this->nodeRead->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
             throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
         }
-    }
-
-    private function previousHeadSize(UploadFileData $data): int
-    {
-        $target = $data->targetNode;
-
-        return $target instanceof Node ? $target->size_bytes : 0;
-    }
-
-    private function tenantId(UploadFileData $data): ?int
-    {
-        $tenantId = $data->storage->tenant_id;
-
-        return is_numeric($tenantId) ? (int) $tenantId : null;
-    }
-
-    /**
-     * The storage id handed to the CAS only matters under dedup_scope=storage; for
-     * other scopes BlobStore ignores it, so passing it unconditionally is safe.
-     */
-    private function storageIdForScope(UploadFileData $data): ?int
-    {
-        $storageId = $data->storage->id;
-
-        return is_numeric($storageId) ? (int) $storageId : null;
-    }
-
-    /**
-     * Probe the staged stream's byte length without consuming it (the ContentStore
-     * re-reads it from the start). Seekable streams report fstat size; a
-     * non-seekable stream falls back to 0 here and the committed blob's size is the
-     * truth (used for accounting after commit).
-     */
-    private function probeSize(mixed $stream): int
-    {
-        if (!is_resource($stream)) {
-            return 0;
-        }
-
-        $stats = fstat($stream);
-
-        return is_array($stats) ? (int) $stats['size'] : 0;
     }
 
     private function extension(string $name): ?string

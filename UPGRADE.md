@@ -6,6 +6,205 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Prepared CAS commit and atomic quota (AD21)
+
+Custom implementations of `Vaulter\Contracts\Cas\BlobStore` must add
+`commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob`.
+It commits prepared bytes without discarding the staged object. Keep `commit()`
+as stage → commitStaged → discard in `finally`. The outer upload owns cleanup
+and reuses prepared bytes on transaction retries.
+
+Quota reservations now run before CAS promotion. Subtree copies that exceed quota
+throw the existing `Vaulter\Drive\Exceptions\QuotaExceededException` and roll
+back completely. The core repository throws its common base,
+`Vaulter\Exceptions\Drive\QuotaExceededException`; Drive Actions preserve the
+existing exception type and HTTP 413 `quota_exceeded` response.
+
+
+### Lossless CAS scope and migration №7 (AD20)
+
+Replace `BlobStore::commit($stream, tenantId: ..., storageId: ...)` with
+`commit($stream, BlobScope::forUpload($dedupScope, $tenantId, (string) $storageId), $disk)`.
+`ContentStore::keyFor()` now receives `Vaulter\ValueObjects\Cas\BlobScope`.
+Host tenant IDs and drive IDs remain strings without numeric coercion. Tenant scope
+with no tenant uses `BlobScope::global()`. Scope IDs contain 1–96 bytes; IDs outside
+`[A-Za-z0-9_-]{1,64}` are encoded as unpadded base64url in physical paths.
+
+Migration `2026_10_01_000007_blob_scope_key` backfills the NOT NULL `scope_key`
+and replaces the dedup index with `UNIQUE(scope_key, sha256)`. It preserves all
+existing `storage_key` values and objects. A uniqueness conflict stops migration
+before the old index is removed; investigate the conflicting rows before retrying.
+Custom blob schemas must also provide `scope_key`.
+
+After the SQL migrations, inspect and repair mixed legacy areas:
+
+```bash
+php artisan vaulter:blobs:repair-scopes --dry-run
+php artisan vaulter:blobs:repair-scopes --execute
+```
+
+Exactly one mode is required. Review `hash_mismatch` and `unreferenced` reports;
+these blobs remain unchanged. Each target commits independently, so a failed copy
+can be retried. Old objects stay until GC; successful moves are journalled in
+`storage/logs/vaulter-repair-scopes.log`. Target scope comes from revision → file →
+node → storage; no tenant is guessed. A storage with NULL tenant belongs to the
+host-wide global scope. Reads always use the disk and path recorded on the blob.
+Run with operational access to all storages in the affected panel, and pause other
+operators changing tenant assignments during repair.
+
+The migration's `down()` restores the historical structure using the current
+`dedup.scope`; it does not undo object copies or redirected edges. If repaired
+rows conflict with the old index, rollback fails before removing `scope_key`.
+Take a backup before upgrading or repairing data.
+
+### Exact listing and shared cursors (AD12)
+
+Before: children, search, trash and Filament exposed grant-reachable candidates,
+including denied nodes; `shared` used `page`, `current_page` and `total`.
+After: all these surfaces and folder `show` children apply effective `View` for every
+driver. REST listings return `meta.next_cursor`, `per_page`, `scanned`, `path` and a
+null `prev_cursor`; `total` and numbered page links are omitted. Replace shared
+page-number iteration with `cursor` iteration, and continue through empty pages
+while `next_cursor` is non-null. `vaulter.listing.scan_budget` defaults to 1000;
+raise it to inspect more candidates per request. Invalid or cross-query cursors
+return 422 `validation_failed` with `errors.cursor`.
+
+New PHP surface: `AccessResolver::evaluateMany()`, `AclFolder`, `NodePage` and
+`ExactListing`. Listing resource abilities use the batch grant sets.
+
+### Tree invariants, second-root repair and migration №6 (AD13)
+
+Before: Actions accepted any node of the drive as a parent, so a folder, upload, move,
+copy or document could land inside a file, a document or a trashed folder; a `null`
+parent in `CreateDocumentNodeAction` (and in Drive Actions called directly) wrote a
+second parentless node that the root listing never showed; the root could be renamed,
+moved or trashed; two concurrent moves could form a cycle; `forceDelete` purged live
+nodes; restoring or trashing twice was a silent no-op. After:
+
+- A parent or destination must be a live folder of the same drive, checked under row
+  locks inside the transaction: otherwise `InvalidDestinationException`
+  (409, `invalid_destination`); a folder of another drive raises
+  `CrossStorageMoveException` (409, `cross_drive_operation`) from Drive Actions and
+  `InvalidDestinationException` from `CreateDocumentNodeAction`.
+- A `null` destination always means the drive root (`root_node_id`).
+- The root cannot be renamed, moved, copied, trashed or force-deleted (409, `invalid_destination`).
+- Trashing a node already in the trash raises `InvalidDestinationException`; restoring or
+  force-deleting a node that is not in the trash raises `NodeNotTrashedException`
+  (409, `node_not_trashed`). Delete a live node by trashing it first.
+- Every tree write takes the drive tree lock as its first statement: moves, restores, trashes
+  and force deletes exclusively (`VaulterDatabase::lockTree()`), creates, uploads, copies and
+  renames shared (`VaulterDatabase::lockTreeShared()`, new). Concurrent moves can no longer form a
+  cycle (`CycleException`, 409, `node_move_cycle`) and a create cannot slip under a folder being
+  trashed. On PostgreSQL the shared lock keeps uploads concurrent with each other but a structural
+  operation waits for in-flight uploads of its drive; on MySQL/MariaDB and SQLite the lock is the
+  storage row and tree writes of one drive run one at a time. Custom Actions that change the
+  tree should take the same locks before locking node rows.
+- Names written by create, upload, rename, copy (explicit name) and document creation are
+  trimmed, NFC-normalized when ext-intl is installed, and rejected with
+  `InvalidNodeNameException` (422, `validation_failed`, `errors.name`) when empty, `.`/`..`,
+  longer than `vaulter.drive.name_rules.max_length` UTF-8 bytes, or containing `/`, `\`
+  or a control character.
+
+Run `php artisan migrate --force` after a database backup. Migration
+`2026_10_01_000006_nodes_cleanup` moves every parentless node other than a drive's
+`root_node_id` under that root, renaming it `"<base> (legacy N)<.ext>"` when a live root
+child already owns the name, writes a `node.moved` activity row (`actor_type`
+`vaulter:system`, `context.reason` `n04_repair`, `context.renamed_from`) per move, and then
+adds the unique one-root-per-drive index (`{nodes}_root_uniq`; a generated `root_storage`
+column on MySQL/MariaDB). It stops without changes when a drive has several parentless
+nodes and no `root_node_id`: set the real root first. The repair is irreversible —
+rollback only drops the index. Re-running the migration changes nothing.
+
+### Independent host keys and migration №3 (AD25)
+
+Before: host owner, subject, author, tenant and actor columns inherited Vaulter's
+entity-ID strategy (`char(26)` for ULID or bigint). After: all 27 columns use
+`vaulter.ids.host_keys`, default `string` (`varchar(64)`), so UUID users and bigint
+projects/roles can coexist with ULID Vaulter IDs. `VaulterSchema::hostKey()` is new;
+`actor()` and `tenant()` use the host setting. Entity keys and references keep their strategy.
+
+Run `php artisan migrate --force` in a maintenance window after a database backup.
+Migration `2026_10_01_000003_host_key_columns` preserves existing values, column
+nullability and indexes, uses `vaulter.connection` and legacy table names, and is
+idempotent. PostgreSQL casts values with `USING`; MySQL/MariaDB modifies column types;
+SQLite requires no type upgrade. The migration does not rename the tenant column.
+
+Set `VAULTER_HOST_KEYS` to `bigint`, `uuid` or `ulid` only when every existing host
+key fits that type. Incompatible data raises the database driver's error. Rollback
+restores the current Vaulter ID strategy; host keys inserted after upgrading (for
+example UUIDs into an old ULID installation) can prevent rollback. Do not assume a
+structural rollback can accept every new host key.
+
+### Runtime Drive dependencies (AD02)
+
+Documents and Filament now declare `axioma-studio/vaulter-drive` in `require`
+rather than `require-dev`; installing either also installs Drive and its Media
+backend. Update your Composer lock accordingly. Filament Move now requires
+workspace creation access and Create on the destination, including the storage
+root. A denied move leaves the node in place and shows "Move not allowed".
+
+### HTTP middleware and route parameters (AD31)
+
+Replace `vaulter.middleware` with `vaulter.routes.middleware.authenticated` and
+remove the legacy key to adopt the default `['api', 'auth:sanctum']`. Install and
+configure Sanctum or choose your own host guard. A non-null legacy list still
+wins for protected routes, including an empty list. Public shares and signed hub
+callbacks use their own `public` and `hub` stacks; metrics are appended once to
+all stacks. Replace PHP calls to `Config::middleware()` with the corresponding
+`authenticatedMiddleware()`, `publicMiddleware()` or `hubMiddleware()`.
+
+Global route bindings for `node` and `storage` have been removed. Vaulter's middleware
+resolves its own parameters through swappable repositories before Laravel's
+`SubstituteBindings`; host routes retain their own model bindings. Controller
+model signatures and existing route paths are preserved.
+
+### Webhook event occurrence ids (AD22, E8)
+
+Webhook `event_id` values are now 26-character ULIDs generated when a domain event
+is constructed. Consumers should deduplicate by the complete `event_id`, without
+parsing a topic or node id from it. Repeated operations producing the same state
+have different ids; retries of one occurrence keep its original id. Existing queued
+rows retain their stored ids, so accept both formats while the backlog drains.
+
+All domain events expose readonly `eventId` and accept an optional final
+`?string $eventId = null` constructor argument. Preserve this value when reconstructing
+an event for replay. Custom callers of `OutboxRecorder::stage()` using named arguments
+must replace `key:` with `eventId:` and pass the originating event's id.
+
+### Domain HTTP error codes and statuses (AD29)
+
+Domain exceptions now implement `Vaulter\Exceptions\Contracts\ProblemException`
+with `problemCode(): string` and `httpStatus(): int`. JSON requests and paths under
+`vaulter.route_prefix` receive `{message, code}` plus the existing error fields.
+PHP callers continue receiving the same exception classes and messages. Host HTML
+routes and configuration/infrastructure failures retain Laravel's default handling.
+
+Update HTTP clients for these changes:
+
+- `NodeNameConflictException`: 422 → 409, `code: node_name_conflict`; `errors.name` remains.
+- `UploadContentMismatchException`: 415 → 422, `code: upload_rejected`, `reason: mime_mismatch`.
+- Document, move and lookup exceptions that previously returned 500 now return the
+  4xx statuses listed in [the error reference](docs/guide/errors.md#domain-http-errors).
+
+`OffsetMismatchException` still returns 409 and the authoritative `Upload-Offset`
+plus `Tus-Resumable: 1.0.0`. New `NodeNotFoundException::forId()` and
+`StorageNotFoundException::forId()` provide 404 codes for resource resolvers.
+Custom domain exceptions should implement `ProblemException`; additional JSON fields
+can be returned from `protected renderExtras(): array`. RFC 9457 formatting follows
+in a later release.
+
+### Dedicated database transactions (AD25)
+
+Transactions, locks and after-commit callbacks previously used the host default connection;
+they now follow `vaulter.connection` via `Vaulter\Database\VaulterDatabase`. The config
+key is unchanged. Actions, upload repositories, CAS services and webhook/activity subscribers
+now receive this singleton through constructor injection. Resolve them through Laravel's
+container, or provide `database: app(VaulterDatabase::class)` when constructing them directly.
+Custom transaction code can use the same singleton; acquire tree/CAS locks inside its
+`transaction()` callback. The shipped UploadSession, UploadPart, NodeComment and NodeDocumentVersion models
+now also follow this key, so their Eloquent writes participate in the same transaction.
+A custom replacement model must resolve the same connection to preserve atomicity.
+
 ### CI: mutation testing runs on native Pest, Infection is gone (VLT-CANON Open risk #4)
 
 Not consumer-facing — a contributor/CI note; no published API, config key or schema changes.

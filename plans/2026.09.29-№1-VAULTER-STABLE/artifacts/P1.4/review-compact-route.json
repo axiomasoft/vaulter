@@ -1,0 +1,30 @@
+{
+  "provider": "grok-cli",
+  "model": "grok-4.7",
+  "effort": "high",
+  "fresh_context": true,
+  "read_only": true,
+  "static_diff_review": true,
+  "session_id": "c094d461-dcde-40f3-9470-7788b2131adb",
+  "invocation": [
+    "grok",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--tools",
+    "read_file,grep",
+    "--disable-web-search",
+    "--no-subagents",
+    "--permission-mode",
+    "plan",
+    "--cwd",
+    "/home/vostrikov/projects/packages/vaulter",
+    "--session-id",
+    "c094d461-dcde-40f3-9470-7788b2131adb",
+    "--output-format",
+    "json",
+    "--prompt-file",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.4/review-compact-packet.txt"
+  ]
+}

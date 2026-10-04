@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -13,8 +12,12 @@ use Vaulter\Exceptions\VaulterException;
  * sibling-unique). Drive operations never silently auto-rename — the conflict is
  * surfaced deterministically so the caller decides (overwrite, suffix, abort).
  */
-final class NodeNameConflictException extends VaulterException
+final class NodeNameConflictException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'node_name_conflict';
+
+    private const int HTTP_STATUS = 409;
+
     public static function forName(string $name, int|string|null $parentId): self
     {
         $where = $parentId === null ? 'the storage root' : "parent [{$parentId}]";
@@ -26,18 +29,21 @@ final class NodeNameConflictException extends VaulterException
         );
     }
 
-    /**
-     * Surface the conflict as a clean 422 in the same validation-error envelope a
-     * FormRequest produces, keyed on `name` — the client treats a sibling clash
-     * exactly like an invalid name.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse([
-            'message' => $this->getMessage(),
-            'errors' => [
-                'name' => [$this->getMessage()],
-            ],
-        ], 422);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function renderExtras(): array
+    {
+        return ['errors' => ['name' => [$this->getMessage()]]];
     }
 }

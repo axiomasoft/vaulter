@@ -1,0 +1,16 @@
+[
+  {
+    "branch": "12.x",
+    "url": "https://raw.githubusercontent.com/laravel/framework/12.x/src/Illuminate/Foundation/Http/Kernel.php",
+    "sha256": "9b5e787137463aed13372a8bbaaf0bf44307bc7e7190031325b72995df8eb383",
+    "method": "addToMiddlewarePriorityBefore",
+    "present": true
+  },
+  {
+    "branch": "13.x",
+    "url": "https://raw.githubusercontent.com/laravel/framework/13.x/src/Illuminate/Foundation/Http/Kernel.php",
+    "sha256": "f807ec6b1851030c4e5d4c3d83dc9021d8ac6b399d49f1300a068ea2f3c208ad",
+    "method": "addToMiddlewarePriorityBefore",
+    "present": true
+  }
+]

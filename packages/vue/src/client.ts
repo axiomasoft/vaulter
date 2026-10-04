@@ -19,7 +19,6 @@ import type {
   NodeGrant,
   NodeShare,
   NodeShareCreated,
-  Page,
   RevokeNodeAccessPayload,
   SharedNode,
   SharedNodesQuery,
@@ -152,10 +151,10 @@ export interface VaulterClient {
     /**
      * The cross-storage "shared with me" listing (`GET /shared`): the nodes the
      * actor holds a live allow-grant on, re-resolved EXACTLY. Top-level (the subject
-     * index is not storage-bound) and LENGTH-AWARE (a page/total envelope, not a
-     * cursor one); an unauthenticated request sees an empty page.
+     * index is not storage-bound), with an opaque continuation cursor and no total;
+     * an unauthenticated request sees an empty page.
      */
-    shared(query?: SharedNodesQuery): Promise<Page<Node>>
+    shared(query?: SharedNodesQuery): Promise<CursorPage<Node>>
     /** The (relative) URL the browser hits to stream the node's current head. */
     downloadUrl(nodeId: NodeId): string
     /** Fetch the node's current-head bytes as a Blob. */
@@ -357,18 +356,6 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
     return params
   }
 
-  /** A length-aware page query: `?page=…&per_page=…`. */
-  function pageQuery(query?: SharedNodesQuery): Record<string, string | number> {
-    const params: Record<string, string | number> = {}
-    if (query?.page != null) {
-      params.page = query.page
-    }
-    if (query?.perPage != null) {
-      params.per_page = query.perPage
-    }
-    return params
-  }
-
   const client: VaulterClient = {
     comments: {
       list: (nodeId) => unwrap(request<Envelope<VaulterComment[]>>('GET', `/nodes/${nodeId}/comments`)),
@@ -418,7 +405,7 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
       trashed: (storageId, query) =>
         request<CursorPage<Node>>('GET', `/storages/${storageId}/trash`, { query: cursorQuery(query) }),
       shared: (query) =>
-        request<Page<Node>>('GET', '/shared', { query: pageQuery(query) }),
+        request<CursorPage<Node>>('GET', '/shared', { query: cursorQuery(query) }),
       downloadUrl: (nodeId) => urlFor(`/nodes/${nodeId}/download`),
       download: async (nodeId) => (await rawRequest('GET', `/nodes/${nodeId}/download`)).blob(),
       versionDownloadUrl: (nodeId, versionId) => urlFor(`/nodes/${nodeId}/versions/${versionId}/download`),

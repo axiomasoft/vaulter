@@ -3,3 +3,94 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   initialise(\Vaulter\Drive\Models\Uploads\UploadSession $session): array
   isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
+
+Vaulter\Drive\Events\FileUploaded
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileVersion $version, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\File $file
+  readonly \Vaulter\Models\Drive\FileVersion $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeCopied
+  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $copy
+  readonly \Vaulter\Models\Drive\Node $source
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeCreated
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeForceDeleted
+  __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $actorId = null, ?string $eventId = null)
+  readonly array $nodeIds
+  readonly int $freedBytes
+  readonly int|null|string $actorId
+  readonly int|string $storageId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeMoved
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly int|null|string $fromParentId
+  readonly int|null|string $toParentId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeRenamed
+  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+  readonly string $fromName
+  readonly string $toName
+
+Vaulter\Drive\Events\NodeRestored
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeTrashed
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\NodeVersionCommitted
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileVersion $version, int $versionNo, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\File $file
+  readonly \Vaulter\Models\Drive\FileVersion $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int $versionNo
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\StorageCreated
+  __construct(\Vaulter\Models\Drive\Storage $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $root
+  readonly \Vaulter\Models\Drive\Storage $storage
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\UploadSessionAborted
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\UploadSessionExpired
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\UploadSessionInitiated
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
+  readonly int|null|string $actorId
+  readonly string $eventId

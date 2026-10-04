@@ -6,13 +6,14 @@ namespace Vaulter\Support;
 
 use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Contracts\IdStrategy;
+use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\IdStrategyResolver;
 
 /**
  * Static migration helper over the resolved IdStrategy. Hand-written migrations
  * call these helpers instead of hard-coding column types, so "ulid vs uuid7 vs
- * bigint" stays driven by config('vaulter.ids.default'). Key/reference/actor/
- * morphs/tenant route through the strategy; panel/extra_data/bits/reference add
+ * bigint" stays driven by config('vaulter.ids.default'). Key/reference/morphs route through the strategy;
+ * hostKey/actor/tenant use the independent host-key type; panel/extra_data/bits/reference add
  * the per-table convention columns from the master plan §2.0.
  */
 final class VaulterSchema
@@ -58,12 +59,17 @@ final class VaulterSchema
     }
 
     /**
-     * Reference to a host record (user id) of the configured key type. Nullable
-     * with no DB-level FK, because the host owns the users table.
+     * Reference to a host record using ids.host_keys, without a foreign key.
      */
+    public static function hostKey(Blueprint $table, string $column, bool $nullable = false): void
+    {
+        HostKeyColumns::add(table: $table, column: $column, nullable: $nullable, index: false);
+    }
+
+    /** Reference to a nullable host actor, without an index. */
     public static function actor(Blueprint $table, string $column, bool $nullable = true): void
     {
-        self::strategy()->actor(table: $table, column: $column, nullable: $nullable);
+        self::hostKey(table: $table, column: $column, nullable: $nullable);
     }
 
     /**
@@ -76,7 +82,7 @@ final class VaulterSchema
             return;
         }
 
-        self::strategy()->reference(table: $table, column: Config::tenantColumn(), nullable: true);
+        HostKeyColumns::add(table: $table, column: Config::tenantColumn(), nullable: true, index: true);
     }
 
     /**

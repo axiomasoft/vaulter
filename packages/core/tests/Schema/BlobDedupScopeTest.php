@@ -21,6 +21,7 @@ function makeBlob(array $overrides = []): Blob
     $blob->forceFill([
         'sha256' => str_repeat('a', 64),
         'size_bytes' => 10,
+        'scope_key' => isset($overrides['tenant_id']) ? 'tenant:'.$overrides['tenant_id'] : 'global',
         'storage_key' => 'global/aa/aa/'.str_repeat('a', 64),
         ...$overrides,
     ]);

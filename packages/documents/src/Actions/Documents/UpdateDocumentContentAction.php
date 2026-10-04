@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Documents;
 
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentData;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -34,6 +34,7 @@ final readonly class UpdateDocumentContentAction
         private NodeDocumentVersionReadRepository $read,
         private NodeDocumentVersionStoreRepository $store,
         private NodeStoreRepository $nodes,
+        private VaulterDatabase $database,
     ) {}
 
     public function execute(UpdateDocumentContentData $data): NodeDocumentVersion
@@ -52,7 +53,7 @@ final readonly class UpdateDocumentContentAction
             $data->content->ensureWithin(Config::maxDocumentSizeKb());
         }
 
-        return DB::transaction(function () use ($node, $data): NodeDocumentVersion {
+        return $this->database->transaction(function () use ($node, $data): NodeDocumentVersion {
             $head = $this->read->head($node);
 
             if ($head !== null && $this->shouldOverwrite($head)) {

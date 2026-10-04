@@ -1,0 +1,15 @@
+Next step recommendation:
+**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.5
+
+| Parameter | Meaning |
+|:--|:--|
+| Batch | solo |
+| Model class | frontier |
+| Model | claude-opus-5-5 |
+| Effort | high |
+| Context | continue-root |
+| Essence | P1.5: CAS data migration and repair-scopes. |
+
+```session-continuity-decision/v1
+{"evidence": ["batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.3/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
+```

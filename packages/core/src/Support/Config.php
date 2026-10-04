@@ -14,6 +14,7 @@ use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
@@ -743,6 +744,20 @@ final class Config
         return is_string($value) ? $value : 'id';
     }
 
+    /** @return 'string'|'bigint'|'uuid'|'ulid' */
+    public static function hostKeyType(): string
+    {
+        $value = config('vaulter.ids.host_keys', 'string');
+
+        if (!is_string($value) || !in_array($value, ['string', 'bigint', 'uuid', 'ulid'], true)) {
+            $label = is_scalar($value) || $value === null ? (string) $value : get_debug_type($value);
+
+            throw new \InvalidArgumentException('[Vaulter] Unknown vaulter.ids.host_keys ['.$label.']; expected string|bigint|uuid|ulid.');
+        }
+
+        return $value;
+    }
+
     /**
      * The active id-strategy key (ulid|uuid7|bigint), default ulid (D9).
      *
@@ -840,6 +855,13 @@ final class Config
         return self::tablePrefix().$base;
     }
 
+    public static function listingScanBudget(): int
+    {
+        $budget = config('vaulter.listing.scan_budget', 1000);
+
+        return is_numeric($budget) ? max(1, (int) $budget) : 1000;
+    }
+
     /**
      * The named Laravel database connection every Vaulter-owned table/model reads
      * and writes through (F-P2.3-02), or null to defer to the host's default
@@ -864,9 +886,37 @@ final class Config
     /**
      * @return list<string>
      */
-    public static function middleware(): array
+    public static function authenticatedMiddleware(): array
     {
-        return self::stringList(config('vaulter.middleware', ['api']), ['api']);
+        return self::withRequestMetrics(self::stringList(
+            config('vaulter.middleware') ?? config('vaulter.routes.middleware.authenticated'),
+            ['api', 'auth:sanctum'],
+        ));
+    }
+
+    /** @return list<string> */
+    public static function publicMiddleware(): array
+    {
+        return self::withRequestMetrics(self::stringList(config('vaulter.routes.middleware.public'), ['api']));
+    }
+
+    /** @return list<string> */
+    public static function hubMiddleware(): array
+    {
+        return self::withRequestMetrics(self::stringList(config('vaulter.routes.middleware.hub'), ['api']));
+    }
+
+    /**
+     * @param  list<string> $middleware
+     * @return list<string>
+     */
+    private static function withRequestMetrics(array $middleware): array
+    {
+        if (!in_array(RecordVaulterRequestMetrics::class, $middleware, true)) {
+            $middleware[] = RecordVaulterRequestMetrics::class;
+        }
+
+        return $middleware;
     }
 
     /**

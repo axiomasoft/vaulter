@@ -2,6 +2,8 @@
 
 **Status:** accepted
 
+> Amended by ADR-0021 (proposed).
+
 ## Context
 
 ADR-0003 made Vaulter embeddable through swappable models, a dual key type and an

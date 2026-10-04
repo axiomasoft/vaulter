@@ -1,0 +1,2006 @@
+Read-only independent full review of PLAN2.P1.7. Owner explicitly requires Grok 4.7/high. You are the reviewer, not the executor. Do not edit, repair, commit, finalize, run DB writes or start subagents. Review only the supplied item spec, OPUS requirements, candidate diff/new files, and observed validation evidence. Focus on demonstrated correctness and data-preservation defects, public schema/API contract, all 27 columns, conversion/rollback/idempotency/connection routing, test effectiveness and fixture isolation. File count and bookkeeping are not findings by themselves. Report actionable defects with file:line and concrete failure; avoid speculative nits. If no material defect, output review: grok/grok-4.7 GREEN. If defects, output review: grok/grok-4.7 findings:N and list each.
+
+
+
+## Item spec
+### P1.7 — Типы колонок ключей хоста
+
+**Intent:** Колонки, хранящие ключи хоста (владелец storage, субъект grant, tenant, автор и все actor-колонки),
+типизируются отдельным ключом `vaulter.ids.host_keys` (по умолчанию `string` = `varchar(64)`), а не стратегией ID Vaulter,
+так что хост с UUID/bigint/ULID-ключами пишет и читает grants, activity и provisioning при любой `ids` стратегии (N02, AD25, V23).
+
+**Why:** OPUS 13 P1.7, 02 D25, 08 §2–§3 (миграция №3); V23. Сегодня `PanelTablesBuilder` создаёт эти колонки через
+`$ids->reference()`/`$ids->actor()` (`packages/core/src/Schema/PanelTablesBuilder.php:162–755`, `AutoIncrementIds.php:22–30`,
+`UlidIds.php:31–39`): при `ids.default = ulid` колонки `char(26)` и UUID хоста (36 символов) не вставляется на PostgreSQL; при
+`bigint` — ULID/UUID-пользователь не может получить grant или попасть в аудит.
+
+**Scope Included:**
+1. Конфиг: `packages/core/config/vaulter.php` блок `ids` — ключ `'host_keys' => env('VAULTER_HOST_KEYS', 'string')`
+   (`string|bigint|uuid|ulid`) с комментарием; `packages/core/src/Support/Config.php` — `hostKeyType(): string`
+   (значение вне четырёх — `InvalidArgumentException('[Vaulter] Unknown vaulter.ids.host_keys [<v>]; expected string|bigint|uuid|ulid.')`).
+2. `packages/core/src/Schema/HostKeyColumns.php` (new, `final class`): `add(Blueprint $table, string $column, bool $nullable, bool $index): void`
+   по `Config::hostKeyType()`: `string` → `$table->string($column, 64)`; `bigint` → `unsignedBigInteger`; `uuid` → `uuid`;
+   `ulid` → `char($column, 26)`; затем `nullable($nullable)` и `->index()` при `$index`. `sqlType(string $driver): string` —
+   целевой SQL-тип для миграции: PG `varchar(64)|bigint|uuid|char(26)`, MySQL/MariaDB `varchar(64)|bigint unsigned|char(36)|char(26)`.
+3. `PanelTablesBuilder`: ровно 27 колонок переходят на `HostKeyColumns::add()` с прежними `nullable` и наличием индекса
+   (индекс был у `reference()`, у `actor()` не было):
+   `tenant_id` (index, nullable) в `storages`, `nodes`, `blobs`, `files`, `file_versions`, `node_grants`, `node_shares`,
+   `node_comments`, `document_versions`, `upload_sessions`, `activity` (через приватный `tenant()`, строка 1173);
+   `storages.owner_id` (index, not null, строка 164); `node_grants.subject_id` (index, not null, 419);
+   `node_comments.author_id` (index, not null, 533); без индекса, nullable: `storages.created_by` (177), `nodes.owner_id` (218),
+   `nodes.trashed_by` (223), `nodes.created_by` (226), `nodes.updated_by` (227), `files.created_by` (334),
+   `file_versions.created_by` (365), `node_grants.granted_by` (434), `node_shares.granted_by` (491),
+   `node_comments.resolved_by` (544), `document_versions.created_by` (611), `upload_sessions.created_by` (687),
+   `activity.actor_id` (755). Ссылки на сущности Vaulter (`storage_id`, `parent_id`, `node_id`, …) не меняются.
+4. `packages/core/src/Support/VaulterSchema.php` (хелпер миграций хоста): новый `hostKey(Blueprint $table, string $column, bool $nullable = false): void`
+   → `HostKeyColumns::add(..., index: false)`; `actor()` и `tenant()` используют `HostKeyColumns` (это ключи хоста).
+   `IdStrategy::actor()` в контракте остаётся (удаление — P2.1).
+5. Upgrade-миграция `packages/core/database/migrations/2026_10_01_000003_host_key_columns.php` (R3): для каждой из 27
+   пар (таблица `Config::table('<key>')`, колонка), если таблица и колонка есть и фактический тип ≠ целевого:
+   PG — `ALTER TABLE "<t>" ALTER COLUMN "<c>" TYPE <sqlType> USING "<c>"::<cast>` (`cast` = `text` для string/ulid,
+   `bigint`, `uuid`); MySQL/MariaDB — `ALTER TABLE \`<t>\` MODIFY \`<c>\` <sqlType> NULL|NOT NULL` (как в п.3); SQLite —
+   no-op (динамическая типизация, только dev/test). Фактический тип — `Schema::getColumns($t)` (`type_name`). Ошибка
+   приведения (например, ULID-значения при `host_keys = bigint`) не перехватывается: миграция падает с сообщением
+   драйвера — данные не теряются. Шаг №3 «кастомная `tenant.column` → `tenant_id`» — no-op по R10 (`tenant_id` всегда).
+   `down()`: обратно к типу стратегии (`IdStrategyResolver` → `reference`-тип для `tenant_id`/`owner_id`/`subject_id`/`author_id`,
+   `actor`-тип для остальных) тем же способом; несовместимые значения → падение с сообщением драйвера.
+6. Тесты:
+   - V23 — `packages/core/tests/IdStrategy/Ulid/HostKeysTest.php` (`UlidStrategyTestCase`, `host_keys = string`): пользователь
+     хоста с UUID-ключом, проект-владелец с bigint-ключом (тестовые модели в `packages/core/tests/Fixtures/`), роль Spatie
+     с bigint-ключом: provisioning storage для проекта, grant на пользователя и на роль, запись activity, `created_by` узла —
+     все вставки проходят, чтение возвращает исходные строки ключей (`'550e8400-e29b-41d4-a716-446655440000'`, `'42'`).
+   - `packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php` (`BigintStrategyTestCase`): grant на ULID-пользователя и
+     activity с ULID-actor при `ids = bigint`, `host_keys = string` → успех.
+   - Миграция: `packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php` (PG; пропуск без pgsql или без `psql` в PATH):
+     хелпер `packages/core/tests/Upgrade/LoadsV02Fixture.php` (trait) — `DROP SCHEMA public CASCADE; CREATE SCHEMA public`,
+     загрузка `tests/fixtures/v0.2.0/pgsql-<bigint|ulid>.sql` через `psql -X -q -v ON_ERROR_STOP=1` с координатами `DB_*`,
+     затем `$this->artisan('migrate', ['--force' => true])->assertSuccessful()`. Проверки для обоих дампов: все 27 колонок
+     имеют `information_schema.columns.data_type = 'character varying'` и `character_maximum_length = 64`; исходные значения
+     (`owner_id` `1/2/3` и три ULID из `tests/fixtures/v0.2.0/README.md`) прочитаны как строки; повторный `migrate` — no-op;
+     `migrate:rollback --step=1` возвращает исходные типы (bigint-дамп → `bigint`, ulid-дамп → `character`).
+     Привязка в `tests/Pest.php`: `uses(TestCase::class)->in($core.'/Upgrade');`
+     без `RefreshDatabase`/`DatabaseMigrations` (схему готовит хелпер); тест задаёт `vaulter.ids.default` = стратегия дампа.
+   - Свежая установка: `packages/core/tests/Schema/HostKeyColumnsSchemaTest.php` — для `host_keys` ∈ {string, bigint, uuid, ulid}
+     (dataset) колонка `node_grants.subject_id` после `PanelTablesBuilder::createAll` имеет ожидаемый `type_name` драйвера.
+7. Документация: `docs/guide/configuration.md` (`ids.host_keys`), `docs/guide/database-compatibility.md` (HK-колонки),
+   `UPGRADE.md` (миграция №3, AD25), `CHANGELOG.md [Unreleased]`; golden `PublicApiSnapshotTest` (`HostKeyColumns`,
+   `VaulterSchema::hostKey`).
+
+**Scope Excluded:** переименование колонок (`owner_id` узла → `owned_by`, `storage_id` → `drive_id`) и порядок с
+миграцией №2 (P2.1, R3); doctor-проверка фактических типов `core.schema.key_types` (P7.1); удаление `IdStrategy::actor()`
+(P2.1); нормализатор `tenant.column` (P2.5).
+
+**Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md`;
+`audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` (§2, §3 №3); `packages/core/src/Schema/PanelTablesBuilder.php`;
+`packages/core/src/Support/VaulterSchema.php`; `tests/fixtures/v0.2.0/README.md` (producer: P0.3); `tests/Pest.php`
+
+**Files:** `packages/core/config/vaulter.php`, `packages/core/src/Support/Config.php`, `packages/core/src/Schema/HostKeyColumns.php` (new),
+`packages/core/src/Schema/PanelTablesBuilder.php`, `packages/core/src/Support/VaulterSchema.php`,
+`packages/core/database/migrations/2026_10_01_000003_host_key_columns.php` (new),
+`packages/core/tests/IdStrategy/Ulid/HostKeysTest.php` (new), `packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php` (new),
+`packages/core/tests/Upgrade/{LoadsV02Fixture,HostKeyColumnsMigrationTest}.php` (new), `packages/core/tests/Schema/HostKeyColumnsSchemaTest.php` (new),
+`packages/core/tests/Fixtures/*` (тестовые модели хоста), `tests/Pest.php`, `.github/workflows/tests.yml` (PG-лейн «Postgres: base TestCase suite»
+получает каталог `packages/core/tests/Upgrade` и предшествующий шаг `psql --version`), `packages/core/tests/Arch/__snapshots__/*`,
+`docs/guide/{configuration,database-compatibility}.md`, `UPGRADE.md`, `CHANGELOG.md`.
+
+**Required Reads:** 0) `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.7-opus.md` (дословные требования OPUS — исполнить все);
+1) `packages/core/src/Schema/PanelTablesBuilder.php` (строки 150–260, 320–760, 1170–1180); 2) `packages/core/src/Schema/UlidIds.php`;
+3) `packages/core/database/migrations/2026_07_11_000001_optimize_hot_path_indexes.php` (стиль идемпотентной миграции);
+4) `tests/fixtures/v0.2.0/README.md`; 5) `tests/Pest.php`.
+
+**Authority:** routine
+
+**Implementation Rules:**
+- Миграция идемпотентна и на свежей установке no-op (типы уже целевые из п.3).
+- Таблицы — только через `Config::table()`; имена колонок — текущие.
+- Значения не преобразуются вручную (`USING ::text`); при `host_keys = bigint` и нечисловых данных миграция обязана упасть.
+- Если `Schema::getColumns()` недоступен в одной из версий Laravel матрицы — стоп и эскалация.
+- MySQL: прогон Validation на MySQL обязателен; падение, воспроизводимое на `main` без изменений P1.7 (несовместимость
+  текущего кода с MySQL 8), фиксируется как finding с владельцем P8.1 и Known Deviation; падение из-за изменений P1.7 — красный item.
+
+**Code Guidance:** проверка охвата: `grep -nE "->actor\(|reference\(table: \\\$table, column: '(owner_id|subject_id|author_id|tenant_id)'" packages/core/src/Schema/PanelTablesBuilder.php`
+→ пусто после правки (все 27 через `HostKeyColumns`).
+
+**Validation:**
+- Code Guidance → пустой вывод.
+- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid packages/core/tests/IdStrategy/Bigint packages/core/tests/Schema/HostKeyColumnsSchemaTest.php packages/core/tests/Upgrade`
+  → 0 failed, 0 skipped.
+- `env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Schema/HostKeyColumnsSchemaTest.php`
+  → 0 failed (правило MySQL выше).
+- Негативный контроль V23: временно вернуть `$ids->reference(…'subject_id')` → `HostKeysTest` красный на PG (вставка UUID в `char(26)`); вернуть.
+- Гейт core и гейты drive, documents, media → exit 0.
+
+**Deliverables:** `ids.host_keys`, `HostKeyColumns`, `VaulterSchema::hostKey()`, миграция №3, V23, тесты upgrade на фикстуре.
+
+
+## Assigned verbatim OPUS
+# OPUS — дословные требования для P1.7 (21 единиц)
+
+> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению
+> или к явному отказу через D# плана (D06).
+
+
+## 01-review.md — 3. Codex (01–04): позиция
+
+- `01:d1c63e40`
+
+| E1 CAS scope loss | Согласен. Добавляю: колонки `tenant_id`/`storage_id` в `v_blobs` сами типизированы по стратегии ID Vaulter, а tenant — это ключ хоста (N02) |
+
+
+## 01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N02 (S1). Колонки ключей хоста типизированы стратегией ID Vaulter
+
+- `01:5368342b`
+
+`v_storages.owner_id`, `v_node_grants.subject_id`, все `tenant_id` создаются `$ids->reference()`, а все
+actor-колонки (`created_by`, `owner_id` узла, `trashed_by`, `granted_by`, `actor_id`) — `$ids->actor()`
+(`packages/core/src/Schema/UlidIds.php:31-39`, `AutoIncrementIds.php:22-30`, `PanelTablesBuilder.php:164,218`).
+Это ключи **хоста**, а не Vaulter. По умолчанию (`ids.default = ulid`) они `char(26)`: хост с UUID-ключами
+пользователей/проектов/ролей (36 символов) получает ошибку вставки на PostgreSQL; при `bigint` — хост с
+ULID/UUID-пользователями не может ни выдать grant, ни записать аудит.
+
+
+## 02-decisions.md — D25 — База данных: соединение Vaulter и типы ключей хоста · T0
+
+- `02:d8cfbed8`
+
+- Новый ключ `vaulter.ids.host_keys`: `string` (по умолчанию, `varchar(64)`) | `bigint` | `uuid` | `ulid`.
+  Применяется к `v_drives.owner_id`, `v_node_grants.subject_id`, всем `tenant_id` и всем
+  actor-колонкам (N02). Стратегия `ids.strategy` управляет только первичными/внешними ключами
+  таблиц Vaulter.
+
+
+## 03-glossary-and-renames.md — 7. Таблицы и колонки
+
+- `03:03308ccb`
+
+| Было | Стало |
+
+- `03:7ec3b07f`
+
+Типы колонок-ключей хоста — D25. Полная upgrade-миграция — [08-data-model-and-migration.md](08-data-model-and-migration.md).
+
+
+## 08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_drives` (было `v_storages`)
+
+- `08:18e6bbad`
+
+| Колонка | Тип | Примечание |
+
+- `08:a647aebf`
+
+| `tenant_id` | HK null | |
+
+- `08:c08a0d08`
+
+| `owner_id` | HK | |
+
+- `08:09d1e515`
+
+| `created_by` | HK null | |
+
+
+## 08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`
+
+- `08:24547dbd` — _P1.2 — индекс единственного корня; P1.7 — HK-типы; переименования/sequence/удаления — P2.1/P4.1/P4.7_
+
+Добавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`
+(HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,
+`updated_by`, `trashed_by`, `tenant_id`. `extra` — jsonb null всегда (флаг `extra_data` удалён).
+Удалить: `current_version_id`, `file_id`, `deleted_at`.
+Индексы: как сейчас + `UNIQUE (drive_id) WHERE parent_id IS NULL`; sibling-unique без `deleted_at`.
+
+
+## 08-data-model-and-migration.md — 3. Upgrade-миграции 0.2 → 0.3
+
+- `08:e4f63f43`
+
+Если фаза F1 выпускается отдельно как 0.2.1 ([13-workstreams.md](13-workstreams.md)), миграции №3 (типы HK),
+№7 (scope_key) и ремонт «вторых корней» из №6 уходят в 0.2.1 с теми же телами; остальные остаются в 0.3.
+
+- `08:bd7ec0a7`
+
+Порядок — отдельные миграции (PostgreSQL выполняет каждую в транзакции; на MySQL DDL не транзакционен, поэтому
+каждая миграция идемпотентна: проверяет состояние перед шагом). Все читают **старые** имена таблиц из
+устаревших `vaulter.table_names`/`vaulter.table_prefix`, если они заданы.
+
+- `08:c7629c6e`
+
+| # | Файл | Шаги |
+
+- `08:01da7ba3`
+
+| 3 | `…_000003_host_key_columns.php` | Типы HK-колонок по `ids.host_keys` (PG: `ALTER COLUMN … TYPE varchar(64) USING …::text`; MySQL: `MODIFY`); кастомная `tenant.column` → `tenant_id` |
+
+- `08:02425ed3`
+
+Откат: `down()` каждой миграции восстанавливает структуру; данные ремонта N04 и hard-delete grants
+необратимы — это отмечено в UPGRADE.md, preflight-миграция требует бэкап (флаг `--force` при наличии данных).
+
+
+## 13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.7 — Типы колонок ключей хоста
+
+- `13:c8c1b229`
+
+- Решения: D25 · Находки: N02 · Сценарии: V23.
+
+- `13:1dd33c35`
+
+- Сделать: `ids.host_keys` (по умолчанию `string`), `HostKeyColumns` в `SchemaBuilder` для owner/subject/tenant/actor-колонок;
+  upgrade-миграция изменения типов (PG/MySQL); `VaulterSchema::hostKey()`.
+
+- `13:7b008142`
+
+- Готово: V23 (хост с UUID-пользователями и bigint-проектами при `ids.strategy=ulid`) зелёный.
+
+- `13:9c48fb16`
+
+- Исполнитель: sonnet/high; миграция — ревью opus.
+
+
+## 14-verification.md — Новые
+
+- `14:51791b71`
+
+| ID | Сценарий | Ожидание | БД | Пункт |
+
+- `14:c6d66927`
+
+| V23 | `ids.strategy = ulid`, пользователи хоста UUID, проекты bigint, роли Spatie bigint | Provisioning, grants на пользователя и роль, activity, actor-колонки пишутся и читаются | PG + MySQL | P1.7 |
+
+
+
+## Authorized scope repairs
+# P1.7 — bounded validation repairs and authorization
+
+The host-key schema deliberately changes default reads from integer to string. Existing core helper expectations for actor/tenant in all three ID strategies and the persisted share.granted_by assertion were updated to that contract. The snapshot gate now reflects HostKeyColumns and VaulterSchema. No assertion was loosened.
+
+Core's TestCase previously selected SQLite for DB_CONNECTION=mysql. Its test connection resolver now selects real MySQL/MariaDB and refuses non-*_test persistent databases. A fixture-only MySQL TestCase omits the unrelated tree migrations, allowing an additional real-MySQL suite to prove all 27 host columns, values, nullability, indexes, all four types, idempotency and down(). The declared full-install MySQL command still runs and its error is retained rather than hidden.
+
+The owner's explicit reply in this invocation was: «Разрешаю исправить три assertions». The permission question identified precisely two drive assertions (created_by 42 and tenant_id 99887766) and one documents assertion (resolved_by 7) as stale integer expectations, and cited AGENTS.md and the P1.7 Files boundary. Only those three assertions change in sibling packages; their full gates are rerun. No sibling product code changes.
+
+The new V23 fresh-panel setup runs after automatic migrations, so the upgrade cannot hide a wrong fresh-schema subject_id type. Its mandated negative control fails on PostgreSQL inserting the UUID into char(26), and the restored test passes.
+
+The MySQL 8 installation defect is pre-existing and assigned to PLAN2.P8.1 by the P1.7 contract. mysql-baseline-classification.json and mysql-known-deviation.md retain its proof and exact limits. No acceptance threshold or test skip was changed to accept the defect.
+
+
+## Product candidate hashes
+{
+  ".github/workflows/tests.yml": "6f0ded6a58357bda8c453403c337b680a57955f7d83bff78b58cff92d1964387",
+  "CHANGELOG.md": "74fbaecc12c8d15382d4c3be2723a341661f0b3720710bfa6f771cf813d8df30",
+  "UPGRADE.md": "30470acce3e4c4751af318717dd9bb39678355d98de631887400db235160b0db",
+  "docs/guide/configuration.md": "3c029446cd96b78312319b35a4627a17c07bac6efd80ec2cf7d780e98f23f326",
+  "docs/guide/database-compatibility.md": "4d93ac68c5224caa19e746672892ac89f2c6c4fe3a3be2ddabf81443c32b76d4",
+  "packages/core/config/vaulter.php": "68b2bae19a27f7e38aff3861ccfcc277c69b0c31a9b8123ee06e782f7eaafea2",
+  "packages/core/database/migrations/2026_10_01_000003_host_key_columns.php": "034ac42a27f17f3e00ca2bcd0b05de1286fc9aa249f445ae0663b9b919d2dc5f",
+  "packages/core/src/Schema/HostKeyColumns.php": "341210690b9fbfb0b2355e765346d8c70b57cb673c8c6cd1b62a70b6d418963c",
+  "packages/core/src/Schema/PanelTablesBuilder.php": "cda7de8c3e6df71674fa1fdc011a9cf8fa37adaf03c97f4c6fd7a634c845496d",
+  "packages/core/src/Support/Config.php": "451ec3ed52373f5fbced854883449634586e7e3ac6f76709c7a5281968262c4f",
+  "packages/core/src/Support/VaulterSchema.php": "08022e5f1a551f46924f8b305467f281ba21a692175a10d02b3e1a2e3a9872ac",
+  "packages/core/tests/Arch/PublicApiSnapshotTest.php": "adafb15da7532b0e47e5cd0965bcd80305b0f52ad9b0c74491fe0fd7cd1ac729",
+  "packages/core/tests/Arch/__snapshots__/public-api.txt": "174c710c2df8f04fee51734937faf05f53510d0a16b23a14639c1e0f298ffe5b",
+  "packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php": "e781b0a36a10c5c88001342069beff8ca03e9ad06d2a1b84effc435e91b836e8",
+  "packages/core/tests/Fixtures/HostKeyMysqlTestCase.php": "826a2c9ecf019f1c0ab8462dba7ec24892eb537ff36d667a065689ce5511e181",
+  "packages/core/tests/Fixtures/HostKeyUser.php": "1777055556b693ccc304c6e3ecb23c447838287042862f6d4c08e5e7b1237627",
+  "packages/core/tests/HostKeyMysql/HostKeyColumnsMysqlTest.php": "293480023329b316d3c69b2d71a8cd944b05a4add40f721085c5b25840fca930",
+  "packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php": "86daf7d2c6be9a282cd005e2c216c8ef55fe9b45673fcdd6b56d2a97ce22b559",
+  "packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php": "a8a9d7f81084b016be3874325100271180a49890b17d39e70b2d126ffa505112",
+  "packages/core/tests/IdStrategy/Ulid/HostKeysTest.php": "ef2b621d3079a0be0025e4d8e299d97d4728dfb5e2bf1524c37acfb5e2a4f8b8",
+  "packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php": "256260ec863b08e69ce72b1f6283e247a4bbff69daaa758e9728a55bd6e67fb7",
+  "packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php": "36423db6f54f33fa124e2c0cbd672729b9ec751973ce1a35a2e0808a5f426113",
+  "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php": "930290cc6de9f46533e65d880cb440fd7f1dae4238b806420dbe48e303dbb062",
+  "packages/core/tests/TestCase.php": "1eea5092f3a99fbd81b8d48ca68071b71232cb66ac29ab86992cbdd8749ecef3",
+  "packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php": "a62887de041eddec38befc16429f86c96cf13247fb238e0a6e61befb75bb7ce6",
+  "packages/core/tests/Upgrade/LoadsV02Fixture.php": "e037a815953731ea3897931f1ab2097112ef4923cf8343453ee5d4bf43d4d1d4",
+  "packages/documents/tests/Schema/NodeCommentSchemaTest.php": "dfe38905c904bc7b724bf84cd799d617bd9f9671a2d885e560bc7016ba9b66c9",
+  "packages/drive/tests/Uploads/R07SessionManagerContractsTest.php": "2eb8f2b66ac3c5a2d3b1e73262df2f4500023b23bdab4e0aa208442aefb46e91",
+  "packages/drive/tests/Uploads/R07bSessionContractsTest.php": "7bcd1b7a43d0bc723c4d4404a875b5e7a6d2627d27262d607d08a18ded967177",
+  "tests/Pest.php": "28ad9f648a14fe9cf26ee424cca0f3eea9de94006b1a669644a77dcff7ac0873"
+}
+
+
+## Tracked product diff
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index ea857ec..6e48953 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -150,6 +150,9 @@ jobs:
+       # (.github/workflows/drive.yml, drive-pgsql job); the yjs_state bytea round-trip
+       # (tests/Document) moved to vaulter-documents (.github/workflows/documents.yml,
+       # documents-pgsql job) — P2 #5 / ADR-0015, D1/D2.
++      - name: 'Postgres: fixture loader available'
++        run: psql --version
++
+       - name: 'Postgres: base TestCase suite'
+         run: >-
+           vendor/bin/pest --ci
+@@ -160,6 +163,7 @@ jobs:
+           packages/core/tests/Schema
+           packages/core/tests/Sharing
+           packages/core/tests/Webhooks
++          packages/core/tests/Upgrade
+ 
+       # The ForkRace harness (P0.2): forked children race on their own connections.
+       # always() — a known baseline failure of the suite above must not hide it.
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 55a661e..b814774 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## [Unreleased]
+ 
++### Added
++- Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
++  and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
++
+ ### Changed
+ - `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
+ - HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
+@@ -24,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+   directly from GitHub without a private repository token.
+ 
+ ### Fixed
++- Host owner, subject, author, tenant and actor columns now use `ids.host_keys`
++  instead of Vaulter's entity-ID strategy. Upgrade migration №3 preserves existing
++  values and restores the strategy's types on rollback (N02, AD25).
+ - Repository metadata, exception documentation, collaboration errors and install
+   star prompt now point to `axiomasoft/vaulter`; package vendor names stay
+   `axioma-studio/vaulter-*` (N20/E6, AD02).
+diff --git a/UPGRADE.md b/UPGRADE.md
+index fdd983f..2013e9f 100644
+--- a/UPGRADE.md
++++ b/UPGRADE.md
+@@ -6,6 +6,26 @@ changes that require action from consumers of the package.
+ 
+ ## Unreleased
+ 
++### Independent host keys and migration №3 (AD25)
++
++Before: host owner, subject, author, tenant and actor columns inherited Vaulter's
++entity-ID strategy (`char(26)` for ULID or bigint). After: all 27 columns use
++`vaulter.ids.host_keys`, default `string` (`varchar(64)`), so UUID users and bigint
++projects/roles can coexist with ULID Vaulter IDs. `VaulterSchema::hostKey()` is new;
++`actor()` and `tenant()` use the host setting. Entity keys and references keep their strategy.
++
++Run `php artisan migrate --force` in a maintenance window after a database backup.
++Migration `2026_10_01_000003_host_key_columns` preserves existing values, column
++nullability and indexes, uses `vaulter.connection` and legacy table names, and is
++idempotent. PostgreSQL casts values with `USING`; MySQL/MariaDB modifies column types;
++SQLite requires no type upgrade. The migration does not rename the tenant column.
++
++Set `VAULTER_HOST_KEYS` to `bigint`, `uuid` or `ulid` only when every existing host
++key fits that type. Incompatible data raises the database driver's error. Rollback
++restores the current Vaulter ID strategy; host keys inserted after upgrading (for
++example UUIDs into an old ULID installation) can prevent rollback. Do not assume a
++structural rollback can accept every new host key.
++
+ ### Runtime Drive dependencies (AD02)
+ 
+ Documents and Filament now declare `axioma-studio/vaulter-drive` in `require`
+diff --git a/docs/guide/configuration.md b/docs/guide/configuration.md
+index f854403..fe7dfee 100644
+--- a/docs/guide/configuration.md
++++ b/docs/guide/configuration.md
+@@ -72,12 +72,13 @@ So `storages` with prefix `v_` becomes the table `v_storages`.
+ 
+ ## Primary key strategy (`ids`)
+ 
+-The id strategy decides the column type of every primary/morph key. **Default is `ulid`** so
+-morph keys line up with the Corex/AzGuard ecosystem.
++The id strategy decides the column type of Vaulter primary keys and references.
++**Default is `ulid`**. Keys owned by the host use the separate `ids.host_keys` setting (AD25).
+ 
+ ```php
+ 'ids' => [
+     'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid | uuid7 | bigint
++    'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string | bigint | uuid | ulid
+     'strategies' => [
+         'bigint' => \Vaulter\Schema\AutoIncrementIds::class,
+         'ulid'   => \Vaulter\Schema\UlidIds::class,
+@@ -99,6 +100,26 @@ When `ids.default` is set, **it wins**; otherwise the strategy is derived from `
+ `ids.default`. See [ADR-0011](/adr/0011-id-strategy).
+ :::
+ 
++### Host keys (`ids.host_keys`)
++
++`string` is the default and emits `varchar(64)`. It accepts UUID users, bigint projects,
++ULID actors and bigint Spatie roles together, independently of Vaulter's own ID strategy.
++The setting applies to storage owners, grant subjects, comment authors, every `tenant_id`
++and actor columns such as `created_by`, `granted_by` and `activity.actor_id`.
++
++| Host-key setting | PostgreSQL | MySQL / MariaDB |
++|---|---|---|
++| `string` | `varchar(64)` | `varchar(64)` |
++| `bigint` | `bigint` | `bigint unsigned` |
++| `uuid` | `uuid` | `char(36)` |
++| `ulid` | `char(26)` | `char(26)` |
++
++Choose a narrower type only when every host key fits it. Unknown settings throw
++`InvalidArgumentException`. Host migrations can use `VaulterSchema::hostKey($table, 'owner_id')`;
++`actor()` and `tenant()` also use this setting. `key()`, `reference()` and `morphs()`
++continue to use Vaulter's entity-ID strategy. Existing installations run upgrade migration
++`2026_10_01_000003_host_key_columns`; see `UPGRADE.md`.
++
+ ## Storage Panels
+ 
+ A panel is a named config-envelope bound to a host entity over the shared `v_*` schema, with
+diff --git a/docs/guide/database-compatibility.md b/docs/guide/database-compatibility.md
+index eb4f75f..f11f132 100644
+--- a/docs/guide/database-compatibility.md
++++ b/docs/guide/database-compatibility.md
+@@ -17,7 +17,7 @@ each engine gives you and the handful of Postgres specifics the schema depends o
+ |---|---|---|
+ | **PostgreSQL 14+** | **Recommended.** The full test suite runs against Postgres in CI across every id strategy. | Production. Everything below works natively. |
+ | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
+-| **MySQL 8+ / MariaDB** | Supported and portable — the schema avoids engine-specific SQL. | Existing MySQL hosts. |
++| **MySQL 8+ / MariaDB** | Host-key types and upgrade DDL are tested. Full installation currently hits the MySQL 8 `sibling_active` generated-column/FK incompatibility. | Full schema compatibility is a pending release gate. |
+ 
+ ::: tip PHP extension
+ Postgres needs the `pdo_pgsql` extension. It ships with most PHP distributions; on a stock
+@@ -54,7 +54,9 @@ The primary-key strategy is configurable (see
+ | `uuid7` | native `uuid` on Postgres | Time-ordered UUIDs; uses Postgres' native `uuid` type. |
+ 
+ The recursive folder tree (`v_nodes.parent_id → v_nodes.id`) is a self-referencing foreign
+-key, and it migrates cleanly under all three strategies on every engine.
++key. PostgreSQL and SQLite migrate it under all three strategies. MySQL 8 currently
++rejects the STORED `sibling_active` column over the cascading `parent_id` foreign key
++(error 1215); this pre-existing installation defect remains a release gate.
+ 
+ ## Case-insensitive search
+ 
+@@ -62,7 +64,20 @@ Node- and document-name search is **case-folded** (`lower(col) like lower(?)`),
+ matches regardless of case on every engine — including Postgres, whose `like` is
+ case-sensitive (unlike SQLite/MySQL). No configuration needed.
+ 
+-## Spatie role grants and the typed subject key
++## Host keys and Spatie role grants
++
++Host-owned owner, subject, author, tenant and actor columns use `ids.host_keys` (AD25),
++independently of Vaulter's `ulid`, `uuid7` or `bigint` entity IDs. The default `string`
++is `varchar(64)` and preserves mixed UUID, ULID and integer host keys as strings.
++For narrower types and engine mappings, see [host-key configuration](/guide/configuration#host-keys-ids-host-keys).
++
++The upgrade migration changes all 27 host-key columns through the configured Vaulter
++connection and legacy table-name map. PostgreSQL uses `ALTER COLUMN ... TYPE ... USING`;
++MySQL/MariaDB uses `MODIFY` and keeps each column's nullability and indexes.
++Fresh schemas already have the target type; repeated upgrades do no work. SQLite's
++upgrade is a no-op because its columns are dynamically typed. Incompatible values cause
++a driver error rather than being discarded. Rollback restores the configured Vaulter
++ID strategy and can also fail when newly stored host keys no longer fit it.
+ 
+ If you use the optional [`spatie` permission driver](/guide/permission-drivers): a node grant
+ addressed to a spatie **role** stores that role's **primary key** in `v_node_grants.subject_id`
+diff --git a/packages/core/config/vaulter.php b/packages/core/config/vaulter.php
+index 73b6ccb..6b485ff 100644
+--- a/packages/core/config/vaulter.php
++++ b/packages/core/config/vaulter.php
+@@ -131,6 +131,8 @@ return [
+     */
+     'ids' => [
+         'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid|uuid7|bigint (D9)
++        // Keys owned by the host are independent of Vaulter entity IDs.
++        'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string|bigint|uuid|ulid
+         'strategies' => [
+             'bigint' => AutoIncrementIds::class,
+             'ulid' => UlidIds::class,
+diff --git a/packages/core/src/Schema/PanelTablesBuilder.php b/packages/core/src/Schema/PanelTablesBuilder.php
+index 87132bf..269af00 100644
+--- a/packages/core/src/Schema/PanelTablesBuilder.php
++++ b/packages/core/src/Schema/PanelTablesBuilder.php
+@@ -159,9 +159,9 @@ final class PanelTablesBuilder
+     {
+         $ids->key(table: $table);
+         $this->panelDiscriminator(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+ 
+-        $ids->reference(table: $table, column: 'owner_id');
++        HostKeyColumns::add(table: $table, column: 'owner_id', nullable: false, index: true);
+         $table->string('owner_type');
+ 
+         $table->string('name');
+@@ -174,7 +174,7 @@ final class PanelTablesBuilder
+         $table->string('status', 16)->default('active')->index();
+         $table->unsignedInteger('default_node_permissions')->default(31);
+         $this->extraData(table: $table, panel: $panel);
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+         $table->softDeletes();
+         $table->timestamps();
+ 
+@@ -200,7 +200,7 @@ final class PanelTablesBuilder
+     {
+         $ids->key(table: $table);
+         $this->panelDiscriminator(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'storage_id');
+         $ids->reference(table: $table, column: 'parent_id', nullable: true);
+ 
+@@ -215,16 +215,16 @@ final class PanelTablesBuilder
+         $table->boolean('is_pinned')->default(false);
+         $table->boolean('inherit_grants')->default(true);
+         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
+-        $ids->actor(table: $table, column: 'owner_id', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false);
+         $this->extraData(table: $table, panel: $panel);
+ 
+         // Soft-trash triplet (D17) — distinct from the permanent soft-delete below.
+         $table->timestamp('trashed_at')->nullable();
+-        $ids->actor(table: $table, column: 'trashed_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'trashed_by', nullable: true, index: false);
+         $ids->reference(table: $table, column: 'trashed_from_parent_id', nullable: true);
+ 
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
+-        $ids->actor(table: $table, column: 'updated_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
++        HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
+         $table->softDeletes();
+         $table->timestamps();
+ 
+@@ -255,7 +255,7 @@ final class PanelTablesBuilder
+     private function defineBlobs(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'storage_id', nullable: true);
+ 
+         $table->string('hash_algo', 16)->default('sha256');
+@@ -323,7 +323,7 @@ final class PanelTablesBuilder
+     private function defineFiles(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'node_id');
+         $ids->reference(table: $table, column: 'current_version_id', nullable: true);
+ 
+@@ -331,7 +331,7 @@ final class PanelTablesBuilder
+         $table->bigInteger('size_bytes')->default(0);
+         $table->unsignedInteger('version_count')->default(0);
+         $this->extraData(table: $table, panel: $panel);
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+         $table->softDeletes();
+         $table->timestamps();
+ 
+@@ -350,7 +350,7 @@ final class PanelTablesBuilder
+     private function defineFileVersions(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'file_id');
+         $table->integer('version_no');
+         $ids->reference(table: $table, column: 'blob_id', nullable: true);
+@@ -362,7 +362,7 @@ final class PanelTablesBuilder
+         $table->string('status', 12)->default('pending')->index();
+         $table->boolean('keep_forever')->default(false);
+         $this->extraData(table: $table, panel: $panel);
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+         $table->timestamp('created_at')->nullable();
+         $table->timestamp('committed_at')->nullable();
+ 
+@@ -412,11 +412,11 @@ final class PanelTablesBuilder
+     private function defineNodeGrants(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'node_id');
+ 
+         // Subject morph: a registered alias (user|role|team), never a raw FQCN.
+-        $ids->reference(table: $table, column: 'subject_id');
++        HostKeyColumns::add(table: $table, column: 'subject_id', nullable: false, index: true);
+         $table->string('subject_type');
+ 
+         $table->string('level', 16)->index();
+@@ -431,7 +431,7 @@ final class PanelTablesBuilder
+         $ids->reference(table: $table, column: 'inherited_from_node_id', nullable: true);
+ 
+         $table->timestamp('expires_at')->nullable()->index();
+-        $ids->actor(table: $table, column: 'granted_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
+         $this->extraData(table: $table, panel: $panel);
+         $table->softDeletes();
+         $table->timestamps();
+@@ -459,7 +459,7 @@ final class PanelTablesBuilder
+     private function defineNodeShares(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'node_id');
+ 
+         // ONLY the hash is stored — the raw bearer token is returned once at mint
+@@ -488,7 +488,7 @@ final class PanelTablesBuilder
+         $table->unsignedInteger('use_count')->default(0);
+         $table->timestamp('revoked_at')->nullable()->index();
+ 
+-        $ids->actor(table: $table, column: 'granted_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
+         $this->extraData(table: $table, panel: $panel);
+         $table->softDeletes();
+         $table->timestamps();
+@@ -521,7 +521,7 @@ final class PanelTablesBuilder
+     private function defineNodeComments(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'node_id');
+ 
+         // Threading: a reply points at its parent comment (same table). Nullable —
+@@ -530,7 +530,7 @@ final class PanelTablesBuilder
+ 
+         // Author morph: a registered alias (user|…), never a raw FQCN — the Data layer
+         // writes $user->getMorphClass() (honours the host's enforceMorphMap).
+-        $ids->reference(table: $table, column: 'author_id');
++        HostKeyColumns::add(table: $table, column: 'author_id', nullable: false, index: true);
+         $table->string('author_type');
+ 
+         $table->text('body');
+@@ -541,7 +541,7 @@ final class PanelTablesBuilder
+ 
+         // Resolution tombstone: when + by whom the thread was marked resolved.
+         $table->timestamp('resolved_at')->nullable();
+-        $ids->actor(table: $table, column: 'resolved_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
+ 
+         $this->extraData(table: $table, panel: $panel);
+         $table->timestamps();
+@@ -581,7 +581,7 @@ final class PanelTablesBuilder
+     private function defineDocumentVersions(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'node_id');
+ 
+         $table->integer('version_no');
+@@ -608,7 +608,7 @@ final class PanelTablesBuilder
+         $table->boolean('keep_forever')->default(false);
+ 
+         $this->extraData(table: $table, panel: $panel);
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+         $table->timestamp('created_at')->nullable();
+ 
+         $name = $table->getTable();
+@@ -641,7 +641,7 @@ final class PanelTablesBuilder
+     private function defineUploadSessions(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'storage_id');
+ 
+         // The client handle: a UUID (S3 uploadId / tus resource id) the resumable
+@@ -684,7 +684,7 @@ final class PanelTablesBuilder
+         $this->extraData(table: $table, panel: $panel);
+ 
+         $table->timestamp('expires_at')->nullable();
+-        $ids->actor(table: $table, column: 'created_by', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+         $table->timestamps();
+ 
+         $name = $table->getTable();
+@@ -747,12 +747,12 @@ final class PanelTablesBuilder
+     private function defineActivity(Blueprint $table, Panel $panel, IdStrategy $ids): void
+     {
+         $ids->key(table: $table);
+-        $this->tenant(table: $table, ids: $ids);
++        $this->tenant(table: $table);
+         $ids->reference(table: $table, column: 'storage_id', nullable: true);
+ 
+         // Actor morph — the acting host user (nullable: a system/console write has
+         // no actor). actor_id is an actor reference (no DB FK to the host's table).
+-        $ids->actor(table: $table, column: 'actor_id', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'actor_id', nullable: true, index: false);
+         $table->string('actor_type')->nullable();
+ 
+         $table->string('verb')->index();
+@@ -1165,14 +1165,11 @@ final class PanelTablesBuilder
+     }
+ 
+     /**
+-     * The optional tenant_id column (host-owned, D8) — emitted only when tenancy
+-     * is enabled. On blobs it participates in the dedup-unique index, so the
+-     * column must always exist there; we still gate it on the global flag, and the
+-     * dedup index simply spans a NULL column when tenancy is off.
++     * Tenant keys belong to the host. The column always exists for CAS scope indexes.
+      */
+-    private function tenant(Blueprint $table, IdStrategy $ids): void
++    private function tenant(Blueprint $table): void
+     {
+-        $ids->reference(table: $table, column: 'tenant_id', nullable: true);
++        HostKeyColumns::add(table: $table, column: 'tenant_id', nullable: true, index: true);
+     }
+ 
+     /**
+diff --git a/packages/core/src/Support/Config.php b/packages/core/src/Support/Config.php
+index 0254bef..fb47069 100644
+--- a/packages/core/src/Support/Config.php
++++ b/packages/core/src/Support/Config.php
+@@ -744,6 +744,20 @@ final class Config
+         return is_string($value) ? $value : 'id';
+     }
+ 
++    /** @return 'string'|'bigint'|'uuid'|'ulid' */
++    public static function hostKeyType(): string
++    {
++        $value = config('vaulter.ids.host_keys', 'string');
++
++        if (!is_string($value) || !in_array($value, ['string', 'bigint', 'uuid', 'ulid'], true)) {
++            $label = is_scalar($value) || $value === null ? (string) $value : get_debug_type($value);
++
++            throw new \InvalidArgumentException('[Vaulter] Unknown vaulter.ids.host_keys ['.$label.']; expected string|bigint|uuid|ulid.');
++        }
++
++        return $value;
++    }
++
+     /**
+      * The active id-strategy key (ulid|uuid7|bigint), default ulid (D9).
+      *
+diff --git a/packages/core/src/Support/VaulterSchema.php b/packages/core/src/Support/VaulterSchema.php
+index 26ade77..705805d 100644
+--- a/packages/core/src/Support/VaulterSchema.php
++++ b/packages/core/src/Support/VaulterSchema.php
+@@ -6,13 +6,14 @@ namespace Vaulter\Support;
+ 
+ use Illuminate\Database\Schema\Blueprint;
+ use Vaulter\Contracts\IdStrategy;
++use Vaulter\Schema\HostKeyColumns;
+ use Vaulter\Schema\IdStrategyResolver;
+ 
+ /**
+  * Static migration helper over the resolved IdStrategy. Hand-written migrations
+  * call these helpers instead of hard-coding column types, so "ulid vs uuid7 vs
+- * bigint" stays driven by config('vaulter.ids.default'). Key/reference/actor/
+- * morphs/tenant route through the strategy; panel/extra_data/bits/reference add
++ * bigint" stays driven by config('vaulter.ids.default'). Key/reference/morphs route through the strategy;
++ * hostKey/actor/tenant use the independent host-key type; panel/extra_data/bits/reference add
+  * the per-table convention columns from the master plan §2.0.
+  */
+ final class VaulterSchema
+@@ -58,12 +59,17 @@ final class VaulterSchema
+     }
+ 
+     /**
+-     * Reference to a host record (user id) of the configured key type. Nullable
+-     * with no DB-level FK, because the host owns the users table.
++     * Reference to a host record using ids.host_keys, without a foreign key.
+      */
++    public static function hostKey(Blueprint $table, string $column, bool $nullable = false): void
++    {
++        HostKeyColumns::add(table: $table, column: $column, nullable: $nullable, index: false);
++    }
++
++    /** Reference to a nullable host actor, without an index. */
+     public static function actor(Blueprint $table, string $column, bool $nullable = true): void
+     {
+-        self::strategy()->actor(table: $table, column: $column, nullable: $nullable);
++        self::hostKey(table: $table, column: $column, nullable: $nullable);
+     }
+ 
+     /**
+@@ -76,7 +82,7 @@ final class VaulterSchema
+             return;
+         }
+ 
+-        self::strategy()->reference(table: $table, column: Config::tenantColumn(), nullable: true);
++        HostKeyColumns::add(table: $table, column: Config::tenantColumn(), nullable: true, index: true);
+     }
+ 
+     /**
+diff --git a/packages/core/tests/Arch/PublicApiSnapshotTest.php b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+index 741a3b8..f039bc9 100644
+--- a/packages/core/tests/Arch/PublicApiSnapshotTest.php
++++ b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+@@ -9,7 +9,9 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+ use Vaulter\Exceptions\VaulterException;
+ use Vaulter\Facades\Vaulter;
+ use Vaulter\Http\Support\HttpResourceResolver;
++use Vaulter\Schema\HostKeyColumns;
+ use Vaulter\Support\Config;
++use Vaulter\Support\VaulterSchema;
+ 
+ /**
+  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
+@@ -279,6 +281,8 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
+     $blocks = array_map('vaulterSnapshotInterface', $contracts);
+     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
+     $blocks[] = vaulterSnapshotInterface(Config::class);
++    $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
++    $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
+     $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);
+     $blocks[] = vaulterSnapshotInterface(ProblemException::class);
+     foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
+diff --git a/packages/core/tests/Arch/__snapshots__/public-api.txt b/packages/core/tests/Arch/__snapshots__/public-api.txt
+index bcf2abc..e64d28d 100644
+--- a/packages/core/tests/Arch/__snapshots__/public-api.txt
++++ b/packages/core/tests/Arch/__snapshots__/public-api.txt
+@@ -168,6 +168,7 @@ Vaulter\Support\Config
+   fileVersionModel(): string
+   gcGraceHours(int $override = 0): int
+   grantModel(): string
++  hostKeyType(): string
+   hubMiddleware(): array
+   idStrategies(): array
+   idStrategy(): string
+@@ -238,6 +239,22 @@ Vaulter\Support\Config
+   webhookTimestampHeader(): string
+   webhookUrlGuardClass(): string
+ 
++Vaulter\Schema\HostKeyColumns
++  add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
++  sqlType(string $driver): string
++
++Vaulter\Support\VaulterSchema
++  actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
++  bits(\Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
++  extraData(\Illuminate\Database\Schema\Blueprint $table): void
++  foreignKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
++  hostKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
++  key(\Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void
++  morphs(\Illuminate\Database\Schema\Blueprint $table, string $name): void
++  panel(\Illuminate\Database\Schema\Blueprint $table): void
++  reference(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
++  tenant(\Illuminate\Database\Schema\Blueprint $table): void
++
+ Vaulter\Http\Support\HttpResourceResolver
+   __construct(\Vaulter\Repositories\Drive\StorageReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
+   node(int|string $id): \Vaulter\Models\Drive\Node
+diff --git a/packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php b/packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php
+index f19c169..23acbb0 100644
+--- a/packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php
++++ b/packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php
+@@ -67,7 +67,7 @@ it('maps the complete valid request into the persisted share contract', function
+         ->and($share->allow_discovery)->toBeTrue()
+         ->and($share->expires_at?->equalTo($expiresAt))->toBeTrue()
+         ->and($share->max_uses)->toBe(7)
+-        ->and($share->granted_by)->toBe(1);
++        ->and($share->granted_by)->toBe('1');
+ });
+ 
+ it('derives permissions from the selected level when no mask is supplied', function (): void {
+diff --git a/packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php b/packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php
+index bf3ea59..e1d6899 100644
+--- a/packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php
++++ b/packages/core/tests/IdStrategy/Bigint/VaulterSchemaBigintTest.php
+@@ -18,11 +18,11 @@ it('emits every convention column under the bigint strategy', function (): void
+     ]))->toBeTrue();
+ });
+ 
+-it('shapes keys, references, actors and tenant as bigint columns', function (): void {
++it('shapes Vaulter keys and references as bigint columns and host keys independently', function (): void {
+     expect(SchemaProbe::emittedType('id', fn ($t) => VaulterSchema::key($t)))->toBe('bigInteger')
+         ->and(SchemaProbe::emittedType('storage_id', fn ($t) => VaulterSchema::reference($t, 'storage_id')))->toBe('bigInteger')
+-        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('bigInteger')
+-        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('bigInteger')
++        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('string')
++        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('string')
+         ->and(SchemaProbe::emittedType('owner_id', fn ($t) => VaulterSchema::morphs($t, 'owner')))->toBe('bigInteger');
+ });
+ 
+diff --git a/packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php b/packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php
+index 84436c8..1a3cad6 100644
+--- a/packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php
++++ b/packages/core/tests/IdStrategy/Ulid/VaulterSchemaUlidTest.php
+@@ -18,11 +18,11 @@ it('emits every convention column under the ulid strategy', function (): void {
+     ]))->toBeTrue();
+ });
+ 
+-it('shapes keys, references, actors and tenant as char(26) columns', function (): void {
++it('shapes Vaulter keys and references as char(26) columns and host keys independently', function (): void {
+     expect(SchemaProbe::emittedType('id', fn ($t) => VaulterSchema::key($t)))->toBe('char')
+         ->and(SchemaProbe::emittedType('storage_id', fn ($t) => VaulterSchema::reference($t, 'storage_id')))->toBe('char')
+-        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('char')
+-        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('char')
++        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('string')
++        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('string')
+         ->and(SchemaProbe::emittedType('owner_id', fn ($t) => VaulterSchema::morphs($t, 'owner')))->toBe('char');
+ });
+ 
+diff --git a/packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php b/packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php
+index 3c3cc6e..1ea05b4 100644
+--- a/packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php
++++ b/packages/core/tests/IdStrategy/Uuid7/VaulterSchemaUuid7Test.php
+@@ -18,11 +18,11 @@ it('emits every convention column under the uuid7 strategy', function (): void {
+     ]))->toBeTrue();
+ });
+ 
+-it('shapes keys, references, actors and tenant as uuid columns', function (): void {
++it('shapes Vaulter keys and references as uuid columns and host keys independently', function (): void {
+     expect(SchemaProbe::emittedType('id', fn ($t) => VaulterSchema::key($t)))->toBe('uuid')
+         ->and(SchemaProbe::emittedType('storage_id', fn ($t) => VaulterSchema::reference($t, 'storage_id')))->toBe('uuid')
+-        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('uuid')
+-        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('uuid')
++        ->and(SchemaProbe::emittedType('created_by', fn ($t) => VaulterSchema::actor($t, 'created_by')))->toBe('string')
++        ->and(SchemaProbe::emittedType('tenant_id', fn ($t) => VaulterSchema::tenant($t)))->toBe('string')
+         ->and(SchemaProbe::emittedType('owner_id', fn ($t) => VaulterSchema::morphs($t, 'owner')))->toBe('uuid');
+ });
+ 
+diff --git a/packages/core/tests/TestCase.php b/packages/core/tests/TestCase.php
+index 3120c76..769567e 100644
+--- a/packages/core/tests/TestCase.php
++++ b/packages/core/tests/TestCase.php
+@@ -99,7 +99,9 @@ abstract class TestCase extends OrchestraTestCase
+      */
+     protected function suiteDatabaseConnection(): array
+     {
+-        if (env('DB_CONNECTION') !== 'pgsql') {
++        $driver = env('DB_CONNECTION');
++
++        if (!in_array($driver, ['pgsql', 'mysql', 'mariadb'], true)) {
+             return [
+                 'driver' => 'sqlite',
+                 'database' => ':memory:',
+@@ -107,11 +109,32 @@ abstract class TestCase extends OrchestraTestCase
+             ];
+         }
+ 
++        $database = (string) env('DB_DATABASE', 'vaulter_test');
++
++        if (!str_ends_with($database, '_test')) {
++            throw new \RuntimeException('Test database must end with _test: '.$database);
++        }
++
++        if ($driver !== 'pgsql') {
++            return [
++                'driver' => $driver,
++                'host' => (string) env('DB_HOST', '127.0.0.1'),
++                'port' => (string) env('DB_PORT', '3306'),
++                'database' => $database,
++                'username' => (string) env('DB_USERNAME', 'vaulter'),
++                'password' => (string) env('DB_PASSWORD', ''),
++                'charset' => 'utf8mb4',
++                'collation' => 'utf8mb4_unicode_ci',
++                'prefix' => '',
++                'strict' => true,
++            ];
++        }
++
+         return [
+             'driver' => 'pgsql',
+             'host' => (string) env('DB_HOST', '127.0.0.1'),
+             'port' => (string) env('DB_PORT', '5432'),
+-            'database' => (string) env('DB_DATABASE', 'vaulter_test'),
++            'database' => $database,
+             'username' => (string) env('DB_USERNAME', 'vaulter'),
+             'password' => (string) env('DB_PASSWORD', ''),
+             'charset' => 'utf8',
+diff --git a/packages/documents/tests/Schema/NodeCommentSchemaTest.php b/packages/documents/tests/Schema/NodeCommentSchemaTest.php
+index 3119273..b16fe3a 100644
+--- a/packages/documents/tests/Schema/NodeCommentSchemaTest.php
++++ b/packages/documents/tests/Schema/NodeCommentSchemaTest.php
+@@ -85,5 +85,5 @@ it('carries a resolution tombstone (resolved_at + resolved_by)', function (): vo
+ 
+     $fresh = $comment->fresh();
+     expect($fresh->isResolved())->toBeTrue()
+-        ->and($fresh->resolved_by)->toBe(7);
++        ->and($fresh->resolved_by)->toBe('7');
+ });
+diff --git a/packages/drive/tests/Uploads/R07SessionManagerContractsTest.php b/packages/drive/tests/Uploads/R07SessionManagerContractsTest.php
+index 46c2642..2c44671 100644
+--- a/packages/drive/tests/Uploads/R07SessionManagerContractsTest.php
++++ b/packages/drive/tests/Uploads/R07SessionManagerContractsTest.php
+@@ -84,7 +84,7 @@ it('initiate persists the full server-built session shape from UploadInitData',
+         'chunk_size' => Config::uploadChunkSize(),
+         'mime_type' => 'application/octet-stream',
+         'metadata' => ['filename' => 'shape.bin'],
+-        'created_by' => 42,
++        'created_by' => '42',
+     ])
+         ->and($session->upload_id)->not->toBeEmpty()
+         ->and($session->expires_at)->not->toBeNull();
+diff --git a/packages/drive/tests/Uploads/R07bSessionContractsTest.php b/packages/drive/tests/Uploads/R07bSessionContractsTest.php
+index c7a4ae3..7e7ed69 100644
+--- a/packages/drive/tests/Uploads/R07bSessionContractsTest.php
++++ b/packages/drive/tests/Uploads/R07bSessionContractsTest.php
+@@ -83,7 +83,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
+     ));
+ 
+     // AlwaysReturnNull mutation: tenantId() always returns null → session.tenant_id = null
+-    expect($session->tenant_id)->toBe($tenantId);
++    expect($session->tenant_id)->toBe((string) $tenantId);
+ });
+ 
+ it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCast)', function (): void {
+diff --git a/tests/Pest.php b/tests/Pest.php
+index 1182b6c..ca6dda1 100644
+--- a/tests/Pest.php
++++ b/tests/Pest.php
+@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
+ use Vaulter\Load\Tests\LoadTestCase;
+ use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
+ use Vaulter\Tests\BrokenPanelBootTestCase;
++use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
+ use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
+ use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
+ use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
+@@ -110,3 +111,8 @@ uses(LoadTestCase::class)->in(
+     dirname(__DIR__).'/load/tests/Observability',
+     dirname(__DIR__).'/load/tests/Feature',
+ );
++
++// Upgrade tests own the fixture schema; no wrapping transaction or automatic migrations.
++uses(TestCase::class)->in($core.'/Upgrade');
++
++uses(HostKeyMysqlTestCase::class)->in($core.'/HostKeyMysql');
+
+
+## New file packages/core/database/migrations/2026_10_01_000003_host_key_columns.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Schema\HostKeyColumns;
+use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Support\Config;
+
+return new class extends Migration
+{
+    /** @var array<string, array<string, bool>> */
+    private const array COLUMNS = [
+        'storages' => ['tenant_id' => true, 'owner_id' => false, 'created_by' => true],
+        'nodes' => ['tenant_id' => true, 'owner_id' => true, 'trashed_by' => true, 'created_by' => true, 'updated_by' => true],
+        'blobs' => ['tenant_id' => true],
+        'files' => ['tenant_id' => true, 'created_by' => true],
+        'file_versions' => ['tenant_id' => true, 'created_by' => true],
+        'node_grants' => ['tenant_id' => true, 'subject_id' => false, 'granted_by' => true],
+        'node_shares' => ['tenant_id' => true, 'granted_by' => true],
+        'node_comments' => ['tenant_id' => true, 'author_id' => false, 'resolved_by' => true],
+        'node_document_versions' => ['tenant_id' => true, 'created_by' => true],
+        'upload_sessions' => ['tenant_id' => true, 'created_by' => true],
+        'activity' => ['tenant_id' => true, 'actor_id' => true],
+    ];
+
+    public function up(): void
+    {
+        $this->convert(restore: false);
+    }
+
+    public function down(): void
+    {
+        $this->convert(restore: true);
+    }
+
+    private function convert(bool $restore): void
+    {
+        $connection = app(VaulterDatabase::class)->connection();
+        $driver = $connection->getDriverName();
+
+        if ($driver === 'sqlite') {
+            return;
+        }
+
+        $schema = $connection->getSchemaBuilder();
+        $grammar = $connection->getQueryGrammar();
+
+        foreach (self::COLUMNS as $entity => $columns) {
+            $table = Config::table($entity);
+
+            if (!$schema->hasTable($table)) {
+                continue;
+            }
+
+            $actual = array_column($schema->getColumns($table), null, 'name');
+
+            foreach ($columns as $column => $nullable) {
+                if (!isset($actual[$column])) {
+                    continue;
+                }
+
+                $type = $restore
+                    ? $this->originalType(new Blueprint($connection, $table), $entity, $column, $driver)
+                    : HostKeyColumns::sqlType($driver);
+
+                // type_name alone cannot distinguish varchar(26) from varchar(64)
+                // or a signed bigint from an unsigned MySQL bigint.
+                $actualType = str_replace(['character varying', 'character'], ['varchar', 'char'], strtolower($actual[$column]['type']));
+                if ($actualType === $type) {
+                    continue;
+                }
+
+                $wrappedTable = $grammar->wrapTable($table);
+                $wrappedColumn = $grammar->wrap($column);
+
+                if ($driver === 'pgsql') {
+                    $cast = match ($type) {
+                        'bigint' => 'bigint',
+                        'uuid' => 'uuid',
+                        default => 'text',
+                    };
+                    $connection->statement("ALTER TABLE {$wrappedTable} ALTER COLUMN {$wrappedColumn} TYPE {$type} USING {$wrappedColumn}::{$cast}");
+                } else {
+                    $null = $nullable ? 'NULL' : 'NOT NULL';
+                    $connection->statement("ALTER TABLE {$wrappedTable} MODIFY {$wrappedColumn} {$type} {$null}");
+                }
+            }
+        }
+    }
+
+    private function originalType(Blueprint $blueprint, string $entity, string $column, string $driver): string
+    {
+        $strategy = app(IdStrategyResolver::class)->resolve();
+        $reference = $column === 'tenant_id'
+            || ($entity === 'storages' && $column === 'owner_id')
+            || $column === 'subject_id'
+            || $column === 'author_id';
+
+        if ($reference) {
+            $strategy->reference($blueprint, $column);
+        } else {
+            $strategy->actor($blueprint, $column);
+        }
+
+        $definition = $blueprint->getColumns()[0];
+        $type = $definition->get('type');
+        $length = $definition->get('length');
+
+        if (!is_string($type) || (in_array($type, ['char', 'string'], true) && !is_int($length))) {
+            throw new LogicException('[Vaulter] Invalid rollback host-key definition.');
+        }
+
+        return match ($type) {
+            'bigInteger' => $driver !== 'pgsql' && $definition->get('unsigned') ? 'bigint unsigned' : 'bigint',
+            'char' => 'char('.$length.')',
+            'string' => 'varchar('.$length.')',
+            'uuid' => $driver === 'pgsql' ? 'uuid' : 'char(36)',
+            default => throw new LogicException('[Vaulter] Unsupported rollback host-key type ['.$type.'].'),
+        };
+    }
+};
+
+
+## New file packages/core/src/Schema/HostKeyColumns.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Schema;
+
+use Illuminate\Database\Schema\Blueprint;
+use InvalidArgumentException;
+use Vaulter\Support\Config;
+
+final class HostKeyColumns
+{
+    public static function add(Blueprint $table, string $column, bool $nullable, bool $index): void
+    {
+        $definition = match (Config::hostKeyType()) {
+            'string' => $table->string($column, 64),
+            'bigint' => $table->unsignedBigInteger($column),
+            'uuid' => $table->uuid($column),
+            'ulid' => $table->char($column, 26),
+        };
+
+        $definition->nullable($nullable);
+
+        if ($index) {
+            $definition->index();
+        }
+    }
+
+    public static function sqlType(string $driver): string
+    {
+        if (!in_array($driver, ['pgsql', 'mysql', 'mariadb'], true)) {
+            throw new InvalidArgumentException('[Vaulter] Unsupported host-key SQL driver ['.$driver.'].');
+        }
+
+        return match (Config::hostKeyType()) {
+            'string' => 'varchar(64)',
+            'bigint' => $driver === 'pgsql' ? 'bigint' : 'bigint unsigned',
+            'uuid' => $driver === 'pgsql' ? 'uuid' : 'char(36)',
+            'ulid' => 'char(26)',
+        };
+    }
+}
+
+
+## New file packages/core/tests/Fixtures/HostKeyMysqlTestCase.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Tests\Fixtures;
+
+use Vaulter\Tests\TestCase;
+
+/** Host-key DDL can run independently of the existing MySQL tree-schema defect. */
+class HostKeyMysqlTestCase extends TestCase
+{
+    #[\Override]
+    protected function defineDatabaseMigrations(): void {}
+}
+
+
+## New file packages/core/tests/Fixtures/HostKeyUser.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Tests\Fixtures;
+
+use Illuminate\Foundation\Auth\User;
+
+final class HostKeyUser extends User
+{
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
+    protected $guarded = [];
+
+    public $timestamps = false;
+}
+
+
+## New file packages/core/tests/HostKeyMysql/HostKeyColumnsMysqlTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Schema\HostKeyColumns;
+use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Support\Config;
+
+beforeEach(function (): void {
+    if (!in_array(app(VaulterDatabase::class)->driver(), ['mysql', 'mariadb'], true)) {
+        $this->markTestSkipped('MySQL host-key DDL requires MySQL or MariaDB.');
+    }
+    config()->set('vaulter.table_prefix', 'hk_test_');
+});
+
+it('preserves values, nullability and indexes when upgrading and restoring MySQL host keys', function (string $strategy): void {
+    config()->set('vaulter.ids.default', $strategy);
+    config()->set('vaulter.ids.host_keys', 'string');
+    $db = app(VaulterDatabase::class)->connection();
+    $schema = $db->getSchemaBuilder();
+    $ids = app(IdStrategyResolver::class)->resolve();
+    $value = $strategy === 'bigint' ? '42' : '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    $map = [
+        'storages' => ['tenant_id' => true, 'owner_id' => false, 'created_by' => true],
+        'nodes' => ['tenant_id' => true, 'owner_id' => true, 'trashed_by' => true, 'created_by' => true, 'updated_by' => true],
+        'blobs' => ['tenant_id' => true],
+        'files' => ['tenant_id' => true, 'created_by' => true],
+        'file_versions' => ['tenant_id' => true, 'created_by' => true],
+        'node_grants' => ['tenant_id' => true, 'subject_id' => false, 'granted_by' => true],
+        'node_shares' => ['tenant_id' => true, 'granted_by' => true],
+        'node_comments' => ['tenant_id' => true, 'author_id' => false, 'resolved_by' => true],
+        'node_document_versions' => ['tenant_id' => true, 'created_by' => true],
+        'upload_sessions' => ['tenant_id' => true, 'created_by' => true],
+        'activity' => ['tenant_id' => true, 'actor_id' => true],
+    ];
+    try {
+        foreach ($map as $entity => $columns) {
+            $table = Config::table($entity);
+            $schema->create($table, function (Blueprint $blueprint) use ($columns, $ids): void {
+                foreach ($columns as $column => $nullable) {
+                    if ($column === 'tenant_id' || !$nullable) {
+                        $ids->reference($blueprint, $column, $nullable);
+                    } else {
+                        $ids->actor($blueprint, $column, $nullable);
+                    }
+                }
+            });
+            $db->table($table)->insert(array_fill_keys(array_keys($columns), $value));
+        }
+        $indexes = [];
+        foreach ($map as $entity => $columns) {
+            $indexes[$entity] = $schema->getIndexes(Config::table($entity));
+        }
+        $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
+        $migration->up();
+        $queries = [];
+        $db->listen(function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+        $migration->up();
+        expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
+        foreach ($map as $entity => $columns) {
+            $table = Config::table($entity);
+            $metadata = array_column($schema->getColumns($table), null, 'name');
+            $row = (array) $db->table($table)->first();
+            expect($schema->getIndexes($table))->toBe($indexes[$entity]);
+            foreach ($columns as $column => $nullable) {
+                expect($metadata[$column]['type'])->toBe('varchar(64)')
+                    ->and($metadata[$column]['nullable'])->toBe($nullable)
+                    ->and($row[$column])->toBe($value);
+            }
+        }
+        $migration->down();
+        foreach ($map as $entity => $columns) {
+            $metadata = array_column($schema->getColumns(Config::table($entity)), null, 'name');
+            foreach ($columns as $column => $nullable) {
+                expect($metadata[$column]['type'])->toBe($strategy === 'bigint' ? 'bigint unsigned' : 'char(26)');
+            }
+        }
+    } finally {
+        foreach (array_keys($map) as $entity) {
+            $schema->dropIfExists(Config::table($entity));
+        }
+    }
+})->with(['bigint', 'ulid']);
+
+it('creates each configured MySQL host type and leaves it unchanged on upgrade', function (string $type): void {
+    config()->set('vaulter.ids.host_keys', $type);
+    $db = app(VaulterDatabase::class)->connection();
+    $schema = $db->getSchemaBuilder();
+    $table = Config::table('node_grants');
+    try {
+        $schema->create($table, function (Blueprint $blueprint): void {
+            HostKeyColumns::add($blueprint, 'subject_id', nullable: false, index: true);
+            HostKeyColumns::add($blueprint, 'granted_by', nullable: true, index: false);
+        });
+        $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
+        $queries = [];
+        $db->listen(function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+        $migration->up();
+        $metadata = array_column($schema->getColumns($table), null, 'name');
+        expect($metadata['subject_id']['type'])->toBe(HostKeyColumns::sqlType('mysql'))
+            ->and(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
+    } finally {
+        $schema->dropIfExists($table);
+    }
+})->with(['string', 'bigint', 'uuid', 'ulid']);
+
+
+## New file packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Repositories\Activity\ActivityStoreRepository;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\HostKeyUser;
+
+it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', function (): void {
+    config()->set('vaulter.ids.host_keys', 'string');
+    $ulid = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    $user = (new HostKeyUser)->forceFill(['id' => $ulid]);
+    $user->exists = true;
+    $this->actingAs($user);
+    $drive = DriveTestHelpers::drive(42);
+    $node = $drive->createFolder('ULID actor', actorId: $ulid)->refresh();
+    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $ulid, subjectType: $user->getMorphClass());
+    $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
+        verb: ActivityVerb::NodeCreated,
+        storageId: $drive->storage()->getKey(),
+        actorType: $user->getMorphClass(),
+        actorId: $ulid,
+    ))->refresh();
+
+    expect($grant->subject_id)->toBe($ulid)
+        ->and($activity->actor_id)->toBe($ulid)
+        ->and($node->created_by)->toBe($ulid)
+        ->and($node->getKey())->toBeInt();
+});
+
+
+## New file packages/core/tests/IdStrategy/Ulid/HostKeysTest.php
+<?php
+
+declare(strict_types=1);
+
+use Spatie\Permission\Models\Role;
+use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Panels\Panel;
+use Vaulter\Repositories\Activity\ActivityStoreRepository;
+use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\HostKeyUser;
+
+// Build a fresh panel after upgrade migrations, so the regression cannot be
+// hidden by the upgrade repairing an incorrectly emitted fresh column.
+beforeEach(function (): void {
+    config()->set('vaulter.ids.host_keys', 'string');
+    config()->set('vaulter.table_prefix', 'hk_v23_');
+    (new PanelTablesBuilder)->createAll((new Panel)->id('default'));
+});
+afterEach(function (): void {
+    (new PanelTablesBuilder)->dropAll((new Panel)->id('default'));
+});
+
+it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulter IDs', function (): void {
+    config()->set('vaulter.ids.host_keys', 'string');
+    $uuid = '550e8400-e29b-41d4-a716-446655440000';
+    $user = (new HostKeyUser)->forceFill(['id' => $uuid]);
+    $user->exists = true;
+    $this->actingAs($user);
+    config()->set('permission.table_names.roles', 'roles');
+    $role = (new Role)->forceFill(['id' => 42, 'name' => 'editor', 'guard_name' => 'web']);
+    $role->exists = true;
+
+    $drive = DriveTestHelpers::drive(42);
+    $storage = $drive->storage()->refresh();
+    $node = $drive->createFolder('UUID actor', actorId: $uuid)->refresh();
+    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
+    $roleGrant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
+    $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
+        verb: ActivityVerb::NodeCreated,
+        storageId: $storage->getKey(),
+        actorType: $user->getMorphClass(),
+        actorId: $uuid,
+    ))->refresh();
+
+    expect($storage->owner_id)->toBe('42')
+        ->and($node->created_by)->toBe($uuid)
+        ->and($grant->subject_id)->toBe($uuid)
+        ->and($roleGrant->subject_id)->toBe('42')
+        ->and($activity->actor_id)->toBe($uuid)
+        ->and(NodeGrant::query()->where('subject_type', $user->getMorphClass())->where('subject_id', $uuid)->count())->toBe(1)
+        ->and(strlen((string) $node->getKey()))->toBe(26);
+});
+
+
+## New file packages/core/tests/Schema/HostKeyColumnsSchemaTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Vaulter\Panels\Panel;
+use Vaulter\Schema\HostKeyColumns;
+use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Support\Config;
+use Vaulter\Support\VaulterSchema;
+
+it('creates host keys independently of entity IDs on a fresh panel', function (string $type): void {
+    config()->set('vaulter.ids.host_keys', $type);
+    $panel = (new Panel)->id('hostkeys')->tablePrefix('hostkeys')->features([
+        'comments' => true, 'document_versions' => true, 'share_links' => true,
+    ]);
+    $builder = new PanelTablesBuilder;
+    $builder->createAll($panel);
+
+    try {
+        $columns = array_column(Schema::getColumns($panel->table('node_grants')), null, 'name');
+        $driver = DB::connection()->getDriverName();
+        $expected = match ($type) {
+            'string' => 'varchar',
+            'bigint' => $driver === 'sqlite' ? 'integer' : ($driver === 'pgsql' ? 'int8' : 'bigint'),
+            'uuid' => $driver === 'pgsql' ? 'uuid' : ($driver === 'sqlite' ? 'varchar' : 'char'),
+            'ulid' => $driver === 'pgsql' ? 'bpchar' : ($driver === 'sqlite' ? 'varchar' : 'char'),
+        };
+        expect($columns['subject_id']['type_name'])->toBe($expected)
+            ->and($columns['subject_id']['nullable'])->toBeFalse()
+            ->and($columns['node_id']['type_name'])->toBe($driver === 'sqlite' ? 'integer' : ($driver === 'pgsql' ? 'int8' : 'bigint'));
+
+        $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
+        config()->set('vaulter.table_prefix', 'hostkeys_');
+        $queries = [];
+        DB::listen(function ($query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+        $migration->up();
+        expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
+    } finally {
+        $builder->dropAll($panel);
+    }
+})->with(['string', 'bigint', 'uuid', 'ulid']);
+
+it('rejects unknown host key configuration', function ($value): void {
+    config()->set('vaulter.ids.host_keys', $value);
+    expect(fn () => Config::hostKeyType())->toThrow(InvalidArgumentException::class);
+})->with(['unknown', 42, null, ['nested']]);
+
+it('preserves nullable and index conventions for migration helpers', function (): void {
+    config()->set('vaulter.tenant.enabled', true);
+    $table = new Blueprint(DB::connection(), 'host_key_probe');
+    VaulterSchema::hostKey($table, 'owner_id');
+    VaulterSchema::actor($table, 'created_by');
+    VaulterSchema::tenant($table);
+    $columns = array_column($table->getColumns(), null, 'name');
+    expect($columns['owner_id']->type)->toBe('string')
+        ->and($columns['owner_id']->length)->toBe(64)
+        ->and($columns['owner_id']->nullable)->toBeFalse()
+        ->and($columns['created_by']->nullable)->toBeTrue()
+        ->and($columns['tenant_id']->nullable)->toBeTrue();
+    // Fluent indexes are compiled when toSql() is called.
+    $table->toSql();
+    $indexes = array_values(array_filter($table->getCommands(), static fn ($command): bool => $command->name === 'index'));
+    expect(array_map(static fn ($index): array => $index->columns, $indexes))->toBe([['tenant_id']]);
+});
+
+it('maps every supported SQL driver and host type', function (string $type, string $pgsql, string $mysql): void {
+    config()->set('vaulter.ids.host_keys', $type);
+    expect(HostKeyColumns::sqlType('pgsql'))->toBe($pgsql)
+        ->and(HostKeyColumns::sqlType('mysql'))->toBe($mysql)
+        ->and(HostKeyColumns::sqlType('mariadb'))->toBe($mysql);
+})->with([
+    ['string', 'varchar(64)', 'varchar(64)'],
+    ['bigint', 'bigint', 'bigint unsigned'],
+    ['uuid', 'uuid', 'char(36)'],
+    ['ulid', 'char(26)', 'char(26)'],
+]);
+
+
+## New file packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Symfony\Component\Process\ExecutableFinder;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Support\Config;
+use Vaulter\Tests\Upgrade\LoadsV02Fixture;
+
+uses(LoadsV02Fixture::class);
+
+beforeEach(function (): void {
+    if (app(VaulterDatabase::class)->driver() !== 'pgsql' || (new ExecutableFinder)->find('psql') === null) {
+        $this->markTestSkipped('Upgrade fixture requires PostgreSQL and psql.');
+    }
+});
+afterEach(function (): void {
+    RefreshDatabaseState::$migrated = false;
+});
+
+function hostKeyFixtureColumns(): array
+{
+    return [
+        'storages' => ['tenant_id', 'owner_id', 'created_by'],
+        'nodes' => ['tenant_id', 'owner_id', 'trashed_by', 'created_by', 'updated_by'],
+        'blobs' => ['tenant_id'],
+        'files' => ['tenant_id', 'created_by'],
+        'file_versions' => ['tenant_id', 'created_by'],
+        'node_grants' => ['tenant_id', 'subject_id', 'granted_by'],
+        'node_shares' => ['tenant_id', 'granted_by'],
+        'node_comments' => ['tenant_id', 'author_id', 'resolved_by'],
+        'node_document_versions' => ['tenant_id', 'created_by'],
+        'upload_sessions' => ['tenant_id', 'created_by'],
+        'activity' => ['tenant_id', 'actor_id'],
+    ];
+}
+
+it('widens all 27 fixture host columns without losing values and rolls back', function (string $strategy): void {
+    $this->loadV02Fixture($strategy);
+    $db = app(VaulterDatabase::class)->connection();
+    $before = [];
+    foreach (hostKeyFixtureColumns() as $entity => $columns) {
+        $before[$entity] = $db->table(Config::table($entity))->orderBy('id')->get()->map(static function ($row) use ($columns): array {
+            $values = (array) $row;
+            foreach ($columns as $column) {
+                $values[$column] = $values[$column] === null ? null : (string) $values[$column];
+            }
+
+            return $values;
+        })->all();
+    }
+
+    $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+    $count = 0;
+    foreach (hostKeyFixtureColumns() as $entity => $columns) {
+        expect($db->table(Config::table($entity))->orderBy('id')->get()->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
+        foreach ($columns as $column) {
+            $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
+                ->where('table_name', Config::table($entity))->where('column_name', $column)->first();
+            expect($metadata->data_type)->toBe('character varying')
+                ->and($metadata->character_maximum_length)->toBe(64);
+            $count++;
+        }
+    }
+    expect($count)->toBe(27);
+    $owners = $db->table(Config::table('storages'))->orderBy('owner_id')->pluck('owner_id')->all();
+    expect($owners)->toBe($strategy === 'bigint' ? ['1', '2', '3'] : [
+        '01ARZ3NDEKTSV4RRFFQ69G5FAV', '01ARZ3NDEKTSV4RRFFQ69G5FAW', '01ARZ3NDEKTSV4RRFFQ69G5FAX',
+    ]);
+    $queries = [];
+    $db->listen(function ($query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+    $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
+    $migration->up();
+    expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
+    $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+    $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertSuccessful();
+    foreach (hostKeyFixtureColumns() as $entity => $columns) {
+        foreach ($columns as $column) {
+            $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
+                ->where('table_name', Config::table($entity))->where('column_name', $column)->first();
+            expect($metadata->data_type)->toBe($strategy === 'bigint' ? 'bigint' : 'character');
+        }
+    }
+})->with(['bigint', 'ulid']);
+
+it('refuses a nonnumeric host-key conversion without changing fixture rows', function (): void {
+    $this->loadV02Fixture('ulid');
+    $db = app(VaulterDatabase::class)->connection();
+    $owners = $db->table(Config::table('storages'))->orderBy('id')->pluck('owner_id')->all();
+    config()->set('vaulter.ids.host_keys', 'bigint');
+    $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
+    expect(fn () => $db->transaction(fn () => $migration->up()))->toThrow(QueryException::class);
+    expect($db->table(Config::table('storages'))->orderBy('id')->pluck('owner_id')->all())->toBe($owners);
+});
+
+
+## New file packages/core/tests/Upgrade/LoadsV02Fixture.php
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Tests\Upgrade;
+
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use RuntimeException;
+use Symfony\Component\Process\Process;
+use Vaulter\Database\VaulterDatabase;
+
+trait LoadsV02Fixture
+{
+    protected function loadV02Fixture(string $strategy): void
+    {
+        if (!in_array($strategy, ['bigint', 'ulid'], true)) {
+            throw new RuntimeException('Unknown v0.2 fixture strategy.');
+        }
+
+        $connection = app(VaulterDatabase::class)->connection();
+        $config = $connection->getConfig();
+
+        if (!$this->app->environment('testing') || $connection->getDriverName() !== 'pgsql'
+            || !is_string($config['database']) || !str_ends_with($config['database'], '_test')
+            || $connection->transactionLevel() !== 0) {
+            throw new RuntimeException('Fixture loading requires an unwrapped PostgreSQL *_test database in APP_ENV=testing.');
+        }
+
+        $path = dirname(__DIR__, 4).'/tests/fixtures/v0.2.0/pgsql-'.$strategy.'.sql';
+        if (!is_file($path)) {
+            throw new RuntimeException('Missing committed fixture: '.$path);
+        }
+
+        config()->set('vaulter.ids.default', $strategy);
+        config()->set('vaulter.ids.host_keys', 'string');
+        $connection->statement('DROP SCHEMA public CASCADE');
+        $connection->statement('CREATE SCHEMA public');
+        $connection->disconnect();
+
+        (new Process([
+            'psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1',
+            '-h', (string) $config['host'], '-p', (string) $config['port'],
+            '-U', (string) $config['username'], '-d', $config['database'], '-f', $path,
+        ], env: ['PGPASSWORD' => (string) $config['password'], 'PGCONNECT_TIMEOUT' => '5']))->mustRun();
+
+        RefreshDatabaseState::$migrated = false;
+    }
+}
+
+
+## Observed validation
+Declared PG command: exit 0, 27 passed, 305 assertions, no skipped. Negative V23: exit 2, UUID insert into char(26) SQLSTATE 22001; restored: exit 0. All 12 core/drive/documents/media gates exit 0 after strictly updating authorized integer expectations. Core SQLite 611 passed/20 skipped/17 risky; drive 454 passed/8 skipped/2 risky; documents 249 passed/1 skipped; media 128 passed/9 skipped/4 risky. Conditional skipped/risky tests are not claimed executed.
+
+
+## Validation artifact pgsql-final.log
+{"tool":"pest","result":"passed","tests":27,"passed":27,"assertions":305,"duration_ms":21786}
+
+
+## Validation artifact v23-negative.log
+{"tool":"pest","result":"failed","tests":1,"passed":0,"assertions":0,"duration_ms":994,"errors":1,"error_details":[{"test":"P\\Packages\\core\\tests\\IdStrategy\\Ulid\\HostKeysTest::__pest_evaluable_it_round_trips_UUID_users_and_bigint_projects_and_Spatie_roles_with_ULID_Vaulter_IDs","file":"/home/vostrikov/projects/packages/vaulter/vendor/laravel/framework/src/Illuminate/Database/Connection.php","line":601,"message":"SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character(26) (Connection: testing, Host: 127.0.0.1, Port: 5432, Database: vaulter_test, SQL: insert into \"hk_v23_node_grants\" (\"node_id\", \"subject_type\", \"subject_id\", \"level\", \"permissions\", \"effect\", \"scope\", \"expires_at\", \"id\", \"updated_at\", \"created_at\") values (01M41MMHCHBK5J0V5T8THYVA5Y, Vaulter\\Tests\\Fixtures\\HostKeyUser, 550e8400-e29b-41d4-a716-446655440000, reader, 0, allow, subtree, ?, 01M41MMHCPYSNQW9CZM8GJZQP4, 2026-10-03 19:42:41, 2026-10-03 19:42:41))"}]}
+
+
+## Validation artifact v23-restored.log
+{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":7,"duration_ms":972}
+
+
+## Validation artifact mysql-final.log
+{
+  "tool": "pest",
+  "result": "failed",
+  "tests": 14,
+  "passed": 0,
+  "assertions": 0,
+  "duration_ms": 11497,
+  "errors": 14,
+  "error_details": [
+    {
+      "test": "P\\Packages\\core\\tests\\IdStrategy\\Ulid\\HostKeysTest::__pest_evaluable_it_round_trips_UUID_users_and_bigint_projects_and_Spatie_roles_with_ULID_Vaulter_IDs",
+      "file": "/home/vostrikov/projects/packages/vaulter/vendor/laravel/framework/src/Illuminate/Database/Connection.php",
+      "line": 601,
+      "message": "SQLSTATE[HY000]: General error: 1215 Cannot add foreign key constraint (Connection: testing, Host: 127.0.0.1, Port: 3306, Database: vaulter_test, SQL: ALTER TABLE `v_nodes` ADD COLUMN `sibling_active` VARCHAR(512) GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED)"
+    }
+  ]
+}
+
+## Validation artifact mysql-baseline.log
+{"tool":"pest","result":"failed","tests":1,"passed":0,"assertions":0,"duration_ms":862,"errors":1,"error_details":[{"test":"P\\Packages\\core\\tests\\IdStrategy\\Ulid\\DriveMigrationsUlidTest::__pest_evaluable_it_\u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442_\u0431\u0430\u0437\u043e\u0432\u044b\u0435_Drive_\u043c\u0438\u0433\u0440\u0430\u0446\u0438\u0438_\u043f\u043e\u0434_ulid_\u0441\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u0435\u0439","file":"/home/vostrikov/projects/packages/vaulter/vendor/laravel/framework/src/Illuminate/Database/Connection.php","line":601,"message":"SQLSTATE[HY000]: General error: 1215 Cannot add foreign key constraint (Connection: testing, Host: 127.0.0.1, Port: 3306, Database: vaulter_test, SQL: ALTER TABLE `v_nodes` ADD COLUMN `sibling_active` VARCHAR(512) GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED)"}]}
+
+
+## Validation artifact mysql-ddl-final.log
+{"tool":"pest","result":"passed","tests":6,"passed":6,"assertions":248,"duration_ms":7877}
+
+
+## Validation artifact mysql-baseline-classification.json
+{
+  "baseline_head": "f04f374490c65dabb3a3b83a440642157d68f0fd",
+  "baseline_builder_sha256": "ffcedbea1c1654a3f7366b85ddef0d15a64f78353a4978c50418e6f898870e3b",
+  "candidate_exit_code": 2,
+  "baseline_exit_code": 2,
+  "fingerprint": "MySQL 8 1215 sibling_active STORED generated column over cascading parent_id FK",
+  "classification": "unrelated-pre-existing",
+  "owner": "PLAN2.P8.1",
+  "evidence": [
+    "mysql-baseline.log",
+    "mysql-final.log",
+    "mysql-ddl-final.log"
+  ],
+  "harness_delta": "Baseline TestCase only: opt into real MySQL rather than silently using SQLite; product files from HEAD unchanged."
+}
+
+
+## Validation artifact consumer-final-results.json
+[
+  {
+    "name": "drive-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pint-final.log",
+    "executed_at": "2026-10-03T19:49:16.952656+00:00"
+  },
+  {
+    "name": "drive-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-phpstan-final.log",
+    "executed_at": "2026-10-03T19:49:20.813982+00:00"
+  },
+  {
+    "name": "drive-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pest-final.log",
+    "executed_at": "2026-10-03T19:49:53.653325+00:00"
+  },
+  {
+    "name": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pint-final.log",
+    "executed_at": "2026-10-03T19:49:53.920984+00:00"
+  },
+  {
+    "name": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-phpstan-final.log",
+    "executed_at": "2026-10-03T19:49:57.318887+00:00"
+  },
+  {
+    "name": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pest-final.log",
+    "executed_at": "2026-10-03T19:50:16.598523+00:00"
+  }
+]
+
+
+## Validation artifact gate-results.json
+[
+  {
+    "name": "core-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/core-pint.log",
+    "executed_at": "2026-10-03T19:43:10.350387+00:00"
+  },
+  {
+    "name": "core-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "-c",
+      "phpstan.neon",
+      "--memory-limit=1G",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/core-phpstan.log",
+    "executed_at": "2026-10-03T19:43:14.662456+00:00"
+  },
+  {
+    "name": "core-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "exit_code": 1,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/core-pest.log",
+    "executed_at": "2026-10-03T19:44:27.392057+00:00"
+  },
+  {
+    "name": "drive-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pint.log",
+    "executed_at": "2026-10-03T19:44:27.761284+00:00"
+  },
+  {
+    "name": "drive-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-phpstan.log",
+    "executed_at": "2026-10-03T19:44:32.023484+00:00"
+  },
+  {
+    "name": "drive-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "exit_code": 1,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/drive-pest.log",
+    "executed_at": "2026-10-03T19:45:05.457416+00:00"
+  },
+  {
+    "name": "documents-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pint.log",
+    "executed_at": "2026-10-03T19:45:05.691680+00:00"
+  },
+  {
+    "name": "documents-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-phpstan.log",
+    "executed_at": "2026-10-03T19:45:09.321808+00:00"
+  },
+  {
+    "name": "documents-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "exit_code": 1,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/documents-pest.log",
+    "executed_at": "2026-10-03T19:45:28.907954+00:00"
+  },
+  {
+    "name": "media-pint",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/media-pint.log",
+    "executed_at": "2026-10-03T19:45:29.102027+00:00"
+  },
+  {
+    "name": "media-phpstan",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/media-phpstan.log",
+    "executed_at": "2026-10-03T19:45:33.069937+00:00"
+  },
+  {
+    "name": "media-pest",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.7/media-pest.log",
+    "executed_at": "2026-10-03T19:45:57.716218+00:00"
+  }
+]
+
+
+## Validation artifact core-pest-final.log
+{"tool":"pest","result":"passed","tests":631,"passed":611,"assertions":2001,"duration_ms":71670,"skipped":20,"risky":17}
+
+
+## Validation artifact code-guidance.json
+{
+  "forbidden_matches": [],
+  "explicit_host_columns": 16,
+  "tenant_call_sites": 11,
+  "total_host_columns": 27
+}
+
+
+## Validation artifact core-phpstan.log
+{"tool":"phpstan","result":"passed","errors":0}
+
+
+All prior unrelated dirty plan/configuration files are excluded from this product diff. The declared MySQL fresh-install check failed with exit 2; the item explicitly permits this baseline condition only if reproduced on unchanged HEAD and assigned to P8.1. Both were proven. No successful full MySQL install is claimed. An additional independent real-MySQL host-key DDL suite passes.

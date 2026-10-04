@@ -1,0 +1,113 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\ArchTest[39m
+  [32;1m✓[39;22m[90m [39m[90mall package code declares strict types[39m[90m                              [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe plugin implements the Filament plugin contract[39m[90m                  [39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno debug helpers leak into the package[39m[90m                              [39m [90m2.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mfilament never depends on drive, documents or media (T6 — filament[39m[90m… [39m [90m0.61s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe package never depends on the host application (E5.1)[39m
+  [32;1m✓[39;22m[90m [39m[90mnon-test src never references the host App namespace (E5.1, F-P4.3-01)[39m
+  [32;1m✓[39;22m[90m [39m[90minternal namespaces are not used outside the package (E3.1)[39m[90m         [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe package exposes no public contract surface (VLT-REL P2.2)[39m
+  [32;1m✓[39;22m[90m [39m[90mDB facade is routed through VaulterDatabase (AD25)[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ActivityResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured activity model (swappable)[39m[90m               [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is strictly read-only (no create / edit / delete)[39m[90m                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit surfaces the append-only feed recorded by the core Drive Actions[39m[90m [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every verb the audit filter offers[39m[90m                         [39m [90m0.08s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Feature\DiagTest[39m
+  [33;1m-[39;22m[90m [39m[90mit renders the node list page[39m[90m [39m[33m→ Filament 5 + Livewire + Testbench:[39m[90m… [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeGrantResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured grant model (swappable)[39m[90m                  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is not creatable from a flat form (grants come from the core Act[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a grant through the core GrantNodeAccessAction[39m[90m           [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves the validated grant form contract at the core Action b[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies grant defaults when optional form values are omitted[39m[90m     [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a missing grant node with the declared warning[39m[90m           [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not create a grant when the admin may not share the node[39m[90m    [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit revokes every grant a subject holds through the core RevokeNodeA[39m[90m…[39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeResourceExactVisibilityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit hides a denied node from the actual table and shows an allowed n[39m[90m…[39m [90m0.28s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeResourceMoveAuthorizationTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit omits a destination without Create from the folder options[39m[90m       [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a forged move into a folder without Create and notifies[39m[90m… [39m [90m0.72s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit moves into a destination when the actor has Create there[39m[90m         [39m [90m0.75s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeResourceQueryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit returns an empty table query when no admin is acting[39m[90m             [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit narrows the table to the acting admin candidate set[39m[90m              [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit flips between live and trashed WITHIN the accessible set via the[39m[90m…[39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps force-deleted tombstones out of the resource table[39m[90m         [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit constrains a raw builder to the item anchor only via the reposit[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists a deny-vetoed candidate in the table query (superset), per[39m[90m…[39m [90m0.11s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured node model (swappable)[39m[90m                   [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is not creatable from a flat form (folders come from the Drive A[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit trashes a node through the core Trash Action (the row action pat[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restores a trashed node through the core Restore Action[39m[90m          [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit renames a node through the core Rename Action[39m[90m                    [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit force-deletes a trashed node through the core ForceDelete Action[39m[90m [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit denies the trash ability to an admin who lacks a grant (row acti[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit grants the trash ability to an admin who holds an owner grant[39m[90m    [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit exposes folder/file/document kinds[39m[90m                               [39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeShareResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured node-share model (swappable)[39m[90m             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is not creatable from a flat form (shares come from the core Act[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a share link through the core CreateShareLinkAction[39m[90m      [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves the validated share form contract and one-time token n[39m[90m…[39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies safe share defaults to omitted and blank optional values[39m[90m [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a missing share node with the declared warning[39m[90m           [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never persists the raw token — only its hash and prefix[39m[90m          [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reveals the token prefix but never the full hash in the prefix c[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit revokes a share link through the core RevokeShareLinkAction[39m[90m      [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not create a share when the admin may not share the node[39m[90m    [39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\PanelActorGuardTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the acting admin through the panel guard, not the globa[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves the same identity as the default guard when the panel u[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an authenticated identity that cannot be authorized[39m[90m      [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ResourceListingScopeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit StorageResource lists a storage the acting admin can reach and h[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeGrantResource lists a grant on a reachable node and hides on[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeShareResource lists a share on a reachable node and hides on[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit ActivityResource lists activity targeting a reachable node and h[39m[90m…[39m [90m0.11s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ResourcePagesTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit declares an index page for every Drive resource with ('Vaulter\F[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares an index page for every Drive resource with ('Vaulter\F[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares an index page for every Drive resource with ('Vaulter\F[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares an index page for every Drive resource with ('Vaulter\F[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares an index page for every Drive resource with ('Vaulter\F[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares a view page for the read-mostly resources[39m[90m               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every Drive resource under the Vaulter navigation group wi[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every Drive resource under the Vaulter navigation group wi[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every Drive resource under the Vaulter navigation group wi[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every Drive resource under the Vaulter navigation group wi[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every Drive resource under the Vaulter navigation group wi[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\StorageResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured storage model (swappable)[39m[90m                [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is read-mostly: storages are provisioned by the core, not the pa[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists the storages the core StorageManager provisioned[39m[90m           [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\VaulterPluginTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit identifies the plugin[39m[90m                                            [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit loads the package config[39m[90m                                         [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit registers the Drive/permissions resources on the panel[39m[90m           [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit localizes the getPlugin cast through current()[39m[90m                   [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit respects a disabled resource toggle[39m[90m                              [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps resources enabled for an omitted or malformed host toggle[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps resources enabled for an omitted or malformed host toggle[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit drops ActivityResource when the core activity feature is off, ev[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit control: ActivityResource registers when the core activity featu[39m[90m…[39m [90m0.08s[39m  
+
+  [90mTests:[39m    [33;1m1 skipped[39;22m[90m,[39m[39m [39m[32;1m80 passed[39;22m[90m (245 assertions)[39m
+  [90mDuration:[39m [39m11.58s[39m
+

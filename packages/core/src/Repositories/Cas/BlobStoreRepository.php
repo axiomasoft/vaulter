@@ -10,13 +10,14 @@ use Vaulter\Cas\BlobLock;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Write-side row work for v_blobs (H.3). It owns the locked find-or-create by the
  * per-scope dedup key, resurrection of a tombstoned match, and the blob state
  * transitions. It opens NO transactions — BlobStore wraps every call in one — and
  * makes NO liveness decision beyond reading the row under the lock the caller
- * already took. The dedup column set mirrors the dedup-UNIQUE index exactly.
+ * already took. The scope_key lookup mirrors the scope_sha_uniq index exactly.
  */
 final readonly class BlobStoreRepository
 {
@@ -31,14 +32,8 @@ final readonly class BlobStoreRepository
      * flag telling BlobStore whether bytes must be promoted (true ⇒ newly created,
      * promote; false ⇒ dedup hit, skip the physical write).
      *
-     * The UNIQUE (scope, sha256) constraint is the portable race backbone for a
-     * NON-NULL scope value: a concurrent INSERT loser catches the unique violation
-     * and re-SELECTs. CAVEAT (F-P1.5-03 / D18): for scope=tenant with a NULL
-     * tenant_id (single-tenant / tenancy disabled — the common case) this UNIQUE
-     * does NOT fire — SQL never treats two NULLs as equal — so the true backbone
-     * for that case is `storage_key_uniq` (single-column, NULL-free by
-     * construction) on `v_blobs.storage_key`; see PanelTablesBuilder::defineBlobs()
-     * and ADR-0012 Amendment.
+     * UNIQUE (scope_key, sha256) is NULL-free. A savepoint around the INSERT
+     * keeps PostgreSQL usable for the loser lookup after a unique violation.
      *
      * @return array{blob: Blob, created: bool}
      */
@@ -47,11 +42,11 @@ final readonly class BlobStoreRepository
         int $sizeBytes,
         string $storageKey,
         string $disk,
-        string $dedupScope,
-        ?int $tenantId,
-        ?int $storageId,
+        BlobScope $scope,
+        ?string $tenantId,
+        ?string $storageId,
     ): array {
-        $existing = $this->lockedLookup(sha256: $sha256, tenantId: $tenantId, storageId: $storageId, dedupScope: $dedupScope);
+        $existing = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
         if ($existing !== null) {
             $this->resurrectIfTombstoned($existing);
@@ -60,15 +55,15 @@ final readonly class BlobStoreRepository
         }
 
         try {
-            $blob = $this->insertCommitted(
+            $blob = $this->query()->getConnection()->transaction(fn (): Blob => $this->insertCommitted(
                 sha256: $sha256,
                 sizeBytes: $sizeBytes,
                 storageKey: $storageKey,
                 disk: $disk,
-                dedupScope: $dedupScope,
+                scope: $scope,
                 tenantId: $tenantId,
                 storageId: $storageId,
-            );
+            ));
 
             return ['blob' => $blob, 'created' => true];
         } catch (UniqueConstraintViolationException) {
@@ -76,7 +71,7 @@ final readonly class BlobStoreRepository
             // Re-SELECT under the same transaction and reuse its row — never treat
             // a unique violation as fatal (H.3). This is the loser branch of the
             // UNIQUE (scope, sha256) backbone.
-            $winner = $this->lockedLookup(sha256: $sha256, tenantId: $tenantId, storageId: $storageId, dedupScope: $dedupScope);
+            $winner = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
             if ($winner === null) {
                 throw new \RuntimeException("Lost the blob INSERT race for {$sha256} but the winning row is not visible.");
@@ -190,12 +185,9 @@ final readonly class BlobStoreRepository
      * Look up the blob for a content address within its dedup scope, taking the
      * MySQL row lock when that driver is the lock mechanism.
      */
-    private function lockedLookup(string $sha256, ?int $tenantId, ?int $storageId, string $dedupScope): ?Blob
+    private function lockedLookup(string $sha256, BlobScope $scope): ?Blob
     {
-        $query = $this->query()->where('sha256', $sha256);
-
-        $this->applyScope(query: $query, dedupScope: $dedupScope, tenantId: $tenantId, storageId: $storageId);
-
+        $query = $this->query()->where('sha256', $sha256)->where('scope_key', $scope->key());
         if ($this->lock->usesRowLock()) {
             $query->lockForUpdate();
         }
@@ -203,38 +195,22 @@ final readonly class BlobStoreRepository
         return $query->first();
     }
 
-    /**
-     * Constrain a query to the dedup scope columns so the lookup matches the
-     * dedup-UNIQUE index exactly: global ignores tenant/storage, tenant keys on
-     * tenant_id, storage keys on storage_id.
-     *
-     * @param Builder<Blob> $query
-     */
-    private function applyScope(Builder $query, string $dedupScope, ?int $tenantId, ?int $storageId): void
-    {
-        match ($dedupScope) {
-            'storage' => $query->where('storage_id', $storageId),
-            'tenant' => $query->where('tenant_id', $tenantId),
-            default => $query, // global: sha256 alone is the address
-        };
-    }
-
     private function insertCommitted(
         string $sha256,
         int $sizeBytes,
         string $storageKey,
         string $disk,
-        string $dedupScope,
-        ?int $tenantId,
-        ?int $storageId,
+        BlobScope $scope,
+        ?string $tenantId,
+        ?string $storageId,
     ): Blob {
         // forceFill (P1.4/F-P1.5-04): Blob is intentionally fully guarded (CAS
         // integrity: sha256/storage_key are content-addressed) — this is the
         // sole trusted commit seam, never raw request input.
         $blob = new (Config::blobModel());
         $blob->forceFill([
-            'tenant_id' => $dedupScope === 'storage' ? null : $tenantId,
-            'storage_id' => $dedupScope === 'storage' ? $storageId : null,
+            'tenant_id' => $scope->dedupScope() === 'storage' ? null : $tenantId,
+            'storage_id' => $scope->dedupScope() === 'storage' ? $storageId : null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => $sizeBytes,
@@ -242,7 +218,8 @@ final readonly class BlobStoreRepository
             'storage_key' => $storageKey,
             'status' => BlobStatus::Committed,
             'ref_count' => 0,
-            'dedup_scope' => $dedupScope,
+            'dedup_scope' => $scope->dedupScope(),
+            'scope_key' => $scope->key(),
             'committed_at' => now(),
         ]);
         $blob->save();

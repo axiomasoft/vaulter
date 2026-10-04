@@ -1,0 +1,8 @@
+UTC: 2026-09-29T15:52:29.899715+00:00
+Owner steering: "давай ботай оптимально, экономь ресурсы"; "сколь еще??? я злюсь".
+Agent decision: terminate remaining expensive native mutation trees, preserve completed measurements; do not claim native mutation verdict or complete P0.1.
+core-mutation-sqlite: actual exit -15 (SIGTERM), elapsed 6571.404s
+core-mutation-pgsql: actual exit -15 (SIGTERM), elapsed 6142.679s
+drive-mutation-3: actual exit -15 (SIGTERM), elapsed 3477.04s
+documents-mutation-3: actual exit -15 (SIGTERM), elapsed 5276.379s
+Hosted CI was never launched. No product source was changed by mutation runs.

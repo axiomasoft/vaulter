@@ -2,11 +2,11 @@
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | 2026.09.29-№1-VAULTER-STABLE |
 | Short ID | PLAN2 |
-| Title | План №1 — Vaulter 1.0: канон, корректность и стабильный API |
+| Title | Plan №1 — Vaulter 1.0: канон, корректность и стабильный API |
 | Layout | v2 |
 | Document Type | Executable Master Plan (катящийся дизайн с немедленным исполнением — D03) |
 | Authoring Model | claude-opus-5-5/high (создание плана, дизайн P0, 2026-09-29) |
@@ -51,6 +51,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
   (`artifacts/coverage/section-owners.tsv`); при дизайне фазы каждая её единица назначается item в
   `artifacts/coverage/ledger-Pn.tsv`; гейт `python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check`
   exit 0 — в Validation каждого finish, фазового аудита и закрытия. Отказ от единицы — только D# плана.
+  D07 добавляет побайтный manifest `opus-sources.sha256`, проверку свежести дословных входов и негативные контроли;
+  ID/назначения не меняются, исходные переносы строк в render сохраняются.
 - **Всё перед глазами исполнителя** (D06, B7): первый Required Read каждого item —
   `artifacts/Pn-design/<Pn.m>-opus.md` (дословные единицы OPUS, `opus-coverage.py render`); исполнитель выполняет каждую
   или эскалирует. Контракт/досье содержат все файлы, имена, сигнатуры, решения развилок, точные команды с ожидаемым
@@ -59,6 +61,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - Запреты OPUS 01 §5 и отложенное AD39 действуют во всех фазах (D06 п.7).
 - **Катящийся дизайн** (D03): детализируется только текущая фаза по фактическому коду; фазы после неё — skeleton в
   `backlog/Pn.md`. Цикл фазы: design → finish → независимый design audit → execute → **фазовый аудит** → close.
+  Для повторной проверки исправлений текущего дизайна P0 владелец разрешил same-author recheck до GREEN (D08);
+  исходный независимый RED сохранён. Это исключение не распространяется на проверку реализации или будущие фазы.
 - **Гейт затронутых пакетов до коммита** (OPUS 13 правило 1): `scripts/php84 vendor/bin/pint --test`,
   `scripts/php84 vendor/bin/phpstan analyse` (уровень пакета; max — цель P2.5+), `scripts/php84 vendor/bin/pest` (+ arch);
   для Vue — `vue-tsc`, `vitest`, `vite build`. Пропуск или падение ≠ успех.
@@ -79,6 +83,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - Item закрывается только по своим Validation-командам; «тест есть» ≠ доказательство; новый гейт/харнесс имеет
   негативный контроль (падает на внедрённом нарушении).
 - Внешние действия (push, PR, merge, теги, Packagist/npm, split-репозитории) — owner gates (O-3, P8).
+  Для P0 D07 уточняет O-3: push итогового candidate и workflow_dispatch — O-3-CI до фазового аудита;
+  PR/merge — O-3-PR после GREEN аудита. Оба требуют отдельного явного запроса владельца.
 - Canonical statuses: `⬜ Not started`, `🟡 In progress`, `🟢 Done`, `🟠 Done with deviations`, `🔴 Blocked`,
   `⛔ Skipped by decision`. Generated carriers (state, status, bundles, decision views, journal) — только через Task tooling.
 - **Маршрут запуска** (D05): класс/effort — §3 Routing; исполнитель/ревьюер — `roadmap.md` `execution-sheet/v1`;
@@ -90,15 +96,27 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 ## 3. Routing
 
-Детализирована: P0. Фазы P1–P8 — skeleton в `backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
+Детализированы: P0, P1 (P1 — до закрытия P0 по D12; исполнение P1 — после `task:plan-close … P0`). Фазы P2–P8 — skeleton в
+`backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
 окончательная — execution-sheet в `roadmap.md`.
 
-| Batch | Items | Model class/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Why |
 |:--|:--|:--|:--|:--|:--|
-| solo | P0.1 | implementation/medium | manual | light | recommended: окружение (`scripts/php84`, preflight БД) и базовая линия — предусловие остальных items; O-1 проверяется первым шагом. |
+| solo | P0.1 | implementation/medium | manual | light | recommended: окружение (`scripts/php84`, preflight БД) и базовая линия — предусловие остальных items; сначала bootstrap, затем O-1 preflight. |
 | B0-A | P0.2 | implementation/medium | manual | full | recommended: харнесс конкурентности — фундамент доказательств T0 (V02, V03, V13, V17, V19–V21); первым в B0-A. |
 | B0-A | P0.3 | implementation/medium | manual | full | recommended: фикстура 0.2 на том же окружении PG/MySQL; вторым в B0-A; O-2 до старта. |
-| solo | P0.4 | frontier/medium | manual | light | recommended: ADR 0019–0024 — перенос решений OPUS, не переосмысление; frontier не смешивается с implementation. |
+| solo | P0.4 | frontier/medium | manual | light | recommended: ADR 0019–0024 — перенос решений OPUS; потребляет baseline P0.1; после него независим от B0-A, frontier не смешивается с implementation. |
+| solo | P1.1 | implementation/medium | manual | full | recommended: `VaulterDatabase` — основа P1.2/P1.5/P1.6; первым в фазе после закрытия P0 (D12). |
+| solo | P1.8 | implementation/low | manual | light | recommended: контракт `ProblemException` и коды — нужны новым исключениям P1.2/P1.9; сразу после P1.1 (батч с P1.4 невозможен — номера не смежны). |
+| solo | P1.4 | implementation/medium | manual | light | recommended: `eventId` в событиях — независимый механический пакет; после P1.8. |
+| B1-B | P1.9 | implementation/medium | manual | full | recommended: стеки middleware и резолвер — граница аутентификации, full-ревью; использует исключения P1.8; первым в B1-B. |
+| B1-B | P1.10 | implementation/low | manual | full | recommended: авторизация Filament (N14, S1) — full-ревью; вторым в B1-B. |
+| B1-B | P1.11 | economy/low | manual | light | recommended: URL-метаданные — механическая правка; третьим в B1-B (economy в implementation-батче допустим). |
+| solo | P1.7 | implementation/high | manual | full | recommended: HK-колонки и миграция №3 меняют `PanelTablesBuilder` до P1.2/P1.5 и дают хелпер фикстуры; миграция — full-ревью frontier-уровня. |
+| solo | P1.2 | frontier/high | manual | full | recommended: инварианты дерева, `lockTree`, ремонт N04 — миграция данных и блокировки; frontier не смешивается с implementation. |
+| solo | P1.3 | frontier/high | manual | full | recommended: `evaluateMany` + точный курсорный листинг — алгоритм доступа; отдельная сессия из-за объёма контекста. |
+| solo | P1.5 | frontier/high | manual | full | recommended: `BlobScope`/`scope_key`/repair-scopes — миграция данных CAS; после P1.7 (HK `v_blobs.tenant_id`). |
+| solo | P1.6 | implementation/high | manual | full | recommended: квота и номер ревизии под блокировками D21 — последним: опирается на `lockTree` (P1.2) и `advisoryLock` CAS (P1.5). |
 
 ## 4. Update Log
 
@@ -106,6 +124,9 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 |:--|:--|:--|
 | 2026-09-29 | План создан по OPUS: D01–D05 (норматив, Q1–Q15, порядок и цикл фаз, окружение, маршрутизация/доставка); P0 детализирована (P0.1–P0.4); P1–P8 — skeleton в `backlog/` | claude-opus-5-5/high |
 | 2026-09-29 | Уточнение владельца (B6, B7) → D06: реестр единиц OPUS (1438/254), владельцы секций, ledger P0 (92 единицы), гейт `opus-coverage.py`, дословные входы `artifacts/P0-design/P0.m-opus.md`; P0 дополнена (полный CI в baseline, MySQL-ulid дамп, AD → mAInd, поправки ADR строго по OPUS) | claude-opus-5-5/high |
+| 2026-09-29 | По поручению владельца исправлены DA01–DA06 (D07): owner IDs исходной схемы, явный PG-job харнесса, O-3-CI до аудита, bootstrap, дословный render/manifest/негативные контроли, producer baseline P0.4; повторная финализация, без исполнения P0 | gpt-6-sol/high |
+| 2026-09-29 | D08: владелец разрешил завершить перепроверку исправлений дизайна P0 до GREEN в текущей sol-сессии; same-author recheck явно обозначен, фазовая приёмка реализации сохранена | gpt-6-sol/high |
+| 2026-10-02 | D12: дизайн P1 до закрытия P0 по выбору владельца; P1 детализирована (P1.1–P1.11, ledger 360 единиц, решения R1–R10); `backlog/P1.md` перенесён в `phases/P1/` | claude-opus-5-5/high |
 
 ## 5. Decision Log
 
@@ -116,14 +137,14 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 ### Exported
 
-| Контракт | Версия | Статус | Потребители | Уведомлены |
+| Contract | Version | Status | Consumers | Notified |
 |:--|:--|:--|:--|:--|
 | Публичный PHP API (`Vaulter::drive()` handle, контракты OPUS 05/06) | P3 | draft | хосты, авторы расширений | — |
 | REST v1 + OpenAPI `openapi/vaulter-v1.yaml` | P6 | draft | `@vaulter/vue`, хаб, хосты | — |
 
 ### Consumed
 
-| Контракт | Донор-план | Pinned | Замечено | Реакция |
+| Contract | Donor plan | Pinned | Spotted | Reaction |
 |:--|:--|:--|:--|:--|
 | Кандидат `v0.2.0` | vaulter (архивные планы) | `v0.2.0` | 2026-09-29 | Исходная точка; BC PHP не обязательна (AD01), данные и конфиг 0.2 мигрируют. |
 | Процесс Task layout v2, катящийся дизайн | `corex:PLAN3` | 2026-09-29 | 2026-09-29 | Принят (B4, D03). |

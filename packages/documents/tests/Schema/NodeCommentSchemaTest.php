@@ -85,5 +85,5 @@ it('carries a resolution tombstone (resolved_at + resolved_by)', function (): vo
 
     $fresh = $comment->fresh();
     expect($fresh->isResolved())->toBeTrue()
-        ->and($fresh->resolved_by)->toBe(7);
+        ->and($fresh->resolved_by)->toBe('7');
 });

@@ -1,0 +1,20 @@
+[
+  {
+    "package": "core",
+    "check": "pint",
+    "command": "scripts/php84 vendor/bin/pint --test packages/core",
+    "exit_code": 0
+  },
+  {
+    "package": "core",
+    "check": "phpstan",
+    "command": "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+    "exit_code": 0
+  },
+  {
+    "package": "core",
+    "check": "pest",
+    "command": "env DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests",
+    "exit_code": 1
+  }
+]

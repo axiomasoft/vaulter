@@ -1,0 +1,645 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.29-№1-vaulter-stable-p1-2",
+  "version": {
+    "revision": 1,
+    "content_hash": "f3ed4b2363094d5f13403e71610cf1d7c5aa7976f148746952762f742c83dd91",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Дерево каждого storage остаётся корректным при любых вызовах PHP API и HTTP и при параллельных операциях:\nродитель/назначение — активная папка того же storage, корень неприкосновенен, у storage ровно один узел без родителя,\nциклы невозможны даже при гонке `A→B` ‖ `B→A`, имена нормализованы (N04, N05, AD13, I1–I4; V18, V19).",
+    "non_goals": [
+      "`OnNameConflict` (`Rename`/`AddRevision`) и `RestoreOptions::destination` (P3.2/P3.3)",
+      "`NodeContentLifecycle` для copy/purge документов (P4.2)",
+      "квота копии одним условным UPDATE (P1.6)",
+      "переименование\n`owner_id` → `owned_by`, `sequence`, удаление `current_version_id/file_id/deleted_at` (P4.1, P4.7)",
+      "индекс sibling-unique\nбез `deleted_at` (P4.1)",
+      "`IngestFileAction`/`CreateDocumentAction` (канонические имена — P3)."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "1. Исключения (контракт P1.8, `ProblemException`):\n   - `packages/core/src/Exceptions/Nodes/InvalidDestinationException.php` — код `invalid_destination`, 409",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M2",
+      "requirement": "фабрики\n     `notAFolder(Node $destination)`, `trashed(Node $node)`, `rootIsImmutable(Node $root, string $operation)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M3",
+      "requirement": "- `packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php` — `node_not_trashed`, 409, `forNode(Node $node)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M4",
+      "requirement": "- `packages/core/src/Exceptions/Nodes/InvalidNodeNameException.php` — `validation_failed`, 422,\n     `renderExtras()` = `['errors' => ['name' => [$this->getMessage()]]]`, фабрика `forName(string $name, string $reason)`.\n   Межстораджевые операции бросают существующий `CrossStorageMoveException` (`cross_drive_operation`, 409).\n2. `packages/core/src/Support/NodeName.php` — `final class NodeName { public static function normalize(string $name): string }`:\n   trim пробелов по краям",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M5",
+      "requirement": "NFC через `\\Normalizer::normalize($name, \\Normalizer::FORM_C)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M6",
+      "requirement": "отказ (`InvalidNodeNameException`)\n   при пустом результате, `/`, `\\`, NUL, символах C0 (`\\x00-\\x1F`), DEL и C1 (`\\x{7F}-\\x{9F}`), именах `.` и `..`, длине\n   `strlen($name) > Config::driveNameMaxLength()` (байты UTF-8, по умолчанию 255). Все Actions п.4 нормализуют имя до проверок.\n3. `packages/core/src/Repositories/Drive/NodeStoreRepository.php`: `lockForUpdate(array $ids): Collection` — `SELECT … FOR UPDATE`\n   строк узлов по возрастанию `id` (уровень 2 порядка D21",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M7",
+      "requirement": "SQLite — без `FOR UPDATE`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M8",
+      "requirement": "`packages/core/src/Repositories/Drive/NodeReadRepository.php`:\n   `isRoot(Node $node): bool` (`Identity::stringify($node->getKey()) === Identity::stringify($node->storage->root_node_id)`).\n4. Проверки в Actions (внутри `VaulterDatabase::transaction()`, после блокировок",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M9",
+      "requirement": "`null` назначение = корень storage\n   `$storage->root_node_id`, ни одно Action больше не пишет `parent_id = NULL`):\n\n   | Action (текущее имя) | Блокировки | Проверки |\n   |:--|:--|:--|\n   | `drive/src/Actions/CreateFolderAction.php`, `documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `drive/src/Actions/UploadFileAction.php` (новый файл) | `lockForUpdate([parent])` | родитель: тот же storage (`CrossStorageMoveException`), `kind=folder` (`notAFolder`), `trashed_at IS NULL` (`trashed`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M10",
+      "requirement": "`NodeName::normalize`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M11",
+      "requirement": "конфликт имени (`NodeNameConflictException`) |\n   | `drive/src/Actions/RenameNodeAction.php` | `lockForUpdate([node])` | не корень (`rootIsImmutable`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M12",
+      "requirement": "`normalize`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M13",
+      "requirement": "конфликт с соседями |\n   | `drive/src/Actions/MoveNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, into])` | не корень",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M14",
+      "requirement": "назначение — активная папка того же storage",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M15",
+      "requirement": "назначение ≠ узел и не потомок (CTE `subtree()` **после** `lockTree`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M16",
+      "requirement": "конфликт имени |\n   | `drive/src/Actions/CopyNodeAction.php` | `lockForUpdate([into])` | источник не корень",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M17",
+      "requirement": "назначение — активная папка того же storage",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M18",
+      "requirement": "копия поддерева без узлов в корзине (как сейчас) |\n   | `drive/src/Actions/TrashNodeAction.php` | `lockForUpdate([node])` | не корень",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M19",
+      "requirement": "не уже в корзине (`trashed`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M20",
+      "requirement": "поддерево — одним UPDATE по CTE (как сейчас) |\n   | `drive/src/Actions/RestoreNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, parent])` | узел в корзине (иначе `NodeNotTrashedException`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M21",
+      "requirement": "исходный родитель активен → туда, иначе корень (как сейчас, `resolveDestinationParent`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M22",
+      "requirement": "конфликт имени — `NodeNameConflictException` (как сейчас) |\n   | `drive/src/Actions/ForceDeleteNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node])` | не корень",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M23",
+      "requirement": "узел в корзине (`NodeNotTrashedException`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M24",
+      "requirement": "освобождение квоты — как сейчас |\n\n   Проверки «до транзакции» в `MoveNodeAction`/`CreateFolderAction`/`RenameNodeAction`/`CopyNodeAction`/`RestoreNodeAction`/\n   `CreateDocumentNodeAction` переносятся внутрь транзакции после блокировок (быстрый отказ до транзакции можно оставить\n   только как дубль). `CycleException` (`node_move_cycle`) остаётся исключением цикла.\n5. Схема и миграция (R3):\n   - `core/src/Schema/PanelTablesBuilder.php` `afterCreate()` для `nodes`: новый `addSingleRootIndex($table)` — PG/SQLite\n     `CREATE UNIQUE INDEX {t}_root_uniq ON {t} (storage_id) WHERE parent_id IS NULL`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M25",
+      "requirement": "MySQL/MariaDB — сгенерированная колонка\n     `root_storage` `VARCHAR(64) GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN storage_id ELSE NULL END) STORED` +\n     `UNIQUE INDEX {t}_root_uniq (root_storage)` (как `addSiblingUniqueIndex`, строки 1123–1156).\n   - `core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (только эти шаги №6",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M26",
+      "requirement": "остальные — P4.1):\n     для каждого storage — узлы с `parent_id IS NULL` и `id <> storages.root_node_id` переносятся под корень",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M27",
+      "requirement": "конфликт имени с активным соседом корня (без учёта регистра) → имя `\"<base> (legacy N)<.ext>\"`, N = 1, 2, … до\n     свободного",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M28",
+      "requirement": "на каждый перенос — строка `Config::table('activity')`: `verb = 'node.moved'`, `actor_type = 'vaulter:system'`,\n     `actor_id = NULL`, `target_type` = morph-класс модели узла (`(new (Config::nodeModel()))->getMorphClass()`),\n     `target_id` = id узла, `storage_id`, `context = {\"from_parent_id\": null, \"to_parent_id\": <root>, \"reason\": \"n04_repair\", \"renamed_from\": <старое имя|null>}`,\n     `created_at = now()`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M29",
+      "requirement": "затем индекс корня (п.5, если его нет). Идемпотентна: повтор — 0 переносов, индекс уже есть.\n     `down()` удаляет индекс корня",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M30",
+      "requirement": "перенос необратим — `UPGRADE.md` (08 §3 «Откат»).\n6. Тесты:\n   - V18 — `packages/drive/tests/Feature/TreeInvariantsTest.php` (SQLite): для create folder / upload (`DriveContext::upload`) /\n     move / copy / restore с назначением: файл, документ (узел `kind=document`), папка в корзине → `InvalidDestinationException`\n     (HTTP-вариант каждого — 409 `code = invalid_destination`)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M31",
+      "requirement": "назначение — папка другого storage → 409 `cross_drive_operation`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M32",
+      "requirement": "корень: rename / move / trash / forceDelete → `invalid_destination`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M33",
+      "requirement": "forceDelete живого узла → 409 `node_not_trashed`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M34",
+      "requirement": "`CreateDocumentNodeAction` с `parent = null` → `parent_id = root_node_id` и документ виден в `GET storages/{id}/nodes`.\n   - V19 — `packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (PG, `ForkRace`, `DatabaseMigrations`): две папки A, B под\n     корнем",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M35",
+      "requirement": "задачи `move(A→B)` ‖ `move(B→A)` → ровно одна `RaceOutcome` успешна, другая `failedWith(CycleException::class)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M36",
+      "requirement": "в БД нет цикла (рекурсивный подъём от A и от B достигает корня). Повтор 5 раз подряд. Негативный контроль: временно\n     убрать `lockTree` из `MoveNodeAction` → хотя бы в одном из 5 прогонов обе задачи успешны (цикл) — тест красный.\n   - `NodeName` — `packages/core/tests/Unit/NodeNameTest.php`: dataset из всех правил п.2 (вкл. `\"e\\u{0301}\"` → `\"é\"` NFC,\n     256-байтное имя, `\"a\\u{0085}b\"`).\n   - Миграция — `packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (хелпер `LoadsV02Fixture` из P1.7): на\n     `pgsql-bigint.sql` до миграции `count(parent_id IS NULL) > count(storages)` (P0.3)",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M37",
+      "requirement": "после — по одному узлу без родителя\n     на storage",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M38",
+      "requirement": "документ с конфликтующим именем получил суффикс ` (legacy 1)`",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M39",
+      "requirement": "число новых строк activity\n     `reason = n04_repair` = числу перенесённых узлов",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M40",
+      "requirement": "повторный `migrate` → 0 изменений",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M41",
+      "requirement": "вставка второго корня → ошибка\n     уникальности.\n7. `UPGRADE.md` (ремонт N04 необратим",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M42",
+      "requirement": "forceDelete только из корзины",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M43",
+      "requirement": "коды ошибок), `CHANGELOG.md [Unreleased]`\n   (Fixed: N04, N05",
+      "source_ref": "phases/P1.md:13"
+    },
+    {
+      "id": "M44",
+      "requirement": "AD13), `docs/guide/{drive,trash}.md` (правила назначения, корень), golden `PublicApiSnapshotTest`.",
+      "source_ref": "phases/P1.md:13"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "`OnNameConflict` (`Rename`/`AddRevision`) и `RestoreOptions::destination` (P3.2/P3.3)",
+      "source_ref": "phases/P1.md:77"
+    },
+    {
+      "id": "N2",
+      "prohibition": "`NodeContentLifecycle` для copy/purge документов (P4.2)",
+      "source_ref": "phases/P1.md:77"
+    },
+    {
+      "id": "N3",
+      "prohibition": "квота копии одним условным UPDATE (P1.6)",
+      "source_ref": "phases/P1.md:77"
+    },
+    {
+      "id": "N4",
+      "prohibition": "переименование\n`owner_id` → `owned_by`, `sequence`, удаление `current_version_id/file_id/deleted_at` (P4.1, P4.7)",
+      "source_ref": "phases/P1.md:77"
+    },
+    {
+      "id": "N5",
+      "prohibition": "индекс sibling-unique\nбез `deleted_at` (P4.1)",
+      "source_ref": "phases/P1.md:77"
+    },
+    {
+      "id": "N6",
+      "prohibition": "`IngestFileAction`/`CreateDocumentAction` (канонические имена — P3).",
+      "source_ref": "phases/P1.md:77"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.",
+        "scope": "public",
+        "check": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.",
+        "evidence_ref": "E10"
+      },
+      {
+        "id": "A2",
+        "predicate": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.",
+        "scope": "public",
+        "check": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.",
+        "evidence_ref": "E11"
+      },
+      {
+        "id": "A3",
+        "predicate": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.",
+        "scope": "public",
+        "check": "- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).",
+        "evidence_ref": "E12"
+      },
+      {
+        "id": "A4",
+        "predicate": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.",
+        "scope": "public",
+        "check": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.",
+        "evidence_ref": "E13"
+      },
+      {
+        "id": "A5",
+        "predicate": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19.",
+        "scope": "public",
+        "check": "- Гейт core и гейты drive, documents, filament → exit 0.",
+        "evidence_ref": "E14"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P1/P1.2.md:P1.2",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "run-items",
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": []
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "packages/drive/src/Actions/MoveNodeAction.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "packages/drive/src/Actions/RestoreNodeAction.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E7",
+      "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E8",
+      "path": "packages/core/tests/Concurrency/ForkRace.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E9",
+      "path": "packages/drive/src/Activity/RecordsDriveActivity.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E10",
+      "path": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E11",
+      "path": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E12",
+      "path": "- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E13",
+      "path": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E14",
+      "path": "- Гейт core и гейты drive, documents, filament → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Actions/MoveNodeAction.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Actions/MoveNodeAction.php",
+        "normalized": "packages/drive/src/Actions/MoveNodeAction.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "normalized": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "normalized": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Database/VaulterDatabase.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Database/VaulterDatabase.php",
+        "normalized": "packages/core/src/Database/VaulterDatabase.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "normalized": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/tests/Upgrade/LoadsV02Fixture.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/tests/Upgrade/LoadsV02Fixture.php",
+        "normalized": "packages/core/tests/Upgrade/LoadsV02Fixture.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.2-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Actions/MoveNodeAction.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Actions/MoveNodeAction.php",
+        "normalized": "packages/drive/src/Actions/MoveNodeAction.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "normalized": "packages/drive/src/Actions/RestoreNodeAction.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+        "normalized": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "normalized": "packages/core/src/Schema/PanelTablesBuilder.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/tests/Concurrency/ForkRace.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/tests/Concurrency/ForkRace.php",
+        "normalized": "packages/core/tests/Concurrency/ForkRace.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Activity/RecordsDriveActivity.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Activity/RecordsDriveActivity.php",
+        "normalized": "packages/drive/src/Activity/RecordsDriveActivity.php",
+        "path_kind": "internal",
+        "rejection": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "chain-of-thought",
+        "raw-transcript-bodies",
+        "secrets",
+        "tool-payloads"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2",
+      "codex": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P1.2",
+    "reads": [
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E8",
+      "E9"
+    ],
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.2"
+  }
+}

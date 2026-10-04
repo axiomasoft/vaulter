@@ -9,6 +9,7 @@ use Vaulter\Drive\Http\Controllers\NodeController;
 use Vaulter\Drive\Http\Controllers\StorageController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartController;
 use Vaulter\Drive\Http\Controllers\Uploads\TusUploadController;
+use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Support\Config;
 
 /*
@@ -18,16 +19,15 @@ use Vaulter\Support\Config;
 | The file/folder tree + resumable-upload surface, extracted from core's
 | routes/api.php into the vaulter-drive package. Mounted under the SAME configured
 | prefix (default: api/vaulter) and middleware as the kernel routes — Laravel merges
-| the two group registrations. The {storage} and {node} route-model bindings are
-| registered by the CORE provider (Node/Storage are kernel models); these routes
-| reuse them. All paths are distinct literals / differ in segment count from the
+| the two group registrations. The local resource middleware resolves {storage}
+| and {node} through swappable core repositories before SubstituteBindings. All paths are distinct literals / differ in segment count from the
 | kernel + documents routes, so cross-file registration order never shadows them.
 */
 
 Route::prefix(Config::routePrefix())
-    ->middleware(Config::middleware())
+    ->middleware(Config::authenticatedMiddleware())
     ->group(static function (): void {
-        Route::middleware(SubstituteBindings::class)->group(static function (): void {
+        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
             // "Shared with me" (§2.6 / H.2) — CROSS-STORAGE: not storage-bound, so it
             // sits at the top level. Gated on the 'grants' feature; the fixed segment
             // sits before the catch-all /{node} routes so it never shadows them.

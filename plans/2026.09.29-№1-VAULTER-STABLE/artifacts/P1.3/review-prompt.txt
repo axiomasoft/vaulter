@@ -1,0 +1,2137 @@
+Independent read-only full code review of PLAN2.P1.3, authorized by repository owner.
+Required reviewer route: Grok 4.7, high effort, 500k context. You are a fresh reviewer.
+Use quality:code-review semantics. Do not modify files, run mutations, execute Task plan commands, commit, finalize, or spawn agents. Read the complete review packet and candidate diff; inspect current source/tests if necessary with read-only tools. Do not invoke a second reviewer.
+Review against the included immutable item specification and OPUS inputs. Trace ACL semantics, storage/owner boundaries, inherited item versus subtree grants, deny veto, override precedence, cursor traversal and authentication, serialization, query budget and actual Filament behavior.
+Report only actionable demonstrated defects with file:line, trigger, consequence, evidence and repair direction. Severity: Blocker/Major/Minor/Nit by demonstrated impact. Do not invent failures because skips/risky tests exist in baseline. Do not reopen excluded work. A missing optional test or preference is not a blocker. The declared Filament scope is a simple paginator plus exact filtering of its fetched collection, not ExactListing keyset pagination.
+Output either `review: cursor/grok-4.7 GREEN` if no defects, or `review: cursor/grok-4.7 findings:N` and findings. Never emit GREEN if necessary inputs were truncated or unavailable: explicitly report incomplete coverage.
+
+Validation on current implementation:
+- core Access: 112 passed, 5988 assertions; seeded 500 random trees; owner grouping delta: 1 passed, 7 assertions.
+- core full: 640 passed, 26 pre-existing skipped, 17 pre-existing risky; Pint/PHPStan green.
+- drive full: 499 passed, 11 pre-existing skipped, 2 risky; Pint/PHPStan green.
+- documents full: 256 passed, 1 pre-existing skipped; Pint/PHPStan green.
+- filament full: 80 passed, 1 pre-existing skipped; Pint/PHPStan green after getTableRecords typing repair; actual table regression 1 passed.
+- ExactListingTest: SQLite and PostgreSQL 16: 7 passed, 106 assertions each. Includes V09, V22, signed cursor integrity, query budget <=5, descending tie-break, mid-batch continuation, cross-storage shared.
+- Negative control: restore old index candidate cursorPaginate; V09 and V22 both fail; original restored, all 7 green.
+No new skips, no disabled tests, no weakened gates. Review P1.3 only; existing P1.2 quota risks belong to P1.6.
+
+ITEM SPEC:
+### P1.3 — Точная видимость листинга и поиска
+
+**Intent:** Листинг детей, поиск, корзина, «shared with me», дети в `show` и Filament-таблица возвращают только узлы с
+эффективным `View` для **любого** драйвера прав, без `total`, с курсором «последний просмотренный»; `abilities` страницы
+считаются одним пакетным проходом с тем же результатом, что `effectiveGrants()` (N08, E10, N24, AD12; V09, V22).
+
+**Why:** OPUS 13 P1.3, 02 D12, 09 §2–§3. Сегодня `NodeController::index/search/trashed`
+(`packages/drive/src/Http/Controllers/NodeController.php:81–93, 309–331`) сужают выборку только «кандидатами по grant»
+(`NodeReadRepository::constrainToAccessible`, `packages/core/src/Repositories/Drive/NodeReadRepository.php:378–391`) — надмножество
+без deny-вето, а для драйверов `gate`/`spatie`/`azgard` сужения нет вовсе (`grantFilteringApplies`, строка 467): любой,
+кто видит папку, видит имена/размеры/MIME всех детей. `NodeResource::abilities` (`packages/core/src/Http/Resources/Drive/NodeResource.php:139–149`)
+вызывает `effectiveGrants()` с обходом предков на каждый узел страницы.
+
+**Scope Included:**
+1. `packages/core/src/Access/ValueObjects/AclMask.php` (new, `final readonly`): `int $allowed`, `int $denied`, `?GrantLevel $level`;
+   `static none()`.
+   `packages/core/src/Access/AclFolder.php` (new, `final class`, без состояния и SQL) — единственное место правил свёртки:
+   - `foldChain(array $depths): AclMask` — вход `list<array{allow:int, deny:int, level:?GrantLevel}>`, индекс 0 — ближайший;
+     `allowed` = объединение всех allow; `denied` = объединение `deny_d & ~(allow_0 | … | allow_{d-1})` (deny пробивается только
+     строго более близким allow); `level` = максимум level allow-грантов. Это перенос фаз 1–2 текущего
+     `AccessResolver::resolveAcl` (`packages/core/src/Access/AccessResolver.php:299–389`) без изменения семантики.
+   - `applyOwn(AclMask $inherited, int $ownAllow, int $ownDeny, ?GrantLevel $ownLevel): AclMask` — 09 §2 п.5:
+     `allowed = own.allow | P.allowed`; `denied = own.deny | (P.denied & ~own.allow)`; `level = max(own.level, P.level)`.
+   `resolveAcl()` и `resolveAclWithProvenance()` переписываются на `AclFolder::foldChain()` (провенанс сохраняется).
+2. `AccessResolver::evaluateMany(Authorizable $actor, iterable $nodes): array<string, GrantSet>` (ключ — `Identity::stringify(id)`):
+   1) узлы группируются по `(storage_id, owner_id)`; для каждой группы один раз — `driver()->override($actor, $scope)` (Allow →
+      `GrantSet::superAllowed()` всем узлам группы, Deny → `superDenied()`) и роль-лейн `resolveRole(...)`
+      (`$scope = scopeFor($storage, $node)` первого узла группы; `AclScope` зависит от storage и владельца узла);
+   2) `subjectsFor($actor)` — один раз; пустой список → ACL-маски `AclMask::none()` для всех (как `resolveAcl`);
+   3) для уникальных `parent_id` страницы — одна рекурсивная CTE (новый `NodeReadRepository::ancestorChains(array $parentIds): array<string, list<Node-row>>`):
+      `WITH RECURSIVE chain AS (SELECT id, parent_id, inherit_grants, id AS origin, 0 AS depth FROM <nodes> WHERE id IN (…)
+      UNION ALL SELECT n.id, n.parent_id, n.inherit_grants, c.origin, c.depth + 1 FROM <nodes> n JOIN chain c ON n.id = c.parent_id
+      WHERE c.inherit_grants = <true>)` — подъём останавливается после первого узла с `inherit_grants = false` (он сам входит);
+   4) одна выборка grants: `GrantReadRepository::forSubjectsOnNodes(nodeIds: ids страницы ∪ ids всех цепочек, subjects, now)`
+      (существующий метод; не истёкшие);
+   5) для каждого родителя `P = foldChain(...)` по его цепочке, где на каждой глубине учитываются только grants со
+      `scope->inheritsDownward()`; для каждого узла: `inherit_grants = false` → `P = AclMask::none()`, иначе `P` родителя;
+      `acl = applyOwn(P, own.allow, own.deny, own.level)` (собственные grants узла любого scope);
+   6) `GrantSet(allowedBits: acl.allowed | roleAllow, deniedBits: acl.denied, level: maxLevel(acl.level, roleLevel))`.
+   Итого ≤ 3 SQL на страницу без роль-лейна драйвера (CTE, grants, storage — если не загружен `storage`).
+3. `packages/core/src/Data/Drive/NodePage.php` (new) — точно по OPUS 05 §6: `final readonly class NodePage implements IteratorAggregate, Countable, JsonSerializable`,
+   `__construct(public array $items, public ?string $nextCursor, public int $scanned)`, `hasMore(): bool`.
+4. `packages/core/src/Access/ExactListing.php` (new, `final readonly`; зависимости `AccessResolver`, `VaulterDatabase`, `Encrypter`-ключ `app.key`):
+   `page(?Authorizable $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage`, где
+   `$order` — `list<array{column:string, direction:'asc'|'desc'}>`, последний элемент всегда `id` в направлении сортировки.
+   Алгоритм 09 §3: `last = decode(cursor)`; цикл, пока `count(visible) < perPage` и `scanned < Config::listingScanBudget()`:
+   batch = `(clone $candidates)` + keyset «после `last`» (дизъюнкция `(a ⋚ x) OR (a = x AND b ⋚ y) OR … (… AND id ⋚ z)`, `⋚` = `>` для
+   asc и `<` для desc) + `limit(perPage * 2)`; пустой → `last = null`, стоп; `grants = evaluateMany(actor, batch)`; узлы просматриваются по
+   порядку, каждый просмотренный увеличивает `scanned` и становится `last`; видимые (`grants[id]->allows(Ability::View)`) идут в
+   страницу, пока она не заполнится — тогда просмотр останавливается на этом узле. Выход по бюджету → `nextCursor = encode(last)`.
+   Без актёра → пустая страница, `nextCursor = null`.
+   Курсор: `base64url(json_encode(['c' => $context, 'k' => [значения order…]]))` + `.` + `base64url(hash_hmac('sha256', payload, app.key, true))`;
+   неверная подпись или другой `$context` → `Vaulter\Exceptions\Nodes\InvalidCursorException` (new, `validation_failed`, 422,
+   `errors.cursor`). `$context` = `"<kind>:<storage_id>:<parent_id|term-sha1|''>"`.
+   `Config::listingScanBudget(): int` — `vaulter.listing.scan_budget`, по умолчанию 1000 (`packages/core/config/vaulter.php` блок `listing`, новый ключ).
+5. Потребители (у всех драйверов, без `grantFilteringApplies`-ветвления для точности; кандидатное сужение по grant остаётся
+   только как префильтр SQL для grant-authoritative драйвера):
+   - `NodeController::index` — кандидаты `children(storage, parent)` с порядком `position asc, name asc, id asc` (добавить `orderBy('id')`
+     в `NodeReadRepository::children`); `search` — `search()` (`name asc, id asc`); `trashed` — `trashed()` (`trashed_at desc, id desc`);
+     `shared` — кандидаты `whereKey(sharedNodeIds)` с `name asc, id asc`, кросс-storage (`$context = "shared:*:"`).
+     Ответ — `NodeResource::collection($page->items)` + `additional(['meta' => ['path' => $request->url(), 'per_page' => $perPage, 'next_cursor' => $page->nextCursor, 'prev_cursor' => null, 'scanned' => $page->scanned]])`
+     (ключи `meta.next_cursor`/`per_page`, которые читает `packages/vue/src/types.ts:346–352`); `meta.total` и `links` с номерами страниц не выдаются.
+   - `NodeController::show` (дети папки, строка 152): дети фильтруются `evaluateMany` (только `View`).
+   - `NodeResource`: `withGrantSet(GrantSet $set): static`; при наличии — `abilities` из него (`NodeAbilities::fromGrantSet`, new),
+     иначе прежний путь (одиночный `show`). Листинги п.5 передают наборы `evaluateMany` в каждый ресурс страницы.
+   - Filament `packages/filament/src/Resources/NodeResource/Pages/ListNodes.php`: переопределить `getTableRecords()` — после
+     `parent::getTableRecords()` коллекция страницы фильтруется `evaluateMany` (`View`) и устанавливается обратно
+     (`setCollection`); `NodeResource::table()` — `->paginationMode(Filament\Tables\Enums\PaginationMode::Simple)` (нет total).
+6. Тесты:
+   - Эквивалентность — `packages/core/tests/Access/EvaluateManyEquivalenceTest.php` (SQLite): `mt_srand(20261002)`; 500 случайных
+     деревьев по 8–15 узлов (глубина ≤ 5), случайные grants (allow/deny, item/subtree, все `GrantLevel`, часть истёкших),
+     случайные `inherit_grants = false`, 1–3 субъекта; для каждого дерева `evaluateMany(actor, все узлы)` ≡ `effectiveGrants(actor, узел)`
+     для каждого узла (сравнение `allowedBits`, `deniedBits`, `level`, флагов super). Падение печатает seed и номер дерева.
+   - V09 — `packages/drive/tests/Feature/ExactListingTest.php`: allow `subtree` на родителе + deny на детях; 300 запрещённых детей,
+     301-й разрешён (имена сортируются так, что разрешённый последний); `GET storages/{id}/nodes?parent_id=…&per_page=50` → страницы
+     с `data = []` и ненулевым `next_cursor`, обход курсора доходит до 301-го; запрещённые не встречаются ни в `index`, ни в `search`,
+     ни в `trashed`, ни в детях `show`; в ответах нет `meta.total`.
+   - V22 — там же: драйвер `gate` (Gate разрешает папку), на ребёнке явный deny-grant → ребёнок не виден в листинге.
+   - Запросы — там же: страница 50 видимых узлов (драйвер `database`) → число запросов, учтённых `DB::listen` на соединении
+     Vaulter от входа в `ExactListing::page()` до конца сериализации ресурсов, ≤ 5.
+   - Курсор: подделанная подпись или курсор другого `parent_id` → 422 `code = validation_failed`.
+   - Filament — `packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php`: узел с deny `View` для админа не попадает в
+     строки таблицы (`assertCanNotSeeTableRecords`), разрешённый — попадает.
+   Негативный контроль: временно вернуть `NodeController::index` к `narrowToAccessible(...)->cursorPaginate()` → V09 и V22 красные.
+7. `docs/guide/search-trash.md` и `docs/guide/authorization.md` — точная видимость, курсор без `total`, `listing.scan_budget`;
+   `UPGRADE.md` (`shared` — курсорный конверт вместо `page/total`; `total` больше не выдаётся — AD12); `CHANGELOG.md [Unreleased]`;
+   golden `PublicApiSnapshotTest` (`evaluateMany`, `AclFolder`, `NodePage`, `ExactListing`).
+
+**Scope Excluded:** `ListOptions`/`SearchOptions`, `NodeSort`, handle `nodes()->children()` (P3.2/P3.3); удаление `file_id`/
+`current_version_id` из `NodeResource` (P6.1); materialized read-model (AD39, T2); листинг публичной share-ссылки
+(`PublicShareController::children` — права share, не ACL актёра); `DriveContext::list()` PHP API (P3.3).
+
+**Inputs:** `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md`;
+`audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` (§2, §3); `audits/2026-09-29-stable-audit/opus/05-php-api.md` (`NodePage`, §6);
+`packages/core/src/Access/AccessResolver.php`; `packages/core/src/Repositories/Drive/NodeReadRepository.php`;
+`packages/drive/src/Http/Controllers/NodeController.php`; `packages/core/src/Http/Resources/Drive/NodeResource.php`;
+`packages/core/src/Database/VaulterDatabase.php` (producer: P1.1); `packages/core/src/Exceptions/Contracts/ProblemException.php` (producer: P1.8)
+
+**Files:** `packages/core/src/Access/{AclFolder,AccessResolver,ExactListing}.php`, `packages/core/src/Access/ValueObjects/AclMask.php` (new),
+`packages/core/src/Access/Abilities/NodeAbilities.php`, `packages/core/src/Data/Drive/NodePage.php` (new),
+`packages/core/src/Exceptions/Nodes/InvalidCursorException.php` (new), `packages/core/src/Repositories/Drive/NodeReadRepository.php`,
+`packages/core/src/Http/Resources/Drive/NodeResource.php`, `packages/core/src/Support/Config.php`, `packages/core/config/vaulter.php`,
+`packages/drive/src/Http/Controllers/NodeController.php`, `packages/filament/src/Resources/NodeResource.php`,
+`packages/filament/src/Resources/NodeResource/Pages/ListNodes.php`, `packages/core/tests/Access/EvaluateManyEquivalenceTest.php` (new),
+`packages/drive/tests/Feature/ExactListingTest.php` (new), `packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php` (new),
+тесты пакетов, сверявшие `meta.total`/`page` у `shared` или надмножество листинга, `packages/core/tests/Arch/__snapshots__/*`,
+`docs/guide/{search-trash,authorization}.md`, `UPGRADE.md`, `CHANGELOG.md`.
+
+**Required Reads:** 0) `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md` (дословные требования OPUS — исполнить все);
+1) `audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` §2–§3; 2) `packages/core/src/Access/AccessResolver.php`;
+3) `packages/core/src/Repositories/Drive/NodeReadRepository.php` (78–260, 340–600); 4) `packages/drive/src/Http/Controllers/NodeController.php` (60–160, 295–450);
+5) `packages/core/src/Http/Resources/Drive/NodeResource.php`; 6) `packages/core/src/Access/ValueObjects/{GrantSet,AclScope}.php`;
+7) `packages/filament/src/Resources/NodeResource.php` (185–215).
+
+**Authority:** routine
+
+**Implementation Rules:**
+- Правила свёртки не меняются: `effectiveGrants()` после рефакторинга даёт прежние результаты (существующие тесты
+  `packages/core/tests/Access` зелёные без правок ожиданий).
+- Курсор — ключ последнего **просмотренного** кандидата; недобор страницы допустим; `nextCursor = null` только когда кандидаты кончились.
+- Видимость решает только `evaluateMany(...)->allows(Ability::View)`; SQL-префильтр не заменяет его.
+- Тест, сверявший надмножество (виден узел с deny) или `meta.total`, переписывается под точную видимость; иное падение — стоп.
+- Если эквивалентность нарушена хотя бы в одном дереве — стоп: исправлять `evaluateMany`, не тест и не seed.
+
+**Code Guidance:** `grep -n "narrowToAccessible\|cursorPaginate" packages/drive/src/Http/Controllers/NodeController.php` → пусто;
+`grep -n "LengthAwarePaginator" packages/drive/src/Http/Controllers/NodeController.php` → пусто.
+
+**Validation:**
+- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Access` → 0 failed (вкл. `EvaluateManyEquivalenceTest`: 500 деревьев).
+- `(cd packages/drive && env $SQ "$R/scripts/php84" vendor/bin/pest --ci tests/Feature/ExactListingTest.php)` → 0 failed;
+  тот же файл с `env $PG` → 0 failed.
+- `(cd packages/filament && env $SQ "$R/scripts/php84" vendor/bin/pest --ci tests/Feature/NodeResourceExactVisibilityTest.php)` → passed.
+- Негативный контроль Scope п.6 → V09/V22 красные; после возврата — зелёные.
+- Code Guidance → оба пустые.
+- Гейт core и гейты drive, documents, filament → exit 0.
+
+**Deliverables:** `AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.
+
+OPUS INPUT:
+# OPUS — дословные требования для P1.3 (30 единиц)
+
+> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению
+> или к явному отказу через D# плана (D06).
+
+
+## 01-review.md — 3. Codex (01–04): позиция
+
+- `01:b362eeda`
+
+| Вывод Codex | Позиция |
+
+- `01:59e0fce6`
+
+| E10 cursor/unique частично есть | Согласен. Но утечка метаданных в листинге шире, чем описано (N08) |
+
+- `01:7960d51f`
+
+| ACL listing: exact SQL или projection | Выбираю третий путь: **пакетная точная оценка соседей** по общей цепочке предков (новая идея, [D12](02-decisions.md#d12)) — без materialized read-model |
+
+
+## 01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N08 (S1). Листинг раскрывает запрещённых детей
+
+- `01:2c803f0d`
+
+`NodeController::index` проверяет `View` только у родителя, затем `narrowToAccessible()`. Для драйверов
+`gate`/`spatie`/`azgard` (не grant-authoritative) сужение **не применяется вообще**
+(`NodeReadRepository::grantFilteringApplies`, строка 471): любой, кто видит папку, видит имена, размеры и MIME
+всех детей, включая узлы с явным `deny`. Для `database` — сознательный superset (docblock «LISTING SEMANTIC»,
+строка 356). Имена файлов — это данные; для DMS это утечка.
+
+
+## 01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N24 (S3). `NodeResource` — N обходов ACL на страницу и внутренние указатели наружу
+
+- `01:8f64c1d4` — _P1.3 — abilities из evaluateMany; file_id/current_version_id в JSON — P6.1_
+
+Для каждого узла страницы вызывается `effectiveGrants()` с обходом предков. В JSON уходят `file_id` и
+`current_version_id` — внутренняя схема становится REST-контрактом.
+
+
+## 02-decisions.md — D12 — Точная видимость в листинге и поиске через пакетную оценку · T0
+
+- `02:a8870662`
+
+**Решение.** Листинг детей, поиск, корзина и «shared with me» возвращают только узлы с
+эффективным `View`, для **любого** драйвера. Алгоритм:
+
+- `02:22cec884`
+
+1. SQL выбирает кандидатов страницы по курсору (сортировка + tie-breaker `id`), с переизбытком
+   `k × per_page` (k = 2, максимум `vaulter.listing.scan_budget` = 1000 строк за запрос).
+
+- `02:c7fac8d7`
+
+2. `AccessResolver::evaluateMany(Authorizable, iterable<Node>)` группирует кандидатов по
+   родителю: эффективный набор родителя считается **один раз** (обход предков + роль-лейн
+   драйвера), затем для каждого ребёнка сворачиваются только его собственные grants
+   (один запрос `WHERE node_id IN (...)`) и `inherit_grants`.
+
+- `02:a96762c1`
+
+3. Отфильтрованные элементы идут в страницу; курсор = ключ **последнего просмотренного**
+   кандидата, не последнего выданного. Недобор страницы допустим; `nextCursor` не null, пока
+   кандидаты не кончились.
+
+- `02:7b7717f0`
+
+4. Счётчики `total` не выдаются там, где они раскрывали бы скрытые узлы.
+
+- `02:d7baadf4`
+
+Тот же `evaluateMany` заполняет `abilities` в `NodeResource` (D33). Materialized read-model
+(ROADMAP H.4) остаётся в T2 как оптимизация, не условие корректности.
+
+
+## 09-integrity-and-security.md — 2. Пакетная оценка доступа (`AccessResolver::evaluateMany`)
+
+- `09:2a2d76a2`
+
+```php
+/**
+ * @param iterable<Node> $nodes
+ * @return array<string, GrantSet> ключ — (string) node id
+ */
+public function evaluateMany(Authorizable $actor, iterable $nodes): array;
+```
+
+- `09:68ded052`
+
+1. `override()` драйвера — один раз на (actor, drive). Allow/Deny → одинаковый результат для всех.
+
+- `09:cc750651`
+
+2. `subjectsFor(actor)` — один раз.
+
+- `09:249d3ac3`
+
+3. Сгруппировать узлы по `parent_id`. Для каждого уникального родителя вычислить **наследуемую** маску
+   для его детей (allow/deny, level): только `subtree`-grants самого родителя и его предков с учётом
+   `inherit_grants`-обрывов; `item`-grants родителя детям не передаются. Одна рекурсивная CTE на всех
+   родителей страницы (`WHERE id IN (...)`), результат кэшируется в объекте запроса. Правила свёртки
+   (ближайший deny, приоритеты) — ровно те же, что в текущем `resolveAcl`; алгоритм выносится в общий
+   `AclFolder`, которым пользуются и `effectiveGrants()`, и `evaluateMany()`.
+
+- `09:3b254327`
+
+4. Одна выборка grants по `node_id IN (<ids страницы>) AND (subject_type, subject_id) IN (<subjects>)`, не истёкших.
+
+- `09:1aa80b9d`
+
+5. Для каждого узла: если `inherit_grants = false` — наследуемая маска `P = (0, 0, null)` (как в текущем
+   `resolveAcl`: обход останавливается на узле), иначе `P` — маска его родителя; поверх — собственные
+   grants узла `O` (и `item`, и `subtree` применяются к самому узлу). Свёртка эквивалентна текущему
+   правилу «deny пробивается только строго более близким allow»:
+
+- `09:b7fdb0f8`
+
+   ```text
+   P.allow  = объединение allow по цепочке родителя (только subtree, с обрывами)
+   P.denied = deny цепочки родителя, уже пробитые более близкими allow внутри цепочки
+   allowed  = O.allow | P.allow
+   denied   = O.deny  | (P.denied & ~O.allow)      # allow узла пробивает deny предков, но не свой deny
+   level    = max(O.level, P.level)
+   ``` Затем роль-лейн драйвера (`resolve()` по субъектам в `AccessScope` drive) —
+   одинаков для всех узлов drive, кроме `nodeOwner`, поэтому кэшируется по `owned_by`.
+
+- `09:5482b224`
+
+6. Результат совпадает с `effectiveGrants()` для каждого узла — это контрактный тест (property-based:
+   случайные деревья, grants, deny, inherit cut-off).
+
+- `09:5c008642`
+
+Сложность: O(1) SQL-запросов на страницу независимо от `per_page` (≤ 3 запроса).
+
+
+## 09-integrity-and-security.md — 3. Листинг с точной видимостью
+
+- `09:42ec8d3c`
+
+```text
+cursor = decode(options.cursor)              # (sort key tuple, id) последнего ПРОСМОТРЕННОГО
+visible = []; scanned = 0; last = cursor
+while count(visible) < perPage and scanned < scanBudget:
+    batch = SQL(children of folder, after last, order by sort+id, limit perPage*2)
+    if batch empty: last = null; break
+    visible += guard.visible(context, batch)[: perPage - count(visible)]
+    last = key(последний элемент batch, который был ПРОСМОТРЕН до заполнения страницы)
+    scanned += count(просмотренных)
+return NodePage(visible, nextCursor = last === null ? null : encode(last), scanned)
+```
+
+- `09:3f8c6b95`
+
+Курсор подписывается HMAC (`app.key`) и включает drive id + сортировку, чтобы не принимать курсор другого
+запроса. `total` не выдаётся. Поиск: то же, но кандидаты — `lower(name) LIKE %term%` по drive (экранирование как сейчас).
+
+
+## 13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.3 — Точная видимость листинга и поиска
+
+- `13:3efee162`
+
+- Решения: D12 · Находки: N08, E10 · Сценарии: V09, V22.
+
+- `13:a8181f49`
+
+- Сделать: вынести свёртку в `AclFolder`; `AccessResolver::evaluateMany()` (09 §2); листинг детей, поиск, корзина,
+  shared, Filament-таблица — через точный фильтр с курсором «последний просмотренный» (09 §3) для **всех**
+  драйверов; `NodeResource::abilities` — из того же пакетного результата.
+
+- `13:8f23049f`
+
+- Готово: property-тест эквивалентности `evaluateMany` ≡ `effectiveGrants` (≥ 500 случайных деревьев); V09, V22
+  зелёные; число SQL-запросов на страницу 50 узлов ≤ 5 (тест счётчика запросов).
+
+- `13:ea96dc41`
+
+- Исполнитель: opus/high.
+
+
+## 14-verification.md — Принятые от Codex (с уточнениями)
+
+- `14:b891e4d6`
+
+| ID | Сценарий | Ожидание после решений | БД | Пункт |
+
+- `14:dd60651a`
+
+| V09 | Allow на предке + deny на ребёнке; первые 300 кандидатов запрещены, 301-й разрешён | Запрещённые не видны в листинге/поиске/abilities; курсор доходит до 301-го; нет `total` | любая | P1.3 |
+
+
+## 14-verification.md — Новые
+
+- `14:51791b71`
+
+| ID | Сценарий | Ожидание | БД | Пункт |
+
+- `14:5d9f3b69`
+
+| V22 | Драйвер `gate`: Gate разрешает папку, на ребёнке явный deny-grant | Ребёнок не виден в листинге (раньше был виден) | любая | P1.3 |
+
+
+CANDIDATE DIFF (all 25 product files including new files):
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index f2ee0d4..dc5bd15 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ ## [Unreleased]
+ 
+ ### Added
++- Batch ACL evaluation (`AccessResolver::evaluateMany`, `AclFolder`), `NodePage`,
++  `ExactListing`, signed query-bound cursors and `listing.scan_budget` (AD12).
+ - Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
+   and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
+ - `InvalidDestinationException` (409 `invalid_destination`), `NodeNotTrashedException`
+@@ -17,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+   creates, uploads, copies and renames (AD13, D21).
+ 
+ ### Changed
++- Children, search, trash, shared, folder children and Filament now display only nodes
++  with effective View for every driver. Shared uses cursors instead of page/total;
++  REST listings omit totals and reuse batch ACL results for abilities (AD12).
+ - `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
+ - HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
+   stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides
+diff --git a/UPGRADE.md b/UPGRADE.md
+index 4e83152..d1a1915 100644
+--- a/UPGRADE.md
++++ b/UPGRADE.md
+@@ -6,6 +6,21 @@ changes that require action from consumers of the package.
+ 
+ ## Unreleased
+ 
++### Exact listing and shared cursors (AD12)
++
++Before: children, search, trash and Filament exposed grant-reachable candidates,
++including denied nodes; `shared` used `page`, `current_page` and `total`.
++After: all these surfaces and folder `show` children apply effective `View` for every
++driver. REST listings return `meta.next_cursor`, `per_page`, `scanned`, `path` and a
++null `prev_cursor`; `total` and numbered page links are omitted. Replace shared
++page-number iteration with `cursor` iteration, and continue through empty pages
++while `next_cursor` is non-null. `vaulter.listing.scan_budget` defaults to 1000;
++raise it to inspect more candidates per request. Invalid or cross-query cursors
++return 422 `validation_failed` with `errors.cursor`.
++
++New PHP surface: `AccessResolver::evaluateMany()`, `AclFolder`, `NodePage` and
++`ExactListing`. Listing resource abilities use the batch grant sets.
++
+ ### Tree invariants, second-root repair and migration №6 (AD13)
+ 
+ Before: Actions accepted any node of the drive as a parent, so a folder, upload, move,
+diff --git a/docs/guide/authorization.md b/docs/guide/authorization.md
+index a95b72e..1eae209 100644
+--- a/docs/guide/authorization.md
++++ b/docs/guide/authorization.md
+@@ -290,66 +290,41 @@ cheaper question — *"which nodes should this actor even see?"* — and answer
+ **candidate set**, not the exact algorithm. The distinction matters, so be precise about
+ what each guarantees.
+ 
+-### When grant-narrowing applies
++### Exact visibility
+ 
+-A listing narrows to the actor's grant-reachable candidate set **only** when **both**:
++Children, search, trash, shared nodes, folder `show` children and Filament table rows
++are filtered through `AccessResolver::evaluateMany()` for every permission driver.
++Only nodes with effective `View` are returned. Explicit deny and `inherit_grants`
++cut-offs apply before names, sizes or MIME types are exposed. The same batch result
++fills each listing item's `abilities`, avoiding a separate ancestor walk per resource.
+ 
+-1. the **`grants`** feature is on; **and**
+-2. the active permission driver is **grant-authoritative** — it declares `v_node_grants`
+-   the *sole* authority for read-visibility (`GrantAuthoritativeDriver::isGrantAuthoritative()`).
++`evaluateMany()` preserves the rules of `effectiveGrants()`: a nearer allow can pierce
++a farther deny; a same-node deny vetoes its allow and the host role lane. Absolute
++host overrides retain their existing behavior. Parent `item` grants never inherit.
+ 
+-Only the default **`database`** driver is grant-authoritative out of the box. For the
+-**open** drivers (`gate` / `spatie` / `azgard` / `null`) the host's roles govern and
+-`v_node_grants` is *not* the source of truth, so narrowing would wrongly hide nodes the
+-host role lane allows — **listings stay open and unchanged** there (the safe default).
++SQL grant narrowing in `constrainToAccessible()` remains a candidate prefilter for
++grant-authoritative drivers. Its result needs exact ACL evaluation before display.
++The REST listings scan candidates directly; Filament applies the exact batch filter
++to the fetched page and uses simple pagination without totals.
+ 
+-::: warning A grant-authoritative subclass can opt out
+-A host that *subclasses* the `database` resolver to add a role/team lane or a super-admin
+-`override()` can now confer access on nodes with **no** grant anchor. Such a subclass MUST
+-override `isGrantAuthoritative()` to return `false` — otherwise the listing would hide
+-nodes its own role lane allows. The gate keys on this *capability*, not on the driver key
+-string. See [Permission Drivers](./permission-drivers).
+-:::
+-
+-### Candidate superset, not exact suppression
+-
+-When narrowing applies, the listing query is constrained **in SQL** (before pagination)
+-to the actor's **candidate** node ids — the grant anchors for the actor's subject-set
+-**union** the descendants of every `subtree`-scoped anchor (an `item`-scoped anchor
+-contributes only its own node). Nodes with **no grant-reachability** — the common
+-"inaccessible" / "not shared with me" case — are hidden.
+-
+-::: danger The candidate set is a deliberate SUPERSET
+-The listing SQL narrows to grant-*reachability*; it does **not** apply the exact
+-**deny-veto** or the **`inherit_grants` cut-off** in the query. So a node that a *nearer*
+-`deny` revokes (or one past an inherit-cutoff wall) **can still appear in a listing**.
+-Pushing that exact suppression into the listing SQL is explicitly **deferred** to a future
+-materialised effective-grants read-model. Treat a listing as "candidates the actor
+-*probably* can see", never as an authorization decision.
+-:::
+-
+-Two things stay **exact** regardless:
++### Cursor and scan budget
+ 
+-- **Per-action authorization.** Every `show` / mutation still runs the full
+-  `AccessResolver` (deny-veto + inherit-cutoff), so a candidate a deny revokes **403s** the
+-  moment the actor acts on it. The listing is a visibility hint; the gate is the authority.
+-- **The "shared with me" view** below, which re-resolves every candidate exactly.
++REST pages carry `meta.next_cursor`, `prev_cursor` (null), `per_page`, `path` and
++`scanned`; they do not carry `total` or numbered page links. A cursor records the
++last **inspected** candidate, including denied candidates, and is signed with the
++application key. It is bound to the storage, listing kind, parent or search term and
++ordering. An invalid signature or mismatched query returns 422 `validation_failed`
++with `errors.cursor`; restart that listing without a cursor.
+ 
+-The narrowing lives in the **query**, never a post-fetch page filter — a post-filter that
+-empties a cursor page would null the next-cursor and silently strand later authorized rows.
+-The Filament admin table (the `axioma-studio/vaulter-filament` package) applies the **same**
+-candidate-SQL narrowing through the public `constrainToAccessible()` seam, so the API and the
+-admin UI stay consistent.
++`vaulter.listing.scan_budget` defaults to 1000 candidates per request. A page can be
++short or empty while `next_cursor` remains non-null. Follow that cursor until null
++to reach later visible nodes. Changing `per_page` does not change the cursor's scope.
+ 
+ ## "Shared with me"
+ 
+-`sharedNodeIds()` runs a fast subject-index pass over `v_node_grants` to collect the
+-candidate node ids an actor has any **live allow** grant on. Those candidates are then
+-**re-resolved** through the full algorithm by `filterSharedWith()` — because a nearer
+-`deny` may have revoked the visibility a raw grant implied, the raw index never decides
+-visibility on its own. Unlike the candidate-SQL listings above, this view is **exact**:
+-the re-resolution runs over a *bounded* candidate set, so the cost of the full algorithm
+-per node is acceptable.
++`sharedNodeIds()` collects candidates with a live direct allow-grant across storages.
++The endpoint scans those candidates in `name, id` order and uses `evaluateMany()` to
++apply the same exact visibility rules as other listings.
+ 
+ ### The `GET /shared` endpoint
+ 
+@@ -365,8 +340,8 @@ GET {prefix}/shared        # e.g. GET /api/vaulter/shared
+ |---|---|
+ | **Gating** | Registered only when the **`grants`** feature is on. |
+ | **Auth** | An unauthenticated request gets an **empty** page (never an error). |
+-| **Exactness** | Each candidate is **re-resolved** through the full algorithm — a nearer `deny` excludes it. This is the EXACT gate, unlike the candidate-SQL listings. |
+-| **Pagination** | A **length-aware** page envelope (`page` / `total`), *not* a cursor — the cross-storage set is post-filtered into a Collection that can't cursor-paginate cleanly. Page size matches the sibling listings' `per_page`. |
++| **Exactness** | Each candidate is evaluated through the batch ACL algorithm; an effective deny excludes it. |
++| **Pagination** | A signed cursor envelope (`meta.next_cursor`, `per_page`, `scanned`) without `total`; follow the cursor even after an empty page. |
+ | **Payload** | `NodeResource` items with the owning `storage` eager-loaded (the only cross-storage context the payload carries; the breadcrumb is attached only on `show`). |
+ 
+ On the client, `@vaulter/vue` ships [`useSharedNodes`](./vue) and `VaulterSharedWithMe`
+diff --git a/docs/guide/errors.md b/docs/guide/errors.md
+index 8e4a4fe..3775b8b 100644
+--- a/docs/guide/errors.md
++++ b/docs/guide/errors.md
+@@ -221,3 +221,8 @@ empty) body, or raise the limit.
+ `BlockedOutboundUrlException` — the outbound webhook URL was refused: a disallowed
+ scheme, a malformed URL, or a host resolving to a blocked network (SSRF protection).
+ Register the endpoint with a public http(s) URL.
++
++## invalid-cursor
++
++`InvalidCursorException`: 422 `validation_failed`, with `errors.cursor`. Restart the
++listing without a cursor; the signature, listing scope or ordering did not match.
+diff --git a/docs/guide/search-trash.md b/docs/guide/search-trash.md
+index 9e170e0..bbc2087 100644
+--- a/docs/guide/search-trash.md
++++ b/docs/guide/search-trash.md
+@@ -22,6 +22,20 @@ a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaul
+ at a searchable model and overriding the read repository.
+ :::
+ 
++## Exact visibility and cursors
++
++Search and trash only return nodes with effective `View`, including when the host
++uses Gate, Spatie or AzGuard. Explicit denies and inheritance cut-offs hide the node
++and its metadata. Listing `abilities` come from the same batch evaluation.
++
++Pages expose `meta.next_cursor`, `per_page`, `scanned`, `path` and a null
++`prev_cursor`. They have no `total` or numbered page links. Send `cursor` from the
++previous response until `next_cursor` is null. An empty page may still have a cursor:
++`vaulter.listing.scan_budget` (default 1000) limits inspected candidates per request.
++Cursors are signed with the application key and bound to the listing query; reuse
++with another storage, parent or search term returns 422 `validation_failed` and
++`errors.cursor`. Restart without a cursor after changing the query.
++
+ ## Trash
+ 
+ Deleting a node soft-deletes it (and its subtree). The trash can be listed, restored, or
+diff --git a/packages/core/config/vaulter.php b/packages/core/config/vaulter.php
+index 6b485ff..c8f3a0e 100644
+--- a/packages/core/config/vaulter.php
++++ b/packages/core/config/vaulter.php
+@@ -34,6 +34,7 @@ use Vaulter\Webhooks\DefaultOutboundUrlGuard;
+  * Publish: php artisan vendor:publish --tag=vaulter-config
+  */
+ return [
++    'listing' => ['scan_budget' => 1000],
+ 
+     /*
+     |--------------------------------------------------------------------------
+diff --git a/packages/core/src/Access/Abilities/NodeAbilities.php b/packages/core/src/Access/Abilities/NodeAbilities.php
+index 18b0caf..4007ca2 100644
+--- a/packages/core/src/Access/Abilities/NodeAbilities.php
++++ b/packages/core/src/Access/Abilities/NodeAbilities.php
+@@ -6,6 +6,7 @@ namespace Vaulter\Access\Abilities;
+ 
+ use Illuminate\Contracts\Auth\Access\Authorizable;
+ use Vaulter\Access\AccessResolver;
++use Vaulter\Access\ValueObjects\GrantSet;
+ use Vaulter\Enums\Access\Ability;
+ use Vaulter\Models\Drive\Node;
+ 
+@@ -37,10 +38,17 @@ final readonly class NodeAbilities
+         return new self(flags: $resolver->abilitiesFor($actor, $node));
+     }
+ 
+-    /**
+-     * An all-false ability map (no acting user) — keyed by every Ability so the
+-     * client contract shape never shifts.
+-     */
++    /** Reuse the exact batch decision when serializing a listing. */
++    public static function fromGrantSet(GrantSet $set): self
++    {
++        $flags = [];
++        foreach (Ability::cases() as $ability) {
++            $flags[$ability->value] = $set->allows($ability);
++        }
++
++        return new self(flags: $flags);
++    }
++
+     public static function denied(): self
+     {
+         $flags = [];
+diff --git a/packages/core/src/Access/AccessResolver.php b/packages/core/src/Access/AccessResolver.php
+index 804fb71..47c8096 100644
+--- a/packages/core/src/Access/AccessResolver.php
++++ b/packages/core/src/Access/AccessResolver.php
+@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
+ use Illuminate\Support\Carbon;
+ use Vaulter\Access\ValueObjects\AccessAce;
+ use Vaulter\Access\ValueObjects\AccessExplanation;
++use Vaulter\Access\ValueObjects\AclMask;
+ use Vaulter\Access\ValueObjects\AclScope;
+ use Vaulter\Access\ValueObjects\Decision;
+ use Vaulter\Access\ValueObjects\GrantSet;
+@@ -122,6 +123,118 @@ final class AccessResolver
+         );
+     }
+ 
++    /**
++     * @param  iterable<Node>          $nodes
++     * @return array<string, GrantSet>
++     */
++    public function evaluateMany(Authorizable $actor, iterable $nodes): array
++    {
++        $nodes = new Collection(is_array($nodes) ? $nodes : iterator_to_array($nodes));
++        if ($nodes->isEmpty()) {
++            return [];
++        }
++        $nodes->loadMissing('storage');
++        $driver = $this->drivers->driver();
++        $groups = [];
++        foreach ($nodes as $node) {
++            $key = json_encode([Identity::stringify($node->storage_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
++            $groups[$key][] = $node;
++        }
++        $sets = [];
++        $pending = [];
++        $scopes = [];
++        foreach ($groups as $key => $group) {
++            $scope = $this->scopeFor($this->storageOf($group[0]), $group[0]);
++            $override = $driver->override($actor, $scope);
++            if ($override !== null) {
++                foreach ($group as $node) {
++                    $sets[Identity::stringify($node->id)] = $override === Effect::Allow ? GrantSet::superAllowed() : GrantSet::superDenied();
++                }
++
++                continue;
++            }
++            $scopes[$key] = $scope;
++            foreach ($group as $node) {
++                $pending[] = [$node, $key];
++            }
++        }
++        if ($pending === []) {
++            return $sets;
++        }
++        $subjects = $driver->subjectsFor($actor);
++        $roles = [];
++        foreach ($scopes as $key => $scope) {
++            $roles[$key] = $this->resolveRole($driver, $actor, $scope, $subjects);
++        }
++        $parentIds = [];
++        $ids = [];
++        foreach ($pending as [$node]) {
++            $ids[] = $node->id;
++            if ($node->inherit_grants && $node->parent_id !== null) {
++                $parentIds[] = $node->parent_id;
++            }
++        }
++        $chains = $subjects === [] ? [] : app(NodeReadRepository::class)->ancestorChains(array_values(array_unique($parentIds)));
++        foreach ($chains as $chain) {
++            foreach ($chain as $row) {
++                if (!is_int($row->id) && !is_string($row->id)) {
++                    throw new \LogicException('Invalid ancestor identity.');
++                }
++                $ids[] = $row->id;
++            }
++        }
++        $byNode = [];
++        if ($subjects !== []) {
++            foreach ($this->grants->forSubjectsOnNodes(array_values(array_unique($ids)), $subjects, Carbon::now()) as $grant) {
++                $byNode[Identity::stringify($grant->node_id)][] = $grant;
++            }
++        }
++        $folder = new AclFolder;
++        $inherited = [];
++        foreach ($chains as $origin => $chain) {
++            $depths = [];
++            foreach ($chain as $row) {
++                $depths[] = $this->grantMask($byNode[Identity::stringify($row->id)] ?? [], true);
++            }
++            $inherited[$origin] = $folder->foldChain($depths);
++        }
++        foreach ($pending as [$node, $key]) {
++            $parentKey = Identity::stringify($node->parent_id);
++            $chain = $chains[$parentKey] ?? [];
++            $sameStorage = $chain !== [] && Identity::stringify($chain[0]->storage_id) === Identity::stringify($node->storage_id);
++            $parent = $node->inherit_grants && $sameStorage ? $inherited[$parentKey] : AclMask::none();
++            $own = $this->grantMask($byNode[Identity::stringify($node->id)] ?? [], false);
++            $mask = $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level']);
++            [$roleAllow, $roleLevel] = $roles[$key];
++            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied, level: $this->maxLevel($mask->level, $roleLevel));
++        }
++
++        return $sets;
++    }
++
++    /** @param list<NodeGrant> $grants
++     * @return array{allow:int, deny:int, level:?GrantLevel}
++     */
++    private function grantMask(array $grants, bool $inherited): array
++    {
++        $allow = 0;
++        $deny = 0;
++        $level = null;
++        foreach ($grants as $grant) {
++            if ($inherited && !$grant->scope->inheritsDownward()) {
++                continue;
++            }
++            if ($grant->effect === Effect::Allow) {
++                $allow |= $this->bitsFor($grant);
++                $level = $this->maxLevel($level, $grant->level);
++            } else {
++                $deny |= $this->bitsFor($grant);
++            }
++        }
++
++        return ['allow' => $allow, 'deny' => $deny, 'level' => $level];
++    }
++
+     /**
+      * The UI ability flags for (actor, node) — every Ability mapped to whether the
+      * actor may perform it (deny-veto applied). Fills the NodeResource "abilities"
+@@ -361,31 +474,9 @@ final class AccessResolver
+             }
+         }
+ 
+-        // Phase 2 — fold. allowedBits is the union of every depth's allow. A deny at
+-        // depth d is finally denied EXCEPT for the bits allowed at a STRICTLY nearer
+-        // depth (< d); a same-depth allow does NOT pierce it, so a same-node deny
+-        // always vetoes a same-node allow.
+-        $allowedBits = 0;
+-
+-        foreach ($allowByDepth as $bits) {
+-            $allowedBits |= $bits;
+-        }
+-
+-        $deniedBits = 0;
+-
+-        foreach ($denyByDepth as $depth => $bits) {
+-            $nearerAllow = 0;
++        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
+ 
+-            foreach ($allowByDepth as $allowDepth => $allowBits) {
+-                if ($allowDepth < $depth) {
+-                    $nearerAllow |= $allowBits;
+-                }
+-            }
+-
+-            $deniedBits |= ($bits & ~$nearerAllow);
+-        }
+-
+-        return [$allowedBits, $deniedBits, $level];
++        return [$mask->allowed, $mask->denied, $mask->level];
+     }
+ 
+     /**
+@@ -466,33 +557,33 @@ final class AccessResolver
+             }
+         }
+ 
+-        $allowedBits = 0;
+-
+-        foreach ($allowByDepth as $bits) {
+-            $allowedBits |= $bits;
+-        }
+-
+-        $deniedBits = 0;
++        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
+ 
+-        foreach ($denyByDepth as $depth => $bits) {
+-            $nearerAllow = 0;
+-
+-            foreach ($allowByDepth as $allowDepth => $allowBits) {
+-                if ($allowDepth < $depth) {
+-                    $nearerAllow |= $allowBits;
+-                }
+-            }
+-
+-            $deniedBits |= ($bits & ~$nearerAllow);
+-        }
+-
+-        return [$allowedBits, $deniedBits, $level, $aces];
++        return [$mask->allowed, $mask->denied, $mask->level, $aces];
+     }
+ 
+     /**
+      * The machine-readable reason for an explain() verdict: an allow, a deny-veto
+      * (a required bit landed in the deny-mask), or simply no covering grant.
+      */
++    /**
++     * @param list<Node>      $chain
++     * @param array<int, int> $allows
++     * @param array<int, int> $denies
++     */
++    private function foldDepths(array $chain, array $allows, array $denies, ?GrantLevel $level): AclMask
++    {
++        $depths = [];
++        foreach ($chain as $depth => $current) {
++            $depths[] = ['allow' => $allows[$depth] ?? 0, 'deny' => $denies[$depth] ?? 0, 'level' => $level];
++            if (!$current->inherit_grants) {
++                break;
++            }
++        }
++
++        return (new AclFolder)->foldChain($depths);
++    }
++
+     private function explainReason(bool $allowed, Ability $ability, int $deniedBits): string
+     {
+         if ($allowed) {
+diff --git a/packages/core/src/Http/Resources/Drive/NodeResource.php b/packages/core/src/Http/Resources/Drive/NodeResource.php
+index 2623fb9..342721f 100644
+--- a/packages/core/src/Http/Resources/Drive/NodeResource.php
++++ b/packages/core/src/Http/Resources/Drive/NodeResource.php
+@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
+ use Illuminate\Http\Resources\Json\JsonResource;
+ use Vaulter\Access\Abilities\NodeAbilities;
+ use Vaulter\Access\AccessResolver;
++use Vaulter\Access\ValueObjects\GrantSet;
+ use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+ use Vaulter\Enums\Drive\NodeKind;
+ use Vaulter\Models\Drive\Node;
+@@ -27,6 +28,26 @@ use Vaulter\Models\Drive\Node;
+  */
+ final class NodeResource extends JsonResource
+ {
++    private ?GrantSet $grantSet = null;
++
++    /** @var array<string, GrantSet> */
++    private array $childrenGrants = [];
++
++    public function withGrantSet(GrantSet $set): static
++    {
++        $this->grantSet = $set;
++
++        return $this;
++    }
++
++    /** @param array<string, GrantSet> $sets */
++    public function withChildrenGrantSets(array $sets): self
++    {
++        $this->childrenGrants = $sets;
++
++        return $this;
++    }
++
+     /**
+      * Direct children of this node, attached by NodeController::show when listing
+      * a folder's contents alongside the node itself.
+@@ -94,7 +115,7 @@ final class NodeResource extends JsonResource
+             'updated_at' => $node->updated_at,
+             'children' => $this->children === null
+                 ? null
+-                : self::collection($this->children),
++                : self::collection($this->children->map(fn (Node $child): self => isset($this->childrenGrants[(string) $child->id]) ? self::make($child)->withGrantSet($this->childrenGrants[(string) $child->id]) : self::make($child))),
+             'breadcrumb' => $this->breadcrumb === null
+                 ? null
+                 : self::collection($this->breadcrumb),
+@@ -138,6 +159,10 @@ final class NodeResource extends JsonResource
+      */
+     private function abilities(Request $request, Node $node): array
+     {
++        if ($this->grantSet !== null) {
++            return NodeAbilities::fromGrantSet($this->grantSet)->toArray();
++        }
++
+         $user = $request->user();
+         $actor = $user instanceof Authorizable ? $user : null;
+ 
+diff --git a/packages/core/src/Repositories/Drive/NodeReadRepository.php b/packages/core/src/Repositories/Drive/NodeReadRepository.php
+index 8a30466..11ead8d 100644
+--- a/packages/core/src/Repositories/Drive/NodeReadRepository.php
++++ b/packages/core/src/Repositories/Drive/NodeReadRepository.php
+@@ -14,6 +14,7 @@ use Vaulter\Access\AccessResolver;
+ use Vaulter\Access\HostRoleDriverManager;
+ use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
+ use Vaulter\Contracts\Observability\MetricsRecorder;
++use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+ use Vaulter\Enums\Access\GrantScope;
+ use Vaulter\Models\Drive\Node;
+@@ -30,17 +31,9 @@ use Vaulter\Support\LoadTier;
+  * whereHas('descendants') / withCount('descendants') which break on MariaDB and
+  * degrade on Postgres (H.4 arch-ban).
+  *
+- * The access-aware seam (P1 #3) — queryForUser() (the standalone live-nodes entry)
+- * and constrainToAccessible() (compose onto any base) — narrows a query to the actor's
+- * grant-reachable CANDIDATE node ids when grant-filtering applies (the 'grants' feature
+- * is on AND the active permission driver carries the {@see GrantAuthoritativeDriver}
+- * marker — only the standalone {@see DatabasePermissionResolver} does). For every other
+- * driver the host's roles govern and v_node_grants is not the source of truth, so
+- * listing stays OPEN. The candidate set is a deliberate SUPERSET: it hides nodes with
+- * no grant-reachability but does NOT apply the exact deny-veto / inherit-cutoff in the
+- * listing SQL (that exact listing suppression is DEFERRED to the H.4 read-model). The
+- * EXACT gate is the {@see AccessResolver}, applied per ACTION (show/mutations) and per
+- * candidate by filterViewable() / sharedWith() (the bounded "shared with me" set).
++ * queryForUser()/constrainToAccessible() narrow grant-authoritative drivers to
++ * candidate IDs. Candidates require exact AccessResolver evaluation before display;
++ * the REST listings and Filament table apply that after fetching each page.
+  */
+ final class NodeReadRepository
+ {
+@@ -97,7 +90,8 @@ final class NodeReadRepository
+                 ->whereNull('trashed_at')
+                 ->where('parent_id', $parent?->id)
+                 ->orderBy('position')
+-                ->orderBy('name'),
++                ->orderBy('name')
++                ->orderBy('id'),
+             labels: [
+                 'query_kind' => 'children',
+                 'tier' => LoadTier::label(),
+@@ -164,6 +158,38 @@ final class NodeReadRepository
+         );
+     }
+ 
++    /**
++     * @param  list<int|string>               $parentIds
++     * @return array<string, list<\stdClass>>
++     */
++    public function ancestorChains(array $parentIds): array
++    {
++        if ($parentIds === []) {
++            return [];
++        }
++        $query = $this->query();
++        $connection = app(VaulterDatabase::class)->connection();
++        $grammar = $connection->getQueryGrammar();
++        $table = $grammar->wrapTable($query->getModel()->getTable());
++        $seed = $this->whereKeyInBounded($query, $parentIds)
++            ->select(['id', 'parent_id', 'storage_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
++        $sql = 'WITH RECURSIVE chain AS ('.$seed->toSql().'
++            UNION ALL SELECT n.id, n.parent_id, n.storage_id, n.inherit_grants, c.origin, c.depth + 1
++            FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.storage_id = c.storage_id
++            WHERE c.inherit_grants = ? AND c.depth < ? AND n.deleted_at IS NULL)
++            SELECT * FROM chain ORDER BY origin, depth';
++        $rows = $connection->select($sql, [...$seed->getBindings(), true, self::DEFAULT_MAX_DEPTH - 1]);
++        $chains = [];
++        foreach ($rows as $row) {
++            if (!$row instanceof \stdClass || (!is_string($row->origin) && !is_int($row->origin))) {
++                throw new \LogicException('Invalid ancestor chain row.');
++            }
++            $chains[Identity::stringify($row->origin)][] = $row;
++        }
++
++        return $chains;
++    }
++
+     /**
+      * The ancestor chain from the node up to the storage root (nearest first),
+      * bounded by withMaxDepth (F-P4.2-01, VLT-REMED P4.3) — the same cap
+@@ -364,18 +390,8 @@ final class NodeReadRepository
+      * query. A no-op when grant-filtering does not apply (open drivers); forces an
+      * empty result when it applies and the actor reaches no candidate.
+      *
+-     * LISTING SEMANTIC (deliberate, master plan P1 #3 + H.4): a constrained listing
+-     * narrows to the actor's grant-reachable CANDIDATE set — it HIDES nodes with no
+-     * grant-reachability (the common "inaccessible" / "not shared with me" case) but
+-     * is a SUPERSET that does NOT apply the exact deny-veto or the inherit_grants
+-     * cut-off in SQL. A node a NEARER deny revokes (or one past an inherit-cutoff wall)
+-     * can therefore still appear in a listing. Pushing that exact suppression into the
+-     * listing SQL is explicitly DEFERRED to the H.4 materialised effective-grants
+-     * read-model (built "when profiling requires"). This keeps the API listing and the
+-     * Filament table CONSISTENT (both candidate-SQL). Per-ACTION authorization is
+-     * UNCHANGED and stays EXACT: the {@see AccessResolver} gates every mutation/show,
+-     * and the cross-storage "shared with me" view re-resolves each candidate exactly
+-     * via {@see sharedWith()}.
++     * This SQL prefilter deliberately admits denied candidates. Apply exact batch
++     * AccessResolver evaluation before display.
+      *
+      * Generic over the concrete model so a Node-typed base (the core listing paths) and
+      * a Filament resource's `Builder<Model>` both compose without a variance clash — the
+diff --git a/packages/core/src/Support/Config.php b/packages/core/src/Support/Config.php
+index fb47069..d1c536c 100644
+--- a/packages/core/src/Support/Config.php
++++ b/packages/core/src/Support/Config.php
+@@ -855,6 +855,13 @@ final class Config
+         return self::tablePrefix().$base;
+     }
+ 
++    public static function listingScanBudget(): int
++    {
++        $budget = config('vaulter.listing.scan_budget', 1000);
++
++        return is_numeric($budget) ? max(1, (int) $budget) : 1000;
++    }
++
+     /**
+      * The named Laravel database connection every Vaulter-owned table/model reads
+      * and writes through (F-P2.3-02), or null to defer to the host's default
+diff --git a/packages/core/tests/Access/AccessAwareListingTest.php b/packages/core/tests/Access/AccessAwareListingTest.php
+index dca1cec..c3c47aa 100644
+--- a/packages/core/tests/Access/AccessAwareListingTest.php
++++ b/packages/core/tests/Access/AccessAwareListingTest.php
+@@ -3,7 +3,6 @@
+ declare(strict_types=1);
+ 
+ use Illuminate\Http\Request;
+-use Illuminate\Pagination\LengthAwarePaginator;
+ use Illuminate\Support\Carbon;
+ use Illuminate\Support\Facades\Storage as StorageFacade;
+ use Vaulter\Access\HostRoleDriverManager;
+@@ -18,23 +17,9 @@ use Vaulter\Tests\Fixtures\Access\RoleSubjectGrantDriver;
+ use Vaulter\Tests\Fixtures\TestUser;
+ 
+ /**
+- * Access-aware listing (master plan P1 #3 / H.4) — the CANDIDATE-SUPERSET semantic of
+- * the Drive listings and the Filament table, and the EXACT "shared with me" + per-ACTION
+- * gates that sit alongside it. Two deliberately DIFFERENT visibility shapes are pinned
+- * here:
+- *
+- *   LISTINGS (HTTP index/search/trash, the repository seam, the Filament query) narrow
+- *   to the actor's grant-reachable CANDIDATE set in SQL before pagination — they HIDE
+- *   nodes with no grant-reachability but do NOT apply the exact deny-veto / inherit-
+- *   cutoff (deferred to the H.4 read-model). A deny-vetoed node inside a granted subtree
+- *   MAY still LIST; the deny is enforced on the per-ACTION path.
+- *
+- *   `GET shared` and per-node ACTIONS are EXACT (full AccessResolver): a nearer deny
+- *   revokes a row, an expired allow is excluded, and a show/mutation on a deny-vetoed
+- *   node is refused even though that node appears in the candidate listing.
+- *
+- * Filtering applies ONLY on a GrantAuthoritativeDriver (the standalone database driver)
+- * with the 'grants' feature ON; every other driver keeps the listing OPEN.
++ * Repository candidate prefilters and exact HTTP visibility are separate seams.
++ * HTTP listings evaluate candidate pages through the batch ACL resolver and expose
++ * a signed cursor without totals, including for the cross-storage shared endpoint.
+  */
+ beforeEach(function (): void {
+     StorageFacade::fake('local');
+@@ -185,32 +170,24 @@ it('returns an empty bounded page for an unauthenticated shared request', functi
+     $this->getJson('api/vaulter/shared')
+         ->assertOk()
+         ->assertJsonCount(0, 'data')
+-        // A page envelope (page/total meta), NOT a cursor envelope.
+-        ->assertJsonPath('meta.current_page', 1)
+-        ->assertJsonPath('meta.total', 0);
++        // No actor means no continuation cursor or hidden-node total.
++        ->assertJsonPath('meta.next_cursor', null)
++        ->assertJsonMissingPath('meta.total');
+ });
+ 
+-it('wraps the shared view in a LengthAwarePaginator (bounded page envelope)', function (): void {
++it('wraps the shared view in an exact cursor envelope', function (): void {
+     $storage = AccessTestHelpers::storage();
+     $folder = AccessTestHelpers::folder($storage, null, 'shared-one');
+     AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+ 
+-    // The HTTP envelope carries page meta (current_page/total/per_page), the signature
+-    // of a LengthAwarePaginator — not a cursor (next_cursor) it cannot honestly back.
+     $this->getJson('api/vaulter/shared')
+         ->assertOk()
+-        ->assertJsonPath('meta.current_page', 1)
+-        ->assertJsonPath('meta.total', 1)
++        ->assertJsonPath('meta.next_cursor', null)
++        ->assertJsonMissingPath('meta.total')
+         ->assertJsonCount(1, 'data');
+ });
+ 
+-// ── the GET shared endpoint is a DOCUMENTED offset-natured contract (D16 / F-P4.2-04):
+-// `filterSharedWith()` re-resolves each candidate EXACTLY, in-memory, and cannot honestly
+-// back a keyset cursor, so the fix here is NOT a fake cursor over that in-memory pass — it
+-// is (a) the page envelope, asserted above, and (b) an explicit contract test + rest-api.md
+-// note (docs/reference/rest-api.md § "Shared with me") so a client never mis-assumes cursor
+-// semantics on this one endpoint.
+-it('GET shared never advertises a cursor envelope — the offset contract is explicit (F-P4.2-04)', function (): void {
++it('GET shared advertises a cursor envelope without offset totals', function (): void {
+     $storage = AccessTestHelpers::storage();
+     $folder = AccessTestHelpers::folder($storage, null, 'offset-contract');
+     AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+@@ -218,9 +195,9 @@ it('GET shared never advertises a cursor envelope — the offset contract is exp
+     $response = $this->getJson('api/vaulter/shared')->assertOk();
+ 
+     expect($response->json('meta'))
+-        ->not->toHaveKey('next_cursor')
+-        ->not->toHaveKey('prev_cursor')
+-        ->toHaveKeys(['current_page', 'last_page', 'total']);
++        ->toHaveKeys(['next_cursor', 'prev_cursor', 'per_page', 'scanned'])
++        ->not->toHaveKey('total')
++        ->not->toHaveKey('current_page');
+ });
+ 
+ // ── 6. The public repository seam: queryForUser + constrainToAccessible.
+@@ -433,11 +410,7 @@ it('returns the shared view as a paginated envelope from the controller', functi
+         scope: GrantScope::Item,
+     );
+ 
+-    // The shared collection the repository hands the controller is non-empty and the
+-    // HTTP envelope is a LengthAwarePaginator (page meta present).
+-    expect(LengthAwarePaginator::resolveCurrentPage())->toBe(1);
+-
+     $this->getJson('api/vaulter/shared')
+         ->assertOk()
+-        ->assertJsonStructure(['data', 'meta' => ['current_page', 'per_page', 'total']]);
++        ->assertJsonStructure(['data', 'meta' => ['next_cursor', 'per_page', 'scanned']]);
+ });
+diff --git a/packages/core/tests/Arch/PublicApiSnapshotTest.php b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+index f039bc9..36e078f 100644
+--- a/packages/core/tests/Arch/PublicApiSnapshotTest.php
++++ b/packages/core/tests/Arch/PublicApiSnapshotTest.php
+@@ -2,6 +2,10 @@
+ 
+ declare(strict_types=1);
+ 
++use Vaulter\Access\AccessResolver;
++use Vaulter\Access\AclFolder;
++use Vaulter\Access\ExactListing;
++use Vaulter\Data\Drive\NodePage;
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Exceptions\Contracts\ProblemException;
+ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+@@ -279,6 +283,9 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
+     expect($contracts)->not->toBe([]);
+ 
+     $blocks = array_map('vaulterSnapshotInterface', $contracts);
++    foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
++        $blocks[] = vaulterSnapshotInterface($class);
++    }
+     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
+     $blocks[] = vaulterSnapshotInterface(Config::class);
+     $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
+diff --git a/packages/core/tests/Arch/__snapshots__/public-api.txt b/packages/core/tests/Arch/__snapshots__/public-api.txt
+index 4108362..67c4917 100644
+--- a/packages/core/tests/Arch/__snapshots__/public-api.txt
++++ b/packages/core/tests/Arch/__snapshots__/public-api.txt
+@@ -124,6 +124,33 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
+   isAllowed(string $url): void
+   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
+ 
++Vaulter\Access\AccessResolver
++  __construct(\Vaulter\Access\HostRoleDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\StorageReadRepository $storages)
++  abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
++  can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
++  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Storage $storage): bool
++  effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
++  evaluateMany(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $nodes): array
++  explain(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\AccessExplanation
++  filterSharedWith(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $candidates): array
++  sharedNodeIds(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
++
++Vaulter\Access\AclFolder
++  applyOwn(\Vaulter\Access\ValueObjects\AclMask $inherited, int $ownAllow, int $ownDeny, ?\Vaulter\Enums\Access\GrantLevel $ownLevel): \Vaulter\Access\ValueObjects\AclMask
++  foldChain(array $depths): \Vaulter\Access\ValueObjects\AclMask
++
++Vaulter\Access\ExactListing
++  __construct(\Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
++  grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
++  page(?\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
++
++Vaulter\Data\Drive\NodePage
++  __construct(array $items, ?string $nextCursor, int $scanned)
++  count(): int
++  getIterator(): \Traversable
++  hasMore(): bool
++  jsonSerialize(): array
++
+ Vaulter\Database\VaulterDatabase
+   __construct(\Illuminate\Database\DatabaseManager $db)
+   advisoryLock(string $key): void
+@@ -174,6 +201,7 @@ Vaulter\Support\Config
+   idStrategies(): array
+   idStrategy(): string
+   idType(): string
++  listingScanBudget(): int
+   maxActiveUploadSessions(): int
+   maxDocumentSizeKb(): int
+   maxDocumentVersions(): int
+diff --git a/packages/drive/src/Http/Controllers/NodeController.php b/packages/drive/src/Http/Controllers/NodeController.php
+index 3cfafc0..cc2eeb4 100644
+--- a/packages/drive/src/Http/Controllers/NodeController.php
++++ b/packages/drive/src/Http/Controllers/NodeController.php
+@@ -10,8 +10,8 @@ use Illuminate\Http\JsonResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+ use Illuminate\Http\Response;
+-use Illuminate\Pagination\LengthAwarePaginator;
+ use Vaulter\Access\AccessResolver;
++use Vaulter\Access\ExactListing;
+ use Vaulter\Contracts\Drive\DriveHandle;
+ use Vaulter\Drive\Http\Requests\CopyNodeRequest;
+ use Vaulter\Drive\Http\Requests\CreateFolderRequest;
+@@ -27,6 +27,7 @@ use Vaulter\Models\Drive\Node;
+ use Vaulter\Models\Drive\Storage;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Repositories\Drive\StorageReadRepository;
++use Vaulter\Support\Config;
+ use Vaulter\VaulterManager;
+ 
+ /**
+@@ -42,18 +43,9 @@ use Vaulter\VaulterManager;
+  * EXACTLY (deny-veto + inherit-cutoff applied); a denial 403s via
+  * PermissionDeniedException.
+  *
+- * LISTINGS (index/search/trash) follow a CANDIDATE-SET semantic (P1 #3): the query is
+- * narrowed to the actor's grant-reachable candidate set in SQL BEFORE pagination
+- * (constrainToAccessible), so nodes with no grant-reachability — the common
+- * "inaccessible" / "not shared with me" case — are hidden. This narrowing is a
+- * deliberate SUPERSET that does NOT apply the exact deny-veto / inherit-cutoff in the
+- * listing SQL (a node a nearer deny revokes can still list); that exact listing
+- * suppression is DEFERRED to the H.4 materialised effective-grants read-model. The
+- * narrowing is in the QUERY, never a post-fetch page filter — a post-filter that
+- * empties a cursor page makes nextCursor() null and strands later authorized rows.
+- * This matches the Filament table (also candidate-SQL). The cross-storage "shared with
+- * me" view re-resolves each candidate EXACTLY (bounded set). For the open drivers
+- * (gate/spatie/azgard/null) grant-filtering does not apply and listings stay OPEN.
++ * Listings scan ordered candidates through the same ACL resolver as actions.
++ * The signed cursor advances after the last inspected candidate, including denied
++ * nodes, so a bounded empty page still permits reaching later visible nodes.
+  */
+ final class NodeController extends Controller
+ {
+@@ -62,22 +54,10 @@ final class NodeController extends Controller
+         private readonly NodeReadRepository $nodes,
+         private readonly StorageReadRepository $storages,
+         private readonly AccessResolver $access,
++        private readonly ExactListing $listing,
+     ) {}
+ 
+-    /**
+-     * List the direct children of a folder (or the storage root when no parent is
+-     * given), cursor-paginated for large folders.
+-     *
+-     * Access-aware narrowing (P1 #3): when grant-filtering applies the children query
+-     * is constrained to the actor's grant-reachable CANDIDATE set BEFORE pagination,
+-     * so a folder the actor has no grant-reachability to yields zero candidate children
+-     * and never leaks. The narrowing is a SUPERSET (see the controller docblock): the
+-     * exact deny-veto suppression in listings is deferred to the H.4 read-model, while
+-     * per-ACTION authorization (show/mutations) stays exact via the AccessResolver.
+-     * Pushing the narrowing into the SQL — not post-filtering the fetched page — keeps
+-     * the cursor honest: a post-filter that empties a page makes nextCursor() null and
+-     * silently strands the rest of the listing.
+-     */
++    /** List visible direct children using a signed cursor. */
+     public function index(Request $request, Storage $storage): AnonymousResourceCollection
+     {
+         $parent = $request->filled('parent_id')
+@@ -86,54 +66,24 @@ final class NodeController extends Controller
+ 
+         $this->guard($request, Ability::View, $parent);
+ 
+-        $children = $this->narrowToAccessible($request, $this->nodes->children(storage: $storage, parent: $parent))
+-            ->cursorPaginate(perPage: $this->perPage($request))
+-            ->withQueryString();
+-
+-        return NodeResource::collection($children);
++        return $this->listingResponse($request,
++            $this->nodes->children(storage: $storage, parent: $parent),
++            [['column' => 'position', 'direction' => 'asc'], ['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']],
++            "children:{$storage->id}:{$parent->id}",
++        );
+     }
+ 
+-    /**
+-     * The "shared with me" view (§2.6 / H.2): the nodes the actor holds a live
+-     * allow-grant on, re-resolved through the full algorithm so a nearer deny that
+-     * revokes a row excludes it (the EXACT gate over a bounded candidate set). Cross-
+-     * storage by nature — the subject index is not storage-bound. An unauthenticated
+-     * request sees nothing.
+-     *
+-     * BOUNDED (P1 #3 / finding G): the set is cross-storage and unbounded, and the
+-     * exact re-resolution returns a post-filter Collection that cannot cursor-paginate
+-     * cleanly. So the resolved collection is wrapped in a LengthAwarePaginator at the
+-     * same per_page as the sibling listings — a simple page envelope (page/total),
+-     * NOT a cursor envelope it cannot honestly back.
+-     */
++    /** List visible nodes with a live direct allow-grant across storages. */
+     public function shared(Request $request): AnonymousResourceCollection
+     {
+         $actor = $this->authorizable($request);
++        $model = Config::nodeModel();
++        $query = $model::query()->whereNull('trashed_at')->whereKey($actor === null ? [] : $this->access->sharedNodeIds($actor));
+ 
+-        if ($actor === null) {
+-            return NodeResource::collection(new LengthAwarePaginator(
+-                items: [],
+-                total: 0,
+-                perPage: $this->perPage($request),
+-            ));
+-        }
+-
+-        $shared = $this->nodes->sharedWith($actor);
+-        $perPage = $this->perPage($request);
+-        $page = LengthAwarePaginator::resolveCurrentPage();
+-
+-        $paginated = new LengthAwarePaginator(
+-            items: $shared->forPage(page: $page, perPage: $perPage)->values(),
+-            total: $shared->count(),
+-            perPage: $perPage,
+-            currentPage: $page,
+-            options: [
+-                'path' => LengthAwarePaginator::resolveCurrentPath(),
+-                'pageName' => 'page',
+-            ],
++        return $this->listingResponse($request, $query,
++            [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']],
++            'shared:*:',
+         );
+-
+-        return NodeResource::collection($paginated);
+     }
+ 
+     /**
+@@ -149,7 +99,11 @@ final class NodeController extends Controller
+             ->withBreadcrumb($this->nodes->breadcrumb($node));
+ 
+         if ($node->kind === NodeKind::Folder) {
+-            $resource->withChildren($this->nodes->children(storage: $storage, parent: $node)->get());
++            $children = $this->nodes->children(storage: $storage, parent: $node)->get();
++            $actor = $this->authorizable($request);
++            $sets = $actor === null ? [] : $this->access->evaluateMany($actor, $children);
++            $resource->withChildren($children->filter(fn (Node $child): bool => isset($sets[(string) $child->id]) && $sets[(string) $child->id]->allows(Ability::View))->values())
++                ->withChildrenGrantSets($sets);
+         }
+ 
+         return $resource;
+@@ -298,37 +252,24 @@ final class NodeController extends Controller
+         return response()->noContent();
+     }
+ 
+-    /**
+-     * Name search within the storage tree (live nodes only), cursor-paginated. The
+-     * results are narrowed to the actor's grant-reachable candidate set BEFORE
+-     * pagination (P1 #3) — same candidate-SQL semantic as index(), so a match the
+-     * actor has no grant-reachability to never leaks and the cursor stays honest.
+-     */
++    /** Search live nodes with exact visibility and a signed cursor. */
+     public function search(Request $request, Storage $storage): AnonymousResourceCollection
+     {
+         $term = $request->string('q')->toString();
+ 
+-        $results = $this->narrowToAccessible($request, $this->nodes->search(storage: $storage, term: $term))
+-            ->cursorPaginate(perPage: $this->perPage($request))
+-            ->withQueryString();
+-
+-        return NodeResource::collection($results);
++        return $this->listingResponse($request, $this->nodes->search(storage: $storage, term: $term),
++            [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']],
++            "search:{$storage->id}:".sha1($term),
++        );
+     }
+ 
+-    /**
+-     * The trash view: trashed (not yet force-deleted) nodes for the storage, narrowed
+-     * to the actor's grant-reachable candidate set BEFORE pagination (P1 #3 — same
+-     * candidate-SQL semantic as index(), cursor stays honest). The candidate set is
+-     * grant-reachability, NOT a per-row Restore check: per-ACTION authorization
+-     * (restore/forceDelete) stays exact via the AccessResolver on the mutation.
+-     */
++    /** List trashed nodes with exact visibility and a signed cursor. */
+     public function trashed(Request $request, Storage $storage): AnonymousResourceCollection
+     {
+-        $results = $this->narrowToAccessible($request, $this->nodes->trashed(storage: $storage))
+-            ->cursorPaginate(perPage: $this->perPage($request))
+-            ->withQueryString();
+-
+-        return NodeResource::collection($results);
++        return $this->listingResponse($request, $this->nodes->trashed(storage: $storage),
++            [['column' => 'trashed_at', 'direction' => 'desc'], ['column' => 'id', 'direction' => 'desc']],
++            "trashed:{$storage->id}:",
++        );
+     }
+ 
+     private function driveFor(Storage $storage): DriveHandle
+@@ -417,29 +358,22 @@ final class NodeController extends Controller
+     }
+ 
+     /**
+-     * Narrow a listing query to the actor's grant-reachable candidate set BEFORE it is
+-     * paginated (P1 #3) — the access-aware listing seam. A no-op when grant-filtering
+-     * does not apply (open drivers); an empty result for an unauthenticated request (no
+-     * actor ⇒ no grant ⇒ no candidate). The narrowing lives in the SQL so the cursor
+-     * never strands later rows, and the per-row exact gate stays on the per-ACTION path
+-     * (show/mutations through the AccessResolver), not on the listing.
+-     *
+-     * @param  Builder<Node> $query
+-     * @return Builder<Node>
++     * @param Builder<Node>                                      $query
++     * @param list<array{column:string, direction:'asc'|'desc'}> $order
+      */
+-    private function narrowToAccessible(Request $request, Builder $query): Builder
++    private function listingResponse(Request $request, Builder $query, array $order, string $context): AnonymousResourceCollection
+     {
+-        if (!$this->nodes->grantFilteringApplies()) {
+-            return $query;
+-        }
+-
+-        $actor = $this->authorizable($request);
+-
+-        if ($actor === null) {
+-            return $query->whereRaw('1 = 0');
+-        }
++        $page = $this->listing->page(
++            actor: $this->authorizable($request), candidates: $query, order: $order,
++            perPage: $this->perPage($request), cursor: $request->filled('cursor') ? $request->string('cursor')->toString() : null,
++            context: $context,
++        );
++        $resources = array_map(fn (Node $node): NodeResource => NodeResource::make($node)->withGrantSet($this->listing->grantSetFor($node)), $page->items);
+ 
+-        return $this->nodes->constrainToAccessible($query, $actor);
++        return NodeResource::collection($resources)->additional(['meta' => [
++            'path' => $request->url(), 'per_page' => $this->perPage($request),
++            'next_cursor' => $page->nextCursor, 'prev_cursor' => null, 'scanned' => $page->scanned,
++        ]]);
+     }
+ 
+     /**
+diff --git a/packages/filament/src/Resources/NodeResource.php b/packages/filament/src/Resources/NodeResource.php
+index 39281d2..97aff5b 100644
+--- a/packages/filament/src/Resources/NodeResource.php
++++ b/packages/filament/src/Resources/NodeResource.php
+@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
+ use Filament\Schemas\Schema;
+ use Filament\Tables\Columns\IconColumn;
+ use Filament\Tables\Columns\TextColumn;
++use Filament\Tables\Enums\PaginationMode;
+ use Filament\Tables\Filters\SelectFilter;
+ use Filament\Tables\Filters\TernaryFilter;
+ use Filament\Tables\Table;
+@@ -39,14 +40,8 @@ use Vaulter\Support\Config;
+  * Drive Actions (rename/move/trash/restore/forceDelete) through the DriveContext —
+  * NEVER a direct Eloquent write.
+  *
+- * Authorization is the core AccessResolver. The TABLE scopes to the acting admin's
+- * grant-reachable CANDIDATE set (P1 #3): {@see getEloquentQuery()} narrows the query
+- * through {@see NodeReadRepository::constrainToAccessible()}, the same candidate-SQL
+- * the API listing uses — so the two surfaces are CONSISTENT. That narrowing is a
+- * deliberate SUPERSET: it hides nodes the admin has no grant-reachability to, but does
+- * NOT apply the exact deny-veto / inherit-cutoff in the listing SQL (a node a nearer
+- * deny revokes can still appear in the table); that exact listing suppression is
+- * DEFERRED to the H.4 materialised effective-grants read-model.
++ * Table candidates use the grant-authoritative SQL prefilter, then ListNodes applies
++ * exact batch View evaluation before display. Simple pagination avoids leaking totals.
+  *
+  * Per-ROW ACTIONS remain EXACTLY gated: each row action is gated by the acting admin's
+  * {@see Ability} on that node through the AccessResolver (Edit→rename, Move→move,
+@@ -86,6 +81,7 @@ final class NodeResource extends Resource
+     public static function table(Table $table): Table
+     {
+         return $table
++            ->paginationMode(PaginationMode::Simple)
+             ->columns([
+                 IconColumn::make('kind')
+                     ->label('')
+@@ -195,15 +191,7 @@ final class NodeResource extends Resource
+         // hard-deleted (deleted_at) rows hidden.
+         $query = parent::getEloquentQuery();
+ 
+-        // Access-aware listing (P1 #3): narrow the table to the acting admin's
+-        // grant-reachable CANDIDATE set when grant-filtering applies (a grant-
+-        // authoritative driver + 'grants' feature); a no-op for the open drivers. The
+-        // candidate set is a SUPERSET — it hides nodes with no grant-reachability but
+-        // does NOT apply the exact deny-veto in the listing SQL (deferred to the H.4
+-        // read-model); per-ROW ACTIONS stay exactly gated by the AccessResolver. No
+-        // acting user ⇒ an empty table (a panel never lists nodes for nobody). The
+-        // repository constrains WITHOUT a trashed-state filter, so the Trashed filter
+-        // still flips between live and trashed within the accessible set.
++        // SQL narrows candidates only; ListNodes applies the exact ACL page filter.
+         $actor = PanelActor::current();
+ 
+         if ($actor === null) {
+diff --git a/packages/filament/src/Resources/NodeResource/Pages/ListNodes.php b/packages/filament/src/Resources/NodeResource/Pages/ListNodes.php
+index b628528..9c56fae 100644
+--- a/packages/filament/src/Resources/NodeResource/Pages/ListNodes.php
++++ b/packages/filament/src/Resources/NodeResource/Pages/ListNodes.php
+@@ -5,9 +5,44 @@ declare(strict_types=1);
+ namespace Vaulter\Filament\Resources\NodeResource\Pages;
+ 
+ use Filament\Resources\Pages\ListRecords;
++use Illuminate\Contracts\Pagination\CursorPaginator;
++use Illuminate\Contracts\Pagination\Paginator;
++use Illuminate\Pagination\AbstractCursorPaginator;
++use Illuminate\Pagination\AbstractPaginator;
++use Illuminate\Support\Collection;
++use Vaulter\Access\AccessResolver;
++use Vaulter\Enums\Access\Ability;
+ use Vaulter\Filament\Resources\NodeResource;
++use Vaulter\Filament\Support\PanelActor;
++use Vaulter\Models\Drive\Node;
+ 
+ final class ListNodes extends ListRecords
+ {
+     protected static string $resource = NodeResource::class;
++
++    /** @return Collection<array-key, Node>|Paginator<array-key, mixed>|CursorPaginator<array-key, mixed> */
++    public function getTableRecords(): Collection|Paginator|CursorPaginator
++    {
++        $records = parent::getTableRecords();
++        if (!$records instanceof Collection && !$records instanceof AbstractPaginator && !$records instanceof AbstractCursorPaginator) {
++            throw new \LogicException('Node table requires a collection-backed paginator.');
++        }
++        $collection = $records instanceof Collection ? $records : $records->getCollection();
++        $nodes = [];
++        foreach ($collection as $record) {
++            if (!$record instanceof Node) {
++                throw new \LogicException('Node table contains an invalid record.');
++            }
++            $nodes[] = $record;
++        }
++        $actor = PanelActor::current();
++        $sets = $actor === null ? [] : app(AccessResolver::class)->evaluateMany($actor, $nodes);
++        $visible = $collection->filter(fn ($node): bool => $node instanceof Node && isset($sets[(string) $node->id]) && $sets[(string) $node->id]->allows(Ability::View));
++        if ($records instanceof Collection) {
++            return $this->cachedTableRecords = $visible;
++        }
++        $records->setCollection($visible);
++
++        return $records;
++    }
+ }
+diff --git a/packages/core/src/Access/AclFolder.php b/packages/core/src/Access/AclFolder.php
+new file mode 100644
+index 0000000..5137e7b
+--- /dev/null
++++ b/packages/core/src/Access/AclFolder.php
+@@ -0,0 +1,36 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Vaulter\Access;
++
++use Vaulter\Access\ValueObjects\AclMask;
++use Vaulter\Enums\Access\GrantLevel;
++
++final class AclFolder
++{
++    /** @param list<array{allow:int, deny:int, level:?GrantLevel}> $depths */
++    public function foldChain(array $depths): AclMask
++    {
++        $allowed = 0;
++        $denied = 0;
++        $level = null;
++        foreach ($depths as $depth) {
++            // Same-depth allow cannot pierce a deny: merge it only after the veto.
++            $denied |= $depth['deny'] & ~$allowed;
++            $allowed |= $depth['allow'];
++            $level = $level === null ? $depth['level'] : ($depth['level'] === null ? $level : $level->max($depth['level']));
++        }
++
++        return new AclMask(allowed: $allowed, denied: $denied, level: $level);
++    }
++
++    public function applyOwn(AclMask $inherited, int $ownAllow, int $ownDeny, ?GrantLevel $ownLevel): AclMask
++    {
++        return new AclMask(
++            allowed: $ownAllow | $inherited->allowed,
++            denied: $ownDeny | ($inherited->denied & ~$ownAllow),
++            level: $ownLevel === null ? $inherited->level : ($inherited->level === null ? $ownLevel : $ownLevel->max($inherited->level)),
++        );
++    }
++}
+diff --git a/packages/core/src/Access/ExactListing.php b/packages/core/src/Access/ExactListing.php
+new file mode 100644
+index 0000000..3fcb731
+--- /dev/null
++++ b/packages/core/src/Access/ExactListing.php
+@@ -0,0 +1,130 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Vaulter\Access;
++
++use Illuminate\Contracts\Auth\Access\Authorizable;
++use Illuminate\Contracts\Encryption\Encrypter;
++use Illuminate\Database\Eloquent\Builder;
++use Vaulter\Access\ValueObjects\GrantSet;
++use Vaulter\Data\Drive\NodePage;
++use Vaulter\Database\VaulterDatabase;
++use Vaulter\Enums\Access\Ability;
++use Vaulter\Exceptions\Nodes\InvalidCursorException;
++use Vaulter\Models\Drive\Node;
++use Vaulter\Support\Config;
++use Vaulter\Support\Identity;
++use WeakMap;
++
++final readonly class ExactListing
++{
++    /** @var WeakMap<Node, GrantSet> */
++    private WeakMap $grants;
++
++    public function __construct(private AccessResolver $access, private VaulterDatabase $database, private Encrypter $encrypter)
++    {
++        $this->grants = new WeakMap;
++    }
++
++    public function grantSetFor(Node $node): GrantSet
++    {
++        return $this->grants[$node] ?? GrantSet::none();
++    }
++
++    /**
++     * @param Builder<Node>                                      $candidates
++     * @param list<array{column:string, direction:'asc'|'desc'}> $order
++     */
++    public function page(?Authorizable $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage
++    {
++        if ($actor === null) {
++            return new NodePage(items: [], nextCursor: null, scanned: 0);
++        }
++        if ($candidates->getConnection() !== $this->database->connection()) {
++            throw new \LogicException('Listing candidates must use the Vaulter connection.');
++        }
++        $last = $cursor === null ? null : $this->decode($cursor, $context, $order);
++        $visible = [];
++        $scanned = 0;
++        $budget = Config::listingScanBudget();
++        while (count($visible) < $perPage && $scanned < $budget) {
++            $query = (clone $candidates)->reorder();
++            foreach ($order as $sort) {
++                $query->orderBy($sort['column'], $sort['direction']);
++            }
++            if ($last !== null) {
++                $query->where(function (Builder $outer) use ($order, $last): void {
++                    foreach ($order as $i => $sort) {
++                        $outer->orWhere(function (Builder $branch) use ($order, $last, $i, $sort): void {
++                            for ($j = 0; $j < $i; $j++) {
++                                $branch->where($order[$j]['column'], '=', $last[$j]);
++                            }
++                            $branch->where($sort['column'], $sort['direction'] === 'asc' ? '>' : '<', $last[$i]);
++                        });
++                    }
++                });
++            }
++            $batch = $query->limit(min($perPage * 2, $budget - $scanned))->get();
++            if ($batch->isEmpty()) {
++                $last = null;
++                break;
++            }
++            $sets = $this->access->evaluateMany($actor, $batch);
++            foreach ($batch as $node) {
++                $scanned++;
++                $last = array_map(static fn (array $sort) => $node->getRawOriginal($sort['column']), $order);
++                $set = $sets[Identity::stringify($node->id)];
++                if ($set->allows(Ability::View)) {
++                    $visible[] = $node;
++                    $this->grants[$node] = $set;
++                    if (count($visible) === $perPage) {
++                        break;
++                    }
++                }
++            }
++        }
++
++        return new NodePage(items: $visible, nextCursor: $last === null ? null : $this->encode($last, $context, $order), scanned: $scanned);
++    }
++
++    /** @param list<mixed> $keys
++     * @param list<array{column:string, direction:'asc'|'desc'}> $order
++     */
++    private function encode(array $keys, string $context, array $order): string
++    {
++        $payload = $this->base64url(json_encode(['c' => $context, 'k' => $keys, 'o' => $order], JSON_THROW_ON_ERROR));
++
++        return $payload.'.'.$this->base64url(hash_hmac('sha256', $payload, $this->encrypter->getKey(), true));
++    }
++
++    /** @param list<array{column:string, direction:'asc'|'desc'}> $order
++     * @return list<int|string>
++     */
++    private function decode(string $cursor, string $context, array $order): array
++    {
++        $parts = explode('.', $cursor);
++        if (count($parts) !== 2 || !hash_equals($this->base64url(hash_hmac('sha256', $parts[0], $this->encrypter->getKey(), true)), $parts[1])) {
++            throw InvalidCursorException::invalid();
++        }
++        $json = base64_decode(strtr($parts[0], '-_', '+/'), true);
++        $data = $json === false ? null : json_decode($json, true);
++        if (!is_array($data) || ($data['c'] ?? null) !== $context || ($data['o'] ?? null) !== $order || !isset($data['k']) || !is_array($data['k']) || !array_is_list($data['k']) || count($data['k']) !== count($order)) {
++            throw InvalidCursorException::invalid();
++        }
++        $keys = [];
++        foreach ($data['k'] as $key) {
++            if (!is_int($key) && !is_string($key)) {
++                throw InvalidCursorException::invalid();
++            }
++            $keys[] = $key;
++        }
++
++        return $keys;
++    }
++
++    private function base64url(string $value): string
++    {
++        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
++    }
++}
+diff --git a/packages/core/src/Access/ValueObjects/AclMask.php b/packages/core/src/Access/ValueObjects/AclMask.php
+new file mode 100644
+index 0000000..38e87e4
+--- /dev/null
++++ b/packages/core/src/Access/ValueObjects/AclMask.php
+@@ -0,0 +1,17 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Vaulter\Access\ValueObjects;
++
++use Vaulter\Enums\Access\GrantLevel;
++
++final readonly class AclMask
++{
++    public function __construct(public int $allowed, public int $denied, public ?GrantLevel $level) {}
++
++    public static function none(): self
++    {
++        return new self(allowed: 0, denied: 0, level: null);
++    }
++}
+diff --git a/packages/core/src/Data/Drive/NodePage.php b/packages/core/src/Data/Drive/NodePage.php
+new file mode 100644
+index 0000000..c0754ac
+--- /dev/null
++++ b/packages/core/src/Data/Drive/NodePage.php
+@@ -0,0 +1,41 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Vaulter\Data\Drive;
++
++use ArrayIterator;
++use Countable;
++use IteratorAggregate;
++use JsonSerializable;
++use Traversable;
++use Vaulter\Models\Drive\Node;
++
++/** @implements IteratorAggregate<int, Node> */
++final readonly class NodePage implements Countable, IteratorAggregate, JsonSerializable
++{
++    /** @param list<Node> $items */
++    public function __construct(public array $items, public ?string $nextCursor, public int $scanned) {}
++
++    public function hasMore(): bool
++    {
++        return $this->nextCursor !== null;
++    }
++
++    /** @return Traversable<int, Node> */
++    public function getIterator(): Traversable
++    {
++        return new ArrayIterator($this->items);
++    }
++
++    public function count(): int
++    {
++        return count($this->items);
++    }
++
++    /** @return array{items:list<Node>, nextCursor:?string, scanned:int} */
++    public function jsonSerialize(): array
++    {
++        return ['items' => $this->items, 'nextCursor' => $this->nextCursor, 'scanned' => $this->scanned];
++    }
++}
+diff --git a/packages/core/src/Exceptions/Nodes/InvalidCursorException.php b/packages/core/src/Exceptions/Nodes/InvalidCursorException.php
+new file mode 100644
+index 0000000..bf7961f
+--- /dev/null
++++ b/packages/core/src/Exceptions/Nodes/InvalidCursorException.php
+@@ -0,0 +1,32 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Vaulter\Exceptions\Nodes;
++
++use Vaulter\Exceptions\Contracts\ProblemException;
++use Vaulter\Exceptions\VaulterException;
++
++final class InvalidCursorException extends VaulterException implements ProblemException
++{
++    public static function invalid(): self
++    {
++        return new self('[Vaulter] Invalid listing cursor. Fix: restart the listing without a cursor. Docs: '.self::docs('invalid-cursor'));
++    }
++
++    public function problemCode(): string
++    {
++        return 'validation_failed';
++    }
++
++    public function httpStatus(): int
++    {
++        return 422;
++    }
++
++    /** @return array<string, mixed> */
++    protected function renderExtras(): array
++    {
++        return ['errors' => ['cursor' => [$this->getMessage()]]];
++    }
++}
+diff --git a/packages/core/tests/Access/EvaluateManyEquivalenceTest.php b/packages/core/tests/Access/EvaluateManyEquivalenceTest.php
+new file mode 100644
+index 0000000..4bc961e
+--- /dev/null
++++ b/packages/core/tests/Access/EvaluateManyEquivalenceTest.php
+@@ -0,0 +1,141 @@
++<?php
++
++declare(strict_types=1);
++
++use Vaulter\Access\AccessResolver;
++use Vaulter\Access\HostRoleDriverManager;
++use Vaulter\Access\ValueObjects\Decision;
++use Vaulter\Access\ValueObjects\Subject;
++use Vaulter\Contracts\Access\HostRoleDriver;
++use Vaulter\Enums\Access\Effect;
++use Vaulter\Enums\Access\GrantLevel;
++use Vaulter\Enums\Access\GrantScope;
++use Vaulter\Tests\Access\AccessTestHelpers;
++use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
++
++it('matches individual ACL resolution on 500 seeded random trees', function (): void {
++    $seed = 20261002;
++    mt_srand($seed);
++    $actor = AccessTestHelpers::user();
++    $storage = AccessTestHelpers::storage();
++    $levels = GrantLevel::cases();
++
++    for ($tree = 0; $tree < 500; $tree++) {
++        $subjects = array_map(static fn (int $id): Subject => Subject::ofModel(AccessTestHelpers::user($id)), range(1, mt_rand(1, 3)));
++        $driver = Mockery::mock(HostRoleDriver::class);
++        $driver->shouldReceive('subjectsFor')->andReturn($subjects);
++        $driver->shouldReceive('override')->andReturn(null);
++        $driver->shouldReceive('resolve')->andReturn(null);
++        app()->instance(HostRoleDriver::class, $driver);
++        config()->set('vaulter.permission_drivers.equivalence', HostRoleDriver::class);
++        app()->forgetInstance(HostRoleDriverManager::class);
++        app()->forgetInstance(AccessResolver::class);
++        config()->set('vaulter.drivers.permission', 'equivalence');
++        $nodes = [];
++        $depths = [];
++        $count = mt_rand(8, 15);
++
++        for ($i = 0; $i < $count; $i++) {
++            $parents = array_keys(array_filter($depths, static fn (int $depth): bool => $depth < 5));
++            $parentIndex = $parents === [] || mt_rand(0, 3) === 0 ? null : $parents[mt_rand(0, count($parents) - 1)];
++            $node = AccessTestHelpers::folder($storage, $parentIndex === null ? null : $nodes[$parentIndex], "tree-{$tree}-{$i}", mt_rand(0, 4) !== 0);
++            $nodes[] = $node;
++            $depths[] = $parentIndex === null ? 1 : $depths[$parentIndex] + 1;
++
++            $seen = [];
++            for ($j = 0, $grants = mt_rand(0, 4); $j < $grants; $j++) {
++                $effect = mt_rand(0, 1) === 0 ? Effect::Allow : Effect::Deny;
++                $scope = mt_rand(0, 1) === 0 ? GrantScope::Item : GrantScope::Subtree;
++                $subjectId = mt_rand(1, 3);
++                $key = $effect->value.':'.$scope->value.':'.$subjectId;
++                if (isset($seen[$key])) {
++                    continue;
++                }
++                $seen[$key] = true;
++                AccessTestHelpers::grant(
++                    $node,
++                    $levels[mt_rand(0, count($levels) - 1)],
++                    effect: $effect,
++                    scope: $scope,
++                    permissions: mt_rand(0, 31),
++                    subjectId: $subjectId,
++                    expiresAt: mt_rand(0, 4) === 0 ? now()->subMinute() : null,
++                );
++            }
++        }
++
++        $resolver = app(AccessResolver::class);
++        $sets = $resolver->evaluateMany($actor, $nodes);
++        foreach ($nodes as $node) {
++            expect((array) $sets[(string) $node->id])->toBe((array) $resolver->effectiveGrants($actor, $node), "seed={$seed}, tree={$tree}, node={$node->id}");
++        }
++    }
++});
++
++it('preserves absolute overrides, empty subjects and role grants in batch', function (?Effect $override, ?GrantLevel $role, bool $subjects): void {
++    $storage = AccessTestHelpers::storage();
++    $nodes = [AccessTestHelpers::folder($storage, null, 'one'), AccessTestHelpers::folder($storage, null, 'two')];
++    AccessTestHelpers::grant($nodes[0], GrantLevel::Owner, effect: Effect::Deny);
++    $driver = new RoleStubDriver(roleLevel: $role, overrideEffect: $override, includeActor: $subjects);
++    app()->instance(HostRoleDriver::class, $driver);
++    config()->set('vaulter.permission_drivers.batch', HostRoleDriver::class);
++    config()->set('vaulter.drivers.permission', 'batch');
++    app()->forgetInstance(HostRoleDriverManager::class);
++    app()->forgetInstance(AccessResolver::class);
++    $resolver = app(AccessResolver::class);
++    $actor = AccessTestHelpers::user();
++    $batch = $resolver->evaluateMany($actor, $nodes);
++    foreach ($nodes as $node) {
++        expect((array) $batch[(string) $node->id])->toBe((array) $resolver->effectiveGrants($actor, $node));
++    }
++})->with([
++    'super allow' => [Effect::Allow, null, true],
++    'super deny' => [Effect::Deny, GrantLevel::Owner, true],
++    'empty subjects' => [null, GrantLevel::Owner, false],
++    'role and deny' => [null, GrantLevel::Owner, true],
++]);
++
++it('evaluates override and role once per storage and node owner and subjects once per batch', function (): void {
++    $storageA = AccessTestHelpers::storage();
++    $storageB = AccessTestHelpers::storage();
++    $nodes = [
++        AccessTestHelpers::folder($storageA, null, 'owner-a'),
++        AccessTestHelpers::folder($storageA, null, 'owner-b'),
++        AccessTestHelpers::folder($storageB, null, 'other-storage'),
++        AccessTestHelpers::folder($storageA, null, 'denied-owner'),
++    ];
++    foreach ($nodes as $i => $node) {
++        $node->forceFill(['owner_id' => $i === 3 ? '11' : '22'])->save();
++    }
++    $overrides = 0;
++    $roles = 0;
++    $subjectCalls = 0;
++    $actor = AccessTestHelpers::user();
++    $driver = Mockery::mock(HostRoleDriver::class);
++    $driver->shouldReceive('subjectsFor')->andReturnUsing(function () use ($actor, &$subjectCalls): array {
++        $subjectCalls++;
++
++        return [Subject::ofModel($actor)];
++    });
++    $driver->shouldReceive('override')->andReturnUsing(function ($actor, $scope) use (&$overrides): ?Effect {
++        $overrides++;
++
++        return (string) $scope->nodeOwner?->id === '11' ? Effect::Deny : null;
++    });
++    $driver->shouldReceive('resolve')->andReturnUsing(function () use (&$roles) {
++        $roles++;
++
++        return Decision::allow(GrantLevel::Reader);
++    });
++    app()->instance(HostRoleDriver::class, $driver);
++    config()->set('vaulter.permission_drivers.batch', HostRoleDriver::class);
++    config()->set('vaulter.drivers.permission', 'batch');
++    app()->forgetInstance(HostRoleDriverManager::class);
++    app()->forgetInstance(AccessResolver::class);
++    $resolver = app(AccessResolver::class);
++    $batch = $resolver->evaluateMany($actor, $nodes);
++    expect($overrides)->toBe(3)->and($roles)->toBe(2)->and($subjectCalls)->toBe(1);
++    foreach ($nodes as $node) {
++        expect((array) $batch[(string) $node->id])->toBe((array) $resolver->effectiveGrants($actor, $node));
++    }
++});
+diff --git a/packages/drive/tests/Feature/ExactListingTest.php b/packages/drive/tests/Feature/ExactListingTest.php
+new file mode 100644
+index 0000000..c5e04ed
+--- /dev/null
++++ b/packages/drive/tests/Feature/ExactListingTest.php
+@@ -0,0 +1,147 @@
++<?php
++
++declare(strict_types=1);
++
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Gate;
++use Vaulter\Access\ExactListing;
++use Vaulter\Enums\Access\Effect;
++use Vaulter\Enums\Access\GrantLevel;
++use Vaulter\Enums\Access\GrantScope;
++use Vaulter\Http\Resources\Drive\NodeResource;
++use Vaulter\Models\Drive\Node;
++use Vaulter\Tests\Access\AccessTestHelpers;
++
++beforeEach(function (): void {
++    config()->set('vaulter.drivers.permission', 'database');
++    $this->actor = AccessTestHelpers::user();
++    $this->actingAs($this->actor);
++    $this->storage = AccessTestHelpers::storage();
++    $this->folder = AccessTestHelpers::folder($this->storage, null, 'parent');
++    AccessTestHelpers::grant($this->folder, GrantLevel::Reader, scope: GrantScope::Subtree);
++    $this->base = 'api/vaulter/storages/'.$this->storage->id;
++});
++
++it('V09 reaches the 301st candidate across empty pages and hides denied nodes everywhere', function (): void {
++    config()->set('vaulter.listing.scan_budget', 100);
++    $hidden = [];
++    for ($i = 0; $i < 300; $i++) {
++        $child = AccessTestHelpers::folder($this->storage, $this->folder, sprintf('candidate-%04d', $i));
++        AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Deny);
++        $hidden[] = $child->id;
++    }
++    $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'candidate-0300');
++    $cursor = null;
++    $found = [];
++    $emptyPages = 0;
++    do {
++        $url = $this->base.'/nodes?'.http_build_query(['parent_id' => $this->folder->id, 'per_page' => 50, 'cursor' => $cursor]);
++        $response = $this->getJson($url)->assertOk()->assertJsonMissingPath('meta.total');
++        $data = $response->json('data');
++        $cursor = $response->json('meta.next_cursor');
++        if ($data === []) {
++            $emptyPages++;
++        }
++        $found = array_merge($found, array_column($data, 'id'));
++        expect($emptyPages)->toBeLessThan(10);
++    } while ($cursor !== null);
++    expect($emptyPages)->toBe(3)->and($found)->toBe([$visible->id]);
++    $this->getJson('api/vaulter/nodes/'.$this->folder->id)->assertOk()->assertJsonCount(1, 'data.children')->assertJsonPath('data.children.0.id', $visible->id);
++    config()->set('vaulter.listing.scan_budget', 1000);
++    $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id)->assertJsonMissingPath('meta.total');
++    Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now()]);
++    $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id)->assertJsonMissingPath('meta.total');
++});
++
++it('V22 enforces a child deny after the Gate role lane allows the workspace', function (): void {
++    config()->set('vaulter.drivers.permission', 'gate');
++    Gate::define('vaulter.view', fn (): bool => true);
++    $hidden = AccessTestHelpers::folder($this->storage, $this->folder, 'hidden');
++    $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
++    AccessTestHelpers::grant($hidden, GrantLevel::Reader, effect: Effect::Deny);
++    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id);
++});
++
++it('uses at most five Vaulter queries for 50 visible nodes including resource abilities', function (): void {
++    for ($i = 0; $i < 50; $i++) {
++        AccessTestHelpers::folder($this->storage, $this->folder, 'child-'.$i);
++    }
++    $listing = app(ExactListing::class);
++    $query = Node::query()->where('parent_id', $this->folder->id);
++    $queries = 0;
++    $counting = true;
++    DB::listen(function ($event) use (&$queries, &$counting): void {
++        if ($counting && $event->connectionName === 'testing') {
++            $queries++;
++        }
++    });
++    $page = $listing->page($this->actor, $query, [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']], 50, null, 'queries');
++    $request = Request::create('/');
++    $request->setUserResolver(fn () => $this->actor);
++    foreach ($page->items as $node) {
++        $data = NodeResource::make($node)->withGrantSet($listing->grantSetFor($node))->resolve($request);
++        expect($data['abilities']['view'])->toBeTrue();
++    }
++    $counting = false;
++    expect(count($page))->toBe(50)->and($queries)->toBeLessThanOrEqual(5);
++});
++
++it('rejects forged signatures and a cursor from another parent', function (): void {
++    AccessTestHelpers::folder($this->storage, $this->folder, 'a');
++    AccessTestHelpers::folder($this->storage, $this->folder, 'b');
++    $url = $this->base.'/nodes?parent_id='.$this->folder->id.'&per_page=1';
++    $cursor = $this->getJson($url)->assertOk()->json('meta.next_cursor');
++    $this->getJson($url.'&cursor='.urlencode($cursor.'x'))->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
++    $other = AccessTestHelpers::folder($this->storage, null, 'other');
++    AccessTestHelpers::grant($other, GrantLevel::Reader);
++    $this->getJson($this->base.'/nodes?parent_id='.$other->id.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
++});
++
++it('keeps the last inspected key when a full page ends inside an overfetch batch', function (): void {
++    for ($i = 0; $i < 5; $i++) {
++        AccessTestHelpers::folder($this->storage, $this->folder, 'row-'.$i);
++    }
++    $cursor = null;
++    $names = [];
++    do {
++        $response = $this->getJson($this->base.'/nodes?'.http_build_query(['parent_id' => $this->folder->id, 'per_page' => 2, 'cursor' => $cursor]))->assertOk();
++        $names = array_merge($names, array_column($response->json('data'), 'name'));
++        $cursor = $response->json('meta.next_cursor');
++    } while ($cursor !== null);
++    expect($names)->toBe(['row-0', 'row-1', 'row-2', 'row-3', 'row-4']);
++});
++
++it('does not skip equal sort values during descending trash pagination', function (): void {
++    $ids = [];
++    for ($i = 0; $i < 5; $i++) {
++        $ids[] = AccessTestHelpers::folder($this->storage, $this->folder, 'trash-'.$i)->id;
++    }
++    Node::query()->whereIn('id', $ids)->update(['trashed_at' => '2026-10-04 00:00:00']);
++    $cursor = null;
++    $found = [];
++    do {
++        $response = $this->getJson($this->base.'/trash?'.http_build_query(['per_page' => 2, 'cursor' => $cursor]))->assertOk();
++        $found = array_merge($found, array_column($response->json('data'), 'id'));
++        $cursor = $response->json('meta.next_cursor');
++    } while ($cursor !== null);
++    expect($found)->toBe(array_reverse($ids));
++});
++
++it('scans shared candidates across storages without totals or denied rows', function (): void {
++    config()->set('vaulter.listing.scan_budget', 1);
++    $hidden = AccessTestHelpers::folder($this->storage, $this->folder, 'a-hidden');
++    AccessTestHelpers::grant($hidden, GrantLevel::Reader);
++    AccessTestHelpers::grant($hidden, GrantLevel::Reader, effect: Effect::Deny);
++    $otherStorage = AccessTestHelpers::storage();
++    $visible = AccessTestHelpers::folder($otherStorage, null, 'z-visible');
++    AccessTestHelpers::grant($visible, GrantLevel::Reader);
++    $cursor = null;
++    $ids = [];
++    do {
++        $response = $this->getJson('api/vaulter/shared?'.http_build_query(['cursor' => $cursor]))->assertOk()->assertJsonMissingPath('meta.total');
++        $ids = array_merge($ids, array_column($response->json('data'), 'id'));
++        $cursor = $response->json('meta.next_cursor');
++    } while ($cursor !== null);
++    expect($ids)->toContain($visible->id)->not->toContain($hidden->id);
++});
+diff --git a/packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php b/packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php
+new file mode 100644
+index 0000000..b8858c8
+--- /dev/null
++++ b/packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php
+@@ -0,0 +1,25 @@
++<?php
++
++declare(strict_types=1);
++
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Livewire\Livewire;
++use Livewire\Mechanisms\DataStore;
++use Vaulter\Enums\Access\Effect;
++use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
++use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
++
++uses(RefreshDatabase::class);
++
++it('hides a denied node from the actual table and shows an allowed node', function (): void {
++    app(DataStore::class)->register();
++    $actor = DriveBuilder::user();
++    $this->actingAs($actor);
++    $storage = DriveBuilder::storage();
++    $hidden = DriveBuilder::folder($storage, 'Denied');
++    $visible = DriveBuilder::folder($storage, 'Visible');
++    DriveBuilder::grant($hidden, $actor);
++    DriveBuilder::grant($hidden, $actor, effect: Effect::Deny);
++    DriveBuilder::grant($visible, $actor);
++    Livewire::test(ListNodes::class)->assertCanNotSeeTableRecords([$hidden])->assertCanSeeTableRecords([$visible]);
++});
+
+END OF REVIEW PACKET

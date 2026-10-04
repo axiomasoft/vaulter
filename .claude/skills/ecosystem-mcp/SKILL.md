@@ -56,7 +56,11 @@ serena-code graph (LSP) is relevant on the fly - the disclaimer does not apply t
 
 - **scope memory:** `project:vaulter`; ecosystem facts - in scope `global`.
 - **namespaces:** `axioma` (within a group - general, between groups - isolated).
-- **linked to:** —.
+<<<<<<< HEAD
+- **linked to:** azguard.
+=======
+- **linked to:** azguard.
+>>>>>>> 51553172ca3a2ac70c8cf36bb44631d739f46859
 - see current connections: `maind graph --project vaulter`.
 
 If something breaks in a linked project, remember that the link exists: changes here can

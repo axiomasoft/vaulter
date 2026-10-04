@@ -1,0 +1,106 @@
+{
+  "ts": "2026-10-04T07:12:04Z",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P1.2",
+  "command": "plan-run",
+  "session_id": "c6d6e68a-61a0-45e9-aae4-9533148f1b76",
+  "run_id": "b48a9583e17fab8987dd5cfe66d9e6bf60f22f236608409b960df7023aaa522a",
+  "attempt": 1,
+  "actor": "claude-code/claude-opus-5-5/high",
+  "friction": [
+    "deviation",
+    "retry",
+    "local-repair"
+  ],
+  "result": "closed-green",
+  "cost_usd": null,
+  "num_turns": null,
+  "duration_ms": null,
+  "note": "P1.2 green under a global lock matrix; review grok-4.7 not GREEN: 11 findings fixed, 2 quota findings deferred to PLAN2.P1.6. See artifacts/P1.2/completion.md.\nwrite-site: pre_mutation: allow · pre_final: allow",
+  "decision": {
+    "signal_class": "acceptance",
+    "scope_class": "item",
+    "action": "close-green",
+    "recovered": true,
+    "terminal": true,
+    "terminal_evidence": {
+      "schema_version": "terminal-evidence/v1",
+      "spec_sha256": "16ac1bbe9f409460c43db8aa4493fe86d16f5483bead957da22526dcb0811155",
+      "validation": [
+        {
+          "carrier": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/v18.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/v19.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/v19-negative.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/v19.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/completion.md"
+          ]
+        },
+        {
+          "carrier": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/migration-nodename-pgsql.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/completion.md"
+          ]
+        },
+        {
+          "carrier": "- Гейт core и гейты drive, documents, filament → exit 0.",
+          "status": "green",
+          "evidence_ids": [
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/core-pint.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/core-stan.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/core-pest.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/drive-pint.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/drive-stan.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/drive-pest.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/documents-pint.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/documents-stan.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/documents-pest.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/filament-pint.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/filament-stan.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/filament-pest.log",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/validation-receipts.json",
+            "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.2/completion.md"
+          ]
+        }
+      ],
+      "repair_exhausted": null
+    }
+  },
+  "batch_receipt": {
+    "batch_id": "solo",
+    "completed_prefix": [
+      "P1.2"
+    ],
+    "handoff_digest": "8d474429c20dbd3baa74174c990b589e0fe992468fa13eac9ece17d33bb7f31f",
+    "invocation_digest": "b7325cbfc7a8ebe04e758c959a518440b7f3a0b4b30c5d76cdb5a41775967533",
+    "membership": [
+      "P1.2"
+    ],
+    "routing_digest": "84db2ec5f2ec4aa9c5e22ffeb7f0c28fe92004a622dc337302a480060c554512",
+    "schema_version": "batch-receipt/v1",
+    "spec_digest": "16ac1bbe9f409460c43db8aa4493fe86d16f5483bead957da22526dcb0811155",
+    "stop_disposition": "continue"
+  }
+}

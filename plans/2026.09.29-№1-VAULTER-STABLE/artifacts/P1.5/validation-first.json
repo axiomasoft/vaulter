@@ -1,0 +1,186 @@
+[
+  {
+    "id": "v01",
+    "cwd": "packages/media",
+    "argv": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas/BlobScopeKeyTest.php"
+    ],
+    "exit": 0,
+    "seconds": 1.79,
+    "summary": "t isolates real identifier strategies across dedup scopes and GC w… 0.17s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n  ✓ it isolates real identifier strategies across dedup scopes and GC w… 0.18s  \n\n  Tests:    9 passed (75 assertions)\n  Duration: 1.73s\n\n"
+  },
+  {
+    "id": "cas-pg",
+    "cwd": "packages/media",
+    "argv": [
+      "env",
+      "DB_CONNECTION=pgsql",
+      "DB_HOST=127.0.0.1",
+      "DB_PORT=5432",
+      "DB_DATABASE=vaulter_test",
+      "DB_USERNAME=vaulter",
+      "DB_PASSWORD=secret",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Cas"
+    ],
+    "exit": 2,
+    "seconds": 103.59,
+    "summary": "endor/laravel/framework/src/Illuminate/Database/Connection.php:601\n    597▕             $this->bindValues($statement, $this->prepareBindings($bindings));\n    598▕ \n    599▕             $this->recordsHaveBeenModified();\n    600▕ \n  ➜ 601▕             return $statement->execute();\n    602▕         });\n    603▕     }\n    604▕ \n    605▕     /**\n\n      +4 vendor frames \n  5   /home/vostrikov/projects/packages/vaulter/packages/core/database/migrations/2026_10_01_000003_host_key_columns.php:85\n  6   /home/vostrikov/projects/packages/vaulter/packages/core/database/migrations/2026_10_01_000003_host_key_columns.php:36\n\n\n  Tests:    6 failed, 4 skipped, 134 passed (590 assertions)\n  Duration: 103.43s\n\n"
+  },
+  {
+    "id": "upgrade-unit-pg",
+    "cwd": ".",
+    "argv": [
+      "env",
+      "DB_CONNECTION=pgsql",
+      "DB_HOST=127.0.0.1",
+      "DB_PORT=5432",
+      "DB_DATABASE=vaulter_test",
+      "DB_USERNAME=vaulter",
+      "DB_PASSWORD=secret",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Upgrade/BlobScopeKeyMigrationTest.php",
+      "packages/core/tests/Unit/BlobScopeTest.php"
+    ],
+    "exit": 0,
+    "seconds": 3.47,
+    "summary": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":20,\"passed\":20,\"assertions\":129,\"duration_ms\":3386}\n"
+  },
+  {
+    "id": "core-pint",
+    "cwd": ".",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "exit": 0,
+    "seconds": 4.24,
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "core-phpstan",
+    "cwd": ".",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G",
+      "-c",
+      "phpstan.neon"
+    ],
+    "exit": 1,
+    "seconds": 5.03,
+    "summary": " documentation at URL https://phpstan.org/error-identifiers/<identifier>, which contains a code example, explanation why it is an error, and instructions on how to fix it. Before fixing the error, fetch the documentation page for its identifier. The error usually indicates a real bug or incorrect type in the code. Fix the underlying cause, do not just make the error go away. Do not add `@phpstan-ignore` comments, `@phpstan-ignore-next-line` comments, or baseline entries to suppress the error. Do not use assert() or inline @var PHPDoc tag to override PHPStan's inferred type. Do not add type casts just to silence errors. Do not widen parameter or return types just to make the error go away.\"}\n"
+  },
+  {
+    "id": "core-pest",
+    "cwd": ".",
+    "argv": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "exit": 2,
+    "seconds": 108.28,
+    "summary": "luable_it_serves_a_public_download_of_a_text_html_declared_mime_as_octet_stream_with_nosniff__F_P1_11_03_\",\"file\":\"/home/vostrikov/projects/packages/vaulter/packages/drive/src/Actions/UploadFileAction.php\",\"line\":112,\"message\":\"Class \\\"Vaulter\\\\Drive\\\\Actions\\\\Config\\\" not found\"},{\"test\":\"P\\\\Packages\\\\core\\\\tests\\\\Sharing\\\\PublicShareDownloadHeadersTest::__pest_evaluable_it_serves_a_public_download_of_a_whitelisted_image_png_declared_mime_as_is__nosniff_still_set_unconditionally__F_P1_11_03_\",\"file\":\"/home/vostrikov/projects/packages/vaulter/packages/drive/src/Actions/UploadFileAction.php\",\"line\":112,\"message\":\"Class \\\"Vaulter\\\\Drive\\\\Actions\\\\Config\\\" not found\"}],\"skipped\":28,\"risky\":17}\n"
+  },
+  {
+    "id": "drive-pint",
+    "cwd": "packages/drive",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit": 0,
+    "seconds": 0.55,
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "drive-phpstan",
+    "cwd": "packages/drive",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit": 1,
+    "seconds": 4.46,
+    "summary": "ps://phpstan.org/user-guide/discovering-symbols   \n  112    Parameter #1 $dedupScope of static method                              \n         Vaulter\\ValueObjects\\Cas\\BlobScope::forUpload() expects string, mixed  \n         given.                                                                 \n         🪪  argument.type                                                      \n  114    Cannot cast mixed to string.                                           \n         🪪  cast.string                                                        \n ------ ----------------------------------------------------------------------- \n\n\n [ERROR] Found 3 errors                                                         \n\n"
+  },
+  {
+    "id": "drive-pest",
+    "cwd": "packages/drive",
+    "argv": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit": 2,
+    "seconds": 40.18,
+    "summary": "9\n    175▕     // commit — одно и то же окно; на реальной гонке байты исчезают ПОСЕРЕДИНЕ стрима).\n    176▕     UploadSession::query()->whereKey($session->getKey())->update(['status' => UploadStatus::Expired->value]);\n    177▕ \n    178▕     expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))\n  ➜ 179▕         ->toThrow(UploadConflictException::class);\n    180▕ \n    181▕     $after = UploadSession::query()->findOrFail($session->getKey());\n    182▕ \n    183▕     expect($after->status)->toBe(UploadStatus::Expired)\n\n  1   tests/Uploads/UploadSessionCriticalSectionTest.php:179\n\n\n  Tests:    102 failed, 2 risky, 11 skipped, 397 passed (1242 assertions)\n  Duration: 39.72s\n\n"
+  },
+  {
+    "id": "media-pint",
+    "cwd": "packages/media",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit": 0,
+    "seconds": 5.23,
+    "summary": "{\"tool\":\"pint\",\"result\":\"passed\"}"
+  },
+  {
+    "id": "media-phpstan",
+    "cwd": "packages/media",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit": 0,
+    "seconds": 5.18,
+    "summary": "Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/media/phpstan.neon.\n\n [OK] No errors                                                                 \n\n"
+  },
+  {
+    "id": "media-pest",
+    "cwd": "packages/media",
+    "argv": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit": 0,
+    "seconds": 28.53,
+    "summary": "tion-retry path is PostgreSQL-specific.\n\n   PASS  Tests\\Feature\\BootTest\n  ✓ it boots the media provider on top of core                           0.08s  \n  ✓ it migrates the core-owned blob schema through the path-repo         0.05s  \n\n   WARN  Tests\\Observability\\P85Section53MediaMetricsTest\n  ! it records gc mark and sweep metrics → This test did not perform an… 0.06s  \n  ! it records reconcile metrics when ref counts are rebuilt → This tes… 0.06s  \n  ! it records gc metrics via vaulter:gc-blobs command → This test did…  0.05s  \n  ! it records reconcile metrics via vaulter:reconcile-blobs command →…  0.05s  \n\n  Tests:    4 risky, 15 skipped, 137 passed (524 assertions)\n  Duration: 28.48s\n\n"
+  }
+]

@@ -3,9 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeCreated;
+use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Webhooks\WebhookEvent;
 use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -58,7 +63,7 @@ it('stages a node.created row carrying the actor and a slim payload', function (
 
 // ─────────────────────────── idempotency (event_id) ───────────────────────────
 
-it('is idempotent by event_id: re-staging the same key stages no duplicate', function (): void {
+it('is idempotent by event_id: re-staging the same occurrence stages no duplicate', function (): void {
     $storage = AccessTestHelpers::storage();
     Outbox::query()->delete();
 
@@ -68,11 +73,11 @@ it('is idempotent by event_id: re-staging the same key stages no duplicate', fun
     // exercises the core OutboxRecorder::stage() idempotency seam directly (the seam the
     // vaulter-drive subscriber maps its node events through).
     $recorder = app(OutboxRecorder::class);
-    $key = 'node.created:'.$folder->getKey();
+    $eventId = (string) Str::ulid();
 
     $stage = fn (): ?Outbox => $recorder->stage(
         event: WebhookEvent::NodeCreated,
-        key: $key,
+        eventId: $eventId,
         panel: $folder->panel,
         topic: (string) $folder->getKey(),
         payload: ['node_id' => $folder->getKey(), 'name' => 'dup'],
@@ -86,6 +91,46 @@ it('is idempotent by event_id: re-staging the same key stages no duplicate', fun
         // The second staging is a no-op (returns null) — idempotent by event_id.
         ->and($second)->toBeNull()
         ->and(Outbox::query()->where('event', WebhookEvent::NodeCreated->value)->count())->toBe(1);
+});
+
+it('keeps distinct grant occurrences with identical parameters and deduplicates their replay', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'Granted');
+    $grant = AccessTestHelpers::grant(node: $node, level: GrantLevel::Reader);
+    $subject = new Subject(type: $grant->subject_type, id: $grant->subject_id);
+    Outbox::query()->delete();
+
+    foreach ([
+        new NodeGrantCreated(grant: $grant, actorId: 7),
+        new NodeGrantCreated(grant: $grant, actorId: 7),
+        new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: 7),
+        new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: 7),
+    ] as $event) {
+        event($event);
+        event($event);
+
+        $row = Outbox::query()->where('event_id', $event->eventId)->sole();
+        expect(Str::isUlid($row->event_id))->toBeTrue()
+            ->and($row->payload['event_id'])->toBe($event->eventId);
+    }
+
+    expect(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->count())->toBe(2)
+        ->and(Outbox::query()->where('event', WebhookEvent::GrantRevoked->value)->count())->toBe(2)
+        ->and(Outbox::query()->distinct()->count('event_id'))->toBe(4);
+});
+
+it('retains an explicit occurrence id across reconstructed events', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'Replay');
+    Outbox::query()->delete();
+    $eventId = (string) Str::ulid();
+
+    event(new NodeCreated(node: $node, actorId: 7, eventId: $eventId));
+    event(new NodeCreated(node: $node, actorId: 7, eventId: $eventId));
+
+    $row = Outbox::query()->sole();
+    expect($row->event_id)->toBe($eventId)
+        ->and($row->payload['event_id'])->toBe($eventId);
 });
 
 it('never serializes a share secret — only the non-secret token_prefix travels', function (): void {
@@ -115,7 +160,7 @@ it('swallows + logs a staging failure so the originating action is unaffected', 
     $recorder = Mockery::mock(OutboxRecorder::class);
     $recorder->shouldReceive('recordGrantCreated')->andThrow(new RuntimeException('boom'));
 
-    $subscriber = new RecordsOutbox($recorder);
+    $subscriber = new RecordsOutbox($recorder, app(VaulterDatabase::class));
 
     // Must NOT throw — the failure is logged and swallowed.
     $subscriber->handleGrantCreated(new NodeGrantCreated(grant: new NodeGrant, actorId: 7));

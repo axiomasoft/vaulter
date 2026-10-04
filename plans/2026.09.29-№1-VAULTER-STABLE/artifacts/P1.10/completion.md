@@ -1,0 +1,16 @@
+# P1.10 — Runtime Drive dependencies and Filament destination authorization
+
+Documents and Filament now require Drive at runtime; vendor/package identities stay unchanged. README/installation describe this dependency. Filament folder options require workspace creation and Create on the folder. Move checks the same pair again at action time, using Storage::rootNode for an empty destination. Permission denial sends Move not allowed and halts before the Drive call.
+
+V27: 3 passed, including source Move granted, destination omitted without Create, forged target denied with notification and unchanged parent, root denied without Create, and allowed destination moved. The test deliberately admits the forged target in form validation through scoped Select::configureUsing(in:...) to reach the actual action guard; production option validation is unchanged. Removing the action's assertCanCreateIn call makes that test fail because the node is actually moved; original source bytes restored. Both root and folder denial are executed through real Livewire callTableAction.
+
+The initial Livewire render reproduced the existing ViewErrorBag null failure. A discriminating probe proved DataStore was transient (two container lookups were different objects). Calling its normal register() in this test restores the instance binding and hydration state; no vendor, production provider or existing skipped test changed. After that correction the pre-implementation test showed the real defect: target selectable and actual unauthorized move. Diagnostic outputs retained locally.
+
+All six declared package gates GREEN (validation.json): documents 249 passed, 1 skipped; filament 79 passed, 1 skipped. Pint and PHPStan exit 0 in both packages. Tests use explicit testing environment, SQLite :memory: and the suite's local test storage. Existing skips are not claimed executed.
+
+Both composer validate --strict commands exit 0. Ignored package locks initially retained Drive/Media in packages-dev; composer update --lock did not reclassify them. Targeted minimal dependency update with --no-install corrected their production closure without changing installed vendor bytes. consumer-dry-run.log proves a local path consumer requiring documents only resolves documents, core, drive and media without dev dependencies. Split repository consumer installation remains deferred by the item contract.
+
+review: grok/grok-4.7 GREEN. Fresh session 0a873d4e-7acc-4a5b-a657-c7badfcb32a5, actual model grok-4.7-build, high effort. Static inline diff review; verifier commands were executed by the owning root. Verbatim review/candidate/route/raw response preserved.
+
+write-site: pre_mutation: allow · pre_final: allow
+ No push/release or unrelated owner changes.

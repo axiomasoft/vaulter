@@ -14,6 +14,7 @@ use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\Storage;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Shared builders for the CAS slice tests (M1b): a real Storage→Node→File→Version
@@ -100,7 +101,7 @@ final class CasTestHelpers
      */
     public static function seedOrphan(string $bytes, string $scope = 'tnull', int $ageHours = 48, string $disk = 'local'): string
     {
-        $key = self::contentStore()->keyFor(scope: $scope, sha256: hash('sha256', $bytes));
+        $key = self::contentStore()->keyFor(scope: BlobScope::fromSegment($scope), sha256: hash('sha256', $bytes));
 
         StorageFacade::disk($disk)->put($key, $bytes);
         self::ageObject(key: $key, ageHours: $ageHours, disk: $disk);
@@ -141,7 +142,7 @@ final class CasTestHelpers
         string $scope = 'tnull',
     ): Blob {
         $sha256 = hash('sha256', $bytes);
-        $storageKey = self::contentStore()->keyFor(scope: $scope, sha256: $sha256);
+        $storageKey = self::contentStore()->keyFor(scope: BlobScope::fromSegment($scope), sha256: $sha256);
 
         StorageFacade::disk($bytesDisk ?? $disk)->put($storageKey, $bytes);
 
@@ -158,7 +159,8 @@ final class CasTestHelpers
             'storage_key' => $storageKey,
             'status' => $status,
             'ref_count' => 0,
-            'dedup_scope' => 'tenant',
+            'dedup_scope' => BlobScope::fromSegment($scope)->dedupScope(),
+            'scope_key' => BlobScope::fromSegment($scope)->key(),
             'committed_at' => $status === BlobStatus::Committed ? now() : null,
         ]);
         $blob->save();

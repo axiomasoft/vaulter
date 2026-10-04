@@ -1,0 +1,6 @@
+{
+  "test": "rename A\u2192B\u2192A\u2192B",
+  "exit_code": 1,
+  "expected": "2 rows instead of 3",
+  "source_restored_byte_exact": true
+}

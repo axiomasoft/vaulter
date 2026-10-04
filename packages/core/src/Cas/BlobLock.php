@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Cas;
 
-use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 
 /**
  * The per-(scope, sha256) liveness lock (H.3 safety invariant). EVERY transaction
@@ -28,23 +28,34 @@ use Illuminate\Support\Facades\DB;
  */
 final class BlobLock
 {
+    public function __construct(private readonly VaulterDatabase $database) {}
+
     /**
      * Take the per-(scope, sha256) advisory lock for the current transaction.
-     * Must be called as the first statement inside DB::transaction().
+     * Must be called as the first statement inside $this->database->transaction().
      */
     public function acquire(string $scope, string $sha256): void
     {
-        if (!$this->isPostgres()) {
-            // MySQL relies on SELECT … FOR UPDATE (the caller); SQLite on the
-            // single-writer transaction. Nothing to take here.
+        $this->database->advisoryLock('cas:'.$scope.':'.$sha256);
+    }
+
+    /**
+     * Acquire multiple CAS keys in the database's lock order, including hash
+     * collisions. Every operation needing multiple addresses uses this order.
+     *
+     * @param list<string> $keys full cas:{scope_key}:{sha256} keys
+     */
+    public function acquireMany(array $keys): void
+    {
+        if (!$this->isPostgres() || $keys === []) {
             return;
         }
 
-        // hashtext() folds the variable-length key into the int4 advisory-lock
-        // namespace; xact-scoped so it releases at COMMIT/ROLLBACK automatically.
-        DB::statement(
-            'SELECT pg_advisory_xact_lock(hashtext(?))',
-            [$scope.'|'.$sha256],
+        $this->database->connection()->select(
+            'SELECT pg_advisory_xact_lock(lock_key) FROM '
+            .'(SELECT DISTINCT hashtext(value) AS lock_key '
+            .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',
+            [json_encode($keys, JSON_THROW_ON_ERROR)],
         );
     }
 
@@ -89,6 +100,6 @@ final class BlobLock
 
     private function driver(): string
     {
-        return DB::connection()->getDriverName();
+        return $this->database->driver();
     }
 }

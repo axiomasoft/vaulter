@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -24,6 +25,7 @@ use UnitEnum;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
@@ -38,14 +40,8 @@ use Vaulter\Support\Config;
  * Drive Actions (rename/move/trash/restore/forceDelete) through the DriveContext —
  * NEVER a direct Eloquent write.
  *
- * Authorization is the core AccessResolver. The TABLE scopes to the acting admin's
- * grant-reachable CANDIDATE set (P1 #3): {@see getEloquentQuery()} narrows the query
- * through {@see NodeReadRepository::constrainToAccessible()}, the same candidate-SQL
- * the API listing uses — so the two surfaces are CONSISTENT. That narrowing is a
- * deliberate SUPERSET: it hides nodes the admin has no grant-reachability to, but does
- * NOT apply the exact deny-veto / inherit-cutoff in the listing SQL (a node a nearer
- * deny revokes can still appear in the table); that exact listing suppression is
- * DEFERRED to the H.4 materialised effective-grants read-model.
+ * Table candidates use the grant-authoritative SQL prefilter, then ListNodes applies
+ * exact batch View evaluation before display. Simple pagination avoids leaking totals.
  *
  * Per-ROW ACTIONS remain EXACTLY gated: each row action is gated by the acting admin's
  * {@see Ability} on that node through the AccessResolver (Edit→rename, Move→move,
@@ -85,6 +81,7 @@ final class NodeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 IconColumn::make('kind')
                     ->label('')
@@ -194,15 +191,7 @@ final class NodeResource extends Resource
         // hard-deleted (deleted_at) rows hidden.
         $query = parent::getEloquentQuery();
 
-        // Access-aware listing (P1 #3): narrow the table to the acting admin's
-        // grant-reachable CANDIDATE set when grant-filtering applies (a grant-
-        // authoritative driver + 'grants' feature); a no-op for the open drivers. The
-        // candidate set is a SUPERSET — it hides nodes with no grant-reachability but
-        // does NOT apply the exact deny-veto in the listing SQL (deferred to the H.4
-        // read-model); per-ROW ACTIONS stay exactly gated by the AccessResolver. No
-        // acting user ⇒ an empty table (a panel never lists nodes for nobody). The
-        // repository constrains WITHOUT a trashed-state filter, so the Trashed filter
-        // still flips between live and trashed within the accessible set.
+        // SQL narrows candidates only; ListNodes applies the exact ACL page filter.
         $actor = PanelActor::current();
 
         if ($actor === null) {
@@ -258,8 +247,15 @@ final class NodeResource extends Resource
                     ->options(fn (Node $record): array => self::folderOptions($record))
                     ->searchable(),
             ])
-            ->action(function (Node $record, array $data): void {
+            ->action(function (Node $record, array $data, Action $action): void {
                 $into = self::resolveFolder($record, $data['parent_id'] ?? null);
+
+                try {
+                    self::assertCanCreateIn($record, $into);
+                } catch (PermissionDeniedException) {
+                    Notification::make()->title('Move not allowed')->danger()->send();
+                    $action->halt();
+                }
 
                 Vaulter::forStorage($record->storage)->move(
                     node: $record,
@@ -363,21 +359,37 @@ final class NodeResource extends Resource
      */
     private static function folderOptions(Node $record): array
     {
-        $model = Config::nodeModel();
-        $keyName = (new $model)->getKeyName();
+        $actor = PanelActor::current();
+        if ($actor === null || !app(AccessResolver::class)->canCreateInWorkspace($actor, $record->storage)) {
+            return [];
+        }
 
-        /** @var array<int|string, string> $options */
-        $options = $model::query()
+        $model = Config::nodeModel();
+
+        return $model::query()
             ->where('storage_id', $record->storage_id)
             ->where('kind', NodeKind::Folder->value)
             ->whereNull('trashed_at')
             ->whereKeyNot($record->getKey())
             ->orderBy('name')
-            ->pluck('name', $keyName)
-            ->map(fn (string $name): string => $name === '' ? '(root)' : $name)
+            ->get()
+            ->filter(static fn (Node $folder): bool => self::actorCan(Ability::Create, $folder))
+            ->mapWithKeys(static fn (Node $folder): array => [$folder->getKey() => $folder->name === '' ? '(root)' : $folder->name])
             ->all();
+    }
 
-        return $options;
+    private static function assertCanCreateIn(Node $record, ?Node $into): void
+    {
+        $actor = PanelActor::current();
+        $destination = $into ?? $record->storage->rootNode;
+        $access = app(AccessResolver::class);
+
+        if ($actor === null || $destination === null
+            || !$access->canCreateInWorkspace($actor, $record->storage)
+            || !$access->can($actor, Ability::Create, $destination)
+        ) {
+            throw PermissionDeniedException::forAbility(Ability::Create->value);
+        }
     }
 
     /**

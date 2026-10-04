@@ -2,6 +2,8 @@
 
 **Status:** accepted
 
+> Amended by ADR-0022 (proposed).
+
 > Consolidates the design-and-execution record of **VLT-CANON** (`plans/archive/VLT-CANON/plan.md`,
 > Decision Log D1–D12, phases P0–P3). Supersedes `plans/VLT-HSEAM/` in full — VLT-HSEAM's scope
 > (leaks L1–L5, capability-policy, DX scaffolding, Q1/Q2) was absorbed and closed here; see

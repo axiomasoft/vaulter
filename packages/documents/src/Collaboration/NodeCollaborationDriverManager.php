@@ -46,7 +46,7 @@ final readonly class NodeCollaborationDriverManager
             throw new VaulterException(
                 sprintf('[Vaulter] Unknown collaboration driver [%s]. ', $name)
                 .'Fix: set config(vaulter.collaboration.driver) to one of: reverb, hocuspocus. '
-                .'Docs: https://github.com/axioma-studio/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
+                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
             );
         }
 

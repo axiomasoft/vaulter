@@ -7,6 +7,7 @@ use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Cross-scope deletion safety (H.3 / H.6): under per-tenant dedup the SAME bytes
@@ -23,8 +24,8 @@ it('sweep одного scope не трогает байты другого scope
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('cross-scope'), tenantId: 1);
-    $b = $store->commit(CasTestHelpers::streamFor('cross-scope'), tenantId: 2);
+    $a = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $b = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 2, 'unused'));
 
     // Two distinct physical objects despite identical bytes.
     expect($a->storage_key)->not->toBe($b->storage_key);

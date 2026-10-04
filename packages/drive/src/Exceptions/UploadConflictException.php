@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
@@ -21,8 +20,12 @@ use Vaulter\Exceptions\VaulterException;
  * (P3.4/B7); here the handler raises this typed exception and the controller is left
  * untouched beyond what the fix requires.
  */
-final class UploadConflictException extends VaulterException
+final class UploadConflictException extends VaulterException implements ProblemException
 {
+    private const string PROBLEM_CODE = 'upload_conflict';
+
+    private const int HTTP_STATUS = 409;
+
     public static function forSession(string $uploadId): self
     {
         return new self(
@@ -48,12 +51,13 @@ final class UploadConflictException extends VaulterException
         );
     }
 
-    /**
-     * Surface a concurrent-modification conflict as 409 — the client must re-read
-     * HEAD and resume from the authoritative offset.
-     */
-    public function render(Request $request): JsonResponse
+    public function problemCode(): string
     {
-        return new JsonResponse(['message' => $this->getMessage()], 409);
+        return self::PROBLEM_CODE;
+    }
+
+    public function httpStatus(): int
+    {
+        return self::HTTP_STATUS;
     }
 }

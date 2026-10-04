@@ -1,0 +1,39 @@
+{
+  "provider": "grok-cli",
+  "model": "grok-4.7",
+  "effort": "high",
+  "fresh_context": true,
+  "read_only": true,
+  "static_diff_review": true,
+  "session_id": "133a2967-bc08-47e4-8a0b-cfeea0684a52",
+  "invocation": [
+    "grok",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--tools",
+    "read_file,grep",
+    "--max-turns",
+    "2",
+    "--disable-web-search",
+    "--no-subagents",
+    "--permission-mode",
+    "plan",
+    "--cwd",
+    "/home/vostrikov/projects/packages/vaulter",
+    "--session-id",
+    "133a2967-bc08-47e4-8a0b-cfeea0684a52",
+    "--output-format",
+    "json",
+    "--prompt-file",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.4/review-diff-packet.txt"
+  ],
+  "completed_session_id": "133a2967-bc08-47e4-8a0b-cfeea0684a52",
+  "stop_reason": "end_turn",
+  "num_turns": 1,
+  "observed_models": [
+    "grok-4.7-build"
+  ],
+  "observed_tool_calls": 0
+}

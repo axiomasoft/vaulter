@@ -67,7 +67,7 @@ it('maps the complete valid request into the persisted share contract', function
         ->and($share->allow_discovery)->toBeTrue()
         ->and($share->expires_at?->equalTo($expiresAt))->toBeTrue()
         ->and($share->max_uses)->toBe(7)
-        ->and($share->granted_by)->toBe(1);
+        ->and($share->granted_by)->toBe('1');
 });
 
 it('derives permissions from the selected level when no mask is supplied', function (): void {

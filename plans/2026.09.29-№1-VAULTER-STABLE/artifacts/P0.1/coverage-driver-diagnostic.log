@@ -1,0 +1,7 @@
+$ scripts/php84 php -r 'require "vendor/autoload.php"; $selector = new SebastianBergmann\CodeCoverage\Driver\Selector; echo get_class($selector->forLineCoverage(new SebastianBergmann\CodeCoverage\Filter)), PHP_EOL;'
+cwd: /home/vostrikov/projects/packages/vaulter
+source: tests.yml:test / local coverage engine diagnostic
+SebastianBergmann\CodeCoverage\Driver\PcovDriver
+
+exit: 0
+elapsed_seconds: 0.032

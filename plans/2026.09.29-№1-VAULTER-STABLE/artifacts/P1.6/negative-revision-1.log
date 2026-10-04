@@ -1,0 +1,28 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Concurrency\RevisionNumberRaceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V03 serializes revisions and accounts for their actual preceding[39m[90m…[39m [90m1.28s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit V03 aggregate lock protects counter allocation even without a ca[39m[90m…[39m [90m1.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reuses prepared bytes on a serialization retry and discards the[39m[90m… [39m [90m1.08s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Concurrency\RevisionNumberRaceTest[22m [90m>[39m it V03 aggregate lock…    
+[39;1m  SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint "v_file_versions_no_uniq"
+DETAIL:  Key (file_id, version_no)=(1, 2) already exists. (Connection: testing, Host: 127.0.0.1, Port: 5432, Database: vaulter_test, SQL: insert into "v_file_versions" ("tenant_id", "file_id", "version_no", "blob_id", "manifest_blob_id", "content_sha256", "size_bytes", "mime_type", "original_name", "status", "keep_forever", "extra_data", "created_by", "created_at", "committed_at") values (?, 1, 2, 1, ?, 9f2e6d33a3717ee826353a404ba4618d1aeeb6879ad7936bce8ed5f46814924d, 4, ?, a.txt, committed, 0, null, ?, 2026-10-04 13:07:17, 2026-10-04 13:07:17) returning "id")
+Failed asserting that false is true.[39;22m
+
+  at [32mtests/Concurrency/RevisionNumberRaceTest.php[39m:[32m68[39m
+     64▕         }),
+     65▕         [0, 1],
+     66▕     ));
+     67▕     foreach ($outcomes as $outcome) {
+  ➜  68▕         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
+     69▕     }
+     70▕     $numbers = array_map(static fn ($o): int => $o->value, $outcomes);
+     71▕     sort($numbers);
+     72▕     expect($numbers)->toBe([2, 3])
+
+  [33m1   [39m[39;1mtests/Concurrency/RevisionNumberRaceTest.php[39;22m:[39;1m68[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m,[39m[39m [39m[32;1m2 passed[39;22m[90m (16 assertions)[39m
+  [90mDuration:[39m [39m3.58s[39m
+

@@ -4,20 +4,26 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions;
 
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeRestored;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
+use Vaulter\Support\Identity;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Restore a trashed node and its subtree (§2.10). Clears the trashed triplet
- * across the bounded subtree in one bulk UPDATE. Two deterministic destination
+ * across the bounded subtree in one bulk UPDATE. Runs under the storage tree lock
+ * (it re-parents) with the node, its original parent and the root locked, and only
+ * accepts a node that is actually in the trash. Two deterministic destination
  * rules (§2.10 restore-collision):
- *   - if the original parent is gone (deleted / itself trashed), re-home the node
- *     to the storage root (parent_id = null) rather than dangling it;
+ *   - if the original parent is gone (deleted / itself trashed / no longer a
+ *     folder), re-home the node to the storage root rather than dangling it;
  *   - if a LIVE sibling now owns the node's name at the resolved destination,
  *     throw NodeNameConflictException — the caller renames then retries.
  *
@@ -29,33 +35,45 @@ final readonly class RestoreNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
+        private VaulterDatabase $database,
+        private TreeGuard $tree,
     ) {}
 
     public function execute(Node $node, int|string|null $actorId = null): Node
     {
+        $rootId = $this->tree->destinationId(storage: $node->storage, into: null);
 
-        if ($node->trashed_at === null) {
-            return $node;
-        }
+        return $this->database->transaction(function () use ($node, $rootId, $actorId): Node {
+            $this->database->lockTree($node->storage_id);
 
-        $destinationParentId = $this->resolveDestinationParent($node);
+            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id, $rootId]), $node->id));
 
-        if ($this->liveSiblingOwnsName(node: $node, parentId: $destinationParentId)) {
-            throw NodeNameConflictException::forName(name: $node->name, parentId: $destinationParentId);
-        }
+            if ($current->trashed_at === null) {
+                throw NodeNotTrashedException::forNode($current);
+            }
 
-        $ids = $this->nodes->subtree($node)->modelKeys();
+            // The original parent is read from the locked row, not the caller's model.
+            // Locking it after the node is safe: the tree lock excludes every other
+            // operation that holds more than one node row.
+            $originalParentId = $current->trashed_from_parent_id ?? $current->parent_id;
+            $locked = $this->tree->lock([$originalParentId]);
+            $destinationParentId = $this->resolveDestinationParent(node: $current, locked: $locked, rootId: $rootId);
 
-        return DB::transaction(function () use ($node, $ids, $destinationParentId, $actorId): Node {
+            if ($this->liveSiblingOwnsName(node: $current, parentId: $destinationParentId)) {
+                throw NodeNameConflictException::forName(name: $current->name, parentId: $destinationParentId);
+            }
+
+            $ids = $this->nodes->subtree($current)->modelKeys();
+
             // Re-home the subtree root first (so the cleared triplet lands on a
             // node already hung at its restored destination), then clear trash.
-            if ($node->parent_id !== $destinationParentId) {
-                $this->store->move(node: $node, parentId: $destinationParentId);
+            if (Identity::stringify($current->parent_id) !== Identity::stringify($destinationParentId)) {
+                $this->store->move(node: $current, parentId: $destinationParentId);
             }
 
             $this->store->restoreSubtree(collect($ids));
 
-            $fresh = $node->refresh();
+            $fresh = $current->refresh();
 
             event(new NodeRestored(node: $fresh, actorId: $actorId));
 
@@ -65,32 +83,35 @@ final readonly class RestoreNodeAction
 
     /**
      * The destination parent for the restored node: its recorded original parent
-     * when that parent is still live, else the storage root (null).
+     * when that row is still a live folder of the same storage, else the root. The
+     * row was locked with the node, so it cannot be trashed or moved meanwhile.
+     *
+     * @param Collection<string, Node> $locked
      */
-    private function resolveDestinationParent(Node $node): int|string|null
+    private function resolveDestinationParent(Node $node, Collection $locked, int|string $rootId): int|string
     {
         $originalParentId = $node->trashed_from_parent_id ?? $node->parent_id;
-
-        // No recorded parent (or it was the very top) → the storage root node.
-        $rootId = $node->storage->root_node_id;
 
         if ($originalParentId === null) {
             return $rootId;
         }
 
-        $model = Config::nodeModel();
+        $parent = $locked->get(Identity::stringify($originalParentId));
 
-        $parentIsLive = $model::query()
-            ->whereKey($originalParentId)
-            ->whereNull('trashed_at')
-            ->whereNull('deleted_at')
-            ->exists();
+        if (!$parent instanceof Node || !$this->tree->sameStorage($parent, $node->storage_id)) {
+            return $rootId;
+        }
 
-        // The original home vanished → re-home to root deterministically.
-        return $parentIsLive ? $originalParentId : $rootId;
+        try {
+            $this->tree->assertActiveFolder($parent);
+        } catch (InvalidDestinationException) {
+            return $rootId;
+        }
+
+        return $parent->id;
     }
 
-    private function liveSiblingOwnsName(Node $node, int|string|null $parentId): bool
+    private function liveSiblingOwnsName(Node $node, int|string $parentId): bool
     {
         return $this->nodes->siblingNameExists(
             storage: $node->storage,

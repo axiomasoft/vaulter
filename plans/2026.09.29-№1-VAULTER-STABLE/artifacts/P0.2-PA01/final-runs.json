@@ -1,0 +1,103 @@
+[
+  {
+    "name": "serial-pgsql-1.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "serial-pgsql-2.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "serial-pgsql-3.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "serial-pgsql-4.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "serial-pgsql-5.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "sqlite.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "pint.log",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core/tests/Concurrency",
+      "tests/Pest.php"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "name": "barrier-bypass-final.log",
+    "command": [
+      "python3",
+      "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P0-audit/repro-barrier-bypass.py"
+    ],
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "name": "sequential.log",
+    "command": [
+      "scripts/php84",
+      "php",
+      "-d",
+      "auto_prepend_file=/tmp/vaulter-p0-sequential-er71gdg4/prepend.php",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Concurrency"
+    ],
+    "exit_code": 1,
+    "expected_exit": 1
+  }
+]
