@@ -13,29 +13,12 @@ use Vaulter\Models\Drive\FileVersion;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 use Vaulter\Support\Config;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * The race-free content-addressed blob store (H.3). commit() is the single CAS
- * entry point and runs ONE transaction whose FIRST statement is the
- * per-(scope,sha256) advisory lock, so every liveness decision is made from rows
- * read after the lock:
- *
- *   1. stage the incoming stream to a local seekable temp file, recompute sha256
- *      from THOSE bytes (never the live stream / client hash / S3 ETag);
- *   2. open the transaction, take the per-(scope,sha256) lock as statement #1;
- *   3. find-or-create the blob by its per-scope dedup key — a tombstoned match is
- *      RESURRECTED in the same locked transaction (this is what makes online GC
- *      safe), the UNIQUE (scope, sha256) constraint is the portable race backbone
- *      (loser re-SELECTs + reuses) FOR A NON-NULL SCOPE VALUE. For scope=tenant
- *      with a NULL tenant_id (single-tenant / tenancy disabled) that UNIQUE never
- *      fires (NULL ≠ NULL in SQL); `v_blobs.storage_key`'s own single-column
- *      UNIQUE is the actual backbone there (F-P1.5-03 / D18 — see
- *      {@see BlobStoreRepository::findOrCreate()} and
- *      ADR-0012 Amendment);
- *   4. promote bytes to the canonical key ONLY when the row is newly created — a
- *      dedup hit skips the physical write;
- *   5. NO synchronous ref_count++ (hot-row) — liveness truth is the edge in
- *      v_file_version_blobs, ref_count is a reconciled cache.
+ * Stage and hash outside the transaction, then lock (scope_key, sha256) before
+ * row lookup, resurrection and promotion. SQL rollback can leave orphan bytes;
+ * the reconciler uses this same lock before collecting them.
  */
 final readonly class BlobStore implements BlobStoreContract
 {
@@ -50,33 +33,31 @@ final readonly class BlobStore implements BlobStoreContract
     /**
      * @param resource $stream
      */
-    public function commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): Blob
+    public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob
     {
-        $dedupScope = Config::dedupScope();
         $disk ??= Config::defaultDisk();
 
         // Stage + hash OUTSIDE the transaction: hashing a multi-GB upload must not
         // hold the row/advisory lock. The lock guards only the liveness decision.
         $staged = $this->content->stage($stream);
-        $scopeSegment = $this->scopeSegment(dedupScope: $dedupScope, tenantId: $tenantId, storageId: $storageId);
-        $storageKey = $this->content->keyFor(scope: $scopeSegment, sha256: $staged->sha256());
+        $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
 
         try {
             return $this->database->transaction(function () use (
-                $staged, $dedupScope, $tenantId, $storageId, $disk, $storageKey
+                $staged, $scope, $disk, $storageKey
             ): Blob {
                 // H.3 invariant: the lock is the FIRST statement; every liveness
                 // decision below reads rows acquired after it.
-                $this->lock->acquire(scope: $this->lockScope($dedupScope, $tenantId, $storageId), sha256: $staged->sha256());
+                $this->lock->acquire(scope: $scope->key(), sha256: $staged->sha256());
 
                 $result = $this->blobs->findOrCreate(
                     sha256: $staged->sha256(),
                     sizeBytes: $staged->sizeBytes(),
                     storageKey: $storageKey,
                     disk: $disk,
-                    dedupScope: $dedupScope,
-                    tenantId: $tenantId,
-                    storageId: $storageId,
+                    scope: $scope,
+                    tenantId: $scope->tenantId(),
+                    storageId: $scope->storageId(),
                 );
 
                 // Promote bytes only when the row is newly created (dedup hit ⇒
@@ -113,30 +94,5 @@ final readonly class BlobStore implements BlobStoreContract
     public function read(Blob $blob): mixed
     {
         return $this->content->get($blob->storage_key, $blob->disk);
-    }
-
-    /**
-     * The scope SEGMENT baked into the storage_key (H.3): the dedup-scope value as
-     * a path-safe string. global → 'global'; tenant → 't<id>' (or 'tnull' when
-     * tenancy is off); storage → 's<id>' (or 'snull'). Distinct scopes therefore
-     * never resolve to the same physical object.
-     */
-    private function scopeSegment(string $dedupScope, ?int $tenantId, ?int $storageId): string
-    {
-        return match ($dedupScope) {
-            'storage' => 's'.($storageId ?? 'null'),
-            'tenant' => 't'.($tenantId ?? 'null'),
-            default => 'global',
-        };
-    }
-
-    /**
-     * The lock-namespace key for the advisory lock — the same scope discriminator
-     * the dedup-UNIQUE index keys on, so the lock and the constraint guard the
-     * same liveness unit.
-     */
-    private function lockScope(string $dedupScope, ?int $tenantId, ?int $storageId): string
-    {
-        return $this->scopeSegment(dedupScope: $dedupScope, tenantId: $tenantId, storageId: $storageId);
     }
 }

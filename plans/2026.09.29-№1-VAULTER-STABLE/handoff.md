@@ -1,24 +1,25 @@
-# HANDOFF — 2026-10-04 — after P1.3
+# HANDOFF — 2026-10-04 — after P1.5
 
-**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.5
+**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.6
 
 | Parameter | Meaning |
 |:--|:--|
 | Batch | solo |
-| Model class | frontier |
-| Model | claude-opus-5-5 |
+| Model class | implementation |
+| Model | gpt-6-sol |
 | Effort | high |
+| Thinking | high |
 | Context | continue-root |
-| Essence | P1.5: CAS data migration and repair-scopes. |
+| The bottom line | P1.5 complete; P1.6 locks quota accounting and revision numbers using the common tree and CAS order. |
 
 ```session-continuity-decision/v1
-{"evidence": ["batch:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.3/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
+{"evidence": ["batch:47b4c4cdf1b33b513eda17d727d8cba29f896a3d9aa31933e8b430a10ec89a76", "loaded-inputs:reusable", "cold-start-cost:0", "lifecycle:scope-complete", "checkpoint:artifacts/P1.5/completion.md"], "outcome": "continue-root", "reason": "authorized-scope-complete", "runnable": true, "schema_version": "session-continuity-decision/v1"}
 ```
 
-**Done:** P1.3 Done (green). Exact View for children/search/trash/shared/show children and actual Filament rows; batched ACL and abilities; scan cursors without total. Owner-approved Vue shared cursor migration applied. Review cursor/grok-4.7-high: two Major findings repaired, focused recheck zero findings. Requested 500k override was rejected and remains unattested. Evidence: artifacts/P1.3/completion.md.
+**Done:** Lossless CAS scope, migration №7 preserving old paths/disks, atomic and resumable scope repair, V01/V13/V14, public API snapshot and docs. Whole-work review: grok-4.7/high/500000. Evidence: artifacts/P1.5/completion.md.
 
-**Remaining:** P1.5, P1.6.
+**Remaining:** P1.6. This invocation authorized P1.5 and its whole-work review only; no successor executed. P1 is not closed while P1.6 remains open.
 
-**Open risks:** P1.6 must take over the deferred quota findings (new-version eager quota check outside the transaction; copy reads the source subtree without locks) and start from artifacts/P1.2/lock-matrix.md. StorageManager::root() re-provisioning hits the single-root index if a parentless row survives. ACL ascend follows the existing resolver's negative-depth/cycle behavior; signed cursor payloads follow the specified format. Prior owner dirty plan/configuration carriers remain unstaged. No push or release.
+**Open risks:** Historical mixed scopes require an operator to run dry-run and execute; tests exercised only isolated *_test/in-memory databases and fake local disks. Existing suite skips/risky annotations remain reported. Previously dirty shared plan/configuration files remain in the owner's worktree. Mutation follow-up remains stopped by D14. No push/release authorized.
 
-**Sources of truth:** phases/P1/P1.3.md; journal.jsonl; artifacts/P1.3/completion.md; artifacts/P1.3/owner-scope-extension.json; roadmap.md execution-sheet/v1.
+**Sources of truth:** phases/P1/P1.5.md; phases/P1/P1.5.state.md; artifacts/P1.5/completion.md; artifacts/P1.5/grok-review.md.

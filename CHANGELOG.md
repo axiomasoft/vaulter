@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Lossless `BlobScope`, `scope_key`, upgrade migration №7 and resumable
+  `vaulter:blobs:repair-scopes --dry-run|--execute` (AD20).
 - Batch ACL evaluation (`AccessResolver::evaluateMany`, `AclFolder`), `NodePage`,
   `ExactListing`, signed query-bound cursors and `listing.scan_budget` (AD12).
 - Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   creates, uploads, copies and renames (AD13, D21).
 
 ### Changed
+- CAS commit and content-key contracts take `BlobScope`; UUID/ULID scopes use
+  NULL-free uniqueness and the same `cas:{scope_key}:{sha256}` lock in commit, GC
+  and reconcile. Existing blob paths and disks remain authoritative (AD20).
 - Children, search, trash, shared, folder children and Filament now display only nodes
   with effective View for every driver. Shared uses cursors instead of page/total;
   REST listings omit totals and reuse batch ACL results for abilities (AD12).

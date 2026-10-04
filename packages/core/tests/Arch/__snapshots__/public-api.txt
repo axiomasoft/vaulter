@@ -17,7 +17,7 @@ Vaulter\Contracts\Access\HostRoleDriver
 
 Vaulter\Contracts\Cas\BlobStore
   attach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
-  commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): \Vaulter\Models\Cas\Blob
+  commit(mixed $stream, \Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): \Vaulter\Models\Cas\Blob
   detach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   read(\Vaulter\Models\Cas\Blob $blob): mixed
 
@@ -25,7 +25,7 @@ Vaulter\Contracts\Cas\ContentStore
   delete(string $key, ?string $disk = null): void
   exists(string $key, ?string $disk = null): bool
   get(string $key, ?string $disk = null): mixed
-  keyFor(string $scope, string $sha256): string
+  keyFor(\Vaulter\ValueObjects\Cas\BlobScope $scope, string $sha256): string
   promote(\Vaulter\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
   stage(mixed $stream): \Vaulter\Contracts\Cas\StagedObject
 
@@ -160,6 +160,20 @@ Vaulter\Database\VaulterDatabase
   lockTree(int|string $storageId): void
   lockTreeShared(int|string $storageId): void
   transaction(\Closure $callback, int $attempts = 3): mixed
+
+Vaulter\ValueObjects\Cas\BlobScope
+  dedupScope(): string
+  drive(string $id): \self
+  forUpload(string $dedupScope, ?string $tenantId, string $storageId): \self
+  fromSegment(string $segment): \self
+  global(): \self
+  isLegacy(): bool
+  key(): string
+  legacy(string $segment): \self
+  segment(): string
+  storageId(): ?string
+  tenant(string $id): \self
+  tenantId(): ?string
 
 Vaulter\Support\Config
   activityModel(): string

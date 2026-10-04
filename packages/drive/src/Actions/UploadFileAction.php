@@ -24,9 +24,11 @@ use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → BlobStore.commit
@@ -105,10 +107,18 @@ final readonly class UploadFileAction
                 $previousSize = $target->size_bytes;
             }
 
+            $storageId = $data->storage->getKey();
+            if (!is_int($storageId) && !is_string($storageId)) {
+                throw new LogicException('An upload requires a persisted storage identifier.');
+            }
+
             $blob = $this->blobs->commit(
                 stream: $data->stream,
-                tenantId: $this->tenantId($data),
-                storageId: $this->storageIdForScope($data),
+                scope: BlobScope::forUpload(
+                    Config::dedupScope(),
+                    $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
+                    (string) $storageId,
+                ),
                 disk: $data->storage->disk,
             );
 
@@ -304,24 +314,6 @@ final readonly class UploadFileAction
         $target = $data->targetNode;
 
         return $target instanceof Node ? $target->size_bytes : 0;
-    }
-
-    private function tenantId(UploadFileData $data): ?int
-    {
-        $tenantId = $data->storage->tenant_id;
-
-        return is_numeric($tenantId) ? (int) $tenantId : null;
-    }
-
-    /**
-     * The storage id handed to the CAS only matters under dedup_scope=storage; for
-     * other scopes BlobStore ignores it, so passing it unconditionally is safe.
-     */
-    private function storageIdForScope(UploadFileData $data): ?int
-    {
-        $storageId = $data->storage->id;
-
-        return is_numeric($storageId) ? (int) $storageId : null;
     }
 
     /**

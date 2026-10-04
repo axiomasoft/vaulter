@@ -15,6 +15,7 @@ use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * sweepPending must run its critical section through the SERIALIZABLE + retry-on-40001
@@ -84,7 +85,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
             $this->inner->delete($key, $disk);
         }
 
-        public function keyFor(string $scope, string $sha256): string
+        public function keyFor(BlobScope $scope, string $sha256): string
         {
             return $this->inner->keyFor($scope, $sha256);
         }

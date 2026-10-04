@@ -15,6 +15,7 @@ use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Blob reconciliation (H.3): ref_count is a CACHE, not the truth, so it drifts and
@@ -54,20 +55,8 @@ use Vaulter\Support\Identity;
  */
 final readonly class BlobReconciler
 {
-    /**
-     * A committed CAS key is EXACTLY "<scope>/<a>/<b>/<sha256>": the scope segment,
-     * two 1-byte shard segments, and the 64-char lowercase-hex digest. The scope is
-     * "global" or a tenant/storage discriminator ("t<id>" / "s<id>") where the id is
-     * digits, a 26-char ULID, or the literal "null" — BlobStore::scopeSegment emits
-     * "tnull"/"snull" for a NULL tenant/storage id (tenancy off), so those orphans
-     * must be detectable too. This pattern is the FIRST safety guard of the orphan
-     * walk: staging/tmp parts, resumable-upload fragments and foreign files do not
-     * match it and are never considered for deletion. The shard bytes are NOT
-     * trusted from the path — keyFor() re-derives them from the sha256 and the whole
-     * path must round-trip (the decisive guard), so a mis-sharded object also fails
-     * to match.
-     */
-    private const string KEY_PATTERN = '#^(?<scope>global|[ts](?:\d+|null|[0-9A-HJKMNP-TV-Z]{26}))/[0-9a-f]{2}/[0-9a-f]{2}/(?<sha256>[0-9a-f]{64})$#';
+    /** Both historical two-shard keys and lossless single-shard keys. */
+    private const string KEY_PATTERN = '#^(?<scope>global|[ts](?:\d+|null|[0-9A-HJKMNP-TV-Z]{26})|g|[td]-~?[A-Za-z0-9_-]{1,128})/[0-9a-f]{2}/(?:[0-9a-f]{2}/)?(?<sha256>[0-9a-f]{64})$#';
 
     public function __construct(
         private ContentStore $content,
@@ -322,7 +311,11 @@ final readonly class BlobReconciler
             return null;
         }
 
-        $scope = $matches['scope'];
+        try {
+            $scope = BlobScope::fromSegment($matches['scope']);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
         $sha256 = $matches['sha256'];
 
         // Re-derive the canonical key from the parsed parts; the shard bytes must be
@@ -331,7 +324,7 @@ final readonly class BlobReconciler
             return null;
         }
 
-        return ['scope' => $scope, 'sha256' => $sha256];
+        return ['scope' => $scope->key(), 'sha256' => $sha256];
     }
 
     /**

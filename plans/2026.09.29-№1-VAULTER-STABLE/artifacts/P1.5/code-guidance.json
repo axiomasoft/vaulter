@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "rg",
+    "-n",
+    "is_numeric\\(\\$(tenantId|storageId)\\)|'snull'|'tnull'",
+    "packages/drive/src",
+    "packages/media/src/Cas/BlobStore.php"
+  ],
+  "matches": 0,
+  "rg_exit": 1
+}

@@ -8,6 +8,7 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Сквозной GC-конвейер БЕЗ ручного стампинга delete_after_at (H.3). Раньше mark-фаза
@@ -28,7 +29,7 @@ it('реальный конвейер: detach→reconcile→mark томбств�
     $gc = app(BlobGarbageCollector::class);
 
     // Коммитим блоб и навешиваем настоящее ребро — блоб живой.
-    $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 
@@ -55,7 +56,7 @@ it('реальный конвейер: за время grace sweep не трог
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
     $store->detach($version, $blob);
@@ -87,7 +88,7 @@ it('реальный конвейер: всё ещё ссылающийся бл
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 

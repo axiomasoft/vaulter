@@ -1,0 +1,74 @@
+[
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E9",
+    "command": "- `(cd packages/media && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Cas/BlobScopeKeyTest.php)` → `9` dataset-кейсов passed.",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E10",
+    "command": "- `(cd packages/media && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Cas)` → 0 failed (вкл. V13, V14; 0 skipped у новых тестов).",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E11",
+    "command": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/BlobScopeKeyMigrationTest.php packages/core/tests/Unit/BlobScopeTest.php` → 0 failed.",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E12",
+    "command": "- Негативный контроль V01 (Scope п.8) → красный; после возврата — зелёный.",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E13",
+    "command": "- Code Guidance → пусто.",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  },
+  {
+    "schema_version": "validation-receipt/v1",
+    "evidence_id": "E14",
+    "command": "- Гейт core и гейты drive, media → exit 0.",
+    "contract_sha256": "79fc1c0f8ac28559e3d8dc53be01838ae8ca1ef4c3e0cc79b69a3ebe98e961cc",
+    "spec_sha256": "da6946ad8ad2fdb0cc1a101e9935e49f82eb370fdfaf7ae561cb263411db0968",
+    "head": "2c448d629f131c21a5e1a436461382e21ec578f8",
+    "tree": "b23aa79105e17ce0ef790c7c423b42f370566a65c5c8c04a8334cd17252498bd",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16",
+    "exit_code": 0,
+    "executed_at": "2026-10-04T12:43:18Z"
+  }
+]

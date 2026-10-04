@@ -13,6 +13,7 @@ use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit atomicity (H.3): if the transaction rolls back, no blob row is left
@@ -57,7 +58,7 @@ it('rollback не оставляет висящей строки blob', function
             $this->inner->delete($key, $disk);
         }
 
-        public function keyFor(string $scope, string $sha256): string
+        public function keyFor(BlobScope $scope, string $sha256): string
         {
             return $this->inner->keyFor($scope, $sha256);
         }
@@ -71,7 +72,7 @@ it('rollback не оставляет висящей строки blob', function
         database: app(VaulterDatabase::class),
     );
 
-    expect(fn () => $store->commit(stringStream('boom bytes'), tenantId: 1))
+    expect(fn () => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused')))
         ->toThrow(RuntimeException::class, 'promote boom');
 
     // The transaction rolled back: zero rows, zero objects.
@@ -82,7 +83,7 @@ it('rollback не оставляет висящей строки blob', function
 it('staged temp-файл удаляется после успешного коммита', function (): void {
     $before = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
-    app(BlobStore::class)->commit(stringStream('temp cleanup'), tenantId: 1);
+    app(BlobStore::class)->commit(stringStream('temp cleanup'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
 
     $after = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 

@@ -1,0 +1,15 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Cas\BlobScopeKeyTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates real identifier strategies across dedup scopes and GC w[39m[90m…[39m [90m0.18s[39m  
+
+  [90mTests:[39m    [32;1m9 passed[39;22m[90m (75 assertions)[39m
+  [90mDuration:[39m [39m1.78s[39m
+

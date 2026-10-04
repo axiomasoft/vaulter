@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The CAS console commands wire the collector / reconciler to artisan (H.3): the
@@ -20,7 +21,7 @@ beforeEach(function (): void {
 it('vaulter:gc-blobs прогоняет обе фазы', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('via command'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('via command'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     // Already tombstoned past grace → the sweep phase removes it.
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subDay()])->save();
 
@@ -33,7 +34,7 @@ it('vaulter:gc-blobs прогоняет обе фазы', function (): void {
 it('vaulter:gc-blobs --pending подметает упавший staging', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('half upload'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     // A crashed staging: pending, old, no edge.
     $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDay()])->save();
 
@@ -46,7 +47,7 @@ it('vaulter:gc-blobs --pending подметает упавший staging', funct
 it('vaulter:reconcile-blobs корректирует ref_count и сообщает', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('reconcile cmd'), tenantId: 1);
+    $blob = $store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 
@@ -57,7 +58,7 @@ it('vaulter:reconcile-blobs корректирует ref_count и сообщае
 });
 
 it('vaulter:reconcile-blobs падает, когда есть dangling-строка', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), tenantId: 1);
+    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
 
     Storage::disk('local')->delete($blob->storage_key);
 

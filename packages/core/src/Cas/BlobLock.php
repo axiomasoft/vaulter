@@ -36,7 +36,27 @@ final class BlobLock
      */
     public function acquire(string $scope, string $sha256): void
     {
-        $this->database->advisoryLock($scope.'|'.$sha256);
+        $this->database->advisoryLock('cas:'.$scope.':'.$sha256);
+    }
+
+    /**
+     * Acquire multiple CAS keys in the database's lock order, including hash
+     * collisions. Every operation needing multiple addresses uses this order.
+     *
+     * @param list<string> $keys full cas:{scope_key}:{sha256} keys
+     */
+    public function acquireMany(array $keys): void
+    {
+        if (!$this->isPostgres() || $keys === []) {
+            return;
+        }
+
+        $this->database->connection()->select(
+            'SELECT pg_advisory_xact_lock(lock_key) FROM '
+            .'(SELECT DISTINCT hashtext(value) AS lock_key '
+            .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',
+            [json_encode($keys, JSON_THROW_ON_ERROR)],
+        );
     }
 
     /**

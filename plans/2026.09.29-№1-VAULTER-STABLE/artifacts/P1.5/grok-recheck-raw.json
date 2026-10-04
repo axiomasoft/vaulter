@@ -1,0 +1,27 @@
+{
+  "text": "The three earlier findings are fixed, and the lock change does not reopen a byte-loss or lock-order cycle.\n\nPostgreSQL repair and batched mark both call `BlobLock::acquireMany`, which locks distinct `hashtext` values in numeric order. The new regression picks a pair where `hashtext('cas:legacy:snull:…')` is lower than `hashtext('cas:drive:…')`, so the old lexical order was the opposite. GC holds that lower lock, waits until the repair session is actually waiting on an advisory lock, then marks the batch with deadlock retries disabled. The repair command acquires the target once, exits 0, moves the revision, leaves `ref_count` at 1, and the source object remains readable. The old run retried the target acquisition (`attempts` 2). Single-key commit, sweep, and prune still take one lock and cannot invert this order. An absent target has no row and no second lock.\n\nOn MySQL the advisory call is a no-op. Repair and mark both take `FOR UPDATE` through `PRIMARY` in ascending primary-key order before any per-row repository lock. An absent target is not in that scan, so it cannot be locked in the opposite order. This path was inspected, not concurrency-tested. A primary scan can lock extra rows, but only in the same direction as mark, so it does not recreate the deadlock. The 32-bit `hashtext` collision behavior is unchanged.\n\nThe dry-run test now requires two `| move |` rows and both `drive:{id}` values. The guide diagram and `ContentStore::keyFor` describe `<scope>/ab/<sha256>`, and the legacy `ab/cd` layout remains documented. V01 plants two rowless objects per case and compares the exact orphan-key list. All nine identifier and scope cases passed on SQLite (84 assertions) and again inside the PostgreSQL CAS run.\n\nThe numeric-coercion mutant fails the ULID and UUID7 storage cases with `drive:missing` (2 failed, 7 passed). The restored `BlobScope` matches `c7e6fca4…` and passes all 9. The code-guidance search reports no matches.\n\nCurrent gates, all exit 0: PostgreSQL CAS 141 passed and 4 skipped, including V13, V14, and the lock-order test; the focused lock-order rerun 19 passed; core Pest 662 passed; drive Pest 499 passed; core and drive PHPStan and Pint clean; media SQLite Pest, PHPStan, and Pint clean; migration and `BlobScope` unit tests 20 passed.\n\nNo remaining findings.\n\nVerdict: GREEN",
+  "stopReason": "end_turn",
+  "sessionId": "b813ef4a-83d4-489b-89ba-58be27563851",
+  "requestId": "ea366f77-df3d-43e0-a418-c164a60f6891",
+  "usage": {
+    "input_tokens": 54837,
+    "cache_read_input_tokens": 429184,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 10030,
+    "reasoning_tokens": 9386,
+    "total_tokens": 494051
+  },
+  "num_turns": 2,
+  "total_cost_usd": 0.26142328,
+  "total_cost_usd_ticks": 2614232800,
+  "modelUsage": {
+    "grok-4.7-build": {
+      "inputTokens": 54837,
+      "outputTokens": 10030,
+      "cacheReadInputTokens": 429184,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 2,
+      "costUSD": 0.26142328
+    }
+  }
+}

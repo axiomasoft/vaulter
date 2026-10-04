@@ -6,6 +6,7 @@ namespace Vaulter\Contracts\Cas;
 
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The high-level content-addressed blob lifecycle (H.3): the race-free CAS.
@@ -30,7 +31,7 @@ interface BlobStore
      *
      * @param resource $stream
      */
-    public function commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): Blob;
+    public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob;
 
     /**
      * Create the version↔blob edge in v_file_version_blobs. The edge — not

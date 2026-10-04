@@ -300,11 +300,7 @@ final readonly class BlobGarbageCollector
      */
     private function scopeFor(Blob $blob): string
     {
-        return match ($blob->dedup_scope) {
-            'storage' => 's'.($blob->storage_id ?? 'null'),
-            'tenant' => 't'.($blob->tenant_id ?? 'null'),
-            default => 'global',
-        };
+        return $blob->scope_key;
     }
 
     /**
@@ -341,23 +337,16 @@ final readonly class BlobGarbageCollector
 
         return $this->database->transaction(function () use ($batch, $graceHours): int {
             if ($this->lock->isPostgres()) {
-                $keys = $batch->map(fn (Blob $blob): string => $this->scopeFor($blob).'|'.$blob->sha256)->all();
+                $keys = array_values($batch->map(fn (Blob $blob): string => 'cas:'.$this->scopeFor($blob).':'.$blob->sha256)->all());
 
-                // The same hashtext namespace as BlobLock. Acquire distinct locks
-                // in hash order (including collisions), before any data read.
-                $this->database->connection()->select(
-                    'SELECT pg_advisory_xact_lock(lock_key) FROM '
-                    .'(SELECT DISTINCT hashtext(value) AS lock_key '
-                    .'FROM jsonb_array_elements_text(CAST(? AS jsonb)) ORDER BY lock_key) AS locks',
-                    [json_encode($keys, JSON_THROW_ON_ERROR)],
-                );
+                $this->lock->acquireMany($keys);
             }
 
             $model = Config::blobModel();
             $query = $model::query()->whereKey($batch->modelKeys())->orderBy((new $model)->getKeyName());
 
             if ($this->lock->usesRowLock()) {
-                $query->lockForUpdate();
+                $query->forceIndex('PRIMARY')->lockForUpdate();
             }
 
             $fresh = $query->get();

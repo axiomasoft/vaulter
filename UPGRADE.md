@@ -6,6 +6,42 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Lossless CAS scope and migration №7 (AD20)
+
+Replace `BlobStore::commit($stream, tenantId: ..., storageId: ...)` with
+`commit($stream, BlobScope::forUpload($dedupScope, $tenantId, (string) $storageId), $disk)`.
+`ContentStore::keyFor()` now receives `Vaulter\ValueObjects\Cas\BlobScope`.
+Host tenant IDs and drive IDs remain strings without numeric coercion. Tenant scope
+with no tenant uses `BlobScope::global()`. Scope IDs contain 1–96 bytes; IDs outside
+`[A-Za-z0-9_-]{1,64}` are encoded as unpadded base64url in physical paths.
+
+Migration `2026_10_01_000007_blob_scope_key` backfills the NOT NULL `scope_key`
+and replaces the dedup index with `UNIQUE(scope_key, sha256)`. It preserves all
+existing `storage_key` values and objects. A uniqueness conflict stops migration
+before the old index is removed; investigate the conflicting rows before retrying.
+Custom blob schemas must also provide `scope_key`.
+
+After the SQL migrations, inspect and repair mixed legacy areas:
+
+```bash
+php artisan vaulter:blobs:repair-scopes --dry-run
+php artisan vaulter:blobs:repair-scopes --execute
+```
+
+Exactly one mode is required. Review `hash_mismatch` and `unreferenced` reports;
+these blobs remain unchanged. Each target commits independently, so a failed copy
+can be retried. Old objects stay until GC; successful moves are journalled in
+`storage/logs/vaulter-repair-scopes.log`. Target scope comes from revision → file →
+node → storage; no tenant is guessed. A storage with NULL tenant belongs to the
+host-wide global scope. Reads always use the disk and path recorded on the blob.
+Run with operational access to all storages in the affected panel, and pause other
+operators changing tenant assignments during repair.
+
+The migration's `down()` restores the historical structure using the current
+`dedup.scope`; it does not undo object copies or redirected edges. If repaired
+rows conflict with the old index, rollback fails before removing `scope_key`.
+Take a backup before upgrading or repairing data.
+
 ### Exact listing and shared cursors (AD12)
 
 Before: children, search, trash and Filament exposed grant-reachable candidates,

@@ -10,6 +10,7 @@ use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * A {@see ContentStore} that DELIBERATELY does NOT implement
@@ -53,7 +54,7 @@ final readonly class NonListableContentStore implements ContentStore
         $this->inner->delete($key, $disk);
     }
 
-    public function keyFor(string $scope, string $sha256): string
+    public function keyFor(BlobScope $scope, string $sha256): string
     {
         return $this->inner->keyFor($scope, $sha256);
     }

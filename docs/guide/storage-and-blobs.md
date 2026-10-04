@@ -35,7 +35,7 @@ ContentStore::stage()   ─► local seekable temp file, sha256 recomputed from 
 BlobStore::commit()     ─► one locked transaction: find-or-create v_blobs row by (scope, sha256)
      │                       └─ dedup hit?  reuse the row, skip the physical write
      ▼
-ContentStore::promote() ─► write staged bytes to "<scope>/ab/cd/<sha256>" on the disk
+ContentStore::promote() ─► write staged bytes to "<scope>/ab/<sha256>" on the disk
      │
      ▼
 v_file_version_blobs    ─► the EDGE that pins the blob alive (liveness truth)
@@ -72,11 +72,12 @@ A blob is just metadata. The `v_blobs` row (model `Vaulter\Models\Cas\Blob`) car
 | `sha256` | The lowercase hex content address (always recomputed server-side). |
 | `size_bytes` | Authoritative size of the durable bytes. |
 | `disk` | The Flysystem disk the canonical object lives on. |
-| `storage_key` | The scope-qualified path of the object — `"<scope>/ab/cd/<sha256>"`. |
+| `storage_key` | The scope-qualified path of the object — `"<scope>/ab/<sha256>"`. |
 | `status` | Lifecycle state (see [Blob lifecycle](#blob-lifecycle)). |
 | `ref_count` | A **reconciled cache** of the live edge count — *not* the liveness truth. |
 | `dedup_scope` | `global` \| `tenant` \| `storage` — the boundary the address is unique within. |
-| `tenant_id` / `storage_id` | The scope discriminators (always present; only the relevant one is indexed). |
+| `scope_key` | Lossless `global`, `tenant:{id}` or `drive:{id}`; unique together with `sha256`. |
+| `tenant_id` / `storage_id` | Informational scope IDs; `scope_key` owns deduplication. |
 | `first_seen_at` / `committed_at` / `delete_after_at` | Staging, commit, and GC-grace timestamps. |
 
 The bytes themselves never appear in any column. The model timestamps are disabled
@@ -84,13 +85,10 @@ The bytes themselves never appear in any column. The model timestamps are disabl
 
 ### The storage key is scope-qualified
 
-`ContentStore::keyFor()` builds the path from the dedup scope plus a two-level shard
-on the first four hex characters of the digest:
-
-```php
-// Vaulter\Media\Cas\Sha256ContentStore::keyFor()
-"{$scope}/{$a}/{$b}/{$sha256}"   // e.g. "t42/ab/cd/abcd…ef"  (scope = tenant 42)
-```
+`ContentStore::keyFor(BlobScope $scope, string $sha256)` uses the first two digest
+characters as one shard: `{scope-segment}/{sha[0:2]}/{sha}`. Historical scopes keep
+`{legacy-segment}/{sha[0:2]}/{sha[2:4]}/{sha}`. Migration preserves their stored paths;
+reads always use the blob row's `storage_key` and `disk`.
 
 ::: warning Why the scope segment matters
 Under per-scope dedup, two scopes may legitimately hold the same `sha256`. Without
@@ -101,9 +99,15 @@ resolve to the same physical object.
 
 The scope segment is derived from the dedup scope:
 
-- `global` → `global`
-- `tenant` → `t<id>` (or `tnull` when no tenant)
-- `storage` → `s<id>` (or `snull`)
+- `global` → `g`
+- `tenant` → `t-{id}`, or `g` when there is no tenant
+- `storage` → `d-{id}`
+
+`BlobScope` preserves string IDs, including UUIDs, ULIDs and leading zeroes.
+Identifiers contain 1–96 bytes. An ID matching `[A-Za-z0-9_-]{1,64}` is used verbatim;
+other IDs use `~` followed by unpadded base64url. `fromSegment()` reverses this
+encoding and rejects noncanonical segments. Legacy factories retain `global`,
+`s<id>`, `t<id>`, `snull` and `tnull` paths.
 
 ## Hashing: the staged file, never the live stream
 
@@ -135,27 +139,23 @@ The dedup scope decides the boundary a content address is unique within:
 
 | Scope | Uniqueness | Effect |
 |---|---|---|
-| `global` | `UNIQUE (sha256)` | One physical object per `sha256` across the whole install. |
-| `tenant` | `UNIQUE (tenant_id, sha256)` | One object per tenant — no cross-tenant existence leak. **Default.** |
-| `storage` | `UNIQUE (storage_id, sha256)` | One object per storage container. |
+| `global` | `UNIQUE (scope_key, sha256)` | One physical object per `sha256` across the whole install. |
+| `tenant` | `UNIQUE (scope_key, sha256)` | One object per tenant — no cross-tenant existence leak. **Default.** |
+| `storage` | `UNIQUE (scope_key, sha256)` | One object per storage container. |
 
-This single setting drives **both** sides of the design at once:
-
-1. **The dedup-UNIQUE index shape.** `PanelTablesBuilder::dedupUniqueColumns()`
-   emits the index over `(sha256)`, `(tenant_id, sha256)` or `(storage_id, sha256)`.
-   The `tenant_id` / `storage_id` columns *always* exist on `v_blobs`; only the
-   UNIQUE index spans the scope-relevant subset.
-2. **The scope-qualified key** described above.
+`BlobScope::forUpload()` selects a `scope_key` from this setting. The schema always
+uses `UNIQUE(scope_key, sha256)`; scope changes do not alter that index shape.
+`UNIQUE(storage_key)` remains an independent physical-address guard.
 
 ::: tip The UNIQUE index is the portable race backbone
-When two requests upload identical bytes concurrently, the `UNIQUE (scope, sha256)`
+When two requests upload identical bytes concurrently, the `UNIQUE (scope_key, sha256)`
 constraint is the cross-database backbone: one `INSERT` wins, the loser catches the
 unique violation, re-`SELECT`s the winning row, and reuses it. This holds on
 PostgreSQL, MySQL and SQLite even where the advisory lock below is a no-op.
 :::
 
 ::: warning Choosing a scope is a one-way door
-The scope is baked into every blob's `storage_key` *and* into the unique index. Pick
+The scope is stored in every blob's `scope_key` and `storage_key`. Pick
 it at install time. `tenant` is the safe default for multi-tenant apps because it
 prevents one tenant from learning another tenant holds a given file (an existence
 leak), at the cost of storing identical bytes once per tenant. See
@@ -174,8 +174,8 @@ decision is made from rows read *after* the lock:
 $staged = $this->content->stage($stream);          // 1. stage + hash OUTSIDE the tx
 $key    = $this->content->keyFor($scope, $staged->sha256());
 
-DB::transaction(function () use (…) {
-    $this->lock->acquire($scope, $staged->sha256());          // 2. lock = statement #1
+$this->database->transaction(function () use (…) {
+    $this->database->advisoryLock('cas:'.$scope->key().':'.$staged->sha256());          // 2. lock = statement #1
 
     $result = $this->blobs->findOrCreate(…);                  // 3. find-or-create by dedup key
                                                               //    (a tombstoned match is RESURRECTED)
@@ -281,7 +281,7 @@ Per database driver (`Vaulter\Cas\BlobLock`):
   no-op.
 - **SQLite** — single-writer; the transaction itself serialises.
 
-The `UNIQUE (scope, sha256)` constraint is the portable backbone that holds on all
+The `UNIQUE (scope_key, sha256)` constraint is the portable backbone that holds on all
 three even when the advisory lock is a no-op.
 
 ### Pending sweep
@@ -489,3 +489,24 @@ different, recommended backstop — see the `uploads` config.)
 - [Recipes › Custom storage driver](/guide/recipes) — swap the disk / drive
   a custom `ContentStore`.
 - [Recipes › Blob GC & reconcile cron](/guide/recipes) — production operations.
+
+## Repairing historical mixed scopes
+
+Migration №7 fills `scope_key` from historical IDs without moving any object.
+Blobs previously committed without a numeric storage or tenant ID become
+`legacy:snull` or `legacy:tnull`. Inspect them with
+`php artisan vaulter:blobs:repair-scopes --dry-run`, then apply with `--execute`.
+The report shows blob, digest, source scope, storage, edge count, target and action.
+Unreferenced blobs and SHA-256 mismatches are reported without changing their bytes
+or references. Each target runs in its own `VaulterDatabase` transaction: lock the
+affected trees and both CAS addresses, verify source bytes, copy to the target,
+verify target bytes, redirect revision edges and the legacy `blob_id`, and rebuild
+ref-count caches. Existing target blobs retain their authoritative disk/path.
+Old objects remain until GC. Interrupted repairs resume without duplicate moves;
+successes append JSON to `storage/logs/vaulter-repair-scopes.log`.
+
+The CAS saga is stage → SHA-256 → `cas:{scope_key}:{sha256}` lock → row lookup or
+resurrection → conditional promotion → edge → SQL commit. SQL rollback after
+promotion can leave an orphan. Reconcile recognizes both key layouts, waits for
+`orphan_grace_hours`, and rechecks row absence under the same CAS lock before
+removing bytes. GC uses the blob row's `scope_key` with that identical namespace.

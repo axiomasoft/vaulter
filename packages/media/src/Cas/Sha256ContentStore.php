@@ -10,6 +10,7 @@ use Vaulter\Contracts\Cas\ListableContentStore;
 use Vaulter\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * The default ContentStore (H.3): hash the LOCAL staged temp file, never the live
@@ -149,14 +150,13 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
         yield from $this->driver->listContents($disk);
     }
 
-    public function keyFor(string $scope, string $sha256): string
+    public function keyFor(BlobScope $scope, string $sha256): string
     {
-        // "<scope>/ab/cd/<sha256>" — the scope segment is what stops two dedup
-        // scopes sharing one physical object (H.3 / D18′).
+        $segment = $scope->segment();
         $a = substr($sha256, 0, 2);
-        $b = substr($sha256, 2, 2);
+        $legacyShard = $scope->isLegacy() ? substr($sha256, 2, 2).'/' : '';
 
-        return "{$scope}/{$a}/{$b}/{$sha256}";
+        return "{$segment}/{$a}/{$legacyShard}{$sha256}";
     }
 
     /**

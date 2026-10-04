@@ -1,0 +1,30 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Cas\ScopeKeyReconcileTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit repairs while batch GC holds the first advisory lock without a l[39m[90m…[39m [90m2.34s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Cas\ScopeKeyReconcileTest[22m [90m>[39m it repairs while batch GC holds…   
+[39;1m  Failed asserting that two arrays are identical.
+  [39;22m[32m Array &0 [[39m[39;1m
+  [39;22m[32m     'exit' => 0,[39m[39;1m
+  [39;22m[31m-    'attempts' => 1,[39m[39;1m
+  [39;22m[32m+    'attempts' => 2,[39m[39;1m
+  [39;22m[32m ][39m[39;1m
+  [39;22m
+
+  at [32mtests/Cas/ScopeKeyReconcileTest.php[39m:[32m140[39m
+    136▕         ]);
+    137▕         foreach ($outcomes as $outcome) {
+    138▕             expect($outcome->ok)->toBeTrue($outcome->message ?? '');
+    139▕         }
+  ➜ 140▕         expect($outcomes[1]->value)->toBe(['exit' => 0, 'attempts' => 1])
+    141▕             ->and($version->fresh()->blob_id)->toBe($target->getKey())
+    142▕             ->and($target->fresh()->ref_count)->toBe(1)
+    143▕             ->and(stream_get_contents($store->read($target)))->toBe($bytes);
+    144▕         Storage::disk('local')->assertExists($source->storage_key);
+
+  [33m1   [39m[39;1mtests/Cas/ScopeKeyReconcileTest.php[39;22m:[39;1m140[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (5 assertions)[39m
+  [90mDuration:[39m [39m2.38s[39m
+

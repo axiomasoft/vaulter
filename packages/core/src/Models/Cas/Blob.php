@@ -35,6 +35,7 @@ use Vaulter\Support\Config;
  * @property string          $storage_key
  * @property BlobStatus      $status
  * @property int             $ref_count
+ * @property string          $scope_key
  * @property string          $dedup_scope
  * @property string|null     $etag
  * @property string|null     $md5

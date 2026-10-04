@@ -11,6 +11,7 @@ use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
+use Vaulter\Media\Console\RepairBlobScopesCommand;
 use Vaulter\Support\Config;
 
 /**
@@ -33,7 +34,8 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
         $package
             ->name('vaulter-media')
             ->hasCommand(GcBlobsCommand::class)
-            ->hasCommand(ReconcileBlobsCommand::class);
+            ->hasCommand(ReconcileBlobsCommand::class)
+            ->hasCommand(RepairBlobScopesCommand::class);
     }
 
     public function packageRegistered(): void

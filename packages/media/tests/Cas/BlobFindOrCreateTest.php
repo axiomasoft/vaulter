@@ -8,6 +8,7 @@ use Vaulter\Cas\BlobLock;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * find-or-create regressions (H.3): the row id is always real (the ON CONFLICT
@@ -29,8 +30,8 @@ it('возвращает РЕАЛЬНЫЙ id (регрессия на null-id и
         sizeBytes: 7,
         storageKey: "t1/{$sha[0]}{$sha[1]}/{$sha[2]}{$sha[3]}/{$sha}",
         disk: 'local',
-        dedupScope: 'tenant',
-        tenantId: 1,
+        scope: BlobScope::tenant('1'),
+        tenantId: '1',
         storageId: null,
     ));
 
@@ -47,12 +48,12 @@ it('второй find-or-create тех же байт → created=false, тот �
 
     $first = DB::transaction(fn (): array => $repo->findOrCreate(
         sha256: $sha, sizeBytes: 10, storageKey: $key, disk: 'local',
-        dedupScope: 'tenant', tenantId: 1, storageId: null,
+        scope: BlobScope::tenant('1'), tenantId: '1', storageId: null,
     ));
 
     $second = DB::transaction(fn (): array => $repo->findOrCreate(
         sha256: $sha, sizeBytes: 10, storageKey: $key, disk: 'local',
-        dedupScope: 'tenant', tenantId: 1, storageId: null,
+        scope: BlobScope::tenant('1'), tenantId: '1', storageId: null,
     ));
 
     expect($second['created'])->toBeFalse()
@@ -67,7 +68,7 @@ it('find-or-create на tombstoned-строке воскрешает её', func
 
     $created = DB::transaction(fn (): array => $repo->findOrCreate(
         sha256: $sha, sizeBytes: 5, storageKey: $key, disk: 'local',
-        dedupScope: 'tenant', tenantId: 1, storageId: null,
+        scope: BlobScope::tenant('1'), tenantId: '1', storageId: null,
     ));
 
     Blob::query()->whereKey($created['blob']->getKey())->update([
@@ -77,7 +78,7 @@ it('find-or-create на tombstoned-строке воскрешает её', func
 
     $again = DB::transaction(fn (): array => $repo->findOrCreate(
         sha256: $sha, sizeBytes: 5, storageKey: $key, disk: 'local',
-        dedupScope: 'tenant', tenantId: 1, storageId: null,
+        scope: BlobScope::tenant('1'), tenantId: '1', storageId: null,
     ));
 
     expect($again['created'])->toBeFalse()

@@ -33,6 +33,7 @@ beforeEach(function (): void {
     ]);
 
     $this->blob = ForceCreates::make(Blob::class, [
+        'scope_key' => 'global',
         'sha256' => str_repeat('b', 64),
         'size_bytes' => 100,
         'storage_key' => 'global/bb/bb/'.str_repeat('b', 64),

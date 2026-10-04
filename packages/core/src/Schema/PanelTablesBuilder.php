@@ -286,30 +286,9 @@ final class PanelTablesBuilder
         $table->timestamp('delete_after_at')->nullable();
         $this->extraData(table: $table, panel: $panel);
 
-        // Dedup-UNIQUE by scope (D18 / H.3) — this index IS the portable race
-        // backbone for concurrent identical uploads: one INSERT wins, the loser
-        // catches the unique violation and re-SELECTs + reuses. The column set is
-        // finalised per config('vaulter.dedup.scope') (this resolves the M1a note
-        // that tenant_id was emitted unconditionally):
-        //   global  → UNIQUE (sha256)              one object install-wide
-        //   tenant  → UNIQUE (tenant_id, sha256)   no cross-tenant existence leak
-        //   storage → UNIQUE (storage_id, sha256)
-        // tenant_id/storage_id columns always exist (the model carries them); only
-        // the UNIQUE index spans the scope-relevant subset. Index names are derived
-        // from the table so a per-panel prefixed table never collides.
-        //
-        // CAVEAT (F-P1.5-03 / D18, VLT-REMED): for scope=tenant with tenant_id=NULL
-        // (a single-tenant host, or tenancy simply not enabled — the common case),
-        // this UNIQUE does NOT converge concurrent identical uploads: SQL treats
-        // every NULL as distinct, so UNIQUE(NULL, sha256) never raises a violation
-        // and two committers of the same bytes can both "win" the INSERT. The row
-        // still converges to ONE physical object because storage_key_uniq below is
-        // a SEPARATE, scope-qualified, single-column UNIQUE that has no NULL in its
-        // column — the actual race backbone for NULL-tenant dedup. Keep
-        // storage_key_uniq single-column (never compose it with disk/anything else)
-        // — see ADR-0012 Amendment.
+        $table->string('scope_key', 191);
         $name = $table->getTable();
-        $table->unique($this->dedupUniqueColumns(), "{$name}_dedup_uniq");
+        $table->unique(['scope_key', 'sha256'], "{$name}_scope_sha_uniq");
         $table->unique('storage_key', "{$name}_storage_key_uniq");
 
         // GC scan support (§2.3): committed orphans past their grace deadline.
@@ -1277,22 +1256,6 @@ final class PanelTablesBuilder
             'activity' => $panel->featureEnabled('activity'),
             'outbox', 'webhook_endpoints', 'webhook_deliveries' => $panel->featureEnabled('reliability'),
             default => false,
-        };
-    }
-
-    /**
-     * The column set for the blob dedup-UNIQUE index, derived from the configured
-     * dedup scope (D18 / H.3). sha256 is always last so the index also serves
-     * content-address lookups within the scope.
-     *
-     * @return list<string>
-     */
-    private function dedupUniqueColumns(): array
-    {
-        return match (Config::dedupScope()) {
-            'global' => ['sha256'],
-            'storage' => ['storage_id', 'sha256'],
-            default => ['tenant_id', 'sha256'],
         };
     }
 

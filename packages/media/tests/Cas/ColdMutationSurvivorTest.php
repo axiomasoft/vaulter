@@ -25,6 +25,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
 use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -62,7 +63,7 @@ function r18PgAdvisoryLockIsHeld(string $scope, string $sha256): bool
     config()->set('database.connections.r18_lock_probe', config('database.connections.pgsql'));
     DB::purge('r18_lock_probe');
     $connection = DB::connection('r18_lock_probe');
-    $lockKey = $scope.'|'.$sha256;
+    $lockKey = 'cas:'.$scope.':'.$sha256;
     $acquired = (bool) $connection->selectOne(
         'SELECT pg_try_advisory_lock(hashtext(?)) AS acquired',
         [$lockKey],
@@ -87,7 +88,7 @@ it('records exact mark metrics and suppresses zero-row batch metrics', function 
         ->and($emptyMetrics->emissions()[0]['name'])->toBe('vaulter_gc_duration_seconds')
         ->and($emptyMetrics->emissions()[0]['labels'])->toBe(['phase' => 'mark']);
 
-    $blob = app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), tenantId: 1);
+    $blob = app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $metrics = new FakeMetricsRecorder;
 
     expect(r18Collector($metrics)->mark(graceHours: 24))->toBe([
@@ -158,10 +159,10 @@ it('records exact sweep metrics including the zero deletion counter', function (
 
 it('adds skipped candidates from both collect phases', function (): void {
     $store = app(BlobStoreContract::class);
-    $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), tenantId: 1);
+    $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $store->attach(CasTestHelpers::makeVersion(name: 'mark skipped edge'), $markSkipped);
 
-    $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), tenantId: 1);
+    $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $store->attach(CasTestHelpers::makeVersion(name: 'sweep skipped edge'), $sweepSkipped);
     $sweepSkipped->forceFill([
         'status' => BlobStatus::Tombstoned,
@@ -214,7 +215,7 @@ it('records the exact reconcile count and suppresses its zero-row counter', func
     ])->and($emptyMetrics->emissions())->toHaveCount(1)
         ->and($emptyMetrics->emissions()[0]['name'])->toBe('vaulter_reconcile_duration_seconds');
 
-    app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('reconcile metric one'), tenantId: 1);
+    app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('reconcile metric one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $metrics = new FakeMetricsRecorder;
 
     expect(r18Reconciler($metrics)->reconcile()['reconciled'])->toBe(1)
@@ -319,7 +320,7 @@ it('locks the parsed orphan scope and digest while pruning on PostgreSQL', funct
     );
 
     expect($report['pruned'])->toBe(1)
-        ->and(r18PgAdvisoryLockIsHeld('t161803', $sha256))->toBeTrue();
+        ->and(r18PgAdvisoryLockIsHeld('tenant:161803', $sha256))->toBeTrue();
 })->skip(
     fn (): bool => DB::connection()->getDriverName() !== 'pgsql',
     'PostgreSQL exposes the orphan-prune advisory lock to a second connection.',
@@ -330,9 +331,7 @@ it('uses the explicit blob disk instead of the configured default', function ():
 
     $blob = app(BlobStoreContract::class)->commit(
         CasTestHelpers::streamFor('explicit archive disk'),
-        tenantId: 1,
-        disk: 'archive',
-    );
+        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
 
     expect($blob->disk)->toBe('archive');
     Storage::disk('archive')->assertExists($blob->storage_key);
@@ -341,11 +340,9 @@ it('uses the explicit blob disk instead of the configured default', function ():
 
 it('takes the tenant advisory lock when committing on PostgreSQL', function (): void {
     $blob = app(BlobStoreContract::class)->commit(
-        CasTestHelpers::streamFor('commit advisory lock'),
-        tenantId: 314159,
-    );
+        CasTestHelpers::streamFor('commit advisory lock'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 314159, 'unused'));
 
-    expect(r18PgAdvisoryLockIsHeld('t314159', $blob->sha256))->toBeTrue();
+    expect(r18PgAdvisoryLockIsHeld('tenant:314159', $blob->sha256))->toBeTrue();
 })->skip(
     fn (): bool => DB::connection()->getDriverName() !== 'pgsql',
     'PostgreSQL exposes the transaction advisory lock to a second connection.',
@@ -358,7 +355,7 @@ it('takes the row scope advisory lock while collecting on PostgreSQL', function 
     expect(r18Collector(new FakeMetricsRecorder)->mark(graceHours: 24))->toBe([
         'tombstoned' => 1,
         'skipped' => 0,
-    ])->and(r18PgAdvisoryLockIsHeld('t271828', $blob->sha256))->toBeTrue();
+    ])->and(r18PgAdvisoryLockIsHeld($blob->scope_key, $blob->sha256))->toBeTrue();
 })->skip(
     fn (): bool => DB::connection()->getDriverName() !== 'pgsql',
     'PostgreSQL exposes the transaction advisory lock to a second connection.',

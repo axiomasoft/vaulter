@@ -16,6 +16,7 @@ use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Support\Config;
 use Vaulter\Support\VaulterSchema;
+use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
@@ -287,6 +288,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         $blocks[] = vaulterSnapshotInterface($class);
     }
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
+    $blocks[] = vaulterSnapshotInterface(BlobScope::class);
     $blocks[] = vaulterSnapshotInterface(Config::class);
     $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
     $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
