@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\AccessAce;
 use Vaulter\Access\ValueObjects\AccessExplanation;
+use Vaulter\Access\ValueObjects\AclMask;
 use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
@@ -120,6 +121,118 @@ final class AccessResolver
             deniedBits: $deniedBits,
             level: $level,
         );
+    }
+
+    /**
+     * @param  iterable<Node>          $nodes
+     * @return array<string, GrantSet>
+     */
+    public function evaluateMany(Authorizable $actor, iterable $nodes): array
+    {
+        $nodes = new Collection(is_array($nodes) ? $nodes : iterator_to_array($nodes));
+        if ($nodes->isEmpty()) {
+            return [];
+        }
+        $nodes->loadMissing('storage');
+        $driver = $this->drivers->driver();
+        $groups = [];
+        foreach ($nodes as $node) {
+            $key = json_encode([Identity::stringify($node->storage_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
+            $groups[$key][] = $node;
+        }
+        $sets = [];
+        $pending = [];
+        $scopes = [];
+        foreach ($groups as $key => $group) {
+            $scope = $this->scopeFor($this->storageOf($group[0]), $group[0]);
+            $override = $driver->override($actor, $scope);
+            if ($override !== null) {
+                foreach ($group as $node) {
+                    $sets[Identity::stringify($node->id)] = $override === Effect::Allow ? GrantSet::superAllowed() : GrantSet::superDenied();
+                }
+
+                continue;
+            }
+            $scopes[$key] = $scope;
+            foreach ($group as $node) {
+                $pending[] = [$node, $key];
+            }
+        }
+        if ($pending === []) {
+            return $sets;
+        }
+        $subjects = $driver->subjectsFor($actor);
+        $roles = [];
+        foreach ($scopes as $key => $scope) {
+            $roles[$key] = $this->resolveRole($driver, $actor, $scope, $subjects);
+        }
+        $parentIds = [];
+        $ids = [];
+        foreach ($pending as [$node]) {
+            $ids[] = $node->id;
+            if ($node->inherit_grants && $node->parent_id !== null) {
+                $parentIds[] = $node->parent_id;
+            }
+        }
+        $chains = $subjects === [] ? [] : app(NodeReadRepository::class)->ancestorChains(array_values(array_unique($parentIds)));
+        foreach ($chains as $chain) {
+            foreach ($chain as $row) {
+                if (!is_int($row->id) && !is_string($row->id)) {
+                    throw new \LogicException('Invalid ancestor identity.');
+                }
+                $ids[] = $row->id;
+            }
+        }
+        $byNode = [];
+        if ($subjects !== []) {
+            foreach ($this->grants->forSubjectsOnNodes(array_values(array_unique($ids)), $subjects, Carbon::now()) as $grant) {
+                $byNode[Identity::stringify($grant->node_id)][] = $grant;
+            }
+        }
+        $folder = new AclFolder;
+        $inherited = [];
+        foreach ($chains as $origin => $chain) {
+            $depths = [];
+            foreach ($chain as $row) {
+                $depths[] = $this->grantMask($byNode[Identity::stringify($row->id)] ?? [], true);
+            }
+            $inherited[$origin] = $folder->foldChain($depths);
+        }
+        foreach ($pending as [$node, $key]) {
+            $parentKey = Identity::stringify($node->parent_id);
+            $chain = $chains[$parentKey] ?? [];
+            $sameStorage = $chain !== [] && Identity::stringify($chain[0]->storage_id) === Identity::stringify($node->storage_id);
+            $parent = $node->inherit_grants && $sameStorage ? $inherited[$parentKey] : AclMask::none();
+            $own = $this->grantMask($byNode[Identity::stringify($node->id)] ?? [], false);
+            $mask = $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level']);
+            [$roleAllow, $roleLevel] = $roles[$key];
+            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied, level: $this->maxLevel($mask->level, $roleLevel));
+        }
+
+        return $sets;
+    }
+
+    /** @param list<NodeGrant> $grants
+     * @return array{allow:int, deny:int, level:?GrantLevel}
+     */
+    private function grantMask(array $grants, bool $inherited): array
+    {
+        $allow = 0;
+        $deny = 0;
+        $level = null;
+        foreach ($grants as $grant) {
+            if ($inherited && !$grant->scope->inheritsDownward()) {
+                continue;
+            }
+            if ($grant->effect === Effect::Allow) {
+                $allow |= $this->bitsFor($grant);
+                $level = $this->maxLevel($level, $grant->level);
+            } else {
+                $deny |= $this->bitsFor($grant);
+            }
+        }
+
+        return ['allow' => $allow, 'deny' => $deny, 'level' => $level];
     }
 
     /**
@@ -361,31 +474,9 @@ final class AccessResolver
             }
         }
 
-        // Phase 2 — fold. allowedBits is the union of every depth's allow. A deny at
-        // depth d is finally denied EXCEPT for the bits allowed at a STRICTLY nearer
-        // depth (< d); a same-depth allow does NOT pierce it, so a same-node deny
-        // always vetoes a same-node allow.
-        $allowedBits = 0;
+        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
 
-        foreach ($allowByDepth as $bits) {
-            $allowedBits |= $bits;
-        }
-
-        $deniedBits = 0;
-
-        foreach ($denyByDepth as $depth => $bits) {
-            $nearerAllow = 0;
-
-            foreach ($allowByDepth as $allowDepth => $allowBits) {
-                if ($allowDepth < $depth) {
-                    $nearerAllow |= $allowBits;
-                }
-            }
-
-            $deniedBits |= ($bits & ~$nearerAllow);
-        }
-
-        return [$allowedBits, $deniedBits, $level];
+        return [$mask->allowed, $mask->denied, $mask->level];
     }
 
     /**
@@ -466,33 +557,33 @@ final class AccessResolver
             }
         }
 
-        $allowedBits = 0;
+        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
 
-        foreach ($allowByDepth as $bits) {
-            $allowedBits |= $bits;
-        }
-
-        $deniedBits = 0;
-
-        foreach ($denyByDepth as $depth => $bits) {
-            $nearerAllow = 0;
-
-            foreach ($allowByDepth as $allowDepth => $allowBits) {
-                if ($allowDepth < $depth) {
-                    $nearerAllow |= $allowBits;
-                }
-            }
-
-            $deniedBits |= ($bits & ~$nearerAllow);
-        }
-
-        return [$allowedBits, $deniedBits, $level, $aces];
+        return [$mask->allowed, $mask->denied, $mask->level, $aces];
     }
 
     /**
      * The machine-readable reason for an explain() verdict: an allow, a deny-veto
      * (a required bit landed in the deny-mask), or simply no covering grant.
      */
+    /**
+     * @param list<Node>      $chain
+     * @param array<int, int> $allows
+     * @param array<int, int> $denies
+     */
+    private function foldDepths(array $chain, array $allows, array $denies, ?GrantLevel $level): AclMask
+    {
+        $depths = [];
+        foreach ($chain as $depth => $current) {
+            $depths[] = ['allow' => $allows[$depth] ?? 0, 'deny' => $denies[$depth] ?? 0, 'level' => $level];
+            if (!$current->inherit_grants) {
+                break;
+            }
+        }
+
+        return (new AclFolder)->foldChain($depths);
+    }
+
     private function explainReason(bool $allowed, Ability $ability, int $deniedBits): string
     {
         if ($allowed) {

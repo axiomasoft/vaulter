@@ -1,0 +1,23 @@
+I'll read the recheck prompt in full and follow only that review, without editing files or running mutation commands.The packet starts with the two prior Major findings and the repaired ancestor walk. I'll keep reading through the repair delta and the Vue candidate.The packet’s two repairs are the unbounded ancestor CTE and the proposed shared-cursor client. I’ll check those against the live resolver, the grammar the CTE copies, and the Vue call sites.The Vue sources and the packet disagree about whether the cursor client is already in the tree. I’ll re-read those files and the ancestor SQL against the grammar the walk claims to copy.`review: cursor/grok-4.7 recheck findings:0`
+
+This pass did not receive a 500k context override. The review is static and read-only; the Pest runs cited in the packet were not re-executed. The Vue change is the candidate patch from the packet. Owner approval is still pending, and this review does not treat that patch as an approved apply.
+
+## Dispositions
+
+### 1. Major — batch ancestor walk drops grants above 64 — fixed
+
+`ancestorChains()` no longer has a positive depth cutoff. The recursive leg stops on `inherit_grants = false` (that row stays in the chain), a soft-deleted ancestor, a storage change, or the same cycle predicate `ancestors()` uses.
+
+`AccessResolver::ancestorChain()` still calls `ancestors()` under `withMaxDepth(64)`. For an upward walk the dependency seeds depth at `-1` and then subtracts, and `withMaxDepth(64)` compiles `depth < 64`. Every negative depth satisfies that predicate, so the live single-node walk already continues to the root, a cycle, or the database recursion limit. The batch CTE now follows that walk: it compiles the path and the cycle check through the same `ExpressionGrammar` methods (`compileInitialPath`, `compileRecursivePath`, `compileCycleDetection`), with bindings in placeholder order (seed, recursive path, `inherit_grants`, cycle). On SQLite, MySQL/MariaDB, and PostgreSQL those fragments contribute the same placeholders the grammar’s binding methods return.
+
+The new equivalence case keeps `mt_srand(20261002)` and the depth-≤5 trees unchanged. It adds a separate chain whose deciding grant sits on a root 66 steps above the leaf, plus a two-node cycle compared against `effectiveGrants()`.
+
+### 2. Major — official shared client still pages with `page` / `total` — fixed in the candidate patch
+
+The candidate points `nodes.shared()` at `cursorQuery()` and `CursorPage<Node>`. `SharedNodesQuery` is a `CursorQuery` (`cursor`, `perPage`). `useSharedNodes` sends that cursor, sets `hasMore` from `next_cursor != null`, and keeps the in-flight `loadSeq` and double-click guards. The added composable case continues an empty scan-budget page (`next_cursor` set, `data` empty) and then stops when `next_cursor` is null. `GET /shared` already reads `cursor` and returns `meta.next_cursor` without `total`.
+
+## Remaining findings
+
+None in this repair delta.
+
+Residual limits, not separate defects: the single-node walk is still documented as depth-capped, while `withMaxDepth(64)` does not cap negative ancestor depths, and the batch walk matches that live behavior. SQLite path-suffix cycle checks remain the dependency’s own rule on both walks. `VaulterSharedWithMe` still shows the empty-list copy when the first cursor page has no visible rows; `hasMore` stays true and the Load more control stays available, which is the continuation the candidate covers in `useSharedNodes`.

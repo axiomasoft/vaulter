@@ -855,6 +855,13 @@ final class Config
         return self::tablePrefix().$base;
     }
 
+    public static function listingScanBudget(): int
+    {
+        $budget = config('vaulter.listing.scan_budget', 1000);
+
+        return is_numeric($budget) ? max(1, (int) $budget) : 1000;
+    }
+
     /**
      * The named Laravel database connection every Vaulter-owned table/model reads
      * and writes through (F-P2.3-02), or null to defer to the host's default

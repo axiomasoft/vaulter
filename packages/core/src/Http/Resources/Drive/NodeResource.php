@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Contracts\Handlers\NodeHandlerResolver;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
@@ -27,6 +28,26 @@ use Vaulter\Models\Drive\Node;
  */
 final class NodeResource extends JsonResource
 {
+    private ?GrantSet $grantSet = null;
+
+    /** @var array<string, GrantSet> */
+    private array $childrenGrants = [];
+
+    public function withGrantSet(GrantSet $set): static
+    {
+        $this->grantSet = $set;
+
+        return $this;
+    }
+
+    /** @param array<string, GrantSet> $sets */
+    public function withChildrenGrantSets(array $sets): self
+    {
+        $this->childrenGrants = $sets;
+
+        return $this;
+    }
+
     /**
      * Direct children of this node, attached by NodeController::show when listing
      * a folder's contents alongside the node itself.
@@ -94,7 +115,7 @@ final class NodeResource extends JsonResource
             'updated_at' => $node->updated_at,
             'children' => $this->children === null
                 ? null
-                : self::collection($this->children),
+                : self::collection($this->children->map(fn (Node $child): self => isset($this->childrenGrants[(string) $child->id]) ? self::make($child)->withGrantSet($this->childrenGrants[(string) $child->id]) : self::make($child))),
             'breadcrumb' => $this->breadcrumb === null
                 ? null
                 : self::collection($this->breadcrumb),
@@ -138,6 +159,10 @@ final class NodeResource extends JsonResource
      */
     private function abilities(Request $request, Node $node): array
     {
+        if ($this->grantSet !== null) {
+            return NodeAbilities::fromGrantSet($this->grantSet)->toArray();
+        }
+
         $user = $request->user();
         $actor = $user instanceof Authorizable ? $user : null;
 

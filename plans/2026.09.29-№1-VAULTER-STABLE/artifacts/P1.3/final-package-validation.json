@@ -1,0 +1,168 @@
+[
+  {
+    "package": "core",
+    "check": "pint",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/core-pint-post-review.log"
+  },
+  {
+    "package": "core",
+    "check": "phpstan",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/core-phpstan-post-review.log"
+  },
+  {
+    "package": "core",
+    "check": "pest",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "command": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/core-pest-post-review.log"
+  },
+  {
+    "package": "drive",
+    "check": "pint",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/drive-pint-post-review.log"
+  },
+  {
+    "package": "drive",
+    "check": "phpstan",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/drive-phpstan-post-review.log"
+  },
+  {
+    "package": "drive",
+    "check": "pest",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "command": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/drive-pest-post-review.log"
+  },
+  {
+    "package": "documents",
+    "check": "pint",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/documents-pint-post-review.log"
+  },
+  {
+    "package": "documents",
+    "check": "phpstan",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/documents-phpstan-post-review.log"
+  },
+  {
+    "package": "documents",
+    "check": "pest",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+    "command": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/documents-pest-post-review.log"
+  },
+  {
+    "package": "filament",
+    "check": "pint",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/filament-pint-post-review.log"
+  },
+  {
+    "package": "filament",
+    "check": "phpstan",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=1G"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/filament-phpstan-post-review.log"
+  },
+  {
+    "package": "filament",
+    "check": "pest",
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+    "command": [
+      "env",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci"
+    ],
+    "exit_code": 0,
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.3/filament-pest-post-review.log"
+  }
+]

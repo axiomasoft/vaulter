@@ -1,0 +1,1 @@
+{"tool":"pint","result":"fixed","files":[{"path":"packages\/core\/tests\/Access\/EvaluateManyEquivalenceTest.php","fixers":["fully_qualified_strict_types","blank_line_before_statement","ordered_imports"]}]}

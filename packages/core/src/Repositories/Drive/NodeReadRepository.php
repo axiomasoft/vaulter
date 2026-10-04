@@ -14,6 +14,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\HostRoleDriverManager;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
@@ -30,17 +31,9 @@ use Vaulter\Support\LoadTier;
  * whereHas('descendants') / withCount('descendants') which break on MariaDB and
  * degrade on Postgres (H.4 arch-ban).
  *
- * The access-aware seam (P1 #3) — queryForUser() (the standalone live-nodes entry)
- * and constrainToAccessible() (compose onto any base) — narrows a query to the actor's
- * grant-reachable CANDIDATE node ids when grant-filtering applies (the 'grants' feature
- * is on AND the active permission driver carries the {@see GrantAuthoritativeDriver}
- * marker — only the standalone {@see DatabasePermissionResolver} does). For every other
- * driver the host's roles govern and v_node_grants is not the source of truth, so
- * listing stays OPEN. The candidate set is a deliberate SUPERSET: it hides nodes with
- * no grant-reachability but does NOT apply the exact deny-veto / inherit-cutoff in the
- * listing SQL (that exact listing suppression is DEFERRED to the H.4 read-model). The
- * EXACT gate is the {@see AccessResolver}, applied per ACTION (show/mutations) and per
- * candidate by filterViewable() / sharedWith() (the bounded "shared with me" set).
+ * queryForUser()/constrainToAccessible() narrow grant-authoritative drivers to
+ * candidate IDs. Candidates require exact AccessResolver evaluation before display;
+ * the REST listings and Filament table apply that after fetching each page.
  */
 final class NodeReadRepository
 {
@@ -97,7 +90,8 @@ final class NodeReadRepository
                 ->whereNull('trashed_at')
                 ->where('parent_id', $parent?->id)
                 ->orderBy('position')
-                ->orderBy('name'),
+                ->orderBy('name')
+                ->orderBy('id'),
             labels: [
                 'query_kind' => 'children',
                 'tier' => LoadTier::label(),
@@ -162,6 +156,50 @@ final class NodeReadRepository
                 'tier' => LoadTier::label(),
             ],
         );
+    }
+
+    /**
+     * @param  list<int|string>               $parentIds
+     * @return array<string, list<\stdClass>>
+     */
+    public function ancestorChains(array $parentIds): array
+    {
+        if ($parentIds === []) {
+            return [];
+        }
+        /** @var \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<Node> $query */
+        $query = $this->query();
+        $connection = app(VaulterDatabase::class)->connection();
+        $grammar = $query->getExpressionGrammar();
+        $table = $connection->getQueryGrammar()->wrapTable($query->getModel()->getTable());
+        $separator = $query->getModel()->getPathSeparator();
+        $initialPath = $grammar->compileInitialPath('id', '__acl_path');
+        $seed = $this->whereKeyInBounded($query, $parentIds)
+            ->select(['id', 'parent_id', 'storage_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
+        // Match ancestors()'s ascend semantics, including its database-specific
+        // cycle guard. withMaxDepth(+64) does not limit negative ancestor depths.
+        $path = $grammar->compileRecursivePath('n.id', 'c.__acl_path');
+        $cycle = $grammar->compileCycleDetection('n.id', 'c.__acl_path');
+        $sql = 'WITH RECURSIVE chain AS (SELECT seed.*, '.$initialPath.' FROM ('.$seed->toSql().') seed
+            UNION ALL SELECT n.id, n.parent_id, n.storage_id, n.inherit_grants, c.origin, c.depth + 1, '.$path.'
+            FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.storage_id = c.storage_id
+            WHERE c.inherit_grants = ? AND NOT ('.$cycle.') AND n.deleted_at IS NULL)
+            SELECT * FROM chain ORDER BY origin, depth';
+        $rows = $connection->select($sql, [
+            ...$seed->getBindings(),
+            ...$grammar->getRecursivePathBindings($separator),
+            true,
+            ...$grammar->getCycleDetectionBindings($separator),
+        ]);
+        $chains = [];
+        foreach ($rows as $row) {
+            if (!$row instanceof \stdClass || (!is_string($row->origin) && !is_int($row->origin))) {
+                throw new \LogicException('Invalid ancestor chain row.');
+            }
+            $chains[Identity::stringify($row->origin)][] = $row;
+        }
+
+        return $chains;
     }
 
     /**
@@ -364,18 +402,8 @@ final class NodeReadRepository
      * query. A no-op when grant-filtering does not apply (open drivers); forces an
      * empty result when it applies and the actor reaches no candidate.
      *
-     * LISTING SEMANTIC (deliberate, master plan P1 #3 + H.4): a constrained listing
-     * narrows to the actor's grant-reachable CANDIDATE set — it HIDES nodes with no
-     * grant-reachability (the common "inaccessible" / "not shared with me" case) but
-     * is a SUPERSET that does NOT apply the exact deny-veto or the inherit_grants
-     * cut-off in SQL. A node a NEARER deny revokes (or one past an inherit-cutoff wall)
-     * can therefore still appear in a listing. Pushing that exact suppression into the
-     * listing SQL is explicitly DEFERRED to the H.4 materialised effective-grants
-     * read-model (built "when profiling requires"). This keeps the API listing and the
-     * Filament table CONSISTENT (both candidate-SQL). Per-ACTION authorization is
-     * UNCHANGED and stays EXACT: the {@see AccessResolver} gates every mutation/show,
-     * and the cross-storage "shared with me" view re-resolves each candidate exactly
-     * via {@see sharedWith()}.
+     * This SQL prefilter deliberately admits denied candidates. Apply exact batch
+     * AccessResolver evaluation before display.
      *
      * Generic over the concrete model so a Node-typed base (the core listing paths) and
      * a Filament resource's `Builder<Model>` both compose without a variance clash — the

@@ -1,0 +1,651 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.29-№1-vaulter-stable-p1-3",
+  "version": {
+    "revision": 1,
+    "content_hash": "23f4cdc1dcf30136c91e679295abd3a1ffd8d5e7d590ac3539f7e620f34ebd72",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Листинг детей, поиск, корзина, «shared with me», дети в `show` и Filament-таблица возвращают только узлы с\nэффективным `View` для **любого** драйвера прав, без `total`, с курсором «последний просмотренный»; `abilities` страницы\nсчитаются одним пакетным проходом с тем же результатом, что `effectiveGrants()` (N08, E10, N24, AD12; V09, V22).",
+    "non_goals": [
+      "`ListOptions`/`SearchOptions`, `NodeSort`, handle `nodes()->children()` (P3.2/P3.3)",
+      "удаление `file_id`/\n`current_version_id` из `NodeResource` (P6.1)",
+      "materialized read-model (AD39, T2)",
+      "листинг публичной share-ссылки\n(`PublicShareController::children` — права share, не ACL актёра)",
+      "`DriveContext::list()` PHP API (P3.3)."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "1. `packages/core/src/Access/ValueObjects/AclMask.php` (new, `final readonly`): `int $allowed`, `int $denied`, `?GrantLevel $level`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M2",
+      "requirement": "`static none()`.\n   `packages/core/src/Access/AclFolder.php` (new, `final class`, без состояния и SQL) — единственное место правил свёртки:\n   - `foldChain(array $depths): AclMask` — вход `list<array{allow:int, deny:int, level:?GrantLevel}>`, индекс 0 — ближайший",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M3",
+      "requirement": "`allowed` = объединение всех allow",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M4",
+      "requirement": "`denied` = объединение `deny_d & ~(allow_0 | … | allow_{d-1})` (deny пробивается только\n     строго более близким allow)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M5",
+      "requirement": "`level` = максимум level allow-грантов. Это перенос фаз 1–2 текущего\n     `AccessResolver::resolveAcl` (`packages/core/src/Access/AccessResolver.php:299–389`) без изменения семантики.\n   - `applyOwn(AclMask $inherited, int $ownAllow, int $ownDeny, ?GrantLevel $ownLevel): AclMask` — 09 §2 п.5:\n     `allowed = own.allow | P.allowed`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M6",
+      "requirement": "`denied = own.deny | (P.denied & ~own.allow)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M7",
+      "requirement": "`level = max(own.level, P.level)`.\n   `resolveAcl()` и `resolveAclWithProvenance()` переписываются на `AclFolder::foldChain()` (провенанс сохраняется).\n2. `AccessResolver::evaluateMany(Authorizable $actor, iterable $nodes): array<string, GrantSet>` (ключ — `Identity::stringify(id)`):\n   1) узлы группируются по `(storage_id, owner_id)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M8",
+      "requirement": "для каждой группы один раз — `driver()->override($actor, $scope)` (Allow →\n      `GrantSet::superAllowed()` всем узлам группы, Deny → `superDenied()`) и роль-лейн `resolveRole(...)`\n      (`$scope = scopeFor($storage, $node)` первого узла группы",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M9",
+      "requirement": "`AclScope` зависит от storage и владельца узла)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M10",
+      "requirement": "2) `subjectsFor($actor)` — один раз",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M11",
+      "requirement": "пустой список → ACL-маски `AclMask::none()` для всех (как `resolveAcl`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M12",
+      "requirement": "3) для уникальных `parent_id` страницы — одна рекурсивная CTE (новый `NodeReadRepository::ancestorChains(array $parentIds): array<string, list<Node-row>>`):\n      `WITH RECURSIVE chain AS (SELECT id, parent_id, inherit_grants, id AS origin, 0 AS depth FROM <nodes> WHERE id IN (…)\n      UNION ALL SELECT n.id, n.parent_id, n.inherit_grants, c.origin, c.depth + 1 FROM <nodes> n JOIN chain c ON n.id = c.parent_id\n      WHERE c.inherit_grants = <true>)` — подъём останавливается после первого узла с `inherit_grants = false` (он сам входит)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M13",
+      "requirement": "4) одна выборка grants: `GrantReadRepository::forSubjectsOnNodes(nodeIds: ids страницы ∪ ids всех цепочек, subjects, now)`\n      (существующий метод",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M14",
+      "requirement": "не истёкшие)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M15",
+      "requirement": "5) для каждого родителя `P = foldChain(...)` по его цепочке, где на каждой глубине учитываются только grants со\n      `scope->inheritsDownward()`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M16",
+      "requirement": "для каждого узла: `inherit_grants = false` → `P = AclMask::none()`, иначе `P` родителя",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M17",
+      "requirement": "`acl = applyOwn(P, own.allow, own.deny, own.level)` (собственные grants узла любого scope)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M18",
+      "requirement": "6) `GrantSet(allowedBits: acl.allowed | roleAllow, deniedBits: acl.denied, level: maxLevel(acl.level, roleLevel))`.\n   Итого ≤ 3 SQL на страницу без роль-лейна драйвера (CTE, grants, storage — если не загружен `storage`).\n3. `packages/core/src/Data/Drive/NodePage.php` (new) — точно по OPUS 05 §6: `final readonly class NodePage implements IteratorAggregate, Countable, JsonSerializable`,\n   `__construct(public array $items, public ?string $nextCursor, public int $scanned)`, `hasMore(): bool`.\n4. `packages/core/src/Access/ExactListing.php` (new, `final readonly`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M19",
+      "requirement": "зависимости `AccessResolver`, `VaulterDatabase`, `Encrypter`-ключ `app.key`):\n   `page(?Authorizable $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage`, где\n   `$order` — `list<array{column:string, direction:'asc'|'desc'}>`, последний элемент всегда `id` в направлении сортировки.\n   Алгоритм 09 §3: `last = decode(cursor)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M20",
+      "requirement": "цикл, пока `count(visible) < perPage` и `scanned < Config::listingScanBudget()`:\n   batch = `(clone $candidates)` + keyset «после `last`» (дизъюнкция `(a ⋚ x) OR (a = x AND b ⋚ y) OR … (… AND id ⋚ z)`, `⋚` = `>` для\n   asc и `<` для desc) + `limit(perPage * 2)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M21",
+      "requirement": "пустой → `last = null`, стоп",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M22",
+      "requirement": "`grants = evaluateMany(actor, batch)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M23",
+      "requirement": "узлы просматриваются по\n   порядку, каждый просмотренный увеличивает `scanned` и становится `last`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M24",
+      "requirement": "видимые (`grants[id]->allows(Ability::View)`) идут в\n   страницу, пока она не заполнится — тогда просмотр останавливается на этом узле. Выход по бюджету → `nextCursor = encode(last)`.\n   Без актёра → пустая страница, `nextCursor = null`.\n   Курсор: `base64url(json_encode(['c' => $context, 'k' => [значения order…]]))` + `.` + `base64url(hash_hmac('sha256', payload, app.key, true))`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M25",
+      "requirement": "неверная подпись или другой `$context` → `Vaulter\\Exceptions\\Nodes\\InvalidCursorException` (new, `validation_failed`, 422,\n   `errors.cursor`). `$context` = `\"<kind>:<storage_id>:<parent_id|term-sha1|''>\"`.\n   `Config::listingScanBudget(): int` — `vaulter.listing.scan_budget`, по умолчанию 1000 (`packages/core/config/vaulter.php` блок `listing`, новый ключ).\n5. Потребители (у всех драйверов, без `grantFilteringApplies`-ветвления для точности",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M26",
+      "requirement": "кандидатное сужение по grant остаётся\n   только как префильтр SQL для grant-authoritative драйвера):\n   - `NodeController::index` — кандидаты `children(storage, parent)` с порядком `position asc, name asc, id asc` (добавить `orderBy('id')`\n     в `NodeReadRepository::children`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M27",
+      "requirement": "`search` — `search()` (`name asc, id asc`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M28",
+      "requirement": "`trashed` — `trashed()` (`trashed_at desc, id desc`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M29",
+      "requirement": "`shared` — кандидаты `whereKey(sharedNodeIds)` с `name asc, id asc`, кросс-storage (`$context = \"shared:*:\"`).\n     Ответ — `NodeResource::collection($page->items)` + `additional(['meta' => ['path' => $request->url(), 'per_page' => $perPage, 'next_cursor' => $page->nextCursor, 'prev_cursor' => null, 'scanned' => $page->scanned]])`\n     (ключи `meta.next_cursor`/`per_page`, которые читает `packages/vue/src/types.ts:346–352`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M30",
+      "requirement": "`meta.total` и `links` с номерами страниц не выдаются.\n   - `NodeController::show` (дети папки, строка 152): дети фильтруются `evaluateMany` (только `View`).\n   - `NodeResource`: `withGrantSet(GrantSet $set): static`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M31",
+      "requirement": "при наличии — `abilities` из него (`NodeAbilities::fromGrantSet`, new),\n     иначе прежний путь (одиночный `show`). Листинги п.5 передают наборы `evaluateMany` в каждый ресурс страницы.\n   - Filament `packages/filament/src/Resources/NodeResource/Pages/ListNodes.php`: переопределить `getTableRecords()` — после\n     `parent::getTableRecords()` коллекция страницы фильтруется `evaluateMany` (`View`) и устанавливается обратно\n     (`setCollection`)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M32",
+      "requirement": "`NodeResource::table()` — `->paginationMode(Filament\\Tables\\Enums\\PaginationMode::Simple)` (нет total).\n6. Тесты:\n   - Эквивалентность — `packages/core/tests/Access/EvaluateManyEquivalenceTest.php` (SQLite): `mt_srand(20261002)`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M33",
+      "requirement": "500 случайных\n     деревьев по 8–15 узлов (глубина ≤ 5), случайные grants (allow/deny, item/subtree, все `GrantLevel`, часть истёкших),\n     случайные `inherit_grants = false`, 1–3 субъекта",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M34",
+      "requirement": "для каждого дерева `evaluateMany(actor, все узлы)` ≡ `effectiveGrants(actor, узел)`\n     для каждого узла (сравнение `allowedBits`, `deniedBits`, `level`, флагов super). Падение печатает seed и номер дерева.\n   - V09 — `packages/drive/tests/Feature/ExactListingTest.php`: allow `subtree` на родителе + deny на детях",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M35",
+      "requirement": "300 запрещённых детей,\n     301-й разрешён (имена сортируются так, что разрешённый последний)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M36",
+      "requirement": "`GET storages/{id}/nodes?parent_id=…&per_page=50` → страницы\n     с `data = []` и ненулевым `next_cursor`, обход курсора доходит до 301-го",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M37",
+      "requirement": "запрещённые не встречаются ни в `index`, ни в `search`,\n     ни в `trashed`, ни в детях `show`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M38",
+      "requirement": "в ответах нет `meta.total`.\n   - V22 — там же: драйвер `gate` (Gate разрешает папку), на ребёнке явный deny-grant → ребёнок не виден в листинге.\n   - Запросы — там же: страница 50 видимых узлов (драйвер `database`) → число запросов, учтённых `DB::listen` на соединении\n     Vaulter от входа в `ExactListing::page()` до конца сериализации ресурсов, ≤ 5.\n   - Курсор: подделанная подпись или курсор другого `parent_id` → 422 `code = validation_failed`.\n   - Filament — `packages/filament/tests/Feature/NodeResourceExactVisibilityTest.php`: узел с deny `View` для админа не попадает в\n     строки таблицы (`assertCanNotSeeTableRecords`), разрешённый — попадает.\n   Негативный контроль: временно вернуть `NodeController::index` к `narrowToAccessible(...)->cursorPaginate()` → V09 и V22 красные.\n7. `docs/guide/search-trash.md` и `docs/guide/authorization.md` — точная видимость, курсор без `total`, `listing.scan_budget`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M39",
+      "requirement": "`UPGRADE.md` (`shared` — курсорный конверт вместо `page/total`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M40",
+      "requirement": "`total` больше не выдаётся — AD12)",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M41",
+      "requirement": "`CHANGELOG.md [Unreleased]`",
+      "source_ref": "phases/P1.md:14"
+    },
+    {
+      "id": "M42",
+      "requirement": "golden `PublicApiSnapshotTest` (`evaluateMany`, `AclFolder`, `NodePage`, `ExactListing`).",
+      "source_ref": "phases/P1.md:14"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "`ListOptions`/`SearchOptions`, `NodeSort`, handle `nodes()->children()` (P3.2/P3.3)",
+      "source_ref": "phases/P1.md:89"
+    },
+    {
+      "id": "N2",
+      "prohibition": "удаление `file_id`/\n`current_version_id` из `NodeResource` (P6.1)",
+      "source_ref": "phases/P1.md:89"
+    },
+    {
+      "id": "N3",
+      "prohibition": "materialized read-model (AD39, T2)",
+      "source_ref": "phases/P1.md:89"
+    },
+    {
+      "id": "N4",
+      "prohibition": "листинг публичной share-ссылки\n(`PublicShareController::children` — права share, не ACL актёра)",
+      "source_ref": "phases/P1.md:89"
+    },
+    {
+      "id": "N5",
+      "prohibition": "`DriveContext::list()` PHP API (P3.3).",
+      "source_ref": "phases/P1.md:89"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Access` → 0 failed (вкл. `EvaluateManyEquivalenceTest`: 500 деревьев).",
+        "evidence_ref": "E10"
+      },
+      {
+        "id": "A2",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/ExactListingTest.php)` → 0 failed;\n  тот же файл с `env $PG` → 0 failed.",
+        "evidence_ref": "E11"
+      },
+      {
+        "id": "A3",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- `(cd packages/filament && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/NodeResourceExactVisibilityTest.php)` → passed.",
+        "evidence_ref": "E12"
+      },
+      {
+        "id": "A4",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- Негативный контроль Scope п.6 → V09/V22 красные; после возврата — зелёные.",
+        "evidence_ref": "E13"
+      },
+      {
+        "id": "A5",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- Code Guidance → оба пустые.",
+        "evidence_ref": "E14"
+      },
+      {
+        "id": "A6",
+        "predicate": "`AclFolder`, `evaluateMany`, `NodePage`, `ExactListing`, точные листинги/поиск/корзина/shared/show/Filament, abilities страницы, V09, V22, тест эквивалентности.",
+        "scope": "public",
+        "check": "- Гейт core и гейты drive, documents, filament → exit 0.",
+        "evidence_ref": "E15"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P1/P1.3.md:P1.3",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "run-items",
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.3",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": []
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "packages/core/src/Access/AccessResolver.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "packages/drive/src/Http/Controllers/NodeController.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E7",
+      "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E8",
+      "path": "packages/core/src/Access/ValueObjects/{GrantSet,AclScope}.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E9",
+      "path": "packages/filament/src/Resources/NodeResource.php",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E10",
+      "path": "- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Access` → 0 failed (вкл. `EvaluateManyEquivalenceTest`: 500 деревьев).",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E11",
+      "path": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/ExactListingTest.php)` → 0 failed;\n  тот же файл с `env $PG` → 0 failed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E12",
+      "path": "- `(cd packages/filament && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/NodeResourceExactVisibilityTest.php)` → passed.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E13",
+      "path": "- Негативный контроль Scope п.6 → V09/V22 красные; после возврата — зелёные.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E14",
+      "path": "- Code Guidance → оба пустые.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    },
+    {
+      "id": "E15",
+      "path": "- Гейт core и гейты drive, documents, filament → exit 0.",
+      "proof_class": "declared",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/05-php-api.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/05-php-api.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/05-php-api.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Access/AccessResolver.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Access/AccessResolver.php",
+        "normalized": "packages/core/src/Access/AccessResolver.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "normalized": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Http/Controllers/NodeController.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Http/Controllers/NodeController.php",
+        "normalized": "packages/drive/src/Http/Controllers/NodeController.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "normalized": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Database/VaulterDatabase.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Database/VaulterDatabase.php",
+        "normalized": "packages/core/src/Database/VaulterDatabase.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "normalized": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "normalized": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P1-design/P1.3-opus.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "kind": "committed",
+        "producer": null,
+        "original": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "normalized": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Access/AccessResolver.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Access/AccessResolver.php",
+        "normalized": "packages/core/src/Access/AccessResolver.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "normalized": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/drive/src/Http/Controllers/NodeController.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/drive/src/Http/Controllers/NodeController.php",
+        "normalized": "packages/drive/src/Http/Controllers/NodeController.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "normalized": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Access/ValueObjects/GrantSet.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Access/ValueObjects/GrantSet.php",
+        "normalized": "packages/core/src/Access/ValueObjects/GrantSet.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/core/src/Access/ValueObjects/AclScope.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/core/src/Access/ValueObjects/AclScope.php",
+        "normalized": "packages/core/src/Access/ValueObjects/AclScope.php",
+        "path_kind": "internal",
+        "rejection": null
+      },
+      {
+        "path": "packages/filament/src/Resources/NodeResource.php",
+        "kind": "committed",
+        "producer": null,
+        "original": "packages/filament/src/Resources/NodeResource.php",
+        "normalized": "packages/filament/src/Resources/NodeResource.php",
+        "path_kind": "internal",
+        "rejection": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "chain-of-thought",
+        "raw-transcript-bodies",
+        "secrets",
+        "tool-payloads"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.3",
+      "codex": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.3"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P1.3",
+    "reads": [
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E8",
+      "E9"
+    ],
+    "carrier": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P1.3"
+  }
+}

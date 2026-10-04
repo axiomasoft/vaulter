@@ -1,15 +1,15 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
-import type { Node, PageMeta, SharedNodesQuery } from '../types'
+import type { Node, CursorMeta, SharedNodesQuery } from '../types'
 
 export interface UseSharedNodesReturn {
   /** The nodes shared with the actor (flat, cross-storage). */
   nodes: ShallowRef<Node[]>
-  /** The page meta of the last load (page counters + total), or null before first load. */
-  meta: ShallowRef<PageMeta | null>
+  /** The cursor meta of the last load, or null before first load. */
+  meta: ShallowRef<CursorMeta | null>
   loading: Ref<boolean>
   error: Ref<unknown>
-  /** Whether another page exists (the listing is length-aware, not infinite). */
+  /** Whether another scan page exists, including after an empty visible page. */
   hasMore: Ref<boolean>
   /** (Re)load the first page, replacing the list. */
   refresh: () => Promise<Node[]>
@@ -21,8 +21,8 @@ export interface UseSharedNodesReturn {
  * Reactive "shared with me" listing — the nodes the actor holds a live allow-grant
  * on, served by the cross-storage `GET /shared` endpoint. A FLAT list: there is no
  * folder navigation here (the set spans storages), so unlike {@link useNodes} it
- * has no `parentId`/`navigate`. The endpoint is length-aware (page/total), so paging
- * is `page`-based: `loadMore` advances `current_page` until `last_page`.
+ * has no `parentId`/`navigate`. Paging follows the last inspected candidate cursor,
+ * including empty pages when the server reaches its scan budget.
  *
  * Injection + error handling mirror {@link useNodes}: the client is resolved via
  * `useVaulterClient`, every load flips `loading` and captures into `error`. It does
@@ -36,7 +36,7 @@ export interface UseSharedNodesReturn {
 export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
   const client = useVaulterClient()
   const nodes = shallowRef<Node[]>([])
-  const meta = shallowRef<PageMeta | null>(null)
+  const meta = shallowRef<CursorMeta | null>(null)
   const loading = ref(false)
   const error = ref<unknown>(null)
   const hasMore = ref(false)
@@ -45,7 +45,7 @@ export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
   let loadSeq = 0
 
   function syncHasMore(): void {
-    hasMore.value = meta.value != null && meta.value.current_page < meta.value.last_page
+    hasMore.value = meta.value?.next_cursor != null
   }
 
   async function refresh(): Promise<Node[]> {
@@ -53,7 +53,7 @@ export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
     loading.value = true
     error.value = null
     try {
-      const page = await client.nodes.shared({ page: query?.page ?? 1, perPage })
+      const page = await client.nodes.shared({ cursor: query?.cursor ?? null, perPage })
       // A later refresh already won — drop this stale page entirely.
       if (seq !== loadSeq) {
         return nodes.value
@@ -82,11 +82,11 @@ export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
       return nodes.value
     }
     const seq = ++loadSeq
-    const next = meta.value.current_page + 1
+    const next = meta.value.next_cursor
     loading.value = true
     error.value = null
     try {
-      const page = await client.nodes.shared({ page: next, perPage })
+      const page = await client.nodes.shared({ cursor: next, perPage })
       // A later refresh/loadMore already won — never graft this stale page onto the
       // list (or rewind meta) it already replaced.
       if (seq !== loadSeq) {

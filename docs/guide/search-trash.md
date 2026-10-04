@@ -22,6 +22,20 @@ a real search index (e.g. Laravel Scout / Meilisearch) by pointing `config('vaul
 at a searchable model and overriding the read repository.
 :::
 
+## Exact visibility and cursors
+
+Search and trash only return nodes with effective `View`, including when the host
+uses Gate, Spatie or AzGuard. Explicit denies and inheritance cut-offs hide the node
+and its metadata. Listing `abilities` come from the same batch evaluation.
+
+Pages expose `meta.next_cursor`, `per_page`, `scanned`, `path` and a null
+`prev_cursor`. They have no `total` or numbered page links. Send `cursor` from the
+previous response until `next_cursor` is null. An empty page may still have a cursor:
+`vaulter.listing.scan_budget` (default 1000) limits inspected candidates per request.
+Cursors are signed with the application key and bound to the listing query; reuse
+with another storage, parent or search term returns 422 `validation_failed` and
+`errors.cursor`. Restart without a cursor after changing the query.
+
 ## Trash
 
 Deleting a node soft-deletes it (and its subtree). The trash can be listed, restored, or

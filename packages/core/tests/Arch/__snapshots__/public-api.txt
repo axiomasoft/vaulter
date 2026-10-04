@@ -124,6 +124,33 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
   isAllowed(string $url): void
   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
+Vaulter\Access\AccessResolver
+  __construct(\Vaulter\Access\HostRoleDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\StorageReadRepository $storages)
+  abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
+  can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
+  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Storage $storage): bool
+  effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
+  evaluateMany(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $nodes): array
+  explain(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\AccessExplanation
+  filterSharedWith(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $candidates): array
+  sharedNodeIds(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Access\AclFolder
+  applyOwn(\Vaulter\Access\ValueObjects\AclMask $inherited, int $ownAllow, int $ownDeny, ?\Vaulter\Enums\Access\GrantLevel $ownLevel): \Vaulter\Access\ValueObjects\AclMask
+  foldChain(array $depths): \Vaulter\Access\ValueObjects\AclMask
+
+Vaulter\Access\ExactListing
+  __construct(\Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
+  grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
+  page(?\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
+
+Vaulter\Data\Drive\NodePage
+  __construct(array $items, ?string $nextCursor, int $scanned)
+  count(): int
+  getIterator(): \Traversable
+  hasMore(): bool
+  jsonSerialize(): array
+
 Vaulter\Database\VaulterDatabase
   __construct(\Illuminate\Database\DatabaseManager $db)
   advisoryLock(string $key): void
@@ -174,6 +201,7 @@ Vaulter\Support\Config
   idStrategies(): array
   idStrategy(): string
   idType(): string
+  listingScanBudget(): int
   maxActiveUploadSessions(): int
   maxDocumentSizeKb(): int
   maxDocumentVersions(): int

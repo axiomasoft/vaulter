@@ -115,26 +115,27 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
       expect(fetchMock.mock.calls[1][0]).toContain('/storages/7/trash')
     })
 
-    it('lists "shared with me" at the top-level /shared with length-aware page params', async () => {
+    it('lists "shared with me" at the top-level /shared with query-bound cursor params', async () => {
       const fetchMock = vi.fn().mockResolvedValue(
         jsonResponse({
           data: [{ id: 1, storage_id: 7 }, { id: 2, storage_id: 9 }],
-          meta: { current_page: 1, last_page: 3, per_page: 2, total: 5, from: 1, to: 2 },
+          meta: { next_cursor: 'next-shared', prev_cursor: null, per_page: 2, scanned: 4 },
         }),
       )
       const client = createVaulterClient({ fetch: fetchMock })
 
-      const page = await client.nodes.shared({ page: 1, perPage: 2 })
+      const page = await client.nodes.shared({ cursor: 'after-denied', perPage: 2 })
 
-      // No unwrap — the length-aware page envelope is the result.
+      // The cursor page envelope is the result.
       expect(page.data.map((n) => n.id)).toEqual([1, 2])
-      expect(page.meta.total).toBe(5)
-      expect(page.meta.last_page).toBe(3)
+      expect(page.meta.next_cursor).toBe('next-shared')
+      expect(page.meta).not.toHaveProperty('total')
       const [url, init] = fetchMock.mock.calls[0]
       // Top-level, NOT storage-scoped (the subject index is cross-storage).
       expect(url).toContain('/api/vaulter/shared?')
       expect(url).not.toContain('/storages/')
-      expect(url).toContain('page=1')
+      expect(url).toContain('cursor=after-denied')
+      expect(new URL(url, 'https://test.invalid').searchParams.has('page')).toBe(false)
       expect(url).toContain('per_page=2')
       expect(init.method).toBe('GET')
     })
@@ -143,7 +144,7 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
       const fetchMock = vi.fn().mockResolvedValue(
         jsonResponse({
           data: [],
-          meta: { current_page: 1, last_page: 1, per_page: 50, total: 0, from: null, to: null },
+          meta: { next_cursor: null, prev_cursor: null, per_page: 50, scanned: 0 },
         }),
       )
       const client = createVaulterClient({ fetch: fetchMock })
@@ -151,8 +152,8 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
       const page = await client.nodes.shared()
 
       expect(page.data).toEqual([])
-      expect(page.meta.total).toBe(0)
-      // No page/per_page params when none were given.
+      expect(page.meta.next_cursor).toBeNull()
+      // No cursor/per_page params when none were given.
       expect(fetchMock.mock.calls[0][0]).toBe('/api/vaulter/shared')
     })
 

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\HostRoleDriverManager;
@@ -18,23 +17,9 @@ use Vaulter\Tests\Fixtures\Access\RoleSubjectGrantDriver;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * Access-aware listing (master plan P1 #3 / H.4) — the CANDIDATE-SUPERSET semantic of
- * the Drive listings and the Filament table, and the EXACT "shared with me" + per-ACTION
- * gates that sit alongside it. Two deliberately DIFFERENT visibility shapes are pinned
- * here:
- *
- *   LISTINGS (HTTP index/search/trash, the repository seam, the Filament query) narrow
- *   to the actor's grant-reachable CANDIDATE set in SQL before pagination — they HIDE
- *   nodes with no grant-reachability but do NOT apply the exact deny-veto / inherit-
- *   cutoff (deferred to the H.4 read-model). A deny-vetoed node inside a granted subtree
- *   MAY still LIST; the deny is enforced on the per-ACTION path.
- *
- *   `GET shared` and per-node ACTIONS are EXACT (full AccessResolver): a nearer deny
- *   revokes a row, an expired allow is excluded, and a show/mutation on a deny-vetoed
- *   node is refused even though that node appears in the candidate listing.
- *
- * Filtering applies ONLY on a GrantAuthoritativeDriver (the standalone database driver)
- * with the 'grants' feature ON; every other driver keeps the listing OPEN.
+ * Repository candidate prefilters and exact HTTP visibility are separate seams.
+ * HTTP listings evaluate candidate pages through the batch ACL resolver and expose
+ * a signed cursor without totals, including for the cross-storage shared endpoint.
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
@@ -185,32 +170,24 @@ it('returns an empty bounded page for an unauthenticated shared request', functi
     $this->getJson('api/vaulter/shared')
         ->assertOk()
         ->assertJsonCount(0, 'data')
-        // A page envelope (page/total meta), NOT a cursor envelope.
-        ->assertJsonPath('meta.current_page', 1)
-        ->assertJsonPath('meta.total', 0);
+        // No actor means no continuation cursor or hidden-node total.
+        ->assertJsonPath('meta.next_cursor', null)
+        ->assertJsonMissingPath('meta.total');
 });
 
-it('wraps the shared view in a LengthAwarePaginator (bounded page envelope)', function (): void {
+it('wraps the shared view in an exact cursor envelope', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'shared-one');
     AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
 
-    // The HTTP envelope carries page meta (current_page/total/per_page), the signature
-    // of a LengthAwarePaginator — not a cursor (next_cursor) it cannot honestly back.
     $this->getJson('api/vaulter/shared')
         ->assertOk()
-        ->assertJsonPath('meta.current_page', 1)
-        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('meta.next_cursor', null)
+        ->assertJsonMissingPath('meta.total')
         ->assertJsonCount(1, 'data');
 });
 
-// ── the GET shared endpoint is a DOCUMENTED offset-natured contract (D16 / F-P4.2-04):
-// `filterSharedWith()` re-resolves each candidate EXACTLY, in-memory, and cannot honestly
-// back a keyset cursor, so the fix here is NOT a fake cursor over that in-memory pass — it
-// is (a) the page envelope, asserted above, and (b) an explicit contract test + rest-api.md
-// note (docs/reference/rest-api.md § "Shared with me") so a client never mis-assumes cursor
-// semantics on this one endpoint.
-it('GET shared never advertises a cursor envelope — the offset contract is explicit (F-P4.2-04)', function (): void {
+it('GET shared advertises a cursor envelope without offset totals', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'offset-contract');
     AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
@@ -218,9 +195,9 @@ it('GET shared never advertises a cursor envelope — the offset contract is exp
     $response = $this->getJson('api/vaulter/shared')->assertOk();
 
     expect($response->json('meta'))
-        ->not->toHaveKey('next_cursor')
-        ->not->toHaveKey('prev_cursor')
-        ->toHaveKeys(['current_page', 'last_page', 'total']);
+        ->toHaveKeys(['next_cursor', 'prev_cursor', 'per_page', 'scanned'])
+        ->not->toHaveKey('total')
+        ->not->toHaveKey('current_page');
 });
 
 // ── 6. The public repository seam: queryForUser + constrainToAccessible.
@@ -433,11 +410,7 @@ it('returns the shared view as a paginated envelope from the controller', functi
         scope: GrantScope::Item,
     );
 
-    // The shared collection the repository hands the controller is non-empty and the
-    // HTTP envelope is a LengthAwarePaginator (page meta present).
-    expect(LengthAwarePaginator::resolveCurrentPage())->toBe(1);
-
     $this->getJson('api/vaulter/shared')
         ->assertOk()
-        ->assertJsonStructure(['data', 'meta' => ['current_page', 'per_page', 'total']]);
+        ->assertJsonStructure(['data', 'meta' => ['next_cursor', 'per_page', 'scanned']]);
 });

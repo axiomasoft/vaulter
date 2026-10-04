@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Batch ACL evaluation (`AccessResolver::evaluateMany`, `AclFolder`), `NodePage`,
+  `ExactListing`, signed query-bound cursors and `listing.scan_budget` (AD12).
 - Independent `ids.host_keys` configuration (default `varchar(64)`), `HostKeyColumns`
   and `VaulterSchema::hostKey()` for host-owned keys (N02, AD25).
 - `InvalidDestinationException` (409 `invalid_destination`), `NodeNotTrashedException`
@@ -17,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   creates, uploads, copies and renames (AD13, D21).
 
 ### Changed
+- Children, search, trash, shared, folder children and Filament now display only nodes
+  with effective View for every driver. Shared uses cursors instead of page/total;
+  REST listings omit totals and reuse batch ACL results for abilities (AD12).
 - `vaulter-documents` and `vaulter-filament` require `vaulter-drive` at runtime (AD02).
 - HTTP routes use separate `routes.middleware.authenticated`, `public` and `hub`
   stacks; protected routes default to `auth:sanctum`. Legacy `middleware` overrides

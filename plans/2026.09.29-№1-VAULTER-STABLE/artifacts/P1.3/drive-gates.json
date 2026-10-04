@@ -1,0 +1,20 @@
+[
+  {
+    "package": "drive",
+    "check": "pint",
+    "command": "../../scripts/php84 vendor/bin/pint --test",
+    "exit_code": 0
+  },
+  {
+    "package": "drive",
+    "check": "phpstan",
+    "command": "../../scripts/php84 vendor/bin/phpstan analyse --no-progress --memory-limit=512M",
+    "exit_code": 0
+  },
+  {
+    "package": "drive",
+    "check": "pest",
+    "command": "env DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci",
+    "exit_code": 0
+  }
+]

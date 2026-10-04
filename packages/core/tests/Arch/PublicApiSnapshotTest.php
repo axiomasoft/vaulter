@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\AccessResolver;
+use Vaulter\Access\AclFolder;
+use Vaulter\Access\ExactListing;
+use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -279,6 +283,9 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     expect($contracts)->not->toBe([]);
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
+    foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
+        $blocks[] = vaulterSnapshotInterface($class);
+    }
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotInterface(Config::class);
     $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);

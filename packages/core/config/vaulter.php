@@ -34,6 +34,7 @@ use Vaulter\Webhooks\DefaultOutboundUrlGuard;
  * Publish: php artisan vendor:publish --tag=vaulter-config
  */
 return [
+    'listing' => ['scan_budget' => 1000],
 
     /*
     |--------------------------------------------------------------------------

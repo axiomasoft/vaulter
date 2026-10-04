@@ -1,0 +1,161 @@
+
+> @vaulter/vue@0.0.0 test /tmp/vaulter-p13-vue-yy28066b/vue
+> vitest run "tests/shared-with-me.test.ts" "tests/drive-client.test.ts"
+
+
+ RUN  v4.1.10 /tmp/vaulter-p13-vue-yy28066b/vue
+
+ ❯ tests/drive-client.test.ts (25 tests | 1 failed) 13ms
+       × lists "shared with me" at the top-level /shared with query-bound cursor params 3ms
+ ❯ tests/shared-with-me.test.ts (11 tests | 6 failed) 5041ms
+     × loads the shared nodes and exposes them on refresh 14ms
+     × pages with loadMore when more pages exist, then stops 1ms
+     × continues an empty scan-budget page to the next visible node 1ms
+     × a stale in-flight loadMore never clobbers a list a later refresh replaced 5001ms
+     × a double-click on loadMore appends the next page only once 1ms
+     × renders the shared nodes from the client and emits open-node on open 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/drive-client.test.ts > createVaulterClient — Drive (M1–M4) > storages + nodes > lists "shared with me" at the top-level /shared with query-bound cursor params
+AssertionError: expected '/api/vaulter/shared?per_page=2' to contain 'cursor=after-denied'
+
+Expected: "cursor=after-denied"
+Received: "/api/vaulter/shared?per_page=2"
+
+ ❯ tests/drive-client.test.ts:137:19
+    135|       expect(url).toContain('/api/vaulter/shared?')
+    136|       expect(url).not.toContain('/storages/')
+    137|       expect(url).toContain('cursor=after-denied')
+       |                   ^
+    138|       expect(new URL(url, 'https://test.invalid').searchParams.has('pa…
+    139|       expect(url).toContain('per_page=2')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > useSharedNodes > loads the shared nodes and exposes them on refresh
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "cursor": null,
++     "page": 1,
+      "perPage": undefined,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/shared-with-me.test.ts:76:20
+     74|
+     75|     // Cross-storage: ids from two different storages land in one flat…
+     76|     expect(shared).toHaveBeenCalledWith({ cursor: null, perPage: undef…
+       |                    ^
+     77|     expect(vm.nodes.value.map((n) => n.id)).toEqual([1, 2])
+     78|     expect(vm.nodes.value.map((n) => n.storage_id)).toEqual([7, 9])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > useSharedNodes > pages with loadMore when more pages exist, then stops
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/shared-with-me.test.ts:101:30
+     99|
+    100|     await vm.refresh()
+    101|     expect(vm.hasMore.value).toBe(true)
+       |                              ^
+    102|
+    103|     await vm.loadMore()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > useSharedNodes > continues an empty scan-budget page to the next visible node
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/shared-with-me.test.ts:121:30
+    119|     await vm.refresh()
+    120|     expect(vm.nodes.value).toEqual([])
+    121|     expect(vm.hasMore.value).toBe(true)
+       |                              ^
+    122|     await vm.loadMore()
+    123|     expect(shared).toHaveBeenLastCalledWith({ cursor: 'after-denied', …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > useSharedNodes > a stale in-flight loadMore never clobbers a list a later refresh replaced
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/shared-with-me.test.ts:147:3
+    145|   })
+    146|
+    147|   it('a stale in-flight loadMore never clobbers a list a later refresh…
+       |   ^
+    148|     let resolveMore: ((page: CursorPage<Node>) => void) | undefined
+    149|     const shared = vi.fn()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > useSharedNodes > a double-click on loadMore appends the next page only once
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ tests/shared-with-me.test.ts:181:20
+    179|
+    180|     // Exactly two client calls (refresh + ONE loadMore); page 2 appen…
+    181|     expect(shared).toHaveBeenCalledTimes(2)
+       |                    ^
+    182|     expect(vm.nodes.value.map((n) => n.id)).toEqual([1, 2])
+    183|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/shared-with-me.test.ts > VaulterSharedWithMe > renders the shared nodes from the client and emits open-node on open
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "cursor": null,
++     "page": 1,
+      "perPage": undefined,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/shared-with-me.test.ts:197:20
+    195|
+    196|     await flushAll()
+    197|     expect(shared).toHaveBeenCalledWith({ cursor: null, perPage: undef…
+       |                    ^
+    198|
+    199|     const rows = wrapper.findAll('.vaulter-node-list__item')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 29 passed (36)
+   Start at  14:08:59
+   Duration  5.76s (transform 452ms, setup 0ms, import 550ms, tests 5.05s, environment 313ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

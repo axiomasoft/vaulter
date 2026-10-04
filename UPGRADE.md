@@ -6,6 +6,21 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Exact listing and shared cursors (AD12)
+
+Before: children, search, trash and Filament exposed grant-reachable candidates,
+including denied nodes; `shared` used `page`, `current_page` and `total`.
+After: all these surfaces and folder `show` children apply effective `View` for every
+driver. REST listings return `meta.next_cursor`, `per_page`, `scanned`, `path` and a
+null `prev_cursor`; `total` and numbered page links are omitted. Replace shared
+page-number iteration with `cursor` iteration, and continue through empty pages
+while `next_cursor` is non-null. `vaulter.listing.scan_budget` defaults to 1000;
+raise it to inspect more candidates per request. Invalid or cross-query cursors
+return 422 `validation_failed` with `errors.cursor`.
+
+New PHP surface: `AccessResolver::evaluateMany()`, `AclFolder`, `NodePage` and
+`ExactListing`. Listing resource abilities use the batch grant sets.
+
 ### Tree invariants, second-root repair and migration №6 (AD13)
 
 Before: Actions accepted any node of the drive as a parent, so a folder, upload, move,

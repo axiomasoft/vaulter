@@ -1,0 +1,4 @@
+
+> @vaulter/vue@0.0.0 typecheck /home/vostrikov/projects/packages/vaulter/packages/vue
+> vue-tsc --noEmit
+

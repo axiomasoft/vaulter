@@ -16,7 +16,7 @@ const props = withDefaults(
     viewMode?: 'list' | 'grid'
     /** Row actions to offer (still filtered per node abilities by the list). */
     actions?: NodeAction[]
-    /** Initial page / page size for the length-aware listing. */
+    /** Initial cursor / page size for the shared listing. */
     query?: SharedNodesQuery
   }>(),
   {

@@ -221,3 +221,8 @@ empty) body, or raise the limit.
 `BlockedOutboundUrlException` — the outbound webhook URL was refused: a disallowed
 scheme, a malformed URL, or a host resolving to a blocked network (SSRF protection).
 Register the endpoint with a public http(s) URL.
+
+## invalid-cursor
+
+`InvalidCursorException`: 422 `validation_failed`, with `errors.cursor`. Restart the
+listing without a cursor; the signature, listing scope or ordering did not match.
