@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-04
-inputs_sha256: a1caf58bc60de678594b333e2548f8732f74121b2d3df88cfb1b06d2eed6b35c
+inputs_sha256: 8eb26fc24b1ead3f821bce1db10ecec91200b75ba31e6d470c0298ea738ff39d
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Field | Meaning |
 |:--|:--|
 | Version | — |
-| Status | 🟠 Done with deviations |
+| Status | 🟡 In progress |
 | Last Updated | 2026-10-04 |
 
 ## 4. Phase Index & Status Board
@@ -25,6 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
 | P1 | Исправления T0 на текущих именах | 10/11 | 🟠 Done with deviations |
+| P2 | Канон имён и конфигурации | 0/7 | ⬜ Not started |
 
 ## Phase P0
 
@@ -50,6 +51,18 @@ generated_by: task plan-views status
 | P1.9 | Стеки middleware и отказ от глобальных биндингов | 🟢 Done | 2026-10-03 |
 | P1.10 | Честные зависимости и авторизация Filament | 🟢 Done | 2026-10-03 |
 | P1.11 | Метаданные и URL | 🟢 Done | 2026-10-03 |
+
+## Phase P2
+
+| ID | Title | Status | Updated |
+|:--|:--|:--|:--|
+| P2.1 | Переименования классов core | ⬜ Not started | — |
+| P2.2 | Переименования и раскладка drive | ⬜ Not started | — |
+| P2.3 | Переименования и раскладка documents без типов | ⬜ Not started | — |
+| P2.4 | AzGuard из core в vaulter-azgard; media и filament | ⬜ Not started | — |
+| P2.5 | Канонический конфиг и типизированный доступ | ⬜ Not started | — |
+| P2.6 | Типы новых и переименованных колонок | ⬜ Not started | — |
+| P2.7 | Схема 0.3 и upgrade-миграции №1, №2, №4, №8, №9 | ⬜ Not started | — |
 
 ## 6. Update Log
 
@@ -131,6 +144,10 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-04 | codex | plan-run · in-progress · — |
 | 2026-10-04 | codex/gpt-6.1-sol/high | plan-run · closed-green · note abbreviated; full text: journal.jsonl:62 |
+| 2026-10-04 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
+| 2026-10-04 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
+| 2026-10-04 | claude-haiku-4-5/lean | plan-close · closed-deviations · Phase P1 closed: 10/11 GREEN items, P1.7 with classified MySQL deviation. Local validation gates: core pint/phpstan OK, coverage OK. Direct close without hosted CI (owner decision). All deliverables integrated. |
+| 2026-10-04 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
 
 ## Owner Gates
 

@@ -1,0 +1,4 @@
+core-pint ✓
+core-phpstan ✓
+core-pest ✓
+core-concurrency ✗ exit=2

@@ -96,7 +96,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 
 ## 3. Routing
 
-Детализированы: P0, P1 (P1 — до закрытия P0 по D12; исполнение P1 — после `task:plan-close … P0`). Фазы P2–P8 — skeleton в
+Детализированы: P0, P1 (P1 — до закрытия P0 по D12; исполнение P1 — после `task:plan-close … P0`), P2 (до закрытия P1 по D15;
+finish, design audit и исполнение — после `task:plan-close … P1`; P2.7 — D16). Фазы P3–P8 — skeleton в
 `backlog/` (D03), детализируются по очереди. Batch — предложение группировки;
 окончательная — execution-sheet в `roadmap.md`.
 
@@ -117,6 +118,13 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | solo | P1.3 | frontier/high | manual | full | recommended: `evaluateMany` + точный курсорный листинг — алгоритм доступа; отдельная сессия из-за объёма контекста. |
 | solo | P1.5 | frontier/high | manual | full | recommended: `BlobScope`/`scope_key`/repair-scopes — миграция данных CAS; после P1.7 (HK `v_blobs.tenant_id`). |
 | solo | P1.6 | implementation/high | manual | full | recommended: квота и номер ревизии под блокировками D21 — последним: опирается на `lockTree` (P1.2) и `advisoryLock` CAS (P1.5). |
+| solo | P2.1 | implementation/high | manual | full | recommended: FQN-проход core по Rector-карте задаёт имена, которые импортируют все пакеты; первым в фазе после закрытия P1 (D15); ревью публичной поверхности — full. |
+| solo | P2.7 | frontier/high | manual | full | recommended: схема 0.3 и upgrade-миграции на фикстуре P0.3 — миграция данных (D16); frontier не смешивается с implementation; после P2.1. |
+| B2-A | P2.2 | implementation/medium | manual | light | recommended: механические переименования drive по карте на итоговой схеме; первым в B2-A после P2.7. |
+| B2-A | P2.3 | implementation/medium | manual | light | recommended: механические переименования documents без типов; вторым в B2-A (номера смежны, общий класс). |
+| solo | P2.4 | implementation/medium | manual | full | recommended: вынос драйвера прав AzGuard — граница авторизации, full-ревью; после переименований доступа P2.1 и модулей B2-A. |
+| solo | P2.5 | implementation/high | manual | full | recommended: замена `Support\Config` во всех пакетах, нормализатор и валидатор ключей безопасности (V28) — full; последним среди переименований. |
+| solo | P2.6 | implementation/low | manual | light | recommended: проверка типов ключевых колонок итоговой схемы и `KeyColumnInspector`; последним, после P2.5 и P2.7. |
 
 ## 4. Update Log
 
@@ -127,6 +135,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | 2026-09-29 | По поручению владельца исправлены DA01–DA06 (D07): owner IDs исходной схемы, явный PG-job харнесса, O-3-CI до аудита, bootstrap, дословный render/manifest/негативные контроли, producer baseline P0.4; повторная финализация, без исполнения P0 | gpt-6-sol/high |
 | 2026-09-29 | D08: владелец разрешил завершить перепроверку исправлений дизайна P0 до GREEN в текущей sol-сессии; same-author recheck явно обозначен, фазовая приёмка реализации сохранена | gpt-6-sol/high |
 | 2026-10-02 | D12: дизайн P1 до закрытия P0 по выбору владельца; P1 детализирована (P1.1–P1.11, ledger 360 единиц, решения R1–R10); `backlog/P1.md` перенесён в `phases/P1/` | claude-opus-5-5/high |
+| 2026-10-04 | D15: дизайн P2 до закрытия P1 по выбору владельца; D16: OPUS P2.1 разделён на P2.1 (классы core) и P2.7 (схема и upgrade-миграции); P2 детализирована (P2.1–P2.7, ledger 556 единиц, решения R1–R25, досье `artifacts/P2-design/P2.5-config-map.md`); `backlog/P2.md` перенесён в `phases/P2/` | claude-opus-5-5/high |
+| 2026-10-04 | Finish дизайна P2 (D15 п.2): P1 закрыта (`356a02b`); delta assessment — `git diff 938f0ea..HEAD -- packages` пуст, item-контракты P2 без изменений; `opus-coverage.py check --phase P2` exit 0; группы execution-sheet 13–18 подтверждены по порядку D16; ремонт journal:65 (ts, result `closed-deviations`) | claude-opus-5-5/high |
 
 ## 5. Decision Log
 

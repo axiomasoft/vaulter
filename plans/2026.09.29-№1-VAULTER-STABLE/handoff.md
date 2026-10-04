@@ -1,29 +1,33 @@
-# HANDOFF — 2026-10-04 — P1 closed, P2 next
+# HANDOFF — 2026-10-04 — after P1
 
-**Next:** design: task:plan-design 2026.09.29-№1-VAULTER-STABLE finish
+**Next:** audit-design: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design
 
 | Parameter | Meaning |
 |:--|:--|
-| Batch | solo |
+| Batch | n/a |
 | Model class | frontier |
-| Model | haiku-4.5 |
-| Effort | lean |
-| Thinking | minimal |
-| Context | continue-root |
-| The bottom line | P1 closed (direct, no hosted CI); P2 design ready for finish and audit. |
+| Effort | high |
+| Capabilities | — |
+| Context | cold-start-root: whole-plan-independent-audit |
+| Essence | independent design audit (reviewer ≠ design author, D03) of the finish fingerprint; GREEN admits rows 13–18 |
 
-**Done:** P1 closed on 2026-10-04 (10/11 ✓, P1.7 deviation classified). All item deliverables integrated.
-P2 designed on `main` @ `938f0ea` by owner choice (D15): `phases/P2/P2.md` + item contracts P2.1–P2.7; D16 splits OPUS
-P2.1 into class renames (P2.1) and schema/upgrade migrations (P2.7); ledger P2 — 556 OPUS units, `opus-coverage.py check`
-OK; verbatim inputs `artifacts/P2-design/P2.m-opus.md`; config dossier `artifacts/P2-design/P2.5-config-map.md`;
-execution-sheet rows 13–18 and the P2 command sequence in `roadmap.md`.
+**Provider-native command:**
 
-**Remaining:** `task:plan-design 2026.09.29-№1-VAULTER-STABLE finish` (regenerate views, update roadmap) 
-→ `task:plan-audit 2026.09.29-№1-VAULTER-STABLE design` (if audit required) → P2 execution rows 13–18.
+```text
+/task:plan-audit 2026.09.29-№1-VAULTER-STABLE design
+```
 
-**Open risks:** No MySQL concurrency run is claimed for P1. P2 assumes `composer install` before execution (no `vendor/`
-in the design working copy). P2.4 depends on `axioma-studio/azguard-core: dev-main` being installable (O-4). No push,
-hosted CI trigger or release was authorized.
+**Done:** P1 closed on 2026-10-04 (`356a02b`; 10/11 ✓, P1.7 deviation classified; direct close without hosted CI).
+P2 finish recorded: delta assessment (D15 п.2) — no `packages/` change since design base `938f0ea`, P2 item contracts
+unchanged; `opus-coverage.py check --phase P2` exit 0 (556 units); execution-sheet rows 13–18 confirmed against the
+D16 order P2.1 → P2.7 → P2.2/P2.3 → P2.4 → P2.5 → P2.6. Journal:65 repaired (missing `ts`, invalid result/fingerprint).
 
-**Sources of truth:** phases/P1/P1.md; phases/P2/P2.md; decisions/D15-p2-design-before-p1-close.md;
-decisions/D16-p2-schema-item-split.md; artifacts/coverage/ledger-P2.tsv; roadmap.md (execution-sheet).
+**Remaining:** `task:plan-audit 2026.09.29-№1-VAULTER-STABLE design` (GREEN on the finish fingerprint) → P2 execution,
+first row `task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.1` → O-3-CI (owner) → phase audit P2 → close P2 → design P3.
+
+**Open risks:** No MySQL concurrency run is claimed for P1. P2 DoR: `composer install` in `packages/{drive,documents,media,
+filament,azgard}` still pending (root `vendor/` present). P2.4 depends on `axioma-studio/azguard-core: dev-main` being
+installable (O-4). No push, hosted CI trigger or release was authorized.
+
+**Sources of truth:** phases/P2/P2.md; decisions/D15-p2-design-before-p1-close.md; decisions/D16-p2-schema-item-split.md;
+artifacts/coverage/ledger-P2.tsv; roadmap.md (execution-sheet).

@@ -1,0 +1,20 @@
+core-pint exit=127
+core-phpstan exit=127
+core-pest exit=127
+core-pg exit=127
+drive-pint exit=127
+drive-phpstan exit=127
+drive-pest exit=127
+documents-pint exit=127
+documents-phpstan exit=127
+documents-pest exit=127
+media-pint exit=127
+media-phpstan exit=127
+media-pest exit=127
+filament-pint exit=127
+filament-phpstan exit=127
+filament-pest exit=127
+drive-pg exit=127
+media-pg exit=127
+coverage exit=0
+DONE
