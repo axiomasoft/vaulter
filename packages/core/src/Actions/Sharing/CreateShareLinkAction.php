@@ -9,8 +9,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
-use Vaulter\Data\Sharing\CreateShareLinkData;
 use Vaulter\Data\Sharing\MintedShareLink;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Node;
@@ -51,7 +51,7 @@ final readonly class CreateShareLinkAction
         private VaulterDatabase $database,
     ) {}
 
-    public function execute(Node $node, CreateShareLinkData $data): MintedShareLink
+    public function execute(Node $node, ShareLinkInput $data): MintedShareLink
     {
         $passwordHash = $data->password === null || $data->password === ''
             ? null
@@ -82,7 +82,7 @@ final readonly class CreateShareLinkAction
      * persist its hash + prefix. Returns the raw token alongside the row exactly
      * once — it is never recoverable afterward.
      */
-    private function mint(Node $node, CreateShareLinkData $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
+    private function mint(Node $node, ShareLinkInput $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
     {
         $prefixLength = Config::sharePrefixLength();
 

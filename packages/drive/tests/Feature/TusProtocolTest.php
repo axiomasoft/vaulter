@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -22,7 +22,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function protocolStorage(): Storage
+function protocolStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

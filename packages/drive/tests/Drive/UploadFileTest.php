@@ -9,7 +9,7 @@ use Vaulter\Drive\Events\NodeVersionCommitted;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -18,7 +18,7 @@ beforeEach(function (): void {
     config()->set('vaulter.dedup.scope', 'tenant');
 });
 
-it('загружает файл: node kind=file + File + FileVersion + ребро', function (): void {
+it('загружает файл: node kind=file + File + FileRevision + ребро', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(DriveTestHelpers::streamFor('hello drive'), originalName: 'hello.txt', mimeType: 'text/plain');
@@ -30,7 +30,7 @@ it('загружает файл: node kind=file + File + FileVersion + ребр�
         ->and($node->size_bytes)->toBe(11)
         ->and($node->file_id)->not->toBeNull()
         ->and($node->current_version_id)->not->toBeNull()
-        ->and(FileVersion::query()->count())->toBe(1)
+        ->and(FileRevision::query()->count())->toBe(1)
         ->and(Blob::query()->count())->toBe(1);
 });
 
@@ -81,7 +81,7 @@ it('новая версия: бамп version_no, перенаведение hea
 
     expect($file->version_count)->toBe(2)
         ->and($updated->current_version_id)->not->toEqual($firstVersionId)
-        ->and(FileVersion::query()->find($firstVersionId)->status)->toBe('superseded')
+        ->and(FileRevision::query()->find($firstVersionId)->status)->toBe('superseded')
         ->and($file->currentVersion->version_no)->toBe(2);
 });
 

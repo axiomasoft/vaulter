@@ -20,12 +20,12 @@ use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
 use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
-use Vaulter\Repositories\Drive\FileVersionReadRepository;
+use Vaulter\Repositories\Drive\DriveReadRepository;
+use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Support\LoadTier;
@@ -45,14 +45,14 @@ use Vaulter\Support\LoadTier;
  *    share exposes a single node, never a listing).
  *
  * Thin — bytes stream off the StorageDriver, the version/blob resolve through the
- * FileVersionReadRepository bounded to the node's own file.
+ * FileRevisionReadRepository bounded to the node's own file.
  */
 final class PublicShareController extends Controller
 {
     public function __construct(
         private readonly NodeReadRepository $nodes,
-        private readonly FileVersionReadRepository $versions,
-        private readonly StorageReadRepository $storages,
+        private readonly FileRevisionReadRepository $versions,
+        private readonly DriveReadRepository $storages,
         private readonly NodeShareStoreRepository $shares,
         private readonly StorageDriver $driver,
         private readonly MetricsRecorder $metrics,
@@ -118,7 +118,7 @@ final class PublicShareController extends Controller
 
         $storage = $this->storages->find($node->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
@@ -155,7 +155,7 @@ final class PublicShareController extends Controller
     {
         $storage = $this->storages->find($parent->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             /** @var Collection<int, Node> $empty */
             $empty = new Collection;
 
@@ -173,9 +173,9 @@ final class PublicShareController extends Controller
         )->values();
     }
 
-    private function stream(Node $node, ?FileVersion $version, Storage $storage, int $startedAt): StreamedResponse
+    private function stream(Node $node, ?FileRevision $version, Drive $storage, int $startedAt): StreamedResponse
     {
-        if (!$version instanceof FileVersion) {
+        if (!$version instanceof FileRevision) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 

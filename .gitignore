@@ -110,3 +110,7 @@ load/results/
 load/gates/__pycache__/
 .grok/config.toml
 /:memory:
+.claude/.maind-feature-log.last
+.claude/maind-*.sh
+.claude/settings.json
+.claude/agent-pack.lock.json

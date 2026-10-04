@@ -14,7 +14,7 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
@@ -43,7 +43,7 @@ it('records vaulter_outbox_backlog from pending outbox rows', function (): void 
 
 it('records vaulter_outbox_stage_duration_seconds when staging a new row', function (): void {
     app(OutboxRecorder::class)->stage(
-        event: WebhookEvent::GrantCreated,
+        event: EventType::GrantCreated,
         eventId: (string) Str::ulid(),
         panel: 'default',
         topic: 'node-1',

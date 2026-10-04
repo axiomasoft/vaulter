@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -26,8 +26,8 @@ beforeEach(function (): void {
 it('grants an absolute override from a super-admin gate', function (): void {
     Gate::define('vaulter.super', fn (TestUser $user): bool => $user->getKey() === 1);
 
-    $driver = new GatePermissionResolver;
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $driver = new GatePermissionDriver;
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
 
     expect($driver->override(AccessTestHelpers::user(id: 1), $scope))->toBe(Effect::Allow)
         ->and($driver->override(AccessTestHelpers::user(id: 2), $scope))->toBeNull();
@@ -47,9 +47,9 @@ it('maps a gate ability to a role-grant level', function (): void {
     // Only the writer-level ability is granted → the actor gets a Writer decision.
     Gate::define('vaulter.edit', fn (TestUser $user): bool => true);
 
-    $driver = new GatePermissionResolver;
+    $driver = new GatePermissionDriver;
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     $decision = $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
@@ -76,9 +76,9 @@ it('lets a gate-mapped ability raise access in the AccessResolver with no ACL ro
 });
 
 it('returns no role decision when no mapped ability is granted (pass-through)', function (): void {
-    $driver = new GatePermissionResolver;
+    $driver = new GatePermissionDriver;
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull()
         ->and($driver->override($actor, $scope))->toBeNull();
@@ -88,7 +88,7 @@ it('gates workspace creation through the configured create ability', function ()
     // The create ability receives [workspaceType, workspaceId]; allow only project 5.
     Gate::define('vaulter.create', fn (TestUser $user, string $type, int|string $id): bool => $id === 5);
 
-    $driver = new GatePermissionResolver;
+    $driver = new GatePermissionDriver;
     $actor = AccessTestHelpers::user();
 
     expect($driver->canCreateInWorkspace($actor, 'project', 5))->toBeTrue()
@@ -104,9 +104,9 @@ it('the gate ability check is node-blind — it receives the workspace context o
         return true;
     });
 
-    $driver = new GatePermissionResolver;
+    $driver = new GatePermissionDriver;
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'team', workspaceType: 'project', workspaceId: 42);
+    $scope = new AccessScope(panel: 'team', workspaceType: 'project', workspaceId: 42);
 
     $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
@@ -118,7 +118,7 @@ it('the gate ability check is node-blind — it receives the workspace context o
 });
 
 it('exposes only the actor in its subject-set (the Gate has no role subjects)', function (): void {
-    $driver = new GatePermissionResolver;
+    $driver = new GatePermissionDriver;
     $subjects = $driver->subjectsFor(AccessTestHelpers::user(id: 3));
 
     expect($subjects)->toHaveCount(1)

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data;
 
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for UploadFileAction (§2.4 commit flow). Carries an already-normalised,
@@ -25,7 +25,7 @@ final readonly class UploadFileData
      * @param resource $stream a seekable byte stream the BlobStore can stage
      */
     public function __construct(
-        public Storage $storage,
+        public Drive $storage,
         public mixed $stream,
         public string $originalName,
         public ?string $mimeType = null,

@@ -11,8 +11,8 @@ use Vaulter\Drive\Events\NodeForceDeleted;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -62,7 +62,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
 });
 
-function r07bActStorage(): Storage
+function r07bActStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Panels\PanelRegistry;
 use Vaulter\Support\Config;
 
 return new class extends Migration
@@ -51,12 +50,6 @@ return new class extends Migration
     /** @return list<string> */
     private function tables(): array
     {
-        $tables = [Config::table('webhook_deliveries')];
-
-        foreach (app(PanelRegistry::class)->all() as $panel) {
-            $tables[] = $panel->table('webhook_deliveries');
-        }
-
-        return array_values(array_unique($tables));
+        return [Config::table('webhook_deliveries')];
     }
 };

@@ -43,7 +43,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 монотонен в пределах узла, а уникальный индекс `(node_id, version_no)` — тот стержень, на котором
 сериализуются два конкурентных коммита.
 
-Колонки `v_node_document_versions` (из `PanelTablesBuilder::defineDocumentVersions`):
+Колонки `v_node_document_versions` (из `SchemaBuilder::defineDocumentVersions`):
 
 | Колонка | Тип | Смысл |
 |---|---|---|

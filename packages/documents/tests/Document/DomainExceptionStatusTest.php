@@ -23,11 +23,11 @@ use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Exceptions\Panels\UnknownPanelException;
+use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Support\Config;
-use Vaulter\Testing\NullRoleDriver;
+use Vaulter\Testing\NullPermissionDriver;
 
 it('renders each domain exception with its stable code and HTTP status', function (
     VaulterException $exception,
@@ -81,8 +81,8 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
-    'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullRoleDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
-    'unknown panel' => [UnknownPanelException::forName('unknown', ['default']), 'unknown_profile', 422],
+    'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullPermissionDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],
+    'unknown panel' => [UnknownProfileException::forName('unknown', ['default']), 'unknown_profile', 422],
     'node missing' => [fn (): VaulterException => NodeNotFoundException::forId(1), 'node_not_found', 404],
     'storage missing' => [fn (): VaulterException => StorageNotFoundException::forId('storage'), 'drive_not_found', 404],
 ]);

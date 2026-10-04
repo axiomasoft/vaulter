@@ -67,30 +67,30 @@ const props = defineProps<{ storageId: string }>()
 :::
 
 For a **dedicated** Drive on a specific entity type — with its own feature flags and a Filament
-resource — define a Storage Panel instead of using the `default` panel:
+resource — define a Storage Profile instead of using the `default` panel:
 
 ```bash
-php artisan vaulter:make-panel task_drive --host="App\\Models\\Task"
+php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 ```
 
-This scaffolds `app/Vaulter/Panels/TaskDriveStoragePanel.php`. Edit its feature flags, then
+This scaffolds `app/Vaulter/Profiles/TaskDriveStoragePanel.php`. Edit its feature flags, then
 register the provider FQCN in `config/vaulter.php`:
 
 ```php
 // config/vaulter.php
 'panels' => [
-    \App\Vaulter\Panels\TaskDriveStoragePanel::class,
+    \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ],
 ```
 
 ```php
-// app/Vaulter/Panels/TaskDriveStoragePanel.php
-use Vaulter\Panels\Panel;
-use Vaulter\Panels\StoragePanelProvider;
+// app/Vaulter/Profiles/TaskDriveStoragePanel.php
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileProvider;
 
-final class TaskDriveStoragePanel extends StoragePanelProvider
+final class TaskDriveStoragePanel extends ProfileProvider
 {
-    public function panel(Panel $panel): Panel
+    public function profile(Profile $panel): Profile
     {
         return $panel
             ->id('task_drive')
@@ -109,10 +109,8 @@ $drive = Vaulter::for($task, panel: 'task_drive');
 ```
 
 ::: tip Zero migrations
-A panel is a config envelope over the **shared** `v_*` schema — `make-panel` writes **no**
-migration and touches **no** config. Registering the FQCN and (only for the rare own-tables
-mode) generating migrations are deliberate, separate steps. See
-[ADR-0009](/adr/0009-storage-panels).
+A profile uses the shared `v_*` schema. `vaulter:make:profile` writes the provider;
+register its FQCN in config. It creates no migration.
 :::
 
 ## Multi-tenant SaaS storage {#multi-tenant}
@@ -177,10 +175,10 @@ in a tenant-aware model, that model — not Vaulter — must apply the scope on 
 
 ## Write a custom permission driver {#permission-driver}
 
-The Drive ACL combines `v_node_grants` with a swappable `HostRoleDriver` lane. To bridge your
+The Drive ACL combines `v_node_grants` with a swappable `PermissionDriver` lane. To bridge your
 app's role system, implement
-[`Vaulter\Contracts\Access\HostRoleDriver`](/guide/architecture#authorization). It is
-**node-blind**: it never receives a `Node` — only an `Authorizable` actor and an `AclScope`
+[`Vaulter\Contracts\Access\PermissionDriver`](/guide/architecture#authorization). It is
+**node-blind**: it never receives a `Node` — only an `Authorizable` actor and an `AccessScope`
 (panel + workspace coordinates + node owner).
 
 The simplest real driver subclasses the standalone `database` lane and just expands the
@@ -189,11 +187,11 @@ subject-set with the actor's roles/teams (so `v_node_grants` rows addressed to a
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
-final class TeamRoleDriver extends DatabasePermissionResolver
+final class TeamRoleDriver extends DatabasePermissionDriver
 {
     /** @return list<Subject> */
     public function subjectsFor(Authorizable $actor): array
@@ -212,21 +210,21 @@ final class TeamRoleDriver extends DatabasePermissionResolver
 A fuller driver also answers the role lane and the super-admin override:
 
 ```php
-use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 
-final class AppRoleDriver implements HostRoleDriver
+final class AppRoleDriver implements PermissionDriver
 {
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return $actor->is_super_admin ? Effect::Allow : null; // absolute, step 1
     }
 
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         // Raise access from a host role — folded as roleAllow into max(aclAllow, roleAllow).
         // It can RAISE access but never override a deny (the final veto still applies).
@@ -261,10 +259,10 @@ Register it as a named driver and select it:
 ],
 
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
 ],
 ```
@@ -280,7 +278,7 @@ For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom 
 ## Write a custom format handler {#format-handler}
 
 A `FileHandler` claims mime types / extensions and tells the client how to mount a node
-(editor, preview, or download). The core-owned `Vaulter\Engines\DocumentHandlerRegistry` resolves
+(editor, preview, or download). The core-owned `Vaulter\Handlers\FileHandlerRegistry` resolves
 the best one by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`.
 Adding a
 format is **one class + one register call — no migration, no core change**
@@ -291,12 +289,12 @@ namespace App\Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CadHandler implements FileHandler
 {
-    public function id(): string { return 'cad'; }
+    public function key(): string { return 'acme/cad'; }
 
     /** @return list<string> */
     public function mimeTypes(): array { return ['application/acad', 'image/vnd.dwg']; }
@@ -307,9 +305,9 @@ final class CadHandler implements FileHandler
     // Higher wins among handlers matching the same file; DownloadOnly sits lowest.
     public function priority(): int { return 100; }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: false,
             previewable: true,
             downloadable: true,
@@ -318,12 +316,11 @@ final class CadHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        // The Vue component + open route + props the client routes the node to.
-        return new HandlerUi(
-            component: 'CadViewer',
-            route: "nodes/{$file->nodeId}/download",
+        // The viewer key + props the client routes the node to.
+        return new ViewerDescriptor(
+            key: 'acme/cad',
             props: ['mime' => $file->canonicalMime()],
         );
     }
@@ -337,10 +334,10 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 ```php [config]
 // config/vaulter.php
 'handlers' => [
-    \Vaulter\Documents\Handlers\TipTapHandler::class,
+    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     \App\Vaulter\Handlers\CadHandler::class, // before the fallbacks
-    \Vaulter\Documents\Handlers\PreviewHandler::class,
-    \Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    \Vaulter\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -348,18 +345,18 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 // A service provider's boot()
 use Vaulter\Facades\Vaulter;
 
-Vaulter::registerHandler(\App\Vaulter\Handlers\CadHandler::class);
+Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
 
 ```php [tagged]
 // A service provider's register()
-$this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.handlers');
+$this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handlers');
 ```
 
 :::
 
 ::: details Confirm the descriptor that ships to the client
-`GET nodes/{node}/handler` returns the resolved handler's `id`, capabilities and `HandlerUi`
+`GET nodes/{node}/handler` returns the resolved handler's `id`, capabilities and `ViewerDescriptor`
 for a node — exactly what the Vue client reads to pick an editor/preview implementation. (This
 route is gated on the `document_versions` feature.)
 :::
@@ -603,7 +600,7 @@ relay/retry commands above.
 Vaulter ships test doubles under `Vaulter\Testing\*` so a consumer can boot without wiring a
 real role system:
 
-- **`NullRoleDriver`** — an open driver (every actor is a super-admin) for tests / local dev.
+- **`NullPermissionDriver`** — an open driver (every actor is a super-admin) for tests / local dev.
   It is rejected in production, so it can never silently open a prod install.
 - **`FakeAzgardGuard`** — a `Contracts\Access\AzgardGuard` double for testing the `azgard` lane
   without AzGuard installed.

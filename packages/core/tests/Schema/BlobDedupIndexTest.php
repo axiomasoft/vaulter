@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Panels\Panel;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Profiles\Profile;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 
 /** Every configured scope uses the same NULL-free scope_key index. */
@@ -21,11 +21,11 @@ function dedupIndexColumns(): array
 
 function rebuildBlobsTable(): void
 {
-    $builder = new PanelTablesBuilder;
-    $panel = (new Panel)->id('default');
+    $builder = new SchemaBuilder;
+    $panel = (new Profile)->id('default');
 
-    $builder->dropTable(panel: $panel, entity: 'blobs');
-    $builder->createTable(panel: $panel, entity: 'blobs');
+    $builder->dropTable(entity: 'blobs');
+    $builder->createTable(entity: 'blobs');
 }
 
 function storageKeyIndexColumns(): array

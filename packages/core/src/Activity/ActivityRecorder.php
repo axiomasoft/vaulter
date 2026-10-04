@@ -7,7 +7,7 @@ namespace Vaulter\Activity;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -51,7 +51,7 @@ final readonly class ActivityRecorder
         $node = $event->grant->node;
 
         return $this->record(
-            verb: ActivityVerb::GrantCreated,
+            verb: EventType::GrantCreated,
             storageId: $node->storage_id,
             tenantId: $event->grant->tenant_id,
             actorId: $event->actorId,
@@ -70,7 +70,7 @@ final readonly class ActivityRecorder
     public function recordGrantRevoked(NodeGrantRevoked $event): Activity
     {
         return $this->recordForNode(
-            verb: ActivityVerb::GrantRevoked,
+            verb: EventType::GrantRevoked,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -86,7 +86,7 @@ final readonly class ActivityRecorder
         $node = $event->share->node;
 
         return $this->record(
-            verb: ActivityVerb::ShareCreated,
+            verb: EventType::ShareCreated,
             storageId: $node->storage_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
@@ -106,7 +106,7 @@ final readonly class ActivityRecorder
         $node = $event->share->node;
 
         return $this->record(
-            verb: ActivityVerb::ShareRevoked,
+            verb: EventType::ShareRevoked,
             storageId: $node->storage_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
@@ -126,7 +126,7 @@ final readonly class ActivityRecorder
      * @param array<string, mixed>|null $context
      */
     public function recordForNode(
-        ActivityVerb $verb,
+        EventType $verb,
         Node $node,
         int|string|null $actorId,
         ?array $context = null,
@@ -150,7 +150,7 @@ final readonly class ActivityRecorder
      * @param array<string, mixed>|null $context
      */
     public function record(
-        ActivityVerb $verb,
+        EventType $verb,
         int|string|null $storageId = null,
         int|string|null $tenantId = null,
         int|string|null $actorId = null,

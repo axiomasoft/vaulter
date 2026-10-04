@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drivers\Permission\GatePermissionResolver;
+use Vaulter\Access\Drivers\GatePermissionDriver;
 
 /*
  * F-P1.2-02 (Nit, D19 green guard — docblock-alignment fix, no behaviour delta):
@@ -12,7 +12,7 @@ use Vaulter\Drivers\Permission\GatePermissionResolver;
  * comment was wrong. This guard pins that the false "swallow" claim is gone.
  */
 it('no longer claims gateAllows() swallows an exception it never catches, F-P1.2-02', function (): void {
-    $method = new ReflectionMethod(GatePermissionResolver::class, 'gateAllows');
+    $method = new ReflectionMethod(GatePermissionDriver::class, 'gateAllows');
     $doc = $method->getDocComment();
 
     expect($doc)->not->toBeFalse()

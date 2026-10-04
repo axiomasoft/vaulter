@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Events;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Uploads\UploadSessionManager;
 
 /**
  * A stale resumable-upload session was reclaimed by the sweeper (§2.8 / F-P1.4-13):

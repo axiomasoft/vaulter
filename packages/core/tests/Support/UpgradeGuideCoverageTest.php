@@ -71,7 +71,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // VaulterServiceProvider, не просто наличие файла.
         'P0.4 registry engine in core' => ['(VLT-CANON P0.4 / D10', (string) file_get_contents($root.'/packages/core/src/VaulterServiceProvider.php')],
         // P0.5 — richText дефолт flip; факт кода — сам VO несёт дефолт false.
-        'P0.5 richText default' => ['(VLT-CANON P0.5)', (string) file_get_contents($root.'/packages/core/src/ValueObjects/Handlers/HandlerCapabilities.php')],
+        'P0.5 richText default' => ['(VLT-CANON P0.5)', (string) file_get_contents($root.'/packages/core/src/ValueObjects/Handlers/ContentCapabilities.php')],
     ];
 });
 
@@ -106,7 +106,7 @@ it('UPGRADE.md обещает скраб URL на чтении — и скраб
 
 /*
  * Эта секция UPGRADE.md отсутствовала, и пробел стоил красного CI: P4.4 сделал резолв
- * PanelRegistry эагерным (fail-loud на boot'е), а вместе с ним отнял у хоста возможность
+ * ProfileRegistry эагерным (fail-loud на boot'е), а вместе с ним отнял у хоста возможность
  * дописать панель в конфиг ПОСЛЕ boot'а — host-видимое изменение поведения, о котором дока
  * молчала. Guard держит оба конца: факт в коде (резолв в packageBooted) и запись про него.
  */
@@ -116,7 +116,10 @@ it('UPGRADE.md документирует, что панели читаются 
     // Факт кода: реестр резолвится в packageBooted(), а не лениво на первом обращении.
     $booted = substr($provider, (int) strpos($provider, 'public function packageBooted'));
 
-    expect($booted)->toContain('$this->app->make(PanelRegistry::class)');
+    expect($booted)->toContain('(new BindingsRegistrar)->boot($this->app)');
+    $registrar = (string) file_get_contents(dirname(__DIR__, 3).'/core/src/Providers/BindingsRegistrar.php');
+    expect(substr($registrar, (int) strpos($registrar, 'public function boot')))
+        ->toContain('$app->make(ProfileRegistry::class)');
 
     // …и дока про это говорит — вместе с рантайм-швом на замену.
     expect(upgradeGuide())

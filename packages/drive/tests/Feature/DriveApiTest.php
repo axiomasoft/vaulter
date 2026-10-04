@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -31,7 +31,7 @@ beforeEach(function (): void {
  * Provision a storage for a fresh host entity and return its id — the routes are
  * storage-scoped, so every test opens against a real storage row.
  */
-function driveStorage(): Storage
+function driveStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -334,7 +334,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
 
     // Every one of the N sibling nodes on the page belongs to the SAME storage —
     // `AccessResolver::storageOf()` is called once per node (via
-    // `NodeResource::abilities()`), but the scoped-singleton `StorageReadRepository`
+    // `NodeResource::abilities()`), but the scoped-singleton `DriveReadRepository`
     // memoizes by id, so the whole page issues AT MOST 2 storage-table hits (the
     // Route::bind model resolution for {storage} in the URL, which queries the
     // model directly and is NOT the repository under test, plus one repository
@@ -351,7 +351,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
  */
 class SwappedNode extends Node {}
 
-class SwappedStorage extends Storage {}
+class SwappedStorage extends Drive {}
 
 /**
  * A StorageDriver decorator that mints no signed URL — it forces the download

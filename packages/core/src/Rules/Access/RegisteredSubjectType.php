@@ -16,7 +16,7 @@ use Illuminate\Translation\PotentiallyTranslatedString;
  * does not enforce a morph map — a concrete Eloquent model FQCN. An arbitrary or
  * typo'd string is rejected here so it can never be written into v_node_grants: a
  * grant addressed to a non-existent subject_type is dead data that matches nothing
- * the HostRoleDriver's subjectsFor() can ever produce.
+ * the PermissionDriver's subjectsFor() can ever produce.
  */
 final class RegisteredSubjectType implements ValidationRule
 {

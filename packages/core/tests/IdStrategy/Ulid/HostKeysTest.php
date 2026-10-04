@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Spatie\Permission\Models\Role;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Panels\Panel;
+use Vaulter\Profiles\Profile;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\HostKeyUser;
@@ -19,10 +19,10 @@ use Vaulter\Tests\Fixtures\HostKeyUser;
 beforeEach(function (): void {
     config()->set('vaulter.ids.host_keys', 'string');
     config()->set('vaulter.table_prefix', 'hk_v23_');
-    (new PanelTablesBuilder)->createAll((new Panel)->id('default'));
+    (new SchemaBuilder)->createAll((new Profile)->id('default'));
 });
 afterEach(function (): void {
-    (new PanelTablesBuilder)->dropAll((new Panel)->id('default'));
+    (new SchemaBuilder)->dropAll((new Profile)->id('default'));
 });
 
 it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulter IDs', function (): void {
@@ -41,7 +41,7 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $roleGrant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
-        verb: ActivityVerb::NodeCreated,
+        verb: EventType::FolderCreated,
         storageId: $storage->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $uuid,

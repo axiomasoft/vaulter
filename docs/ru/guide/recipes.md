@@ -67,30 +67,30 @@ const props = defineProps<{ storageId: string }>()
 :::
 
 Для **выделенного** Drive на конкретном типе сущности — со своими фича-флагами и Filament-ресурсом
-— определите Storage Panel вместо панели `default`:
+— определите Storage Profile вместо панели `default`:
 
 ```bash
-php artisan vaulter:make-panel task_drive --host="App\\Models\\Task"
+php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 ```
 
-Это создаст `app/Vaulter/Panels/TaskDriveStoragePanel.php`. Отредактируйте её фича-флаги, затем
+Это создаст `app/Vaulter/Profiles/TaskDriveStoragePanel.php`. Отредактируйте её фича-флаги, затем
 зарегистрируйте FQCN провайдера в `config/vaulter.php`:
 
 ```php
 // config/vaulter.php
 'panels' => [
-    \App\Vaulter\Panels\TaskDriveStoragePanel::class,
+    \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ],
 ```
 
 ```php
-// app/Vaulter/Panels/TaskDriveStoragePanel.php
-use Vaulter\Panels\Panel;
-use Vaulter\Panels\StoragePanelProvider;
+// app/Vaulter/Profiles/TaskDriveStoragePanel.php
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileProvider;
 
-final class TaskDriveStoragePanel extends StoragePanelProvider
+final class TaskDriveStoragePanel extends ProfileProvider
 {
-    public function panel(Panel $panel): Panel
+    public function profile(Profile $panel): Profile
     {
         return $panel
             ->id('task_drive')
@@ -178,10 +178,10 @@ final class Node extends BaseNode
 
 ## Написать свой драйвер прав {#permission-driver}
 
-ACL для Drive комбинирует `v_node_grants` со сменной полосой `HostRoleDriver`. Чтобы связать
+ACL для Drive комбинирует `v_node_grants` со сменной полосой `PermissionDriver`. Чтобы связать
 систему ролей вашего приложения, реализуйте
-[`Vaulter\Contracts\Access\HostRoleDriver`](/ru/guide/architecture#authorization). Он
-**слеп к узлам**: никогда не получает `Node` — только актора `Authorizable` и `AclScope`
+[`Vaulter\Contracts\Access\PermissionDriver`](/ru/guide/architecture#authorization). Он
+**слеп к узлам**: никогда не получает `Node` — только актора `Authorizable` и `AccessScope`
 (панель + координаты workspace + владелец узла).
 
 Простейший реальный драйвер наследует автономную полосу `database` и просто расширяет
@@ -191,11 +191,11 @@ ACL для Drive комбинирует `v_node_grants` со сменной по
 ```php
 namespace App\Vaulter;
 
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\ValueObjects\Subject;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
-final class TeamRoleDriver extends DatabasePermissionResolver
+final class TeamRoleDriver extends DatabasePermissionDriver
 {
     /** @return list<Subject> */
     public function subjectsFor(Authorizable $actor): array
@@ -214,21 +214,21 @@ final class TeamRoleDriver extends DatabasePermissionResolver
 Более полный драйвер также отвечает за полосу ролей и переопределение супер-админа:
 
 ```php
-use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 
-final class AppRoleDriver implements HostRoleDriver
+final class AppRoleDriver implements PermissionDriver
 {
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return $actor->is_super_admin ? Effect::Allow : null; // absolute, step 1
     }
 
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         // Raise access from a host role — folded as roleAllow into max(aclAllow, roleAllow).
         // It can RAISE access but never override a deny (the final veto still applies).
@@ -263,10 +263,10 @@ final class AppRoleDriver implements HostRoleDriver
 ],
 
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
 ],
 ```
@@ -282,7 +282,7 @@ final class AppRoleDriver implements HostRoleDriver
 ## Написать свой обработчик формата {#format-handler}
 
 `FileHandler` заявляет права на mime-типы / расширения и говорит клиенту, как смонтировать
-узел (редактор, превью или скачивание). Принадлежащий core `Vaulter\Engines\DocumentHandlerRegistry`
+узел (редактор, превью или скачивание). Принадлежащий core `Vaulter\Handlers\FileHandlerRegistry`
 подбирает лучший по mime → расширение → возможность → приоритет, откатываясь к `DownloadOnlyHandler`.
 Добавить
 формат — это **один класс + один вызов регистрации — без миграции, без правки ядра**
@@ -293,12 +293,12 @@ namespace App\Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CadHandler implements FileHandler
 {
-    public function id(): string { return 'cad'; }
+    public function key(): string { return 'acme/cad'; }
 
     /** @return list<string> */
     public function mimeTypes(): array { return ['application/acad', 'image/vnd.dwg']; }
@@ -309,9 +309,9 @@ final class CadHandler implements FileHandler
     // Higher wins among handlers matching the same file; DownloadOnly sits lowest.
     public function priority(): int { return 100; }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: false,
             previewable: true,
             downloadable: true,
@@ -320,12 +320,11 @@ final class CadHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        // The Vue component + open route + props the client routes the node to.
-        return new HandlerUi(
-            component: 'CadViewer',
-            route: "nodes/{$file->nodeId}/download",
+        // The viewer key + props the client routes the node to.
+        return new ViewerDescriptor(
+            key: 'acme/cad',
             props: ['mime' => $file->canonicalMime()],
         );
     }
@@ -340,10 +339,10 @@ final class CadHandler implements FileHandler
 ```php [config]
 // config/vaulter.php
 'handlers' => [
-    \Vaulter\Documents\Handlers\TipTapHandler::class,
+    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     \App\Vaulter\Handlers\CadHandler::class, // before the fallbacks
-    \Vaulter\Documents\Handlers\PreviewHandler::class,
-    \Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    \Vaulter\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -351,18 +350,18 @@ final class CadHandler implements FileHandler
 // A service provider's boot()
 use Vaulter\Facades\Vaulter;
 
-Vaulter::registerHandler(\App\Vaulter\Handlers\CadHandler::class);
+Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
 
 ```php [tagged]
 // A service provider's register()
-$this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.handlers');
+$this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handlers');
 ```
 
 :::
 
 ::: details Проверьте дескриптор, уходящий клиенту
-`GET nodes/{node}/handler` возвращает `id` подобранного обработчика, его возможности и `HandlerUi`
+`GET nodes/{node}/handler` возвращает `id` подобранного обработчика, его возможности и `ViewerDescriptor`
 для узла — ровно то, что читает Vue-клиент, чтобы выбрать реализацию редактора/превью. (Этот
 маршрут завязан на фичу `document_versions`.)
 :::
@@ -609,7 +608,7 @@ relay) и доставка `pending`/`failed` (ею всё ещё владеет
 Vaulter поставляет тестовые дубли под `Vaulter\Testing\*`, чтобы потребитель мог подняться без
 проводки реальной системы ролей:
 
-- **`NullRoleDriver`** — открытый драйвер (каждый актор — супер-админ) для тестов / локальной
+- **`NullPermissionDriver`** — открытый драйвер (каждый актор — супер-админ) для тестов / локальной
   разработки. В production он отклоняется, так что не может тихо открыть боевую установку.
 - **`FakeAzgardGuard`** — дубль `Contracts\Access\AzgardGuard` для тестирования полосы `azgard`
   без установленного AzGuard.

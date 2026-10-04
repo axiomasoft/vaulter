@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A grant subject — the (type, id) pair a v_node_grants row is addressed to
  * (master plan §2.6 / H.2). The type is a registered morph alias (user|role|team
- * or a host alias), never a raw FQCN leaking through the API; the HostRoleDriver
+ * or a host alias), never a raw FQCN leaking through the API; the PermissionDriver
  * expands an actor into the list of Subjects whose grants apply (user + roles +
  * teams) and Vaulter builds `WHERE (subject_type, subject_id) IN (...)` from them.
  *
@@ -29,7 +29,7 @@ final readonly class Subject
 
     /**
      * Build a Subject from an Eloquent model, using its registered morph alias so
-     * the stored subject_type is alias-safe (the DatabasePermissionResolver's
+     * the stored subject_type is alias-safe (the DatabasePermissionDriver's
      * subjectsFor() lane).
      */
     public static function ofModel(Model $model): self

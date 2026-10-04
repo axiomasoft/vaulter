@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Schema\ForceCreates;
 
@@ -16,7 +16,7 @@ use Vaulter\Tests\Schema\ForceCreates;
  * substring wildcards, with an explicit `ESCAPE '\'` clause.
  */
 beforeEach(function (): void {
-    $this->storage = ForceCreates::make(Storage::class, [
+    $this->storage = ForceCreates::make(Drive::class, [
         'owner_type' => 'team',
         'owner_id' => 1,
         'name' => 'Disk',
@@ -45,7 +45,7 @@ beforeEach(function (): void {
     $this->ordinaryTwo = $make('bravo');
 });
 
-function searchNames(Storage $storage, string $term): array
+function searchNames(Drive $storage, string $term): array
 {
     return app(NodeReadRepository::class)
         ->search($storage, $term)

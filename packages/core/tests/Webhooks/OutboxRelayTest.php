@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Drive\Events\NodeCreated;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -43,7 +43,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     Outbox::query()->delete();
     $event = new NodeCreated(node: $node, actorId: 7);
     $message = app(OutboxRecorder::class)->stage(
-        event: WebhookEvent::NodeCreated,
+        event: EventType::FolderCreated,
         eventId: $event->eventId,
         panel: $node->panel,
         topic: (string) $node->getKey(),

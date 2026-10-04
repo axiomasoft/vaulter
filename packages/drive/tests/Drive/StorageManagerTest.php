@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Event;
 use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
@@ -19,7 +19,7 @@ it('создаёт storage и корневую папку при первом о
 
     $drive = Vaulter::for($host);
 
-    expect(Storage::query()->count())->toBe(1)
+    expect(Drive::query()->count())->toBe(1)
         ->and($drive->storage()->owner_type)->toBe($host->getMorphClass())
         ->and($drive->storage()->owner_id)->toEqual($host->getKey())
         ->and($drive->storage()->root_node_id)->not->toBeNull();
@@ -39,12 +39,12 @@ it('идемпотентен: второе обращение возвращае
     $second = Vaulter::for($host)->storage();
 
     expect($second->getKey())->toEqual($first->getKey())
-        ->and(Storage::query()->count())->toBe(1)
+        ->and(Drive::query()->count())->toBe(1)
         ->and(Node::query()->where('kind', NodeKind::Folder->value)->count())->toBe(1);
 });
 
 // Разведение storage по панелям переехало в StoragePanelSeparationTest: панель обязана быть
-// в конфиге ДО boot'а (PanelRegistry резолвится в packageBooted с P4.4) — см. PanelTestCase.
+// в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4) — см. PanelTestCase.
 
 it('применяет дефолтный диск из конфига к новому storage', function (): void {
     config()->set('vaulter.storage.default_disk', 'spaces');

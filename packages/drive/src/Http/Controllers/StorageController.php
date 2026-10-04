@@ -11,8 +11,8 @@ use Vaulter\Drive\Http\Resources\StorageResource;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -52,7 +52,7 @@ final class StorageController extends Controller
      *     host-role driver, so an open driver decides exactly as it does for the node
      *     listings — the database driver is never hard-coded here.
      */
-    public function show(Request $request, Storage $storage): StorageResource
+    public function show(Request $request, Drive $storage): StorageResource
     {
         $root = $this->root($storage);
 
@@ -74,7 +74,7 @@ final class StorageController extends Controller
      * storage has no root_node_id yet, or the row is missing — matching how
      * StorageResource resolves the root for its ability flags.
      */
-    private function root(Storage $storage): ?Node
+    private function root(Drive $storage): ?Node
     {
         if ($storage->root_node_id === null) {
             return null;

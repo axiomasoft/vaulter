@@ -12,8 +12,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\StorageManager;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Activity\ActivityVerb;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
@@ -91,7 +90,7 @@ it('createFolder activity context carries owner and creator ids', function (): v
 
     $folder = $drive->createFolder('Audited', actorId: 42);
 
-    expect(Activity::query()->where('verb', ActivityVerb::NodeCreated->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::FolderCreated->value)->sole()->context)->toEqual([
         'kind' => 'folder',
         'name' => 'Audited',
         'parent_id' => (string) $drive->root()->getKey(),
@@ -110,8 +109,8 @@ it('move within the same parent is a no-op without NodeMoved activity', function
 
     $drive->move($child, $parent, actorId: 17);
 
-    expect(Activity::query()->where('verb', ActivityVerb::NodeMoved->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', WebhookEvent::NodeMoved->value)->count())->toBe(0);
+    expect(Activity::query()->where('verb', EventType::NodeMoved->value)->count())->toBe(0)
+        ->and(Outbox::query()->where('event', EventType::NodeMoved->value)->count())->toBe(0);
 });
 
 it('forceDelete on a folder subtree records zero freed bytes and skips quota adjustment', function (): void {
@@ -124,7 +123,7 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
     $drive->forceDelete($folder, actorId: 17);
 
     expect($drive->storage()->refresh()->used_bytes)->toBe($used)
-        ->and(Activity::query()->where('verb', ActivityVerb::NodeForceDeleted->value)->sole()->context)->toEqual([
+        ->and(Activity::query()->where('verb', EventType::NodePurged->value)->sole()->context)->toEqual([
             'node_ids' => [(string) $folder->getKey()],
             'freed_bytes' => 0,
         ]);
@@ -141,7 +140,7 @@ it('restore re-homes to the storage root when the original parent was trashed', 
     $restored = $drive->restore($child->refresh(), actorId: 17);
 
     expect($restored->parent_id)->toEqual($drive->storage()->root_node_id)
-        ->and(Activity::query()->where('verb', ActivityVerb::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
+        ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
             'name' => 'Child',
             'parent_id' => (string) $drive->storage()->root_node_id,
         ]);
@@ -160,7 +159,7 @@ it('upload session initiated activity carries the exact lifecycle context', func
         mimeType: null,
     ));
 
-    $row = Activity::query()->where('verb', ActivityVerb::UploadSessionInitiated->value)->sole();
+    $row = Activity::query()->where('verb', EventType::UploadInitiated->value)->sole();
 
     expect($row->context)->toEqual([
         'upload_id' => $session->upload_id,
@@ -176,12 +175,12 @@ it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $first = $drive->createFolder('One');
     $drive->trash($first);
     $drive->forceDelete($first, actorId: 9);
-    $firstKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole()->event_id;
+    $firstKey = Outbox::query()->where('event', EventType::NodePurged->value)->sole()->event_id;
 
     $second = $drive->createFolder('Two');
     $drive->trash($second);
     $drive->forceDelete($second, actorId: 9);
-    $secondKey = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->orderByDesc('id')->firstOrFail()->event_id;
+    $secondKey = Outbox::query()->where('event', EventType::NodePurged->value)->orderByDesc('id')->firstOrFail()->event_id;
 
     expect($firstKey)->not->toBe($secondKey)
         ->and(Str::isUlid($firstKey))->toBeTrue()

@@ -29,7 +29,7 @@ use Vaulter\Support\Config;
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
- * @property-read FileVersion|null $currentVersion
+ * @property-read FileRevision|null $currentVersion
  */
 class File extends Model
 {
@@ -74,7 +74,7 @@ class File extends Model
     }
 
     /**
-     * @return HasMany<FileVersion, $this>
+     * @return HasMany<FileRevision, $this>
      */
     public function versions(): HasMany
     {
@@ -82,7 +82,7 @@ class File extends Model
     }
 
     /**
-     * @return BelongsTo<FileVersion, $this>
+     * @return BelongsTo<FileRevision, $this>
      */
     public function currentVersion(): BelongsTo
     {

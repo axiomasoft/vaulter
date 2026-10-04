@@ -25,7 +25,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -251,7 +251,7 @@ final class NodeGrantResource extends Resource
 
         app(GrantNodeAccessAction::class)->execute(
             node: $node,
-            data: new GrantNodeAccessData(
+            data: new GrantNodeAccessInput(
                 subject: new Subject(
                     // Filament validation already supplies these enum/string fields with their declared types.
                     type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast

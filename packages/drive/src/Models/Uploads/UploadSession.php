@@ -16,7 +16,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 
 /**
@@ -83,7 +83,7 @@ class UploadSession extends Model
     /**
      * The storage this session ingests into.
      *
-     * @return BelongsTo<Storage, $this>
+     * @return BelongsTo<Drive, $this>
      */
     public function storage(): BelongsTo
     {

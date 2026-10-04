@@ -15,7 +15,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Config;
 
 /**
@@ -50,7 +50,7 @@ final readonly class BlobGarbageCollector
         private ContentStore $content,
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
-        private FileVersionBlobStoreRepository $edges,
+        private FileRevisionBlobStoreRepository $edges,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
     ) {}

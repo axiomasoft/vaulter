@@ -1827,3 +1827,83 @@ endpoints that no longer exist after the DocVault excision above; it could only 
 
 `useComments` and `VaulterCommentsPanel` survive but were **repointed** to the node comment API
 (`/nodes/{node}/comments`): the prop is now `nodeId`, not `documentId`.
+
+## Канон PHP API 0.3 (AD03, AD04, AD05, AD11, AD14)
+
+Все следующие FQN переименованы жёстко, без class_alias и deprecated-обёрток.
+Имена таблиц, колонок, ключи конфигурации и значения событий на этом шаге остаются прежними;
+их переход описывается отдельными изменениями схемы и конфигурации.
+
+| Было | Стало |
+|:--|:--|
+| `Vaulter\Models\Drive\Storage` | `Vaulter\Models\Drive\Drive` |
+| `Vaulter\Models\Drive\FileVersion` | `Vaulter\Models\Drive\FileRevision` |
+| `Vaulter\Models\Drive\FileVersionBlob` | `Vaulter\Models\Drive\FileRevisionBlob` |
+| `Vaulter\Panels\Panel` | `Vaulter\Profiles\Profile` |
+| `Vaulter\Panels\StoragePanelProvider` | `Vaulter\Profiles\ProfileProvider` |
+| `Vaulter\Panels\DefaultStoragePanel` | `Vaulter\Profiles\DefaultProfile` |
+| `Vaulter\Panels\PanelRegistry` | `Vaulter\Profiles\ProfileRegistry` |
+| `Vaulter\Schema\PanelTablesBuilder` | `Vaulter\Schema\SchemaBuilder` |
+| `Vaulter\Support\VaulterSchema` | `Vaulter\Schema\VaulterSchema` |
+| `Vaulter\Console\MakePanelCommand` | `Vaulter\Console\MakeProfileCommand` |
+| `Vaulter\Console\RelayOutboxCommand` | `Vaulter\Console\RelayWebhooksCommand` |
+| `Vaulter\Contracts\Access\HostRoleDriver` | `Vaulter\Contracts\Access\PermissionDriver` |
+| `Vaulter\Access\HostRoleDriverManager` | `Vaulter\Access\PermissionDriverManager` |
+| `Vaulter\Testing\NullRoleDriver` | `Vaulter\Testing\NullPermissionDriver` |
+| `Vaulter\Exceptions\Access\MissingHostRoleDriverException` | `Vaulter\Exceptions\Access\MissingPermissionDriverException` |
+| `Vaulter\Access\ValueObjects\AclScope` | `Vaulter\Access\ValueObjects\AccessScope` |
+| `Vaulter\Access\Abilities\NodeAbilities` | `Vaulter\Access\ValueObjects\NodeAbilities` |
+| `Vaulter\Contracts\Handlers\HandlerRegistry` | `Vaulter\Contracts\Handlers\FileHandlerRegistry` |
+| `Vaulter\Contracts\Handlers\NodeHandlerResolver` | `Vaulter\Contracts\Handlers\NodePresenter` |
+| `Vaulter\Engines\DocumentHandlerRegistry` | `Vaulter\Handlers\FileHandlerRegistry` |
+| `Vaulter\Engines\NodeHandlerResolver` | `Vaulter\Handlers\NodePresenter` |
+| `Vaulter\Engines\DocumentFileDescriptorFactory` | `Vaulter\Handlers\FileDescriptorFactory` |
+| `Vaulter\Engines\Handlers\AbstractFileHandler` | `Vaulter\Handlers\AbstractFileHandler` |
+| `Vaulter\Engines\Handlers\PreviewHandler` | `Vaulter\Handlers\Builtin\PreviewHandler` |
+| `Vaulter\Engines\Handlers\DownloadOnlyHandler` | `Vaulter\Handlers\Builtin\DownloadOnlyHandler` |
+| `Vaulter\ValueObjects\Handlers\HandlerUi` | `Vaulter\ValueObjects\Handlers\ViewerDescriptor` |
+| `Vaulter\ValueObjects\Handlers\HandlerDescriptor` | `Vaulter\ValueObjects\Handlers\NodePresentation` |
+| `Vaulter\ValueObjects\Handlers\HandlerCapabilities` | `Vaulter\ValueObjects\Handlers\ContentCapabilities` |
+| `Vaulter\Exceptions\Support\TenantIsolationNotConfiguredException` | `Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException` |
+| `Vaulter\Drivers\Permission\DatabasePermissionResolver` | `Vaulter\Access\Drivers\DatabasePermissionDriver` |
+| `Vaulter\Drivers\Permission\GatePermissionResolver` | `Vaulter\Access\Drivers\GatePermissionDriver` |
+| `Vaulter\Drivers\Permission\SpatiePermissionResolver` | `Vaulter\Access\Drivers\SpatiePermissionDriver` |
+| `Vaulter\Drivers\Permission\AzgardPermissionResolver` | `Vaulter\Access\Drivers\AzgardPermissionDriver` |
+| `Vaulter\Exceptions\Panels\InvalidPanelException` | `Vaulter\Exceptions\Profiles\InvalidProfileException` |
+| `Vaulter\Exceptions\Panels\UnknownPanelException` | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
+| `Vaulter\Repositories\Drive\StorageReadRepository` | `Vaulter\Repositories\Drive\DriveReadRepository` |
+| `Vaulter\Repositories\Drive\StorageStoreRepository` | `Vaulter\Repositories\Drive\DriveStoreRepository` |
+| `Vaulter\Repositories\Drive\FileVersionReadRepository` | `Vaulter\Repositories\Drive\FileRevisionReadRepository` |
+| `Vaulter\Repositories\Drive\FileVersionStoreRepository` | `Vaulter\Repositories\Drive\FileRevisionStoreRepository` |
+| `Vaulter\Repositories\Drive\FileVersionBlobStoreRepository` | `Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository` |
+| `Vaulter\Enums\Activity\ActivityVerb` | `Vaulter\Enums\Events\EventType` |
+| `Vaulter\Enums\Webhooks\WebhookEvent` | `Vaulter\Enums\Events\EventType` |
+
+- `Vaulter::panel()/panels()/registerPanel()` заменены на `Vaulter::profiles()->get()/register()/registerProvider()`;
+  `Vaulter::registerHandler()` — на `Vaulter::handlers()->register()` (AD03, AD14).
+- `FileHandler::id()/ui()` заменены на `key()/viewer()`. Ключи имеют формат `vendor/name`:
+  `vaulter/preview`, `vaulter/download`, `vaulter/tiptap`, `vaulter/univer`.
+  `ViewerDescriptor` содержит `key` и `props`; имена Vue-компонентов и `route` удалены (AD14).
+- `NodePresenter::describe(Node, ?string)` заменён на `present(Node)` (AD14).
+- `SchemaBuilder` использует общую схему и `createTable(string $entity)/dropTable(string $entity)` без профиля (AD05).
+- `ProfileProvider::panel()` заменён на `profile()`. Own-tables API (`tablePrefix`, `tables`, `models`,
+  `idStrategy` и их getters), `HasVaulterPanel`, `PanelMigrationGenerator`, `PanelTableResolver`,
+  `vaulter:panel:migrations` и `PermissionLevel` удалены (AD05, AD11).
+- Hooks `pipes()/resource()/fillNode()/presentNode()/booted()` удалены. `booted()` раньше
+  действительно вызывался после регистрации: перенесите нужную host-логику в service provider.
+  Его удаление — изменение API, а не утверждение, что вызовов никогда не было (AD05).
+- `vaulter:make-panel` заменён на `vaulter:make:profile`; генератор пишет provider в `app/Vaulter/Profiles`.
+  Флаги own-tables `--prefix/--id` удалены. `vaulter:relay-outbox` сохраняет прежнюю сигнатуру (AD03, AD05).
+- Тег контейнера `vaulter.handlers` заменён на `vaulter.file_handlers`; ключ конфига `vaulter.handlers` пока сохранён (AD14).
+- `EventType::webhookTypes()` возвращает подписываемые типы без `Upload*`; `cases()` включает события lifecycle загрузки.
+  Backing values остаются значениями 0.2; `StorageCreated/NodeCreated/VersionCreated/NodeForceDeleted`
+  заменены на `DriveCreated/FolderCreated/FileRevisionAdded/NodePurged` (AD03, AD04).
+
+The remaining core inputs also use their canonical names (OPUS 04 §3):
+
+| Old | New |
+|:--|:--|
+| `Vaulter\Data\Access\GrantNodeAccessData` | `Vaulter\Data\Access\GrantNodeAccessInput` |
+| `Vaulter\Data\Sharing\CreateShareLinkData` | `Vaulter\Data\Sharing\ShareLinkInput` |
+| `Vaulter\Data\Webhooks\RegisterWebhookEndpointData` | `Vaulter\Data\Webhooks\RegisterWebhookEndpointInput` |
+| `Vaulter\Data\Webhooks\UpdateWebhookEndpointData` | `Vaulter\Data\Webhooks\UpdateWebhookEndpointInput` |

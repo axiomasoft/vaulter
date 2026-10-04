@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
-use Vaulter\Documents\Actions\Collaboration\PersistYjsSnapshotAction;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Models\Drive\Node;
 

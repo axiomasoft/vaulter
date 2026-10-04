@@ -5,21 +5,21 @@ declare(strict_types=1);
 use AzGuard\Facades\AzGuard;
 use AzGuard\Models\Role;
 use AzGuard\Testing\FakeGrantSource;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\AzgardPermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles\DocsViewerRole;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * END-TO-END against the REAL AzGuard stack (no doubles): a real Eloquent AzGuard user
  * with real roles / scoped roles / grant sources, the real azguard-context ContextGuard,
- * the real AzgardGuardAdapter and the real Vaulter AzgardPermissionResolver. This is the
+ * the real AzgardGuardAdapter and the real Vaulter AzgardPermissionDriver. This is the
  * proof the FakeAzgardGuard unit tests cannot give — that the adapter's calls actually
  * resolve through AzGuard's own engine.
  */
@@ -33,9 +33,9 @@ function bindRealAdapter(AzgardUser $user): void
     app()->instance(AzgardGuard::class, new AzgardGuardAdapter($user));
 }
 
-function driver(): AzgardPermissionResolver
+function driver(): AzgardPermissionDriver
 {
-    return app(AzgardPermissionResolver::class);
+    return app(AzgardPermissionDriver::class);
 }
 
 /** Register a fake grant source (a REAL GrantSource in AzGuard's pipeline) for this test. */
@@ -52,7 +52,7 @@ it('resolves a real AzGuard super-admin to a Vaulter absolute-allow override', f
     registerGrants(fn (FakeGrantSource $f) => $f->wildcard());
     bindRealAdapter($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
 
     // Real chain: Vaulter override → adapter.isSuperAdmin → AzGuard permissionSet->isWildcard.
     expect($user->isSuperAdmin())->toBeTrue()
@@ -63,7 +63,7 @@ it('defers when the real user is not a super-admin', function (): void {
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
 
     expect($user->isSuperAdmin())->toBeFalse()
         ->and(driver()->override($user, $scope))->toBeNull();
@@ -76,7 +76,7 @@ it('folds a real workspace-context permission into the matching Vaulter grant le
     registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.update'));
     bindRealAdapter($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
     $decision = driver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
@@ -96,7 +96,7 @@ it('yields no decision when the real user holds nothing in the workspace', funct
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect(driver()->resolve(Subject::ofModel($user), $user, $scope))->toBeNull()
         ->and(driver()->canCreateInWorkspace($user, 'project', 1))->toBeFalse();

@@ -34,16 +34,16 @@ namespace App\Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 final class MyEditorHandler implements FileHandler
 {
     public const int PRIORITY = 90;
 
-    public function id(): string
+    public function key(): string
     {
-        return 'my-editor';
+        return 'acme/my-editor';
     }
 
     /** @return list<string> */
@@ -63,9 +63,9 @@ final class MyEditorHandler implements FileHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: true,
             previewable: true,
             collaborative: false,
@@ -74,24 +74,23 @@ final class MyEditorHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(
-            component: 'AppMyEditor',
-            route: 'documents.show',
+        return new ViewerDescriptor(
+            key: 'acme/my-editor',
         );
     }
 }
 ```
 
-Прямая реализация интерфейса — всегда достаточна. `Vaulter\Engines\Handlers\
+Прямая реализация интерфейса — всегда достаточна. `Vaulter\Handlers\Handlers\
 AbstractFileHandler` — ОПЦИОНАЛЬНАЯ DX-база, которая дефолтит `extensions()` в `[]` для
 mime-only обработчика — экономит один метод, не больше. Встроенные обработчики её не
 наследуют — они остаются `final` (H.5).
 
 ## 2. Инварианты capability-политики (прочитать до релиза)
 
-`HandlerCapabilities` — это **аддитивное, открытое множество осей** (P0.5). Три правила
+`ContentCapabilities` — это **аддитивное, открытое множество осей** (P0.5). Три правила
 держат ваш обработчик (и каждый следующий) безопасно составимым:
 
 1. **Незаявленная capability = `false`, никогда не выводится.** `richText` по умолчанию
@@ -101,8 +100,8 @@ mime-only обработчика — экономит один метод, не 
    контент будет round-trip'иться как опаковый снимок (`OpaqueDocumentContent`) — никогда не
    валидируется, никогда не приводится к форме TipTap.
 2. **Будущая новая capability-ось не должна ломать ваш обработчик.** От вас не требуется знать
-   про каждый флаг, который несёт `HandlerCapabilities` — конструктор даёт каждому флагу
-   безопасный дефолт. Клиент зеркалит это: на TypeScript-стороне `HandlerCapabilities` несёт
+   про каждый флаг, который несёт `ContentCapabilities` — конструктор даёт каждому флагу
+   безопасный дефолт. Клиент зеркалит это: на TypeScript-стороне `ContentCapabilities` несёт
    открытую индекс-сигнатуру (`[capability: string]: boolean | undefined`), так что клиентская
    сборка, собранная до появления нового флага, продолжает компилироваться и игнорирует
    незнакомый ключ.
@@ -121,21 +120,20 @@ mime-only обработчика — экономит один метод, не 
 существуют бок о бок, и контракт не отдаёт предпочтение ни одному:
 
 - **Rich-text-класс** (в духе TipTap): клиент редактирует структурированный JSON напрямую;
-  сервер валидирует его по allow-list на записи и защитно «decay»-ит на чтении. `ui.props`
+  сервер валидирует его по allow-list на записи и защитно «decay»-ит на чтении. `viewer.props`
   несёт конфигурацию редактора (например, список расширений).
 - **WOPI/офисный класс**: реальное редактирование происходит в СТОРОННЕЙ поверхности (iframe,
   указывающий на внешний сервис, или нативное приложение через протокольный хендлер).
-  `ui.props` несёт всё, что нужно этой поверхности для запуска — как правило, action-url и
+  `viewer.props` несёт всё, что нужно этой поверхности для запуска — как правило, action-url и
   короткоживущий токен — **не** контент-payload вовсе. Сервер никогда не парсит и не
   валидирует тело документа — только брокерит сессию.
 
 ```php
-// WOPI-класс обработчика — payload у ui() совсем другой формы.
-public function ui(FileDescriptor $file): HandlerUi
+// WOPI-класс обработчика — payload у viewer() совсем другой формы.
+public function viewer(FileDescriptor $file): ViewerDescriptor
 {
-    return new HandlerUi(
-        component: 'AppOfficeFrame',
-        route: null, // клиент открывает action-url напрямую, не роут Vaulter
+    return new ViewerDescriptor(
+        key: 'acme/office-frame',
         props: [
             'actionUrl' => $this->wopi->actionUrlFor($file),
             'accessToken' => $this->wopi->issueToken($file),
@@ -145,7 +143,7 @@ public function ui(FileDescriptor $file): HandlerUi
 }
 ```
 
-Контракт НЕ заставляет ваш обработчик повторять форму `ui.props` у `TipTapHandler`
+Контракт НЕ заставляет ваш обработчик повторять форму `viewer.props` у `TipTapHandler`
 (`format`, `extensions`) — `props` это произвольная, решаемая обработчиком карта.
 Задокументируйте форму `props` СВОЕГО обработчика для клиентской команды-потребителя — общей
 схемы, которой нужно соответствовать сверх «сериализуемо», нет.
@@ -173,8 +171,8 @@ public function ui(FileDescriptor $file): HandlerUi
 
 Те же три канала, что и у любого обработчика — см.
 [Обработчики документов → Зарегистрировать](./document-handlers.md#2-register-it):
-список FQCN в конфиге (cache-safe), `Vaulter::registerHandler()` (рантайм-шов) или тегированный
-биндинг `'vaulter.handlers'` (как сам пакет поступает с фича-флагованным `UniverHandler`).
+список FQCN в конфиге (cache-safe), `Vaulter::handlers()->register()` (рантайм-шов) или тегированный
+биндинг `'vaulter.file_handlers'` (как сам пакет поступает с фича-флагованным `UniverHandler`).
 
 ## 7. Монтирование на клиенте
 
@@ -182,8 +180,8 @@ public function ui(FileDescriptor $file): HandlerUi
 про два канала регистрации (`componentMap`-проп vs. глобальный
 `registerEngineComponent(id, component)`) — реестр на сервере не предполагает конкретный
 фронтенд-стек. Ниже — сам клиентский скелет: компонент, который монтирует
-`VaulterDocumentNode`, получает один проп `handler` типа `HandlerDescriptor` (экспортируется
-`@vaulter/vue`), несущий вашу карту `ui.props` без изменений.
+`VaulterDocumentNode`, получает один проп `handler` типа `NodePresentation` (экспортируется
+`@vaulter/vue`), несущий вашу карту `viewer.props` без изменений.
 
 ```vue
 <!-- AppMyEditor.vue — компонент, зарегистрированный для id обработчика "my-editor" -->
@@ -194,7 +192,7 @@ import type { DocumentNodeEditorProps } from '@vaulter/vue'
 // `VaulterDocumentNode` биндит эту форму (`DocumentNodeEditorProps`) — `content`/`onChange`
 // типизированы под TipTap в экспортируемом интерфейсе (встроенный редактор), поэтому
 // не-rich-text-обработчик сужает `handler.ui.props` до своей формы, не полагаясь на `content`.
-// `handler.ui.props` — то, что вернул ваш PHP-обработчик из ui() (шаг 1/3) — произвольная,
+// `handler.ui.props` — то, что вернул ваш PHP-обработчик из viewer() (шаг 1/3) — произвольная,
 // решаемая обработчиком карта; контракт её не валидирует.
 interface MyEditorProps {
   format: string
@@ -232,13 +230,13 @@ registerEngineComponent('my-editor', AppMyEditor)
 
 ## Чек-лист
 
-- [ ] `id()` — стабильная, уникальная строка, никогда не переименовывается после релиза (H.5:
+- [ ] `key()` — стабильная, уникальная строка, никогда не переименовывается после релиза (H.5:
       обработчик — это SemVer-замороженная публичная поверхность с момента релиза).
 - [ ] `richText` выставлен явно TRUE только если контент реально TipTap-документ
       `{"type":"doc"}`; иначе оставлен на дефолте FALSE.
 - [ ] `priority()` отражает специфичность совпадения относительно известных конфликтующих
       обработчиков на том же расширении/mime.
-- [ ] Форма `ui.props` задокументирована для вашего клиентского кода — не предполагается, что
+- [ ] Форма `viewer.props` задокументирована для вашего клиентского кода — не предполагается, что
       она совпадает с `TipTapHandler`.
 - [ ] Если форма контента может эволюционировать, вы решили насчёт `schemaVersion` (или явно
       решили, что он пока не нужен).

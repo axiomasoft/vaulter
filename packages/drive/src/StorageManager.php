@@ -9,12 +9,12 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
-use Vaulter\Panels\PanelRegistry;
+use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Repositories\Drive\DriveReadRepository;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
-use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\Config;
 
 /**
@@ -32,8 +32,8 @@ use Vaulter\Support\Config;
 final readonly class StorageManager
 {
     public function __construct(
-        private StorageReadRepository $read,
-        private StorageStoreRepository $store,
+        private DriveReadRepository $read,
+        private DriveStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
     ) {}
@@ -42,11 +42,11 @@ final readonly class StorageManager
      * Resolve (or provision) the storage mounted on $owner within $panel.
      * Idempotent: a second call returns the same row.
      */
-    public function forOwner(Model $owner, string $panel = 'default'): Storage
+    public function forOwner(Model $owner, string $panel = 'default'): Drive
     {
         $existing = $this->read->forOwner(owner: $owner, panel: $panel);
 
-        if ($existing instanceof Storage) {
+        if ($existing instanceof Drive) {
             return $existing;
         }
 
@@ -57,7 +57,7 @@ final readonly class StorageManager
             // is the backbone; re-read the winner.
             $winner = $this->read->forOwner(owner: $owner, panel: $panel);
 
-            if ($winner instanceof Storage) {
+            if ($winner instanceof Drive) {
                 return $winner;
             }
 
@@ -71,9 +71,9 @@ final readonly class StorageManager
      * Create the storage row + its root folder node in one transaction and repoint
      * root_node_id at the node.
      */
-    private function provision(Model $owner, string $panel): Storage
+    private function provision(Model $owner, string $panel): Drive
     {
-        return $this->database->transaction(function () use ($owner, $panel): Storage {
+        return $this->database->transaction(function () use ($owner, $panel): Drive {
             $storage = $this->store->create([
                 'panel' => $panel,
                 'owner_type' => $owner->getMorphClass(),
@@ -104,7 +104,7 @@ final readonly class StorageManager
      * Resolve the root folder node of a storage, provisioning a missing one
      * (defensive — a storage created outside this manager may lack a root).
      */
-    public function root(Storage $storage): Node
+    public function root(Drive $storage): Node
     {
         $root = $storage->rootNode()->first();
 
@@ -129,7 +129,7 @@ final readonly class StorageManager
 
     private function storageType(string $panel): string
     {
-        return app(PanelRegistry::class)->get($panel)->storageTypeKey();
+        return app(ProfileRegistry::class)->get($panel)->storageTypeKey();
     }
 
     private function defaultName(Model $owner): string

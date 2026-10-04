@@ -6,9 +6,6 @@ namespace Vaulter\Support;
 
 use ReflectionEnumUnitCase;
 use UnitEnum;
-use Vaulter\Panels\PanelRegistry;
-use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\VaulterServiceProvider;
 
 /**
  * Resolves a single PHP attribute declared on an enum case, with per-instance
@@ -18,7 +15,7 @@ use Vaulter\VaulterServiceProvider;
  * follows the container (one per request/job on Octane/queue workers via
  * `flush()`ing between them if ever needed), never the whole PHP process. Callers
  * resolve it through the container (`app(EnumCaseAttributeResolver::class)`), the
- * same pattern already used by {@see PanelRegistry} and
+ * same pattern already used by {@see ProfileRegistry} and
  * {@see IdStrategyResolver} elsewhere in this package.
  */
 final class EnumCaseAttributeResolver

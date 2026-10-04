@@ -16,7 +16,7 @@ outline: deep
 | Домен | Контракт | Подмена через |
 |---|---|---|
 | Access | `PermissionResolver` | `config('vaulter.permission_resolver')` / `Vaulter::resolvePermissionsWith()` |
-| Access | `HostRoleDriver` | `config('vaulter.drivers.permission')` + карта `permission_drivers` |
+| Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + карта `permission_drivers` |
 | Access | `AzgardGuard` | привязка в контейнере (адаптер хоста) |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
@@ -26,7 +26,7 @@ outline: deep
 | Collaboration | `CollaborationDriver` | `config('vaulter.collaboration.drivers.*.class')` (легаси-путь документов) |
 | Collaboration | `NodeCollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
-| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
+| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | в комплекте (tus / S3-multipart) |
@@ -40,7 +40,7 @@ outline: deep
 
 Хук, реализуемый хостом, для **легаси-пути документов DocVault**. Привяжите его через
 `config('vaulter.permission_resolver')` (FQCN) или
-`Vaulter::resolvePermissionsWith()`. Drive ACL вместо этого использует `HostRoleDriver` —
+`Vaulter::resolvePermissionsWith()`. Drive ACL вместо этого использует `PermissionDriver` —
 данный резолвер относится к более старой, документо-центричной полосе.
 
 ```php
@@ -56,22 +56,22 @@ interface PermissionResolver
 **Реализуйте, когда** хотите, чтобы легаси-поверхность `v_documents` делегировала решения
 системе ролей вашего приложения. См. [Рецепты → Свой резолвер](/ru/guide/recipes).
 
-### `Vaulter\Contracts\Access\HostRoleDriver`
+### `Vaulter\Contracts\Access\PermissionDriver`
 
 Подключаемая, панель-специфичная **полоса ролей**, которую принадлежащий Vaulter
 (несменяемый) `AccessResolver` комбинирует с ACL `v_node_grants`. Она мостит вашу систему
 идентичности и ролей в Vaulter, не протекая доменом Vaulter: она никогда не получает `Node`
 и никогда не оперирует действиями-магическими-строками — только актором `Authorizable` и
-`AclScope` (координаты панели + workspace + владелец узла). Подмените её через
+`AccessScope` (координаты панели + workspace + владелец узла). Подмените её через
 `config('vaulter.drivers.permission')` по карте `permission_drivers`; по умолчанию — автономный
-`DatabasePermissionResolver`.
+`DatabasePermissionDriver`.
 
 ```php
-interface HostRoleDriver
+interface PermissionDriver
 {
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision;
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect;
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect;
 
     /** @return list<Subject> */
     public function subjectsFor(Authorizable $actor): array;
@@ -147,9 +147,9 @@ interface BlobStore
     public function commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): Blob;
 
     /** @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes */
-    public function attach(FileVersion $version, Blob $blob, array $attributes = []): void;
+    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void;
 
-    public function detach(FileVersion $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
+    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
 
     /** @return resource|null */
     public function read(Blob $blob): mixed;
@@ -335,14 +335,14 @@ interface HostUserResolver
 Подключаемый обработчик обработки документов — заголовочная фича расширяемости по форматам.
 Обработчик заявляет набор mime-типов (точных или вайлдкардов вроде `"image/*"`) и/или
 расширений, декларирует свои возможности и фронтенд-дескриптор монтирования на каждый файл,
-а `Vaulter\Engines\DocumentHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
-`config('vaulter.handlers')` (список FQCN), тегированную привязку `'vaulter.handlers'` или
-`Vaulter::registerHandler()`.
+а `Vaulter\Handlers\FileHandlerRegistry` резолвит лучший из них для `FileDescriptor`. Регистрируйте через
+`config('vaulter.handlers')` (список FQCN), тегированную привязку `'vaulter.file_handlers'` или
+`Vaulter::handlers()->register()`.
 
 ```php
 interface FileHandler
 {
-    public function id(): string;
+    public function key(): string;
 
     /** @return list<string> */
     public function mimeTypes(): array;
@@ -352,14 +352,14 @@ interface FileHandler
 
     public function priority(): int;
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities;
+    public function capabilities(FileDescriptor $file): ContentCapabilities;
 
-    public function ui(FileDescriptor $file): HandlerUi;
+    public function viewer(FileDescriptor $file): ViewerDescriptor;
 }
 ```
 
-- `id()` — стабильный уникальный строковый id (`'tiptap'`, `'preview'`, `'download'`,
-  `'univer'`, …). Отдаётся клиенту, чтобы тот выбрал реализацию редактора/превью.
+- `key()` — стабильный уникальный ключ формата `vendor/name` (`'vaulter/tiptap'`, `'vaulter/preview'`,
+  `'vaulter/download'`, `'vaulter/univer'`, …). Отдаётся клиенту, чтобы тот выбрал реализацию редактора/превью.
 - `mimeTypes()` — точный (`"application/pdf"`), вайлдкард (`"image/*"`) или всеохватный
   (`"*"`). При маршрутизации предпочтение отдаётся вынюханному mime перед заявленным.
 - `extensions()` — в нижнем регистре, без точки; запасной вариант по расширению,
@@ -368,7 +368,7 @@ interface FileHandler
   файлу + возможности; null-объект `DownloadOnlyHandler` сидит ниже всех.
 - `capabilities()` — редактируемый / просматриваемый / скачиваемый / с превью /
   совместный, вычисляется на каждый файл.
-- `ui()` — Vue-компонент + маршрут открытия + пропсы, которые монтирует клиент.
+- `viewer()` — ключ viewer и сериализуемые props.
 
 См. [Рецепты → Свой обработчик](/ru/guide/recipes).
 
@@ -398,6 +398,36 @@ interface DocumentExporter
 См. [Рецепты → Свой экспорт](/ru/guide/recipes).
 
 ---
+
+### `Vaulter\Contracts\Handlers\FileHandlerRegistry`
+
+Общий реестр core принимает обработчики из конфига, контейнерного тега
+`vaulter.file_handlers` и регистрации через `Vaulter::handlers()->register()`.
+
+```php
+interface FileHandlerRegistry
+{
+    /** @param FileHandler|class-string<FileHandler> $handler */
+    public function register(FileHandler|string $handler): void;
+
+    public function resolve(FileDescriptor $file, Capability $capability = Capability::Download): FileHandler;
+
+    /** @return list<FileHandler> */
+    public function all(): array;
+}
+```
+
+### `Vaulter\Contracts\Handlers\NodePresenter`
+
+Возвращает представление узла, содержащее `id`, `capabilities` и `ui`.
+`ui` сериализует `ViewerDescriptor` с полями `key` и `props`.
+
+```php
+interface NodePresenter
+{
+    public function present(Node $node): NodePresentation;
+}
+```
 
 ## Sharing
 

@@ -9,28 +9,28 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\AccessAce;
 use Vaulter\Access\ValueObjects\AccessExplanation;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\AclMask;
-use Vaulter\Access\ValueObjects\AclScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantReadRepository;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
  * The Vaulter-OWNED, NON-swappable effective-permission engine (master plan H.2).
  * It runs the canonical algorithm over v_node_grants combined with the pluggable
- * {@see HostRoleDriver}, and is the single authority every Policy / DriveContext /
+ * {@see PermissionDriver}, and is the single authority every Policy / DriveContext /
  * Resource asks. It is deliberately NOT a contract and NOT swappable — only the
  * host-role lane (the driver) is.
  *
@@ -38,7 +38,7 @@ use Vaulter\Support\Identity;
  *   1. Host override (super-admin) — absolute, both directions.
  *   2. Walk ancestors nearest-first, BOUNDED to the workspace/storage root (never
  *      cross storage_id), collecting direct + scope=subtree grants for the
- *      subject-set (from HostRoleDriver::subjectsFor); STOP at the first ancestor
+ *      subject-set (from PermissionDriver::subjectsFor); STOP at the first ancestor
  *      with inherit_grants=false.
  *   3. aclAllow = max(allow levels/bits); deniedBits = OR of deny bits (a deny
  *      denies that level and everything it implies); a NEARER explicit allow
@@ -49,7 +49,7 @@ use Vaulter\Support\Identity;
  *      no exception. (An absolute, un-pierceable wall-deny would be a separate
  *      product decision, not the current behaviour.)
  *   4. granted = max(aclAllow, roleAllow) where roleAllow comes from
- *      HostRoleDriver::resolve.
+ *      PermissionDriver::resolve.
  *   5. FINAL VETO pass: if deniedBits covers the requested ability → DENY
  *      regardless of role grant.
  *
@@ -60,9 +60,9 @@ use Vaulter\Support\Identity;
 final class AccessResolver
 {
     public function __construct(
-        private readonly HostRoleDriverManager $drivers,
+        private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
-        private readonly StorageReadRepository $storages,
+        private readonly DriveReadRepository $storages,
     ) {}
 
     /**
@@ -334,7 +334,7 @@ final class AccessResolver
      * host-role driver's workspace gate (the folder/upload create path has no
      * existing node to resolve against). canCreate for folders/uploads (§6).
      */
-    public function canCreateInWorkspace(Authorizable $actor, Storage $storage): bool
+    public function canCreateInWorkspace(Authorizable $actor, Drive $storage): bool
     {
         return $this->drivers->driver()->canCreateInWorkspace(
             actor: $actor,
@@ -607,9 +607,9 @@ final class AccessResolver
      * @return array{0: int, 1: GrantLevel|null}
      */
     private function resolveRole(
-        HostRoleDriver $driver,
+        PermissionDriver $driver,
         Authorizable $actor,
-        AclScope $scope,
+        AccessScope $scope,
         array $subjects,
     ): array {
         $bits = 0;
@@ -694,13 +694,13 @@ final class AccessResolver
         return $a->max($b);
     }
 
-    private function scopeFor(Storage $storage, Node $node): AclScope
+    private function scopeFor(Drive $storage, Node $node): AccessScope
     {
         $owner = $node->owner_id === null
             ? null
             : new Subject(type: $storage->owner_type, id: $node->owner_id);
 
-        return new AclScope(
+        return new AccessScope(
             panel: $storage->panel,
             workspaceType: $storage->owner_type,
             workspaceId: $storage->owner_id,
@@ -708,7 +708,7 @@ final class AccessResolver
         );
     }
 
-    private function storageOf(Node $node): Storage
+    private function storageOf(Node $node): Drive
     {
         // Prefer an already-loaded storage relation (e.g. sharedWith eager-loads it)
         // so a bulk re-resolution does NOT fire one storage query per node; fall back
@@ -717,7 +717,7 @@ final class AccessResolver
             ? $node->getRelation('storage')
             : $this->storages->find($node->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             // A node always belongs to a storage (FK cascade); a missing storage is
             // a corrupt state — deny by surfacing an empty workspace scope is unsafe,
             // so we fail loud rather than silently open.

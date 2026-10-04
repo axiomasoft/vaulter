@@ -10,7 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\FailingPromoteContentStore;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
@@ -41,12 +41,12 @@ it('splits mixed storage edges without losing bytes and resumes a partial failur
     foreach ([$a, $b] as $version) {
         expect($output)->toContain('drive:'.$version->file->node->storage->getKey());
     }
-    expect(Blob::query()->count())->toBe(1)->and(FileVersionBlob::query()->where('blob_id', $old->getKey())->count())->toBe(2);
+    expect(Blob::query()->count())->toBe(1)->and(FileRevisionBlob::query()->where('blob_id', $old->getKey())->count())->toBe(2);
     $content = app(ContentStore::class);
     if ($fail) {
         app()->instance(ContentStore::class, new FailingPromoteContentStore($content, 2));
         $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->assertExitCode(1);
-        expect(FileVersionBlob::query()->where('blob_id', $old->getKey())->count())->toBe(1)
+        expect(FileRevisionBlob::query()->where('blob_id', $old->getKey())->count())->toBe(1)
             ->and(Blob::query()->count())->toBe(2);
         app()->instance(ContentStore::class, $content);
     }
@@ -54,7 +54,7 @@ it('splits mixed storage edges without losing bytes and resumes a partial failur
     foreach ([$a, $b] as $version) {
         $blob = Blob::query()->where('scope_key', 'drive:'.$version->file->node->storage->getKey())->sole();
         expect($version->fresh()->blob_id)->toBe($blob->getKey())
-            ->and(FileVersionBlob::query()->where('file_version_id', $version->getKey())->sole()->blob_id)->toBe($blob->getKey())
+            ->and(FileRevisionBlob::query()->where('file_version_id', $version->getKey())->sole()->blob_id)->toBe($blob->getKey())
             ->and($blob->ref_count)->toBe(1)->and(stream_get_contents($store->read($blob)))->toBe('legacy shared');
     }
     expect($old->fresh()->ref_count)->toBe(0)->and(Blob::query()->count())->toBe(3);
@@ -79,5 +79,5 @@ it('uses global for a host without tenants and reports unreferenced and corrupt 
     Storage::disk('local')->put($bad->storage_key, 'tampered');
     $this->artisan('vaulter:blobs:repair-scopes', ['--dry-run' => true])->expectsOutputToContain('hash_mismatch')->assertSuccessful();
     $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->expectsOutputToContain('hash_mismatch')->assertSuccessful();
-    expect(FileVersionBlob::query()->where('blob_id', $bad->getKey())->count())->toBe(1);
+    expect(FileRevisionBlob::query()->where('blob_id', $bad->getKey())->count())->toBe(1);
 });

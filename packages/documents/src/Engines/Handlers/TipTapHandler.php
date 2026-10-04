@@ -6,9 +6,9 @@ namespace Vaulter\Documents\Engines\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * The built-in rich-text handler (master plan §7 level 1): the TipTap/Yjs editor
@@ -34,9 +34,9 @@ final class TipTapHandler implements FileHandler
      */
     public const string DOCUMENT_MIME = 'application/vnd.vaulter.document+json';
 
-    public function id(): string
+    public function key(): string
     {
-        return 'tiptap';
+        return 'vaulter/tiptap';
     }
 
     /**
@@ -67,9 +67,9 @@ final class TipTapHandler implements FileHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: true,
             previewable: true,
             downloadable: true,
@@ -79,11 +79,10 @@ final class TipTapHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(
-            component: 'VaulterDocEditor',
-            route: 'documents.show',
+        return new ViewerDescriptor(
+            key: 'vaulter/tiptap',
             props: [
                 'format' => $this->formatFor($file),
                 'extensions' => $this->tiptapExtensionsFor($file),

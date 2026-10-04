@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  * Read-only — it transforms an already-loaded Storage, never WRITES (it resolves the
  * root node through the read repository, never the provisioning StorageManager).
  *
- * @mixin Storage
+ * @mixin Drive
  */
 final class StorageResource extends JsonResource
 {
@@ -29,7 +29,7 @@ final class StorageResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var Storage $storage */
+        /** @var Drive $storage */
         $storage = $this->resource;
 
         return [
@@ -69,7 +69,7 @@ final class StorageResource extends JsonResource
      *
      * @return array<string, bool>
      */
-    private function abilities(Request $request, Storage $storage): array
+    private function abilities(Request $request, Drive $storage): array
     {
         $actor = $this->actor($request);
         $root = $this->root($storage);
@@ -102,7 +102,7 @@ final class StorageResource extends JsonResource
      * provisioning StorageManager — a Resource must not write). Null when the storage
      * has no root_node_id yet, or the row is missing.
      */
-    private function root(Storage $storage): ?Node
+    private function root(Drive $storage): ?Node
     {
         if ($storage->root_node_id === null) {
             return null;

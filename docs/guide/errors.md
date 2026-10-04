@@ -34,7 +34,7 @@ Codes are a stable public contract (AD29).
 | `validation_failed` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
-| `unknown_profile` | 422 | `Vaulter\Exceptions\Panels\UnknownPanelException` |
+| `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
 | `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
 
@@ -56,7 +56,7 @@ to the current actor. Use an accessible storage; the response is 404 `drive_not_
 ## permission-denied
 
 `PermissionDeniedException` — either the legacy document path's authorization hook, or
-the Drive ACL (`AccessResolver` + `HostRoleDriver`), denied the attempted action. Grant
+the Drive ACL (`AccessResolver` + `PermissionDriver`), denied the attempted action. Grant
 the required level/scope on the node or an ancestor. The API maps this to `403`.
 
 ## unknown-document-type
@@ -127,15 +127,15 @@ from it.
 
 ## missing-host-role-driver
 
-`MissingHostRoleDriverException` — either the open `null` host-role driver was selected in
+`MissingPermissionDriverException` — either the open `null` host-role driver was selected in
 production (forbidden — it grants every actor full access), or `config('vaulter.drivers.permission')`
 names a driver key not in the `permission_drivers` map. Set a real driver
-(`database`/`gate`/`spatie`/`azgard`) or bind your own `HostRoleDriver`.
+(`database`/`gate`/`spatie`/`azgard`) or bind your own `PermissionDriver`.
 
 ## missing-package
 
 `MissingPackageException` — a contract's concrete implementation ships in a package that
-is not installed (e.g. `NodeHandlerResolver`/`HandlerRegistry` need vaulter-documents).
+is not installed (e.g. `NodePresenter`/`FileHandlerRegistry` need vaulter-documents).
 Run the printed `composer require`.
 
 ## move-cycle
@@ -167,7 +167,7 @@ document via the document-node create endpoint first, or target a document node.
 
 ## unenumerable-grant-subject
 
-`UnenumerableGrantSubjectException` — the configured `HostRoleDriver` does not enumerate
+`UnenumerableGrantSubjectException` — the configured `PermissionDriver` does not enumerate
 role/group/team subjects, so a role/team grant would never take effect. Use a driver that
 enumerates role subjects (`spatie`), or override `subjectsFor()` on your own driver to
 append the role/team `Subject`s.

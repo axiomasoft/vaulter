@@ -7,7 +7,7 @@ use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -26,7 +26,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function chunkLimitStorage(): Storage
+function chunkLimitStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

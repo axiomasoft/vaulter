@@ -140,7 +140,7 @@ A **read-mostly** view of the ownable, polymorphic disk roots. Storages are prov
 `StorageManager` (get-or-create on a host entity), never minted from the panel — so this resource
 **cannot create or edit** a row (`canCreate()` returns `false`); it lists and inspects.
 
-- **Model**: resolved via `Config::storageModel()` (`Vaulter\Models\Drive\Storage` by default).
+- **Model**: resolved via `Config::storageModel()` (`Vaulter\Models\Drive\Drive` by default).
 - **Table**: name, owner (`owner_type #owner_id`), disk, used bytes, quota (`∞` when unlimited),
   status, created-at. Default sort `created_at desc`.
 - **Infolist** (view page): Storage / Owner / Usage sections, with human-formatted byte sizes.
@@ -196,7 +196,7 @@ Both mutations route through core Actions and require `Ability::Share` on the ta
 // NodeGrantResource::grantFromData — minting via the core Action.
 app(GrantNodeAccessAction::class)->execute(
     node: $node,
-    data: new GrantNodeAccessData(
+    data: new GrantNodeAccessInput(
         subject: new Subject(type: $subjectType, id: $subjectId),
         level: GrantLevel::from($level),     // reader | commenter | editor | manager
         effect: Effect::from($effect),       // allow | deny
@@ -236,7 +236,7 @@ Both require `Ability::Share` on the node.
 ```php
 $minted = app(CreateShareLinkAction::class)->execute(
     node: $node,
-    data: new CreateShareLinkData(
+    data: new ShareLinkInput(
         permissions: $bits > 0 ? $bits : Permission::Read->value, // defaults to READ (1)
         level: GrantLevel::from($level),
         scope: GrantScope::from($scope),   // item | subtree
@@ -270,7 +270,7 @@ non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
 
 - **Model**: `Config::activityModel()` (`Vaulter\Models\Activity\Activity`).
 - **Table**: verb badge, actor (`type #id`), target (`type #id`), storage, when. Filter: verb
-  (`SelectFilter` over `ActivityVerb` cases).
+  (`SelectFilter` over `EventType` cases).
 - **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
   `KeyValueEntry` for `context` plus ip / user-agent / request-id).
 - **Pages**: `index` (list) and `view` (`/{record}`).

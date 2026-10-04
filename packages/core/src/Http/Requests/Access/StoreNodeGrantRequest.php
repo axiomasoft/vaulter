@@ -7,7 +7,7 @@ namespace Vaulter\Http\Requests\Access;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -15,7 +15,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Rules\Access\RegisteredSubjectType;
 
 /**
- * Validates a grant-access request (§2.6) and assembles its GrantNodeAccessData
+ * Validates a grant-access request (§2.6) and assembles its GrantNodeAccessInput
  * command. The subject (type + id), level, effect, scope and optional expiry are
  * host-supplied; the controller authorizes Share/Manage on the node first.
  */
@@ -37,11 +37,11 @@ final class StoreNodeGrantRequest extends VaulterFormRequest
         ];
     }
 
-    public function toData(int|string|null $grantedBy): GrantNodeAccessData
+    public function toData(int|string|null $grantedBy): GrantNodeAccessInput
     {
         $expiresAt = $this->input('expires_at');
 
-        return new GrantNodeAccessData(
+        return new GrantNodeAccessInput(
             subject: new Subject(
                 type: $this->string('subject_type')->toString(),
                 id: $this->scalarId('subject_id'),

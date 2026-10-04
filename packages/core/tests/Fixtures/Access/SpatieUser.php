@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
- * A test actor wired with spatie's HasRoles, so the SpatiePermissionResolver tests
+ * A test actor wired with spatie's HasRoles, so the SpatiePermissionDriver tests
  * can assign roles/permissions (team-scoped) and assert the driver resolves them.
  * Lives in tests/ — spatie/laravel-permission is a require-dev dependency only.
  */

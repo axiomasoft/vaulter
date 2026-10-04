@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**
@@ -21,7 +21,7 @@ use Vaulter\Tests\Schema\ForceCreates;
  * reached the data outside the Action" scenario.
  */
 beforeEach(function (): void {
-    $this->storage = ForceCreates::make(Storage::class, [
+    $this->storage = ForceCreates::make(Drive::class, [
         'owner_type' => 'team',
         'owner_id' => 1,
         'name' => 'Disk',

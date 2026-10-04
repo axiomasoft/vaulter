@@ -10,7 +10,7 @@ use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Drive\Exceptions\StagedUploadMissingException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 
 /**
@@ -68,7 +68,7 @@ final readonly class StagedUpload
      */
     public function diskName(UploadSession $session): ?string
     {
-        $storage = $session->storage instanceof Storage
+        $storage = $session->storage instanceof Drive
             ? $session->storage
             : $session->storage()->first();
 

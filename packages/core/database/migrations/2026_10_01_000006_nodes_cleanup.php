@@ -7,7 +7,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
@@ -39,7 +39,7 @@ return new class extends Migration
         });
 
         if (!$connection->getSchemaBuilder()->hasIndex($nodes, $this->indexName($nodes))) {
-            app(PanelTablesBuilder::class)->addSingleRootIndex(table: $nodes);
+            app(SchemaBuilder::class)->addSingleRootIndex(table: $nodes);
         }
     }
 

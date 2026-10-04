@@ -6,30 +6,30 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * Absolute deny. The suite default is NullRoleDriver, which short-circuits every
+ * Absolute deny. The suite default is NullPermissionDriver, which short-circuits every
  * guard() to allow, so removing the guard call is invisible. This driver makes
  * the call the only reason a request is refused.
  */
-final class R07cDenyRoleDriver implements HostRoleDriver
+final class R07cDenyRoleDriver implements PermissionDriver
 {
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         return null;
     }
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return Effect::Deny;
     }
@@ -54,7 +54,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 41]));
 });
 
-function r07cStorage(): Storage
+function r07cStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -64,11 +64,11 @@ function r07cDeny(): void
     app()->instance(R07cDenyRoleDriver::class, new R07cDenyRoleDriver);
     config()->set('vaulter.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
     config()->set('vaulter.drivers.permission', 'r07cdeny');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
 
-function r07cNode(Storage $storage): string
+function r07cNode(Drive $storage): string
 {
     return (string) test()->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
         'file' => UploadedFile::fake()->createWithContent('guard.txt', 'guard'),

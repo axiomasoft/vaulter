@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -37,12 +37,12 @@ it('stages the outbox row INSIDE the active transaction, not after commit, F-P1.
 
         // Inside the SAME transaction the staged row must already be visible.
         $stagedInside = Outbox::query()
-            ->where('event', WebhookEvent::GrantCreated->value)
+            ->where('event', EventType::GrantCreated->value)
             ->exists();
     });
 
     expect($stagedInside)->toBeTrue()
-        ->and(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->count())->toBe(1);
+        ->and(Outbox::query()->where('event', EventType::GrantCreated->value)->count())->toBe(1);
 });
 
 it('rolls the staged outbox row back when the mutation transaction rolls back, F-P1.7-03', function (): void {
@@ -54,7 +54,7 @@ it('rolls the staged outbox row back when the mutation transaction rolls back, F
         });
     });
 
-    expect(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->exists())->toBeFalse();
+    expect(Outbox::query()->where('event', EventType::GrantCreated->value)->exists())->toBeFalse();
 });
 
 it('confines a staging failure to a savepoint so the mutation still commits, F-P1.7-03', function (): void {
@@ -86,5 +86,5 @@ it('confines a staging failure to a savepoint so the mutation still commits, F-P
     });
 
     expect($committed)->toBeTrue()
-        ->and(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->exists())->toBeFalse();
+        ->and(Outbox::query()->where('event', EventType::GrantCreated->value)->exists())->toBeFalse();
 });

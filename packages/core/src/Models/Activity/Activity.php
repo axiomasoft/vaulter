@@ -7,7 +7,7 @@ namespace Vaulter\Models\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -34,7 +34,7 @@ use Vaulter\Support\Config;
  * @property int|string|null          $storage_id
  * @property string|null              $actor_type
  * @property int|string|null          $actor_id
- * @property ActivityVerb             $verb
+ * @property EventType                $verb
  * @property string|null              $target_type
  * @property int|string|null          $target_id
  * @property array<string,mixed>|null $context
@@ -89,7 +89,7 @@ class Activity extends Model
     protected function casts(): array
     {
         return [
-            'verb' => ActivityVerb::class,
+            'verb' => EventType::class,
             'context' => 'array',
             'created_at' => 'datetime',
         ];

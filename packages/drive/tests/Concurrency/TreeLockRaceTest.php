@@ -6,8 +6,8 @@ use Vaulter\Drive\Actions\CreateFolderAction;
 use Vaulter\Drive\Actions\TrashNodeAction;
 use Vaulter\Drive\Data\CreateDriveFolderData;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -33,7 +33,7 @@ it('never leaves a live node under a folder trashed concurrently', function (): 
     $outcomes = ForkRace::run([
         static fn (): string => (string) app(TrashNodeAction::class)->execute(Node::query()->findOrFail($topId))->getKey(),
         static fn (): string => (string) app(CreateFolderAction::class)->execute(new CreateDriveFolderData(
-            storage: Storage::query()->findOrFail($storageId),
+            storage: Drive::query()->findOrFail($storageId),
             name: 'Late',
             parent: Node::query()->findOrFail($innerId),
         ))->getKey(),

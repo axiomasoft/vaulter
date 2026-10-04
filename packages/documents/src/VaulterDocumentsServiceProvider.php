@@ -30,7 +30,7 @@ use Vaulter\Support\Config;
  * the schema, the Node/Storage models, Access/Sharing/Activity/Webhooks, the
  * Contracts\Handlers seam (+ its VOs — kernel-shared, T9/D2 finding) AND — since
  * VLT-CANON P0.4 (D10, superseding H.5/T5) — the format-extensibility registry engine
- * itself (`Vaulter\Engines\*`), so a drive-only host without this package still gets
+ * itself (`Vaulter\Handlers\*`), so a drive-only host without this package still gets
  * a preview/download handler descriptor. This package's ONLY handler contribution is
  * TipTapHandler (+ UniverHandler when the 'spreadsheets' feature is on), tagged into
  * the same 'vaulter.handlers' registry core always binds.
@@ -39,7 +39,7 @@ use Vaulter\Support\Config;
  * never media (document content is inline JSON, never CAS-committed). A host that
  * wants document behaviour installs this package and Laravel auto-discovers this
  * provider, which contributes TipTapHandler/UniverHandler to core's
- * `Vaulter::registerHandler()` seam.
+ * `Vaulter::handlers()->register()` seam.
  */
 final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 {
@@ -91,11 +91,11 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         // The feature-flagged UniverHandler is added to the tagged 'vaulter.handlers'
         // set ONLY when the 'spreadsheets' feature is on, so a stock install never
         // resolves xlsx to it (xlsx then falls to DownloadOnly). The format-
-        // extensibility registry engine itself (`Vaulter\Engines\DocumentHandlerRegistry`)
-        // and the `NodeHandlerResolver` seam now bind in core (P0.4/D10) — this
+        // extensibility registry engine itself (`Vaulter\Handlers\FileHandlerRegistry`)
+        // and the `NodePresenter` seam now bind in core (P0.4/D10) — this
         // package only ever ADDS handlers to it, never owns the engine.
         if (Config::featureEnabled('spreadsheets')) {
-            $this->app->tag([UniverHandler::class], 'vaulter.handlers');
+            $this->app->tag([UniverHandler::class], 'vaulter.file_handlers');
         }
 
         // The host-user resolver seam (M4b): the collaboration webhook resolves the

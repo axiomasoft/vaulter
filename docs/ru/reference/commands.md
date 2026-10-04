@@ -14,8 +14,7 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | Команда | Назначение |
 |---|---|
 | `vaulter:install` | Опубликовать конфиг + миграции, выполнить их, предложить поставить репозиторию звезду |
-| `vaulter:make-panel` | Сгенерировать класс-провайдер Storage Panel |
-| `vaulter:panel:migrations` | Сгенерировать per-panel миграции для панели с собственными таблицами |
+| `vaulter:make:profile` | Сгенерировать класс-провайдер Storage Panel |
 | `vaulter:gc-blobs` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
 | `vaulter:reconcile-blobs` | Пересчитать `ref_count` блобов и сообщить о висячих строках |
 | `vaulter:purge-trash` | Окончательно удалить узлы из корзины по истечении срока хранения |
@@ -44,47 +43,28 @@ php artisan migrate
 
 См. [Руководство → Установка](/ru/guide/installation).
 
-## `vaulter:make-panel`
+## `vaulter:make:profile`
 
-Сгенерировать в `app/Vaulter/Panels` класс `StoragePanelProvider`, принадлежащий
+Сгенерировать в `app/Vaulter/Profiles` класс `ProfileProvider`, принадлежащий
 приложению, из stub-заготовки. Она **не** трогает опубликованный конфиг и **не**
 генерирует миграции — панель по умолчанию представляет собой конфиг-конверт без
 миграций поверх общей схемы `v_*`. Регистрация FQCN провайдера в
 `config('vaulter.panels')` — это осознанный следующий шаг, который команда выводит на экран.
 
 ```
-vaulter:make-panel
+vaulter:make:profile
     {name}        Идентификатор панели (snake/kebab), например project_drive
     {--host=}     FQCN хост-модели, в которую встраивается это хранилище
-    {--prefix=}   Префикс имён таблиц — включает продвинутый режим собственных таблиц
     {--no-grants} Сгенерировать панель без грантов на узлы
-    {--id=}       Стратегия первичного ключа для этой панели (ulid|uuid7|bigint) — только для собственных таблиц
     {--force}     Перезаписать провайдер, если он уже существует
 ```
 
 ```bash
-php artisan vaulter:make-panel project_drive --host="App\Models\Project"
+php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 ```
 
 См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
 
-## `vaulter:panel:migrations`
-
-Сгенерировать per-panel Drive-миграцию для панели, включившей продвинутый режим
-собственных таблиц. Резолвит панель из реестра и передаёт её в
-`PanelMigrationGenerator`. Панель, пишущая в общую схему `v_*`, отклоняется —
-маршруту по умолчанию не нужен сгенерированный файл. Результат кладётся в
-`config('vaulter.migrations.path')` (или в `database/migrations`, если значение null).
-
-```
-vaulter:panel:migrations
-    {name}    Идентификатор панели, чьи per-panel таблицы нужно сгенерировать
-    {--force} Перезаписать существующую миграцию для этой панели
-```
-
-```bash
-php artisan vaulter:panel:migrations project_drive
-```
 
 ## `vaulter:gc-blobs`
 

@@ -10,12 +10,12 @@ use Vaulter\Drive\Events\NodeForceDeleted;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -38,7 +38,7 @@ final readonly class ForceDeleteNodeAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
-        private StorageStoreRepository $storageStore,
+        private DriveStoreRepository $storageStore,
         private BlobStore $blobs,
         private VaulterDatabase $database,
         private TreeGuard $tree,
@@ -107,10 +107,10 @@ final readonly class ForceDeleteNodeAction
         return $node->size_bytes;
     }
 
-    private function detachVersionEdges(FileVersion $version): void
+    private function detachVersionEdges(FileRevision $version): void
     {
         foreach ($version->blobs as $blob) {
-            /** @var FileVersionBlob $pivot */
+            /** @var FileRevisionBlob $pivot */
             $pivot = $blob->getRelationValue('pivot');
 
             $this->blobs->detach(

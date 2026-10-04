@@ -8,7 +8,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -25,7 +25,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function authStorage(): Storage
+function authStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

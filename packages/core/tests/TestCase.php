@@ -67,7 +67,7 @@ abstract class TestCase extends OrchestraTestCase
         // 'api' group definition; authorization is exercised via the resolver.
         $app['config']->set('vaulter.middleware', []);
 
-        // The base suite runs OPEN: the env-gated NullRoleDriver (non-prod only,
+        // The base suite runs OPEN: the env-gated NullPermissionDriver (non-prod only,
         // H.2 / D6″) grants every actor full access, so the M1c Drive tests keep
         // their open behaviour. The M2a ACL tests opt INTO the 'database' driver
         // explicitly to exercise real grant resolution.

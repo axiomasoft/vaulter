@@ -6,39 +6,38 @@ namespace Vaulter\Tests\Fixtures\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
-use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Enums\Access\Effect;
 
 /**
  * A grant-authoritative driver that broadens the subject-set: the actor PLUS a fixed
  * role/team subject (type+id), with NO role decision and NO override of its own — so
  * v_node_grants remains the SOLE authority. This proves the access-aware listing
- * candidate set follows {@see HostRoleDriver::subjectsFor()}: a grant addressed to the
+ * candidate set follows {@see PermissionDriver::subjectsFor()}: a grant addressed to the
  * actor's ROLE (not the user directly) is reachable in the listing exactly as a direct
  * user grant would be.
  *
  * It carries the {@see GrantAuthoritativeDriver} marker for the same reason the
- * standalone {@see DatabasePermissionResolver} does — broadening the subject fan-out
+ * standalone {@see DatabasePermissionDriver} does — broadening the subject fan-out
  * does not introduce a non-grant authority, so the listing may still narrow safely.
  */
-final class RoleSubjectGrantDriver extends DatabasePermissionResolver implements GrantAuthoritativeDriver
+final class RoleSubjectGrantDriver extends DatabasePermissionDriver implements GrantAuthoritativeDriver
 {
     public function __construct(
         private readonly string $roleType,
         private readonly int|string $roleId,
     ) {}
 
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         return null;
     }
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return null;
     }

@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Panels\Panel;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 
 /**
  * v_file_versions — the immutable file ↔ blob version (master plan §2.4).
  *
- * Gated on the 'versions' feature. Thin shell over PanelTablesBuilder.
+ * Gated on the 'versions' feature. Thin shell over SchemaBuilder.
  */
 return new class extends Migration
 {
@@ -20,16 +19,16 @@ return new class extends Migration
             return;
         }
 
-        (new PanelTablesBuilder)->createTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->createTable(
+
             entity: 'file_versions',
         );
     }
 
     public function down(): void
     {
-        (new PanelTablesBuilder)->dropTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->dropTable(
+
             entity: 'file_versions',
         );
     }

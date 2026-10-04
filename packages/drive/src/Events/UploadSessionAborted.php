@@ -7,7 +7,6 @@ namespace Vaulter\Drive\Events;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Uploads\UploadSessionManager;
 
 /**
  * A resumable-upload session was aborted by the client (DELETE) (§2.8 / F-P1.4-13):

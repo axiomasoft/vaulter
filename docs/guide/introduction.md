@@ -46,7 +46,7 @@ These are the nouns you will meet throughout the docs and the code.
 
 | Concept | What it is |
 |---|---|
-| **Storage Panel** | A named configuration envelope bound to any host entity. It decides feature flags, the permission driver, id strategy and (optionally) its own tables — over the shared `v_*` schema, with **zero migrations** by default. |
+| **Drive Profile** | A named drive policy for a host entity: feature flags and grants over one shared schema. |
 | **Storage** | The concrete drive row (`v_storages`) for one host entity within a panel. `Vaulter::for($entity)` get-or-creates it and provisions its root folder. |
 | **Node** | An entry in the unified tree (`v_nodes`): a **folder**, **file**, **document** or **shortcut**. One tree per storage, rooted at the storage's root folder. |
 | **Blob** | The content-addressed bytes behind a file (`v_blobs`). Keyed by `sha256`, deduplicated within a configurable scope, and reclaimed by a two-phase garbage collector. |
@@ -96,11 +96,11 @@ $drive = Vaulter::for($project);                 // DriveContext
 $drive = Vaulter::for($project, 'project_drive'); // …within a named panel
 
 // Resolve panels.
-Vaulter::panel('project_drive');                  // Panel
-Vaulter::panels();                                // PanelRegistry
+Vaulter::profiles()->get('project_drive');                  // Panel
+Vaulter::profiles();                                // ProfileRegistry
 
 // Extend the package at runtime.
-Vaulter::registerHandler(MyPdfHandler::class);    // a new document format
+Vaulter::handlers()->register(MyPdfHandler::class);    // a new document format
 Vaulter::registerExporter(new PdfExporter());     // a new export format
 Vaulter::resolvePermissionsWith($resolver);       // the legacy document-path resolver
 

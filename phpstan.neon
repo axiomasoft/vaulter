@@ -16,15 +16,7 @@ parameters:
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
 
-        # HasVaulterPanel is a consumer-facing concern (D13): only the SCAFFOLDED
-        # per-panel models (M1, app/Vaulter/Models/*) and the test fixtures use
-        # it, both outside this src-only analysis scope. It is exercised green by
-        # Pest (tests/Panels/HasVaulterPanelTest). Mirrors chatom's HasChatomPanel.
-        -
-            identifier: trait.unused
-            path: packages/core/src/Models/Concerns/HasVaulterPanel.php
-
-        # NullRoleDriver implements the HostRoleDriver contract, whose override()
+        # NullPermissionDriver implements the PermissionDriver contract, whose override()
         # is ?Effect (a real driver returns null when it has no opinion). The OPEN
         # null-driver always returns Effect::Allow by design (H.2 / D6″), so the
         # concrete body never hits the null branch — but the declared type must stay
@@ -32,7 +24,7 @@ parameters:
         # scoped to this env-gated test-support class only.
         -
             identifier: return.unusedType
-            path: packages/core/src/Testing/NullRoleDriver.php
+            path: packages/core/src/Testing/NullPermissionDriver.php
 
         # The commit path stages the upload stream INTO the CAS inside the transaction
         # (uploadFile->execute), which may consume + fclose it; the finally re-guards

@@ -7,13 +7,13 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SpatieUser;
 
@@ -43,10 +43,10 @@ function setTeam(int|string $teamId): void
 
 /**
  * Align the active spatie team with a storage's workspace (its owner id). The
- * AccessResolver derives the AclScope's workspaceId from the storage owner, so a
+ * AccessResolver derives the AccessScope's workspaceId from the storage owner, so a
  * permission must be granted under THAT team for the through-resolver checks.
  */
-function setTeamForStorage(Storage $storage): int|string
+function setTeamForStorage(Drive $storage): int|string
 {
     /** @var int|string $owner */
     $owner = $storage->owner_id;
@@ -63,8 +63,8 @@ it('resolves a permission granted directly to the actor (team-scoped)', function
     Permission::findOrCreate('vaulter.edit', 'web');
     $user->givePermissionTo('vaulter.edit');
 
-    $driver = new SpatiePermissionResolver;
-    $scope = new AclScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
+    $driver = new SpatiePermissionDriver;
+    $scope = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
 
     $decision = $driver->resolve(Subject::ofModel($user), $user, $scope);
 
@@ -82,7 +82,7 @@ it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', func
     // The driver expands the actor into role Subjects keyed by the role's PRIMARY KEY
     // (the same handle every subject uses); a grant addressed to that role must therefore
     // resolve through the AccessResolver.
-    $subjects = (new SpatiePermissionResolver)->subjectsFor($user);
+    $subjects = (new SpatiePermissionDriver)->subjectsFor($user);
     $roleSubjects = array_values(array_filter($subjects, fn (Subject $s): bool => $s->type === 'role'));
 
     expect($roleSubjects)->toHaveCount(1)
@@ -112,10 +112,10 @@ it('isolates two teams — a permission in team A does not leak into team B', fu
     setTeam(1);
     $user->givePermissionTo('vaulter.edit');
 
-    $driver = new SpatiePermissionResolver;
+    $driver = new SpatiePermissionDriver;
 
-    $scopeA = new AclScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
-    $scopeB = new AclScope(panel: 'default', workspaceType: 'team', workspaceId: 2);
+    $scopeA = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
+    $scopeB = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 2);
 
     // The driver runs the team-switch internally per scope: team 1 sees the grant,
     // team 2 does not — no cross-team leak.
@@ -129,11 +129,11 @@ it('restores the previous team id after a scoped check (symmetric team-switch)',
 
     Permission::findOrCreate('vaulter.edit', 'web');
 
-    $driver = new SpatiePermissionResolver;
+    $driver = new SpatiePermissionDriver;
     $driver->resolve(
         Subject::ofModel($user),
         $user,
-        new AclScope(panel: 'default', workspaceType: 'team', workspaceId: 3),
+        new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 3),
     );
 
     // The active team is exactly what it was before the scoped check — the driver
@@ -167,15 +167,15 @@ it('forgets the cached permissions on mutation (no stale grant after revoke)', f
     Permission::findOrCreate('vaulter.edit', 'web');
     $user->givePermissionTo('vaulter.edit');
 
-    $driver = new SpatiePermissionResolver;
-    $scope = new AclScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
+    $driver = new SpatiePermissionDriver;
+    $scope = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
 
     expect($driver->resolve(Subject::ofModel($user), $user, $scope))->not->toBeNull();
 
     // Revoke, then flush the cache through the driver's consumer seam — the next
     // resolve must NOT see the stale, team-cached permission.
     $user->revokePermissionTo('vaulter.edit');
-    SpatiePermissionResolver::forgetCachedPermissions($user);
+    SpatiePermissionDriver::forgetCachedPermissions($user);
 
     expect($driver->resolve(Subject::ofModel($user), $user, $scope))->toBeNull();
 });
@@ -188,7 +188,7 @@ it('gates workspace creation through the team-scoped create permission', functio
     setTeam(5);
     $user->givePermissionTo('vaulter.create');
 
-    $driver = new SpatiePermissionResolver;
+    $driver = new SpatiePermissionDriver;
 
     // Created in team 5 → allowed; team 6 has no such grant → denied.
     expect($driver->canCreateInWorkspace($user, 'team', 5))->toBeTrue()
@@ -201,7 +201,7 @@ it('contributes the actor plus its roles to the subject-set', function (): void 
 
     $user->assignRole(Role::findOrCreate('viewer', 'web'));
 
-    $subjects = (new SpatiePermissionResolver)->subjectsFor($user);
+    $subjects = (new SpatiePermissionDriver)->subjectsFor($user);
     $types = array_map(fn (Subject $s): string => $s->type, $subjects);
 
     expect($types)->toContain('role')

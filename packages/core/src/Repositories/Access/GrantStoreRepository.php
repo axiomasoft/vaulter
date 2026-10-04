@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Access;
 
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Config;
@@ -18,7 +18,7 @@ use Vaulter\Support\Config;
  */
 final class GrantStoreRepository
 {
-    public function grant(Node $node, GrantNodeAccessData $data): NodeGrant
+    public function grant(Node $node, GrantNodeAccessInput $data): NodeGrant
     {
         $model = Config::grantModel();
 

@@ -9,17 +9,17 @@ Vaulter\Contracts\Access\EnumeratesRoleSubjects
 Vaulter\Contracts\Access\GrantAuthoritativeDriver
   isGrantAuthoritative(): bool
 
-Vaulter\Contracts\Access\HostRoleDriver
+Vaulter\Contracts\Access\PermissionDriver
   canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
-  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AclScope $scope): ?\Vaulter\Enums\Access\Effect
-  resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AclScope $scope): ?\Vaulter\Access\ValueObjects\Decision
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
+  resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision
   subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
 
 Vaulter\Contracts\Cas\BlobStore
-  attach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
+  attach(\Vaulter\Models\Drive\FileRevision $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
   commit(mixed $stream, \Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): \Vaulter\Models\Cas\Blob
   commitStaged(\Vaulter\Contracts\Cas\StagedObject $staged, \Vaulter\ValueObjects\Cas\BlobScope $scope, ?string $disk = null): \Vaulter\Models\Cas\Blob
-  detach(\Vaulter\Models\Drive\FileVersion $version, \Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
+  detach(\Vaulter\Models\Drive\FileRevision $version, \Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   read(\Vaulter\Models\Cas\Blob $blob): mixed
 
 Vaulter\Contracts\Cas\ContentStore
@@ -63,14 +63,14 @@ Vaulter\Contracts\Drive\DriveHandle
   rename(\Vaulter\Models\Drive\Node $node, string $name, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   restore(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   root(): \Vaulter\Models\Drive\Node
-  storage(): \Vaulter\Models\Drive\Storage
+  storage(): \Vaulter\Models\Drive\Drive
   trash(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   upload(mixed $source, ?\Vaulter\Models\Drive\Node $into = null, ?string $name = null, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   uploadVersion(\Vaulter\Models\Drive\Node $target, mixed $source, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
 
 Vaulter\Contracts\Drive\DriveHandleFactory
   forOwner(\Illuminate\Database\Eloquent\Model $entity, string $panel): \Vaulter\Contracts\Drive\DriveHandle
-  forStorage(\Vaulter\Models\Drive\Storage $storage): \Vaulter\Contracts\Drive\DriveHandle
+  forStorage(\Vaulter\Models\Drive\Drive $storage): \Vaulter\Contracts\Drive\DriveHandle
 
 Vaulter\Contracts\Handlers\DocumentContent
   contentHash(): string
@@ -84,19 +84,20 @@ Vaulter\Contracts\Handlers\DocumentExporter
   mimeType(): string
 
 Vaulter\Contracts\Handlers\FileHandler
-  capabilities(\Vaulter\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\ValueObjects\Handlers\HandlerCapabilities
+  capabilities(\Vaulter\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\ValueObjects\Handlers\ContentCapabilities
   extensions(): array
-  id(): string
+  key(): string
   mimeTypes(): array
   priority(): int
-  ui(\Vaulter\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\ValueObjects\Handlers\HandlerUi
+  viewer(\Vaulter\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\ValueObjects\Handlers\ViewerDescriptor
 
-Vaulter\Contracts\Handlers\HandlerRegistry
+Vaulter\Contracts\Handlers\FileHandlerRegistry
   all(): array
   register(\Vaulter\Contracts\Handlers\FileHandler|string $handler): void
+  resolve(\Vaulter\ValueObjects\Handlers\FileDescriptor $file, \Vaulter\Enums\Handlers\Capability $capability = Vaulter\Enums\Handlers\Capability::Download): \Vaulter\Contracts\Handlers\FileHandler
 
-Vaulter\Contracts\Handlers\NodeHandlerResolver
-  describe(\Vaulter\Models\Drive\Node $node, ?string $detectedMime = null): \Vaulter\ValueObjects\Handlers\HandlerDescriptor
+Vaulter\Contracts\Handlers\NodePresenter
+  present(\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Contracts\IdStrategy
   actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
@@ -126,10 +127,10 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
 Vaulter\Access\AccessResolver
-  __construct(\Vaulter\Access\HostRoleDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\StorageReadRepository $storages)
+  __construct(\Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages)
   abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
   can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
-  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Storage $storage): bool
+  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $storage): bool
   effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
   evaluateMany(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $nodes): array
   explain(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\AccessExplanation
@@ -287,7 +288,7 @@ Vaulter\Schema\HostKeyColumns
   add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void
   sqlType(string $driver): string
 
-Vaulter\Support\VaulterSchema
+Vaulter\Schema\VaulterSchema
   actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
   bits(\Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
   extraData(\Illuminate\Database\Schema\Blueprint $table): void
@@ -300,9 +301,9 @@ Vaulter\Support\VaulterSchema
   tenant(\Illuminate\Database\Schema\Blueprint $table): void
 
 Vaulter\Http\Support\HttpResourceResolver
-  __construct(\Vaulter\Repositories\Drive\StorageReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
+  __construct(\Vaulter\Repositories\Drive\DriveReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
   node(int|string $id): \Vaulter\Models\Drive\Node
-  storage(int|string $id): \Vaulter\Models\Drive\Storage
+  storage(int|string $id): \Vaulter\Models\Drive\Drive
 
 Vaulter\Exceptions\Contracts\ProblemException
   httpStatus(): int
@@ -318,18 +319,15 @@ Vaulter\Exceptions\VaulterException
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 FACADE Vaulter\Facades\Vaulter
-  static \Vaulter\Contracts\Drive\DriveHandle for(\Illuminate\Database\Eloquent\Model $entity, ?string $panel = null)
-  static \Vaulter\Contracts\Drive\DriveHandle forStorage(\Vaulter\Models\Drive\Storage $storage)
-  static \Vaulter\Contracts\Handlers\DocumentExporter exporter(string $format)
-  static \Vaulter\Contracts\Handlers\HandlerRegistry handlers()
-  static \Vaulter\Panels\Panel panel(string $name = 'default')
-  static \Vaulter\Panels\PanelRegistry panels()
+  static DocumentExporter exporter(string $format)
+  static DriveHandle for(Model $entity, ?string $panel = null)
+  static DriveHandle forStorage(Drive $storage)
+  static FileHandlerRegistry handlers()
+  static ProfileRegistry profiles()
   static array<string, array<string, mixed>> documentTypes()
   static list<string> exporterFormats()
   static void registerDocumentType(string $type, array<string, mixed> $definition)
-  static void registerExporter(\Vaulter\Contracts\Handlers\DocumentExporter|class-string<\Vaulter\Contracts\Handlers\DocumentExporter> $exporter)
-  static void registerHandler(\Vaulter\Contracts\Handlers\FileHandler|class-string<\Vaulter\Contracts\Handlers\FileHandler> $handler)
-  static void registerPanel(\Vaulter\Panels\StoragePanelProvider|\Vaulter\Panels\Panel $panel)
+  static void registerExporter(DocumentExporter|class-string<DocumentExporter> $exporter)
 
 Vaulter\Events\Access\NodeGrantCreated
   __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null)

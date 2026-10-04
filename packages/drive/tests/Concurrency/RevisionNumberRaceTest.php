@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -57,7 +57,7 @@ it('V03 aggregate lock protects counter allocation even without a caller node lo
             $attributes = $head->getAttributes();
             unset($attributes[$head->getKeyName()]);
             $attributes['version_no'] = $versionNo;
-            $version = app(FileVersionStoreRepository::class)->create($attributes);
+            $version = app(FileRevisionStoreRepository::class)->create($attributes);
             $files->repointHead($locked, $version->id, $head->mime_type, $head->size_bytes, $versionNo);
 
             return $versionNo;
@@ -71,7 +71,7 @@ it('V03 aggregate lock protects counter allocation even without a caller node lo
     sort($numbers);
     expect($numbers)->toBe([2, 3])
         ->and(File::query()->findOrFail($file->id)->version_count)->toBe(3)
-        ->and(FileVersion::query()->where('file_id', $file->id)->orderBy('version_no')->pluck('version_no')->all())->toBe([1, 2, 3]);
+        ->and(FileRevision::query()->where('file_id', $file->id)->orderBy('version_no')->pluck('version_no')->all())->toBe([1, 2, 3]);
 });
 
 it('reuses prepared bytes on a serialization retry and discards the temp file', function (): void {
@@ -97,7 +97,7 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
     expect($injected)->toBeTrue()
         ->and($drive->storage()->refresh()->used_bytes)->toBe(20)
         ->and(File::query()->count())->toBe(1)
-        ->and(FileVersion::query()->sole()->version_no)->toBe(1)
+        ->and(FileRevision::query()->sole()->version_no)->toBe(1)
         ->and(Blob::query()->count())->toBe(1)
         ->and(Blob::query()->sole()->sha256)->toBe(hash('sha256', 'retry the same bytes'))
         ->and(glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [])->toBe($before);

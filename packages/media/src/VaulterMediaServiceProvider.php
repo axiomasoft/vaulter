@@ -23,7 +23,7 @@ use Vaulter\Support\Config;
  * touches AccessResolver).
  *
  * Dependency direction is one-way: media requires core (for the Contracts\Cas\*
- * seam, the Blob/FileVersion models and Support\Config), core does NOT require
+ * seam, the Blob/FileRevision models and Support\Config), core does NOT require
  * media at runtime — a host that wants the CAS file layer installs this package
  * and Laravel auto-discovers this provider, which binds the concrete engine.
  */

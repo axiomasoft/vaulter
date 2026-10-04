@@ -5,19 +5,19 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * The sibling-unique guard (§2.2) must reject a duplicate LIVE sibling name but
  * allow a duplicate name once the rival is trashed or soft-deleted.
  */
-function makeStorage(): Storage
+function makeStorage(): Drive
 {
     // forceFill (P1.4/F-P1.8-02): owner_type/owner_id are excluded from
     // Storage's $fillable — this trusted fixture builder bypasses the guard
-    // the same way StorageStoreRepository does.
-    $storage = new Storage;
+    // the same way DriveStoreRepository does.
+    $storage = new Drive;
     $storage->forceFill([
         'owner_type' => 'team',
         'owner_id' => 1,
@@ -28,7 +28,7 @@ function makeStorage(): Storage
     return $storage;
 }
 
-function makeNode(Storage $storage, string $name, array $overrides = []): Node
+function makeNode(Drive $storage, string $name, array $overrides = []): Node
 {
     $node = new Node;
     $node->forceFill([

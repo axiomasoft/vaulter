@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\ValueObjects\Handlers;
+
+/**
+ * The resolved-handler descriptor embedded in a node payload (§4.5 / §5 / M4a): the
+ * handler id + its capabilities + its front-end mount descriptor, so the Vue client
+ * knows which editor/preview/download surface to mount for the node WITHOUT
+ * re-running mime logic on the client. Immutable.
+ */
+final readonly class NodePresentation
+{
+    public function __construct(
+        public string $id,
+        public ContentCapabilities $capabilities,
+        public ViewerDescriptor $ui,
+    ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'capabilities' => $this->capabilities->toArray(),
+            'ui' => $this->ui->toArray(),
+        ];
+    }
+}

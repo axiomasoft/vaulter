@@ -9,8 +9,8 @@ use LogicException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 
@@ -35,7 +35,7 @@ final readonly class TreeGuard
      * The destination folder id; no destination means the drive root, so no Action
      * ever writes a second parentless node.
      */
-    public function destinationId(Storage $storage, ?Node $into): int|string
+    public function destinationId(Drive $storage, ?Node $into): int|string
     {
         if ($into instanceof Node) {
             return $into->id;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -20,7 +20,7 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
     $node = $drive->createFolder('ULID actor', actorId: $ulid)->refresh();
     $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $ulid, subjectType: $user->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
-        verb: ActivityVerb::NodeCreated,
+        verb: EventType::FolderCreated,
         storageId: $drive->storage()->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $ulid,

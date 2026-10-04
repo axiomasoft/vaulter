@@ -13,7 +13,7 @@ use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage as DriveStorage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -37,7 +37,7 @@ function r07bS3RawSession(int $totalSizeBytes): UploadSession
 /**
  * Controller-level: storage with root node created via the Vaulter handle.
  */
-function r07bS3CtlStorage(): DriveStorage
+function r07bS3CtlStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -47,7 +47,7 @@ function r07bS3CtlStorage(): DriveStorage
  *
  * @param array<string,mixed> $overrides
  */
-function r07bS3CreateSession(DriveStorage $storage, array $overrides = []): string
+function r07bS3CreateSession(Drive $storage, array $overrides = []): string
 {
     return test()->postJson(
         'api/vaulter/storages/'.$storage->getKey().'/resumable-uploads',

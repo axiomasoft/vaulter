@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Activity\Activity;
@@ -31,13 +31,13 @@ it('surfaces the append-only feed recorded by the core Drive Actions', function 
     $feed = app(ActivityReadRepository::class)->forStorage($storage)->get();
 
     expect($feed)->not->toBeEmpty()
-        ->and($feed->contains(fn (Activity $a): bool => $a->verb === ActivityVerb::NodeCreated))->toBeTrue();
+        ->and($feed->contains(fn (Activity $a): bool => $a->verb === EventType::FolderCreated))->toBeTrue();
 });
 
 it('lists every verb the audit filter offers', function (): void {
-    expect(ActivityVerb::cases())->not->toBeEmpty();
+    expect(EventType::cases())->not->toBeEmpty();
 
-    foreach (ActivityVerb::cases() as $verb) {
+    foreach (EventType::cases() as $verb) {
         expect($verb->label())->toBeString()->not->toBe('');
     }
 });

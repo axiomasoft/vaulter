@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Tests\Fixtures;
 
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
@@ -25,7 +25,7 @@ final class DriveBuilder
     /**
      * A fresh storage (and its auto-provisioned root) for a unique host entity.
      */
-    public static function storage(): Storage
+    public static function storage(): Drive
     {
         static $next = 0;
         $next++;
@@ -40,7 +40,7 @@ final class DriveBuilder
     /**
      * A folder node directly under the storage root (via the core Drive Action).
      */
-    public static function folder(Storage $storage, string $name = 'Docs'): Node
+    public static function folder(Drive $storage, string $name = 'Docs'): Node
     {
         return Vaulter::forStorage($storage)->createFolder(name: $name);
     }
@@ -70,7 +70,7 @@ final class DriveBuilder
     ): NodeGrant {
         return app(GrantStoreRepository::class)->grant(
             node: $node,
-            data: new GrantNodeAccessData(
+            data: new GrantNodeAccessInput(
                 subject: Subject::ofModel($user),
                 level: $level,
                 effect: $effect,

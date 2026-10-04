@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -32,7 +32,7 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     expect($drive->storage()->refresh()->used_bytes)->toBe(8 * 1024 * 1024)
         ->and((int) File::query()->sum('size_bytes'))->toBe(8 * 1024 * 1024)
         ->and(Blob::query()->count())->toBe(1)
-        ->and(FileVersionBlob::query()->count())->toBe(1);
+        ->and(FileRevisionBlob::query()->count())->toBe(1);
     $blob = Blob::query()->sole();
     // Age the actual disk object, not Carbon: orphan grace uses filesystem mtime.
     touch(Storage::disk('local')->path($blob->storage_key), time() - 48 * 3600);

@@ -21,12 +21,12 @@ production:
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
 Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie|azgard)
-or bind your own \Vaulter\Contracts\Access\HostRoleDriver.
+or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 ```
 
-**Why.** The Drive ACL needs a `HostRoleDriver` lane. The open `null` driver (every actor is a
-super-admin) is deliberately env-gated: `HostRoleDriverManager` throws
-`MissingHostRoleDriverException` whenever a **production** app resolves it, so it can never
+**Why.** The Drive ACL needs a `PermissionDriver` lane. The open `null` driver (every actor is a
+super-admin) is deliberately env-gated: `PermissionDriverManager` throws
+`MissingPermissionDriverException` whenever a **production** app resolves it, so it can never
 silently open a prod install ([ADR-0007](/adr/0007-pluggable-authorization)).
 
 **Fix.** Pick a real driver in `config/vaulter.php`:
@@ -208,12 +208,9 @@ collide with Vaulter's.
   ```
 
 - **Per-entity rename.** To rename a single table without changing the global prefix, use
-  `config('vaulter.table_names')` — `PanelTablesBuilder` and the models resolve through it.
+  `config('vaulter.table_names')` — `SchemaBuilder` and the models resolve through it.
 
-- **Own-tables panels.** A panel only gets its own tables in the advanced own-tables mode
-  (`->tablePrefix()` / `->tables()`); you then generate them with
-  `php artisan vaulter:panel:migrations <panel>` ([ADR-0009](/adr/0009-storage-panels)). The
-  default zero-migration panel adds **no** migration.
+- **Profiles.** All profiles share the configured schema; own-table generation is removed.
 
 ## Broadcast / collaboration not connecting {#collaboration}
 
@@ -264,18 +261,11 @@ still referenced.
 
 ## Panel validation errors at boot {#panel-validation}
 
-**Symptom.** The app throws on boot from `InvalidPanelException` or `UnknownPanelException`.
+**Symptom.** The app throws on boot from `InvalidProfileException` or `UnknownProfileException`.
 
-**Why & fix.** The `PanelRegistry` validates every panel at boot (fail-loud, H.1):
+**Why & fix.** Check that the requested profile is registered:
 
-- **`InvalidPanelException::missingClass` / `notInstanceOf`** — a panel references a model / pipe
-  / resource FQCN that doesn't exist or doesn't satisfy its contract. Fix the FQCN (a panel
-  model must extend `Illuminate\Database\Eloquent\Model`).
-- **`InvalidPanelException::idStrategyWithoutOwnTables`** — a panel set `->idStrategy()` while
-  staying on the shared schema. One shared `v_nodes` has exactly one PK type, so a per-panel id
-  strategy is only legal in own-tables mode. Either drop the `->idStrategy()` or add a
-  `->tablePrefix()` to opt into own tables ([ADR-0011](/adr/0011-id-strategy)).
-- **`UnknownPanelException::forName`** — `Vaulter::for($entity, panel: 'x')` (or a route) named a
+- **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (or a route) named a
   panel that isn't registered. Register its provider FQCN in `config('vaulter.panels')`, or use
   the `default` panel.
 

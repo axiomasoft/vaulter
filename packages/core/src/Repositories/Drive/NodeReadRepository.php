@@ -11,14 +11,13 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
@@ -53,7 +52,7 @@ final class NodeReadRepository
 
     public function __construct(
         private readonly AccessResolver $access,
-        private readonly HostRoleDriverManager $drivers,
+        private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
         private readonly MetricsRecorder $metrics,
     ) {}
@@ -68,7 +67,7 @@ final class NodeReadRepository
      *
      * @return Builder<Node>
      */
-    public function forStorage(Storage $storage): Builder
+    public function forStorage(Drive $storage): Builder
     {
         return $this->query()
             ->treeOf($storage->id)
@@ -81,7 +80,7 @@ final class NodeReadRepository
      *
      * @return Builder<Node>
      */
-    public function children(Storage $storage, ?Node $parent): Builder
+    public function children(Drive $storage, ?Node $parent): Builder
     {
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
@@ -272,7 +271,7 @@ final class NodeReadRepository
      *
      * @return Builder<Node>
      */
-    public function search(Storage $storage, string $term): Builder
+    public function search(Drive $storage, string $term): Builder
     {
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
@@ -303,7 +302,7 @@ final class NodeReadRepository
      *
      * @return Builder<Node>
      */
-    public function trashed(Storage $storage): Builder
+    public function trashed(Drive $storage): Builder
     {
         return $this->query()
             ->treeOf($storage->id)
@@ -347,7 +346,7 @@ final class NodeReadRepository
      * place. Uses a direct EXISTS, NOT a recursive descendant aggregate (H.4).
      */
     public function siblingNameExists(
-        Storage $storage,
+        Drive $storage,
         int|string|null $parentId,
         string $name,
         int|string|null $ignoreId = null,
@@ -487,10 +486,10 @@ final class NodeReadRepository
      * when the 'grants' feature is on AND the active permission driver is
      * {@see GrantAuthoritativeDriver} with {@see GrantAuthoritativeDriver::isGrantAuthoritative()}
      * true — i.e. treats v_node_grants as the SOLE authority for read-visibility (the
-     * standalone {@see DatabasePermissionResolver}).
+     * standalone {@see DatabasePermissionDriver}).
      *
      * The gate keys on the CAPABILITY, NOT on the driver KEY string: a host that
-     * SUBCLASSES DatabasePermissionResolver under the same 'database' key to add a
+     * SUBCLASSES DatabasePermissionDriver under the same 'database' key to add a
      * role/team lane or a super-admin override() confers access on nodes with NO grant
      * anchor — so it overrides isGrantAuthoritative() to return false (the interface is
      * inherited and cannot be un-declared), and the listing stays OPEN. For the

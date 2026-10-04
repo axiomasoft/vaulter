@@ -9,7 +9,7 @@ use Vaulter\Drive\Support\Uploads\MagicByteSniffer;
 use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\TusUploadHandler;
-use Vaulter\Models\Drive\Storage as DriveStorage;
+use Vaulter\Models\Drive\Drive;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -226,6 +226,6 @@ it('uses the session storage disk name when the relation is a loaded Storage mod
     $session = UploadTestHelpers::session($storage);
     $session->setRelation('storage', $storage);
 
-    expect($session->storage)->toBeInstanceOf(DriveStorage::class)
+    expect($session->storage)->toBeInstanceOf(Drive::class)
         ->and(app(StagedUpload::class)->diskName($session))->toBe('local');
 });

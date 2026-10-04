@@ -8,10 +8,10 @@ use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\StorageStoreRepository;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
@@ -24,7 +24,7 @@ it('reserves from the database value with unlimited and exact-boundary quotas', 
     $stale = $storage->fresh();
     $storage->forceFill(['used_bytes' => 4])->save();
 
-    app(VaulterDatabase::class)->transaction(fn () => app(StorageStoreRepository::class)->reserveBytes($stale, 6));
+    app(VaulterDatabase::class)->transaction(fn () => app(DriveStoreRepository::class)->reserveBytes($stale, 6));
 
     expect($storage->refresh()->used_bytes)->toBe(10);
 })->with([null, 10]);
@@ -33,7 +33,7 @@ it('rejects one byte over the quota without changing used_bytes', function (): v
     $storage = DriveTestHelpers::drive()->storage();
     $storage->forceFill(['quota_bytes' => 10, 'used_bytes' => 10])->save();
 
-    expect(fn () => app(VaulterDatabase::class)->transaction(fn () => app(StorageStoreRepository::class)->reserveBytes($storage, 1)))
+    expect(fn () => app(VaulterDatabase::class)->transaction(fn () => app(DriveStoreRepository::class)->reserveBytes($storage, 1)))
         ->toThrow(CoreQuotaExceededException::class);
     expect($storage->refresh()->used_bytes)->toBe(10);
 });
@@ -41,7 +41,7 @@ it('rejects one byte over the quota without changing used_bytes', function (): v
 it('releases bytes down to zero and accepts a zero reservation', function (): void {
     $storage = DriveTestHelpers::drive()->storage();
     $storage->forceFill(['quota_bytes' => 2, 'used_bytes' => 2])->save();
-    $repo = app(StorageStoreRepository::class);
+    $repo = app(DriveStoreRepository::class);
 
     app(VaulterDatabase::class)->transaction(function () use ($repo, $storage): void {
         $repo->reserveBytes($storage, 0);
@@ -56,11 +56,11 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
     $drive->upload(DriveTestHelpers::streamFor('aaaa'), into: $folder, originalName: 'a.txt');
     $drive->upload(DriveTestHelpers::streamFor('bbbbbb'), into: $folder, originalName: 'b.txt');
     $drive->storage()->forceFill(['quota_bytes' => 19])->save();
-    $counts = [Node::query()->count(), File::query()->count(), FileVersion::query()->count(), FileVersionBlob::query()->count()];
+    $counts = [Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()];
 
     expect(fn () => $drive->copy($folder, name: 'copy'))->toThrow(QuotaExceededException::class);
 
-    expect([Node::query()->count(), File::query()->count(), FileVersion::query()->count(), FileVersionBlob::query()->count()])->toBe($counts)
+    expect([Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()])->toBe($counts)
         ->and(Node::query()->where('name', 'copy')->exists())->toBeFalse()
         ->and($drive->storage()->refresh()->used_bytes)->toBe(10)
         ->and(Blob::query()->count())->toBe(2);

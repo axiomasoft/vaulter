@@ -46,7 +46,7 @@ UNIQUE-индекс дедупликации блобов ключуется н�
 выключена, индекс просто охватывает `NULL`-колонку.
 
 ```php
-// Vaulter\Schema\PanelTablesBuilder::tenant() — выполняется для каждой таблицы Drive
+// Vaulter\Schema\SchemaBuilder::tenant() — выполняется для каждой таблицы Drive
 private function tenant(Blueprint $table, IdStrategy $ids): void
 {
     $ids->reference(table: $table, column: 'tenant_id', nullable: true);
@@ -54,14 +54,14 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ```
 
 Свойство модели объявлено на каждой Drive-модели
-(`Vaulter\Models\Drive\Storage`, `Node`, `File`, `FileVersion`,
+(`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
 `Vaulter\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
 `Vaulter\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
 
 ::: tip
 Флаг `tenant.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и
 миграции. Сам Vaulter читает его лишь для того, чтобы решить, применять ли опциональную
-колонку на таблицах **легаси-DocVault** (`Vaulter\Support\VaulterSchema::tenant()` условный);
+колонку на таблицах **легаси-DocVault** (`Vaulter\Schema\VaulterSchema::tenant()` условный);
 современные таблицы Drive выпускают колонку безусловно, как объяснено выше.
 :::
 
@@ -139,7 +139,7 @@ $blob = $this->blobs->commit(
 namespace App\Models\Vaulter;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Models\Drive\Storage as BaseStorage;
+use Vaulter\Models\Drive\Drive as BaseStorage;
 
 class TenantStorage extends BaseStorage
 {
@@ -223,7 +223,7 @@ Vaulter по умолчанию выбирает стратегию первич
 
 Это важно, когда вы гоняете **драйвер ролей хоста AzGuard** для авторизации в приложении со
 скоупом по тенантам. Этот драйвер
-(`Vaulter\Drivers\Permission\AzgardPermissionResolver`) общается только со швом
+(`Vaulter\Access\Drivers\AzgardPermissionDriver`) общается только со швом
 `Vaulter\Contracts\Access\AzgardGuard`, которым владеет Vaulter — так что vaulter-core не несёт
 **никакой** жёсткой зависимости от `azguard` / `corex` — и маршрутизирует свои проверки ролей
 со скоупом по workspace через `hasPermissionIn($contextType, $contextId, $permission)`, что

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
-use Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 
 /**

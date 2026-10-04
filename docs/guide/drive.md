@@ -85,7 +85,7 @@ them. A custom Action that changes the tree should follow the same order
 
 ```php
 $root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->storage();    // Vaulter\Models\Drive\Storage
+$storage = $drive->storage();    // Vaulter\Models\Drive\Drive
 $panel = $drive->panel();        // string
 ```
 

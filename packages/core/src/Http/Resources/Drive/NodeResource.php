@@ -8,10 +8,10 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Access\Abilities\NodeAbilities;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\GrantSet;
-use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 
@@ -133,7 +133,7 @@ final class NodeResource extends JsonResource
      * for a folder. Resolved lazily via the container so the Resource stays a pure
      * transform and only computes it when serialising a leaf.
      *
-     * The {@see NodeHandlerResolver} contract and its engine are core-owned since
+     * The {@see NodePresenter} contract and its engine are core-owned since
      * P0.4/D10: a host running Drive WITHOUT vaulter-documents still gets a real
      * preview/download descriptor (never a degrade-to-null) — the built-in
      * PreviewHandler/DownloadOnlyHandler are the guaranteed baseline; vaulter-documents
@@ -147,7 +147,7 @@ final class NodeResource extends JsonResource
             return null;
         }
 
-        return app(NodeHandlerResolver::class)->describe($node)->toArray();
+        return app(NodePresenter::class)->present($node)->toArray();
     }
 
     /**

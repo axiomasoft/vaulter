@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Documents;
 
-use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 

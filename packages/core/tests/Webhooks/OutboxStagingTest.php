@@ -8,7 +8,7 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\NodeCreated;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Models\Access\NodeGrant;
@@ -35,7 +35,7 @@ beforeEach(function (): void {
 it('stages exactly one outbox row when a storage is provisioned', function (): void {
     DriveTestHelpers::drive()->storage();
 
-    $rows = Outbox::query()->where('event', WebhookEvent::StorageCreated->value)->get();
+    $rows = Outbox::query()->where('event', EventType::DriveCreated->value)->get();
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->status)->toBe('pending')
@@ -51,7 +51,7 @@ it('stages a node.created row carrying the actor and a slim payload', function (
     $folder = AccessTestHelpers::folder($storage, null, 'reports');
     event(new NodeCreated(node: $folder, actorId: 7));
 
-    $rows = Outbox::query()->where('event', WebhookEvent::NodeCreated->value)->get();
+    $rows = Outbox::query()->where('event', EventType::FolderCreated->value)->get();
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->payload['node_id'])->toEqual($folder->getKey())
@@ -76,7 +76,7 @@ it('is idempotent by event_id: re-staging the same occurrence stages no duplicat
     $eventId = (string) Str::ulid();
 
     $stage = fn (): ?Outbox => $recorder->stage(
-        event: WebhookEvent::NodeCreated,
+        event: EventType::FolderCreated,
         eventId: $eventId,
         panel: $folder->panel,
         topic: (string) $folder->getKey(),
@@ -90,7 +90,7 @@ it('is idempotent by event_id: re-staging the same occurrence stages no duplicat
     expect($first)->toBeInstanceOf(Outbox::class)
         // The second staging is a no-op (returns null) — idempotent by event_id.
         ->and($second)->toBeNull()
-        ->and(Outbox::query()->where('event', WebhookEvent::NodeCreated->value)->count())->toBe(1);
+        ->and(Outbox::query()->where('event', EventType::FolderCreated->value)->count())->toBe(1);
 });
 
 it('keeps distinct grant occurrences with identical parameters and deduplicates their replay', function (): void {
@@ -114,8 +114,8 @@ it('keeps distinct grant occurrences with identical parameters and deduplicates 
             ->and($row->payload['event_id'])->toBe($event->eventId);
     }
 
-    expect(Outbox::query()->where('event', WebhookEvent::GrantCreated->value)->count())->toBe(2)
-        ->and(Outbox::query()->where('event', WebhookEvent::GrantRevoked->value)->count())->toBe(2)
+    expect(Outbox::query()->where('event', EventType::GrantCreated->value)->count())->toBe(2)
+        ->and(Outbox::query()->where('event', EventType::GrantRevoked->value)->count())->toBe(2)
         ->and(Outbox::query()->distinct()->count('event_id'))->toBe(4);
 });
 
@@ -142,7 +142,7 @@ it('never serializes a share secret — only the non-secret token_prefix travels
     $folder = AccessTestHelpers::folder($storage, null, 'safe');
     event(new NodeCreated(node: $folder, actorId: 7));
 
-    $payload = Outbox::query()->where('event', WebhookEvent::NodeCreated->value)->firstOrFail()->payload;
+    $payload = Outbox::query()->where('event', EventType::FolderCreated->value)->firstOrFail()->payload;
 
     expect(array_keys($payload))->not->toContain('signing_secret')
         ->and(array_keys($payload))->not->toContain('token_hash')

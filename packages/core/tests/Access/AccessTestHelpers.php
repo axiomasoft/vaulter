@@ -11,8 +11,8 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -26,7 +26,7 @@ final class AccessTestHelpers
     /**
      * A fresh storage (and its root node) for a unique host entity.
      */
-    public static function storage(): Storage
+    public static function storage(): Drive
     {
         return Vaulter::for(DriveTestHelpers::host())->storage();
     }
@@ -47,7 +47,7 @@ final class AccessTestHelpers
      * Create a folder node directly under a parent (or the storage root), bypassing
      * the Action so a test can shape an arbitrary tree without name-conflict noise.
      */
-    public static function folder(Storage $storage, ?Node $parent, string $name, bool $inheritGrants = true): Node
+    public static function folder(Drive $storage, ?Node $parent, string $name, bool $inheritGrants = true): Node
     {
         $model = config('vaulter.models.node');
 

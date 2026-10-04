@@ -15,7 +15,6 @@ use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionStoreRepository;
 use Vaulter\Documents\Support\DocumentContentHasher;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;

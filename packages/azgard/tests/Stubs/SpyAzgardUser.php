@@ -24,7 +24,7 @@ use Vaulter\Azgard\Contracts\AzgardBackedUser;
  * It implements AzGuard's full `HasPermissions` + `HasScopedRoles` contracts (0.2+);
  * only the three the adapter uses (`hasScopedPermission`, `hasPermissionIn`,
  * `isSuperAdmin`) carry behaviour — the rest are inert stubs. This substitutes ONLY the
- * leaf User (a host concern); the adapter and the Vaulter AzgardPermissionResolver above
+ * leaf User (a host concern); the adapter and the Vaulter AzgardPermissionDriver above
  * it are the real code.
  */
 final class SpyAzgardUser extends User implements AzgardBackedUser

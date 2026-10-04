@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 use UnitEnum;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
 use Vaulter\Filament\Support\PanelAccessScope;
@@ -87,7 +87,7 @@ final class ActivityResource extends Resource
             Section::make('Event')->schema([
                 TextEntry::make('verb')
                     ->badge()
-                    ->formatStateUsing(fn (ActivityVerb $state): string => $state->label()),
+                    ->formatStateUsing(fn (EventType $state): string => $state->label()),
                 TextEntry::make('created_at')->dateTime('d.m.Y H:i:s'),
                 TextEntry::make('storage_id')->label('Storage')->placeholder('—'),
             ])->columns(3),
@@ -118,7 +118,7 @@ final class ActivityResource extends Resource
             ->columns([
                 TextColumn::make('verb')
                     ->badge()
-                    ->formatStateUsing(fn (ActivityVerb $state): string => $state->label())
+                    ->formatStateUsing(fn (EventType $state): string => $state->label())
                     ->sortable(),
 
                 TextColumn::make('actor_type')
@@ -187,7 +187,7 @@ final class ActivityResource extends Resource
     {
         $options = [];
 
-        foreach (ActivityVerb::cases() as $verb) {
+        foreach (EventType::cases() as $verb) {
             $options[$verb->value] = $verb->label();
         }
 

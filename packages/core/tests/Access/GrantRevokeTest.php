@@ -7,7 +7,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -30,7 +30,7 @@ it('grants access through the action and dispatches NodeGrantCreated', function 
 
     $grant = app(GrantNodeAccessAction::class)->execute(
         node: $folder,
-        data: new GrantNodeAccessData(
+        data: new GrantNodeAccessInput(
             subject: Subject::ofModel($actor),
             level: GrantLevel::Writer,
             scope: GrantScope::Subtree,
@@ -50,8 +50,8 @@ it('is idempotent on the grant-unique key (re-grant updates, not duplicates)', f
 
     $action = app(GrantNodeAccessAction::class);
 
-    $action->execute($folder, new GrantNodeAccessData(subject: $subject, level: GrantLevel::Reader));
-    $action->execute($folder, new GrantNodeAccessData(subject: $subject, level: GrantLevel::Owner));
+    $action->execute($folder, new GrantNodeAccessInput(subject: $subject, level: GrantLevel::Reader));
+    $action->execute($folder, new GrantNodeAccessInput(subject: $subject, level: GrantLevel::Owner));
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->count())->toBe(1)
         ->and(NodeGrant::query()->where('node_id', $folder->id)->first()->level)->toBe(GrantLevel::Owner);
@@ -98,7 +98,7 @@ it('carries a time-boxed expiry onto the stored grant', function (): void {
 
     $grant = app(GrantNodeAccessAction::class)->execute(
         node: $folder,
-        data: new GrantNodeAccessData(
+        data: new GrantNodeAccessInput(
             subject: Subject::ofModel(AccessTestHelpers::user()),
             level: GrantLevel::Reader,
             effect: Effect::Allow,

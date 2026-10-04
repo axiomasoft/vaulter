@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Http\Requests;
 
 use Vaulter\Drive\Data\CreateDriveFolderData;
 use Vaulter\Http\Requests\VaulterFormRequest;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\DriveNameRules;
 
 /**
@@ -52,7 +52,7 @@ final class CreateFolderRequest extends VaulterFormRequest
      * Assemble the command once the controller has resolved the storage and the
      * destination parent node (null = storage root).
      */
-    public function toData(Storage $storage, ?Node $parent, int|string|null $actorId): CreateDriveFolderData
+    public function toData(Drive $storage, ?Node $parent, int|string|null $actorId): CreateDriveFolderData
     {
         return new CreateDriveFolderData(
             storage: $storage,

@@ -2,11 +2,7 @@
 
 declare(strict_types=1);
 use Illuminate\Http\Request;
-use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
 arch('all package code declares strict types')
     ->expect('Vaulter')
@@ -30,7 +26,7 @@ arch('the package never depends on the host application (E5.1)')
  * copy-pasted from the consuming app while building a feature) breaks installability
  * in a clean host that does not carry that class.
  *
- * `Console/MakePanelCommand.php` is a deliberate, allow-listed exception: it is a
+ * `Console/MakeProfileCommand.php` is a deliberate, allow-listed exception: it is a
  * scaffolding command (`make:vaulter-panel`) that EMITS the string `App\Vaulter\Panels`
  * as the target namespace for code it generates INTO the host application — the
  * package itself never imports or executes anything under `App\*`.
@@ -42,7 +38,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     // Scaffolding commands legitimately emit `App\*` as a STRING (the namespace of
     // generated host code), never as a real import/dependency of the package itself.
     $allowlist = [
-        'Console/MakePanelCommand.php',
+        'Console/MakeProfileCommand.php',
     ];
 
     /** @var Iterator<SplFileInfo> $files */
@@ -99,7 +95,7 @@ arch('internal namespaces are not consumed outside the Vaulter package tree (E3.
 
 /**
  * H.2 — the AccessResolver is Vaulter-OWNED and NOT swappable: it is a concrete
- * final class, never an interface/contract. Only the HostRoleDriver lane is
+ * final class, never an interface/contract. Only the PermissionDriver lane is
  * pluggable. (If someone made AccessResolver a contract, this fails.)
  */
 arch('the AccessResolver is a concrete, non-swappable class')
@@ -107,12 +103,12 @@ arch('the AccessResolver is a concrete, non-swappable class')
     ->not->toBeInterface();
 
 /**
- * H.2 — the HostRoleDriver contract is node-blind and identity-model-agnostic: it
- * must NEVER reference the Node model (it deals only in Subject/AclScope/Decision).
+ * H.2 — the PermissionDriver contract is node-blind and identity-model-agnostic: it
+ * must NEVER reference the Node model (it deals only in Subject/AccessScope/Decision).
  * A leak of Node into the contract breaks the swappable-driver boundary.
  */
-arch('the HostRoleDriver contract never references the Node model')
-    ->expect('Vaulter\Contracts\Access\HostRoleDriver')
+arch('the PermissionDriver contract never references the Node model')
+    ->expect('Vaulter\Contracts\Access\PermissionDriver')
     ->not->toUse(Node::class);
 
 /**
@@ -124,7 +120,7 @@ arch('host-role drivers are final')
     ->toBeClasses();
 
 /**
- * The ACL value objects are immutable (H.2 VOs: Subject/AclScope/Decision/GrantSet).
+ * The ACL value objects are immutable (H.2 VOs: Subject/AccessScope/Decision/GrantSet).
  */
 arch('access value objects are readonly')
     ->expect('Vaulter\Access\ValueObjects')
@@ -157,7 +153,7 @@ arch('the document handler registry and its handlers are final')
 arch('the core-owned handler engine and its baseline handlers are final (P0.4/D10)')
     ->expect('Vaulter\Engines')
     ->toBeFinal()
-    ->ignoring('Vaulter\Engines\Handlers\AbstractFileHandler');
+    ->ignoring('Vaulter\Handlers\AbstractFileHandler');
 
 arch('the FileHandler contract is an interface (H.5)')
     ->expect('Vaulter\Contracts\Handlers\FileHandler')
@@ -286,8 +282,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
         // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
-        // handler extensibility-seam VOs (FileDescriptor/HandlerCapabilities/HandlerUi/
-        // HandlerDescriptor) are kernel-shared — core's own Contracts\Handlers\*
+        // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
+        // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*
         // interfaces type against them — so they live at Vaulter\ValueObjects\Handlers\*,
         // not in the extracted documents package. TipTapContent/LinkSchemeValidator/
         // OpaqueDocumentContent moved to Vaulter\Documents\ValueObjects\* (VLT-CANON
@@ -339,8 +335,9 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     $nested = layersNestedUnderDomain(__DIR__.'/../../src');
 
     // The public error contract intentionally lives alongside its exception family.
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts'])))->toBe([])
-        ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php']);
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Enums/Events'])))->toBe([])
+        ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
+        ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php']);
 });
 
 /**
@@ -407,12 +404,12 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Events\Sharing\NodeShareCreated',
         'Vaulter\Drive\Exceptions\CycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
-        'Vaulter\Exceptions\Panels\UnknownPanelException',
+        'Vaulter\Exceptions\Profiles\UnknownProfileException',
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Contracts\Cas\BlobStore',
-        'Vaulter\Contracts\Access\HostRoleDriver',
+        'Vaulter\Contracts\Access\PermissionDriver',
         'Vaulter\Documents\ValueObjects\TipTapContent',
-        'Vaulter\Access\Abilities\NodeAbilities',
+        'Vaulter\Access\ValueObjects\NodeAbilities',
     ];
 
     $missing = array_values(array_filter(
@@ -547,7 +544,7 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
  * TipTapContent/LinkSchemeValidator/OpaqueDocumentContent/TiptapExtensions/
  * InvalidTipTapContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
  * isolation, core never knew their shape beyond the DocumentContent contract); the
- * HandlerRegistry/NodeHandlerResolver contracts + `Vaulter::registerHandler()` resolve
+ * FileHandlerRegistry/NodePresenter contracts + `Vaulter::handlers()->register()` resolve
  * the documents package's bindings without naming its classes; HostUserResolver
  * (default + binding) moved to that package entirely; the upload/comment/
  * document-version Config defaults inverted; the document/comment/collab routes + the
@@ -639,10 +636,10 @@ arch('domain exceptions implement the HTTP problem contract')
     ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
     ->ignoring([
         'Vaulter\Exceptions\VaulterException',
-        'Vaulter\Exceptions\Access\MissingHostRoleDriverException',
-        'Vaulter\Exceptions\Panels\InvalidPanelException',
+        'Vaulter\Exceptions\Access\MissingPermissionDriverException',
+        'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Support\MissingPackageException',
-        'Vaulter\Exceptions\Support\TenantIsolationNotConfiguredException',
+        'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
         'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',
     ]);

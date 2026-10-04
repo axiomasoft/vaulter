@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Activity;
 
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 
 /**
  * The resolved, ready-to-persist shape of ONE activity row (master plan §2.9 /
@@ -25,7 +25,7 @@ final readonly class RecordActivityCommand
      * @param array<string, mixed>|null $context
      */
     public function __construct(
-        public ActivityVerb $verb,
+        public EventType $verb,
         public int|string|null $tenantId = null,
         public int|string|null $storageId = null,
         public ?string $actorType = null,

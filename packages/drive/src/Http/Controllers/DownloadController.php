@@ -16,10 +16,10 @@ use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
-use Vaulter\Repositories\Drive\FileVersionReadRepository;
+use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -32,13 +32,13 @@ use Vaulter\Support\LoadTier;
  * revoked instantly, which D15 rules out as a supported mode.
  *
  * Thin — the node/storage arrive route-model resolved; the version + blob are
- * resolved through FileVersionReadRepository (bounded to the node's own file), so
+ * resolved through FileRevisionReadRepository (bounded to the node's own file), so
  * a version id from another file can never be streamed through this node.
  */
 final class DownloadController extends Controller
 {
     public function __construct(
-        private readonly FileVersionReadRepository $versions,
+        private readonly FileRevisionReadRepository $versions,
         private readonly StorageDriver $driver,
         private readonly AccessResolver $access,
         private readonly MetricsRecorder $metrics,
@@ -47,7 +47,7 @@ final class DownloadController extends Controller
     /**
      * Stream the node's current head version.
      */
-    public function current(Request $request, Storage $storage, Node $node): StreamedResponse
+    public function current(Request $request, Drive $storage, Node $node): StreamedResponse
     {
         $startedAt = hrtime(true);
 
@@ -63,7 +63,7 @@ final class DownloadController extends Controller
      */
     public function version(
         Request $request,
-        Storage $storage,
+        Drive $storage,
         Node $node,
         int|string $version,
     ): StreamedResponse {
@@ -96,12 +96,12 @@ final class DownloadController extends Controller
 
     private function stream(
         Node $node,
-        ?FileVersion $version,
-        Storage $storage,
+        ?FileRevision $version,
+        Drive $storage,
         string $source,
         int $startedAt,
     ): StreamedResponse {
-        if (!$version instanceof FileVersion) {
+        if (!$version instanceof FileRevision) {
             abort(404);
         }
 

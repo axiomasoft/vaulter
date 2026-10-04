@@ -736,7 +736,7 @@ room-JWT и привязывает вызов к его узлу (JWT для у�
 | Метод и путь | Действие | Параметры |
 |---|---|---|
 | `GET documents/{documentId}/permissions` | `index` | |
-| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (значение `PermissionLevel`) |
+| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (числовое разрешение legacy-документа) |
 | `DELETE documents/{documentId}/permissions/{permissionId}` | `destroy` | |
 
 ### Комментарии

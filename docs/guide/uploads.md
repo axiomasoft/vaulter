@@ -67,7 +67,7 @@ Initiated → Uploading → Assembled → Committed
 | `initiated` | The row exists; no bytes received yet (`received_bytes = 0`). |
 | `uploading` | At least one tus `PATCH` / S3 part has landed; `received_bytes` is the authoritative server-side offset. |
 | `assembled` | All bytes are present on the staged temp; ready to commit. |
-| `committed` | The assembled bytes went through `BlobStore.commitStaged`; the `File` + `FileVersion` + node were created and `assembled_blob_id` is set. **Terminal.** |
+| `committed` | The assembled bytes went through `BlobStore.commitStaged`; the `File` + `FileRevision` + node were created and `assembled_blob_id` is set. **Terminal.** |
 | `aborted`   | The client (or a `DELETE`) abandoned the session; staged temp + S3 multipart cleaned. **Terminal.** |
 | `expired`   | The sweeper reclaimed a stale session past its TTL. **Terminal.** |
 

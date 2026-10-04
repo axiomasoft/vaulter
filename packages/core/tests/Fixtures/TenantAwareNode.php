@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Fixtures;
 
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\TenantFootgunGuard;
 
 /**
  * A bare Node subclass — no behaviour change, no scope added. It exists ONLY to

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**
@@ -17,7 +17,7 @@ use Vaulter\Tests\Schema\ForceCreates;
  *           └── report (leaf)
  */
 beforeEach(function (): void {
-    $this->storage = ForceCreates::make(Storage::class, [
+    $this->storage = ForceCreates::make(Drive::class, [
         'owner_type' => 'team',
         'owner_id' => 1,
         'name' => 'Disk',
@@ -57,7 +57,7 @@ it('children даёт прямых потомков', function (): void {
 });
 
 it('scope treeOf ограничивает выборку одним хранилищем', function (): void {
-    $other = ForceCreates::make(Storage::class, [
+    $other = ForceCreates::make(Drive::class, [
         'owner_type' => 'team', 'owner_id' => 2, 'name' => 'Other',
     ]);
     ForceCreates::make(Node::class, [

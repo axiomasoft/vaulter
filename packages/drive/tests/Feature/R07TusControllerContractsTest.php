@@ -10,8 +10,8 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -20,12 +20,12 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));
 });
 
-function r07Storage(): Storage
+function r07Storage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
 
-function r07SessionId(Storage $storage, array $overrides = []): string
+function r07SessionId(Drive $storage, array $overrides = []): string
 {
     $create = test()->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'seed.bin',

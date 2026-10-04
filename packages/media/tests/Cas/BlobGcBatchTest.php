@@ -13,7 +13,7 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Support\Config;
 use Vaulter\Testing\FakeMetricsRecorder;
 
@@ -224,7 +224,7 @@ it('advances sparse string and native UUID keys with configured models', functio
             return 'r21_string_blobs';
         }
     };
-    $edgeModel = new class extends FileVersionBlob
+    $edgeModel = new class extends FileRevisionBlob
     {
         public function getTable(): string
         {

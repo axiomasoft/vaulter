@@ -13,10 +13,10 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Support\Uploads\MagicByteSniffer;
 use Vaulter\Drive\Support\Uploads\StagedUpload;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
 
 /**
  * Assemble→commit for a resumable upload (§2.8 / D16 / M3a / H.3). This is the ONE
@@ -41,7 +41,7 @@ final readonly class CommitUploadAction
     public function __construct(
         private UploadFileAction $uploadFile,
         private NodeReadRepository $nodes,
-        private StorageReadRepository $storages,
+        private DriveReadRepository $storages,
         private UploadSessionStoreRepository $sessions,
         private StagedUpload $staged,
         private MagicByteSniffer $sniffer,
@@ -158,11 +158,11 @@ final readonly class CommitUploadAction
      * via FK cascade — a missing one is a corrupt state, fail loud rather than
      * commit into the void).
      */
-    private function storageOf(UploadSession $session): Storage
+    private function storageOf(UploadSession $session): Drive
     {
         $storage = $this->storages->find($session->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             throw new RuntimeException(
                 "Cannot commit upload session [{$session->upload_id}]: its storage [{$session->storage_id}] is missing.",
             );

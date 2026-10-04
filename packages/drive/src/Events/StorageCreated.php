@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Events;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * A storage container was provisioned for a host entity, together with its
@@ -18,7 +18,7 @@ final readonly class StorageCreated implements ShouldDispatchAfterCommit
     public string $eventId;
 
     public function __construct(
-        public Storage $storage,
+        public Drive $storage,
         public Node $root,
         public int|string|null $actorId = null,
         ?string $eventId = null,

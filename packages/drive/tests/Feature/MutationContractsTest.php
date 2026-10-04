@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Enums\Activity\ActivityVerb;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
@@ -21,7 +20,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
     $storage = $drive->storage();
     $root = $storage->rootNode()->firstOrFail();
 
-    $storageOutbox = Outbox::query()->where('event', WebhookEvent::StorageCreated->value)->sole();
+    $storageOutbox = Outbox::query()->where('event', EventType::DriveCreated->value)->sole();
     $storagePayload = $storageOutbox->payload;
 
     expect($storageOutbox->panel)->toBe($storage->panel)
@@ -36,7 +35,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
         'name' => $storage->name,
     ]);
 
-    $storageActivity = Activity::query()->where('verb', ActivityVerb::StorageCreated->value)->sole();
+    $storageActivity = Activity::query()->where('verb', EventType::DriveCreated->value)->sole();
     expect($storageActivity->context)->toEqual([
         'storage_id' => (string) $storage->getKey(),
         'owner_type' => $storage->owner_type,
@@ -45,7 +44,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
     ]);
 
     $folder = $drive->createFolder('Contract folder', actorId: 17);
-    $created = Outbox::query()->where('event', WebhookEvent::NodeCreated->value)->orderByDesc('id')->firstOrFail();
+    $created = Outbox::query()->where('event', EventType::FolderCreated->value)->orderByDesc('id')->firstOrFail();
     $createdPayload = $created->payload;
     unset($createdPayload['event_id'], $createdPayload['actor_id']);
 
@@ -58,7 +57,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
             'name' => 'Contract folder',
         ]);
 
-    $createdActivity = Activity::query()->where('verb', ActivityVerb::NodeCreated->value)->orderByDesc('id')->firstOrFail();
+    $createdActivity = Activity::query()->where('verb', EventType::FolderCreated->value)->orderByDesc('id')->firstOrFail();
     expect($createdActivity->target_id)->toEqual($folder->getKey())
         ->and($createdActivity->context)->toEqual([
             'kind' => 'folder',
@@ -122,7 +121,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
     $node = $drive->createFolder('Old', $from);
 
     $drive->move($node, $to, actorId: 17);
-    $moved = Outbox::query()->where('event', WebhookEvent::NodeMoved->value)->sole();
+    $moved = Outbox::query()->where('event', EventType::NodeMoved->value)->sole();
     $movePayload = $moved->payload;
     unset($movePayload['event_id'], $movePayload['actor_id']);
     expect($movePayload)->toEqual([
@@ -131,13 +130,13 @@ it('preserves move, rename and copy payloads and activity context', function ():
         'from_parent_id' => (string) $from->getKey(),
         'to_parent_id' => (string) $to->getKey(),
     ]);
-    expect(Activity::query()->where('verb', ActivityVerb::NodeMoved->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::NodeMoved->value)->sole()->context)->toEqual([
         'from_parent_id' => (string) $from->getKey(),
         'to_parent_id' => (string) $to->getKey(),
     ]);
 
     $drive->rename($node->refresh(), 'New', actorId: 17);
-    $renamed = Outbox::query()->where('event', WebhookEvent::NodeRenamed->value)->sole();
+    $renamed = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
     $renamePayload = $renamed->payload;
     unset($renamePayload['event_id'], $renamePayload['actor_id']);
     expect($renamePayload)->toEqual([
@@ -146,13 +145,13 @@ it('preserves move, rename and copy payloads and activity context', function ():
         'from' => 'Old',
         'to' => 'New',
     ]);
-    expect(Activity::query()->where('verb', ActivityVerb::NodeRenamed->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->sole()->context)->toEqual([
         'from' => 'Old',
         'to' => 'New',
     ]);
 
     $copy = $drive->copy($node->refresh(), $from, name: 'Copied', actorId: 17);
-    $copied = Outbox::query()->where('event', WebhookEvent::NodeCopied->value)->sole();
+    $copied = Outbox::query()->where('event', EventType::NodeCopied->value)->sole();
     $copyPayload = $copied->payload;
     unset($copyPayload['event_id'], $copyPayload['actor_id']);
     expect($copied->topic)->toBe((string) $copy->getKey())
@@ -162,7 +161,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
             'source_id' => (string) $node->getKey(),
             'name' => 'Copied',
         ]);
-    expect(Activity::query()->where('verb', ActivityVerb::NodeCopied->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::NodeCopied->value)->sole()->context)->toEqual([
         'source_id' => (string) $node->getKey(),
         'name' => 'Copied',
     ]);
@@ -178,7 +177,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
     );
     $firstVersion = $node->currentVersion()->firstOrFail();
 
-    $uploaded = Outbox::query()->where('event', WebhookEvent::FileUploaded->value)->sole();
+    $uploaded = Outbox::query()->where('event', EventType::FileUploaded->value)->sole();
     $uploadPayload = $uploaded->payload;
     unset($uploadPayload['event_id'], $uploadPayload['actor_id']);
     expect($uploadPayload)->toEqual([
@@ -189,7 +188,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
         'size_bytes' => 11,
         'mime_type' => 'text/plain',
     ]);
-    expect(Activity::query()->where('verb', ActivityVerb::FileUploaded->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::FileUploaded->value)->sole()->context)->toEqual([
         'name' => 'report.txt',
         'size_bytes' => 11,
         'mime_type' => 'text/plain',
@@ -198,7 +197,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
 
     $drive->uploadVersion($node->refresh(), DriveTestHelpers::streamFor('second version'), actorId: 17);
     $secondVersion = $node->refresh()->currentVersion()->firstOrFail();
-    $versioned = Outbox::query()->where('event', WebhookEvent::VersionCreated->value)->sole();
+    $versioned = Outbox::query()->where('event', EventType::FileRevisionAdded->value)->sole();
     $versionPayload = $versioned->payload;
     unset($versionPayload['event_id'], $versionPayload['actor_id']);
 
@@ -209,7 +208,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
         'version_no' => 2,
         'size_bytes' => 14,
     ]);
-    expect(Activity::query()->where('verb', ActivityVerb::VersionCreated->value)->sole()->context)->toEqual([
+    expect(Activity::query()->where('verb', EventType::FileRevisionAdded->value)->sole()->context)->toEqual([
         'version_no' => 2,
         'version_id' => (string) $secondVersion->getKey(),
         'size_bytes' => 14,
@@ -222,7 +221,7 @@ it('preserves trash and restore payloads including actor and destination', funct
     $node = $drive->createFolder('Child', $parent);
 
     $drive->trash($node, actorId: 17);
-    $trashed = Outbox::query()->where('event', WebhookEvent::NodeTrashed->value)->sole();
+    $trashed = Outbox::query()->where('event', EventType::NodeTrashed->value)->sole();
     expect($trashed->panel)->toBe($node->panel)
         ->and($trashed->topic)->toBe((string) $node->getKey())
         ->and($trashed->payload)->toEqual([
@@ -232,13 +231,13 @@ it('preserves trash and restore payloads including actor and destination', funct
             'storage_id' => (string) $node->storage_id,
             'name' => 'Child',
         ]);
-    $activity = Activity::query()->where('verb', ActivityVerb::NodeTrashed->value)->sole();
+    $activity = Activity::query()->where('verb', EventType::NodeTrashed->value)->sole();
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->target_id)->toEqual($node->getKey())
         ->and($activity->context)->toEqual(['name' => 'Child']);
 
     $drive->restore($node->refresh(), actorId: 17);
-    $restored = Outbox::query()->where('event', WebhookEvent::NodeRestored->value)->sole();
+    $restored = Outbox::query()->where('event', EventType::NodeRestored->value)->sole();
     expect($restored->panel)->toBe($node->panel)
         ->and($restored->topic)->toBe((string) $node->getKey())
         ->and($restored->payload)->toEqual([
@@ -249,7 +248,7 @@ it('preserves trash and restore payloads including actor and destination', funct
             'parent_id' => (string) $parent->getKey(),
             'name' => 'Child',
         ]);
-    $activity = Activity::query()->where('verb', ActivityVerb::NodeRestored->value)->sole();
+    $activity = Activity::query()->where('verb', EventType::NodeRestored->value)->sole();
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->target_id)->toEqual($node->getKey())
         ->and($activity->context)->toEqual([
@@ -268,7 +267,7 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
 
     $drive->forceDelete($folder, actorId: 17);
 
-    $outbox = Outbox::query()->where('event', WebhookEvent::NodeForceDeleted->value)->sole();
+    $outbox = Outbox::query()->where('event', EventType::NodePurged->value)->sole();
     $payload = $outbox->payload;
     expect($payload['node_ids'])->toEqualCanonicalizing($ids);
     unset($payload['node_ids']);
@@ -280,7 +279,7 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
             'storage_id' => (string) $drive->storage()->getKey(),
             'freed_bytes' => 5,
         ]);
-    $activity = Activity::query()->where('verb', ActivityVerb::NodeForceDeleted->value)->sole();
+    $activity = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->storage_id)->toEqual($drive->storage()->getKey())
         ->and($activity->context['node_ids'])->toEqualCanonicalizing($ids)

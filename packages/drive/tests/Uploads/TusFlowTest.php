@@ -17,7 +17,7 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
@@ -79,7 +79,7 @@ it('PATCH-чанки → HEAD-offset растёт → assemble → commit соз
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->name)->toBe('hello.txt')
         ->and($node->size_bytes)->toBe(27)
-        ->and(FileVersion::query()->count())->toBe(1)
+        ->and(FileRevision::query()->count())->toBe(1)
         ->and(Blob::query()->count())->toBe(1)
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed)
         ->and($session->refresh()->assembled_blob_id)->not->toBeNull();
@@ -159,7 +159,7 @@ it('дедуп: идентичная резюмируемая загрузка �
     config()->set('vaulter.dedup.scope', 'global');
 
     expect(Node::query()->where('kind', NodeKind::File->value)->count())->toBe(2)
-        ->and(FileVersion::query()->count())->toBe(2);
+        ->and(FileRevision::query()->count())->toBe(2);
 });
 
 it('лживый client sha256 игнорируется — адрес считается с собранных байт', function (): void {

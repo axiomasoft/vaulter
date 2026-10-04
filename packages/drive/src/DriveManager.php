@@ -16,7 +16,7 @@ use Vaulter\Drive\Actions\RenameNodeAction;
 use Vaulter\Drive\Actions\RestoreNodeAction;
 use Vaulter\Drive\Actions\TrashNodeAction;
 use Vaulter\Drive\Actions\UploadFileAction;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -39,7 +39,7 @@ final readonly class DriveManager implements DriveHandleFactory
         return $this->forStorage($storage);
     }
 
-    public function forStorage(Storage $storage): DriveHandle
+    public function forStorage(Drive $storage): DriveHandle
     {
         return new DriveContext(
             storage: $storage,

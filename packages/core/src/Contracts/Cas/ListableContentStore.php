@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
-use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
-
 /**
  * A capability a {@see ContentStore} implements to declare it can ENUMERATE stored
  * objects and report their age (master plan P4 #11 / H.3) — the consumer seam the

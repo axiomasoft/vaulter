@@ -282,7 +282,7 @@ await createNamedVersion('Before edit', true)  // snapshot, keep forever
 | `content` | `ShallowRef<TipTapDocument \| null>` | the working content |
 | `head` | `ShallowRef<DocumentVersion \| null>` | the current-head version |
 | `versions` | `ShallowRef<DocumentVersion[]>` | loaded named/auto versions |
-| `handler` | `ShallowRef<HandlerDescriptor \| null>` | the resolved document handler |
+| `handler` | `ShallowRef<NodePresentation \| null>` | the resolved document handler |
 | `saving` | `Ref<boolean>` | true while a save is in flight |
 | `setContent(content, options?)` | `void` | set working content + schedule a debounced autosave |
 | `flush()` | `Promise<DocumentVersion \| null>` | force-flush a pending autosave (null when nothing pending) |

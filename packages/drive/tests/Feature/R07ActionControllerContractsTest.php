@@ -6,11 +6,10 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Enums\Activity\ActivityVerb;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -59,7 +58,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));
 });
 
-function r07ActionStorage(): Storage
+function r07ActionStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -94,7 +93,7 @@ it('stores null mime when the upload source provides no declared type', function
 
     expect($node->mime_type)->toBeNull();
 
-    $activity = Activity::query()->where('verb', ActivityVerb::FileUploaded->value)->sole();
+    $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
 
     expect($activity->context['mime_type'])->toBeNull()
         ->and($activity->context['size_bytes'])->toBe(5);
@@ -168,13 +167,13 @@ it('rename to the same name emits no rename activity or outbox row', function ()
 
     $drive->rename($folder, 'Stable', actorId: 17);
 
-    expect(Activity::query()->where('verb', ActivityVerb::NodeRenamed->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', WebhookEvent::NodeRenamed->value)->count())->toBe(0);
+    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(0)
+        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(0);
 
     $drive->rename($folder, 'Renamed', actorId: 17);
 
-    expect(Activity::query()->where('verb', ActivityVerb::NodeRenamed->value)->count())->toBe(1)
-        ->and(Outbox::query()->where('event', WebhookEvent::NodeRenamed->value)->count())->toBe(1);
+    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(1)
+        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(1);
 });
 
 it('clamps per_page to 1 at the lower bound and 200 at the upper bound', function (): void {

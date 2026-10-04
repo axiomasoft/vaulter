@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Engines\DocumentHandlerRegistry;
-use Vaulter\Engines\Handlers\DownloadOnlyHandler;
-use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Enums\Handlers\Capability;
+use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Handlers\Builtin\PreviewHandler;
+use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /*
@@ -28,11 +28,11 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
 it('resolves the preview baseline even when a stale published config empties vaulter.handlers, P0.4/D10', function (): void {
     // Exactly what a pre-P0.4 published config/vaulter.php carries.
     config()->set('vaulter.handlers', []);
-    app()->forgetInstance(DocumentHandlerRegistry::class);
+    app()->forgetInstance(FileHandlerRegistry::class);
 
     $pdf = FileDescriptor::make(nodeId: 1, filename: 'scan.pdf', detectedMime: 'application/pdf');
 
-    $handler = app(DocumentHandlerRegistry::class)->resolve($pdf, Capability::Preview);
+    $handler = app(FileHandlerRegistry::class)->resolve($pdf, Capability::Preview);
 
     expect($handler)->toBeInstanceOf(PreviewHandler::class)
         ->and($handler->capabilities($pdf)->previewable)->toBeTrue();
@@ -40,11 +40,11 @@ it('resolves the preview baseline even when a stale published config empties vau
 
 it('still falls back to DownloadOnly for an unhandled type under a stale config, P0.4/D10', function (): void {
     config()->set('vaulter.handlers', []);
-    app()->forgetInstance(DocumentHandlerRegistry::class);
+    app()->forgetInstance(FileHandlerRegistry::class);
 
     $zip = FileDescriptor::make(nodeId: 1, filename: 'bundle.zip', detectedMime: 'application/zip');
 
-    expect(app(DocumentHandlerRegistry::class)->resolve($zip, Capability::Download))
+    expect(app(FileHandlerRegistry::class)->resolve($zip, Capability::Download))
         ->toBeInstanceOf(DownloadOnlyHandler::class);
 });
 
@@ -53,10 +53,10 @@ it('lists each baseline handler exactly ONCE — the tag and the config default 
     // stock install must not resolve two PreviewHandler instances (which would make the
     // priority sort order-dependent and the introspection surface lie).
     $ids = array_map(
-        static fn (object $handler): string => $handler->id(),
-        app(DocumentHandlerRegistry::class)->all(),
+        static fn (object $handler): string => $handler->key(),
+        app(FileHandlerRegistry::class)->all(),
     );
 
-    expect(array_count_values($ids)['preview'])->toBe(1)
-        ->and(array_count_values($ids)['download'])->toBe(1);
+    expect(array_count_values($ids)['vaulter/preview'])->toBe(1)
+        ->and(array_count_values($ids)['vaulter/download'])->toBe(1);
 });

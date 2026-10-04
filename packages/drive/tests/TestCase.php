@@ -51,7 +51,7 @@ abstract class TestCase extends OrchestraTestCase
         // 'api' group definition; authorization is exercised via the resolver.
         $app['config']->set('vaulter.middleware', []);
 
-        // The Drive suite runs OPEN under the env-gated NullRoleDriver (non-prod
+        // The Drive suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // file/folder/upload mechanics without an access-control lane.
         $app['config']->set('vaulter.drivers.permission', 'null');

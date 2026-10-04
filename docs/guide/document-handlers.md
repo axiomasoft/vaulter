@@ -9,7 +9,7 @@ outline: deep
 Document handlers are Vaulter's **format-extensibility** layer. A handler claims a set of
 mime types and/or extensions, declares what it can do with a file (edit / preview / download
 / thumbnail / collaborate), and returns the front-end mount descriptor — which Vue component
-the client opens the node in. The `Vaulter\Engines\DocumentHandlerRegistry` resolves the best
+the client opens the node in. The `Vaulter\Handlers\FileHandlerRegistry` resolves the best
 handler for a file, and the client routes the node to that surface **without hard-coding mime
 logic**. The registry and its baseline handlers (`PreviewHandler`/`DownloadOnlyHandler`) are
 core-owned — a drive-only host with no other package installed still resolves preview/download
@@ -35,13 +35,13 @@ A handler implements `Vaulter\Contracts\Handlers\FileHandler`:
 namespace Vaulter\Contracts\Handlers;
 
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 interface FileHandler
 {
     /** A stable, unique id surfaced to the client (e.g. 'tiptap', 'preview', 'download'). */
-    public function id(): string;
+    public function key(): string;
 
     /** Claimed mime types — exact ("application/pdf"), wildcard ("image/*") or "*". @return list<string> */
     public function mimeTypes(): array;
@@ -53,21 +53,21 @@ interface FileHandler
     public function priority(): int;
 
     /** What this handler can do with THIS file (computed per file). */
-    public function capabilities(FileDescriptor $file): HandlerCapabilities;
+    public function capabilities(FileDescriptor $file): ContentCapabilities;
 
-    /** The front-end mount descriptor — component + route + props the client mounts. */
-    public function ui(FileDescriptor $file): HandlerUi;
+    /** The front-end mount descriptor — viewer key + props the client mounts. */
+    public function viewer(FileDescriptor $file): ViewerDescriptor;
 }
 ```
 
 ### Capabilities
 
-`Vaulter\ValueObjects\Handlers\HandlerCapabilities` is what a handler advertises per file.
+`Vaulter\ValueObjects\Handlers\ContentCapabilities` is what a handler advertises per file.
 `downloadable` defaults to `true` (anything can be downloaded as bytes); the richer flags are
 opt-in:
 
 ```php
-new HandlerCapabilities(
+new ContentCapabilities(
     editable:      false,
     previewable:   false,
     downloadable:  true,   // default
@@ -89,21 +89,20 @@ advertises that a preview exists.
 
 ### The front-end mount descriptor
 
-`Vaulter\ValueObjects\Handlers\HandlerUi` tells the client which Vue component to mount, the
-route to open the node through, and any extra serialisable props:
+`Vaulter\ValueObjects\Handlers\ViewerDescriptor` tells the client which Vue component to mount, the
+stable viewer key and any extra serialisable props:
 
 ```php
-new HandlerUi(
-    component: 'VaulterDocEditor',     // the Vue component the client mounts
-    route:     'documents.show',       // the route it opens the node through (or null)
+new ViewerDescriptor(
+    key: 'vaulter/tiptap',     // the Vue component the client mounts
     props:     ['format' => 'richtext'], // arbitrary serialisable props
 );
 ```
 
-This is embedded in the node payload (as a `HandlerDescriptor` — `id` + `capabilities` + `ui`)
+This is embedded in the node payload (as a `NodePresentation` — `id` + `capabilities` + `ui`)
 so the Vue client routes the node without re-running mime logic. The
 [`VaulterDocumentNode`](#mounting-the-resolved-handler-in-vue) component maps the descriptor's
-`ui.component` to a concrete editor.
+`ui.key` to a concrete editor.
 
 ### The file descriptor
 
@@ -121,7 +120,7 @@ force an editable/preview handler onto hostile bytes.
 
 `Vaulter\Enums\Documents\DocumentType` is the built-in **sugar** over the registry — a small
 set of rich-text formats with a label, icon and the TipTap extension list a `TipTapHandler`
-surfaces as a `ui.props.extensions` prop. It is **not** a gate: the registry routes by
+surfaces as a `viewer.props.extensions` prop. It is **not** a gate: the registry routes by
 mime/extension strings, and a host adds new formats with a [handler](#adding-a-new-format-a-worked-example),
 not by extending this enum.
 
@@ -137,7 +136,7 @@ node](./documents.md#creating-a-document-node) (default `richtext`).
 
 ## Resolution algorithm
 
-`Vaulter\Engines\DocumentHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
+`Vaulter\Handlers\FileHandlerRegistry::resolve(FileDescriptor $file, Capability $cap)`
 returns the best handler and **never returns null**. The order is:
 
 1. **Mime-first** — collect handlers claiming the canonical (sniffed) mime: an exact match
@@ -161,27 +160,27 @@ The default set is registered from config (`config('vaulter.handlers')`):
 ```php
 // config/vaulter.php
 'handlers' => [
-    Vaulter\Documents\Handlers\TipTapHandler::class,
-    Vaulter\Documents\Handlers\PreviewHandler::class,
-    Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
+    Vaulter\Handlers\Builtin\PreviewHandler::class,
+    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
-| Handler | `id` | Claims | Capabilities | UI component | Priority |
+| Handler | `key` | Claims | Capabilities | Viewer key | Priority |
 |---|---|---|---|---|---|
-| `TipTapHandler` | `tiptap` | `application/vnd.vaulter.document+json`, `text/markdown`, docx/msword; ext `md`, `markdown`, `doc`, `docx`, `vdoc` | edit · preview · **collaborate** | `VaulterDocEditor` | 100 |
-| `PreviewHandler` | `preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `VaulterPreview` | 80 |
-| `DownloadOnlyHandler` | `download` | `*` (catch-all) | download | `VaulterDownload` | −1000 |
+| `TipTapHandler` | `vaulter/tiptap` | `application/vnd.vaulter.document+json`, `text/markdown`, docx/msword; ext `md`, `markdown`, `doc`, `docx`, `vdoc` | edit · preview · **collaborate** | `vaulter/tiptap` | 100 |
+| `PreviewHandler` | `vaulter/preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `vaulter/pdf-preview` | 80 |
+| `DownloadOnlyHandler` | `vaulter/download` | `*` (catch-all) | download | `vaulter/download` | −1000 |
 
 A document node created via `CreateDocumentNodeAction` is stamped with the Vaulter document
 mime (`application/vnd.vaulter.document+json`), so it always routes to `TipTapHandler`
 regardless of any extension in its name.
 
 ::: details UniverHandler — the feature-flagged spreadsheet handler
-`Vaulter\Documents\Handlers\UniverHandler` (`id: univer`, claims xlsx/xls, priority 90,
+`Vaulter\Documents\Engines\Handlers\UniverHandler` (`key: vaulter/univer`, claims xlsx/xls, priority 90,
 editable + previewable but **single-user** — Univer collaboration is a separate OT engine, not
 the Yjs lane) is **not** in the default config list. The service provider adds it to the tagged
-`vaulter.handlers` set **only** when the `spreadsheets` feature is on:
+`vaulter.file_handlers` set **only** when the `spreadsheets` feature is on:
 
 ```php
 // config/vaulter.php
@@ -213,19 +212,19 @@ The handler descriptor is exposed per node, so the client knows which surface to
 ```bash [HTTP]
 # GET {prefix}/nodes/{node}/handler
 curl https://app.test/api/vaulter/nodes/77/handler
-# → { "data": { "id": "tiptap",
+# → { "data": { "id": "vaulter/tiptap",
 #               "capabilities": { "editable": true, "previewable": true,
 #                                 "downloadable": true, "thumbnailable": false,
 #                                 "collaborative": true },
-#               "ui": { "component": "VaulterDocEditor", "route": "documents.show",
+#               "ui": { "key": "vaulter/tiptap",
 #                       "props": { "format": "richtext", "extensions": [...] } } } }
 ```
 
 ```php [PHP — the resolver]
-use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodePresenter;
 
-$descriptor = app(NodeHandlerResolver::class)->describe($node);
-// HandlerDescriptor: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)
+$descriptor = app(NodePresenter::class)->present($node);
+// NodePresentation: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)
 ```
 
 ```ts [Vue — composable]
@@ -238,7 +237,7 @@ await loadHandler()
 
 :::
 
-`NodeHandlerResolver` builds the `FileDescriptor` from the node (server-trusted mime) and asks
+`NodePresenter` builds the `FileDescriptor` from the node (server-trusted mime) and asks
 the registry at the **broadest** capability (`Download` — every handler satisfies it), so the
 **most specific** matching handler wins; the descriptor then reports that handler's full
 capability set for the client to branch on.
@@ -259,14 +258,14 @@ namespace App\Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 final class CsvHandler implements FileHandler
 {
-    public function id(): string
+    public function key(): string
     {
-        return 'csv';
+        return 'acme/csv';
     }
 
     /** @return list<string> */
@@ -287,9 +286,9 @@ final class CsvHandler implements FileHandler
         return 70;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable:      false,
             previewable:   true,   // render a read-only table preview
             downloadable:  true,
@@ -298,11 +297,10 @@ final class CsvHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(
-            component: 'AppCsvPreview',   // your Vue component
-            route:     'nodes.download',  // open via the binary download route
+        return new ViewerDescriptor(
+            key: 'acme/csv-preview',   // your Vue component
             props:     ['delimiter' => ','],
         );
     }
@@ -323,24 +321,24 @@ once, so registering in two places is safe):
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
-    Vaulter\Documents\Handlers\TipTapHandler::class,
-    Vaulter\Documents\Handlers\PreviewHandler::class,
+    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
+    Vaulter\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]
-    Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
-```php [runtime — Vaulter::registerHandler]
+```php [runtime — Vaulter::handlers()->register]
 // In a service provider's boot() — FQCN or an instance
 use Vaulter\Facades\Vaulter;
 use App\Vaulter\Handlers\CsvHandler;
 
-Vaulter::registerHandler(CsvHandler::class);
+Vaulter::handlers()->register(CsvHandler::class);
 ```
 
 ```php [tagged container binding]
 // In a service provider's register() — the conditional/host extension channel
-$this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.handlers');
+$this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers');
 ```
 
 :::
@@ -348,7 +346,7 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.handlers');
 ::: tip Which channel?
 - **config** is cache-safe (FQCN only, survives `config:cache`) — the default for a static
   handler.
-- **`Vaulter::registerHandler()`** is the runtime seam — register conditionally at boot;
+- **`Vaulter::handlers()->register()`** is the runtime seam — register conditionally at boot;
   re-priming the merged set + clearing the cache keeps a later resolve correct.
 - **tagged binding** is what the package itself uses for the conditional `UniverHandler`.
 :::
@@ -357,7 +355,7 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.handlers');
 
 Now any node whose sniffed mime is `text/csv` (or whose name ends `.csv`) resolves to your
 handler. `GET /nodes/{node}/handler` returns `id: "csv"` with your capabilities and
-`ui.component: "AppCsvPreview"`, and the client mounts your component. No migration ran, no
+`ui.key: "acme/csv-preview"`, and the client mounts your component. No migration ran, no
 core file changed.
 
 ::: details Listing all registered handlers
@@ -369,7 +367,7 @@ is included as the terminal entry.
 ## Mounting the resolved handler in Vue
 
 `VaulterDocumentNode` is the bridge from a handler descriptor to a concrete editor/preview. It
-loads the handler + head content, then mounts the component the descriptor's `ui.component`
+loads the handler + head content, then mounts the component the descriptor's `ui.key`
 maps to. Two mapping sources exist, checked in order:
 
 1. the `componentMap` prop — scoped to one `VaulterDocumentNode` mount point;
@@ -385,10 +383,10 @@ import { VaulterDocumentNode } from '@vaulter/vue'
 import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
 import AppCsvPreview from './AppCsvPreview.vue'
 
-// Map a handler's `ui.component` (or its `id`) to the component to mount.
+// Map a handler's `ui.key` (or its `id`) to the component to mount.
 const componentMap = {
-  VaulterEditor: AppTipTapEditor,   // the TipTap handler's ui.component
-  AppCsvPreview,                    // our CSV handler's ui.component
+  'vaulter/tiptap': AppTipTapEditor,   // the TipTap handler's ui.key
+  'acme/csv-preview': AppCsvPreview,                    // our CSV handler's ui.key
 }
 </script>
 
@@ -420,9 +418,9 @@ Every `VaulterDocumentNode` on the page now resolves these without a local `comp
 currently registered (mostly for diagnostics/tests). The registry lookup is **not reactive**:
 register before mounting the app (or at least before mounting the `VaulterDocumentNode` that
 needs the entry) — an already-mounted node does not re-resolve just because a later
-`registerEngineComponent` call added its `ui.component` key.
+`registerEngineComponent` call added its `ui.key` key.
 
-In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.component`/`id`
+In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.key`/`id`
 (not repeated for the same key WITHIN ONE component instance) naming both registration
 channels — the same gap Nova's string-key `Nova.booting` binding leaves silent.
 
@@ -433,10 +431,10 @@ otherwise it uses the autosave path described in [Document nodes](./documents.md
 ## Reference
 
 - Contract — `Vaulter\Contracts\Handlers\FileHandler`
-- Registry — `Vaulter\Engines\DocumentHandlerRegistry` (`resolve`, `register`, `all`) — core-owned
-- Resolver — `Vaulter\Engines\NodeHandlerResolver` (per-node descriptor) — core-owned
-- Manager seam — `Vaulter\VaulterManager::registerHandler()` / `::handlers()`
-- VOs — `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`, `FileDescriptor`
+- Registry — `Vaulter\Handlers\FileHandlerRegistry` (`resolve`, `register`, `all`) — core-owned
+- Resolver — `Vaulter\Handlers\NodePresenter` (per-node descriptor) — core-owned
+- Manager seam — `Vaulter\VaulterManager::handlers()->register()` / `::handlers()`
+- VOs — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
 - Built-ins — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`
 - Frontend registry (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,

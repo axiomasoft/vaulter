@@ -43,7 +43,7 @@ enum NodeKind: string
 
     /**
      * Whether this is a Documents document leaf (payload in v_node_document_versions).
-     * Built-in sugar over the kind discriminator — the DocumentHandlerRegistry, not
+     * Built-in sugar over the kind discriminator — the FileHandlerRegistry, not
      * this enum, decides what a node can actually do (H.5).
      */
     public function isDocument(): bool

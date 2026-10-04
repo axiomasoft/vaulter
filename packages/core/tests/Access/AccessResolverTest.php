@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
@@ -42,7 +42,7 @@ function useRoleDriver(RoleStubDriver $driver): void
     app()->instance(RoleStubDriver::class, $driver);
     config()->set('vaulter.permission_drivers.stub', RoleStubDriver::class);
     config()->set('vaulter.drivers.permission', 'stub');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
 

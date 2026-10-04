@@ -5,19 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentNodeException;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Engines\DocumentFileDescriptorFactory;
-use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Enums\Handlers\Capability;
-use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
+use Vaulter\Handlers\FileDescriptorFactory;
+use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\LoadTier;
 use Vaulter\VaulterManager;
@@ -46,9 +42,9 @@ final class NodeExportService
 {
     public function __construct(
         private readonly NodeDocumentVersionReadRepository $versions,
-        private readonly DocumentHandlerRegistry $handlers,
+        private readonly FileHandlerRegistry $handlers,
         private readonly VaulterManager $manager,
-        private readonly DocumentFileDescriptorFactory $descriptors,
+        private readonly FileDescriptorFactory $descriptors,
         private readonly ExportFilenameResolver $filenames,
         private readonly MetricsRecorder $metrics,
     ) {}

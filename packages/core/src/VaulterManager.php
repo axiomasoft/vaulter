@@ -10,20 +10,16 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Handlers\HandlerRegistry;
-use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Exceptions\Support\MissingPackageException;
-use Vaulter\Models\Drive\Storage;
-use Vaulter\Panels\Panel;
-use Vaulter\Panels\PanelRegistry;
-use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Support\Config;
 
 /**
- * Public entry point for host-app integration: open Drive handles, register storage
- * panels, extend the document-type/handler/exporter registries.
+ * Public entry point for host-app integration: open Drive handles, register drive
+ * profiles, extend the document-type/handler/exporter registries.
  */
 final class VaulterManager
 {
@@ -58,12 +54,12 @@ final class VaulterManager
 
     /**
      * Open a Drive handle bound to an already-resolved storage row. This is the
-     * seam the HTTP layer uses: a route-model-bound Storage (resolved through the
+     * seam the HTTP layer uses: a route-model-bound Drive (resolved through the
      * swappable config('vaulter.models.storage')) maps straight to a DriveHandle
      * without re-deriving the owner. The handle's panel mirrors the storage's own
      * panel so its Actions run inside the right panel scope.
      */
-    public function forStorage(Storage $storage): DriveHandle
+    public function forStorage(Drive $storage): DriveHandle
     {
         return $this->driveFactory()->forStorage($storage);
     }
@@ -85,8 +81,8 @@ final class VaulterManager
      * Resolve a cross-package seam contract, translating the container's generic
      * {@see BindingResolutionException} ("Target [...] is not instantiable.") into
      * a Vaulter-branded exception naming the composer package to install
-     * (F-P3.3-02 / F-P3.5-01) — the docblocks of {@see HandlerRegistry} and
-     * {@see NodeHandlerResolver} already claimed a
+     * (F-P3.3-02 / F-P3.5-01) — the docblocks of {@see FileHandlerRegistry} and
+     * {@see NodePresenter} already claimed a
      * "fails loudly with an install hint", which this method now actually is.
      *
      * @param class-string $contract
@@ -104,39 +100,11 @@ final class VaulterManager
     }
 
     /**
-     * Resolve a storage panel by id (default 'default'). Any future per-panel
-     * resolved state (drivers, exporters) must be keyed BY this panel id, never
-     * a single shared memoization (H.1) — so the registry is the single source
-     * keyed by panel id.
+     * The container-singleton profile registry (one Profile per id).
      */
-    public function panel(string $name = 'default'): Panel
+    public function profiles(): ProfileRegistry
     {
-        return $this->panels()->get($name);
-    }
-
-    /**
-     * The container-singleton panel registry (one Panel per id).
-     */
-    public function panels(): PanelRegistry
-    {
-        return $this->container->make(PanelRegistry::class);
-    }
-
-    /**
-     * Register a storage panel at runtime, by provider or by an already-built
-     * Panel. The registry validates it (H.1) and keys it by its id.
-     */
-    public function registerPanel(StoragePanelProvider|Panel $panel): void
-    {
-        $registry = $this->panels();
-
-        if ($panel instanceof StoragePanelProvider) {
-            $registry->registerProvider($panel);
-
-            return;
-        }
-
-        $registry->register($panel);
+        return $this->container->make(ProfileRegistry::class);
     }
 
     /**
@@ -158,20 +126,6 @@ final class VaulterManager
     }
 
     /**
-     * Register a custom document handler at runtime — the format-extensibility seam
-     * (§4.5 / H.5). Thin delegation to the container-bound {@see HandlerRegistry}
-     * (the single source of truth, `Vaulter\Engines\DocumentHandlerRegistry` —
-     * core-owned since P0.4/D10); accepts an FQCN or an instance. A NEW format is a
-     * one-class + this call — no migration, no core change, no package required.
-     *
-     * @param FileHandler|class-string<FileHandler> $handler
-     */
-    public function registerHandler(FileHandler|string $handler): void
-    {
-        $this->handlers()->register($handler);
-    }
-
-    /**
      * The container-bound handler registry (§4.5). The single source of truth for
      * format resolution — kept here as a thin accessor so callers reach it through
      * the facade without inflating the manager. The engine is core-owned (P0.4/D10,
@@ -179,14 +133,14 @@ final class VaulterManager
      * installed (a drive-only host still gets preview/download resolution; TipTap and
      * other rich formats are additional handlers a package/host tags in).
      */
-    public function handlers(): HandlerRegistry
+    public function handlers(): FileHandlerRegistry
     {
-        return $this->container->make(HandlerRegistry::class);
+        return $this->container->make(FileHandlerRegistry::class);
     }
 
     /**
      * Register a custom export format at runtime — symmetric to
-     * {@see registerHandler()} (F-P3.3-01): an FQCN is resolved through the
+     * {@see handlers()} (F-P3.3-01): an FQCN is resolved through the
      * container, exactly like the handler seam does.
      *
      * @param DocumentExporter|class-string<DocumentExporter> $exporter

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Drive;
 
 use Illuminate\Database\Eloquent\Collection;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * The ergonomic Drive handle bound to one (Storage, panel) — the surface
@@ -20,7 +20,7 @@ use Vaulter\Models\Drive\Storage;
  */
 interface DriveHandle
 {
-    public function storage(): Storage;
+    public function storage(): Drive;
 
     public function panel(): string;
 

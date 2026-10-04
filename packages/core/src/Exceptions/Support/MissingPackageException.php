@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Support;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Vaulter\Exceptions\VaulterException;
 
 /**

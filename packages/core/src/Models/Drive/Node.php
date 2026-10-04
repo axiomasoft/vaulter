@@ -50,10 +50,10 @@ use Vaulter\Support\Config;
  * @property int|string|null $trashed_from_parent_id
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
- * @property-read Storage          $storage
+ * @property-read Drive $storage
  * @property-read Node|null        $parent
  * @property-read File|null        $file
- * @property-read FileVersion|null $currentVersion
+ * @property-read FileRevision|null $currentVersion
  */
 class Node extends Model
 {
@@ -153,7 +153,7 @@ class Node extends Model
     }
 
     /**
-     * @return BelongsTo<Storage, $this>
+     * @return BelongsTo<Drive, $this>
      */
     public function storage(): BelongsTo
     {
@@ -169,7 +169,7 @@ class Node extends Model
     }
 
     /**
-     * @return BelongsTo<FileVersion, $this>
+     * @return BelongsTo<FileRevision, $this>
      */
     public function currentVersion(): BelongsTo
     {

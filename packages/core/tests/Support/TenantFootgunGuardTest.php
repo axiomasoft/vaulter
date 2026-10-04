@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Exceptions\Support\TenantIsolationNotConfiguredException;
+use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\TenantFootgunGuard;
 use Vaulter\Tests\Fixtures\TenantAwareNode;
@@ -25,7 +25,7 @@ it('warns and throws outside production when tenancy is on with the default node
     );
 
     expect(fn () => (new TenantFootgunGuard)->check(isProduction: false))
-        ->toThrow(TenantIsolationNotConfiguredException::class);
+        ->toThrow(TenancyMisconfiguredException::class);
 });
 
 it('only warns (does not throw) in production for the same misconfiguration, F-P1.9-01', function (): void {

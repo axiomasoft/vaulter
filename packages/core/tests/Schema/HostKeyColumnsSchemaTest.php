@@ -5,22 +5,22 @@ declare(strict_types=1);
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Panels\Panel;
 use Vaulter\Schema\HostKeyColumns;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
+use Vaulter\Schema\VaulterSchema;
 use Vaulter\Support\Config;
-use Vaulter\Support\VaulterSchema;
 
 it('creates host keys independently of entity IDs on a fresh panel', function (string $type): void {
     config()->set('vaulter.ids.host_keys', $type);
-    $panel = (new Panel)->id('hostkeys')->tablePrefix('hostkeys')->features([
-        'comments' => true, 'document_versions' => true, 'share_links' => true,
-    ]);
-    $builder = new PanelTablesBuilder;
-    $builder->createAll($panel);
+    config()->set('vaulter.table_prefix', 'hostkeys_');
+    config()->set('vaulter.features.comments', true);
+    config()->set('vaulter.features.document_versions', true);
+    config()->set('vaulter.features.share_links', true);
+    $builder = new SchemaBuilder;
+    $builder->createAll();
 
     try {
-        $columns = array_column(Schema::getColumns($panel->table('node_grants')), null, 'name');
+        $columns = array_column(Schema::getColumns(Config::table('node_grants')), null, 'name');
         $driver = DB::connection()->getDriverName();
         $expected = match ($type) {
             'string' => 'varchar',
@@ -41,7 +41,7 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
         $migration->up();
         expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
     } finally {
-        $builder->dropAll($panel);
+        $builder->dropAll();
     }
 })->with(['string', 'bigint', 'uuid', 'ulid']);
 

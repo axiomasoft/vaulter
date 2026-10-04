@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Panels\Panel;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 
 /**
@@ -12,7 +11,7 @@ use Vaulter\Support\Config;
  *
  * Gated on the 'blobs' feature. storage_key is scope-qualified and the
  * dedup-unique index spans the scope columns (H.3). Thin shell over
- * PanelTablesBuilder.
+ * SchemaBuilder.
  */
 return new class extends Migration
 {
@@ -22,16 +21,16 @@ return new class extends Migration
             return;
         }
 
-        (new PanelTablesBuilder)->createTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->createTable(
+
             entity: 'blobs',
         );
     }
 
     public function down(): void
     {
-        (new PanelTablesBuilder)->dropTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->dropTable(
+
             entity: 'blobs',
         );
     }

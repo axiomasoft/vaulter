@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Access;
 
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
-use Vaulter\Testing\FakeAzgardGuard;
-
 /**
  * The NARROW Vaulter-owned seam the host's AzGuard-backed actor satisfies (master
  * plan §6 / H.2 / ADR-0007). It exposes EXACTLY the three checks the
- * {@see AzgardPermissionResolver} needs — and nothing of AzGuard's own API — so
+ * {@see AzgardPermissionDriver} needs — and nothing of AzGuard's own API — so
  * vaulter-core carries NO hard dependency on azguard/corex and PHPStan stays green
  * with the package ABSENT (no concrete AzGuard\* / CoreX\* references anywhere in
  * the driver path).

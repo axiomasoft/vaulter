@@ -17,7 +17,7 @@ use Vaulter\Drive\Events\NodeRestored;
 use Vaulter\Drive\Events\NodeTrashed;
 use Vaulter\Drive\Events\NodeVersionCommitted;
 use Vaulter\Drive\Events\StorageCreated;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\OutboxRecorder;
 
@@ -58,7 +58,7 @@ final readonly class RecordsDriveOutbox
     public function handleStorageCreated(StorageCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::StorageCreated,
+            event: EventType::DriveCreated,
             eventId: $event->eventId,
             panel: $event->storage->panel,
             topic: $this->recorder->id($event->storage->getKey()),
@@ -74,7 +74,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeCreated(NodeCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeCreated,
+            event: EventType::FolderCreated,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -92,7 +92,7 @@ final readonly class RecordsDriveOutbox
     public function handleFileUploaded(FileUploaded $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::FileUploaded,
+            event: EventType::FileUploaded,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -111,7 +111,7 @@ final readonly class RecordsDriveOutbox
     public function handleVersionCommitted(NodeVersionCommitted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::VersionCreated,
+            event: EventType::FileRevisionAdded,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -129,7 +129,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeMoved(NodeMoved $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeMoved,
+            event: EventType::NodeMoved,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -146,7 +146,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeRenamed(NodeRenamed $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeRenamed,
+            event: EventType::NodeRenamed,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -163,7 +163,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeCopied(NodeCopied $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeCopied,
+            event: EventType::NodeCopied,
             eventId: $event->eventId,
             panel: $event->copy->panel,
             topic: $this->recorder->id($event->copy->getKey()),
@@ -180,7 +180,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeTrashed(NodeTrashed $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeTrashed,
+            event: EventType::NodeTrashed,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -196,7 +196,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeRestored(NodeRestored $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeRestored,
+            event: EventType::NodeRestored,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->recorder->id($event->node->getKey()),
@@ -219,7 +219,7 @@ final readonly class RecordsDriveOutbox
     public function handleNodeForceDeleted(NodeForceDeleted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
-            event: WebhookEvent::NodeForceDeleted,
+            event: EventType::NodePurged,
             eventId: $event->eventId,
             panel: 'default',
             topic: $this->recorder->id($event->storageId),

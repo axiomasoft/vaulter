@@ -90,7 +90,7 @@ $team = Subject::make('team', $teamId);
 
 ```php
 use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Effect;
@@ -98,7 +98,7 @@ use Vaulter\Enums\Access\GrantScope;
 
 $grant = app(GrantNodeAccessAction::class)->execute(
     node: $node,
-    data: new GrantNodeAccessData(
+    data: new GrantNodeAccessInput(
         subject: Subject::ofModel($collaborator),
         level: GrantLevel::Writer,
         effect: Effect::Allow,            // по умолчанию
@@ -121,7 +121,7 @@ HTTP-поверхность ниже делает ровно это.
 Чтобы вырезать исключение внутри в остальном расшаренного поддерева, запишите `deny`:
 
 ```php
-new GrantNodeAccessData(
+new GrantNodeAccessInput(
     subject: Subject::ofModel($contractor),
     level: GrantLevel::Reader,
     effect: Effect::Deny,           // вето — перебивает более дальние и ролевые allow

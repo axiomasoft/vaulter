@@ -14,8 +14,8 @@ use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Schema\HostKeyColumns;
+use Vaulter\Schema\VaulterSchema;
 use Vaulter\Support\Config;
-use Vaulter\Support\VaulterSchema;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**

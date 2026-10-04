@@ -51,7 +51,7 @@ Initiated → Uploading → Assembled → Committed
 | `initiated` | Строка существует; байты ещё не приняты (`received_bytes = 0`). |
 | `uploading` | Прилетел хотя бы один tus-`PATCH` / S3-часть; `received_bytes` — авторитетное серверное смещение. |
 | `assembled` | Все байты собраны на staged-temp; готовы к коммиту. |
-| `committed` | Собранные байты прошли через `BlobStore.commit`; созданы `File` + `FileVersion` + узел, а `assembled_blob_id` установлен. **Терминальное.** |
+| `committed` | Собранные байты прошли через `BlobStore.commit`; созданы `File` + `FileRevision` + узел, а `assembled_blob_id` установлен. **Терминальное.** |
 | `aborted`   | Клиент (или `DELETE`) отказался от сессии; staged-temp + S3-multipart очищены. **Терминальное.** |
 | `expired`   | Сборщик забрал протухшую сессию по истечении её TTL. **Терминальное.** |
 

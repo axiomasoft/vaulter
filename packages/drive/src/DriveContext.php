@@ -21,8 +21,8 @@ use Vaulter\Drive\Data\CreateDriveFolderData;
 use Vaulter\Drive\Data\MoveNodeData;
 use Vaulter\Drive\Data\RenameNodeData;
 use Vaulter\Drive\Data\UploadFileData;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -40,7 +40,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 final readonly class DriveContext implements DriveHandle
 {
     public function __construct(
-        private Storage $storage,
+        private Drive $storage,
         private string $panel,
         private StorageManager $storages,
         private NodeReadRepository $nodes,
@@ -54,7 +54,7 @@ final readonly class DriveContext implements DriveHandle
         private ForceDeleteNodeAction $forceDeleteNode,
     ) {}
 
-    public function storage(): Storage
+    public function storage(): Drive
     {
         return $this->storage;
     }

@@ -8,7 +8,6 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;

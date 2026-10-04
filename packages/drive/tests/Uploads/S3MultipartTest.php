@@ -16,7 +16,7 @@ use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 
 /**
  * The S3-multipart path exercised against the FAKED 'local' disk (a real S3 is not
@@ -174,6 +174,6 @@ it('дедуп: multipart-сборка против идентичной пре�
     }
 
     // Two file nodes + two versions, but ONE physical blob (global dedup).
-    expect(FileVersion::query()->count())->toBe(2)
+    expect(FileRevision::query()->count())->toBe(2)
         ->and(Blob::query()->count())->toBe(1);
 });

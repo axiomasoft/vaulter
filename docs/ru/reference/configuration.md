@@ -24,12 +24,12 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | По умолчанию | Владелец |
 |---|---|---|
-| `models.storage` | `Vaulter\Models\Drive\Storage` | core |
+| `models.storage` | `Vaulter\Models\Drive\Drive` | core |
 | `models.node` | `Vaulter\Models\Drive\Node` | core |
 | `models.file` | `Vaulter\Models\Drive\File` | core |
-| `models.file_version` | `Vaulter\Models\Drive\FileVersion` | core |
+| `models.file_version` | `Vaulter\Models\Drive\FileRevision` | core |
 | `models.blob` | `Vaulter\Models\Cas\Blob` | core |
-| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` | core |
+| `models.file_version_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
 | `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
 | `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
@@ -94,11 +94,11 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | По умолчанию | Управляет |
 |---|---|---|
-| `panels` | `[]` | Список FQCN `StoragePanelProvider`, которые переопределяют панель по умолчанию по её id |
-| `default_panel` | `Vaulter\Panels\DefaultStoragePanel` | FQCN резервной панели |
-| `migrations.path` | `null` | Куда `vaulter:panel:migrations` пишет сгенерированную миграцию под собственные таблицы; `null` → в `database/migrations` хоста |
+| `panels` | `[]` | Список FQCN `ProfileProvider`, которые переопределяют панель по умолчанию по её id |
+| `default_panel` | `Vaulter\Profiles\DefaultProfile` | FQCN резервной панели |
+| `migrations.path` | `null` | Legacy key retained for the configuration transition; unused by profile scaffolding. |
 
-Сгенерируйте заготовку панели командой `php artisan vaulter:make-panel <name>`. См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
+Сгенерируйте заготовку панели командой `php artisan vaulter:make:profile <name>`. См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
 
 ## Фичи — `features.*`
 
@@ -119,15 +119,15 @@ php artisan vendor:publish --tag=vaulter-config
 
 ## Обработчики документов — `handlers`
 
-Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Engines\DocumentHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` ДОБАВЛЯЕТ `TipTapHandler` своим слиянием конфига.
+Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Handlers\FileHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` ДОБАВЛЯЕТ `TipTapHandler` своим слиянием конфига.
 
 | Записи по умолчанию | Владелец |
 |---|---|
-| `Vaulter\Engines\Handlers\PreviewHandler` | core |
-| `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
+| `Vaulter\Handlers\Builtin\PreviewHandler` | core |
+| `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
 | `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
-`UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::registerHandler()`).
+`UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::handlers()->register()`).
 
 ## Тенантность — `tenant.*`
 
@@ -159,11 +159,11 @@ php artisan vendor:publish --tag=vaulter-config
 | Ключ | Env | По умолчанию | Принимает |
 |---|---|---|---|
 | `drivers.permission` | `VAULTER_PERMISSION_DRIVER` | `database` | ключ из `permission_drivers` |
-| `permission_drivers.database` | — | `Vaulter\Drivers\Permission\DatabasePermissionResolver` | автономный — авторизует чисто по строкам грантов |
-| `permission_drivers.gate` | — | `Vaulter\Drivers\Permission\GatePermissionResolver` | драйвер Laravel Gate |
-| `permission_drivers.spatie` | — | `Vaulter\Drivers\Permission\SpatiePermissionResolver` | драйвер spatie/laravel-permission |
-| `permission_drivers.azgard` | — | `Vaulter\Drivers\Permission\AzgardPermissionResolver` | драйвер AzGuard |
-| `permission_drivers.null` | — | `Vaulter\Testing\NullRoleDriver` | открытый, **только не для продакшена** |
+| `permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
+| `permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
+| `permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
+| `permission_drivers.azgard` | — | `Vaulter\Access\Drivers\AzgardPermissionDriver` | драйвер AzGuard |
+| `permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
 
 ::: danger Null-драйвер в продакшене
 Драйвер `null` открыт и завязан на окружение. Валидация продакшен-конфига отвергает панель, привязанную к нему, — привяжите реальный драйвер до деплоя.

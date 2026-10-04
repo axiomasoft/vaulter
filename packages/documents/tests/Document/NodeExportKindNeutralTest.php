@@ -6,7 +6,7 @@ use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -21,10 +21,10 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    Vaulter::registerHandler(UniverHandler::class);
+    Vaulter::handlers()->register(UniverHandler::class);
 });
 
-function univerStorage(): Storage
+function univerStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

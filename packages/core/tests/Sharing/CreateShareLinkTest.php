@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-use Vaulter\Data\Sharing\CreateShareLinkData;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
@@ -30,7 +30,7 @@ it('returns the raw token once and persists ONLY its hash + prefix', function ()
 
     $minted = app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value),
+        data: new ShareLinkInput(permissions: Permission::Read->value),
     );
 
     // The raw token is surfaced exactly once, on the result.
@@ -51,7 +51,7 @@ it('hashes a share password — the plaintext never lands in the row', function 
 
     app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value, password: 's3cret'),
+        data: new ShareLinkInput(permissions: Permission::Read->value, password: 's3cret'),
     );
 
     $row = NodeShare::query()->firstOrFail();
@@ -67,7 +67,7 @@ it('defaults the bitmask to READ and the scope to item', function (): void {
 
     $minted = app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value),
+        data: new ShareLinkInput(permissions: Permission::Read->value),
     );
 
     expect($minted->share->permissions)->toBe(Permission::Read->value)
@@ -83,7 +83,7 @@ it('emits NodeShareCreated on mint', function (): void {
 
     app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value),
+        data: new ShareLinkInput(permissions: Permission::Read->value),
     );
 
     Event::assertDispatched(NodeShareCreated::class);
@@ -97,7 +97,7 @@ it('revokes a share (stamps revoked_at) and emits NodeShareRevoked', function ()
 
     $minted = app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value),
+        data: new ShareLinkInput(permissions: Permission::Read->value),
     );
 
     $revoked = app(RevokeShareLinkAction::class)->execute(share: $minted->share);
@@ -116,7 +116,7 @@ it('is a no-op (and emits nothing) when revoking an already-revoked share', func
 
     $minted = app(CreateShareLinkAction::class)->execute(
         node: $node,
-        data: new CreateShareLinkData(permissions: Permission::Read->value, level: GrantLevel::Reader),
+        data: new ShareLinkInput(permissions: Permission::Read->value, level: GrantLevel::Reader),
     );
 
     app(RevokeShareLinkAction::class)->execute(share: $minted->share);

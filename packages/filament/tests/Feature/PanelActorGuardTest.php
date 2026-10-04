@@ -28,7 +28,7 @@ it('resolves the acting admin through the panel guard, not the global default gu
 
     // Point the registered panel at the non-default guard (mutates the SAME Panel
     // instance FilamentManager::getDefaultPanel() resolves, via the shared
-    // PanelRegistry — see FilamentManager::getPanel()/getDefaultPanel()).
+    // ProfileRegistry — see FilamentManager::getPanel()/getDefaultPanel()).
     Filament::getPanel('admin')->authGuard('panel_guard');
 
     expect(PanelActor::id())->toBe($panelUser->getKey())

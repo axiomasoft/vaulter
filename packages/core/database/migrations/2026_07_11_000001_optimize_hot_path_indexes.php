@@ -17,7 +17,7 @@ use Vaulter\Support\Config;
  * (§0/C7): dead write cost, zero read benefit.
  *
  * A fresh install already gets the corrected shape straight from
- * PanelTablesBuilder (defineNodes/defineBlobs/defineActivity + the new
+ * SchemaBuilder (defineNodes/defineBlobs/defineActivity + the new
  * addTrashedAtIndex() hook no longer double-emit), so every step below first
  * inspects Schema::getIndexes() — this migration only does real work against a
  * database that ran the OLD shape before this fix shipped; re-running it (or
@@ -116,7 +116,7 @@ return new class extends Migration
     /**
      * v_activity carries created_at TWICE on a pre-fix database — an unnamed
      * inline index and the explicit `_created_idx`
-     * (PanelTablesBuilder::addActivityCreatedAtIndex). Keep the named one (every
+     * (SchemaBuilder::addActivityCreatedAtIndex). Keep the named one (every
      * other feed index on this table already follows the `_xxx_idx` convention),
      * drop the other.
      */

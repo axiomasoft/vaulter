@@ -1,37 +1,37 @@
 ---
 title: Драйверы прав
-description: Четыре полосы HostRoleDriver — Database (по умолчанию), Gate, Spatie v8 teams и шов AzGuard — как выбрать и настроить каждую, а также адаптер AzgardGuard, который привязывает хост.
+description: Четыре полосы PermissionDriver — Database (по умолчанию), Gate, Spatie v8 teams и шов AzGuard — как выбрать и настроить каждую, а также адаптер AzgardGuard, который привязывает хост.
 outline: deep
 ---
 
 # Драйверы прав
 
 [`AccessResolver`](/ru/concepts/authorization) владеет ACL на уровне узла и итоговым решением.
-**Ролевая полоса**, которую он подмешивает, — сменяемая: это контракт `HostRoleDriver`, и
+**Ролевая полоса**, которую он подмешивает, — сменяемая: это контракт `PermissionDriver`, и
 Vaulter поставляет четыре реализации. Именно здесь вы мостите систему идентичности и
 ролей вашего приложения в Vaulter.
 
 ::: info Контракт не видит узла
-`HostRoleDriver` никогда не получает `Node` и не оперирует действиями-магическими-строками —
-только актором `Authorizable` и `AclScope` (координаты панели + workspace + владелец узла).
+`PermissionDriver` никогда не получает `Node` и не оперирует действиями-магическими-строками —
+только актором `Authorizable` и `AccessScope` (координаты панели + workspace + владелец узла).
 Это и делает каждый драйвер сменяемым, а resolver — единственной инстанцией власти.
 :::
 
-## Контракт HostRoleDriver
+## Контракт PermissionDriver
 
-`Vaulter\Contracts\Access\HostRoleDriver`:
+`Vaulter\Contracts\Access\PermissionDriver`:
 
 ```php
-interface HostRoleDriver
+interface PermissionDriver
 {
     // Per-subject role decision, or null when the host has nothing to say.
     // Folded as roleAllow into granted = max(aclAllow, roleAllow) — it can RAISE
     // access but never override a deny (the final veto still applies).
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision;
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
     // An absolute super-admin override, or null. Allow/Deny short-circuit BOTH
     // directions before any ACL walk.
-    public function override(Authorizable $actor, AclScope $scope): ?Effect;
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect;
 
     // Expand an actor into the Subjects whose grants apply (user + roles + teams).
     // Vaulter builds WHERE (subject_type, subject_id) IN (...) from this list.
@@ -64,27 +64,27 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
 Карта ключ → FQCN лежит в `permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
-реализующий `HostRoleDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
+реализующий `PermissionDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
 
 ```php
 // config/vaulter.php
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
-    'null'     => \Vaulter\Testing\NullRoleDriver::class, // non-prod only
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
+    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
 ],
 ```
 
-`HostRoleDriverManager` резолвит и мемоизирует драйвер по ключу; неизвестный ключ бросает
-`MissingHostRoleDriverException::unknownDriver()`, а `null` в продакшене бросает
+`PermissionDriverManager` резолвит и мемоизирует драйвер по ключу; неизвестный ключ бросает
+`MissingPermissionDriverException::unknownDriver()`, а `null` в продакшене бросает
 `nullDriverInProduction()` — см. [Авторизация → fail-loud](/ru/concepts/authorization#fail-loud-the-null-driver).
 
 ## Database — полоса по умолчанию, автономная
 
-`Vaulter\Drivers\Permission\DatabasePermissionResolver` **не** вводит никакой внешней системы
+`Vaulter\Access\Drivers\DatabasePermissionDriver` **не** вводит никакой внешней системы
 ролей. Каждое решение — это строка `v_node_grants`, разрешаемая `AccessResolver`; сам драйвер
 лишь добавляет собственную идентичность актора в набор субъектов.
 
@@ -100,7 +100,7 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 унаследуйтесь от неё и допишите записи `Subject`:
 
 ```php
-final class TeamAwareRoleDriver extends DatabasePermissionResolver
+final class TeamAwareRoleDriver extends DatabasePermissionDriver
 {
     public function subjectsFor(Authorizable $actor): array
     {
@@ -117,7 +117,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionResolver
 
 ## Gate — встроенная полоса Laravel
 
-`Vaulter\Drivers\Permission\GatePermissionResolver` мостит хост, который уже авторизует через
+`Vaulter\Access\Drivers\GatePermissionDriver` мостит хост, который уже авторизует через
 права (abilities) / политики Gate. Он идёт вместе с фреймворком — ноль дополнительных
 зависимостей.
 
@@ -126,7 +126,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionResolver
   жёсткий запрет).
 - **`resolve`** спрашивает у Gate каждое сопоставленное право (от низкого к высокому) и
   подмешивает **наивысший разрешённый уровень** в `Decision`. Проверка Gate не видит узла — она
-  получает `{panel, workspace_type, workspace_id}` из `AclScope`, но никогда `Node`.
+  получает `{panel, workspace_type, workspace_id}` из `AccessScope`, но никогда `Node`.
 - **`subjectsFor`** = только `[Subject(actor)]`. Gate не выставляет перечислимых субъектов-ролей
   / команд, поэтому строки грантов, адресованные роли/команде, этой полосой не совпадают —
   используйте для этого Spatie/AzGuard.
@@ -170,7 +170,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 
 ## Spatie — роли, разрешения и v8 teams
 
-`Vaulter\Drivers\Permission\SpatiePermissionResolver` мостит хост на
+`Vaulter\Access\Drivers\SpatiePermissionDriver` мостит хост на
 `spatie/laravel-permission`, включая фичу **v8 teams**. Он инкапсулирует весь танец переключения
 команд v8, так что тот никогда не протекает в resolver.
 
@@ -223,16 +223,16 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 разрешение не выдало отозванный уровень при следующем resolve:
 
 ```php
-use Vaulter\Drivers\Permission\SpatiePermissionResolver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
 
-SpatiePermissionResolver::forgetCachedPermissions($actor);
+SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```
 
 Это no-op, когда Spatie не установлен.
 
 ## AzGuard — шов на уровне ресурса
 
-`Vaulter\Drivers\Permission\AzgardPermissionResolver` мостит хост на per-resource,
+`Vaulter\Access\Drivers\AzgardPermissionDriver` мостит хост на per-resource,
 scoped-модель разрешений AzGuard **без зависимости vaulter-core от azguard/corex**. Каждое
 обращение к AzGuard идёт через узкий, принадлежащий Vaulter шов `AzgardGuard`, так что PHPStan
 остаётся зелёным при отсутствии пакета, а драйвер не ссылается ни на один конкретный класс
@@ -244,7 +244,7 @@ scoped-модель разрешений AzGuard **без зависимости
 - **`override`** = `isSuperAdmin()` → `Effect::Allow`, иначе `null` (никогда не запрет).
 - **`resolve`** сопоставляет определяющее право (ability) каждого ранжированного уровня с
   разрешением AzGuard и спрашивает `hasPermissionIn($workspaceType, $workspaceId, $permission)`;
-  наивысший разрешённый уровень становится `Decision`. (`AclScope` не видит узла, поэтому это
+  наивысший разрешённый уровень становится `Decision`. (`AccessScope` не видит узла, поэтому это
   проверка в области workspace.)
 - **`subjectsFor`** = только `[Subject(actor)]` — AzGuard *отвечает* на проверки, а не перечисляет
   субъектов-роли. Хост, адресующий строки грантов на роли AzGuard, должен унаследоваться и

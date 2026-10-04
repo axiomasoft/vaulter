@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Uploads;
 
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for UploadSessionManager::initiate (§2.8 / D16 / M3a): everything needed
@@ -32,7 +32,7 @@ final readonly class UploadInitData
      * @param array<string, string> $metadata
      */
     public function __construct(
-        public Storage $storage,
+        public Drive $storage,
         public UploadProtocol $protocol,
         public ?Node $targetParent = null,
         public ?string $targetName = null,

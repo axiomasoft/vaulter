@@ -14,7 +14,7 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -95,7 +95,7 @@ it('sweepPending ретраит транзиентный serialization-failure 4
         $flaky,
         app(BlobLock::class),
         app(BlobStoreRepository::class),
-        app(FileVersionBlobStoreRepository::class),
+        app(FileRevisionBlobStoreRepository::class),
         app(MetricsRecorder::class),
         app(VaulterDatabase::class),
     );

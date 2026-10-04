@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Collaboration;
 
-use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
-
 /**
  * The authenticated identity of a server-to-server collaboration webhook call (M4b),
  * resolved by {@see CollaborationCallResolver} and stashed by the

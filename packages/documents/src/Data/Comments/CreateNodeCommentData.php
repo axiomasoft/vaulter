@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Comments;
 
-use Vaulter\Documents\Actions\Comments\AddNodeCommentAction;
-
 /**
  * The input to {@see AddNodeCommentAction} (ADR-0014 шаг 1).
  * authorType is a REGISTERED morph alias ($user->getMorphClass()), never a raw FQCN —

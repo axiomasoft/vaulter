@@ -10,10 +10,10 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -24,20 +24,20 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 final class CasTestHelpers
 {
     /**
-     * Build a committed FileVersion (with its File + Node + Storage) to attach a
+     * Build a committed FileRevision (with its File + Node + Storage) to attach a
      * blob edge to.
      */
-    public static function makeVersion(int $versionNo = 1, string $name = 'a.bin'): FileVersion
+    public static function makeVersion(int $versionNo = 1, string $name = 'a.bin'): FileRevision
     {
         // One storage per host owner (the M1c owner-unique index): mint a fresh
         // owner_id per call so repeated makeVersion()s in one test don't collide.
         static $owner = 0;
         $owner++;
 
-        // forceFill (P1.4/F-P1.8-02, F-P1.5-04): Storage/Node/File/FileVersion all
+        // forceFill (P1.4/F-P1.8-02, F-P1.5-04): Storage/Node/File/FileRevision all
         // now carry a closed $fillable/$guarded list — this trusted fixture
         // builder bypasses it exactly like the production store repositories do.
-        $storage = new Storage;
+        $storage = new Drive;
         $storage->forceFill([
             'owner_type' => 'team',
             'owner_id' => $owner,
@@ -61,7 +61,7 @@ final class CasTestHelpers
         ]);
         $file->save();
 
-        $version = new FileVersion;
+        $version = new FileRevision;
         $version->forceFill([
             'file_id' => $file->getKey(),
             'version_no' => $versionNo,

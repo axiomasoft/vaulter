@@ -6,13 +6,12 @@ namespace Vaulter\Azgard\Tests;
 
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\VaulterAzgardServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**
  * The base case for the bridge suite. It boots vaulter-core (the real
- * AzgardPermissionResolver + AccessResolver live here) and this package's provider
+ * AzgardPermissionDriver + AccessResolver live here) and this package's provider
  * (the AzgardGuard binding), with the AzGuard permission driver selected — so a test
  * exercises the REAL Vaulter authorization path against the REAL adapter, with only the
  * host's User standing in as a controllable {@see AzgardBackedUser}.

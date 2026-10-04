@@ -9,8 +9,8 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * Shared builders for the resumable-upload slice tests (M3a): a real Storage with a
@@ -22,16 +22,16 @@ final class UploadTestHelpers
      * A fresh storage with a kind=folder root node (the mount the upload targets).
      * One per call (the owner-unique index forbids two storages for one owner+panel).
      */
-    public static function storage(?int $quotaBytes = null): Storage
+    public static function storage(?int $quotaBytes = null): Drive
     {
         static $owner = 0;
         $owner++;
 
         // forceFill (P1.4/F-P1.8-02): owner_id/disk/used_bytes are excluded from
         // Storage's $fillable, and Node has its own closed list — this trusted
-        // fixture builder bypasses both exactly like StorageStoreRepository/
+        // fixture builder bypasses both exactly like DriveStoreRepository/
         // NodeStoreRepository do.
-        $storage = new Storage;
+        $storage = new Drive;
         $storage->forceFill([
             'owner_type' => 'team',
             'owner_id' => $owner,
@@ -61,7 +61,7 @@ final class UploadTestHelpers
      * Open a session row directly (bypassing the manager) for handler-level tests.
      */
     public static function session(
-        Storage $storage,
+        Drive $storage,
         UploadProtocol $protocol = UploadProtocol::Tus,
         ?int $totalSizeBytes = null,
         ?string $targetName = 'upload.bin',

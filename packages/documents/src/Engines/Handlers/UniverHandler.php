@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Engines\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * The FEATURE-FLAGGED spreadsheet handler (master plan §7 level 2): the Univer
@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Handlers\HandlerUi;
  * collaborative stays false here).
  *
  * It is behind the 'spreadsheets' feature flag (default OFF): the service provider
- * only registers it in the tagged 'vaulter.handlers' set when the flag is on, so a
+ * only registers it in the tagged 'vaulter.file_handlers' set when the flag is on, so a
  * stock install never resolves xlsx to it (xlsx then falls to DownloadOnly). This is
  * a STUB — it declares routing + capabilities; the actual Univer mount is the Vue
  * slice. It proves the one-class + register extensibility for a non-rich-text
@@ -26,9 +26,9 @@ final class UniverHandler implements FileHandler
 {
     public const int PRIORITY = 90;
 
-    public function id(): string
+    public function key(): string
     {
-        return 'univer';
+        return 'vaulter/univer';
     }
 
     /**
@@ -55,9 +55,9 @@ final class UniverHandler implements FileHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: true,
             previewable: true,
             downloadable: true,
@@ -71,11 +71,10 @@ final class UniverHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(
-            component: 'VaulterSpreadsheet',
-            route: 'documents.show',
+        return new ViewerDescriptor(
+            key: 'vaulter/univer',
             props: ['engine' => 'univer'],
         );
     }

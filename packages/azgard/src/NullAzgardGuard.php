@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard;
 
-use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 
 /**
  * The deny-all {@see AzgardGuard} the provider binds when the current request has no
  * AzGuard-backed user (an unauthenticated request, or a User that does not implement
  * {@see AzgardBackedUser}). Every probe returns
- * false, so the {@see AzgardPermissionResolver} raises NO
+ * false, so the {@see AzgardPermissionDriver} raises NO
  * access — a SAFE pass-through, never a fatal, exactly as when no guard is bound at all.
  */
 final class NullAzgardGuard implements AzgardGuard

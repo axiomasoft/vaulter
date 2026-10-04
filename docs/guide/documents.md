@@ -43,7 +43,7 @@ a committed version is immutable (no `updated_at`, no soft-delete), `version_no`
 per node, and the unique `(node_id, version_no)` index is the backbone two concurrent commits
 serialise on.
 
-`v_node_document_versions` columns (from `PanelTablesBuilder::defineDocumentVersions`):
+`v_node_document_versions` columns (from `SchemaBuilder::defineDocumentVersions`):
 
 | Column | Type | Meaning |
 |---|---|---|

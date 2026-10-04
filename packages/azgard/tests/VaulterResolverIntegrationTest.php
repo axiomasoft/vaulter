@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\AzgardPermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 
 /**
- * The bridge driving the REAL Vaulter AzgardPermissionResolver: the adapter is bound as
+ * The bridge driving the REAL Vaulter AzgardPermissionDriver: the adapter is bound as
  * the host's AzgardGuard, and the driver's every lane (super-admin override, the
  * workspace-role → GrantLevel fold, the create gate) is exercised end-to-end. Only the
  * leaf user is a controllable double; the adapter and the resolver are production code.
@@ -22,16 +22,16 @@ function bindAdapterFor(SpyAzgardUser $user): void
     app()->instance(AzgardGuard::class, new AzgardGuardAdapter($user));
 }
 
-function azgardDriver(): AzgardPermissionResolver
+function azgardDriver(): AzgardPermissionDriver
 {
-    return app(AzgardPermissionResolver::class);
+    return app(AzgardPermissionDriver::class);
 }
 
 it('grants an absolute override from an AzGuard super-admin (wildcard)', function (): void {
     $user = SpyAzgardUser::make()->grantGlobal(['*']);
     bindAdapterFor($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
 
     expect(azgardDriver()->override($user, $scope))->toBe(Effect::Allow);
 });
@@ -40,7 +40,7 @@ it('defers (no override) for a non super-admin', function (): void {
     $user = SpyAzgardUser::make()->grantGlobal(['documents.view']);
     bindAdapterFor($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
 
     expect(azgardDriver()->override($user, $scope))->toBeNull();
 });
@@ -50,7 +50,7 @@ it('folds a workspace-scoped permission into the matching grant level', function
     $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.update']);
     bindAdapterFor($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
     $decision = azgardDriver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
@@ -62,7 +62,7 @@ it('yields no decision when the workspace grants nothing', function (): void {
     $user = SpyAzgardUser::make();
     bindAdapterFor($user);
 
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect(azgardDriver()->resolve(Subject::ofModel($user), $user, $scope))->toBeNull();
 });

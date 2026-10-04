@@ -6,8 +6,7 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Vaulter\Actions\Sharing\CreateShareLinkAction;
-use Vaulter\Data\Sharing\CreateShareLinkData;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
@@ -16,7 +15,7 @@ use Vaulter\Support\Config;
 
 /**
  * Validates a create-share-link request (§2.7 / M2c) and assembles its
- * CreateShareLinkData command. The permissions bitmask, level, scope, optional
+ * ShareLinkInput command. The permissions bitmask, level, scope, optional
  * password / require-login / discovery flags, expiry and use budget are
  * host-supplied; the controller authorizes Ability::Share on the node first.
  *
@@ -50,13 +49,13 @@ final class StoreShareLinkRequest extends VaulterFormRequest
         ];
     }
 
-    public function toData(int|string|null $grantedBy): CreateShareLinkData
+    public function toData(int|string|null $grantedBy): ShareLinkInput
     {
         $expiresAt = $this->input('expires_at');
         $password = $this->input('password');
         $maxUses = $this->input('max_uses');
 
-        return new CreateShareLinkData(
+        return new ShareLinkInput(
             permissions: $this->resolvePermissions(),
             level: GrantLevel::from($this->string('level', GrantLevel::Reader->value)->toString()),
             scope: GrantScope::from($this->string('scope', GrantScope::Item->value)->toString()),

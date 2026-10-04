@@ -21,7 +21,7 @@ use Vaulter\Drive\Events\StorageCreated;
 use Vaulter\Drive\Events\UploadSessionAborted;
 use Vaulter\Drive\Events\UploadSessionExpired;
 use Vaulter\Drive\Events\UploadSessionInitiated;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Support\Identity;
 
 /**
@@ -63,7 +63,7 @@ final readonly class RecordsDriveActivity
     public function handleStorageCreated(StorageCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
-            verb: ActivityVerb::StorageCreated,
+            verb: EventType::DriveCreated,
             storageId: Identity::key($event->storage->getKey()),
             tenantId: $event->storage->tenant_id,
             actorId: $event->actorId,
@@ -80,7 +80,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeCreated(NodeCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeCreated,
+            verb: EventType::FolderCreated,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -94,7 +94,7 @@ final readonly class RecordsDriveActivity
     public function handleFileUploaded(FileUploaded $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::FileUploaded,
+            verb: EventType::FileUploaded,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -109,7 +109,7 @@ final readonly class RecordsDriveActivity
     public function handleVersionCommitted(NodeVersionCommitted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::VersionCreated,
+            verb: EventType::FileRevisionAdded,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -123,7 +123,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeMoved(NodeMoved $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeMoved,
+            verb: EventType::NodeMoved,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -136,7 +136,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeRenamed(NodeRenamed $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeRenamed,
+            verb: EventType::NodeRenamed,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -150,7 +150,7 @@ final readonly class RecordsDriveActivity
     {
         // The target is the NEW copy; the source is recorded in context.
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeCopied,
+            verb: EventType::NodeCopied,
             node: $event->copy,
             actorId: $event->actorId,
             context: [
@@ -163,7 +163,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeTrashed(NodeTrashed $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeTrashed,
+            verb: EventType::NodeTrashed,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -175,7 +175,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeRestored(NodeRestored $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
-            verb: ActivityVerb::NodeRestored,
+            verb: EventType::NodeRestored,
             node: $event->node,
             actorId: $event->actorId,
             context: [
@@ -193,7 +193,7 @@ final readonly class RecordsDriveActivity
     public function handleNodeForceDeleted(NodeForceDeleted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
-            verb: ActivityVerb::NodeForceDeleted,
+            verb: EventType::NodePurged,
             storageId: $event->storageId,
             actorId: $event->actorId,
             context: [
@@ -213,7 +213,7 @@ final readonly class RecordsDriveActivity
     public function handleUploadSessionInitiated(UploadSessionInitiated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
-            verb: ActivityVerb::UploadSessionInitiated,
+            verb: EventType::UploadInitiated,
             storageId: $event->session->storage_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,
@@ -228,7 +228,7 @@ final readonly class RecordsDriveActivity
     public function handleUploadSessionAborted(UploadSessionAborted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
-            verb: ActivityVerb::UploadSessionAborted,
+            verb: EventType::UploadAborted,
             storageId: $event->session->storage_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,
@@ -243,7 +243,7 @@ final readonly class RecordsDriveActivity
     public function handleUploadSessionExpired(UploadSessionExpired $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
-            verb: ActivityVerb::UploadSessionExpired,
+            verb: EventType::UploadExpired,
             storageId: $event->session->storage_id,
             tenantId: $event->session->tenant_id,
             actorId: $event->actorId,

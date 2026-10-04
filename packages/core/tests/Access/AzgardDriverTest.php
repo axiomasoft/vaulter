@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\Drivers\AzgardPermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -64,8 +64,8 @@ it('honours a host override of the ability map', function (): void {
 it('grants an absolute override from an AzGuard super-admin', function (): void {
     bindAzgardGuard(FakeAzgardGuard::superAdmin());
 
-    $driver = app(AzgardPermissionResolver::class);
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $driver = app(AzgardPermissionDriver::class);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
 
     expect($driver->override(AccessTestHelpers::user(), $scope))->toBe(Effect::Allow);
 });
@@ -73,8 +73,8 @@ it('grants an absolute override from an AzGuard super-admin', function (): void 
 it('defers (no override) when the actor is not a super-admin', function (): void {
     bindAzgardGuard(new FakeAzgardGuard);
 
-    $driver = app(AzgardPermissionResolver::class);
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $driver = app(AzgardPermissionDriver::class);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
 
     expect($driver->override(AccessTestHelpers::user(), $scope))->toBeNull();
 });
@@ -94,9 +94,9 @@ it('maps a workspace-scoped AzGuard permission to a role-grant level', function 
     // decision (Writer is gated by the Edit ability → documents.update).
     bindAzgardGuard(FakeAzgardGuard::grantingWorkspace('project', 1, 'documents.update'));
 
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     $decision = $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
@@ -112,7 +112,7 @@ it('composite order: a workspace role grant raises access when NO node-ACL row e
     $folder = AccessTestHelpers::folder($storage, null, 'role-only');
 
     // The guard's workspace grant must match THIS storage's owner morph (the workspace
-    // coordinates the AclScope derives from the storage owner) so hasPermissionIn hits.
+    // coordinates the AccessScope derives from the storage owner) so hasPermissionIn hits.
     bindAzgardGuard(FakeAzgardGuard::grantingWorkspace($storage->owner_type, $storage->owner_id, 'documents.view'));
 
     $resolver = app(AccessResolver::class);
@@ -148,7 +148,7 @@ it('composite order: a node-ACL deny still vetoes a workspace role grant via the
 it('gates workspace creation through hasPermissionIn with the create permission', function (): void {
     bindAzgardGuard(FakeAzgardGuard::grantingWorkspace('project', 5, 'documents.create'));
 
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
 
     expect($driver->canCreateInWorkspace($actor, 'project', 5))->toBeTrue()
@@ -158,18 +158,18 @@ it('gates workspace creation through hasPermissionIn with the create permission'
 it('returns no role decision when the workspace grants nothing (pass-through with a guard)', function (): void {
     bindAzgardGuard(new FakeAzgardGuard);
 
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull()
         ->and($driver->override($actor, $scope))->toBeNull();
 });
 
 it('is a safe pass-through (no fatal) when no AzgardGuard is bound', function (): void {
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull()
         ->and($driver->override($actor, $scope))->toBeNull()
@@ -179,15 +179,15 @@ it('is a safe pass-through (no fatal) when no AzgardGuard is bound', function ()
 it('returns no role decision for a node-blind scope with no workspace coordinates', function (): void {
     bindAzgardGuard(FakeAzgardGuard::grantingWorkspace('project', 1, 'documents.view'));
 
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AclScope(panel: 'default'); // no workspaceType/workspaceId
+    $scope = new AccessScope(panel: 'default'); // no workspaceType/workspaceId
 
     expect($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull();
 });
 
 it('exposes only the actor in its subject-set (AzGuard enumerates no role subjects)', function (): void {
-    $driver = app(AzgardPermissionResolver::class);
+    $driver = app(AzgardPermissionDriver::class);
     $subjects = $driver->subjectsFor(AccessTestHelpers::user(id: 3));
 
     expect($subjects)->toHaveCount(1)
@@ -221,8 +221,8 @@ it('uses the actor itself as the guard when the actor implements the AzgardGuard
     $actor->forceFill(['id' => 7]);
     $actor->exists = true;
 
-    $driver = app(AzgardPermissionResolver::class);
-    $scope = new AclScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $driver = app(AzgardPermissionDriver::class);
+    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
 
     expect($driver->override($actor, $scope))->toBe(Effect::Allow)
         ->and($driver->canCreateInWorkspace($actor, 'project', 1))->toBeTrue();

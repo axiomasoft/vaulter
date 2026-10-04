@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Testing;
 
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 
 /**
  * A configurable in-memory {@see AzgardGuard} so consumers (and this package's own
- * tests) can exercise the {@see AzgardPermissionResolver}
+ * tests) can exercise the {@see AzgardPermissionDriver}
  * WITHOUT installing azguard/corex (master plan §6 / H.5 — the src/Testing seam). It
  * lives in src/Testing/ (not tests/) so hosts can reference it from their own suites.
  *
@@ -17,7 +16,7 @@ use Vaulter\Drivers\Permission\AzgardPermissionResolver;
  *   - a super-admin flag (the SuperAdmin wildcard);
  *   - a set of (entity-key, permission) scoped grants (the per-resource lane);
  *   - a set of (contextType, contextId, permission) workspace grants (the
- *     hasPermissionIn lane the resolver actually drives, since AclScope is node-blind).
+ *     hasPermissionIn lane the resolver actually drives, since AccessScope is node-blind).
  *
  * Grant a permission "globally" by passing it to a workspace check the resolver runs;
  * grant SuperAdmin to short-circuit everything.

@@ -9,7 +9,7 @@ use Spatie\Permission\PermissionServiceProvider;
 
 /**
  * Boots the package alongside spatie/laravel-permission with the v8 TEAMS feature
- * enabled, so the SpatiePermissionResolver is exercised against a real spatie schema
+ * enabled, so the SpatiePermissionDriver is exercised against a real spatie schema
  * (permissions, roles, model pivots — all team-scoped) and a real HasRoles user. The
  * spatie migration stub is run by hand (it is a .php.stub, not a loadable migration),
  * and a minimal `users` table backs the actor.

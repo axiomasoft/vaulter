@@ -6,21 +6,20 @@ namespace Vaulter\Tests\Fixtures\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
 use Vaulter\Support\SpatieConfig;
 
 /**
  * A host driver following the DOCUMENTED extension path (F-P1.2-01 review): it
- * subclasses the standalone {@see DatabasePermissionResolver} and OVERRIDES
+ * subclasses the standalone {@see DatabasePermissionDriver} and OVERRIDES
  * subjectsFor() to append a role Subject — exactly as that driver's own docblock
  * promotes — but does NOT implement the {@see EnumeratesRoleSubjects}
  * marker. Its role grants genuinely take effect, so the fail-loud guard must NOT trip
- * for it. A no-arg constructor so the HostRoleDriverManager can container-make it from
+ * for it. A no-arg constructor so the PermissionDriverManager can container-make it from
  * the permission_drivers map.
  */
-final class SubclassedRoleDriver extends DatabasePermissionResolver
+final class SubclassedRoleDriver extends DatabasePermissionDriver
 {
     /**
      * The actor itself PLUS its (fixed) role Subject — the host identity fan-out that

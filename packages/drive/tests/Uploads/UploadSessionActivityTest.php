@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
@@ -31,7 +31,7 @@ it('initiate пишет activity-строку upload_session.initiated с акт
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionInitiated->value);
+    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->storage_id)->toEqual($storage->getKey())
@@ -49,7 +49,7 @@ it('abort пишет activity-строку upload_session.aborted (F-P1.4-13, re
 
     $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
-    $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionAborted->value);
+    $row = ActivityTestHelpers::only(EventType::UploadAborted->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->context['upload_id'])->toBe($uploadId);
@@ -76,7 +76,7 @@ it('sweep-expire пишет activity-строку upload_session.expired без 
 
     $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
 
-    $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionExpired->value);
+    $row = ActivityTestHelpers::only(EventType::UploadExpired->value);
 
     expect($row->actor_id)->toBeNull()
         ->and($row->context['upload_id'])->toBe($uploadId);
@@ -102,7 +102,7 @@ it('переезд Uploads morph-безопасен: upload-session activity н�
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(ActivityVerb::UploadSessionInitiated->value);
+    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
 
     expect(UploadSession::class)->toBe('Vaulter\\Drive\\Models\\Uploads\\UploadSession')
         ->and($row->target_type)->toBeNull()

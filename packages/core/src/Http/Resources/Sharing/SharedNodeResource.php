@@ -7,7 +7,6 @@ namespace Vaulter\Http\Resources\Sharing;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Http\Controllers\Sharing\PublicShareController;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 

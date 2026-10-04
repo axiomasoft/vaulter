@@ -6,11 +6,11 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Tests\Schema\ForceCreates;
 
 /**
@@ -18,7 +18,7 @@ use Vaulter\Tests\Schema\ForceCreates;
  * truth, §2.4): relations resolve through the swappable model map.
  */
 beforeEach(function (): void {
-    $storage = ForceCreates::make(Storage::class, [
+    $storage = ForceCreates::make(Drive::class, [
         'owner_type' => 'team', 'owner_id' => 1, 'name' => 'Disk',
     ]);
 
@@ -40,7 +40,7 @@ beforeEach(function (): void {
         'status' => 'committed',
     ]);
 
-    $this->version = ForceCreates::make(FileVersion::class, [
+    $this->version = ForceCreates::make(FileRevision::class, [
         'file_id' => $this->file->getKey(),
         'version_no' => 1,
         'blob_id' => $this->blob->getKey(),
@@ -60,11 +60,11 @@ it('file -> versions -> blob связаны', function (): void {
 });
 
 it('ребро version<->blob — это GC-истина через pivot', function (): void {
-    // FileVersionBlob is fully guarded (P1.4/F-P1.8-02) — the production write
+    // FileRevisionBlob is fully guarded (P1.4/F-P1.8-02) — the production write
     // path is the query-builder repository, not Eloquent's own relation
     // attach() (which routes pivot attributes through fill()/mass-assignment
     // and would now throw MassAssignmentException).
-    app(FileVersionBlobStoreRepository::class)->attach($this->version, $this->blob, [
+    app(FileRevisionBlobStoreRepository::class)->attach($this->version, $this->blob, [
         'role' => 'data',
         'ordinal' => 0,
     ]);
@@ -79,7 +79,7 @@ it('version_no монотонно уникален на файл', function (): 
     // enclosing RefreshDatabase transaction, poisoning the connection for the rest of the
     // suite; the nested DB::transaction rolls back only the failed insert. SQLite tolerates
     // either form (see BlobDedupScopeTest for the reference rationale).
-    expect(fn () => DB::transaction(fn () => ForceCreates::make(FileVersion::class, [
+    expect(fn () => DB::transaction(fn () => ForceCreates::make(FileRevision::class, [
         'file_id' => $this->file->getKey(),
         'version_no' => 1,
         'content_sha256' => str_repeat('c', 64),

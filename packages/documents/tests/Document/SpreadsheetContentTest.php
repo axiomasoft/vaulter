@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -21,7 +21,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function spreadsheetStorage(): Storage
+function spreadsheetStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -31,7 +31,7 @@ const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
 /** Register the feature-flagged spreadsheet handler at runtime (it is off by default). */
 function enableSpreadsheets(): void
 {
-    Vaulter::registerHandler(UniverHandler::class);
+    Vaulter::handlers()->register(UniverHandler::class);
 }
 
 it('creates a spreadsheet node handler-aware — the node is born on the Univer handler', function (): void {
@@ -48,7 +48,7 @@ it('creates a spreadsheet node handler-aware — the node is born on the Univer 
         'content' => $workbook,
     ])->assertCreated();
 
-    $created->assertJsonPath('data.handler.id', 'univer');
+    $created->assertJsonPath('data.handler.id', 'vaulter/univer');
     $nodeId = $created->json('data.id');
 
     // The node was stamped with the xlsx mime so a fresh read re-resolves the same handler.
@@ -104,7 +104,7 @@ it('still creates a rich-text (tiptap) node and enforces {"type":"doc"} when no 
         'content' => ['type' => 'doc', 'content' => []],
     ])
         ->assertCreated()
-        ->assertJsonPath('data.handler.id', 'tiptap')
+        ->assertJsonPath('data.handler.id', 'vaulter/tiptap')
         ->json('data.id');
 
     // A workbook-shaped payload on a rich-text node must be rejected — the type:doc rule stands.

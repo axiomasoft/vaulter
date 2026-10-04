@@ -18,10 +18,10 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
@@ -43,7 +43,7 @@ final class S3MultipartController extends Controller
     public function __construct(
         private readonly UploadSessionManager $manager,
         private readonly UploadSessionReadRepository $sessions,
-        private readonly StorageReadRepository $storages,
+        private readonly DriveReadRepository $storages,
         private readonly NodeReadRepository $nodes,
         private readonly AccessResolver $access,
         private readonly CommitUploadAction $commit,
@@ -153,18 +153,18 @@ final class S3MultipartController extends Controller
         }
     }
 
-    private function storageOf(UploadSession $session): Storage
+    private function storageOf(UploadSession $session): Drive
     {
         $storage = $this->storages->find($session->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             abort(404);
         }
 
         return $storage;
     }
 
-    private function rootOf(Storage $storage): Node
+    private function rootOf(Drive $storage): Node
     {
         $root = $storage->rootNode()->first();
 
@@ -175,7 +175,7 @@ final class S3MultipartController extends Controller
         return $root;
     }
 
-    private function findNodeInStorage(int|string $nodeId, Storage $storage): Node
+    private function findNodeInStorage(int|string $nodeId, Drive $storage): Node
     {
         $node = $this->nodes->find($nodeId);
 
@@ -237,7 +237,7 @@ final class S3MultipartController extends Controller
         }
     }
 
-    private function guardCreate(Request $request, Storage $storage, Node $destination): void
+    private function guardCreate(Request $request, Drive $storage, Node $destination): void
     {
         $actor = $this->authorizable($request);
 

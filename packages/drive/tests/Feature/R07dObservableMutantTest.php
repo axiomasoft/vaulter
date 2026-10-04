@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Data\Uploads\UploadInitData;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -26,8 +26,8 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -36,9 +36,9 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 /**
  * Role lane whose allow-mask is the only reason a guard passes or fails.
- * NullRoleDriver allows every ability, so removing one guard stays invisible.
+ * NullPermissionDriver allows every ability, so removing one guard stays invisible.
  */
-final class R07dBitsDriver implements HostRoleDriver
+final class R07dBitsDriver implements PermissionDriver
 {
     public function __construct(
         private readonly int $bits,
@@ -46,7 +46,7 @@ final class R07dBitsDriver implements HostRoleDriver
         private readonly ?string $onlyOwnerId = null,
     ) {}
 
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         if ($this->onlyOwnerId !== null) {
             $ownerId = $scope->nodeOwner?->id;
@@ -59,7 +59,7 @@ final class R07dBitsDriver implements HostRoleDriver
         return Decision::allow(level: GrantLevel::Reader, bits: $this->bits);
     }
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return null;
     }
@@ -141,7 +141,7 @@ beforeEach(function (): void {
     }
 });
 
-function r07dStorage(): Storage
+function r07dStorage(): Drive
 {
     return AccessTestHelpers::storage();
 }
@@ -155,7 +155,7 @@ function r07dInstall(int $bits, bool $workspaceCreate, ?string $onlyOwnerId = nu
     ));
     config()->set('vaulter.permission_drivers.r07d', R07dBitsDriver::class);
     config()->set('vaulter.drivers.permission', 'r07d');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
 

@@ -1,0 +1,153 @@
+{
+  "checks": [
+    {
+      "package": "core",
+      "check": "pint",
+      "exit": 0,
+      "log": "core-pint-final.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "core",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "core-phpstan-final.log",
+      "sha256": "c10f74fb840de989bba7e9c2dfee7f8419b5d2ac0cc0daf18a4a187f6530aa43"
+    },
+    {
+      "package": "core",
+      "check": "tests",
+      "exit": 0,
+      "log": "core-tests-final.log",
+      "sha256": "4670ca3c739f02e4573766e1b52a4fb501e11b779bd071ada919f18629a24d5a"
+    },
+    {
+      "package": "drive",
+      "check": "pint",
+      "exit": 0,
+      "log": "drive-pint.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "drive",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "drive-phpstan-final.log",
+      "sha256": "0486df13135fb358d37d83a1a174cbeb23ed35ca19cf459dc5f9b4b1f093ad0f"
+    },
+    {
+      "package": "drive",
+      "check": "tests",
+      "exit": 0,
+      "log": "drive-tests.log",
+      "sha256": "39ebb1a7c76e2972fe2525b488204998643ba194b9368efcaa874f7ef1a28f3e"
+    },
+    {
+      "package": "documents",
+      "check": "pint",
+      "exit": 0,
+      "log": "documents-pint.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "documents",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "documents-phpstan-final.log",
+      "sha256": "235babf3f601eebbf888145d1df40f8bc81840c5cfb6af652fc8bfc4d704166e"
+    },
+    {
+      "package": "documents",
+      "check": "tests",
+      "exit": 0,
+      "log": "documents-tests-recheck.log",
+      "sha256": "393dd2d7881d455ee5817d4843828674f09f9eee324d6b69f5c2665826468587"
+    },
+    {
+      "package": "media",
+      "check": "pint",
+      "exit": 0,
+      "log": "media-pint.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "media",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "media-phpstan-final.log",
+      "sha256": "43c7a85f03d7af6ba25722f5f424a7089510c546e678aa0a4d74919d01dcf06b"
+    },
+    {
+      "package": "media",
+      "check": "tests",
+      "exit": 0,
+      "log": "media-tests.log",
+      "sha256": "7b9fdde672b77d261e434ab4005ede7339a5b04103b556321d6e78e015f75255"
+    },
+    {
+      "package": "filament",
+      "check": "pint",
+      "exit": 0,
+      "log": "filament-pint.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "filament",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "filament-phpstan-final.log",
+      "sha256": "9508b8e5ba66023b6c7c67f68900d2f2f92b73f0b6675993e624c666c8b693a7"
+    },
+    {
+      "package": "filament",
+      "check": "tests",
+      "exit": 0,
+      "log": "filament-tests.log",
+      "sha256": "90343890b6770690dd1c2f15e17f6cae7c97d04977d41d617b37fc4eefa74a2b"
+    },
+    {
+      "package": "azgard",
+      "check": "pint",
+      "exit": 0,
+      "log": "azgard-pint.log",
+      "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+    },
+    {
+      "package": "azgard",
+      "check": "phpstan",
+      "exit": 0,
+      "log": "azgard-phpstan-final.log",
+      "sha256": "1112f0561c8f1932b682dfc800cb26be25ae0d00d4941413d6a9e00806b5c8c2"
+    },
+    {
+      "package": "azgard",
+      "check": "tests",
+      "exit": 0,
+      "log": "azgard-tests.log",
+      "sha256": "30ef227524242f128802ba0c698d30f1b53d47dc3c060014ee68c808b970c85c"
+    }
+  ],
+  "postgresql": {
+    "core": {
+      "passed": 29,
+      "skipped": 0,
+      "failed": 0
+    },
+    "drive": {
+      "passed": 174,
+      "skipped": 0,
+      "failed": 0
+    }
+  },
+  "handler_key_negative_control": {
+    "negative_exit": 1,
+    "negative_failed": 6,
+    "restored_exit": 0,
+    "source_restored_sha256": "ce9ed72994a06ac616a6d60be74821a12bfc9fc6286a25dd45073e364011f090",
+    "mutation": "Temporarily disabled key format assertion; no source mutation remains."
+  },
+  "old_symbols": 0,
+  "audit": "skipped by owner (D17); no audit verdict",
+  "independent_review": "not requested; not launched",
+  "azgard_dependency": "P0 baseline 253cbf4cce0226545cd96ca8c6bcbefe329b1403; see azgard-dependency-witness.json"
+}

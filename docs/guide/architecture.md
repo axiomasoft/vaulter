@@ -32,7 +32,7 @@ when you extend a seam or debug a layer.
 @vaulter/vue  ──HTTP/JSON──►  Controllers ─► FormRequests ─► DTOs (Data\*)
               ──WebSocket──►  CollaborationDriver (Reverb | Hocuspocus)
        │
-  AccessResolver (Vaulter-owned)  ◄── HostRoleDriver (host, swappable)
+  AccessResolver (Vaulter-owned)  ◄── PermissionDriver (host, swappable)
        │                              + v_node_grants ACL
   Actions (final readonly · transactional · dispatch domain Events)
        │
@@ -89,8 +89,8 @@ pure delegation surface. This keeps the access decision in exactly one place.
 
 ### Repositories — read / store split
 
-Reads (`NodeReadRepository`, `GrantReadRepository`, `StorageReadRepository`, …) build queries;
-stores (`NodeStoreRepository`, `StorageStoreRepository`, …) perform writes and never open
+Reads (`NodeReadRepository`, `GrantReadRepository`, `DriveReadRepository`, …) build queries;
+stores (`NodeStoreRepository`, `DriveStoreRepository`, …) perform writes and never open
 transactions or dispatch events — the Action owns that. The tree-descent reads use
 `staudenmeir/laravel-adjacency-list` recursive relations scoped by `storage_id`.
 
@@ -104,8 +104,8 @@ ULID behaviour, tenant scoping, or audit. Models are the one part of the package
 ### Value objects, DTOs, enums
 
 `Vaulter\Data\*` are the `final readonly` DTOs Actions consume. `Vaulter\ValueObjects\*` hold
-domain values (`FileDescriptor`, `HandlerCapabilities`, the ACL
-`Subject`/`Decision`/`GrantSet`/`AclScope`) — kind-neutral only; core does not know the shape of
+domain values (`FileDescriptor`, `ContentCapabilities`, the ACL
+`Subject`/`Decision`/`GrantSet`/`AccessScope`) — kind-neutral only; core does not know the shape of
 any handler's content (`TipTapContent` and friends live in `vaulter-documents`, VLT-CANON P0.3).
 `Vaulter\Enums\*` are the sealed vocabularies (`Ability`, `NodeKind`, `BlobStatus`, …).
 
@@ -118,20 +118,21 @@ Drive and Documents each ship as their own package:
 
 | Directory (core) | Responsibility |
 |---|---|
-| `Access/` | `AccessResolver` (the effective-permission engine), `HostRoleDriverManager`, `HostUserResolver`. |
-| `Drivers/Permission/` | The shipped `HostRoleDriver` lanes: `database`, `gate`, `spatie`, `azgard`. |
+| `Access/` | `AccessResolver` (the effective-permission engine), `PermissionDriverManager`, `HostUserResolver`. |
+| `Drivers/Permission/` | The shipped `PermissionDriver` lanes: `database`, `gate`, `spatie`, `azgard`. |
 | `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
-| `Panels/` | `Panel` builder, `StoragePanelProvider`, `PanelRegistry`, `PanelTablesBuilder`, `PanelMigrationGenerator`. |
-| `Engines/` | The format-extensibility registry ENGINE (VLT-CANON P0.4, superseding H.5/T5): `DocumentHandlerRegistry`, `NodeHandlerResolver`, `DocumentFileDescriptorFactory`, and the baseline `Handlers/{PreviewHandler,DownloadOnlyHandler}` — always bound, so a drive-only host resolves preview/download with no other package installed. |
-| `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, `PanelTablesBuilder` columns. |
+| `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
+| `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
+| `Engines/` | The format-extensibility registry ENGINE (VLT-CANON P0.4, superseding H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory`, and the baseline `Handlers/{PreviewHandler,DownloadOnlyHandler}` — always bound, so a drive-only host resolves preview/download with no other package installed. |
+| `Schema/` | The id-strategy classes (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, `SchemaBuilder` columns. |
 | `Sharing/` | The bearer-link channel: `ShareResolver`, `ShareContext`, `ShareResult`. |
 | `Webhooks/` | The reliability layer: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | The append-only activity feed (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Access, Sharing and Webhooks only — Drive and Documents actions/events now live in their own packages (see below). |
-| `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
+| `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |
 | `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Handlers/*` (the interfaces the split packages implement). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
-| `Testing/` | Ship-with-package doubles: `NullRoleDriver`, `FakeAzgardGuard`. |
+| `Testing/` | Ship-with-package doubles: `NullPermissionDriver`, `FakeAzgardGuard`. |
 
 | Package | Namespace | Adds |
 |---|---|---|
@@ -170,31 +171,28 @@ methods each delegate to one Action or the read repository. The handle adds no b
 only a pre-resolved storage and upload-source normalisation (a PSR stream, `SplFileInfo` /
 `UploadedFile`, an open resource, or a raw string all normalise to a seekable stream).
 
-::: details VaulterManager — the full facade surface
-`for()`, `forStorage()`, `panel()`, `panels()`, `registerPanel()`,
-`resolvePermissionsWith()`, `permissionResolver()`, `registerDocumentType()`,
-`documentTypes()`, `registerHandler()`, `handlers()`, `registerExporter()`,
-`exporter()`, `exporterFormats()`, `driver()`. See the
-[Recipes](/guide/recipes) for the extension points (`registerHandler` / `registerExporter` /
-`resolvePermissionsWith`).
+::: details VaulterManager
+`for()`, `forStorage()`, `profiles()`, `registerDocumentType()`, `documentTypes()`,
+`handlers()`, `registerExporter()`, `exporter()`, `exporterFormats()`.
+[Facade and manager](/reference/facade).
 :::
 
 ## Storage Panels — the embeddability axis
 
-A **Storage Panel** is a named config envelope bound to *any* host entity, living over the
-**one shared `v_*` schema with no tables of its own by default** (zero migrations). It is the
+A **Storage Profile** is a named config envelope bound to *any* host entity, living over the
+**one shared `v_*` schema with no tables of its own** (zero migrations). It is the
 isolation/configuration axis, separate from the *storage type* (the policy preset
 `private | team | public`).
 
 A panel is built fluently and registered by FQCN only (config-cache-safe — no closures):
 
 ```php
-use Vaulter\Panels\Panel;
-use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileProvider;
 
-final class ProjectDriveStoragePanel extends StoragePanelProvider
+final class ProjectDriveProfile extends ProfileProvider
 {
-    public function panel(Panel $panel): Panel
+    public function profile(Profile $panel): Profile
     {
         return $panel
             ->id('project_drive')
@@ -205,17 +203,10 @@ final class ProjectDriveStoragePanel extends StoragePanelProvider
 }
 ```
 
-Register it under `config('vaulter.panels')`. Unset values fall back to the global config
-(**override → prefix → global**), so a panel declares only what it overrides. The
-`PanelRegistry` is a container singleton that **validates every panel at boot** (H.1):
-referenced model/pipe/resource FQCNs must exist and satisfy their contract, and a per-panel id
-strategy is rejected on the shared schema — a broken panel fails loud at boot rather than
-corrupting a request. Scaffold one with `php artisan vaulter:make-panel <name>`.
-
-The **own-tables** mode (declare `->tablePrefix()` / `->tables()`) is the rare advanced path
-for a schema-divergent domain; `vaulter:panel:migrations <panel>` then generates per-panel
-tables through the same `PanelTablesBuilder` definition so the schema never drifts. See
-[ADR-0009](/adr/0009-storage-panels).
+Register the provider in `config('vaulter.panels')`. `ProfileRegistry` hydrates profiles
+during application boot. Scaffold a provider with `php artisan vaulter:make:profile <name>`.
+Profiles share one schema; own tables, model maps, pipelines and resource hooks are removed.
+See [Drive profiles](/guide/storage-panels).
 
 ## Data model
 
@@ -244,8 +235,8 @@ on MariaDB) and enforced by an arch test — see [Troubleshooting](/guide/troubl
 
 Two lanes, evaluated by the Vaulter-owned `AccessResolver` ([ADR-0007](/adr/0007-pluggable-authorization)):
 
-- **`HostRoleDriver`** — the host's pluggable, per-panel role lane. It never sees a `Node` and
-  never deals in magic-string actions; it answers `resolve(Subject, Authorizable, AclScope)`,
+- **`PermissionDriver`** — the host's pluggable, per-panel role lane. It never sees a `Node` and
+  never deals in magic-string actions; it answers `resolve(Subject, Authorizable, AccessScope)`,
   `override(...)` (super-admin / `Gate::before`), `subjectsFor(Authorizable)` (actor → users +
   roles + teams) and `canCreateInWorkspace(...)`. Shipped lanes: `database` (default,
   standalone), `gate`, `spatie`, `azgard`, and the non-prod `null`. Swap via
@@ -269,8 +260,8 @@ Abilities (`Vaulter\Enums\Access\Ability`) map to CRUDS bits: `View/Download/Com
 `Share → SHARE`, `Manage → ALL`.
 
 ::: warning No driver = fail-loud in production
-The open `null` driver is selectable **only outside production**; `HostRoleDriverManager`
-throws `MissingHostRoleDriverException` if a production app resolves it. Bind a real driver
+The open `null` driver is selectable **only outside production**; `PermissionDriverManager`
+throws `MissingPermissionDriverException` if a production app resolves it. Bind a real driver
 before you deploy — see [Troubleshooting](/guide/troubleshooting#no-permission-driver).
 :::
 
@@ -317,12 +308,12 @@ Every seam a host plugs into, and where it is documented:
 
 | Contract | Bind via | Documented in |
 |---|---|---|
-| `Contracts\Access\HostRoleDriver` | `config('vaulter.drivers.permission')` | [Recipes — custom permission driver](/guide/recipes#permission-driver) |
+| `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Recipes — custom permission driver](/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (legacy) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
 | `Contracts\Access\AzgardGuard` | container binding (host adapter) | [Troubleshooting — Azgard morphs](/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
-| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
+| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
 | `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
 | `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
@@ -342,7 +333,7 @@ The reasoning behind every choice above lives in the [ADRs](/adr/). The full set
 | [0004](/adr/0004-content-format) | TipTap JSON content + append-only bounded version history. | accepted |
 | [0005](/adr/0005-unified-node-tree) | One adjacency-list tree (`v_nodes`) for folders/files/documents/shortcuts. | accepted |
 | [0006](/adr/0006-content-addressed-blobs-gc) | Content-addressed blobs + two-phase race-free GC. | accepted |
-| [0007](/adr/0007-pluggable-authorization) | `HostRoleDriver` (pluggable) + `AccessResolver` (owned), deny-veto. | accepted |
+| [0007](/adr/0007-pluggable-authorization) | `PermissionDriver` (pluggable) + `AccessResolver` (owned), deny-veto. | accepted |
 | [0008](/adr/0008-media-library-decision) | A custom CAS instead of `spatie/laravel-medialibrary`. | accepted |
 | [0009](/adr/0009-storage-panels) | Storage Panels — config-first, zero-migration envelopes. | accepted |
 | [0010](/adr/0010-php-npm-monorepo-release) | One repo, two package managers, two release channels. | accepted |

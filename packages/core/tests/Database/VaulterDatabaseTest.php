@@ -9,8 +9,8 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 
@@ -74,7 +74,7 @@ it('runs after-commit callbacks only when its outer transaction commits', functi
 
 it('rolls back uploads and document model inserts on the dedicated connection', function (string $modelClass): void {
     ForkRace::skipUnlessSupported($this);
-    $storage = Storage::forceCreate([
+    $storage = Drive::forceCreate([
         'owner_type' => 'team', 'owner_id' => 1, 'name' => 'test', 'disk' => 'local',
     ]);
     $node = Node::forceCreate([

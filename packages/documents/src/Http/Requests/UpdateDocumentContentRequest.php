@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Engines\DocumentFileDescriptorFactory;
-use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Enums\Handlers\Capability;
+use Vaulter\Handlers\FileDescriptorFactory;
+use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
 
@@ -92,8 +91,8 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
             return $this->richText = false;
         }
 
-        $descriptor = app(DocumentFileDescriptorFactory::class)->forNode($node);
-        $handler = app(DocumentHandlerRegistry::class)->resolve($descriptor, Capability::Edit);
+        $descriptor = app(FileDescriptorFactory::class)->forNode($node);
+        $handler = app(FileHandlerRegistry::class)->resolve($descriptor, Capability::Edit);
 
         return $this->richText = $handler->capabilities($descriptor)->richText;
     }

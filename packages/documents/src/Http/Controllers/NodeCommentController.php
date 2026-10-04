@@ -22,7 +22,6 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Http\Controllers\CommentController;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;

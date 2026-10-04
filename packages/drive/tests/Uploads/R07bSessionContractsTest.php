@@ -14,17 +14,16 @@ use Vaulter\Drive\Events\NodeForceDeleted;
 use Vaulter\Drive\Events\UploadSessionAborted;
 use Vaulter\Drive\Events\UploadSessionExpired;
 use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Activity\ActivityVerb;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage as DriveStorage;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -36,12 +35,12 @@ beforeEach(function (): void {
 /**
  * Quick storage with explicit tenant_id (not the default null).
  */
-function r07bReqTenantStorage(int $tenantId): DriveStorage
+function r07bReqTenantStorage(int $tenantId): Drive
 {
     static $seq = 0;
     $seq++;
 
-    $storage = new DriveStorage;
+    $storage = new Drive;
     $storage->forceFill([
         'owner_type' => 'team',
         'owner_id' => 90000 + $seq,
@@ -363,7 +362,7 @@ it('R07b: handleUploadSessionAborted records all three context keys (L237/238 Re
         new UploadSessionAborted($session, actorId: 42),
     );
 
-    $row = Activity::query()->where('verb', ActivityVerb::UploadSessionAborted->value)->sole();
+    $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
 
     expect($row->context)->toHaveKeys(['upload_id', 'protocol', 'received_bytes'])
         ->and($row->context['upload_id'])->toBeString()->not->toBeEmpty()
@@ -379,7 +378,7 @@ it('R07b: handleUploadSessionAborted upload_id context is the session upload_id 
         new UploadSessionAborted($session->refresh(), actorId: null),
     );
 
-    $row = Activity::query()->where('verb', ActivityVerb::UploadSessionAborted->value)->sole();
+    $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
     expect($row->context['upload_id'])->toBe($session->upload_id);
 });
 
@@ -396,7 +395,7 @@ it('R07b: handleUploadSessionExpired records all three context keys (L252/253 Re
         new UploadSessionExpired($session),
     );
 
-    $row = Activity::query()->where('verb', ActivityVerb::UploadSessionExpired->value)->sole();
+    $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
 
     expect($row->context)->toHaveKeys(['upload_id', 'protocol', 'received_bytes'])
         ->and($row->context['upload_id'])->toBe($session->upload_id)
@@ -416,7 +415,7 @@ it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 ex
         new UploadSessionExpired($session->refresh()),
     );
 
-    $row = Activity::query()->where('verb', ActivityVerb::UploadSessionExpired->value)->sole();
+    $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
     expect($row->context['protocol'])->toBe('tus');
 });
 
@@ -446,7 +445,7 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
         actorId: 7,
     ));
 
-    $row = Activity::query()->where('verb', ActivityVerb::NodeForceDeleted->value)->sole();
+    $row = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
     $nodeIds = $row->context['node_ids'];
 
     expect($nodeIds)->toBeArray()->not->toBeEmpty();

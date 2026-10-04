@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Cas;
 
-use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
-
 /**
  * A capability a {@see StorageDriver} implements to declare it can ENUMERATE the
  * disk and report object age (master plan P4 #11 / H.3). It is the seam the orphan

@@ -21,12 +21,12 @@ outline: deep
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
 Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie|azgard)
-or bind your own \Vaulter\Contracts\Access\HostRoleDriver.
+or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 ```
 
-**Почему.** ACL Drive нужна полоса `HostRoleDriver`. Открытый драйвер `null` (каждый актор —
-супер-админ) намеренно завязан на окружение: `HostRoleDriverManager` бросает
-`MissingHostRoleDriverException` всякий раз, когда его резолвит **production**-приложение, так что
+**Почему.** ACL Drive нужна полоса `PermissionDriver`. Открытый драйвер `null` (каждый актор —
+супер-админ) намеренно завязан на окружение: `PermissionDriverManager` бросает
+`MissingPermissionDriverException` всякий раз, когда его резолвит **production**-приложение, так что
 он не может втихую открыть прод-установку ([ADR-0007](/adr/0007-pluggable-authorization)).
 
 **Решение.** Выберите реальный драйвер в `config/vaulter.php`:
@@ -213,13 +213,10 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   ```
 
 - **Переименование по сущности.** Чтобы переименовать одну таблицу без изменения глобального
-  префикса, используйте `config('vaulter.table_names')` — `PanelTablesBuilder` и модели резолвят
+  префикса, используйте `config('vaulter.table_names')` — `SchemaBuilder` и модели резолвят
   через него.
 
-- **Панели со своими таблицами.** Панель получает собственные таблицы только в продвинутом режиме
-  own-tables (`->tablePrefix()` / `->tables()`); тогда вы генерируете их через
-  `php artisan vaulter:panel:migrations <panel>` ([ADR-0009](/adr/0009-storage-panels)). Дефолтная
-  панель с нулём миграций **не** добавляет ни одной миграции.
+- **Профили.** Все профили используют общую схему; генерация собственных таблиц удалена.
 
 ## Broadcast / совместное редактирование не подключается {#collaboration}
 
@@ -273,18 +270,11 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 
 ## Ошибки валидации панелей при загрузке {#panel-validation}
 
-**Симптом.** Приложение падает при загрузке с `InvalidPanelException` или `UnknownPanelException`.
+**Симптом.** Приложение падает при загрузке с `InvalidProfileException` или `UnknownProfileException`.
 
-**Почему и решение.** `PanelRegistry` валидирует каждую панель при загрузке (fail-loud, H.1):
+**Почему и решение.** Проверьте регистрацию запрошенного профиля:
 
-- **`InvalidPanelException::missingClass` / `notInstanceOf`** — панель ссылается на FQCN модели /
-  пайпа / ресурса, который не существует или не удовлетворяет своему контракту. Поправьте FQCN
-  (модель панели должна наследовать `Illuminate\Database\Eloquent\Model`).
-- **`InvalidPanelException::idStrategyWithoutOwnTables`** — панель задала `->idStrategy()`, оставаясь
-  на общей схеме. У одной общей `v_nodes` ровно один тип PK, так что стратегия id на панель законна
-  только в режиме own-tables. Либо уберите `->idStrategy()`, либо добавьте `->tablePrefix()`, чтобы
-  включить собственные таблицы ([ADR-0011](/adr/0011-id-strategy)).
-- **`UnknownPanelException::forName`** — `Vaulter::for($entity, panel: 'x')` (или маршрут) назвал
+- **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (или маршрут) назвал
   панель, которая не зарегистрирована. Зарегистрируйте FQCN её провайдера в
   `config('vaulter.panels')` или используйте панель `default`.
 

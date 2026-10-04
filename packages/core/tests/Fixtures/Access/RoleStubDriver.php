@@ -6,22 +6,22 @@ namespace Vaulter\Tests\Fixtures\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Access\ValueObjects\AclScope;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 
 /**
- * A configurable HostRoleDriver stub for the ACL tests: it can simulate a host
+ * A configurable PermissionDriver stub for the ACL tests: it can simulate a host
  * role-grant (resolve → a Decision), an absolute super-admin override, and a fixed
- * extra subject-set. The DatabasePermissionResolver returns null/empty for all of
+ * extra subject-set. The DatabasePermissionDriver returns null/empty for all of
  * these, so this stub is how the final-veto-after-role-grant and override paths are
  * exercised — and the contract test feeds it the SAME inputs as the real driver to
  * prove identical AccessResolver decisions where they should match.
  */
-final class RoleStubDriver implements HostRoleDriver
+final class RoleStubDriver implements PermissionDriver
 {
     public function __construct(
         private readonly ?GrantLevel $roleLevel = null,
@@ -29,7 +29,7 @@ final class RoleStubDriver implements HostRoleDriver
         private readonly bool $includeActor = true,
     ) {}
 
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         if ($this->roleLevel === null) {
             return null;
@@ -38,7 +38,7 @@ final class RoleStubDriver implements HostRoleDriver
         return Decision::allow($this->roleLevel);
     }
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return $this->overrideEffect;
     }

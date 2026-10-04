@@ -14,7 +14,7 @@ use Vaulter\Drive\Data\MoveNodeData;
 use Vaulter\Drive\Exceptions\CycleException;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
 use Vaulter\Load\Observability\CollaborationRoomMetrics;
@@ -98,7 +98,7 @@ it('records vaulter_activity_write_total when activity is persisted', function (
     $storage = DriveTestHelpers::drive()->storage();
 
     app(ActivityRecorder::class)->record(
-        verb: ActivityVerb::StorageCreated,
+        verb: EventType::DriveCreated,
         storageId: $storage->getKey(),
     );
 

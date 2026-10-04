@@ -14,7 +14,7 @@ use Vaulter\Webhooks\SigningSecretEncryptor;
  *   2. encrypt any existing plaintext secret in place — a value that already decrypts
  *      is left untouched, so re-running is a no-op.
  *
- * Fresh installs already get a text column (PanelTablesBuilder) and have no plaintext
+ * Fresh installs already get a text column (SchemaBuilder) and have no plaintext
  * rows, so both steps are no-ops there; the migration exists for a deployment that ran
  * the original string version. Gated on the 'reliability' feature.
  */

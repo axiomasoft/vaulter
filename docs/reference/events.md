@@ -95,8 +95,8 @@ All `ShouldDispatchAfterCommit`.
 |---|---|
 | `StorageCreated` | `Storage $storage, Node $root, int\|string\|null $actorId = null` |
 | `NodeCreated` | `Node $node, int\|string\|null $actorId = null` |
-| `FileUploaded` | `Node $node, File $file, FileVersion $version, int\|string\|null $actorId = null` |
-| `NodeVersionCommitted` | `Node $node, File $file, FileVersion $version, int $versionNo, int\|string\|null $actorId = null` |
+| `FileUploaded` | `Node $node, File $file, FileRevision $version, int\|string\|null $actorId = null` |
+| `NodeVersionCommitted` | `Node $node, File $file, FileRevision $version, int $versionNo, int\|string\|null $actorId = null` |
 | `NodeRenamed` | `Node $node, string $fromName, string $toName, int\|string\|null $actorId = null` |
 | `NodeMoved` | `Node $node, int\|string\|null $fromParentId, int\|string\|null $toParentId, int\|string\|null $actorId = null` |
 | `NodeCopied` | `Node $source, Node $copy, int\|string\|null $actorId = null` |

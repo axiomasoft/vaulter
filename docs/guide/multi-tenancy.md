@@ -46,7 +46,7 @@ column must exist for the index to be defined. When tenancy is off, the index si
 spans a `NULL` column.
 
 ```php
-// Vaulter\Schema\PanelTablesBuilder::tenant() — runs for every Drive table
+// Vaulter\Schema\SchemaBuilder::tenant() — runs for every Drive table
 private function tenant(Blueprint $table, IdStrategy $ids): void
 {
     $ids->reference(table: $table, column: 'tenant_id', nullable: true);
@@ -54,14 +54,14 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 ```
 
 The model property is declared on every Drive model
-(`Vaulter\Models\Drive\Storage`, `Node`, `File`, `FileVersion`,
+(`Vaulter\Models\Drive\Drive`, `Node`, `File`, `FileRevision`,
 `Vaulter\Models\Cas\Blob`, `Vaulter\Models\Access\NodeGrant`,
 `Vaulter\Models\Sharing\NodeShare`, …) as `int|string|null $tenant_id`.
 
 ::: tip
 The `tenant.enabled` flag is what *your* tenant-aware models and migrations should
 key on. Vaulter reads it only to decide whether to apply the optional column on the
-**legacy DocVault** tables (`Vaulter\Support\VaulterSchema::tenant()` is conditional);
+**legacy DocVault** tables (`Vaulter\Schema\VaulterSchema::tenant()` is conditional);
 the modern Drive tables emit the column unconditionally as explained above.
 :::
 
@@ -139,7 +139,7 @@ A minimal tenant-aware storage that *stamps and scopes* by the current tenant:
 namespace App\Models\Vaulter;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Models\Drive\Storage as BaseStorage;
+use Vaulter\Models\Drive\Drive as BaseStorage;
 
 class TenantStorage extends BaseStorage
 {
@@ -224,7 +224,7 @@ line up with the Corex / AzGuard ecosystem:
 
 This matters when you run the **AzGuard host-role driver** for authorization in a
 tenant-scoped app. That driver
-(`Vaulter\Drivers\Permission\AzgardPermissionResolver`) talks only to the
+(`Vaulter\Access\Drivers\AzgardPermissionDriver`) talks only to the
 Vaulter-owned `Vaulter\Contracts\Access\AzgardGuard` seam — so vaulter-core carries
 **no** hard dependency on `azguard` / `corex` — and routes its workspace-scoped role
 checks through `hasPermissionIn($contextType, $contextId, $permission)`, which is

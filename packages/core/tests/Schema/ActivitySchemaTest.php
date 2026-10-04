@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Support\Config;
 
@@ -33,7 +33,7 @@ it('is append-only: no updated_at and no soft-delete column', function (): void 
 it('the Activity model keeps timestamps off (no updated_at maintenance)', function (): void {
     $activity = new Activity;
     $activity->forceFill([
-        'verb' => ActivityVerb::NodeCreated->value,
+        'verb' => EventType::FolderCreated->value,
         'context' => ['k' => 'v'],
         'created_at' => now(),
     ])->save();
@@ -41,6 +41,6 @@ it('the Activity model keeps timestamps off (no updated_at maintenance)', functi
     // It persists against the timestamp-less table and round-trips the verb cast +
     // json context — the model never attempts an updated_at write.
     expect($activity->usesTimestamps())->toBeFalse()
-        ->and($activity->refresh()->verb)->toBe(ActivityVerb::NodeCreated)
+        ->and($activity->refresh()->verb)->toBe(EventType::FolderCreated)
         ->and($activity->context)->toBe(['k' => 'v']);
 });

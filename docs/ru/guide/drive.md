@@ -67,7 +67,7 @@ $drive = Vaulter::forStorage($storage);
 
 ```php
 $root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->storage();    // Vaulter\Models\Drive\Storage
+$storage = $drive->storage();    // Vaulter\Models\Drive\Drive
 $panel = $drive->panel();        // string
 ```
 

@@ -6,7 +6,6 @@ namespace Vaulter\Filament\Support;
 
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Vaulter\Access\AccessResolver;
 
 /**
  * Resolves the panel's acting admin for the Vaulter resources. The Filament

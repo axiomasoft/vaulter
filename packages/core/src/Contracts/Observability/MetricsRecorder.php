@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Observability;
 
-use Vaulter\Observability\NullMetricsRecorder;
-
 /**
  * Host-facing metrics seam (VLT-LOAD P8 / D35). Package code depends only on this
  * contract; the host or load SUT binds a real adapter. With no backend installed the

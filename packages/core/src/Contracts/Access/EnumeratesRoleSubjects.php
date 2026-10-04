@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Access;
 
-use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-
 /**
- * A capability marker (F-P1.2-01): the {@see HostRoleDriver} implementing it declares
+ * A capability marker (F-P1.2-01): the {@see PermissionDriver} implementing it declares
  * that its `subjectsFor()` DOES expand an actor into role/group/team {@see Subject}s,
  * not just the actor's own identity — so a `v_node_grants` row addressed to a role or
  * team actually enters the AccessResolver's subject-set and takes effect.
@@ -20,7 +16,7 @@ use Vaulter\Actions\Access\GrantNodeAccessAction;
  * addressed to a role/team under them is silently inert. Vaulter makes that silence
  * LOUD — {@see GrantNodeAccessAction} warns (and, outside production, throws) — but ONLY
  * when the driver PROVABLY cannot enumerate: neither this marker NOR an overridden
- * `subjectsFor()` (see {@see HostRoleDriverManager::enumeratesRoleSubjects()}).
+ * `subjectsFor()` (see {@see PermissionDriverManager::enumeratesRoleSubjects()}).
  * A host that follows the documented extension path — subclass a base lane and override
  * `subjectsFor()` to append role/team Subjects — is recognised WITHOUT this marker.
  *

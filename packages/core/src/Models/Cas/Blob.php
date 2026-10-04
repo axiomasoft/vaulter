@@ -12,8 +12,8 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Support\Config;
 
 /**
@@ -74,7 +74,7 @@ class Blob extends Model
     /**
      * Every file version that references this blob through the edge table.
      *
-     * @return BelongsToMany<FileVersion, $this, FileVersionBlob>
+     * @return BelongsToMany<FileRevision, $this, FileRevisionBlob>
      */
     public function versions(): BelongsToMany
     {

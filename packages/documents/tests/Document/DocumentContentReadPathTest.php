@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -27,7 +27,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function readPathStorage(): Storage
+function readPathStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

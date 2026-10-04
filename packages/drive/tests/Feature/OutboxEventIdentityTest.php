@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Vaulter\Drive\Events\NodeRenamed;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -22,7 +22,7 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
     }
 
     $rows = Outbox::query()->where('topic', (string) $node->getKey())
-        ->where('event', WebhookEvent::NodeRenamed->value)->orderBy('id')->get();
+        ->where('event', EventType::NodeRenamed->value)->orderBy('id')->get();
 
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('event_id')->unique())->toHaveCount(3)
@@ -44,15 +44,15 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
     $drive->trash($node->refresh());
 
     $rows = Outbox::query()->where('topic', (string) $node->getKey())
-        ->whereIn('event', [WebhookEvent::NodeTrashed->value, WebhookEvent::NodeRestored->value])
+        ->whereIn('event', [EventType::NodeTrashed->value, EventType::NodeRestored->value])
         ->orderBy('id')->get();
 
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('event_id')->unique())->toHaveCount(3)
         ->and($rows->pluck('event')->all())->toBe([
-            WebhookEvent::NodeTrashed->value,
-            WebhookEvent::NodeRestored->value,
-            WebhookEvent::NodeTrashed->value,
+            EventType::NodeTrashed->value,
+            EventType::NodeRestored->value,
+            EventType::NodeTrashed->value,
         ]);
 
     foreach ($rows as $row) {
@@ -68,7 +68,7 @@ it('stages one row when the same event occurrence is dispatched twice', function
     event($event);
     event($event);
 
-    $row = Outbox::query()->where('event', WebhookEvent::NodeRenamed->value)->sole();
+    $row = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
 
     expect($row->event_id)->toBe($event->eventId)
         ->and($row->payload['event_id'])->toBe($event->eventId);

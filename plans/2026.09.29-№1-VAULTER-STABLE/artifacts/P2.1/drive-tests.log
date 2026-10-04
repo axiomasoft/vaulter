@@ -1,0 +1,662 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\ArchTest[39m
+  [32;1m✓[39;22m[90m [39m[90mstrict types[39m[90m                                                        [39m [90m0.59s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdrive never depends on documents[39m[90m                                    [39m [90m0.51s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe package never depends on the host application (E5.1)[39m
+  [32;1m✓[39;22m[90m [39m[90mnon-test src never references the host App namespace (E5.1, F-P4.3-[39m[90m…[39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mtechnical layers are never nested under a domain module (ADR-0017 Law 1)[39m
+  [32;1m✓[39;22m[90m [39m[90mDB facade is routed through VaulterDatabase (AD25)[39m
+  [32;1m✓[39;22m[90m [39m[90mdomain exceptions implement the HTTP problem contract[39m[90m               [39m [90m0.02s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\PublicApiSnapshotTest[39m
+  [32;1m✓[39;22m[90m [39m[90mvaulter-drive public API surface matches the frozen golden (VLT-REL[39m[90m…[39m [90m0.01s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\DedicatedConnectionTest[39m
+  [33;1m-[39;22m[90m [39m[90mit rolls back an Action insertion on the dedicated Vaulter connection[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+  [33;1m-[39;22m[90m [39m[90mit takes the CAS advisory lock on the dedicated connection only[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\LockOrderRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit V21 completes ten overlapping move/upload races with an acyclic[39m[90m… [39m [90m0.12s[39m  
+  [33;1m-[39;22m[90m [39m[90mit copy and dedup upload finish with overlapping quota operations a[39m[90m…[39m [90m0.12s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\MoveCycleRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit lets exactly one of move(A→B) and move(B→A) win and leaves no cycle[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+  [33;1m-[39;22m[90m [39m[90mit lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycle[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\QuotaRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit V02 admits exactly one 8 MiB upload into 10 MiB of free quota[39m[90m [39m[33m→[39m[90m… [39m [90m0.12s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\RevisionNumberRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit V03 serializes revisions and accounts for their actual preceding heads[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+  [33;1m-[39;22m[90m [39m[90mit V03 aggregate lock protects counter allocation even without a caller node lock[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+  [33;1m-[39;22m[90m [39m[90mit reuses prepared bytes on a serialization retry and discards the temp file[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\SameNameUploadRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit V20 creates one x.pdf and returns a domain conflict to the secon[39m[90m…[39m [90m0.12s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\TreeLockRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit never leaves a live node under a folder trashed concurrently[39m[90m [39m[33m→ ForkRace needs a pgsql connection and the pcntl + posix extensions (SQLite serialises writes).[39m
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\TusConcurrentPatchTest[39m
+  [33;1m-[39;22m[90m [39m[90mit два конкурентных PATCH с одинаковым offset — ровно один применяе[39m[90m…[39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit offset берётся со СВЕЖЕЙ залоченной строки, а не из устаревшей м[39m[90m…[39m [90m0.14s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Concurrency\TusPatchVsSweepRaceTest[39m
+  [33;1m-[39;22m[90m [39m[90mit PATCH и sweep одной сессии: победитель ровно один, файл не усечё[39m[90m…[39m [90m0.12s[39m  
+  [33;1m-[39;22m[90m [39m[90mit commitAssembled() берёт ту же критическую секцию: пока лок сесси[39m[90m…[39m [90m0.12s[39m  
+  [33;1m-[39;22m[90m [39m[90mit лок двух РАЗНЫХ upload_id, коллизирующих по 32-битному hashtext,[39m[90m…[39m [90m0.12s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\CopyMutationContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit copies node and current version attributes and charges the exact[39m[90m…[39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit charges only live copied descendants and excludes trashed childr[39m[90m…[39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\CopyNodeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit копия файла переиспользует ОДИН блоб через новое ребро[39m[90m           [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit глубокая копия папки клонирует всё поддерево[39m[90m                     [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copy отклоняет конфликт имён в месте назначения[39m[90m                  [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\CreateFolderTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit создаёт папку в корне хранилища (под root-узлом)[39m[90m                 [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit создаёт вложенную папку под родителем[39m[90m                            [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit детерминированно отклоняет конфликт имён сиблингов[39m[90m               [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit игнорирует регистр при проверке сиблингов[39m[90m                        [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit разрешает одинаковые имена в разных родителях[39m[90m                    [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit диспатчит NodeCreated при создании папки[39m[90m                         [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit list возвращает прямых детей папки[39m[90m                               [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\ForceDeleteTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit forceDelete отцепляет рёбра блоба → блоб становится GC-кандидато[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit forceDelete уменьшает used_bytes на освобождённый размер[39m[90m         [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit forceDelete тумбстонит всё поддерево (deleted_at)[39m[90m                [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit forceDelete не трогает байты на диске (GC отдельно)[39m[90m              [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\MoveRenameTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit move = ОДИН UPDATE по parent_id, поддерево не трогается[39m[90m          [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit цикл-гард: запрет перемещения в самого себя[39m[90m                      [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit цикл-гард: запрет перемещения в собственного потомка[39m[90m             [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit move отклоняет конфликт имён в месте назначения[39m[90m                  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit move отклоняет кросс-storage перемещение[39m[90m                         [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rename меняет имя и проверяет конфликт сиблингов[39m[90m                 [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rename в то же имя — no-op без конфликта[39m[90m                         [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\R07CommandActivityContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit purge-trash reports zero subtrees when nothing qualifies[39m[90m         [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit purge-trash purges on the cutoff day but spares one day newer[39m[90m    [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit purge-trash pluralizes multiple purged roots[39m[90m                     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records sweep counters for the materialised stale batch size[39m[90m     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit createFolder activity context carries owner and creator ids[39m[90m      [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit move within the same parent is a no-op without NodeMoved activit[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit forceDelete on a folder subtree records zero freed bytes and ski[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restore re-homes to the storage root when the original parent wa[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit upload session initiated activity carries the exact lifecycle co[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit force-delete outbox occurrence ids are distinct ULIDs[39m[90m            [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DriveContext upload from a string uses the provided original nam[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit StorageManager root() provisions a missing root with an empty na[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\StorageManagerTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit создаёт storage и корневую папку при первом обращении[39m[90m            [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit идемпотентен: второе обращение возвращает тот же storage[39m[90m         [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit применяет дефолтный диск из конфига к новому storage[39m[90m             [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit диспатчит StorageCreated с корнем при провижене[39m[90m                  [39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\TrashRestoreTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit trash помечает узел и всё поддерево, used_bytes не меняется[39m[90m      [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit trash освобождает имя для нового сиблинга (partial-uniq исключае[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restore очищает trashed-триплет на поддереве[39m[90m                     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restore при живом сиблинге с тем же именем → конфликт[39m[90m            [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restore возвращает к корню, если исходный родитель пропал[39m[90m        [39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\UploadConfigTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit maxUploadKb falls back to the document size limit when unset[39m[90m     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit maxUploadKb prefers its own configured value over the document l[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit allowedUploadMimes is empty (permissive) by default and lists co[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an upload above the dedicated drive.max_upload_kb ceilin[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts an upload within the dedicated ceiling regardless of the[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a mime outside a configured allowlist[39m[90m                    [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts a mime inside a configured allowlist[39m[90m                     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stays permissive when no allowlist is configured[39m[90m                 [39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\UploadFileTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit загружает файл: node kind=file + File + FileRevision + ребро[39m[90m     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit дедуп: два одинаковых файла → один блоб, два узла, два ребра[39m[90m     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit увеличивает used_bytes в рамках транзакции загрузки[39m[90m              [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit квота: загрузка сверх квоты отклоняется ДО коммита блоба[39m[90m         [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit новая версия: бамп version_no, перенаведение head, прежняя super[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit новая версия корректирует used_bytes на дельту размера[39m[90m           [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit диспатчит FileUploaded для нового файла и NodeVersionCommitted д[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\CommandOutputContractTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit reports zero, one and multiple swept sessions with the actual co[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reports the purge threshold, override and actual subtree count[39m[90m   [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\DriveApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit runs the full CRUD cycle: folder → upload → list → show → rename[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit dedups two identical uploads onto a shared blob[39m[90m                  [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uploads a new version onto an existing file node[39m[90m                 [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an invalid name with 422[39m[90m                                 [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit surfaces a sibling-name conflict as a clean 409[39m[90m                  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit streams the current version with the right bytes and headers (no[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit streams the bytes through PHP even on a disk that provides a tem[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit streams a specific historical version[39m[90m                            [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit serves a text/html declared mime as octet-stream with nosniff, n[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit serves a whitelisted image/png declared mime as-is, with nosniff[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit shows storage meta with root node id and quota accounting[39m[90m        [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves the swapped Node/Storage models through route-model bin[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit cursor-paginates the folder listing[39m[90m                              [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves a listing page of sibling nodes with O(1) storage queri[39m[90m…[39m [90m0.12s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\DriveAuthorizationTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit blocks an unauthorised show with 403[39m[90m                             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit allows an authorised show when the actor holds a grant[39m[90m           [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit blocks an unauthorised folder create with 403[39m[90m                    [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit allows a folder create when the actor may create at the destinat[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit fills the node abilities object from the resolver[39m[90m                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit grants then revokes access through the grant API[39m[90m                 [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a grant with an unregistered subject_type (422)[39m[90m          [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a revoke with an unregistered subject_type (422)[39m[90m         [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit blocks the grant API for an actor without SHARE[39m[90m                  [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit denies a download without a grant and allows it with one[39m[90m         [39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ExactListingTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V09 reaches the 301st candidate across empty pages and hides den[39m[90m…[39m [90m0.98s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V22 enforces a child deny after the Gate role lane allows the wo[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses at most five Vaulter queries for 50 visible nodes including[39m[90m…[39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects forged signatures and a cursor from another parent[39m[90m       [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the last inspected key when a full page ends inside an ove[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not skip equal sort values during descending trash paginati[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit scans shared candidates across storages without totals or denied[39m[90m…[39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\HostRouteBindingTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves a host node parameter with the host model[39m[90m               [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the problem code for a missing Vaulter storage[39m[90m           [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the problem code for a missing Vaulter node[39m[90m              [39m [90m0.05s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\MutationContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit keeps the complete storage and folder event contracts[39m[90m            [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the complete storage API shape including toolbar abiliti[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "prot[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "name[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "name[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "name[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "size[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "size[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "hash[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "mime[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects each malformed resumable upload field with dataset "meta[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves move, rename and copy payloads and activity context[39m[90m    [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves file upload and version payloads with their actual byt[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves trash and restore payloads including actor and destina[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records every force-deleted subtree id and the exact freed bytes[39m[90m [39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\OutboxEventIdentityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit stages three distinct occurrences for rename A to B to A to B[39m[90m    [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stages three distinct occurrences for trash restore trash[39m[90m        [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stages one row when the same event occurrence is dispatched twic[39m[90m…[39m [90m0.07s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Feature\PurgeTrashTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit physically purges a node trashed past the retention window, F-P1[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit leaves a node still inside the retention window untouched[39m[90m        [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit frees the blob edges of a purged file subtree (GC-eligible)[39m[90m      [39m [90m0.09s[39m  
+  [33;1m-[39;22m[90m [39m[90mit cascades the physical purge to file/version rows on PostgreSQL,[39m[90m… [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not physically purge a node restored between candidate mate[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit honours the --days override[39m[90m                                      [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\QuotaReserveTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit reserves from the database value with unlimited and exact-bounda[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reserves from the database value with unlimited and exact-bounda[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects one byte over the quota without changing used_bytes[39m[90m      [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit releases bytes down to zero and accepts a zero reservation[39m[90m       [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rolls back an entire subtree copy when its summed heads exceed q[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses the locked file head despite stale node size and stale quot[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copies a stale file from its current head and reserves that exac[39m[90m…[39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07ActionControllerContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit accepts an upload that fills the quota exactly and rejects one b[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stores null mime when the upload source provides no declared typ[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s download for a folder node before streaming[39m[90m                 [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sets Content-Length to the blob size and streams the exact bytes[39m[90m [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 409s copy when the destination already owns the requested name[39m[90m   [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit deep-copies every live descendant and charges the summed logical[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rename to the same name emits no rename activity or outbox row[39m[90m   [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit clamps per_page to 1 at the lower bound and 200 at the upper bou[39m[90m…[39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07ExceptionContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps UploadConflictException forSession message an[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps UploadConflictException forClosedSession mess[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps CycleException forMove message[39m[90m                [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps QuotaExceededException forStorage message and[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps StagedUploadMissingException forSession messa[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps UploadContentMismatchException forSession mes[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps CrossStorageMoveException between message[39m[90m     [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception keeps OffsetMismatchException message render header[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Exception surfaces offset mismatch over HTTP with the full me[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07RequestRuleContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit R07Request accepts nullable resumable fields at their boundaries[39m[90m [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request rejects each malformed resumable field in isolation w[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request surfaces the resumable name separator custom message[39m[90m  [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request resolves resumable protocol from input with tus defau[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request treats an empty resumable name as absent while a stri[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request keeps only scalar metadata values in CreateUploadSess[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request validates multipart upload file parent and name rules[39m[90m [39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request requires the multipart upload file field alone when m[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request validates copy name boundaries and separator message[39m[90m… [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request accepts nullable copy parent_id and empty name overri[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request accepts nullable move parent_id only[39m[90m                  [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request validates rename name rules and custom separator mess[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request validates create-folder name and nullable parent_id[39m[90m   [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request enforces the dedicated upload size ceiling on the fil[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Request adds mimetypes to the file rule only when an allowlis[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07TusControllerContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit returns 403 on HEAD PATCH DELETE and OPTIONS when tus is disable[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 412 on missing Tus-Resumable includes both Tus-Resumable and Tus[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 415 on PATCH abort includes Tus-Resumable and rejects empty or t[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts PATCH content-type with parameters after application/off[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit OPTIONS advertises Tus-Max-Size as the decimal max_bytes when ca[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DELETE abort returns 204 with Tus-Resumable and marks the sessio[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit status poll returns 403 for a different authenticated actor[39m[90m      [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit create into a non-root folder stores that folder as target_paren[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit create with parent omitted resolves the storage root folder as t[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit metadata whitelisting continues after an unknown key and trims h[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit metadata skips empty keys and round-trips base64 values from Upl[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit metadata values longer than max_value_length are truncated[39m[90m       [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 413 on CONTENT_LENGTH max plus one includes Tus-Resumable and na[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts CONTENT_LENGTH exactly at max_chunk_bytes[39m[90m                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit treats max_chunk_bytes zero as unlimited for declared CONTENT_LE[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s unknown upload_id on status[39m[90m                                 [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s when the session storage row is missing on HEAD[39m[90m             [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s when parent_id belongs to another storage on create[39m[90m         [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s PATCH when no authenticated actor is present[39m[90m                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit Location header normalizes a trailing slash on the route prefix[39m[90m  [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit guardCreate workspace AND node create cannot be split under the[39m[90m… [39m [90m0.05s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07bActionNodeContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L78: shrinking version passes when quota is at capaci[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L80/L81: sibling-name conflict is rejected for a new-[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L106: used_bytes is decremented when the new version[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L196/L203: new version with a changed mime type updat[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L234-236: committed version has status=committed, cor[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size ver[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L249 Increment: a 1-byte over-quota upload is rejecte[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L312 Increment: probeSize probe does not add a phanto[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L319: a file with no extension stores a null extensio[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadFile L129-130: owner_id and created_by are set to actorId[39m[90m… [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeController L151/L152: show folder response includes children[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeController L374: cross-storage node lookup 404s[39m[90m              [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeController L383/L385: per_page is clamped to exactly 1 at th[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit CopyNode L70: copying a 1-byte file increments used_bytes by exa[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit CopyNode L94/L95: is_pinned and inherit_grants propagate correct[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit CopyNode L96: shortcut_target_id is preserved on the copied node[39m[90m [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit CopyNode L151: copied file version has status=committed[39m[90m          [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DownloadController L114: non-empty original_name is used as file[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DownloadController L114: empty original_name falls back to node[39m[90m… [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DownloadController L115 first CoalesceRemoveLeft: version mime_t[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DownloadController L115 second CoalesceRemoveLeft: node mime_typ[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit ForceDelete L61: force-deleting a 1-byte file fully reclaims the[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit ForceDelete L67: NodeForceDeleted event carries numerically inde[39m[90m…[39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07bRequestCommandContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit R07b: totalSizeBytes() casts numeric string to strict int (L87 R[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: totalSizeBytes() returns null for a non-numeric string (L8[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: totalSizeBytes() returns null when key is absent (L87 boun[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: expectedSha256() returns the full 64-char hash string (L94[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: expectedSha256() returns null for empty string (L94 EmptyS[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: expectedSha256() returns null when key is absent (L94 Bool[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: mimeType() returns the string for a non-empty input (L101[39m[90m… [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: mimeType() returns null for empty string (L101 EmptyString[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: mimeType() returns null when key is absent (L101)[39m[90m          [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: name() returns null for a non-string truthy value — kills[39m[90m… [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: name() returns null for empty string (L80 EmptyStringToNot[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: name() returns the string for a non-empty string (L80 sani[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: resumable session rules() enforces protocol, name, sha256,[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadFileRequest name() returns null for empty string (L9[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadFileRequest name() returns null for non-string (L91[39m[90m… [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadFileRequest name() returns the string for a non-empt[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadFileRequest rules() has file required, name max and[39m[90m… [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash outputs exact singular "day" for retention=1 —[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash outputs exact plural "days" for retention=2 (L[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash --days 0 uses zero retention (L131 max floor)[39m[90m  [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash non-numeric --days falls back to the configure[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash decrements storage used_bytes — ForceDeleteNod[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash physically removes rows — withTrashed still fi[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash increments purgedRoots correctly for multiple[39m[90m… [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: purge-trash emits vaulter_purge_nodes_total when nodes are[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 bou[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: sanitizeMetadata continues after unknown key and still inc[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: decodeUploadMetadata skips segments with an empty key (L46[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: DELETE abort transitions session to Aborted status (L186 R[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07cDenyGuardContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit refuses every node guard when the host role driver denies the ac[39m[90m…[39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses restore of a trashed node when the host role driver deni[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit places a folder under the requested parent, not the storage root[39m[90m [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses the default page size of 50 when per_page is omitted[39m[90m        [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a tus abort when the host role driver denies the actor[39m[90m   [39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\R07dObservableMutantTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit rejects a stat-able chunk when the ceiling is 1 byte[39m[90m             [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an unstatable chunk when the ceiling is 1 byte and stage[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an s3 part of 2 bytes when the ceiling is 1 byte[39m[90m         [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records an assemble duration of a few seconds, not the nanosecon[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit counts a 10-byte download as one 10-byte chunk[39m[90m                   [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records download ttfb once for a body larger than one read[39m[90m       [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the source original name on a copied version[39m[90m               [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses move, copy, and a new version when the actor has only th[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses move and copy when workspace create is closed even if th[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes the requested parent, not the storage root[39m[90m            [39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit counts one purged trash root from zero[39m[90m                           [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not count a trash root that is restored before the lock[39m[90m     [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not emit a purge counter when nothing was purged[39m[90m            [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit floors a negative retention override at zero days[39m[90m                [39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ResumableUploadApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit tus: POST create → Location + upload_id, HEAD offset, PATCH chun[39m[90m…[39m [90m0.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit GET status returns the session shape[39m[90m                             [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit DELETE aborts the session[39m[90m                                        [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit S3 multipart: POST parts → POST complete → committed node[39m[90m        [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s an unknown upload_id[39m[90m                                        [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses the tus surface when tus is disabled[39m[90m                     [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 429s a resumable-upload session create past the vaulter-uploads[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)[39m[90m [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a new upload session past the active-session cap for the[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not cap a new session when max_active_sessions is 0 (unboun[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\TrashRemanenceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit 404s on downloading the current head of a trashed node, F-P1.12-[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s on downloading a specific version of a trashed node, F-P1.1[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restore makes a trashed node downloadable again, no regression t[39m[90m…[39m [90m0.11s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\TreeInvariantsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit rejects creating a folder under a non-folder or trashed destinat[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects creating a folder under a non-folder or trashed destinat[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects creating a folder under a non-folder or trashed destinat[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects uploading a file into a non-folder or trashed destinatio[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects uploading a file into a non-folder or trashed destinatio[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects uploading a file into a non-folder or trashed destinatio[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects moving a node into a non-folder or trashed destination w[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects moving a node into a non-folder or trashed destination w[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects moving a node into a non-folder or trashed destination w[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects copying a node into a non-folder or trashed destination[39m[90m… [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects copying a node into a non-folder or trashed destination[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects copying a node into a non-folder or trashed destination[39m[90m… [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit re-homes a restore to the root when the original parent is no lo[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses to restore a node that is not in the trash[39m[90m               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a folder of another drive as the destination with ('crea[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a folder of another drive as the destination with ('uplo[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a folder of another drive as the destination with ('move[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a folder of another drive as the destination with ('copy[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit renders a cross-drive operation as 409 cross_drive_operation[39m[90m     [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames, moves, trashes or deletes the root with ('rename'[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames, moves, trashes or deletes the root with ('move')[39m[90m  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames, moves, trashes or deletes the root with ('trash')[39m[90m [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames, moves, trashes or deletes the root with ('force d[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames, moves, trashes or deletes the root with ('copy')[39m[90m  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit only force-deletes from the trash[39m[90m                                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses to trash a node that is already in the trash[39m[90m             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects moving a folder into its own subtree[39m[90m                     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves a missing destination to the root instead of a parentle[39m[90m…[39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit allows exactly one parentless node per drive[39m[90m                     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restores to the parent recorded on the locked row, not the calle[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes the tree lock before any node row lock with ('create folde[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes the tree lock before any node row lock with ('upload')[39m[90m     [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes the tree lock before any node row lock with ('copy')[39m[90m       [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes the tree lock before any node row lock with ('trash')[39m[90m      [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes the tree lock before any node row lock with ('rename')[39m[90m     [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit locks a new version's target before the CAS lock[39m[90m                 [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a new version for a node deleted after it was loaded[39m[90m     [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit purges trash under the tree lock taken before the trashed root r[39m[90m…[39m [90m0.09s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\TusProtocolTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit идемпотентный повтор совпадающего диапазона → 204, не 409 (F-P1.[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit PATCH с неверным Content-Type → 415, НЕ 204 (F-P1.4-05, red-befo[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit HEAD/PATCH без Tus-Resumable → 412 (F-P1.4-06, red-before: прохо[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit HEAD/PATCH с чужой версией Tus-Resumable → 412 (F-P1.4-06)[39m[90m       [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit OPTIONS не анонсирует checksum-расширение (не реализовано, U1.5/[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit метаданные с неизвестным ключом → отброшены, с известным — сохра[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit значение метаданных сверх лимита длины — усекается, не отвергает[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\TusResponseContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit returns all resume headers from creation through commit[39m[90m          [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit omits Upload-Length when the upload size is deferred[39m[90m             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit omits Tus-Max-Size for unlimited uploads and advertises a one-by[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit omits Tus-Max-Size for unlimited uploads and advertises a one-by[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts Content-Length exactly at the chunk ceiling[39m[90m              [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit continues metadata whitelisting after an unknown key and lets he[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\UploadChunkLimitTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк огр[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit tus PATCH с Content-Length больше max_chunk_bytes отбивается ДО[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit S3 part с Content-Length больше max_chunk_bytes отбивается ДО чт[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit чанк без объявленной длины (нестатируемый поток, как php://input[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\UploadSessionOwnershipTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit владелец сессии продвигает её PATCH-чанком (F-P1.4-12, контроль)[39m[90m [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit чужой актор с правом Create в той же папке НЕ может PATCH чужую[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit чужой актор НЕ может DELETE (abort) чужую сессию (F-P1.4-12)[39m[90m     [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit чужой актор НЕ может HEAD чужую сессию (F-P1.4-12)[39m[90m               [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit S3-multipart: чужой актор НЕ может POST parts на чужую сессию (F[39m[90m…[39m [90m0.08s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Observability\P84Section52MetricsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit records tus upload bytes and chunk duration on PATCH[39m[90m             [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records tus upload conflict on offset mismatch[39m[90m                   [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records s3 upload bytes, chunk duration, and assemble metrics on[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records single-shot upload bytes and chunk duration[39m[90m              [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records download ttfb and bytes for the current file stream[39m[90m      [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records download ttfb and bytes for a historical version stream[39m[90m  [39m [90m0.09s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Observability\P85Section53DriveMetricsTest[39m
+  [33;1m![39;22m[90m [39m[90mit records sweep upload metrics for stale sessions[39m[90m [39m[33m→ This test did[39m[90m… [39m [90m0.07s[39m  
+  [33;1m![39;22m[90m [39m[90mit records purge trash metrics when a subtree is purged[39m[90m [39m[33m→ This test[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Observability\Tracing\UploadSweepTracingTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit records command root and action child spans for upload.sweep[39m[90m     [39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Panels\StoragePanelSeparationTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit разводит storage по разным панелям одного владельца[39m[90m              [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\R07ModelEnumContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit R07Model casts upload part integers and received_at after persis[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model casts upload session protocol status and total_size_byt[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model lists exact UploadStatus allowedTransitions including o[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model resolves UploadFileData name from override not original[39m[90m [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model returns the full UploadSessionResource JSON shape with[39m[90m… [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model returns all-false storage abilities without an actor or[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model requires both root create ability and workspace gate fo[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model treats a non-Authorizable request user as having no act[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07Model exposes real storage ability flags when actor and root[39m[90m… [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\R07S3MultipartContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit initialise returns only the session chunk_size hint[39m[90m              [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit putPart records exact byte_offset, size, etag md5 wrapper and pa[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sums recorded part sizes into received_bytes across multiple par[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit complete returns the stitched byte length and advances received_[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isComplete is false while parts exist but the staged assembly is[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects complete when a staged part object is missing[39m[90m            [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects complete when copied bytes do not match the recorded par[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a part body one byte over max_chunk_bytes at the handler[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit HTTP parts echo the handler etag map and default part_no from X-[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit HTTP parts 404 an unknown upload_id[39m[90m                              [39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\R07SessionManagerContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit initiate persists the full server-built session shape from Uploa[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit initiate stores null metadata when the client sent an empty map[39m[90m  [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit initiate leaves a tus session ready for PATCH after handler init[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit markAssembled refuses an illegal status transition[39m[90m               [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts initiate total_size_bytes exactly on max_bytes and rejec[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit active-session cap allows max minus one and rejects at the ceili[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit countActiveForActor counts only initiated and uploading rows[39m[90m     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit UploadPartStoreRepository replaces part fields on re-upload of t[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commit commits PNG bytes when declared mime matches and discards[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commit places a new file under the session target_parent_id, not[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commit fails loud when the session storage row is missing[39m[90m        [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commit rejects image/jpg declared when magic bytes are PNG[39m[90m       [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit advanceReceived flips initiated to uploading on first chunk[39m[90m      [39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\R07StagingSnifferContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the staging disk from storage_id when the storage relat[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reports staged size zero when the tmp object is absent[39m[90m           [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a stat-able chunk one byte over max_chunk_bytes before s[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit includes the measured byte count in an oversize stat-able chunk[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rangeMatches requires staged length to cover offset plus chunk l[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit HEAD offset uses the smaller of staged bytes and recorded receiv[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a PATCH that would grow past max_bytes after a partial u[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts an idempotent retransmit when the upload is already comp[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts generic declared mime without requiring[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts generic declared mime without requiring[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts generic declared mime without requiring[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts null declared mime as generic[39m[90m           [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts matching PNG bytes for image/png includ[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer folds image/jpg to image/jpeg for agreement[39m[90m     [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer rejects a concrete declared mime that contradic[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer rejects PNG declared when the head is a ZIP arc[39m[90m…[39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit MagicByteSniffer accepts an empty stream head without contradict[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit append still refuses offset>0 when staged object was removed[39m[90m     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses the session storage disk name when the relation is a loaded[39m[90m…[39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\R07bS3StagingContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] putPart ValidationException for a non-open session carr[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] complete ValidationException for an empty parts list ca[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] complete ValidationException for total mismatch carries[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] isComplete returns true when exactly one byte is assemb[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] max_chunk_bytes zero is treated as unlimited and all by[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] exactly max_chunk_bytes is accepted without triggering[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] complete assembles parts in order and the staged object[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bStage] append at byte offset one rejects immediately when n[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bStage] append at offset one preserves the pre-existing byte[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bStage] rangeMatches returns false without exception when no[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bStage] rangeMatches at offset one correctly skips the first[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] controller rejects a declared Content-Length above max_[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] controller resolves the storage root when session targe[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] controller forbids a different authenticated user from[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit [r07bS3] controller accepts a declared Content-Length exactly eq[39m[90m…[39m [90m0.08s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Uploads\R07bSessionContractsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate stores the tenant_id from the storage row (L307 A[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate upload_id is stored as a non-empty string (L66 Re[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate target_name stored from UploadInitData (L74 Remov[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate node_id stored from UploadInitData targetNode (L7[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate metadata=[] stores null not empty-array (L77 Remo[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: initiate non-empty metadata is stored as-is (L77 sanity)[39m[90m   [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementIn[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 bou[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: null actorId bypasses the active session cap (L269 RemoveA[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: max_active_sessions=0 disables the cap for any actorId (L2[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: guardTransition ValidationException carries the "status" f[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: advanceReceived works on an Uploading session (L182 Remove[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: advanceReceived throws on an Aborted session (L182 boundar[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: markCommitted throws UploadConflictException on an Initiat[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: markCommitted throws on an Uploading session — only Assemb[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadPart part_no and byte_offset and size_bytes cast to[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: UploadPart received_at casts to Carbon (L57/L61 received_a[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: handleUploadSessionAborted records all three context keys[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: handleUploadSessionAborted upload_id context is the sessio[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: handleUploadSessionExpired records all three context keys[39m[90m… [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: handleUploadSessionExpired protocol is the tus protocol va[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit R07b: handleNodeForceDeleted node_ids are string-typed after Ide[39m[90m…[39m [90m0.06s[39m  
+  [33;1m-[39;22m[90m [39m[90mit R07b: acquireForPatch pgsql advisory lock key includes upload: p[39m[90m…[39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\S3MultipartTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit initiate → parts → complete → server-recompute → commit[39m[90m          [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика[39m[90m             [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit лживый ETag не используется как адрес — сервер пересчитывает sha[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit complete без частей отклоняется[39m[90m                                  [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit streams multipart assembly with bounded complete memory[39m[90m          [39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit abort удаляет per-part объекты и помечает aborted[39m[90m                [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit дедуп: multipart-сборка против идентичной прежней загрузки → оди[39m[90m…[39m [90m0.11s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\StagedUploadBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit compares a retransmit at its actual offset and length with datas[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit compares a retransmit at its actual offset and length with datas[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit compares a retransmit at its actual offset and length with datas[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit compares a retransmit at its actual offset and length with datas[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit compares a retransmit at its actual offset and length with datas[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit truncates an unacknowledged suffix before appending at the autho[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts the exact chunk ceiling for statable and non-statable st[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts the exact chunk ceiling for statable and non-statable st[39m[90m…[39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\SweepUploadsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit sweep помечает протухшие открытые сессии expired и чистит staged[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep НЕ трогает свежие (не протухшие) сессии[39m[90m                    [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep НЕ трогает уже завершённые/aborted сессии[39m[90m                  [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweepable scope выбирает initiated|uploading|assembled в граница[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep сметает застрявшую Assembled-сессию за TTL и чистит staged[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep НЕ трогает свежую Assembled-сессию в пределах TTL (F-P1.4-[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep абортит S3-multipart части протухшей сессии[39m[90m                [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\TusFlowTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit open сессию: initiated, нулевой offset, upload_id и TTL[39m[90m          [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit PATCH-чанки → HEAD-offset растёт → assemble → commit создаёт фай[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resume после разрыва: второй клиент читает HEAD-offset и продолж[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit отвергает PATCH с offset, не совпадающим с серверным — байты рас[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit идемпотентный повтор: PATCH с offset<server, но с СОВПАДАЮЩИМИ у[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit дедуп: идентичная резюмируемая загрузка → один блоб против прежн[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit лживый client sha256 игнорируется — адрес считается с собранных[39m[90m… [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit квота: сборка сверх квоты отклоняется на commit[39m[90m                  [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit over-size: initiate сверх max_bytes отклоняется ДО приёма байт[39m[90m   [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit abort чистит staged temp и помечает aborted[39m[90m                      [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit новая версия: резюмируемая загрузка на существующий узел бампит[39m[90m… [39m [90m0.10s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\TusMutationBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit accepts bytes when max_bytes is zero and treats zero as unlimite[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts a chunk exactly on the configured max_bytes boundary[39m[90m     [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a chunk that exceeds max_bytes before recording its offs[39m[90m…[39m [90m0.06s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadIntegrityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit S3 complete при сумме частей меньше total_size_bytes → отказ, бл[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit PATCH крупнее chunk_size (это лишь HINT) НЕ отклоняется, пока ma[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit append не поднимает пиковую память до размера staged-файла (пото[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commit отклоняет объект с mime image/png и magic-bytes ZIP, F-P1[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadModelsMassAssignmentTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit never mass-assigns received_bytes on UploadSession via fill() (F[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects ANY fill() attribute on UploadPart with MassAssignmentEx[39m[90m…[39m [90m0.05s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadSchemaTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit creates v_upload_sessions with every §2.8 column[39m[90m                 [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates v_upload_parts with every §2.8 column[39m[90m                    [39m [90m0.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a duplicate upload_id (UNIQUE)[39m[90m                           [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit a part re-upload REPLACES on the (session, part_no) composite pr[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit casts the session enums and json columns[39m[90m                         [39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit declares the upload_session_id foreign key on v_upload_parts[39m[90m     [39m [90m0.05s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadSessionActivityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit initiate пишет activity-строку upload_session.initiated с акторо[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit abort пишет activity-строку upload_session.aborted (F-P1.4-13, r[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit sweep-expire пишет activity-строку upload_session.expired без ак[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit переезд Uploads morph-безопасен: upload-session activity не пише[39m[90m…[39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadSessionCriticalSectionTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit append() при offset > 0 и пропавшем staged-объекте ОТКАЗЫВАЕТ, а[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit advanceReceived() НЕ воскрешает терминальную сессию — CAS по отк[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit advanceReceived() НЕ воскрешает терминальную сессию — CAS по отк[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit advanceReceived() НЕ воскрешает терминальную сессию — CAS по отк[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit expire() перечитывает статус под локом и не трогает уже терминал[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit vaulter:sweep-uploads реклеймит стухшую сессию и чистит staged,[39m[90m… [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit markCommitted() НЕ воскрешает реклеймленную сессию — CAS по Asse[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit markCommitted() НЕ воскрешает реклеймленную сессию — CAS по Asse[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit коммит реклеймленной сессии отбивается, узел не создаётся, стату[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit commitAssembled() перечитывает статус под локом и не зовёт комми[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit putPart() перечитывает статус под локом: часть терминальной сесс[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit штатная последовательность PATCH после фикса не сломана[39m[90m          [39m [90m0.07s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\UploadSessionLockDriverTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NO[39m[90m…[39m [90m0.06s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NO[39m[90m…[39m [90m0.05s[39m  
+
+  [90mTests:[39m    [33;1m2 risky[39;22m[90m,[39m[39m [39m[33;1m18 skipped[39;22m[90m,[39m[39m [39m[32;1m506 passed[39;22m[90m (1608 assertions)[39m
+  [90mDuration:[39m [39m41.84s[39m
+

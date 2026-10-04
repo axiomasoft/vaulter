@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -25,12 +25,12 @@ it('resolves a document node to the TipTap handler descriptor', function (): voi
         parent: $drive->root(),
     ));
 
-    $descriptor = app(NodeHandlerResolver::class)->describe($node);
+    $descriptor = app(NodePresenter::class)->present($node);
 
-    expect($descriptor->id)->toBe('tiptap')
+    expect($descriptor->id)->toBe('vaulter/tiptap')
         ->and($descriptor->capabilities->editable)->toBeTrue()
         ->and($descriptor->capabilities->collaborative)->toBeTrue()
-        ->and($descriptor->ui->component)->toBe('VaulterDocEditor');
+        ->and($descriptor->ui->key)->toBe('vaulter/tiptap');
 });
 
 it('embeds the handler descriptor in the NodeResource payload', function (): void {
@@ -47,9 +47,9 @@ it('embeds the handler descriptor in the NodeResource payload', function (): voi
 
     expect($payload)->toHaveKey('handler')
         ->and($payload['handler'])->toBeArray()
-        ->and($payload['handler']['id'])->toBe('tiptap')
+        ->and($payload['handler']['id'])->toBe('vaulter/tiptap')
         ->and($payload['handler']['capabilities'])->toHaveKey('editable')
-        ->and($payload['handler']['ui'])->toHaveKey('component');
+        ->and($payload['handler']['ui'])->toHaveKey('key');
 });
 
 it('omits the handler descriptor for a folder node', function (): void {
@@ -79,8 +79,8 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
         'size_bytes' => 10,
     ])->save();
 
-    $descriptor = app(NodeHandlerResolver::class)->describe($node);
+    $descriptor = app(NodePresenter::class)->present($node);
 
-    expect($descriptor->id)->toBe('preview')
+    expect($descriptor->id)->toBe('vaulter/preview')
         ->and($descriptor->capabilities->previewable)->toBeTrue();
 });

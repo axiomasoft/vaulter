@@ -19,13 +19,13 @@ use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededExceptio
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\NodeName;
@@ -34,7 +34,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
  * Commit an upload into the Drive (§2.4 commit flow): stage → quota → BlobStore.commitStaged
- * (content-addressed dedup) → File + FileVersion(version_no) + version↔blob edge
+ * (content-addressed dedup) → File + FileRevision(version_no) + version↔blob edge
  * → file node (current_version_id, mime, size, extension).
  *
  * Quota (§1.5 eager): the incoming size is checked against the storage's
@@ -42,7 +42,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * Preparation happens once outside SQL so transaction retries reuse the same bytes.
  *
  * Two paths share one Action:
- *   - new file → create Node(kind=file) + File + FileVersion(version_no=1);
+ *   - new file → create Node(kind=file) + File + FileRevision(version_no=1);
  *   - new version (upload onto an existing file node) → bump version_no, repoint
  *     current_version_id, mark the prior head superseded, and adjust used_bytes by
  *     the SIZE DELTA (new size − previous head size), not the full size.
@@ -56,10 +56,10 @@ final readonly class UploadFileAction
         private BlobStore $blobs,
         private ContentStore $content,
         private FileStoreRepository $files,
-        private FileVersionStoreRepository $versions,
+        private FileRevisionStoreRepository $versions,
         private NodeStoreRepository $nodeStore,
         private NodeReadRepository $nodeRead,
-        private StorageStoreRepository $storageStore,
+        private DriveStoreRepository $storageStore,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private TreeGuard $tree,
@@ -202,7 +202,7 @@ final readonly class UploadFileAction
      * New-version path (§2.4): bump version_no, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
-    private function commitNewVersion(UploadFileData $data, File $file, ?FileVersion $previousHead, Blob $blob, int $size): Node
+    private function commitNewVersion(UploadFileData $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size): Node
     {
         $node = $data->targetNode;
 
@@ -221,7 +221,7 @@ final readonly class UploadFileAction
 
         $this->blobs->attach($version, $blob);
 
-        if ($previousHead instanceof FileVersion) {
+        if ($previousHead instanceof FileRevision) {
             $this->versions->markSuperseded($previousHead);
         }
 
@@ -258,7 +258,7 @@ final readonly class UploadFileAction
         Blob $blob,
         int $size,
         int $versionNo,
-    ): FileVersion {
+    ): FileRevision {
         return $this->versions->create([
             'file_id' => $file->getKey(),
             'version_no' => $versionNo,

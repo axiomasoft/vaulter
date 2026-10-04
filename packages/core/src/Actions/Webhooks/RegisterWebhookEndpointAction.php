@@ -6,7 +6,7 @@ namespace Vaulter\Actions\Webhooks;
 
 use Illuminate\Support\Str;
 use Vaulter\Data\Webhooks\RegisteredWebhookEndpoint;
-use Vaulter\Data\Webhooks\RegisterWebhookEndpointData;
+use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
@@ -27,7 +27,7 @@ final readonly class RegisterWebhookEndpointAction
         private VaulterDatabase $database,
     ) {}
 
-    public function execute(RegisterWebhookEndpointData $data): RegisteredWebhookEndpoint
+    public function execute(RegisterWebhookEndpointInput $data): RegisteredWebhookEndpoint
     {
         $secret = $this->generateSecret();
 

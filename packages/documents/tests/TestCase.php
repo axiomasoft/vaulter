@@ -37,7 +37,7 @@ abstract class TestCase extends OrchestraTestCase
             // drivers (added to core's registry), the collaboration
             // manager/broadcast channel, the document routes and the
             // Documents-event Activity/outbox subscribers. The registry engine
-            // itself and the NodeHandlerResolver seam are core-owned (P0.4/D10) —
+            // itself and the NodePresenter seam are core-owned (P0.4/D10) —
             // VaulterServiceProvider (core) binds them, not this provider.
             VaulterDocumentsServiceProvider::class,
         ];
@@ -62,7 +62,7 @@ abstract class TestCase extends OrchestraTestCase
         // 'api' group definition; authorization is exercised via the resolver.
         $app['config']->set('vaulter.middleware', []);
 
-        // The Documents suite runs OPEN under the env-gated NullRoleDriver (non-prod
+        // The Documents suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // document mechanics without an access-control lane.
         $app['config']->set('vaulter.drivers.permission', 'null');

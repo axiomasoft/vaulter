@@ -29,7 +29,7 @@ subclass (to add ULID keys, tenant scoping, audit behaviour, …):
 ```php
 'models' => [
     // Vaulter Drive entities
-    'storage'    => \Vaulter\Models\Drive\Storage::class,
+    'storage'    => \Vaulter\Models\Drive\Drive::class,
     'node'       => \Vaulter\Models\Drive\Node::class,
     'file'       => \Vaulter\Models\Drive\File::class,
     'blob'       => \Vaulter\Models\Cas\Blob::class,
@@ -127,16 +127,16 @@ A panel is a named config-envelope bound to a host entity over the shared `v_*` 
 
 ```php
 'panels' => [
-    \App\Vaulter\Panels\ProjectDrivePanel::class,
+    \App\Vaulter\Profiles\ProjectDriveProfile::class,
 ],
-'default_panel' => \Vaulter\Panels\DefaultStoragePanel::class,
+'default_panel' => \Vaulter\Profiles\DefaultProfile::class,
 
 'migrations' => [
-    'path' => null, // where vaulter:panel:migrations writes own-tables panel migrations
+    'path' => null, // legacy key; no longer used by profile scaffolding
 ],
 ```
 
-Scaffold one with `php artisan vaulter:make-panel <name>`. Deep dive:
+Scaffold one with `php artisan vaulter:make:profile <name>`. Deep dive:
 [Storage Panels](/guide/storage-panels).
 
 ## Features
@@ -168,9 +168,9 @@ priority), falling back to download-only. Add a format with one class + one line
 
 ```php
 'handlers' => [
-    \Vaulter\Documents\Handlers\TipTapHandler::class,
-    \Vaulter\Documents\Handlers\PreviewHandler::class,
-    \Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
+    \Vaulter\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -187,11 +187,11 @@ driver. The default `database` driver is fully standalone (zero host dependency)
 ],
 
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
-    'null'     => \Vaulter\Testing\NullRoleDriver::class, // non-prod only
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
+    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
 ],
 ```
 

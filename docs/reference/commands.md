@@ -14,8 +14,7 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | Command | Purpose |
 |---|---|
 | `vaulter:install` | Publish config + migrations, run them, offer to star the repo |
-| `vaulter:make-panel` | Scaffold a storage-panel provider class |
-| `vaulter:panel:migrations` | Generate per-panel migrations for an own-tables panel |
+| `vaulter:make:profile` | Scaffold a storage-panel provider class |
 | `vaulter:gc-blobs` | Two-phase, race-safe blob garbage collection |
 | `vaulter:reconcile-blobs` | Rebuild blob `ref_count` and report dangling rows |
 | `vaulter:purge-trash` | Permanently delete trashed nodes past retention |
@@ -45,47 +44,28 @@ php artisan migrate
 
 See [Guide → Installation](/guide/installation).
 
-## `vaulter:make-panel`
+## `vaulter:make:profile`
 
-Scaffold a consumer-owned `StoragePanelProvider` class in `app/Vaulter/Panels` from a
+Scaffold a consumer-owned `ProfileProvider` class in `app/Vaulter/Profiles` from a
 stub. It does **not** touch the published config and does **not** generate migrations —
 a panel is a zero-migration config-envelope over the shared `v_*` schema by default.
 Registering the provider FQCN in `config('vaulter.panels')` is a deliberate next step
 the command prints.
 
 ```
-vaulter:make-panel
+vaulter:make:profile
     {name}        The panel id (snake/kebab), e.g. project_drive
     {--host=}     The host model FQCN this storage embeds into
-    {--prefix=}   Table name prefix — opts into the advanced own-tables mode
     {--no-grants} Generate a panel without per-node grants
-    {--id=}       Primary key strategy for this panel (ulid|uuid7|bigint) — own-tables only
     {--force}     Overwrite the provider if it already exists
 ```
 
 ```bash
-php artisan vaulter:make-panel project_drive --host="App\Models\Project"
+php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 ```
 
 See [Concepts → Storage panels](/guide/storage-panels).
 
-## `vaulter:panel:migrations`
-
-Generate the per-panel Drive migration for a panel that opted into the advanced
-own-tables mode. Resolves the panel from the registry and hands it to the
-`PanelMigrationGenerator`. A panel writing to the shared `v_*` schema is rejected —
-the default path needs no generated file. Output goes to `config('vaulter.migrations.path')`
-(or `database/migrations` when null).
-
-```
-vaulter:panel:migrations
-    {name}    The panel id whose per-panel tables to generate
-    {--force} Overwrite an existing migration for this panel
-```
-
-```bash
-php artisan vaulter:panel:migrations project_drive
-```
 
 ## `vaulter:gc-blobs`
 

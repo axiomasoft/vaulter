@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -23,13 +23,13 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
 
     for ($tree = 0; $tree < 500; $tree++) {
         $subjects = array_map(static fn (int $id): Subject => Subject::ofModel(AccessTestHelpers::user($id)), range(1, mt_rand(1, 3)));
-        $driver = Mockery::mock(HostRoleDriver::class);
+        $driver = Mockery::mock(PermissionDriver::class);
         $driver->shouldReceive('subjectsFor')->andReturn($subjects);
         $driver->shouldReceive('override')->andReturn(null);
         $driver->shouldReceive('resolve')->andReturn(null);
-        app()->instance(HostRoleDriver::class, $driver);
-        config()->set('vaulter.permission_drivers.equivalence', HostRoleDriver::class);
-        app()->forgetInstance(HostRoleDriverManager::class);
+        app()->instance(PermissionDriver::class, $driver);
+        config()->set('vaulter.permission_drivers.equivalence', PermissionDriver::class);
+        app()->forgetInstance(PermissionDriverManager::class);
         app()->forgetInstance(AccessResolver::class);
         config()->set('vaulter.drivers.permission', 'equivalence');
         $nodes = [];
@@ -78,10 +78,10 @@ it('preserves absolute overrides, empty subjects and role grants in batch', func
     $nodes = [AccessTestHelpers::folder($storage, null, 'one'), AccessTestHelpers::folder($storage, null, 'two')];
     AccessTestHelpers::grant($nodes[0], GrantLevel::Owner, effect: Effect::Deny);
     $driver = new RoleStubDriver(roleLevel: $role, overrideEffect: $override, includeActor: $subjects);
-    app()->instance(HostRoleDriver::class, $driver);
-    config()->set('vaulter.permission_drivers.batch', HostRoleDriver::class);
+    app()->instance(PermissionDriver::class, $driver);
+    config()->set('vaulter.permission_drivers.batch', PermissionDriver::class);
     config()->set('vaulter.drivers.permission', 'batch');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();
@@ -112,7 +112,7 @@ it('evaluates override and role once per storage and node owner and subjects onc
     $roles = 0;
     $subjectCalls = 0;
     $actor = AccessTestHelpers::user();
-    $driver = Mockery::mock(HostRoleDriver::class);
+    $driver = Mockery::mock(PermissionDriver::class);
     $driver->shouldReceive('subjectsFor')->andReturnUsing(function () use ($actor, &$subjectCalls): array {
         $subjectCalls++;
 
@@ -128,10 +128,10 @@ it('evaluates override and role once per storage and node owner and subjects onc
 
         return Decision::allow(GrantLevel::Reader);
     });
-    app()->instance(HostRoleDriver::class, $driver);
-    config()->set('vaulter.permission_drivers.batch', HostRoleDriver::class);
+    app()->instance(PermissionDriver::class, $driver);
+    config()->set('vaulter.permission_drivers.batch', PermissionDriver::class);
     config()->set('vaulter.drivers.permission', 'batch');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
     $batch = $resolver->evaluateMany($actor, $nodes);
@@ -152,10 +152,10 @@ it('preserves deciding grants above the 64th ancestor', function (Effect $effect
         $parent = AccessTestHelpers::folder($storage, $parent, 'deep-'.$i);
     }
     $driver = new RoleStubDriver(roleLevel: $effect === Effect::Deny ? GrantLevel::Reader : null);
-    app()->instance(HostRoleDriver::class, $driver);
-    config()->set('vaulter.permission_drivers.deep', HostRoleDriver::class);
+    app()->instance(PermissionDriver::class, $driver);
+    config()->set('vaulter.permission_drivers.deep', PermissionDriver::class);
     config()->set('vaulter.drivers.permission', 'deep');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();

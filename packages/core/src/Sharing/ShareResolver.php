@@ -12,11 +12,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Http\Controllers\Sharing\ShareController;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Repositories\Drive\StorageReadRepository;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
 
@@ -48,7 +47,7 @@ final class ShareResolver
 {
     public function __construct(
         private readonly NodeShareReadRepository $shares,
-        private readonly StorageReadRepository $storages,
+        private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
     ) {}
 
@@ -131,7 +130,7 @@ final class ShareResolver
 
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
-        if (!$this->storages->find($node->storage_id) instanceof Storage) {
+        if (!$this->storages->find($node->storage_id) instanceof Drive) {
             return null;
         }
 

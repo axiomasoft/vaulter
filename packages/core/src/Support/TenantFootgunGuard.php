@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Exceptions\Support\TenantIsolationNotConfiguredException;
+use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -52,7 +51,7 @@ final class TenantFootgunGuard
         );
 
         if (!$isProduction) {
-            throw new TenantIsolationNotConfiguredException(
+            throw new TenancyMisconfiguredException(
                 'vaulter.tenant.enabled=true but config(\'vaulter.models.node\') is the default '
                 .Node::class.', which does not scope by tenant_id (ADR-0003: Vaulter does not '
                 .'enforce tenancy — the host\'s swapped model applies its own TenantScope). '

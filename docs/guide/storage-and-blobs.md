@@ -214,7 +214,7 @@ locks follow **drive → nodes by id → file aggregate → quota → CAS**. A r
 reads its previous head and `version_count` from the locked file; its new number is
 `version_count + 1` and its quota delta is new size minus that head's size.
 
-`StorageStoreRepository::reserveBytes()` applies a conditional atomic UPDATE:
+`DriveStoreRepository::reserveBytes()` applies a conditional atomic UPDATE:
 `used_bytes = used_bytes + delta` only when the quota is unlimited or the result
 fits `quota_bytes`. A failed reservation throws `QuotaExceededException` and rolls
 back all metadata. Copies reserve the sum of their subtree's heads in one UPDATE.

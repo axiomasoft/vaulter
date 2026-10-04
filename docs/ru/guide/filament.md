@@ -141,7 +141,7 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 ресурс **не может создавать и редактировать** строку (`canCreate()` возвращает `false`); он лишь
 перечисляет и инспектирует.
 
-- **Модель**: определяется через `Config::storageModel()` (по умолчанию `Vaulter\Models\Drive\Storage`).
+- **Модель**: определяется через `Config::storageModel()` (по умолчанию `Vaulter\Models\Drive\Drive`).
 - **Таблица**: имя, владелец (`owner_type #owner_id`), диск, использованные байты, квота (`∞`, когда
   безлимит), статус, дата создания. Сортировка по умолчанию — `created_at desc`.
 - **Infolist** (страница просмотра): секции Storage / Owner / Usage, с человекочитаемым форматом байтов.
@@ -199,7 +199,7 @@ Vaulter::forStorage($record->storage)->rename(
 // NodeGrantResource::grantFromData — создание через ядровый Action.
 app(GrantNodeAccessAction::class)->execute(
     node: $node,
-    data: new GrantNodeAccessData(
+    data: new GrantNodeAccessInput(
         subject: new Subject(type: $subjectType, id: $subjectId),
         level: GrantLevel::from($level),     // reader | commenter | editor | manager
         effect: Effect::from($effect),       // allow | deny
@@ -241,7 +241,7 @@ live/expired/revoked/exhausted. Сырой токен показывается *
 ```php
 $minted = app(CreateShareLinkAction::class)->execute(
     node: $node,
-    data: new CreateShareLinkData(
+    data: new ShareLinkInput(
         permissions: $bits > 0 ? $bits : Permission::Read->value, // по умолчанию READ (1)
         level: GrantLevel::from($level),
         scope: GrantScope::from($scope),   // item | subtree
@@ -275,7 +275,7 @@ $minted = app(CreateShareLinkAction::class)->execute(
 
 - **Модель**: `Config::activityModel()` (`Vaulter\Models\Activity\Activity`).
 - **Таблица**: бейдж глагола, актор (`type #id`), цель (`type #id`), хранилище, когда. Фильтр: глагол
-  (`SelectFilter` по кейсам `ActivityVerb`).
+  (`SelectFilter` по кейсам `EventType`).
 - **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
   `KeyValueEntry` для `context` плюс ip / user-agent / request-id).
 - **Страницы**: `index` (список) и `view` (`/{record}`).

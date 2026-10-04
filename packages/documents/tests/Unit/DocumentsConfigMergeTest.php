@@ -8,8 +8,8 @@ use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
-use Vaulter\Engines\Handlers\DownloadOnlyHandler;
-use Vaulter\Engines\Handlers\PreviewHandler;
+use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Handlers\Builtin\PreviewHandler;
 
 /**
  * Cache-safe config merge (P3.5 / B22 / F-P2.2-01, D19 characterization).

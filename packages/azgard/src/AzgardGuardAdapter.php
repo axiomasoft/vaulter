@@ -7,13 +7,12 @@ namespace Vaulter\Azgard;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Contracts\Access\AzgardGuard;
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
 
 /**
  * The REAL {@see AzgardGuard} adapter (master plan P1 #2 / §6 / H.2 / ADR-0007): it
  * satisfies Vaulter's narrow permission seam by delegating to an AzGuard-backed user
  * ({@see AzgardBackedUser}). This is the production counterpart to core's
- * FakeAzgardGuard — the {@see AzgardPermissionResolver}
+ * FakeAzgardGuard — the {@see AzgardPermissionDriver}
  * only ever sees the Vaulter seam, so core stays free of any AzGuard dependency; this
  * package carries the concrete bridge.
  *

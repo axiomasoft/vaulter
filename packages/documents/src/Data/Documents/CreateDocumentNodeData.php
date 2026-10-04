@@ -7,8 +7,8 @@ namespace Vaulter\Documents\Data\Documents;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for CreateDocumentNodeAction (§2.5 / M4a): create a kind=document node
@@ -25,7 +25,7 @@ use Vaulter\Models\Drive\Storage;
 final readonly class CreateDocumentNodeData
 {
     public function __construct(
-        public Storage $storage,
+        public Drive $storage,
         public string $name,
         public DocumentContent $content,
         public ?Node $parent = null,

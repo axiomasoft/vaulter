@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data;
 
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 
 /**
  * Command for CreateFolderAction (§2.2): create a kind=folder node under a parent
@@ -16,7 +16,7 @@ use Vaulter\Models\Drive\Storage;
 final readonly class CreateDriveFolderData
 {
     public function __construct(
-        public Storage $storage,
+        public Drive $storage,
         public string $name,
         public ?Node $parent = null,
         public int|string|null $actorId = null,

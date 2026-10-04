@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -21,7 +21,7 @@ beforeEach(function (): void {
     StorageFacade::fake('local');
 });
 
-function ownershipStorage(): Storage
+function ownershipStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }

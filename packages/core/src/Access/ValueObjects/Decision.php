@@ -9,7 +9,7 @@ use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * A single resolved access statement (master plan H.2): a level + its effect +
- * the concrete CRUDS bits it grants or forbids. The HostRoleDriver returns one to
+ * the concrete CRUDS bits it grants or forbids. The PermissionDriver returns one to
  * express "this actor has Writer here" (allow) and the AccessResolver folds the
  * node-ACL rows into Decisions before combining them.
  *

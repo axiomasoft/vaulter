@@ -15,7 +15,7 @@ outline: deep
 use Vaulter\Facades\Vaulter;
 
 $drive = Vaulter::for($project);          // открыть Drive-хэндл
-$panel = Vaulter::panel('project_drive'); // резолв Storage Panel
+$panel = Vaulter::profiles()->get('project_drive'); // резолв Storage Panel
 ```
 
 ::: info Резолвьте как удобно
@@ -28,39 +28,25 @@ $panel = Vaulter::panel('project_drive'); // резолв Storage Panel
 
 | Метод | Возвращает | Назначение |
 |---|---|---|
-| `for(Model $entity, ?string $panel = null)` | `DriveContext` | Открыть Drive-хэндл, привязанный к хранилищу сущности хоста в панели |
-| `forStorage(Storage $storage)` | `DriveContext` | Открыть Drive-хэндл, привязанный к уже разрешённой строке-хранилищу |
-| `panel(string $name = 'default')` | `Panel` | Резолв Storage Panel по id |
-| `panels()` | `PanelRegistry` | Синглтон-реестр панелей |
-| `registerPanel(StoragePanelProvider\|Panel $panel)` | `void` | Зарегистрировать Storage Panel в рантайме |
-| `resolvePermissionsWith(PermissionResolver $resolver)` | `void` | Привязать легаси-резолвер разрешений на документном пути |
-| `permissionResolver()` | `?PermissionResolver` | Разрешённый легаси-резолвер разрешений или `null` |
+| `for(Model $entity, ?string $panel = null)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к хранилищу сущности хоста в панели |
+| `forStorage(Drive $storage)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к уже разрешённой строке-хранилищу |
 | `registerDocumentType(string $type, array $definition)` | `void` | Зарегистрировать пользовательский тип документа |
 | `documentTypes()` | `array` | Зарегистрированные пользовательские типы документов |
-| `registerHandler(FileHandler\|string $handler)` | `void` | Зарегистрировать document handler (расширяемость по форматам) |
-| `handlers()` | `DocumentHandlerRegistry` | Реестр document handler'ов |
+| `profiles()` | `ProfileRegistry` | Именованные профили Drive (`get`, `register`, `registerProvider`) |
+| `handlers()` | `FileHandlerRegistry` | Реестр document handler'ов |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Зарегистрировать пользовательский формат экспорта |
 | `exporter(string $format)` | `DocumentExporter` | Резолв экспортёра по ключу формата |
 | `exporterFormats()` | `list<string>` | Все зарегистрированные ключи форматов экспорта |
-| `driver(?string $name = null)` | `CollaborationDriver` | Резолв драйвера совместного редактирования |
 
-::: warning Docblock фасада vs. manager
-Docblock `@method` на фасаде `Vaulter` аннотирует лишь часть этих методов
-(`for`, `forStorage`, `panel`, `panels`, `registerPanel`, `resolvePermissionsWith`,
-`permissionResolver`, `registerDocumentType`, `documentTypes`, `driver`). Остальные
-методы — `registerHandler`, `handlers`, `registerExporter`, `exporter`,
-`exporterFormats` — это реальные методы `VaulterManager`, вызываемые через фасад;
-просто их (пока) нет в блоке `@method`, поэтому ваша IDE может их не автодополнять.
-Вызывайте `app(VaulterManager::class)`, если хотите полную статическую типизацию.
-:::
+Фасад аннотирует все публичные методы менеджера. Для регистрации используйте `profiles()` и `handlers()`.
 
 ## Точки входа в Drive
 
-### `for(Model $entity, ?string $panel = null): DriveContext`
+### `for(Model $entity, ?string $panel = null): DriveHandle`
 
 Основная точка входа для интеграции. Находит-или-создаёт строку `v_storages` для
 сущности хоста в рамках панели (идемпотентно — корневая папка подготавливается
-автоматически) и возвращает эргономичный `DriveContext`, методы которого делегируют
+автоматически) и возвращает эргономичный `DriveHandle`, методы которого делегируют
 Drive-Action'ам и репозиториям. По умолчанию панель — `'default'`.
 
 ```php
@@ -68,62 +54,27 @@ $drive = Vaulter::for($project);                 // панель по умолч
 $drive = Vaulter::for($project, 'project_drive'); // именованная панель
 ```
 
-### `forStorage(Storage $storage): DriveContext`
+### `forStorage(Drive $storage): DriveHandle`
 
-Открыть Drive-хэндл, привязанный к уже разрешённой строке `Storage`. Это шов, который
-использует HTTP-слой: `Storage`, связанный через route-model binding (разрешённый
+Открыть Drive-хэндл, привязанный к уже разрешённой строке `Drive`. Это шов, который
+использует HTTP-слой: `Drive`, связанный через route-model binding (разрешённый
 через сменяемый `config('vaulter.models.storage')`), напрямую отображается в
-`DriveContext` без повторного вывода владельца. Панель хэндла отражает
+`DriveHandle` без повторного вывода владельца. Панель хэндла отражает
 `$storage->panel`, поэтому его Action'ы выполняются в правильном scope панели.
 
 ```php
 $drive = Vaulter::forStorage($storage);
 ```
 
-Полную поверхность методов хэндла см. в [`DriveContext`](/ru/guide/drive).
+Полную поверхность методов хэндла см. в [`DriveHandle`](/ru/guide/drive).
 
-## Панели
+## Профили
 
-### `panel(string $name = 'default'): Panel`
+### `profiles(): ProfileRegistry`
 
-Резолв Storage Panel по id (по умолчанию `'default'`). Делегирует
-`PanelRegistry`.
-
-### `panels(): PanelRegistry`
-
-Синглтон-реестр панелей контейнера — по одной `Panel` на id. Строится из
-`config('vaulter.panels')` (FQCN провайдеров) плюс `config('vaulter.default_panel')`.
-
-### `registerPanel(StoragePanelProvider|Panel $panel): void`
-
-Зарегистрировать Storage Panel в рантайме — либо через провайдер, либо через уже
-собранную `Panel`. Реестр валидирует её и ключует по id.
-
-```php
-Vaulter::registerPanel(new ProjectStoragePanel());          // провайдер
-Vaulter::registerPanel(Panel::make('reports', /* … */));    // собранная Panel
-```
-
-## Авторизация (легаси-путь документов)
-
-### `resolvePermissionsWith(PermissionResolver $resolver): void`
-
-Указать Vaulter, как делегировать авторизацию хост-приложению для **легаси-пути
-документов** (`Vaulter\Contracts\Access\PermissionResolver`). Альтернатива —
-задать `config('vaulter.permission_resolver')` через FQCN.
-
-### `permissionResolver(): ?PermissionResolver`
-
-Возвращает резолвер, привязанный в рантайме, или — если такого нет — инстанцирует
-тот, что назван в `config('vaulter.permission_resolver')`. Возвращает `null`, когда
-не задан ни один.
-
-::: tip Это легаси-полоса
-Для Drive ACL авторизация идёт через сменяемую полосу `HostRoleDriver`
-(`config('vaulter.drivers.permission')`) в связке с принадлежащим Vaulter
-`AccessResolver` — а не через этот резолвер. См.
-[Contracts → Access](/ru/reference/contracts#access).
-:::
+Получите профиль через `Vaulter::profiles()->get('project')` или зарегистрируйте
+провайдер через `Vaulter::profiles()->registerProvider(new ProjectProfile)`.
+См. [Профили Drive](/ru/concepts/storage-panels).
 
 ## Типы документов и handler'ы
 
@@ -133,21 +84,21 @@ Vaulter::registerPanel(Panel::make('reports', /* … */));    // собранн�
 (хранятся в памяти на manager'е). Встроенные типы документов настраиваются отдельно
 через `config('vaulter.enabled_document_types')`.
 
-### `registerHandler(FileHandler|string $handler): void` / `handlers(): DocumentHandlerRegistry`
+### `handlers(): FileHandlerRegistry`
 
 Шов расширяемости по форматам. Добавить новый формат — это один класс + один вызов:
-`registerHandler()` принимает FQCN или инстанс и делегирует привязанному к
-контейнеру `Vaulter\Engines\DocumentHandlerRegistry` (принадлежит core с P0.4/D10 —
+`handlers()->register()` принимает FQCN или инстанс и делегирует привязанному к
+контейнеру `Vaulter\Handlers\FileHandlerRegistry` (принадлежит core с P0.4/D10 —
 единый источник истины для резолва mime → расширение → возможность → приоритет,
 резолвится даже без установленного `vaulter-documents`). Ни миграций, ни правок
 ядра, ни обязательного пакета.
 
 ```php
-Vaulter::registerHandler(\App\Vaulter\CadHandler::class);
+Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 ```
 
 Также можно перечислить FQCN handler'ов в `config('vaulter.handlers')` или привязать
-их к тегированной привязке контейнера `'vaulter.handlers'`. См.
+их к тегированной привязке контейнера `'vaulter.file_handlers'`. См.
 [Recipes → Custom handler](/ru/guide/recipes).
 
 ## Экспортёры

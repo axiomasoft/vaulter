@@ -15,14 +15,14 @@ use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededExceptio
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Repositories\Drive\StorageStoreRepository;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
@@ -30,7 +30,7 @@ use Vaulter\Support\TreeGuard;
  * Copy a node into a destination (§2.4) — the locked destination must be a live
  * folder of the source's storage, and the root itself is never copied:
  *   - folder → deep-copy the whole subtree (new node rows, same shape);
- *   - file   → new File + new FileVersion(version_no=1) whose version↔blob edge
+ *   - file   → new File + new FileRevision(version_no=1) whose version↔blob edge
  *     references the SAME blob, so content-addressed dedup keeps ONE physical
  *     object — a copy costs a row, not bytes.
  *
@@ -47,8 +47,8 @@ final readonly class CopyNodeAction
         private NodeReadRepository $nodes,
         private NodeStoreRepository $nodeStore,
         private FileStoreRepository $files,
-        private FileVersionStoreRepository $versions,
-        private StorageStoreRepository $storageStore,
+        private FileRevisionStoreRepository $versions,
+        private DriveStoreRepository $storageStore,
         private BlobStore $blobs,
         private VaulterDatabase $database,
         private TreeGuard $tree,
@@ -144,7 +144,7 @@ final readonly class CopyNodeAction
     }
 
     /**
-     * Copy a file node's payload: a new File + first FileVersion that re-uses the
+     * Copy a file node's payload: a new File + first FileRevision that re-uses the
      * source head's blob(s) through NEW edges (§2.4 dedup). No bytes are staged or
      * committed — the blob already exists, we just add another reference.
      */
@@ -157,10 +157,10 @@ final readonly class CopyNodeAction
             return;
         }
 
-        /** @var FileVersion|null $head */
+        /** @var FileRevision|null $head */
         $head = $sourceFile->currentVersion()->first();
 
-        if (!$head instanceof FileVersion) {
+        if (!$head instanceof FileRevision) {
             return;
         }
 
@@ -204,9 +204,9 @@ final readonly class CopyNodeAction
         ]);
     }
 
-    private function reattach(FileVersion $version, Blob $blob): void
+    private function reattach(FileRevision $version, Blob $blob): void
     {
-        /** @var FileVersionBlob $pivot */
+        /** @var FileRevisionBlob $pivot */
         $pivot = $blob->getRelationValue('pivot');
 
         $this->blobs->attach($version, $blob, [

@@ -34,7 +34,7 @@ it('does not share its reflection-attribute cache across instances, F-P2.1-05', 
 /*
  * P4.6 review (Major): the binding must be `scoped()`, not `singleton()` — only
  * `scoped()` resets the container's cached instance between requests/jobs on
- * Octane/queue workers (see StorageReadRepository's binding in the same
+ * Octane/queue workers (see DriveReadRepository's binding in the same
  * ServiceProvider, which relies on exactly this). `singleton()` would persist
  * for the whole worker process, reproducing the same failure mode as the
  * removed process-wide static cache.

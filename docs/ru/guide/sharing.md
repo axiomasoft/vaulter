@@ -90,7 +90,7 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../shares \
 
 ```php [PHP]
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
-use Vaulter\Data\Sharing\CreateShareLinkData;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
@@ -98,7 +98,7 @@ use Vaulter\Enums\Access\Permission;
 // Контроллер сначала авторизует Ability::Share; Action только выпускает + персистит.
 $minted = app(CreateShareLinkAction::class)->execute(
     node: $node,
-    data: new CreateShareLinkData(
+    data: new ShareLinkInput(
         permissions: Permission::Read->value,
         level: GrantLevel::Reader,
         scope: GrantScope::Subtree,

@@ -26,8 +26,7 @@ use UnitEnum;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-use Vaulter\Data\Sharing\CreateShareLinkData;
-use Vaulter\Data\Sharing\MintedShareLink;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -274,7 +273,7 @@ final class NodeShareResource extends Resource
 
         $minted = app(CreateShareLinkAction::class)->execute(
             node: $node,
-            data: new CreateShareLinkData(
+            data: new ShareLinkInput(
                 permissions: $permissions > 0 ? $permissions : Permission::Read->value,
                 // Filament validation already supplies enum/string and toggle values with these types.
                 level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)), // @pest-mutate-ignore: RemoveStringCast

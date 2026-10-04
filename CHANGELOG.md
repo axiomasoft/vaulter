@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Canonical core API: Storage → Drive, FileVersion → FileRevision, Panels → Profiles,
+  HostRoleDriver/PermissionResolver → PermissionDriver, Engines → Handlers; no PHP aliases
+  (AD03, AD04; see UPGRADE.md for the complete FQN map).
+- File handlers use vendor/name `key()` and `viewer()`; viewer descriptors expose key/props,
+  and `NodePresenter::present()` replaces `describe()` (AD14).
+- Activity and webhook enums merged into EventType while preserving 0.2 stored values;
+  webhook subscriptions exclude upload lifecycle events (AD03, AD04).
+- Core provider delegates to five registrars; own-tables profile API and hooks, including
+  the previously invoked booted(), removed. Profile scaffolding is vaulter:make:profile
+  (AD05, AD11). Table names, columns and configuration keys are unchanged in this step.
+
+
 ### Added
 - `BlobStore::commitStaged()` for quota-first uploads and reusable staging across SQL retries (AD21).
 - Lossless `BlobScope`, `scope_key`, upgrade migration №7 and resumable

@@ -1,0 +1,13 @@
+✓ mAInd health — project:vaulter (scope project:vaulter)
+  [ok  ] memory daemon (http://192.168.31.93:4111)
+  [ok  ] maind MCP in the project
+  [ok  ] memory hook MODE=maind (maind)
+  [FAIL] native off + digest-injection (SessionStart)
+  [skip] memory round-trip (only --deep)
+  [ok  ] config-hygiene .mcp.json (real gitignored + .example in the repo)
+  ns: [axioma]  status: connected
+  [ok  ] provider:claude-code trust
+  [ok  ] provider:codex trust
+  [ok  ] provider:cursor trust
+  [ok  ] provider:grok trust
+    → MODE=maind, but native-memory not turned off / no digest-injection → maind onboard vaulter --memory maind

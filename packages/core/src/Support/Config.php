@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Contracts\Access\HostRoleDriver;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
@@ -18,18 +18,18 @@ use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Panels\DefaultStoragePanel;
-use Vaulter\Panels\PanelRegistry;
-use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Profiles\DefaultProfile;
+use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 
 /**
@@ -83,12 +83,12 @@ final class Config
     ];
 
     /**
-     * @return class-string<Storage>
+     * @return class-string<Drive>
      */
     public static function storageModel(): string
     {
-        /** @var class-string<Storage> $class */
-        $class = config('vaulter.models.storage', Storage::class);
+        /** @var class-string<Drive> $class */
+        $class = config('vaulter.models.storage', Drive::class);
 
         return $class;
     }
@@ -116,12 +116,12 @@ final class Config
     }
 
     /**
-     * @return class-string<FileVersion>
+     * @return class-string<FileRevision>
      */
     public static function fileVersionModel(): string
     {
-        /** @var class-string<FileVersion> $class */
-        $class = config('vaulter.models.file_version', FileVersion::class);
+        /** @var class-string<FileRevision> $class */
+        $class = config('vaulter.models.file_version', FileRevision::class);
 
         return $class;
     }
@@ -138,12 +138,12 @@ final class Config
     }
 
     /**
-     * @return class-string<FileVersionBlob>
+     * @return class-string<FileRevisionBlob>
      */
     public static function fileVersionBlobModel(): string
     {
-        /** @var class-string<FileVersionBlob> $class */
-        $class = config('vaulter.models.file_version_blob', FileVersionBlob::class);
+        /** @var class-string<FileRevisionBlob> $class */
+        $class = config('vaulter.models.file_version_blob', FileRevisionBlob::class);
 
         return $class;
     }
@@ -713,9 +713,9 @@ final class Config
 
     /**
      * The driver-key → FQCN map for the host-role drivers (H.2). Only valid
-     * HostRoleDriver subclasses are returned (cache-safe — FQCN only).
+     * PermissionDriver subclasses are returned (cache-safe — FQCN only).
      *
-     * @return array<string, class-string<HostRoleDriver>>
+     * @return array<string, class-string<PermissionDriver>>
      */
     public static function permissionDrivers(): array
     {
@@ -728,12 +728,12 @@ final class Config
         $drivers = [];
 
         foreach ($value as $key => $class) {
-            if (is_string($key) && is_string($class) && is_a($class, HostRoleDriver::class, allow_string: true)) {
+            if (is_string($key) && is_string($class) && is_a($class, PermissionDriver::class, allow_string: true)) {
                 $drivers[$key] = $class;
             }
         }
 
-        /** @var array<string, class-string<HostRoleDriver>> $drivers */
+        /** @var array<string, class-string<PermissionDriver>> $drivers */
         return $drivers;
     }
 
@@ -1519,10 +1519,10 @@ final class Config
 
     /**
      * The registered storage panel provider FQCNs (config('vaulter.panels')).
-     * Only valid StoragePanelProvider subclasses are returned; the config stays
+     * Only valid ProfileProvider subclasses are returned; the config stays
      * FQCN-only (cache-safe — no closures).
      *
-     * @return list<class-string<StoragePanelProvider>>
+     * @return list<class-string<ProfileProvider>>
      */
     public static function panels(): array
     {
@@ -1535,30 +1535,30 @@ final class Config
         $providers = [];
 
         foreach ($value as $class) {
-            if (is_string($class) && is_a($class, StoragePanelProvider::class, allow_string: true)) {
+            if (is_string($class) && is_a($class, ProfileProvider::class, allow_string: true)) {
                 $providers[] = $class;
             }
         }
 
-        /** @var list<class-string<StoragePanelProvider>> $providers */
+        /** @var list<class-string<ProfileProvider>> $providers */
         return $providers;
     }
 
     /**
      * The default storage panel provider FQCN (config('vaulter.default_panel')),
-     * falling back to the built-in DefaultStoragePanel.
+     * falling back to the built-in DefaultProfile.
      *
-     * @return class-string<StoragePanelProvider>
+     * @return class-string<ProfileProvider>
      */
     public static function defaultPanel(): string
     {
-        $class = config('vaulter.default_panel', DefaultStoragePanel::class);
+        $class = config('vaulter.default_panel', DefaultProfile::class);
 
-        if (is_string($class) && is_a($class, StoragePanelProvider::class, allow_string: true)) {
+        if (is_string($class) && is_a($class, ProfileProvider::class, allow_string: true)) {
             return $class;
         }
 
-        return DefaultStoragePanel::class;
+        return DefaultProfile::class;
     }
 
     /**
@@ -1569,7 +1569,7 @@ final class Config
     public static function featureEnabled(string $feature, ?string $panel = null): bool
     {
         if ($panel !== null) {
-            return app(PanelRegistry::class)->get($panel)->featureEnabled($feature);
+            return app(ProfileRegistry::class)->get($panel)->featureEnabled($feature);
         }
 
         $value = config("vaulter.features.{$feature}");

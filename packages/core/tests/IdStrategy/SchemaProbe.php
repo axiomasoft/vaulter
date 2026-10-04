@@ -7,7 +7,7 @@ namespace Vaulter\Tests\IdStrategy;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\VaulterSchema;
+use Vaulter\Schema\VaulterSchema;
 
 /**
  * Shared probe for the VaulterSchema convention helpers. Builds one table using

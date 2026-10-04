@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Facades\Vaulter;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -17,7 +17,7 @@ beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
-function documentStorage(): Storage
+function documentStorage(): Drive
 {
     return Vaulter::for(DriveTestHelpers::host())->storage();
 }
@@ -35,7 +35,7 @@ it('runs the document node cycle: create → content → autosave → version �
     ])
         ->assertCreated()
         ->assertJsonPath('data.kind', 'document')
-        ->assertJsonPath('data.handler.id', 'tiptap')
+        ->assertJsonPath('data.handler.id', 'vaulter/tiptap')
         ->json('data.id');
 
     $nodeBase = 'api/vaulter/nodes/'.$nodeId;
@@ -73,7 +73,7 @@ it('runs the document node cycle: create → content → autosave → version �
     // the handler descriptor
     $this->getJson($nodeBase.'/handler')
         ->assertOk()
-        ->assertJsonPath('data.id', 'tiptap')
+        ->assertJsonPath('data.id', 'vaulter/tiptap')
         ->assertJsonPath('data.capabilities.editable', true);
 
     // export to html + markdown

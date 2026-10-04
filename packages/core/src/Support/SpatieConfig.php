@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Drivers\Permission\SpatiePermissionResolver;
 use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * Typed accessors over config('vaulter.spatie.*') — the spatie/laravel-permission
  * host-role lane's permission map (master plan §6 / H.2). The map couples a Vaulter
  * GrantLevel to a spatie permission NAME, so the
- * {@see SpatiePermissionResolver} resolves
+ * {@see SpatiePermissionDriver} resolves
  * `$actor->hasPermissionTo($name)` (team-scoped) without Vaulter knowing the host's
  * permission vocabulary. Cache-safe — plain strings, no closures.
  */

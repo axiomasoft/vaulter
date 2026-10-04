@@ -3,19 +3,19 @@
 declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\HostRoleDriverManager;
-use Vaulter\Contracts\Access\HostRoleDriver;
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Exceptions\Access\MissingHostRoleDriverException;
+use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 it('authorises purely from grants with no host roles (standalone database lane)', function (): void {
     config()->set('vaulter.drivers.permission', 'database');
 
-    expect(app(HostRoleDriver::class))->toBeInstanceOf(DatabasePermissionResolver::class);
+    expect(app(PermissionDriver::class))->toBeInstanceOf(DatabasePermissionDriver::class);
 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'standalone');
@@ -38,7 +38,7 @@ it('lets the database lane create in a workspace by default', function (): void 
 });
 
 it('subjectsFor returns the actor itself in the pure-DB lane', function (): void {
-    $driver = new DatabasePermissionResolver;
+    $driver = new DatabasePermissionDriver;
     $actor = AccessTestHelpers::user(id: 7);
 
     $subjects = $driver->subjectsFor($actor);
@@ -51,22 +51,22 @@ it('fails loud when the open null driver is selected in production', function ()
     config()->set('vaulter.drivers.permission', 'null');
 
     // Simulate production: the manager rejects the open null driver.
-    $manager = new HostRoleDriverManager(container: app(), isProduction: true);
+    $manager = new PermissionDriverManager(container: app(), isProduction: true);
 
     expect(fn (): mixed => $manager->driver())
-        ->toThrow(MissingHostRoleDriverException::class);
+        ->toThrow(MissingPermissionDriverException::class);
 });
 
 it('allows the open null driver outside production', function (): void {
     config()->set('vaulter.drivers.permission', 'null');
 
-    $manager = new HostRoleDriverManager(container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(container: app(), isProduction: false);
 
     // Open in non-prod: every actor gets full access via the override.
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'open');
 
-    app()->instance(HostRoleDriverManager::class, $manager);
+    app()->instance(PermissionDriverManager::class, $manager);
     app()->forgetInstance(AccessResolver::class);
 
     expect(app(AccessResolver::class)->can(AccessTestHelpers::user(), Ability::Manage, $folder))->toBeTrue();
@@ -75,8 +75,8 @@ it('allows the open null driver outside production', function (): void {
 it('throws on an unknown driver key', function (): void {
     config()->set('vaulter.drivers.permission', 'does-not-exist');
 
-    $manager = new HostRoleDriverManager(container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(container: app(), isProduction: false);
 
     expect(fn (): mixed => $manager->driver())
-        ->toThrow(MissingHostRoleDriverException::class);
+        ->toThrow(MissingPermissionDriverException::class);
 });

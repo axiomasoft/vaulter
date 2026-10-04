@@ -111,8 +111,8 @@ it('documents all 7 previously-undocumented public contracts in contracts.md, F-
         'ListableContentStore',
         'ListableStorageDriver',
         'DocumentContent',
-        'HandlerRegistry',
-        'NodeHandlerResolver',
+        'FileHandlerRegistry',
+        'NodePresenter',
         'AzgardBackedUser',
     ] as $contract) {
         expect($doc)->toContain($contract);

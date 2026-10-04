@@ -140,7 +140,7 @@ Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующи�
 
 Эта единственная настройка приводит в движение **обе** стороны дизайна разом:
 
-1. **Форму дедуп-UNIQUE-индекса.** `PanelTablesBuilder::dedupUniqueColumns()` выдаёт индекс
+1. **Форму дедуп-UNIQUE-индекса.** `SchemaBuilder::dedupUniqueColumns()` выдаёт индекс
    по `(sha256)`, `(tenant_id, sha256)` или `(storage_id, sha256)`. Колонки `tenant_id` /
    `storage_id` *всегда* существуют в `v_blobs`; только UNIQUE-индекс покрывает
    релевантное области подмножество.
@@ -207,7 +207,7 @@ $stream = $blobStore->read($blob);         // resource|null над канони�
 
 В Drive это связывается через `Vaulter\Drive\Actions\UploadFileAction`: он зондирует размер,
 проверяет квоту хранилища *до* коммита байтов, вызывает `BlobStore::commit()` внутри
-транзакции, затем создаёт `File` / `FileVersion` и ребро. `tenant_id` и `storage_id`,
+транзакции, затем создаёт `File` / `FileRevision` и ребро. `tenant_id` и `storage_id`,
 переданные в `commit()`, читаются прямо из строки владеющего `Storage`.
 
 ## Жизненный цикл блоба

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Support;
 
-use Vaulter\Drivers\Permission\GatePermissionResolver;
 use Vaulter\Enums\Access\GrantLevel;
 
 /**
  * Typed accessors over config('vaulter.gate.*') — the Gate host-role lane's ability
  * map (master plan §6 / H.2). The map couples a Vaulter GrantLevel to a host Gate
- * ability string, so the {@see GatePermissionResolver}
+ * ability string, so the {@see GatePermissionDriver}
  * stays Node-blind and the host's ability names live entirely in config (cache-safe
  * — plain strings, no closures).
  *

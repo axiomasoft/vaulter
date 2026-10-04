@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Cas;
 
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -42,13 +42,13 @@ interface BlobStore
      *
      * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes
      */
-    public function attach(FileVersion $version, Blob $blob, array $attributes = []): void;
+    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void;
 
     /**
      * Remove a version↔blob edge. A blob with no remaining edges becomes a GC
      * candidate at the next reconciliation; the bytes are NOT deleted here.
      */
-    public function detach(FileVersion $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
+    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
 
     /**
      * A read stream over a committed blob's canonical bytes, or null when absent.

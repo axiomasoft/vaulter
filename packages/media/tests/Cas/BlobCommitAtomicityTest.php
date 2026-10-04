@@ -12,7 +12,7 @@ use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -68,7 +68,7 @@ it('rollback не оставляет висящей строки blob', function
         content: $exploding,
         lock: app(BlobLock::class),
         blobs: app(BlobStoreRepository::class),
-        edges: app(FileVersionBlobStoreRepository::class),
+        edges: app(FileRevisionBlobStoreRepository::class),
         database: app(VaulterDatabase::class),
     );
 

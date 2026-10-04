@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Access;
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
@@ -29,11 +29,11 @@ final readonly class GrantNodeAccessAction
 {
     public function __construct(
         private GrantStoreRepository $grants,
-        private HostRoleDriverManager $drivers,
+        private PermissionDriverManager $drivers,
         private VaulterDatabase $database,
     ) {}
 
-    public function execute(Node $node, GrantNodeAccessData $data): NodeGrant
+    public function execute(Node $node, GrantNodeAccessInput $data): NodeGrant
     {
         // Fail-loud (F-P1.2-01) BEFORE persisting: a grant to a role/team subject under
         // a driver that cannot enumerate role subjects would be silently inert.
@@ -54,9 +54,9 @@ final readonly class GrantNodeAccessAction
 
     /**
      * Make the silent no-op loud (F-P1.2-01): a grant addressed to a role/group/team
-     * subject only ever matches when the active {@see HostRoleDriver} expands the actor
+     * subject only ever matches when the active {@see PermissionDriver} expands the actor
      * into those Subjects. Whether it does is decided by
-     * {@see HostRoleDriverManager::enumeratesRoleSubjects()} — the explicit
+     * {@see PermissionDriverManager::enumeratesRoleSubjects()} — the explicit
      * {@see EnumeratesRoleSubjects} marker OR an overridden `subjectsFor()` (the
      * documented subclass-and-append extension path counts, marker or not). We fail loud
      * ONLY when the driver PROVABLY cannot enumerate role subjects — the standalone
@@ -65,7 +65,7 @@ final readonly class GrantNodeAccessAction
      * notices immediately. The direction is safe (an inert grant grants nothing), so
      * production degrades to a log line rather than a broken write path.
      */
-    private function guardEnumerableSubject(GrantNodeAccessData $data): void
+    private function guardEnumerableSubject(GrantNodeAccessInput $data): void
     {
         if (!$this->isRoleLikeSubject($data->subject)) {
             return;

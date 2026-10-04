@@ -10,9 +10,9 @@ use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
@@ -27,7 +27,7 @@ final readonly class BlobStore implements BlobStoreContract
         private ContentStore $content,
         private BlobLock $lock,
         private BlobStoreRepository $blobs,
-        private FileVersionBlobStoreRepository $edges,
+        private FileRevisionBlobStoreRepository $edges,
         private VaulterDatabase $database,
     ) {}
 
@@ -75,12 +75,12 @@ final readonly class BlobStore implements BlobStoreContract
     /**
      * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes
      */
-    public function attach(FileVersion $version, Blob $blob, array $attributes = []): void
+    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void
     {
         $this->edges->attach(version: $version, blob: $blob, attributes: $attributes);
     }
 
-    public function detach(FileVersion $version, Blob $blob, string $role = 'data', int $ordinal = 0): void
+    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void
     {
         $this->edges->detach(version: $version, blob: $blob, role: $role, ordinal: $ordinal);
     }

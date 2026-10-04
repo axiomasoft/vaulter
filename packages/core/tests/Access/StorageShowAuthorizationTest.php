@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -54,7 +54,7 @@ function actAsStorageGuest(): void
 function useNullPermissionDriver(): void
 {
     config()->set('vaulter.drivers.permission', 'null');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 }
 

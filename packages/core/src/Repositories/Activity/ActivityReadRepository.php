@@ -6,10 +6,10 @@ namespace Vaulter\Repositories\Activity;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 
 /**
@@ -30,7 +30,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forStorage(Storage $storage, ?ActivityVerb $verb = null): Builder
+    public function forStorage(Drive $storage, ?EventType $verb = null): Builder
     {
         return $this->base($verb)->where('storage_id', $storage->getKey());
     }
@@ -42,7 +42,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forNode(Node $node, ?ActivityVerb $verb = null): Builder
+    public function forNode(Node $node, ?EventType $verb = null): Builder
     {
         return $this->forTarget($node, $verb);
     }
@@ -53,7 +53,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forTarget(Model $target, ?ActivityVerb $verb = null): Builder
+    public function forTarget(Model $target, ?EventType $verb = null): Builder
     {
         return $this->base($verb)
             ->where('target_type', $target->getMorphClass())
@@ -66,7 +66,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forActor(string $actorType, int|string $actorId, ?ActivityVerb $verb = null): Builder
+    public function forActor(string $actorType, int|string $actorId, ?EventType $verb = null): Builder
     {
         return $this->base($verb)
             ->where('actor_type', $actorType)
@@ -79,7 +79,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function byVerb(ActivityVerb $verb): Builder
+    public function byVerb(EventType $verb): Builder
     {
         return $this->base($verb);
     }
@@ -89,7 +89,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    private function base(?ActivityVerb $verb): Builder
+    private function base(?EventType $verb): Builder
     {
         $model = Config::activityModel();
 

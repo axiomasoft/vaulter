@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Drive\Http\Resources\StorageResource;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -38,7 +38,7 @@ function useListingDriver(object $driver): void
     app()->instance($driver::class, $driver);
     config()->set('vaulter.permission_drivers.stub', $driver::class);
     config()->set('vaulter.drivers.permission', 'stub');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 }
 
@@ -348,7 +348,7 @@ it('keeps grantFilteringApplies true on the database driver and false on the nul
 
     // The null driver does NOT carry the marker ⇒ filtering does not apply.
     config()->set('vaulter.drivers.permission', 'null');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 
     expect(nodeRepo()->grantFilteringApplies())->toBeFalse();
@@ -361,7 +361,7 @@ it('keeps the listing OPEN (every node) on the null driver', function (): void {
     // No grants at all — on the open driver the listing must still return every node.
 
     config()->set('vaulter.drivers.permission', 'null');
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 
     // queryForUser is a no-op on the open driver: the un-granted nodes are all present.

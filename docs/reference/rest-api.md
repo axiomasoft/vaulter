@@ -784,7 +784,7 @@ for backward compatibility. New integrations should prefer the
 | Method & path | Action | Params |
 |---|---|---|
 | `GET documents/{documentId}/permissions` | `index` | |
-| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (a `PermissionLevel`) |
+| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (legacy numeric document permission) |
 | `DELETE documents/{documentId}/permissions/{permissionId}` | `destroy` | |
 
 ### Comments

@@ -24,7 +24,7 @@ php artisan vendor:publish --tag=vaulter-config
 ```php
 'models' => [
     // Сущности Vaulter Drive
-    'storage'    => \Vaulter\Models\Drive\Storage::class,
+    'storage'    => \Vaulter\Models\Drive\Drive::class,
     'node'       => \Vaulter\Models\Drive\Node::class,
     'file'       => \Vaulter\Models\Drive\File::class,
     'blob'       => \Vaulter\Models\Cas\Blob::class,
@@ -100,16 +100,16 @@ Vaulter route-биндит `{storage}` и `{node}` к тому, что здес�
 
 ```php
 'panels' => [
-    \App\Vaulter\Panels\ProjectDrivePanel::class,
+    \App\Vaulter\Profiles\ProjectDriveProfile::class,
 ],
-'default_panel' => \Vaulter\Panels\DefaultStoragePanel::class,
+'default_panel' => \Vaulter\Profiles\DefaultProfile::class,
 
 'migrations' => [
-    'path' => null, // куда vaulter:panel:migrations пишет миграции own-tables-панели
+    'path' => null, // legacy-ключ; создание профиля его больше не использует
 ],
 ```
 
-Сгенерировать панель: `php artisan vaulter:make-panel <name>`. Подробно —
+Сгенерировать панель: `php artisan vaulter:make:profile <name>`. Подробно —
 [Storage Panels](/ru/concepts/storage-panels).
 
 ## Фичи
@@ -141,9 +141,9 @@ Vaulter route-биндит `{storage}` и `{node}` к тому, что здес�
 
 ```php
 'handlers' => [
-    \Vaulter\Documents\Handlers\TipTapHandler::class,
-    \Vaulter\Documents\Handlers\PreviewHandler::class,
-    \Vaulter\Documents\Handlers\DownloadOnlyHandler::class,
+    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
+    \Vaulter\Handlers\Builtin\PreviewHandler::class,
+    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
 ```
 
@@ -158,11 +158,11 @@ Drive ACL комбинирует собственный `AccessResolver` со **
 ],
 
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
-    'null'     => \Vaulter\Testing\NullRoleDriver::class, // только не-прод
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
+    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // только не-прод
 ],
 ```
 

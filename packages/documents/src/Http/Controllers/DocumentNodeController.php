@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Contracts\Handlers\NodeHandlerResolver;
+use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
@@ -31,8 +31,8 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Support\TrashGuard;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -57,7 +57,7 @@ final class DocumentNodeController extends Controller
         private readonly CreateNamedVersionAction $createNamedVersion,
         private readonly RestoreDocumentVersionAction $restoreVersion,
         private readonly ReleaseKeptVersionAction $releaseKeptVersion,
-        private readonly NodeHandlerResolver $handlers,
+        private readonly NodePresenter $handlers,
         private readonly NodeExportService $exports,
     ) {}
 
@@ -65,7 +65,7 @@ final class DocumentNodeController extends Controller
      * Create a kind=document node under a folder (or storage root) with its v1
      * version.
      */
-    public function store(CreateDocumentNodeRequest $request, Storage $storage): JsonResponse
+    public function store(CreateDocumentNodeRequest $request, Drive $storage): JsonResponse
     {
         $parent = $this->resolveParentById($request->parentId(), $storage);
 
@@ -189,7 +189,7 @@ final class DocumentNodeController extends Controller
     {
         $this->guard($request, Ability::View, $node);
 
-        return new JsonResponse(['data' => $this->handlers->describe($node)->toArray()]);
+        return new JsonResponse(['data' => $this->handlers->present($node)->toArray()]);
     }
 
     /**
@@ -209,7 +209,7 @@ final class DocumentNodeController extends Controller
     /**
      * Resolve the destination parent from an already-extracted id (null = root).
      */
-    private function resolveParentById(int|string|null $parentId, Storage $storage): ?Node
+    private function resolveParentById(int|string|null $parentId, Drive $storage): ?Node
     {
         if ($parentId === null) {
             return null;
@@ -266,7 +266,7 @@ final class DocumentNodeController extends Controller
      * Authorize a document CREATE under a destination (§6): the workspace-create gate
      * AND the CREATE bit on the destination node.
      */
-    private function guardCreate(Request $request, Storage $storage, ?Node $destination): void
+    private function guardCreate(Request $request, Drive $storage, ?Node $destination): void
     {
         $actor = $this->authorizable($request);
         $target = $destination ?? $this->driveRoot($storage);
@@ -283,7 +283,7 @@ final class DocumentNodeController extends Controller
      * The storage's root folder node (the create destination when no parent given),
      * resolved through the read repository — never a controller model query.
      */
-    private function driveRoot(Storage $storage): Node
+    private function driveRoot(Drive $storage): Node
     {
         $rootId = $storage->root_node_id;
 

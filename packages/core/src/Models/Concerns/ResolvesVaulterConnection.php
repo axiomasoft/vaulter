@@ -18,7 +18,7 @@ use Vaulter\Support\Config;
  * before this trait existed — a host that never sets the key sees no change in
  * behaviour, only a host that DOES set it gets every Vaulter-owned table's model
  * routed to that named connection, matching where {@see
- * \Vaulter\Schema\PanelTablesBuilder} created the table.
+ * \Vaulter\Schema\SchemaBuilder} created the table.
  *
  * Host apps that swap in their own model (config('vaulter.models.*')) simply omit
  * this trait if they want a different connection resolution strategy.

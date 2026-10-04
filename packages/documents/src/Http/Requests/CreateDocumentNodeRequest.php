@@ -8,12 +8,11 @@ use Illuminate\Contracts\Validation\Validator;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Engines\DocumentHandlerRegistry;
 use Vaulter\Enums\Handlers\Capability;
+use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Support\DriveNameRules;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
@@ -26,7 +25,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  *
  * It is HANDLER-AWARE (§7 level 2): an optional `mime` selects the document format.
  * With none, the node is a rich-text TipTap document (the historical default). With a
- * concrete mime (e.g. the xlsx sheet mime), the {@see DocumentHandlerRegistry} resolves
+ * concrete mime (e.g. the xlsx sheet mime), the {@see FileHandlerRegistry} resolves
  * the matching editable handler (e.g. the spreadsheet {@see UniverHandler}) — the
  * content shape follows its richText capability (a validated TipTap doc vs an opaque
  * snapshot), and the node is stamped with that handler's canonical mime so a later read
@@ -101,12 +100,12 @@ final class CreateDocumentNodeRequest extends VaulterFormRequest
 
     /**
      * The version `format` label: the DocumentType for a rich-text node (markdown for
-     * .md, else rich text), or the handler id for a non-rich-text one (e.g. 'univer').
+     * .md, else rich text), or the handler id for a non-rich-text one (e.g. 'vaulter/univer').
      */
     public function versionFormat(): string
     {
         if (!$this->isRichText()) {
-            return $this->resolvedHandler()->id();
+            return $this->resolvedHandler()->key();
         }
 
         $format = $this->string('format')->toString();
@@ -146,7 +145,7 @@ final class CreateDocumentNodeRequest extends VaulterFormRequest
      */
     private function resolvedHandler(): FileHandler
     {
-        return $this->handler ??= app(DocumentHandlerRegistry::class)
+        return $this->handler ??= app(FileHandlerRegistry::class)
             ->resolve($this->descriptor(), Capability::Edit);
     }
 

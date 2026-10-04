@@ -6,7 +6,6 @@ namespace Vaulter\Azgard\Contracts;
 
 use AzGuard\Contracts\HasPermissions;
 use AzGuard\Contracts\HasScopedRoles;
-use Vaulter\Azgard\AzgardGuardAdapter;
 
 /**
  * The host user the {@see AzgardGuardAdapter} bridges into

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
-use Vaulter\Tests\BrokenPanelBootTestCase;
 use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
@@ -41,7 +40,8 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Access',
     $core.'/Activity',
     $core.'/Feature',
-    $core.'/Panels',
+    $core.'/Providers',
+    $core.'/Profiles',
     $core.'/Schema',
     $core.'/Sharing',
     $core.'/Support',
@@ -60,15 +60,6 @@ uses(SpatieTestCase::class, RefreshDatabase::class)->in(
 // binding above does not also claim them (Pest forbids two test cases for one path).
 uses(ActivityDisabledTestCase::class, RefreshDatabase::class)->in(
     $core.'/ActivityGate',
-);
-
-// A dedicated top-level folder (F-P3.2-01, P4.4): BrokenPanelBootTestCase configures
-// a KNOWN-BROKEN panel BEFORE the app boots, so PanelRegistry's boot-time
-// validation fires during framework bootstrap and can be asserted on. Kept out of
-// `Panels/` (bound to the plain TestCase above) — Pest forbids a file re-binding a
-// different test case than the one its directory already claims.
-uses(BrokenPanelBootTestCase::class)->in(
-    $core.'/PanelBoot',
 );
 
 // Document + Comment (+ the NodeCommentSchemaTest schema check and the TipTap unit

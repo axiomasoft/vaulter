@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Container\Container;
 use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Contracts\Handlers\HandlerRegistry;
-use Vaulter\Engines\Handlers\DownloadOnlyHandler;
+use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
+use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\Documents\FakeExporter;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 use Vaulter\VaulterManager;
 
 /*
@@ -45,7 +45,7 @@ it('registerExporter still accepts a ready instance (unchanged path), F-P3.3-01'
  * not instantiable.") that carried no mention of "vaulter" or which package to
  * install.
  *
- * The HandlerRegistry seam is DIFFERENT since VLT-CANON P0.4 (D10, superseding
+ * The FileHandlerRegistry seam is DIFFERENT since VLT-CANON P0.4 (D10, superseding
  * H.5/T5): the engine is core-owned, not a vaulter-documents seam, so it no longer
  * "fails loud when absent" — see the tests below, which pin the OPPOSITE: it
  * always resolves.
@@ -58,7 +58,7 @@ it('for() fails loud with an install hint when vaulter-drive is absent from a ba
 });
 
 /*
- * P0.4/D10 — the format-extensibility registry (HandlerRegistry + its
+ * P0.4/D10 — the format-extensibility registry (FileHandlerRegistry + its
  * PreviewHandler/DownloadOnlyHandler baseline) is core-owned, superseding H.5's
  * "concrete engine ships in vaulter-documents" allocation: a drive-only host with
  * NO vaulter-documents installed still resolves a real preview/download handler,
@@ -67,11 +67,11 @@ it('for() fails loud with an install hint when vaulter-drive is absent from a ba
  * so this exercises the real "documents package absent" path, not a mock.
  */
 it('handlers() resolves the core-owned registry even when vaulter-documents is absent, P0.4/D10', function (): void {
-    expect(app()->bound(HandlerRegistry::class))->toBeTrue();
+    expect(app()->bound(FileHandlerRegistry::class))->toBeTrue();
 
     $registry = app(VaulterManager::class)->handlers();
 
-    expect($registry)->toBeInstanceOf(HandlerRegistry::class);
+    expect($registry)->toBeInstanceOf(FileHandlerRegistry::class);
 
     $handler = $registry->resolve(FileDescriptor::make(nodeId: 1, filename: 'mystery', detectedMime: null));
 
@@ -81,13 +81,13 @@ it('handlers() resolves the core-owned registry even when vaulter-documents is a
 it('registerHandler() registers a custom handler with NO package installed, P0.4/D10', function (): void {
     $manager = app(VaulterManager::class);
 
-    $manager->registerHandler(SeamTestCadHandler::class);
+    $manager->handlers()->register(SeamTestCadHandler::class);
 
     $handler = $manager->handlers()->resolve(
         FileDescriptor::make(nodeId: 1, filename: 'part.dwg', detectedMime: 'image/vnd.dwg'),
     );
 
-    expect($handler->id())->toBe('seam-cad');
+    expect($handler->key())->toBe('test/seam-cad');
 });
 
 /**
@@ -96,9 +96,9 @@ it('registerHandler() registers a custom handler with NO package installed, P0.4
  */
 final class SeamTestCadHandler implements FileHandler
 {
-    public function id(): string
+    public function key(): string
     {
-        return 'seam-cad';
+        return 'test/seam-cad';
     }
 
     /**
@@ -122,13 +122,13 @@ final class SeamTestCadHandler implements FileHandler
         return 200;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(editable: true);
+        return new ContentCapabilities(editable: true);
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(component: 'SeamCadViewer', route: null);
+        return new ViewerDescriptor(key: 'SeamCadViewer', route: null);
     }
 }

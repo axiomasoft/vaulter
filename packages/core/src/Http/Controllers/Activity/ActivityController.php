@@ -10,12 +10,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Activity\ActivityResource;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Repositories\Activity\ActivityReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\LoadTier;
@@ -44,7 +44,7 @@ final class ActivityController extends Controller
      * The feed for a whole storage tree. Authorized by View on the storage's root
      * node (seeing the storage = being able to view its root).
      */
-    public function forStorage(Request $request, Storage $storage): AnonymousResourceCollection
+    public function forStorage(Request $request, Drive $storage): AnonymousResourceCollection
     {
         $root = $this->rootNodeOf($storage);
 
@@ -97,7 +97,7 @@ final class ActivityController extends Controller
      * swappable node model). A storage always has a root (provisioned with it); a
      * miss is a corrupt state and 404s.
      */
-    private function rootNodeOf(Storage $storage): Node
+    private function rootNodeOf(Drive $storage): Node
     {
         $root = $storage->root_node_id === null ? null : $this->nodes->find($storage->root_node_id);
 
@@ -113,11 +113,11 @@ final class ActivityController extends Controller
      * ignored (the feed simply isn't narrowed) rather than 422 — the feed is a
      * forgiving read surface.
      */
-    private function verb(Request $request): ?ActivityVerb
+    private function verb(Request $request): ?EventType
     {
         $value = $request->string('verb')->toString();
 
-        return $value === '' ? null : ActivityVerb::tryFrom($value);
+        return $value === '' ? null : EventType::tryFrom($value);
     }
 
     /**

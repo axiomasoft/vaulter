@@ -78,7 +78,7 @@ final class VaulterPlugin implements Plugin
      * (VLT-REMED P3.1 / F-P1.10-03, D13). Only `activity` qualifies today: `storage`/
      * `node` have no corresponding feature (storages/nodes are the unconditional
      * schema roots), and `grant`/`share` map to `grants`/`share_links` — both
-     * consulted by `PanelTablesBuilder::entityEnabled()` for DYNAMICALLY-built
+     * consulted by `SchemaBuilder::entityEnabled()` for DYNAMICALLY-built
      * per-panel schemas, but the package's OWN static migrations always create
      * `v_node_grants`/`v_node_shares` unconditionally (only the ROUTES/UI are
      * feature-gated for them) — gating those two resources here would hide them by

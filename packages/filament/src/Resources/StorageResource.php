@@ -18,7 +18,7 @@ use UnitEnum;
 use Vaulter\Filament\Resources\StorageResource\Pages\ListStorages;
 use Vaulter\Filament\Resources\StorageResource\Pages\ViewStorage;
 use Vaulter\Filament\Support\PanelAccessScope;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 
 /**
@@ -33,7 +33,7 @@ use Vaulter\Support\Config;
  */
 final class StorageResource extends Resource
 {
-    protected static ?string $model = Storage::class;
+    protected static ?string $model = Drive::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-circle-stack';
 
@@ -115,7 +115,7 @@ final class StorageResource extends Resource
 
                 TextColumn::make('owner_type')
                     ->label('Owner')
-                    ->formatStateUsing(fn (string $state, Storage $record): string => $state.' #'.$record->owner_id)
+                    ->formatStateUsing(fn (string $state, Drive $record): string => $state.' #'.$record->owner_id)
                     ->toggleable(),
 
                 TextColumn::make('disk')

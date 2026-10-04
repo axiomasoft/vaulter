@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\VaulterSchema;
+use Vaulter\Schema\VaulterSchema;
 use Vaulter\Tests\IdStrategy\SchemaProbe;
 
 beforeEach(fn () => SchemaProbe::build());

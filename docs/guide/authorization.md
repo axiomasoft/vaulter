@@ -11,7 +11,7 @@ ability on this node?** The answer is computed by a single, Vaulter-owned engine
 the `AccessResolver` — that folds together two lanes:
 
 1. the **per-node ACL** (`v_node_grants` rows), Vaulter's own grant store; and
-2. a **swappable host-role lane** (`HostRoleDriver`) that bridges your application's
+2. a **swappable host-role lane** (`PermissionDriver`) that bridges your application's
    identity and role system in.
 
 The resolver itself is **not** a contract and **not** swappable — only the host-role
@@ -23,7 +23,7 @@ decision deterministic. The role drivers are covered in
 ::: info Two lanes, one authority
 The `AccessResolver` is the single authority every Policy, `DriveContext`, controller
 and Resource asks. It lives at `Vaulter\Access\AccessResolver`. The host plugs into
-it through the `HostRoleDriver` contract — never by replacing the resolver.
+it through the `PermissionDriver` contract — never by replacing the resolver.
 :::
 
 ## The public surface
@@ -123,7 +123,7 @@ exactly as described here — there is no hidden behaviour.
 
 ### Step 1 — host override
 
-The resolver first asks the active `HostRoleDriver::override($actor, $scope)`. A
+The resolver first asks the active `PermissionDriver::override($actor, $scope)`. A
 super-admin / `Gate::before`-style override short-circuits the whole walk:
 
 - `Effect::Allow` → `GrantSet::superAllowed()` (full access, both directions);
@@ -194,7 +194,7 @@ level       = max(aclLevel, roleLevel)
 ```
 
 The role lane is folded **before** the deny veto, so it can **raise** access but can
-**never resurrect a denied bit**. The `AclScope` handed to the driver is node-blind: it
+**never resurrect a denied bit**. The `AccessScope` handed to the driver is node-blind: it
 carries the panel + workspace coordinates and the node owner, never a `Node`.
 
 ### Step 5 — the final veto
@@ -243,7 +243,7 @@ The resolver computes a flat ability map so the front-end renders only the actio
 actor may perform — no permission logic duplicated in JavaScript, no extra round-trips.
 
 `NodeResource` fills its `abilities` object via
-`Vaulter\Access\Abilities\NodeAbilities::for($actor, $node, $resolver)`, which calls
+`Vaulter\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, which calls
 `abilitiesFor()`. When there is no acting user, **every flag is false** (the client
 shows a read-only shell rather than mis-advertising actions).
 
@@ -350,15 +350,15 @@ over this endpoint.
 ## Fail-loud: the null driver
 
 The default driver is `database` — a fully standalone lane with zero host dependency.
-For local boot-up there is also an **open** driver, `Vaulter\Testing\NullRoleDriver`,
+For local boot-up there is also an **open** driver, `Vaulter\Testing\NullPermissionDriver`,
 which grants every actor full access via an absolute `Allow` override.
 
-The `HostRoleDriverManager` rejects the null driver **in production**:
+The `PermissionDriverManager` rejects the null driver **in production**:
 
 ```php
-// Vaulter\Access\HostRoleDriverManager::driver()
-if (is_a($class, NullRoleDriver::class, allow_string: true) && $this->isProduction) {
-    throw MissingHostRoleDriverException::nullDriverInProduction($key);
+// Vaulter\Access\PermissionDriverManager::driver()
+if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isProduction) {
+    throw MissingPermissionDriverException::nullDriverInProduction($key);
 }
 ```
 
@@ -368,7 +368,7 @@ is explicit:
 > The open null host-role driver is forbidden in production. Why: it grants every actor
 > full access; running it in prod would expose every node. Fix: set
 > `config('vaulter.drivers.permission')` to a real driver (`database`/`gate`/`spatie`/
-> `azgard`) or bind your own `HostRoleDriver`.
+> `azgard`) or bind your own `PermissionDriver`.
 
 ::: danger Never ship the null driver
 `null` is selectable only outside production and exists purely so a consumer can boot
@@ -377,12 +377,12 @@ and exercise Vaulter without wiring a real role system. A missing or `null` driv
 :::
 
 An **unknown** driver key fails the same way, via
-`MissingHostRoleDriverException::unknownDriver($key, $known)`, listing the registered
+`MissingPermissionDriverException::unknownDriver($key, $known)`, listing the registered
 keys.
 
 ## See also
 
-- [Permission Drivers](./permission-drivers) — the four `HostRoleDriver` lanes and how
+- [Permission Drivers](./permission-drivers) — the four `PermissionDriver` lanes and how
   to select/configure each.
 - [Grants](./grants) — the per-node `v_node_grants` rows, subjects, effects, scopes,
   expiry, and `GrantNodeAccess`.

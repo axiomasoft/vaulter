@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Events;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -22,7 +22,7 @@ final readonly class FileUploaded implements ShouldDispatchAfterCommit
     public function __construct(
         public Node $node,
         public File $file,
-        public FileVersion $version,
+        public FileRevision $version,
         public int|string|null $actorId = null,
         ?string $eventId = null,
     ) {

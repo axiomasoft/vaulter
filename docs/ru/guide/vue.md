@@ -284,7 +284,7 @@ await createNamedVersion('Before edit', true)  // snapshot, keep forever
 | `content` | `ShallowRef<TipTapDocument \| null>` | рабочий контент |
 | `head` | `ShallowRef<DocumentVersion \| null>` | текущая head-версия |
 | `versions` | `ShallowRef<DocumentVersion[]>` | загруженные именованные/авто версии |
-| `handler` | `ShallowRef<HandlerDescriptor \| null>` | разрешённый обработчик документа |
+| `handler` | `ShallowRef<NodePresentation \| null>` | разрешённый обработчик документа |
 | `saving` | `Ref<boolean>` | true, пока сохранение в полёте |
 | `setContent(content, options?)` | `void` | задать рабочий контент + запланировать автосохранение по дебаунсу |
 | `flush()` | `Promise<DocumentVersion \| null>` | форс-сброс отложенного автосохранения (null, когда ничего не отложено) |

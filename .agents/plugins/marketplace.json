@@ -17,18 +17,6 @@
       "category": "meta"
     },
     {
-      "name": "devops",
-      "source": {
-        "source": "local",
-        "path": "./.agents/plugins/bundles/devops"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "infrastructure"
-    },
-    {
       "name": "laravel-testing",
       "source": {
         "source": "local",
@@ -87,18 +75,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "engineering"
-    },
-    {
-      "name": "system",
-      "source": {
-        "source": "local",
-        "path": "./.agents/plugins/bundles/system"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "meta"
     },
     {
       "name": "task",

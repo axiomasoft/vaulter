@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
-use Vaulter\Engines\DocumentHandlerRegistry;
-use Vaulter\Engines\Handlers\DownloadOnlyHandler;
-use Vaulter\Engines\Handlers\PreviewHandler;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Handlers\Builtin\PreviewHandler;
+use Vaulter\Handlers\FileHandlerRegistry;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * The format-extensibility registry (§4.5 / §7 / H.5): mime → extension → capability
@@ -20,7 +20,7 @@ use Vaulter\ValueObjects\Handlers\HandlerUi;
  * guard. THIS is the headline — a new format is one class + register, no migration.
  */
 beforeEach(function (): void {
-    $this->registry = app(DocumentHandlerRegistry::class);
+    $this->registry = app(FileHandlerRegistry::class);
 });
 
 it('routes a docx-like file to the editable TipTapHandler', function (): void {
@@ -32,7 +32,7 @@ it('routes a docx-like file to the editable TipTapHandler', function (): void {
 
     $handler = $this->registry->resolve($file, Capability::Edit);
 
-    expect($handler->id())->toBe('tiptap')
+    expect($handler->key())->toBe('vaulter/tiptap')
         ->and($handler->capabilities($file)->editable)->toBeTrue();
 });
 
@@ -41,7 +41,7 @@ it('routes a pdf to the previewable PreviewHandler', function (): void {
 
     $handler = $this->registry->resolve($file, Capability::Preview);
 
-    expect($handler->id())->toBe('preview')
+    expect($handler->key())->toBe('vaulter/preview')
         ->and($handler->capabilities($file)->previewable)->toBeTrue()
         ->and($handler->capabilities($file)->thumbnailable)->toBeTrue();
 });
@@ -49,7 +49,7 @@ it('routes a pdf to the previewable PreviewHandler', function (): void {
 it('routes any image to PreviewHandler via the image/* wildcard', function (): void {
     $file = FileDescriptor::make(nodeId: 1, filename: 'photo.png', detectedMime: 'image/png');
 
-    expect($this->registry->resolve($file, Capability::Preview)->id())->toBe('preview');
+    expect($this->registry->resolve($file, Capability::Preview)->key())->toBe('vaulter/preview');
 });
 
 it('falls back to DownloadOnly for an archive / unknown type', function (): void {
@@ -57,7 +57,7 @@ it('falls back to DownloadOnly for an archive / unknown type', function (): void
 
     $handler = $this->registry->resolve($file, Capability::Download);
 
-    expect($handler->id())->toBe('download')
+    expect($handler->key())->toBe('vaulter/download')
         ->and($handler->capabilities($file)->editable)->toBeFalse()
         ->and($handler->capabilities($file)->downloadable)->toBeTrue();
 });
@@ -84,7 +84,7 @@ it('IGNORES a spoofed claimedMime — the server-sniffed detectedMime wins (H.5)
     $handler = $this->registry->resolve($file, Capability::Download);
 
     // Routes on the sniff (zip → DownloadOnly), not the spoofed docx claim.
-    expect($handler->id())->toBe('download')
+    expect($handler->key())->toBe('vaulter/download')
         ->and($file->canonicalMime())->toBe('application/zip');
 });
 
@@ -92,28 +92,28 @@ it('resolves a RUNTIME-registered custom handler with NO migration and NO core c
     // The whole extensibility headline: a host writes ONE class for a brand-new
     // format (.dwg CAD) and registers it at runtime. It resolves immediately — the
     // registry's string keys are the source of truth, not any sealed enum.
-    Vaulter::registerHandler(CadHandler::class);
+    Vaulter::handlers()->register(CadHandler::class);
 
     $file = FileDescriptor::make(nodeId: 1, filename: 'part.dwg', detectedMime: 'image/vnd.dwg');
 
-    $handler = app(DocumentHandlerRegistry::class)->resolve($file, Capability::Edit);
+    $handler = app(FileHandlerRegistry::class)->resolve($file, Capability::Edit);
 
-    expect($handler->id())->toBe('cad')
+    expect($handler->key())->toBe('test/cad')
         ->and($handler->capabilities($file)->editable)->toBeTrue();
 });
 
 it('resolves the custom CAD handler by EXTENSION when the mime is unknown', function (): void {
-    Vaulter::registerHandler(new CadHandler);
+    Vaulter::handlers()->register(new CadHandler);
 
     // No detected mime at all — only the .dwg extension routes it.
     $file = FileDescriptor::make(nodeId: 1, filename: 'assembly.dwg');
 
-    expect(app(DocumentHandlerRegistry::class)->resolve($file, Capability::Edit)->id())->toBe('cad');
+    expect(app(FileHandlerRegistry::class)->resolve($file, Capability::Edit)->key())->toBe('test/cad');
 });
 
 it('sorts matching handlers by priority (the more specific handler beats DownloadOnly)', function (): void {
     config()->set('vaulter.features.spreadsheets', true);
-    app()->forgetInstance(DocumentHandlerRegistry::class);
+    app()->forgetInstance(FileHandlerRegistry::class);
 
     // With spreadsheets ON, xlsx resolves to Univer (priority 90) over DownloadOnly.
     $file = FileDescriptor::make(
@@ -124,9 +124,9 @@ it('sorts matching handlers by priority (the more specific handler beats Downloa
 
     // UniverHandler is only tagged when the feature is on; register it the same way
     // the provider would so the resolution exercises the priority sort.
-    app(DocumentHandlerRegistry::class)->register(UniverHandler::class);
+    app(FileHandlerRegistry::class)->register(UniverHandler::class);
 
-    expect(app(DocumentHandlerRegistry::class)->resolve($file, Capability::Edit)->id())->toBe('univer');
+    expect(app(FileHandlerRegistry::class)->resolve($file, Capability::Edit)->key())->toBe('vaulter/univer');
 });
 
 it('keeps the built-in handlers final and config-driven (cache-safe)', function (): void {
@@ -142,9 +142,9 @@ it('keeps the built-in handlers final and config-driven (cache-safe)', function 
  */
 final class CadHandler implements FileHandler
 {
-    public function id(): string
+    public function key(): string
     {
-        return 'cad';
+        return 'test/cad';
     }
 
     /**
@@ -168,13 +168,13 @@ final class CadHandler implements FileHandler
         return 200;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(editable: true, previewable: true);
+        return new ContentCapabilities(editable: true, previewable: true);
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(component: 'CadViewer', route: 'cad.show');
+        return new ViewerDescriptor(key: 'CadViewer', route: 'cad.show');
     }
 }

@@ -1,0 +1,7 @@
+{
+  "negative_exit": 1,
+  "negative_failed": 6,
+  "restored_exit": 0,
+  "source_restored_sha256": "ce9ed72994a06ac616a6d60be74821a12bfc9fc6286a25dd45073e364011f090",
+  "mutation": "Temporarily disabled key format assertion; no source mutation remains."
+}

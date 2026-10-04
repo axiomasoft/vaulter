@@ -31,7 +31,7 @@ Vaulter — это строго типизированный слоистый La
 @vaulter/vue  ──HTTP/JSON──►  Controllers ─► FormRequests ─► DTOs (Data\*)
               ──WebSocket──►  CollaborationDriver (Reverb | Hocuspocus)
        │
-  AccessResolver (Vaulter-owned)  ◄── HostRoleDriver (host, swappable)
+  AccessResolver (Vaulter-owned)  ◄── PermissionDriver (host, swappable)
        │                              + v_node_grants ACL
   Actions (final readonly · transactional · dispatch domain Events)
        │
@@ -91,8 +91,8 @@ Actions **не** выполняют никаких проверок доступ
 
 ### Repositories — разделение read / store
 
-Чтения (`NodeReadRepository`, `GrantReadRepository`, `StorageReadRepository`, …) строят запросы;
-store-репозитории (`NodeStoreRepository`, `StorageStoreRepository`, …) выполняют записи и никогда не
+Чтения (`NodeReadRepository`, `GrantReadRepository`, `DriveReadRepository`, …) строят запросы;
+store-репозитории (`NodeStoreRepository`, `DriveStoreRepository`, …) выполняют записи и никогда не
 открывают транзакции и не диспатчат события — этим владеет Action. Чтения-спуски по дереву используют
 рекурсивные связи `staudenmeir/laravel-adjacency-list`, ограниченные по `storage_id`.
 
@@ -106,8 +106,8 @@ Vaulter никогда не ссылается на конкретный кла�
 ### Value-объекты, DTO, enum-ы
 
 `Vaulter\Data\*` — это `final readonly` DTO, которые потребляют Actions. `Vaulter\ValueObjects\*`
-держат доменные значения (`FileDescriptor`, `HandlerCapabilities`, ACL-овые
-`Subject`/`Decision`/`GrantSet`/`AclScope`) — только kind-нейтральные; core не знает форму контента
+держат доменные значения (`FileDescriptor`, `ContentCapabilities`, ACL-овые
+`Subject`/`Decision`/`GrantSet`/`AccessScope`) — только kind-нейтральные; core не знает форму контента
 ни одного обработчика (`TipTapContent` и соседи живут в `vaulter-documents`, VLT-CANON P0.3).
 `Vaulter\Enums\*` — это запечатанные словари (`Ability`, `NodeKind`, `BlobStatus`, …).
 
@@ -120,20 +120,21 @@ Vaulter никогда не ссылается на конкретный кла�
 
 | Директория (core) | Ответственность |
 |---|---|
-| `Access/` | `AccessResolver` (движок эффективных прав), `HostRoleDriverManager`, `HostUserResolver`. |
-| `Drivers/Permission/` | Поставляемые полосы `HostRoleDriver`: `database`, `gate`, `spatie`, `azgard`. |
+| `Access/` | `AccessResolver` (движок эффективных прав), `PermissionDriverManager`, `HostUserResolver`. |
+| `Drivers/Permission/` | Поставляемые полосы `PermissionDriver`: `database`, `gate`, `spatie`, `azgard`. |
 | `Cas/` | `BlobLock` — единственный CAS-класс, оставшийся в core; сам движок хранилища переехал в `vaulter-media`. |
-| `Panels/` | Билдер `Panel`, `StoragePanelProvider`, `PanelRegistry`, `PanelTablesBuilder`, `PanelMigrationGenerator`. |
-| `Engines/` | Движок реестра расширяемости по форматам (VLT-CANON P0.4, ревизия H.5/T5): `DocumentHandlerRegistry`, `NodeHandlerResolver`, `DocumentFileDescriptorFactory` и базовые `Handlers/{PreviewHandler,DownloadOnlyHandler}` — привязаны всегда, так что хост только с Drive резолвит preview/download без единого другого пакета. |
-| `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки `PanelTablesBuilder`. |
+| `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
+| `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
+| `Engines/` | Движок реестра расширяемости по форматам (VLT-CANON P0.4, ревизия H.5/T5): `FileHandlerRegistry`, `NodePresenter`, `FileDescriptorFactory` и базовые `Handlers/{PreviewHandler,DownloadOnlyHandler}` — привязаны всегда, так что хост только с Drive резолвит preview/download без единого другого пакета. |
+| `Schema/` | Классы стратегий идентификаторов (`AutoIncrementIds`/`UlidIds`/`Uuid7Ids`) + `IdStrategyResolver`, колонки `SchemaBuilder`. |
 | `Sharing/` | Канал bearer-ссылок: `ShareResolver`, `ShareContext`, `ShareResult`. |
 | `Webhooks/` | Слой надёжности: `OutboxRecorder`, `OutboxRelay`, `WebhookSigner`. |
 | `Activity/` | Append-only лента активности (`ActivityRecorder`, `RecordsActivity`). |
 | `Actions/` · `Data/` · `Events/` | Только Access, Sharing и Webhooks — Actions/Events Drive и Documents теперь живут в своих пакетах (см. ниже). |
-| `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `HandlerCapabilities`, `HandlerUi`, `HandlerDescriptor`. |
+| `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |
 | `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Handlers/*` (интерфейсы, которые реализуют вынесенные пакеты). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — общие/read-часть; свои write-модели поставляют и Drive, и Documents. |
-| `Testing/` | Заглушки, поставляемые с пакетом: `NullRoleDriver`, `FakeAzgardGuard`. |
+| `Testing/` | Заглушки, поставляемые с пакетом: `NullPermissionDriver`, `FakeAzgardGuard`. |
 
 | Пакет | Namespace | Добавляет |
 |---|---|---|
@@ -173,31 +174,28 @@ $children = $drive->list($folder); // Collection<Node>
 бизнес-логики — только предрезолвленное хранилище и нормализацию источника загрузки (PSR-стрим,
 `SplFileInfo` / `UploadedFile`, открытый ресурс или сырую строку — всё нормализуется к seekable-стриму).
 
-::: details VaulterManager — полная поверхность фасада
-`for()`, `forStorage()`, `panel()`, `panels()`, `registerPanel()`,
-`resolvePermissionsWith()`, `permissionResolver()`, `registerDocumentType()`,
-`documentTypes()`, `registerHandler()`, `handlers()`, `registerExporter()`,
-`exporter()`, `exporterFormats()`, `driver()`. См.
-[Рецепты](/ru/guide/recipes) по точкам расширения (`registerHandler` / `registerExporter` /
-`resolvePermissionsWith`).
+::: details VaulterManager
+`for()`, `forStorage()`, `profiles()`, `registerDocumentType()`, `documentTypes()`,
+`handlers()`, `registerExporter()`, `exporter()`, `exporterFormats()`.
+[Фасад и менеджер](/ru/reference/facade).
 :::
 
 ## Storage Panels — ось встраиваемости
 
-**Storage Panel** — это именованный конфиг-конверт, привязанный к *любой* сущности хоста, живущий
-поверх **одной общей схемы `v_*` без собственных таблиц по умолчанию** (ноль миграций). Это ось
+**Storage Profile** — это именованный конфиг-конверт, привязанный к *любой* сущности хоста, живущий
+поверх **одной общей схемы `v_*` без собственных таблиц** (ноль миграций). Это ось
 изоляции/конфигурации, отдельная от *типа хранилища* (пресет политики `private | team | public`).
 
 Панель строится флюентно и регистрируется только по FQCN (безопасно для config-cache — никаких
 замыканий):
 
 ```php
-use Vaulter\Panels\Panel;
-use Vaulter\Panels\StoragePanelProvider;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileProvider;
 
-final class ProjectDriveStoragePanel extends StoragePanelProvider
+final class ProjectDriveProfile extends ProfileProvider
 {
-    public function panel(Panel $panel): Panel
+    public function profile(Profile $panel): Profile
     {
         return $panel
             ->id('project_drive')
@@ -208,17 +206,11 @@ final class ProjectDriveStoragePanel extends StoragePanelProvider
 }
 ```
 
-Зарегистрируйте её под `config('vaulter.panels')`. Незаданные значения откатываются к глобальному
-конфигу (**override → prefix → global**), поэтому панель объявляет только то, что переопределяет.
-`PanelRegistry` — синглтон контейнера, который **валидирует каждую панель на бутстрапе** (H.1):
-упомянутые FQCN моделей/pipe/resource должны существовать и удовлетворять своему контракту, а
-панельная стратегия идентификаторов отвергается на общей схеме — сломанная панель падает громко на
-бутстрапе, а не портит запрос. Заскаффолдить одну можно через `php artisan vaulter:make-panel <name>`.
-
-Режим **собственных таблиц** (объявить `->tablePrefix()` / `->tables()`) — редкий продвинутый путь
-для схемо-расходящегося домена; `vaulter:panel:migrations <panel>` тогда генерирует панельные
-таблицы через то же определение `PanelTablesBuilder`, поэтому схема никогда не расходится. См.
-[ADR-0009](/adr/0009-storage-panels).
+Зарегистрируйте провайдер в `config('vaulter.panels')`. `ProfileRegistry` разрешает
+профили при загрузке приложения. Создайте провайдер командой
+`php artisan vaulter:make:profile <name>`. Все профили используют общую схему;
+собственные таблицы, карты моделей, pipelines и resource-хуки удалены.
+См. [Профили Drive](/ru/concepts/storage-panels).
 
 ## Модель данных
 
@@ -249,9 +241,9 @@ arch-тестом — см. [Устранение неполадок](/ru/guide/
 Две полосы, оцениваемые принадлежащим Vaulter `AccessResolver`
 ([ADR-0007](/adr/0007-pluggable-authorization)):
 
-- **`HostRoleDriver`** — подключаемая, пер-панельная ролевая полоса хоста. Она никогда не видит
+- **`PermissionDriver`** — подключаемая, пер-панельная ролевая полоса хоста. Она никогда не видит
   `Node` и никогда не оперирует magic-string-действиями; она отвечает на
-  `resolve(Subject, Authorizable, AclScope)`, `override(...)` (супер-админ / `Gate::before`),
+  `resolve(Subject, Authorizable, AccessScope)`, `override(...)` (супер-админ / `Gate::before`),
   `subjectsFor(Authorizable)` (актор → пользователи + роли + команды) и
   `canCreateInWorkspace(...)`. Поставляемые полосы: `database` (по умолчанию, автономная),
   `gate`, `spatie`, `azgard` и не-прод `null`. Меняется через
@@ -275,8 +267,8 @@ arch-тестом — см. [Устранение неполадок](/ru/guide/
 `Share → SHARE`, `Manage → ALL`.
 
 ::: warning Нет драйвера = громкий отказ в продакшене
-Открытый драйвер `null` можно выбрать **только вне продакшена**; `HostRoleDriverManager`
-кидает `MissingHostRoleDriverException`, если продакшен-приложение его резолвит. Привяжите настоящий
+Открытый драйвер `null` можно выбрать **только вне продакшена**; `PermissionDriverManager`
+кидает `MissingPermissionDriverException`, если продакшен-приложение его резолвит. Привяжите настоящий
 драйвер до деплоя — см. [Устранение неполадок](/ru/guide/troubleshooting#no-permission-driver).
 :::
 
@@ -323,12 +315,12 @@ Yjs — источник истины; TipTap JSON — производная п
 
 | Контракт | Привязка через | Задокументировано в |
 |---|---|---|
-| `Contracts\Access\HostRoleDriver` | `config('vaulter.drivers.permission')` | [Рецепты — кастомный драйвер прав](/ru/guide/recipes#permission-driver) |
+| `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Рецепты — кастомный драйвер прав](/ru/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (легаси) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
 | `Contracts\Access\AzgardGuard` | привязка в контейнере (адаптер хоста) | [Устранение неполадок — морфы Azgard](/ru/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Рецепты — переход на S3](/ru/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
-| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |
+| `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |
 | `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
 | `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | тег контейнера | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
@@ -348,7 +340,7 @@ Yjs — источник истины; TipTap JSON — производная п
 | [0004](/adr/0004-content-format) | Контент в TipTap JSON + append-only ограниченная история версий. | accepted |
 | [0005](/adr/0005-unified-node-tree) | Одно дерево-список-смежности (`v_nodes`) для папок/файлов/документов/ярлыков. | accepted |
 | [0006](/adr/0006-content-addressed-blobs-gc) | Контент-адресуемые блобы + двухфазная гонкоустойчивая сборка мусора. | accepted |
-| [0007](/adr/0007-pluggable-authorization) | `HostRoleDriver` (подключаемый) + `AccessResolver` (собственный), вето-запрет. | accepted |
+| [0007](/adr/0007-pluggable-authorization) | `PermissionDriver` (подключаемый) + `AccessResolver` (собственный), вето-запрет. | accepted |
 | [0008](/adr/0008-media-library-decision) | Собственный CAS вместо `spatie/laravel-medialibrary`. | accepted |
 | [0009](/adr/0009-storage-panels) | Storage Panels — config-first, конверты с нулём миграций. | accepted |
 | [0010](/adr/0010-php-npm-monorepo-release) | Один репозиторий, два пакетных менеджера, два канала релиза. | accepted |

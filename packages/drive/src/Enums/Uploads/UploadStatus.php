@@ -22,7 +22,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *                 total_size_bytes for tus / multipart completed); ready to commit.
  *  - Committed  — the assembled bytes went through BlobStore.commit (H.3 — server
  *                 recomputes sha256, dedup + race-free GC apply) and the File +
- *                 FileVersion + node were created; assembled_blob_id is set. Terminal.
+ *                 FileRevision + node were created; assembled_blob_id is set. Terminal.
  *  - Aborted    — the client (or a DELETE) abandoned the session; staged temp +
  *                 S3 multipart cleaned. Terminal.
  *  - Expired    — the sweeper found a stale session past expires_at and reclaimed

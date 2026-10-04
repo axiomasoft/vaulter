@@ -7,15 +7,15 @@ namespace Vaulter\Http\Requests\Webhooks;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Data\Webhooks\RegisterWebhookEndpointData;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
  * Validates a register-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
- * assembles its RegisterWebhookEndpointData command. The url must be a valid http(s)
- * URL; every subscribed event must be one of the closed WebhookEvent set; is_active
+ * assembles its RegisterWebhookEndpointInput command. The url must be a valid http(s)
+ * URL; every subscribed event must be one of the closed EventType set; is_active
  * defaults true. The signing_secret is NOT accepted from the client — the Action mints
  * it. The controller authorizes the manage ability first.
  *
@@ -34,7 +34,7 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
         return [
             'url' => ['required', 'url', 'max:2048'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(WebhookEvent::names())],
+            'events.*' => ['string', Rule::in(EventType::names())],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
@@ -64,9 +64,9 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
         });
     }
 
-    public function toData(): RegisterWebhookEndpointData
+    public function toData(): RegisterWebhookEndpointInput
     {
-        return new RegisterWebhookEndpointData(
+        return new RegisterWebhookEndpointInput(
             url: $this->string('url')->toString(),
             events: $this->eventNames(),
             isActive: $this->has('is_active') ? $this->boolean('is_active') : true,

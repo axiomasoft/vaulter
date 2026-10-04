@@ -1,0 +1,52 @@
+[
+  {
+    "pkg": "drive",
+    "check": "pint",
+    "exit": 0
+  },
+  {
+    "pkg": "drive",
+    "check": "tests",
+    "exit": 0
+  },
+  {
+    "pkg": "documents",
+    "check": "pint",
+    "exit": 0
+  },
+  {
+    "pkg": "documents",
+    "check": "tests",
+    "exit": 1
+  },
+  {
+    "pkg": "media",
+    "check": "pint",
+    "exit": 0
+  },
+  {
+    "pkg": "media",
+    "check": "tests",
+    "exit": 0
+  },
+  {
+    "pkg": "filament",
+    "check": "pint",
+    "exit": 0
+  },
+  {
+    "pkg": "filament",
+    "check": "tests",
+    "exit": 0
+  },
+  {
+    "pkg": "azgard",
+    "check": "pint",
+    "exit": 0
+  },
+  {
+    "pkg": "azgard",
+    "check": "tests",
+    "exit": 0
+  }
+]

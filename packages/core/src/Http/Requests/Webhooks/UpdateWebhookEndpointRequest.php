@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Http\Requests\Webhooks;
 
 use Illuminate\Validation\Rule;
-use Vaulter\Data\Webhooks\UpdateWebhookEndpointData;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
  * Validates an update-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
- * assembles its UpdateWebhookEndpointData command. Every field is optional (a PATCH
+ * assembles its UpdateWebhookEndpointInput command. Every field is optional (a PATCH
  * touches only what it sends); a present field must still be valid. signing_secret is
  * never updatable. The controller authorizes the manage ability first.
  */
@@ -25,14 +25,14 @@ final class UpdateWebhookEndpointRequest extends VaulterFormRequest
         return [
             'url' => ['sometimes', 'url', 'max:2048'],
             'events' => ['sometimes', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(WebhookEvent::names())],
+            'events.*' => ['string', Rule::in(EventType::names())],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
 
-    public function toData(): UpdateWebhookEndpointData
+    public function toData(): UpdateWebhookEndpointInput
     {
-        return new UpdateWebhookEndpointData(
+        return new UpdateWebhookEndpointInput(
             url: $this->has('url') ? $this->string('url')->toString() : null,
             events: $this->has('events') ? $this->eventNames() : null,
             isActive: $this->has('is_active') ? $this->boolean('is_active') : null,

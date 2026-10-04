@@ -91,7 +91,7 @@ scope/effect updates the level/bits/expiry. The write runs in a transaction and 
 
 ```php
 use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Effect;
@@ -99,7 +99,7 @@ use Vaulter\Enums\Access\GrantScope;
 
 $grant = app(GrantNodeAccessAction::class)->execute(
     node: $node,
-    data: new GrantNodeAccessData(
+    data: new GrantNodeAccessInput(
         subject: Subject::ofModel($collaborator),
         level: GrantLevel::Writer,
         effect: Effect::Allow,            // default
@@ -122,7 +122,7 @@ Action. The HTTP surface below does exactly that.
 To carve out an exception inside an otherwise-shared subtree, write a `deny`:
 
 ```php
-new GrantNodeAccessData(
+new GrantNodeAccessInput(
     subject: Subject::ofModel($contractor),
     level: GrantLevel::Reader,
     effect: Effect::Deny,           // veto — overrides farther/role allows

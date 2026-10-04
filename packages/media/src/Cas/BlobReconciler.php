@@ -12,7 +12,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Cas\BlobScope;
@@ -61,7 +61,7 @@ final readonly class BlobReconciler
     public function __construct(
         private ContentStore $content,
         private BlobStoreRepository $blobs,
-        private FileVersionBlobStoreRepository $edges,
+        private FileRevisionBlobStoreRepository $edges,
         private BlobLock $lock,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,

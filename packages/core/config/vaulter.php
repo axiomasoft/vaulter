@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drivers\Permission\AzgardPermissionResolver;
-use Vaulter\Drivers\Permission\DatabasePermissionResolver;
-use Vaulter\Drivers\Permission\GatePermissionResolver;
-use Vaulter\Drivers\Permission\SpatiePermissionResolver;
-use Vaulter\Engines\Handlers\DownloadOnlyHandler;
-use Vaulter\Engines\Handlers\PreviewHandler;
+use Vaulter\Access\Drivers\AzgardPermissionDriver;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Panels\DefaultStoragePanel;
+use Vaulter\Profiles\DefaultProfile;
 use Vaulter\Schema\AutoIncrementIds;
 use Vaulter\Schema\UlidIds;
 use Vaulter\Schema\Uuid7Ids;
 use Vaulter\Support\RandomShareTokenGenerator;
-use Vaulter\Testing\NullRoleDriver;
+use Vaulter\Testing\NullPermissionDriver;
 use Vaulter\Webhooks\DefaultOutboundUrlGuard;
 
 /**
@@ -45,12 +45,12 @@ return [
     */
     'models' => [
         // Vaulter Drive entities (M1a).
-        'storage' => Storage::class,
+        'storage' => Drive::class,
         'node' => Node::class,
         'file' => File::class,
-        'file_version' => FileVersion::class,
+        'file_version' => FileRevision::class,
         'blob' => Blob::class,
-        'file_version_blob' => FileVersionBlob::class,
+        'file_version_blob' => FileRevisionBlob::class,
         'grant' => NodeGrant::class,
         'node_share' => NodeShare::class,
 
@@ -80,7 +80,7 @@ return [
     |--------------------------------------------------------------------------
     | Base table name for each Vaulter entity, resolved as
     | {table_prefix}{base}. Rename a single entity's table here without changing
-    | the global prefix; PanelTablesBuilder and the models read through this map.
+    | the global prefix; SchemaBuilder and the models read through this map.
     */
     'table_names' => [
         // Vaulter Drive entities (M1a).
@@ -146,20 +146,20 @@ return [
     | Storage panels (D11)
     |--------------------------------------------------------------------------
     | A storage panel is a named config-envelope bound to ANY host entity, living
-    | over the ONE shared v_* schema WITHOUT its own tables by default (zero
-    | migrations). List your StoragePanelProvider FQCNs here (cache-safe — FQCN
+    | over the ONE shared v_* schema WITHOUT its own tables (zero
+    | migrations). List your ProfileProvider FQCNs here (cache-safe — FQCN
     | only, no closures); they override the default panel by id. Scaffold one with
-    | `php artisan vaulter:make-panel <name>`.
+    | `php artisan vaulter:make:profile <name>`.
     */
     'panels' => [],
-    'default_panel' => DefaultStoragePanel::class,
+    'default_panel' => DefaultProfile::class,
 
     /*
     |--------------------------------------------------------------------------
-    | Per-panel migration output (D12)
+    | Legacy migration output setting
     |--------------------------------------------------------------------------
-    | Where `vaulter:panel:migrations` writes the generated per-panel migration
-    | for an own-tables panel. null → the host's database/migrations directory.
+    | Retained until the configuration transition; profile scaffolding no longer
+    | uses this path because profiles share the configured schema.
     */
     'migrations' => [
         'path' => null,
@@ -211,11 +211,11 @@ return [
     |--------------------------------------------------------------------------
     | Document handlers — the format-extensibility registry (§4.5 / §7 / H.5)
     |--------------------------------------------------------------------------
-    | The DocumentHandlerRegistry resolves the best \Vaulter\Contracts\Handlers\FileHandler
+    | The FileHandlerRegistry resolves the best \Vaulter\Contracts\Handlers\FileHandler
     | for a file by mime → extension → capability → priority, falling back to the
     | DownloadOnlyHandler null-object. List FQCNs here (cache-safe — FQCN only, no
     | closures); a host adds a NEW format with ONE class + an entry here (or a tagged
-    | 'vaulter.handlers' binding, or Vaulter::registerHandler() at runtime) — NO
+    | 'vaulter.handlers' binding, or Vaulter::handlers()->register() at runtime) — NO
     | migration, NO core change, NOT gated by any sealed enum (H.5).
     |
     | Preview/DownloadOnly are the core-owned BASELINE (VLT-CANON P0.4/D10, superseding
@@ -312,7 +312,7 @@ return [
     |--------------------------------------------------------------------------
     | Host role drivers (D6 / H.2) — the Drive ACL
     |--------------------------------------------------------------------------
-    | The pluggable, per-panel \Vaulter\Contracts\Access\HostRoleDriver lane the
+    | The pluggable, per-panel \Vaulter\Contracts\Access\PermissionDriver lane the
     | (Vaulter-owned, NON-swappable) AccessResolver combines with v_node_grants.
     | The default 'database' driver is fully standalone — it authorises purely from
     | the grant rows with zero host dependency. Swap to 'gate'/'spatie'/'azgard'
@@ -327,23 +327,23 @@ return [
     ],
 
     'permission_drivers' => [
-        'database' => DatabasePermissionResolver::class,
-        'gate' => GatePermissionResolver::class,
-        'spatie' => SpatiePermissionResolver::class,
+        'database' => DatabasePermissionDriver::class,
+        'gate' => GatePermissionDriver::class,
+        'spatie' => SpatiePermissionDriver::class,
         // AzGuard lane (H.2 / ADR-0007): the driver talks ONLY to the Vaulter-owned
         // AzgardGuard seam, so core has no azguard/corex dependency. A production host
         // binds a real AzgardGuard adapter (delegating to AzGuard hasScopedPermission /
         // Corex ContextGuard hasPermissionIn) AND aligns ulid morphs — see the azgard
         // sub-config below.
-        'azgard' => AzgardPermissionResolver::class,
-        'null' => NullRoleDriver::class, // non-prod only
+        'azgard' => AzgardPermissionDriver::class,
+        'null' => NullPermissionDriver::class, // non-prod only
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Gate driver — ability map (H.2)
     |--------------------------------------------------------------------------
-    | Used only when drivers.permission = 'gate'. The GatePermissionResolver asks
+    | Used only when drivers.permission = 'gate'. The GatePermissionDriver asks
     | the Laravel Gate these abilities (node-blind — it passes the panel/workspace
     | context, never a Node). 'abilities' maps a Vaulter GrantLevel to a host gate
     | ability; the HIGHEST allowed level becomes the actor's role grant. 'super_
@@ -394,7 +394,7 @@ return [
     |--------------------------------------------------------------------------
     | AzGuard driver — Ability→permission map (H.2 / ADR-0007)
     |--------------------------------------------------------------------------
-    | Used only when drivers.permission = 'azgard'. The AzgardPermissionResolver talks
+    | Used only when drivers.permission = 'azgard'. The AzgardPermissionDriver talks
     | exclusively to the Vaulter-owned AzgardGuard seam (no azguard/corex dependency in
     | core). Unlike the Gate/Spatie maps (keyed by GrantLevel) AzGuard is action-centric,
     | so 'permissions' maps a Vaulter Ability to an AzGuard permission key — the resolver
@@ -447,7 +447,7 @@ return [
     |  'global'  — one physical object per sha256 across the whole install.
     |  'tenant'  — unique per (tenant_id, sha256); no cross-tenant existence leak.
     |  'storage' — unique per (storage_id, sha256).
-    | This drives BOTH the dedup-UNIQUE index (PanelTablesBuilder::defineBlobs)
+    | This drives BOTH the dedup-UNIQUE index (SchemaBuilder::defineBlobs)
     | and the scope-qualified storage_key "<scope>/ab/cd/<sha256>" (H.3 — a
     | scope-free path would let one scope's GC delete another scope's bytes).
     | dedup_scope ⊆ encryption scope: plaintext-sha256 dedup never crosses an

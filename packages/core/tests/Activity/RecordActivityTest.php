@@ -8,7 +8,7 @@ use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -39,7 +39,7 @@ beforeEach(function (): void {
 it('writes one storage.created row with the storage scope and root target', function (): void {
     $storage = DriveTestHelpers::drive()->storage();
 
-    $row = ActivityTestHelpers::only(ActivityVerb::StorageCreated->value);
+    $row = ActivityTestHelpers::only(EventType::DriveCreated->value);
 
     expect($row->storage_id)->toEqual($storage->getKey())
         ->and($row->target_id)->toEqual($storage->root_node_id)
@@ -52,7 +52,7 @@ it('writes one node.created row carrying the actor and the kind/name context', f
     Activity::query()->delete();
     $folder = $drive->createFolder('reports', actorId: 7);
 
-    $row = ActivityTestHelpers::only(ActivityVerb::NodeCreated->value);
+    $row = ActivityTestHelpers::only(EventType::FolderCreated->value);
 
     expect($row->target_id)->toEqual($folder->getKey())
         ->and($row->storage_id)->toEqual($folder->storage_id)
@@ -66,7 +66,7 @@ it('writes one file.uploaded row with size + version context', function (): void
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('payload'), originalName: 'doc.txt', mimeType: 'text/plain');
 
-    $row = ActivityTestHelpers::only(ActivityVerb::FileUploaded->value);
+    $row = ActivityTestHelpers::only(EventType::FileUploaded->value);
 
     expect($row->target_id)->toEqual($node->getKey())
         ->and($row->context['name'])->toBe('doc.txt')
@@ -79,7 +79,7 @@ it('writes one version.created row when a new version is committed', function ()
 
     $drive->uploadVersion($node->refresh(), DriveTestHelpers::streamFor('v2-bytes'));
 
-    $row = ActivityTestHelpers::only(ActivityVerb::VersionCreated->value);
+    $row = ActivityTestHelpers::only(EventType::FileRevisionAdded->value);
 
     expect($row->target_id)->toEqual($node->getKey())
         ->and($row->context['version_no'])->toBe(2);
@@ -93,7 +93,7 @@ it('writes one node.moved row with from/to parent context', function (): void {
 
     $drive->move($child, $b, actorId: 7);
 
-    $row = ActivityTestHelpers::only(ActivityVerb::NodeMoved->value);
+    $row = ActivityTestHelpers::only(EventType::NodeMoved->value);
 
     expect($row->target_id)->toEqual($child->getKey())
         ->and($row->context['from_parent_id'])->toEqual((string) $a->getKey())
@@ -106,7 +106,7 @@ it('writes one node.renamed row with the old + new name', function (): void {
 
     $drive->rename($folder, 'new-name', actorId: 7);
 
-    $row = ActivityTestHelpers::only(ActivityVerb::NodeRenamed->value);
+    $row = ActivityTestHelpers::only(EventType::NodeRenamed->value);
 
     expect($row->context['from'])->toBe('old-name')
         ->and($row->context['to'])->toBe('new-name');
@@ -119,7 +119,7 @@ it('writes one node.copied row targeting the copy and naming the source', functi
 
     $copy = $drive->copy($source, $dest, name: 'copied');
 
-    $row = ActivityTestHelpers::only(ActivityVerb::NodeCopied->value);
+    $row = ActivityTestHelpers::only(EventType::NodeCopied->value);
 
     expect($row->target_id)->toEqual($copy->getKey())
         ->and($row->context['source_id'])->toEqual((string) $source->getKey());
@@ -132,8 +132,8 @@ it('writes one node.trashed and one node.restored row across the lifecycle', fun
     $drive->trash($folder, actorId: 7);
     $drive->restore($folder->refresh(), actorId: 7);
 
-    expect(ActivityTestHelpers::only(ActivityVerb::NodeTrashed->value)->target_id)->toEqual($folder->getKey())
-        ->and(ActivityTestHelpers::only(ActivityVerb::NodeRestored->value)->target_id)->toEqual($folder->getKey());
+    expect(ActivityTestHelpers::only(EventType::NodeTrashed->value)->target_id)->toEqual($folder->getKey())
+        ->and(ActivityTestHelpers::only(EventType::NodeRestored->value)->target_id)->toEqual($folder->getKey());
 });
 
 it('writes one node.force_deleted row with the freed bytes and ids (no target)', function (): void {
@@ -143,7 +143,7 @@ it('writes one node.force_deleted row with the freed bytes and ids (no target)',
 
     $drive->forceDelete($node->refresh(), actorId: 7);
 
-    $row = ActivityTestHelpers::only(ActivityVerb::NodeForceDeleted->value);
+    $row = ActivityTestHelpers::only(EventType::NodePurged->value);
 
     expect($row->target_id)->toBeNull()
         ->and($row->storage_id)->toEqual($node->storage_id)
@@ -158,7 +158,7 @@ it('writes one grant.created row from the grant event', function (): void {
 
     event(new NodeGrantCreated(grant: $grant, actorId: 7));
 
-    $row = ActivityTestHelpers::only(ActivityVerb::GrantCreated->value);
+    $row = ActivityTestHelpers::only(EventType::GrantCreated->value);
 
     expect($row->target_id)->toEqual($node->getKey())
         ->and($row->context['level'])->toBe('writer')
@@ -172,7 +172,7 @@ it('writes one grant.revoked row from the revoke event', function (): void {
 
     event(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 3, actorId: 7));
 
-    $row = ActivityTestHelpers::only(ActivityVerb::GrantRevoked->value);
+    $row = ActivityTestHelpers::only(EventType::GrantRevoked->value);
 
     expect($row->target_id)->toEqual($node->getKey())
         ->and($row->context['revoked'])->toBe(3)
@@ -187,8 +187,8 @@ it('writes one share.created and one share.revoked row from the share events', f
     event(new NodeShareCreated(share: $share, actorId: 7));
     event(new NodeShareRevoked(share: $share, actorId: 7));
 
-    expect(ActivityTestHelpers::only(ActivityVerb::ShareCreated->value)->target_id)->toEqual($node->getKey())
-        ->and(ActivityTestHelpers::only(ActivityVerb::ShareRevoked->value)->context['token_prefix'])
+    expect(ActivityTestHelpers::only(EventType::ShareCreated->value)->target_id)->toEqual($node->getKey())
+        ->and(ActivityTestHelpers::only(EventType::ShareRevoked->value)->context['token_prefix'])
         ->toBe($share->token_prefix);
 });
 
@@ -205,7 +205,7 @@ it('writes exactly ONE row even when a folder has a deep subtree (no per-node fa
     // Trashing the whole subtree is ONE event ⇒ ONE row, not one per descendant.
     $drive->trash($root->refresh(), actorId: 7);
 
-    expect(Activity::query()->where('verb', ActivityVerb::NodeTrashed->value)->count())->toBe(1);
+    expect(Activity::query()->where('verb', EventType::NodeTrashed->value)->count())->toBe(1);
 });
 
 // ─────────────────────────────── resilience ───────────────────────────────────
@@ -248,7 +248,7 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     $recorder = app(ActivityRecorder::class);
 
     Activity::query()->delete();
-    $recorder->recordForNode(verb: ActivityVerb::NodeCreated, node: $node, actorId: 7);
+    $recorder->recordForNode(verb: EventType::FolderCreated, node: $node, actorId: 7);
 
     $row = Activity::query()->firstOrFail();
 

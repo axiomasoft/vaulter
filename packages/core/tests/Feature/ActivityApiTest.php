@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Activity\ActivityVerb;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -33,8 +33,8 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
     Activity::query()->delete();
 
     // Seed two rows with a known order (older, then newer).
-    $older = activityRow($storage->getKey(), ActivityVerb::NodeCreated, 'older');
-    $newer = activityRow($storage->getKey(), ActivityVerb::NodeRenamed, 'newer');
+    $older = activityRow($storage->getKey(), EventType::FolderCreated, 'older');
+    $newer = activityRow($storage->getKey(), EventType::NodeRenamed, 'newer');
     $older->forceFill(['created_at' => now()->subMinute()])->save();
     $newer->forceFill(['created_at' => now()])->save();
 
@@ -46,8 +46,8 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
 
     $verbs = array_column($response->json('data'), 'verb');
 
-    expect($verbs[0])->toBe(ActivityVerb::NodeRenamed->value)
-        ->and($verbs[1])->toBe(ActivityVerb::NodeCreated->value);
+    expect($verbs[0])->toBe(EventType::NodeRenamed->value)
+        ->and($verbs[1])->toBe(EventType::FolderCreated->value);
 });
 
 it('returns a node-scoped feed (only that node target)', function (): void {
@@ -56,8 +56,8 @@ it('returns a node-scoped feed (only that node target)', function (): void {
     $nodeB = AccessTestHelpers::folder($storage, null, 'B');
     AccessTestHelpers::grant($nodeA, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
 
-    targetedRow($storage->getKey(), $nodeA, ActivityVerb::NodeRenamed);
-    targetedRow($storage->getKey(), $nodeB, ActivityVerb::NodeRenamed);
+    targetedRow($storage->getKey(), $nodeA, EventType::NodeRenamed);
+    targetedRow($storage->getKey(), $nodeB, EventType::NodeRenamed);
 
     $response = $this->getJson('api/vaulter/nodes/'.$nodeA->getKey().'/activity')->assertOk();
 
@@ -72,14 +72,14 @@ it('filters a node feed by verb', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'filtered');
     AccessTestHelpers::grant($node, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
 
-    targetedRow($storage->getKey(), $node, ActivityVerb::NodeRenamed);
-    targetedRow($storage->getKey(), $node, ActivityVerb::NodeMoved);
+    targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
+    targetedRow($storage->getKey(), $node, EventType::NodeMoved);
 
     $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity?verb=node.moved')->assertOk();
 
     $verbs = array_column($response->json('data'), 'verb');
 
-    expect($verbs)->toBe([ActivityVerb::NodeMoved->value]);
+    expect($verbs)->toBe([EventType::NodeMoved->value]);
 });
 
 it('cursor-paginates the feed', function (): void {
@@ -88,7 +88,7 @@ it('cursor-paginates the feed', function (): void {
     AccessTestHelpers::grant($node, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
 
     foreach (range(1, 3) as $ignored) {
-        targetedRow($storage->getKey(), $node, ActivityVerb::NodeRenamed);
+        targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
     }
 
     $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity?per_page=2')->assertOk();
@@ -101,7 +101,7 @@ it('403s a node feed for an actor WITHOUT View', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'private');
     // No grant for user 1 → no View.
-    targetedRow($storage->getKey(), $node, ActivityVerb::NodeRenamed);
+    targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
 
     $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity')->assertStatus(403);
 });
@@ -109,7 +109,7 @@ it('403s a node feed for an actor WITHOUT View', function (): void {
 /**
  * A bare activity row in a storage scope (no target) with a verb + name context.
  */
-function activityRow(int|string $storageId, ActivityVerb $verb, string $name): Activity
+function activityRow(int|string $storageId, EventType $verb, string $name): Activity
 {
     $activity = new Activity;
     $activity->forceFill([
@@ -125,7 +125,7 @@ function activityRow(int|string $storageId, ActivityVerb $verb, string $name): A
 /**
  * An activity row targeting a specific node.
  */
-function targetedRow(int|string $storageId, Node $node, ActivityVerb $verb): Activity
+function targetedRow(int|string $storageId, Node $node, EventType $verb): Activity
 {
     $activity = new Activity;
     $activity->forceFill([

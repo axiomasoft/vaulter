@@ -6,14 +6,14 @@ namespace Vaulter\Drive\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\Drive\FileVersion;
+use Vaulter\Models\Drive\FileRevision;
 
 /**
  * The read shape of an immutable file version (§2.4): the monotonic version_no,
  * its content address and the upload metadata. Read-only — it transforms an
- * already-loaded FileVersion, never queries.
+ * already-loaded FileRevision, never queries.
  *
- * @mixin FileVersion
+ * @mixin FileRevision
  */
 final class FileVersionResource extends JsonResource
 {
@@ -23,7 +23,7 @@ final class FileVersionResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var FileVersion $version */
+        /** @var FileRevision $version */
         $version = $this->resource;
 
         return [

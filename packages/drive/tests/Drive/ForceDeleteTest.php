@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -18,7 +18,7 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
 
     $node = $drive->upload(DriveTestHelpers::streamFor('payload bytes'), originalName: 'f.bin');
 
-    expect(FileVersionBlob::query()->count())->toBe(1);
+    expect(FileRevisionBlob::query()->count())->toBe(1);
 
     $drive->trash($node);
 
@@ -26,7 +26,7 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
 
     // The edge is detached — the blob now has zero live edges (GC-eligible via M1b),
     // but its bytes are NOT deleted here.
-    expect(FileVersionBlob::query()->count())->toBe(0)
+    expect(FileRevisionBlob::query()->count())->toBe(0)
         ->and(Blob::query()->count())->toBe(1);
 
     $blob = Blob::query()->first();

@@ -24,7 +24,7 @@ use Vaulter\Support\Config;
  * subject morph (user|role|team — a registered alias) on a node with a level +
  * CRUDS bitmask, an allow|deny effect, an item|subtree scope and an optional
  * expiry. The AccessResolver walks ancestors collecting these (direct + subtree)
- * for an actor's subject-set and folds them with the HostRoleDriver.
+ * for an actor's subject-set and folds them with the PermissionDriver.
  *
  * `inherited`/`inherited_from_node_id` are reserved for an OPTIONAL materialised
  * effective-grants read-model; the source of truth in M2a is the direct rows plus
@@ -91,7 +91,7 @@ class NodeGrant extends Model
     /**
      * Constrain a query to the grants addressed to any subject in the given set —
      * the "WHERE (subject_type, subject_id) IN (...)" the resolver builds from
-     * HostRoleDriver::subjectsFor (§2.6 "shared with me" index).
+     * PermissionDriver::subjectsFor (§2.6 "shared with me" index).
      *
      * @param  Builder<$this> $query
      * @param  list<Subject>  $subjects

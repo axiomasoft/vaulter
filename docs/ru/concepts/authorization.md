@@ -11,7 +11,7 @@ Vaulter отвечает ровно на один вопрос авториза�
 Vaulter, — `AccessResolver`. Он складывает две полосы (lanes):
 
 1. **пер-нодовый ACL** (строки `v_node_grants`) — собственное хранилище грантов Vaulter;
-2. **сменную ролевую полосу хоста** (`HostRoleDriver`) — мост к системе ролей вашего
+2. **сменную ролевую полосу хоста** (`PermissionDriver`) — мост к системе ролей вашего
    приложения.
 
 Сам резолвер **не** контракт и **не** сменный — сменна только ролевая полоса (драйвер).
@@ -19,7 +19,7 @@ Vaulter, — `AccessResolver`. Он складывает две полосы (la
 ::: info Две полосы, один авторитет
 `AccessResolver` (`Vaulter\Access\AccessResolver`) — единственный авторитет, к которому
 обращаются все Policy, `DriveContext`, контроллеры и Resource. Хост подключается к нему
-через контракт `HostRoleDriver`, но никогда не подменяет сам резолвер.
+через контракт `PermissionDriver`, но никогда не подменяет сам резолвер.
 :::
 
 ## Публичная поверхность
@@ -173,7 +173,7 @@ level       = max(aclLevel, roleLevel)
 ```
 
 Ролевая полоса складывается **до** вето, поэтому может **повысить** доступ, но **никогда
-не воскресит запрещённый бит**. `AclScope`, передаваемый драйверу, node-blind: он несёт
+не воскресит запрещённый бит**. `AccessScope`, передаваемый драйверу, node-blind: он несёт
 панель + координаты рабочего пространства и владельца узла, но не сам `Node`.
 
 ### Шаг 5 — финальное вето
@@ -206,7 +206,7 @@ public function allows(Ability $ability): bool
 действия — без дублирования логики прав в JavaScript и лишних запросов.
 
 `NodeResource` заполняет свой объект `abilities` через
-`Vaulter\Access\Abilities\NodeAbilities::for($actor, $node, $resolver)`, который зовёт
+`Vaulter\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, который зовёт
 `abilitiesFor()`. Когда актора нет, **все флаги false** (клиент показывает read-only
 оболочку, а не рекламирует недоступные действия).
 
@@ -243,14 +243,14 @@ public function allows(Ability $ability): bool
 ## Fail-loud: null-драйвер
 
 Драйвер по умолчанию — `database` (полностью автономная полоса без зависимостей от
-хоста). Для локального старта есть **открытый** драйвер `Vaulter\Testing\NullRoleDriver`,
+хоста). Для локального старта есть **открытый** драйвер `Vaulter\Testing\NullPermissionDriver`,
 дающий любому актору полный доступ через абсолютный override `Allow`.
 
-`HostRoleDriverManager` отвергает null-драйвер **в продакшене**:
+`PermissionDriverManager` отвергает null-драйвер **в продакшене**:
 
 ```php
-if (is_a($class, NullRoleDriver::class, allow_string: true) && $this->isProduction) {
-    throw MissingHostRoleDriverException::nullDriverInProduction($key);
+if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isProduction) {
+    throw MissingPermissionDriverException::nullDriverInProduction($key);
 }
 ```
 
@@ -263,7 +263,7 @@ if (is_a($class, NullRoleDriver::class, allow_string: true) && $this->isProducti
 
 ## Дальше
 
-- [Драйверы прав](/guide/permission-drivers) (EN) — четыре полосы `HostRoleDriver` и их
+- [Драйверы прав](/guide/permission-drivers) (EN) — четыре полосы `PermissionDriver` и их
   настройка.
 - [Гранты](/guide/grants) (EN) — строки `v_node_grants`: субъекты, эффекты, scope, срок,
   `GrantNodeAccess`.

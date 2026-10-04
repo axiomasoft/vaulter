@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-04
-inputs_sha256: 8eb26fc24b1ead3f821bce1db10ecec91200b75ba31e6d470c0298ea738ff39d
+inputs_sha256: 4c8fef0ed40a1e8eb99535b4c58aea95f1c066e703bd92a438eb736418a8ca3e
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
 | P1 | Исправления T0 на текущих именах | 10/11 | 🟠 Done with deviations |
-| P2 | Канон имён и конфигурации | 0/7 | ⬜ Not started |
+| P2 | Канон имён и конфигурации | 1/7 | 🟡 In progress |
 
 ## Phase P0
 
@@ -56,7 +56,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Переименования классов core | ⬜ Not started | — |
+| P2.1 | Переименования классов core | 🟢 Done | 2026-10-04 |
 | P2.2 | Переименования и раскладка drive | ⬜ Not started | — |
 | P2.3 | Переименования и раскладка documents без типов | ⬜ Not started | — |
 | P2.4 | AzGuard из core в vaulter-azgard; media и filament | ⬜ Not started | — |
@@ -148,6 +148,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-04 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
 | 2026-10-04 | claude-haiku-4-5/lean | plan-close · closed-deviations · Phase P1 closed: 10/11 GREEN items, P1.7 with classified MySQL deviation. Local validation gates: core pint/phpstan OK, coverage OK. Direct close without hosted CI (owner decision). All deliverables integrated. |
 | 2026-10-04 | claude-opus-5-5/high | plan-design · no-op · Design finalized; execution has not started. |
+| 2026-10-04 | codex/current-session | plan-run · in-progress · Owner-directed P2.1 under D17; reconciling implementation and validation already performed. No design audit or independent review launched. Details: artifacts/P2.1/completion.md. |
+| 2026-10-04 | codex/current-session | plan-run · in-progress · Reconciliation run identity recorded for completed owner-directed P2.1. Validation evidence: artifacts/P2.1/validation-final.json. No route/model admission is asserted. |
+| 2026-10-04 | codex/current-session | plan-run · closed-green · P2.1 implemented; all 6 PHP package gates GREEN; PG 203 passed, no skips; negative control verified. No audit/review per D17. Azgard qualified on P0 dependency. Details: artifacts/P2.1/completion.md. Changes uncommitted; next P2.7. |
 
 ## Owner Gates
 

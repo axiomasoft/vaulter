@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Drive;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Models\Drive\Drive;
 
 /**
  * Opens {@see DriveHandle}s — the seam VaulterManager (core) delegates to so the
@@ -25,5 +25,5 @@ interface DriveHandleFactory
     /**
      * Open a handle on an already-resolved storage row.
      */
-    public function forStorage(Storage $storage): DriveHandle;
+    public function forStorage(Drive $storage): DriveHandle;
 }

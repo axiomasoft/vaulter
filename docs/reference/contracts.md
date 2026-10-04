@@ -14,10 +14,10 @@ signatures and the binding point you swap it through.
 
 | Domain | Contract | Swap via |
 |---|---|---|
-| Access | `HostRoleDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
+| Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
 | Access | `AzgardGuard` | container binding (host adapter) |
 | Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
-| Access | `GrantAuthoritativeDriver` | opt-in capability a `HostRoleDriver` implements |
+| Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
 | Cas | `ListableContentStore` | opt-in capability a `ContentStore` implements |
@@ -28,10 +28,10 @@ signatures and the binding point you swap it through.
 | Collaboration | `NodeCollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
-| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::registerHandler()` |
+| Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
-| Handlers | `HandlerRegistry` | `Vaulter::handlers()` / `Vaulter::registerHandler()` |
-| Handlers | `NodeHandlerResolver` | container binding (core) |
+| Handlers | `FileHandlerRegistry` | `Vaulter::handlers()` / `Vaulter::handlers()->register()` |
+| Handlers | `NodePresenter` | container binding (core) |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -40,22 +40,22 @@ signatures and the binding point you swap it through.
 
 ## Access
 
-### `Vaulter\Contracts\Access\HostRoleDriver`
+### `Vaulter\Contracts\Access\PermissionDriver`
 
 The pluggable, per-panel **role lane** the Vaulter-owned (non-swappable)
 `AccessResolver` combines with the `v_node_grants` ACL. It bridges your identity +
 role system into Vaulter without leaking Vaulter's domain: it never receives a `Node`
 and never deals in magic-string actions — only an `Authorizable` actor and an
-`AclScope` (panel + workspace coordinates + node owner). Swap it via
+`AccessScope` (panel + workspace coordinates + node owner). Swap it via
 `config('vaulter.drivers.permission')` against the `permission_drivers` map; the
-default is the standalone `DatabasePermissionResolver`.
+default is the standalone `DatabasePermissionDriver`.
 
 ```php
-interface HostRoleDriver
+interface PermissionDriver
 {
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision;
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
-    public function override(Authorizable $actor, AclScope $scope): ?Effect;
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect;
 
     /** @return list<Subject> */
     public function subjectsFor(Authorizable $actor): array;
@@ -127,7 +127,7 @@ interface AzgardBackedUser extends HasPermissions, HasScopedRoles {}
 
 ### `Vaulter\Contracts\Access\GrantAuthoritativeDriver`
 
-An opt-in capability a `HostRoleDriver` implements to declare that `v_node_grants` is
+An opt-in capability a `PermissionDriver` implements to declare that `v_node_grants` is
 the sole read-visibility authority for that driver instance, so a listing may safely
 narrow to the actor's grant-reachable candidate set. Absence is the conservative,
 BC-safe default (the listing stays open, never wrongly hiding a row) — only the
@@ -140,7 +140,7 @@ interface GrantAuthoritativeDriver
 }
 ```
 
-**Implement when** your `HostRoleDriver` confers access ONLY through
+**Implement when** your `PermissionDriver` confers access ONLY through
 `v_node_grants` (no host roles/teams, no workspace-create gate, no super-admin
 override) — returning `false` (or not implementing the interface) is always safe.
 
@@ -163,9 +163,9 @@ interface BlobStore
     public function commit(mixed $stream, ?int $tenantId = null, ?int $storageId = null, ?string $disk = null): Blob;
 
     /** @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes */
-    public function attach(FileVersion $version, Blob $blob, array $attributes = []): void;
+    public function attach(FileRevision $version, Blob $blob, array $attributes = []): void;
 
-    public function detach(FileVersion $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
+    public function detach(FileRevision $version, Blob $blob, string $role = 'data', int $ordinal = 0): void;
 
     /** @return resource|null */
     public function read(Blob $blob): mixed;
@@ -366,14 +366,14 @@ See [Collaboration → Drivers](/guide/collaboration).
 A pluggable document-processing handler — the format-extensibility headline. A
 handler claims a set of mime types (exact or wildcards like `"image/*"`) and/or
 extensions, declares its capabilities and front-end mount descriptor per file, and the
-`Vaulter\Engines\DocumentHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
-`config('vaulter.handlers')` (FQCN list), the tagged binding `'vaulter.handlers'`, or
-`Vaulter::registerHandler()`.
+`Vaulter\Handlers\FileHandlerRegistry` resolves the best one for a `FileDescriptor`. Register via
+`config('vaulter.handlers')` (FQCN list), the tagged binding `'vaulter.file_handlers'`, or
+`Vaulter::handlers()->register()`.
 
 ```php
 interface FileHandler
 {
-    public function id(): string;
+    public function key(): string;
 
     /** @return list<string> */
     public function mimeTypes(): array;
@@ -383,14 +383,14 @@ interface FileHandler
 
     public function priority(): int;
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities;
+    public function capabilities(FileDescriptor $file): ContentCapabilities;
 
-    public function ui(FileDescriptor $file): HandlerUi;
+    public function viewer(FileDescriptor $file): ViewerDescriptor;
 }
 ```
 
-- `id()` — a stable unique string id (`'tiptap'`, `'preview'`, `'download'`,
-  `'univer'`, …). Surfaced to the client so it can pick the editor/preview impl.
+- `key()` — a stable unique string key in `vendor/name` form (`'vaulter/tiptap'`, `'vaulter/preview'`,
+  `'vaulter/download'`, `'vaulter/univer'`, …). Surfaced to the client so it can pick the editor/preview impl.
 - `mimeTypes()` — exact (`"application/pdf"`), wildcard (`"image/*"`), or catch-all
   (`"*"`). Routing prefers the sniffed mime over the claimed one.
 - `extensions()` — lower-case, no dot; the extension fallback used when the mime
@@ -399,12 +399,12 @@ interface FileHandler
   `DownloadOnlyHandler` null-object sits lowest.
 - `capabilities()` — editable / previewable / downloadable / thumbnailable /
   collaborative, computed per file.
-- `ui()` — the Vue component + open route + props the client mounts.
+- `viewer()` — a viewer key and serialisable props.
 
 See [Recipes → Custom handler](/guide/recipes) and [Writing a Handler/Engine](/guide/writing-an-engine)
 for a full worked example.
 
-`Vaulter\Engines\Handlers\AbstractFileHandler` is an optional DX base a third-party
+`Vaulter\Handlers\AbstractFileHandler` is an optional DX base a third-party
 handler MAY extend — it only defaults `extensions()` to `[]`; every other method stays
 handler-specific. Implementing `FileHandler` directly is always enough; the base class
 saves nothing beyond that one line. The built-in handlers do not extend it — they stay
@@ -457,40 +457,42 @@ interface DocumentContent
 **Implement when** your `FileHandler` needs a content shape other than TipTap or
 the bundled opaque snapshot.
 
-### `Vaulter\Contracts\Handlers\HandlerRegistry`
+### `Vaulter\Contracts\Handlers\FileHandlerRegistry`
 
-The format-extensibility registry seam behind `Vaulter::registerHandler()` /
+The format-extensibility registry seam behind `Vaulter::handlers()->register()` /
 `Vaulter::handlers()`. Both the contract and the concrete engine
-(`Vaulter\Engines\DocumentHandlerRegistry`, the SSOT resolver — final, H.5) are
+(`Vaulter\Handlers\FileHandlerRegistry`, the SSOT resolver — final, H.5) are
 core-owned: this binding always resolves, even without vaulter-documents installed
 (a drive-only host still gets preview/download resolution). Packages like
 vaulter-documents only ADD handlers (TipTap, Univer, …) to this same registry.
 
 ```php
-interface HandlerRegistry
+interface FileHandlerRegistry
 {
     /** @param FileHandler|class-string<FileHandler> $handler */
     public function register(FileHandler|string $handler): void;
+
+    public function resolve(FileDescriptor $file, Capability $capability = Capability::Download): FileHandler;
 
     /** @return list<FileHandler> */
     public function all(): array;
 }
 ```
 
-### `Vaulter\Contracts\Handlers\NodeHandlerResolver`
+### `Vaulter\Contracts\Handlers\NodePresenter`
 
 Resolves the format-handler descriptor for a node — the `(id + capabilities + ui)`
 bundle the `GET .../handler` endpoint returns, so the Vue client routes the node to
 the right editor/preview/download surface. Both the contract and the concrete
-`Vaulter\Engines\NodeHandlerResolver` are core-owned (D10): `app(NodeHandlerResolver::class)`
+`Vaulter\Handlers\NodePresenter` are core-owned (D10): `app(NodePresenter::class)`
 always resolves, even without vaulter-documents installed — a drive-only host still gets a
 preview/download descriptor. Packages like vaulter-documents only ADD handlers to the
 registry the resolver consults.
 
 ```php
-interface NodeHandlerResolver
+interface NodePresenter
 {
-    public function describe(Node $node, ?string $detectedMime = null): HandlerDescriptor;
+    public function present(Node $node): NodePresentation;
 }
 ```
 

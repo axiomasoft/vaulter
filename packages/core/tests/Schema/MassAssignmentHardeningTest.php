@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileVersion;
-use Vaulter\Models\Drive\FileVersionBlob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -31,10 +31,10 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  * phases/P1.md P1.4 Completion Notes).
  *
  * Two Eloquent behaviours are exercised, per model:
- *  - a CLOSED $fillable list (Node/Storage/File/FileVersion/NodeShare/
+ *  - a CLOSED $fillable list (Node/Storage/File/FileRevision/NodeShare/
  *    WebhookEndpoint) silently DISCARDS a key outside the list — the attribute is
  *    simply absent afterwards;
- *  - a fully `$guarded = ['*']` model (Blob/FileVersionBlob/NodeGrant/Activity/
+ *  - a fully `$guarded = ['*']` model (Blob/FileRevisionBlob/NodeGrant/Activity/
  *    Outbox/WebhookDelivery) is Eloquent's "totally guarded" state, which THROWS
  *    MassAssignmentException on ANY fill() with a non-empty array — an even
  *    stronger guarantee for these security-critical rows (CAS identity, ACL,
@@ -51,9 +51,9 @@ it('discards a service/security column via fill() on a closed-$fillable vaulter-
     expect($instance->getAttributes())->not->toHaveKey($dangerousKey);
 })->with([
     'Node.tenant_id' => [Node::class, 'tenant_id', 999],
-    'Storage.owner_id' => [Storage::class, 'owner_id', 999],
+    'Storage.owner_id' => [Drive::class, 'owner_id', 999],
     'File.size_bytes' => [File::class, 'size_bytes', 999_999_999],
-    'FileVersion.blob_id' => [FileVersion::class, 'blob_id', 999],
+    'FileRevision.blob_id' => [FileRevision::class, 'blob_id', 999],
     'NodeShare.token_hash' => [NodeShare::class, 'token_hash', 'attacker-hash'],
     'WebhookEndpoint.signing_secret' => [WebhookEndpoint::class, 'signing_secret', 'ATTACKER-SECRET'],
 ]);
@@ -69,7 +69,7 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
         ->toThrow(MassAssignmentException::class);
 })->with([
     'Blob.sha256' => [Blob::class, 'sha256', 'attacker-controlled-hash'],
-    'FileVersionBlob.blob_id' => [FileVersionBlob::class, 'blob_id', 999],
+    'FileRevisionBlob.blob_id' => [FileRevisionBlob::class, 'blob_id', 999],
     'NodeGrant.permissions' => [NodeGrant::class, 'permissions', 65535],
     'Activity.verb' => [Activity::class, 'verb', 'fake.verb'],
     'Outbox.status' => [Outbox::class, 'status', 'dispatched'],

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Webhooks\WebhookEvent;
+use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
@@ -46,7 +46,7 @@ class OutboxRecorder
         $node = $event->grant->node;
 
         return $this->stage(
-            event: WebhookEvent::GrantCreated,
+            event: EventType::GrantCreated,
             eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
@@ -67,7 +67,7 @@ class OutboxRecorder
     public function recordGrantRevoked(NodeGrantRevoked $event): ?Outbox
     {
         return $this->stage(
-            event: WebhookEvent::GrantRevoked,
+            event: EventType::GrantRevoked,
             eventId: $event->eventId,
             panel: $event->node->panel,
             topic: $this->id($event->node->getKey()),
@@ -87,7 +87,7 @@ class OutboxRecorder
         $node = $event->share->node;
 
         return $this->stage(
-            event: WebhookEvent::ShareCreated,
+            event: EventType::ShareCreated,
             eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
@@ -111,7 +111,7 @@ class OutboxRecorder
         $node = $event->share->node;
 
         return $this->stage(
-            event: WebhookEvent::ShareRevoked,
+            event: EventType::ShareRevoked,
             eventId: $event->eventId,
             panel: $node->panel,
             topic: $this->id($node->getKey()),
@@ -134,7 +134,7 @@ class OutboxRecorder
      * @param array<string, mixed> $payload
      */
     public function stage(
-        WebhookEvent $event,
+        EventType $event,
         string $eventId,
         string $panel,
         ?string $topic,

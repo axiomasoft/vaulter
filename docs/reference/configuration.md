@@ -29,12 +29,12 @@ Swappable Eloquent models. Point any entry at your own subclass to add behaviour
 
 | Key | Default | Owned by |
 |---|---|---|
-| `models.storage` | `Vaulter\Models\Drive\Storage` | core |
+| `models.storage` | `Vaulter\Models\Drive\Drive` | core |
 | `models.node` | `Vaulter\Models\Drive\Node` | core |
 | `models.file` | `Vaulter\Models\Drive\File` | core |
-| `models.file_version` | `Vaulter\Models\Drive\FileVersion` | core |
+| `models.file_version` | `Vaulter\Models\Drive\FileRevision` | core |
 | `models.blob` | `Vaulter\Models\Cas\Blob` | core |
-| `models.file_version_blob` | `Vaulter\Models\Drive\FileVersionBlob` | core |
+| `models.file_version_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
 | `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
 | `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
@@ -102,11 +102,11 @@ implementation.
 
 | Key | Default | Controls |
 |---|---|---|
-| `panels` | `[]` | A list of `StoragePanelProvider` FQCNs that override the default panel by id |
-| `default_panel` | `Vaulter\Panels\DefaultStoragePanel` | The fallback panel FQCN |
-| `migrations.path` | `null` | Where `vaulter:panel:migrations` writes a generated own-tables migration; `null` → the host's `database/migrations` |
+| `panels` | `[]` | A list of `ProfileProvider` FQCNs that override the default panel by id |
+| `default_panel` | `Vaulter\Profiles\DefaultProfile` | The fallback panel FQCN |
+| `migrations.path` | `null` | Legacy key retained for the configuration transition; unused by profile scaffolding. |
 
-Scaffold a panel with `php artisan vaulter:make-panel <name>`. See
+Scaffold a panel with `php artisan vaulter:make:profile <name>`. See
 [Concepts → Storage panels](/guide/storage-panels).
 
 ## Features — `features.*`
@@ -129,7 +129,7 @@ of these per-panel.
 
 ## Document handlers — `handlers`
 
-A list of `FileHandler` FQCNs, resolved by the core-owned `Vaulter\Engines\DocumentHandlerRegistry`
+A list of `FileHandler` FQCNs, resolved by the core-owned `Vaulter\Handlers\FileHandlerRegistry`
 by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
 null-object. The two baseline entries are core's OWN default (VLT-CANON P0.4/D10 — resolved even
 without `vaulter-documents` installed); `vaulter-documents` ADDS `TipTapHandler` via its own
@@ -137,13 +137,13 @@ config merge.
 
 | Default entries | Owner |
 |---|---|
-| `Vaulter\Engines\Handlers\PreviewHandler` | core |
-| `Vaulter\Engines\Handlers\DownloadOnlyHandler` | core |
+| `Vaulter\Handlers\Builtin\PreviewHandler` | core |
+| `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
 | `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
 `UniverHandler` (xlsx) is appended by the service provider **only** when
 `features.spreadsheets` is on. Add a new format with one class + an entry here (or
-`Vaulter::registerHandler()`).
+`Vaulter::handlers()->register()`).
 
 ## Tenancy — `tenant.*`
 
@@ -176,11 +176,11 @@ coexists with host tables.
 | Key | Env | Default | Accepts |
 |---|---|---|---|
 | `drivers.permission` | `VAULTER_PERMISSION_DRIVER` | `database` | a key in `permission_drivers` |
-| `permission_drivers.database` | — | `Vaulter\Drivers\Permission\DatabasePermissionResolver` | standalone — authorises purely from grant rows |
-| `permission_drivers.gate` | — | `Vaulter\Drivers\Permission\GatePermissionResolver` | the Laravel Gate driver |
-| `permission_drivers.spatie` | — | `Vaulter\Drivers\Permission\SpatiePermissionResolver` | the spatie/laravel-permission driver |
-| `permission_drivers.azgard` | — | `Vaulter\Drivers\Permission\AzgardPermissionResolver` | the AzGuard driver |
-| `permission_drivers.null` | — | `Vaulter\Testing\NullRoleDriver` | open, **non-production only** |
+| `permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
+| `permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
+| `permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
+| `permission_drivers.azgard` | — | `Vaulter\Access\Drivers\AzgardPermissionDriver` | the AzGuard driver |
+| `permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | open, **non-production only** |
 
 ::: danger Null driver in production
 The `null` driver is open and env-gated. Production config validation rejects a panel

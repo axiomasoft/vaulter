@@ -23,10 +23,10 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Drive\StorageReadRepository;
 use Vaulter\Support\Config;
 use Vaulter\VaulterManager;
 
@@ -52,13 +52,13 @@ final class NodeController extends Controller
     public function __construct(
         private readonly VaulterManager $vaulter,
         private readonly NodeReadRepository $nodes,
-        private readonly StorageReadRepository $storages,
+        private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
         private readonly ExactListing $listing,
     ) {}
 
     /** List visible direct children using a signed cursor. */
-    public function index(Request $request, Storage $storage): AnonymousResourceCollection
+    public function index(Request $request, Drive $storage): AnonymousResourceCollection
     {
         $parent = $request->filled('parent_id')
             ? $this->findNodeInStorage($this->scalarId($request, 'parent_id'), $storage)
@@ -109,7 +109,7 @@ final class NodeController extends Controller
         return $resource;
     }
 
-    public function storeFolder(CreateFolderRequest $request, Storage $storage): JsonResponse
+    public function storeFolder(CreateFolderRequest $request, Drive $storage): JsonResponse
     {
         $drive = $this->driveFor($storage);
         $parent = $this->resolveParentById($request->parentId(), $storage);
@@ -129,7 +129,7 @@ final class NodeController extends Controller
      * Commit an upload (§2.4). A new-version upload targets an existing file node
      * (node_id); otherwise a brand-new file is created under the parent.
      */
-    public function upload(UploadFileRequest $request, Storage $storage): JsonResponse
+    public function upload(UploadFileRequest $request, Drive $storage): JsonResponse
     {
         $drive = $this->driveFor($storage);
         $file = $request->uploadedFile();
@@ -253,7 +253,7 @@ final class NodeController extends Controller
     }
 
     /** Search live nodes with exact visibility and a signed cursor. */
-    public function search(Request $request, Storage $storage): AnonymousResourceCollection
+    public function search(Request $request, Drive $storage): AnonymousResourceCollection
     {
         $term = $request->string('q')->toString();
 
@@ -264,7 +264,7 @@ final class NodeController extends Controller
     }
 
     /** List trashed nodes with exact visibility and a signed cursor. */
-    public function trashed(Request $request, Storage $storage): AnonymousResourceCollection
+    public function trashed(Request $request, Drive $storage): AnonymousResourceCollection
     {
         return $this->listingResponse($request, $this->nodes->trashed(storage: $storage),
             [['column' => 'trashed_at', 'direction' => 'desc'], ['column' => 'id', 'direction' => 'desc']],
@@ -272,7 +272,7 @@ final class NodeController extends Controller
         );
     }
 
-    private function driveFor(Storage $storage): DriveHandle
+    private function driveFor(Drive $storage): DriveHandle
     {
         return $this->vaulter->forStorage(storage: $storage);
     }
@@ -281,11 +281,11 @@ final class NodeController extends Controller
      * The storage a route-bound node belongs to, resolved through the read
      * repository (the swappable storage model) rather than a controller query.
      */
-    private function storageOf(Node $node): Storage
+    private function storageOf(Node $node): Drive
     {
         $storage = $this->storages->find($node->storage_id);
 
-        if (!$storage instanceof Storage) {
+        if (!$storage instanceof Drive) {
             abort(404);
         }
 
@@ -295,7 +295,7 @@ final class NodeController extends Controller
     /**
      * Resolve the destination parent from an already-extracted id (null = root).
      */
-    private function resolveParentById(int|string|null $parentId, Storage $storage): ?Node
+    private function resolveParentById(int|string|null $parentId, Drive $storage): ?Node
     {
         if ($parentId === null) {
             return null;
@@ -308,7 +308,7 @@ final class NodeController extends Controller
      * Resolve a node by id, asserting it belongs to the given storage tree so a
      * node id from another storage can never be addressed through this storage.
      */
-    private function findNodeInStorage(int|string $nodeId, Storage $storage): Node
+    private function findNodeInStorage(int|string $nodeId, Drive $storage): Node
     {
         $node = $this->nodes->find($nodeId);
 
@@ -345,7 +345,7 @@ final class NodeController extends Controller
      * driver's workspace-create gate AND hold the CREATE bit on the destination
      * node (the AccessResolver enforces the latter). Throws 403 on either failure.
      */
-    private function guardCreate(Request $request, Storage $storage, Node $destination): void
+    private function guardCreate(Request $request, Drive $storage, Node $destination): void
     {
         $actor = $this->authorizable($request);
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Http\Support;
 
 use Vaulter\Models\Drive\Node;
-use Vaulter\Sharing\ShareResolver;
 
 /**
  * The ONE shared item-safety trash-check for the IDENTITY read/download/export

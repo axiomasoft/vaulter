@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Shared trusted-fixture-builder helper (P1.4/F-P1.8-02). Node/Storage/File/
- * FileVersion/Blob/… now carry a closed $fillable/$guarded list (the HTTP
+ * FileRevision/Blob/… now carry a closed $fillable/$guarded list (the HTTP
  * hardening this suite exercises), so schema-level fixture builders that need
  * service columns (owner_id, node_id, blob_id, status, …) go through
  * forceFill() — the same trusted-seam pattern the production write paths use

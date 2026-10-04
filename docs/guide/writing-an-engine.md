@@ -34,16 +34,16 @@ namespace App\Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
-use Vaulter\ValueObjects\Handlers\HandlerCapabilities;
-use Vaulter\ValueObjects\Handlers\HandlerUi;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 final class MyEditorHandler implements FileHandler
 {
     public const int PRIORITY = 90;
 
-    public function id(): string
+    public function key(): string
     {
-        return 'my-editor';
+        return 'acme/my-editor';
     }
 
     /** @return list<string> */
@@ -63,9 +63,9 @@ final class MyEditorHandler implements FileHandler
         return self::PRIORITY;
     }
 
-    public function capabilities(FileDescriptor $file): HandlerCapabilities
+    public function capabilities(FileDescriptor $file): ContentCapabilities
     {
-        return new HandlerCapabilities(
+        return new ContentCapabilities(
             editable: true,
             previewable: true,
             collaborative: false,
@@ -74,24 +74,23 @@ final class MyEditorHandler implements FileHandler
         );
     }
 
-    public function ui(FileDescriptor $file): HandlerUi
+    public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new HandlerUi(
-            component: 'AppMyEditor',
-            route: 'documents.show',
+        return new ViewerDescriptor(
+            key: 'acme/my-editor',
         );
     }
 }
 ```
 
-Implementing the interface directly is always enough. `Vaulter\Engines\Handlers\
+Implementing the interface directly is always enough. `Vaulter\Handlers\Handlers\
 AbstractFileHandler` is an *optional* DX base that defaults `extensions()` to `[]` for a
 mime-only handler — it saves one method, nothing more. The built-in handlers do not extend it;
 they stay `final` (H.5).
 
 ## 2. The capability-policy invariants (read before you ship)
 
-`HandlerCapabilities` is an **additive, open axis set** (P0.5). Three rules keep your handler
+`ContentCapabilities` is an **additive, open axis set** (P0.5). Three rules keep your handler
 (and every handler that comes after it) safe to compose:
 
 1. **A capability you don't declare is `false`, never inferred.** `richText` defaults to
@@ -100,8 +99,8 @@ they stay `final` (H.5).
    explicitly; otherwise leave it at the default and your content round-trips as an opaque
    snapshot (`OpaqueDocumentContent`) — never validated, never coerced into TipTap's shape.
 2. **A future new capability flag must not break your handler.** You are not required to know
-   about every flag `HandlerCapabilities` carries — the constructor gives every flag a safe
-   default. The client mirrors this: `HandlerCapabilities` on the TypeScript side carries an
+   about every flag `ContentCapabilities` carries — the constructor gives every flag a safe
+   default. The client mirrors this: `ContentCapabilities` on the TypeScript side carries an
    open index signature (`[capability: string]: boolean | undefined`), so a client build that
    predates a new flag keeps compiling and ignores the key it doesn't recognise.
 3. **Priority, not registration order, resolves same-extension conflicts.** Two handlers may
@@ -119,21 +118,20 @@ Not every editable handler looks like a rich-text editor. Two payload families e
 side and the contract does not privilege either:
 
 - **Rich-text-class** (TipTap-style): the client edits structured JSON directly; the server
-  validates it against an allow-list on write and decays it defensively on read. `ui.props`
+  validates it against an allow-list on write and decays it defensively on read. `viewer.props`
   carries editor configuration (e.g. the extension list).
 - **WOPI/office-class**: the actual editing happens in a *third-party* surface (an iframe
-  pointed at an external service, or a native app via a protocol handler). `ui.props` carries
+  pointed at an external service, or a native app via a protocol handler). `viewer.props` carries
   whatever that surface needs to bootstrap — typically an action URL and a short-lived token —
   **not** a content payload at all. The server never parses or validates the document body; it
   only brokers the session.
 
 ```php
-// WOPI-class handler — the ui() payload has a completely different shape.
-public function ui(FileDescriptor $file): HandlerUi
+// WOPI-class handler — the viewer() payload has a completely different shape.
+public function viewer(FileDescriptor $file): ViewerDescriptor
 {
-    return new HandlerUi(
-        component: 'AppOfficeFrame',
-        route: null, // the client opens the action URL directly, not a Vaulter route
+    return new ViewerDescriptor(
+        key: 'acme/office-frame',
         props: [
             'actionUrl' => $this->wopi->actionUrlFor($file),
             'accessToken' => $this->wopi->issueToken($file),
@@ -143,7 +141,7 @@ public function ui(FileDescriptor $file): HandlerUi
 }
 ```
 
-The contract does **not** force your handler to reproduce `TipTapHandler`'s `ui.props` shape
+The contract does **not** force your handler to reproduce `TipTapHandler`'s `viewer.props` shape
 (`format`, `extensions`) — `props` is an arbitrary, handler-decided map. Document your own
 handler's `props` shape for the client team that consumes it; there is no shared schema to
 conform to beyond "serialisable."
@@ -171,7 +169,7 @@ mistake to make silently.
 
 Same three channels as any handler — see
 [Document Handlers → Register it](./document-handlers.md#2-register-it): the config FQCN list
-(cache-safe), `Vaulter::registerHandler()` (runtime), or a tagged `'vaulter.handlers'` binding
+(cache-safe), `Vaulter::handlers()->register()` (runtime), or a tagged `'vaulter.file_handlers'` binding
 (what the package itself uses for the feature-flagged `UniverHandler`).
 
 ## 7. Mounting it on the client
@@ -180,7 +178,7 @@ See [Document Handlers → Mounting the resolved handler in Vue](./document-hand
 for the two registration channels (`componentMap` prop vs. the global
 `registerEngineComponent(id, component)`) — the server-side registry never assumes a specific
 frontend stack. What follows is the client-side skeleton itself: the component
-`VaulterDocumentNode` mounts receives one `handler` prop, typed `HandlerDescriptor` (exported by
+`VaulterDocumentNode` mounts receives one `handler` prop, typed `NodePresentation` (exported by
 `@vaulter/vue`), carrying your `ui.props` map verbatim.
 
 ```vue
@@ -192,7 +190,7 @@ import type { DocumentNodeEditorProps } from '@vaulter/vue'
 // `VaulterDocumentNode` binds this shape (`DocumentNodeEditorProps`) — `content`/`onChange`
 // are typed for TipTap in the exported interface (the built-in editor), so a non-rich-text
 // handler narrows `handler.ui.props` to its own shape instead of relying on `content`.
-// `handler.ui.props` is whatever your PHP handler's ui() returned (step 1/3) — an
+// `handler.ui.props` is whatever your PHP handler's viewer() returned (step 1/3) — an
 // arbitrary, handler-decided map; the contract does not validate it for you.
 interface MyEditorProps {
   format: string
@@ -230,13 +228,13 @@ external consumer of that specific engine exists.
 
 ## Checklist
 
-- [ ] `id()` is a stable, unique string — never renamed once shipped (H.5: a handler is a
+- [ ] `key()` is a stable, unique string — never renamed once shipped (H.5: a handler is a
       SemVer-frozen public surface from its release).
 - [ ] `richText` is set explicitly TRUE only if your content really is a TipTap
       `{"type":"doc"}` document; otherwise left at its default FALSE.
 - [ ] `priority()` reflects how specific your match is relative to handlers you know conflict
       with you on the same extension/mime.
-- [ ] `ui.props` shape is documented for your own client code — it is not assumed to match
+- [ ] `viewer.props` shape is documented for your own client code — it is not assumed to match
       `TipTapHandler`'s.
 - [ ] If your content shape may evolve, you decided on a `schemaVersion` (or explicitly decided
       you don't need one yet).

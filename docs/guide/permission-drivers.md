@@ -1,37 +1,37 @@
 ---
 title: Permission Drivers
-description: The four HostRoleDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the AzgardGuard adapter a host binds.
+description: The four PermissionDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the AzgardGuard adapter a host binds.
 outline: deep
 ---
 
 # Permission Drivers
 
 The [`AccessResolver`](./authorization) owns the per-node ACL and the final decision.
-The **role lane** it folds in is swappable: it is the `HostRoleDriver` contract, and
+The **role lane** it folds in is swappable: it is the `PermissionDriver` contract, and
 Vaulter ships four implementations. This is where you bridge your application's identity
 and role system into Vaulter.
 
 ::: info The contract is node-blind
-A `HostRoleDriver` never receives a `Node` and never deals in magic-string actions —
-only an `Authorizable` actor and an `AclScope` (panel + workspace coordinates + node
+A `PermissionDriver` never receives a `Node` and never deals in magic-string actions —
+only an `Authorizable` actor and an `AccessScope` (panel + workspace coordinates + node
 owner). That keeps every driver swappable and the resolver the single authority.
 :::
 
-## The HostRoleDriver contract
+## The PermissionDriver contract
 
-`Vaulter\Contracts\Access\HostRoleDriver`:
+`Vaulter\Contracts\Access\PermissionDriver`:
 
 ```php
-interface HostRoleDriver
+interface PermissionDriver
 {
     // Per-subject role decision, or null when the host has nothing to say.
     // Folded as roleAllow into granted = max(aclAllow, roleAllow) — it can RAISE
     // access but never override a deny (the final veto still applies).
-    public function resolve(Subject $subject, Authorizable $actor, AclScope $scope): ?Decision;
+    public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
     // An absolute super-admin override, or null. Allow/Deny short-circuit BOTH
     // directions before any ACL walk.
-    public function override(Authorizable $actor, AclScope $scope): ?Effect;
+    public function override(Authorizable $actor, AccessScope $scope): ?Effect;
 
     // Expand an actor into the Subjects whose grants apply (user + roles + teams).
     // Vaulter builds WHERE (subject_type, subject_id) IN (...) from this list.
@@ -64,27 +64,27 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
 The key → FQCN map is `permission_drivers`. Register your own driver by adding an FQCN
-that implements `HostRoleDriver` (config-cache safe — FQCNs only, no closures):
+that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
 ```php
 // config/vaulter.php
 'permission_drivers' => [
-    'database' => \Vaulter\Drivers\Permission\DatabasePermissionResolver::class,
-    'gate'     => \Vaulter\Drivers\Permission\GatePermissionResolver::class,
-    'spatie'   => \Vaulter\Drivers\Permission\SpatiePermissionResolver::class,
-    'azgard'   => \Vaulter\Drivers\Permission\AzgardPermissionResolver::class,
-    'null'     => \Vaulter\Testing\NullRoleDriver::class, // non-prod only
+    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
+    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
 ],
 ```
 
-The `HostRoleDriverManager` resolves and memoises the driver per key; an unknown key
-throws `MissingHostRoleDriverException::unknownDriver()`, and `null` in production throws
+The `PermissionDriverManager` resolves and memoises the driver per key; an unknown key
+throws `MissingPermissionDriverException::unknownDriver()`, and `null` in production throws
 `nullDriverInProduction()` — see [Authorization → fail-loud](./authorization#fail-loud-the-null-driver).
 
 ## Database — the default, standalone lane
 
-`Vaulter\Drivers\Permission\DatabasePermissionResolver` introduces **no** external role
+`Vaulter\Access\Drivers\DatabasePermissionDriver` introduces **no** external role
 system. Every decision is a `v_node_grants` row resolved by the `AccessResolver`; the
 driver only contributes the actor's own identity to the subject-set.
 
@@ -100,7 +100,7 @@ host authorization. To add role/team subjects without any external package, subc
 and append `Subject` entries:
 
 ```php
-final class TeamAwareRoleDriver extends DatabasePermissionResolver
+final class TeamAwareRoleDriver extends DatabasePermissionDriver
 {
     public function subjectsFor(Authorizable $actor): array
     {
@@ -117,7 +117,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionResolver
 
 ## Gate — Laravel's built-in lane
 
-`Vaulter\Drivers\Permission\GatePermissionResolver` bridges a host that already
+`Vaulter\Access\Drivers\GatePermissionDriver` bridges a host that already
 authorizes through Gate abilities / policies. It ships with the framework — zero extra
 dependencies.
 
@@ -126,7 +126,7 @@ dependencies.
   never a hard deny).
 - **`resolve`** asks the Gate each mapped ability (low → high) and folds the **highest
   allowed level** into the `Decision`. The Gate check is node-blind — it receives the
-  `AclScope`'s `{panel, workspace_type, workspace_id}`, never a `Node`.
+  `AccessScope`'s `{panel, workspace_type, workspace_id}`, never a `Node`.
 - **`subjectsFor`** = `[Subject(actor)]` only. The Gate exposes no enumerable role/team
   subjects, so grant rows addressed to a role/team are not matched by this lane — use
   Spatie/AzGuard for that.
@@ -169,7 +169,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 
 ## Spatie — roles, permissions, and v8 teams
 
-`Vaulter\Drivers\Permission\SpatiePermissionResolver` bridges a host running
+`Vaulter\Access\Drivers\SpatiePermissionDriver` bridges a host running
 `spatie/laravel-permission`, including the **v8 teams** feature. It encapsulates the
 entire v8 team-switch dance so it never leaks into the resolver.
 
@@ -222,16 +222,16 @@ never bleed into each other. After the host mutates an actor's roles/permissions
 team-scoped permission can't grant a revoked level on the next resolve:
 
 ```php
-use Vaulter\Drivers\Permission\SpatiePermissionResolver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
 
-SpatiePermissionResolver::forgetCachedPermissions($actor);
+SpatiePermissionDriver::forgetCachedPermissions($actor);
 ```
 
 This is a no-op when Spatie is not installed.
 
 ## AzGuard — the per-resource seam
 
-`Vaulter\Drivers\Permission\AzgardPermissionResolver` bridges a host running AzGuard's
+`Vaulter\Access\Drivers\AzgardPermissionDriver` bridges a host running AzGuard's
 per-resource, scoped permission model **without vaulter-core depending on
 azguard/corex**. Every AzGuard touch goes through the narrow Vaulter-owned `AzgardGuard`
 seam, so PHPStan stays green with the package absent and the driver references no
@@ -243,7 +243,7 @@ owns the **workspace-scoped role** lane:
 - **`override`** = `isSuperAdmin()` → `Effect::Allow`, else `null` (never a deny).
 - **`resolve`** maps each ranked level's defining ability to an AzGuard permission and
   asks `hasPermissionIn($workspaceType, $workspaceId, $permission)`; the highest allowed
-  level becomes the `Decision`. (`AclScope` is node-blind, so this is the
+  level becomes the `Decision`. (`AccessScope` is node-blind, so this is the
   workspace-scoped check.)
 - **`subjectsFor`** = `[Subject(actor)]` only — AzGuard *answers* checks rather than
   enumerating role-subjects. A host that addresses grant rows to AzGuard roles should

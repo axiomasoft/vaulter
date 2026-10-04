@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
-use Vaulter\Access\HostRoleDriverManager;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessData;
+use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
@@ -22,7 +22,7 @@ use Vaulter\Tests\Fixtures\Access\SubclassedRoleDriver;
  */
 function grantAction(): GrantNodeAccessAction
 {
-    app()->forgetInstance(HostRoleDriverManager::class);
+    app()->forgetInstance(PermissionDriverManager::class);
 
     return app(GrantNodeAccessAction::class);
 }
@@ -38,7 +38,7 @@ it('warns and throws when a role grant is written under the gate driver, F-P1.2-
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessData(
+    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessInput(
         subject: new Subject(type: 'role', id: '7'),
         level: GrantLevel::Reader,
     )))->toThrow(UnenumerableGrantSubjectException::class);
@@ -55,7 +55,7 @@ it('throws for a team subject under the gate driver, F-P1.2-01', function (): vo
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessData(
+    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessInput(
         subject: new Subject(type: 'team', id: '3'),
         level: GrantLevel::Reader,
     )))->toThrow(UnenumerableGrantSubjectException::class);
@@ -70,7 +70,7 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessData(
+    $grant = $action->execute($folder, new GrantNodeAccessInput(
         subject: new Subject(type: 'user', id: '1'),
         level: GrantLevel::Reader,
     ));
@@ -79,7 +79,7 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 });
 
 // ── F-P1.2-01 (review): a host driver that follows the DOCUMENTED extension path —
-// subclass DatabasePermissionResolver and OVERRIDE subjectsFor() to append a role
+// subclass DatabasePermissionDriver and OVERRIDE subjectsFor() to append a role
 // Subject — makes its role grants genuinely take effect, so the guard must NOT trip
 // even though it carries no EnumeratesRoleSubjects marker. Capability is detected via
 // the overridden subjectsFor(), not the marker alone (red-before: today the marker
@@ -93,7 +93,7 @@ it('does not throw for a role grant under an unmarked subclass that overrides su
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessData(
+    $grant = $action->execute($folder, new GrantNodeAccessInput(
         subject: new Subject(type: 'role', id: '7'),
         level: GrantLevel::Reader,
     ));
@@ -111,7 +111,7 @@ it('does not throw when a role grant is written under the spatie driver, F-P1.2-
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessData(
+    $grant = $action->execute($folder, new GrantNodeAccessInput(
         subject: new Subject(type: 'role', id: '9'),
         level: GrantLevel::Reader,
     ));

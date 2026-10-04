@@ -5,9 +5,9 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
 Vaulter\Drive\Events\FileUploaded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileVersion $version, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\FileVersion $version
+  readonly \Vaulter\Models\Drive\FileRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly int|null|string $actorId
   readonly string $eventId
@@ -62,18 +62,18 @@ Vaulter\Drive\Events\NodeTrashed
   readonly string $eventId
 
 Vaulter\Drive\Events\NodeVersionCommitted
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileVersion $version, int $versionNo, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\FileVersion $version
+  readonly \Vaulter\Models\Drive\FileRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly int $versionNo
   readonly int|null|string $actorId
   readonly string $eventId
 
 Vaulter\Drive\Events\StorageCreated
-  __construct(\Vaulter\Models\Drive\Storage $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Drive $storage
   readonly \Vaulter\Models\Drive\Node $root
-  readonly \Vaulter\Models\Drive\Storage $storage
   readonly int|null|string $actorId
   readonly string $eventId
 

@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Vaulter\Panels\Panel;
-use Vaulter\Schema\PanelTablesBuilder;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Support\Config;
 
 /**
@@ -12,7 +11,7 @@ use Vaulter\Support\Config;
  *
  * Gated on the 'uploads' feature. upload_id is the client UNIQUE handle and
  * received_bytes is the authoritative tus offset; the (status, expires_at) sweeper
- * index is added by the builder. Thin shell over PanelTablesBuilder.
+ * index is added by the builder. Thin shell over SchemaBuilder.
  */
 return new class extends Migration
 {
@@ -22,16 +21,16 @@ return new class extends Migration
             return;
         }
 
-        (new PanelTablesBuilder)->createTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->createTable(
+
             entity: 'upload_sessions',
         );
     }
 
     public function down(): void
     {
-        (new PanelTablesBuilder)->dropTable(
-            panel: (new Panel)->id('default'),
+        (new SchemaBuilder)->dropTable(
+
             entity: 'upload_sessions',
         );
     }

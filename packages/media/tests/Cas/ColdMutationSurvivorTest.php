@@ -23,7 +23,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Repositories\Drive\FileVersionBlobStoreRepository;
+use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
@@ -40,7 +40,7 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(ContentStore::class),
         app(BlobLock::class),
         app(BlobStoreRepository::class),
-        app(FileVersionBlobStoreRepository::class),
+        app(FileRevisionBlobStoreRepository::class),
         $metrics,
         app(VaulterDatabase::class),
     );
@@ -51,7 +51,7 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
     return new BlobReconciler(
         app(ContentStore::class),
         app(BlobStoreRepository::class),
-        app(FileVersionBlobStoreRepository::class),
+        app(FileRevisionBlobStoreRepository::class),
         app(BlobLock::class),
         $metrics,
         app(VaulterDatabase::class),

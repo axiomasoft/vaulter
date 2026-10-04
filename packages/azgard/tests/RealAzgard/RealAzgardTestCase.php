@@ -6,7 +6,6 @@ namespace Vaulter\Azgard\Tests\RealAzgard;
 
 use AzGuard\AzGuardServiceProvider;
 use AzGuard\Context\AzGuardContextServiceProvider;
-use AzGuard\Contracts\ContextGuard;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Schema;
