@@ -23,11 +23,11 @@ use Vaulter\Repositories\Drive\StorageReadRepository;
  * place the staged bytes of a tus / S3-multipart session cross into the Drive, and
  * it does so through the SAME race-free path a one-shot upload uses:
  *
- *   staged temp → UploadFileData → UploadFileAction → BlobStore.commit
+ *   staged temp → UploadFileData → UploadFileAction → BlobStore.commitStaged
  *
  * so dedup + the race-free state machine + ref accounting + quota all apply, and the
  * sha256 is RECOMPUTED server-side from the assembled staged file inside
- * BlobStore.commit (the client's expected_sha256 / the S3 multipart ETag is NEVER
+ * BlobStore.commitStaged (the client's expected_sha256 / the S3 multipart ETag is NEVER
  * the content address — H.3). The session's target shapes UploadFileData:
  *   - new file    → a Node(kind=file) under target_parent (null = root);
  *   - new version → a new version of node_id (version_no bumps, head repoints).

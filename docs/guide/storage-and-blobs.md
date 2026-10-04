@@ -32,7 +32,7 @@ upload stream
 ContentStore::stage()   ─► local seekable temp file, sha256 recomputed from THOSE bytes
      │
      ▼
-BlobStore::commit()     ─► one locked transaction: find-or-create v_blobs row by (scope, sha256)
+BlobStore::commitStaged() ─► one locked transaction: find-or-create v_blobs row by (scope_key, sha256)
      │                       └─ dedup hit?  reuse the row, skip the physical write
      ▼
 ContentStore::promote() ─► write staged bytes to "<scope>/ab/<sha256>" on the disk
@@ -45,7 +45,7 @@ Three contracts split the work, and all three are swappable through `config('vau
 
 | Contract | Default | Responsibility |
 |---|---|---|
-| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `attach` / `detach` / `read`. The single CAS entry point. |
+| `Vaulter\Contracts\Cas\BlobStore` | `Vaulter\Media\Cas\BlobStore` | High-level lifecycle: `commit` / `commitStaged` / `attach` / `detach` / `read`. Prepared and stream CAS entry points. |
 | `Vaulter\Contracts\Cas\ContentStore` | `Vaulter\Media\Cas\Sha256ContentStore` | Byte side: `stage` / `promote` / `get` / `exists` / `delete` / `keyFor`. Knows bytes, hashes and keys — never a `v_blobs` row. |
 | `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
@@ -208,11 +208,29 @@ $blobStore->detach($fileVersion, $blob);   // bytes are NOT deleted here — GC 
 $stream = $blobStore->read($blob);         // resource|null over the canonical bytes
 ```
 
-In the Drive, this is wired by `Vaulter\Drive\Actions\UploadFileAction`: it probes
-the size, enforces the storage quota *before* committing bytes, calls
-`BlobStore::commit()` inside a transaction, then creates the `File` / `FileVersion`
-and the edge. The `tenant_id` and `storage_id` handed to `commit()` are read
-straight off the owning `Storage` row.
+In the Drive, `UploadFileAction` prepares and hashes bytes through
+`ContentStore::stage()` before entering its SQL transaction. Inside the transaction,
+locks follow **drive → nodes by id → file aggregate → quota → CAS**. A revision
+reads its previous head and `version_count` from the locked file; its new number is
+`version_count + 1` and its quota delta is new size minus that head's size.
+
+`StorageStoreRepository::reserveBytes()` applies a conditional atomic UPDATE:
+`used_bytes = used_bytes + delta` only when the quota is unlimited or the result
+fits `quota_bytes`. A failed reservation throws `QuotaExceededException` and rolls
+back all metadata. Copies reserve the sum of their subtree's heads in one UPDATE.
+`used_bytes` includes heads in the trash; only purge frees those bytes.
+
+The upload then calls `BlobStore::commitStaged($staged, $scope, $disk)`, creates the
+file/version/edge and updates the head. `commitStaged()` leaves the staged object
+intact. Its caller discards it in `finally`, after completion or failure, so SQL
+serialization/deadlock retries (up to three attempts) reuse the same prepared bytes.
+`commit($stream, $scope, $disk)` remains the convenience stage/commitStaged/discard
+entry point. Custom `BlobStore` implementations must implement `commitStaged()`.
+
+Promotion is an idempotent storage operation outside SQL rollback: **stage →
+promote → metadata commit**. A failure after promotion can leave canonical bytes
+without a blob row. Reconciliation collects these orphans after the configured
+grace period under the same CAS lock, preserving objects referenced by winners.
 
 ## Blob lifecycle
 

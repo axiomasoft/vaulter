@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `BlobStore::commitStaged()` for quota-first uploads and reusable staging across SQL retries (AD21).
 - Lossless `BlobScope`, `scope_key`, upgrade migration №7 and resumable
   `vaulter:blobs:repair-scopes --dry-run|--execute` (AD20).
 - Batch ACL evaluation (`AccessResolver::evaluateMany`, `AclFolder`), `NodePage`,
@@ -43,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly from GitHub without a private repository token.
 
 ### Fixed
+- Atomic storage quota reservations for uploads and subtree copies (E2, AD21),
+  fresh head-size deltas, file revision counters under `FOR UPDATE`, canonical
+  drive/node/file/quota/CAS lock order and three-attempt transaction retries.
 - A node created with no parent (notably documents) is placed under the drive root
   instead of becoming a hidden second root; upgrade migration №6 moves existing second
   roots under their root (renaming clashes ` (legacy N)`, logged as `node.moved`) and

@@ -1,0 +1,106 @@
+[
+  {
+    "label": "drive-phpstan",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M",
+      "--no-progress"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-phpstan-final.log",
+    "seconds": 4.29
+  },
+  {
+    "label": "drive-pint",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-pint-final.log",
+    "seconds": 0.92
+  },
+  {
+    "label": "quota-feature",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Feature/QuotaReserveTest.php"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/quota-feature-final.log",
+    "seconds": 0.73
+  },
+  {
+    "label": "drive-concurrency-1",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-1-final.log",
+    "seconds": 20.89
+  },
+  {
+    "label": "drive-concurrency-2",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-2-final.log",
+    "seconds": 19.96
+  },
+  {
+    "label": "drive-concurrency-3",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-3-final.log",
+    "seconds": 20.14
+  },
+  {
+    "label": "drive-concurrency-4",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-4-final.log",
+    "seconds": 20.32
+  },
+  {
+    "label": "drive-concurrency-5",
+    "exit": 0,
+    "command": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Concurrency"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "log": "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P1.6/drive-concurrency-5-final.log",
+    "seconds": 22.1
+  }
+]

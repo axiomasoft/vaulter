@@ -6,6 +6,21 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Prepared CAS commit and atomic quota (AD21)
+
+Custom implementations of `Vaulter\Contracts\Cas\BlobStore` must add
+`commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob`.
+It commits prepared bytes without discarding the staged object. Keep `commit()`
+as stage → commitStaged → discard in `finally`. The outer upload owns cleanup
+and reuses prepared bytes on transaction retries.
+
+Quota reservations now run before CAS promotion. Subtree copies that exceed quota
+throw the existing `Vaulter\Drive\Exceptions\QuotaExceededException` and roll
+back completely. The core repository throws its common base,
+`Vaulter\Exceptions\Drive\QuotaExceededException`; Drive Actions preserve the
+existing exception type and HTTP 413 `quota_exceeded` response.
+
+
 ### Lossless CAS scope and migration №7 (AD20)
 
 Replace `BlobStore::commit($stream, tenantId: ..., storageId: ...)` with

@@ -98,3 +98,24 @@ function stringStream(string $bytes)
 
     return $stream;
 }
+
+it('commitStaged keeps the temp file reusable across an outer SQL rollback', function (): void {
+    $content = app(ContentStore::class);
+    $staged = $content->stage(stringStream('reusable staged bytes'));
+    $scope = BlobScope::global();
+    try {
+        expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($staged, $scope): void {
+            app(BlobStore::class)->commitStaged($staged, $scope);
+            throw new RuntimeException('metadata rollback');
+        }))->toThrow(RuntimeException::class, 'metadata rollback');
+        expect(Blob::query()->count())->toBe(0)
+            ->and(is_file($staged->path()))->toBeTrue();
+        $blob = app(BlobStore::class)->commitStaged($staged, $scope);
+        expect(is_file($staged->path()))->toBeTrue()
+            ->and(stream_get_contents(app(BlobStore::class)->read($blob)))->toBe('reusable staged bytes');
+        expect(app(BlobStore::class)->commitStaged($staged, $scope)->id)->toBe($blob->id);
+    } finally {
+        $staged->discard();
+    }
+    expect(is_file($staged->path()))->toBeFalse();
+});

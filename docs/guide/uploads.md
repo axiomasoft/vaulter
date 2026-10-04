@@ -9,15 +9,32 @@ outline: deep
 Large files upload **resumably**: a long upload survives a dropped connection, a page reload,
 even a different client picking up where the last one left off. Vaulter ships two resumable
 transports plus a one-shot direct path, and every one of them funnels the assembled bytes
-through the **same race-free `BlobStore.commit`** — so dedup, the race-free blob state
+through the **same race-free `BlobStore.commitStaged`** — so dedup, the race-free blob state
 machine and quota all apply, and the `sha256` is **recomputed server-side** from the assembled
 bytes (the client `sha256` / S3 ETag is **never** the content address).
 
 ::: info H.3 invariant
 The server never trusts a client-supplied hash. A declared `expected_sha256` is an integrity
-*hint*, not the content address — `BlobStore.commit` re-hashes the assembled staged file at
-commit time.
+*hint*, not the content address — `ContentStore.stage` hashes the assembled bytes before SQL commit.
 :::
+
+## Atomic quota and revisions
+
+Uploads prepare their bytes once before the commit transaction. The transaction
+locks drive → nodes by ascending id → file → quota → CAS. It reserves a positive
+head-size delta with a conditional UPDATE, so simultaneous writers cannot exceed
+`quota_bytes`. An unlimited quota is `null`; an exact-boundary reservation succeeds.
+The preliminary check is only a fast rejection for new files.
+
+A new revision reads the locked file's current head and counter, allocates
+`version_count + 1`, and accounts for the difference from that actual head. Smaller
+heads release space; trashed heads keep using space until purge. A subtree copy
+reserves all copied head bytes together or rolls back the whole copy.
+
+The transaction retries serialization failures/deadlocks up to three attempts,
+reusing the staged object, then discards it in `finally`. If SQL fails after physical
+promotion, the bytes form an orphan collected by `vaulter:reconcile-blobs --orphans
+--prune` after grace. Reconciliation keeps committed winners' bytes.
 
 ## Transports
 
@@ -50,7 +67,7 @@ Initiated → Uploading → Assembled → Committed
 | `initiated` | The row exists; no bytes received yet (`received_bytes = 0`). |
 | `uploading` | At least one tus `PATCH` / S3 part has landed; `received_bytes` is the authoritative server-side offset. |
 | `assembled` | All bytes are present on the staged temp; ready to commit. |
-| `committed` | The assembled bytes went through `BlobStore.commit`; the `File` + `FileVersion` + node were created and `assembled_blob_id` is set. **Terminal.** |
+| `committed` | The assembled bytes went through `BlobStore.commitStaged`; the `File` + `FileVersion` + node were created and `assembled_blob_id` is set. **Terminal.** |
 | `aborted`   | The client (or a `DELETE`) abandoned the session; staged temp + S3 multipart cleaned. **Terminal.** |
 | `expired`   | The sweeper reclaimed a stale session past its TTL. **Terminal.** |
 
@@ -200,7 +217,7 @@ curl -X POST https://app.test/api/vaulter/resumable-uploads/<upload_id>/complete
 ::: info ETag is never the address
 The per-part `etag` we store is the object-store handle only (for debug / the real
 complete-multipart call) — it is **never** the content address. On `complete` the **stitched
-bytes**, not the multipart ETag, are what `BlobStore.commit` re-hashes (H.3). The default
+bytes**, not the multipart ETag, are what `ContentStore.stage` hashes (H.3). The default
 handler proxies parts through the `StorageDriver`, so the same flow works against a faked/local
 disk in tests and a real S3 disk in production; a host wanting true presigned-PUT parts swaps
 the handler — the record/complete contract is unchanged.
@@ -212,7 +229,7 @@ the handler — the record/complete contract is unchanged.
 through the same race-free path a one-shot upload uses:
 
 ```
-staged temp → UploadFileData → UploadFileAction → BlobStore.commit
+staged temp → UploadFileData → UploadFileAction → ContentStore.stage → quota → BlobStore.commitStaged
 ```
 
 The whole thing runs in one outer transaction so a session is never half-committed:
@@ -220,7 +237,7 @@ The whole thing runs in one outer transaction so a session is never half-committ
 1. The staged temp is read back as a stream (it lives on the session's disk under a `tmp/`
    prefix keyed by `upload_id`, so a multi-GB upload survives across requests).
 2. `UploadFileAction` stages it locally, **recomputes the `sha256`**, and calls
-   `BlobStore.commit` — dedup, the race-free state machine, ref-accounting and quota all apply.
+   `BlobStore.commitStaged` — dedup, the race-free state machine, ref-accounting and quota all apply.
    Two identical files commit to the **same blob** (content-addressed dedup); the session's
    `assembled_blob_id` is set to the blob the bytes deduped into — read from the committed
    version row, never from the client claim.

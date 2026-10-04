@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Models\Drive\Storage;
 use Vaulter\Support\Config;
 
@@ -16,6 +18,38 @@ use Vaulter\Support\Config;
  */
 final class StorageStoreRepository
 {
+    public function __construct(private readonly VaulterDatabase $database) {}
+
+    /** Reserve head bytes atomically inside the caller's transaction. */
+    public function reserveBytes(Storage $storage, int $delta): void
+    {
+        if ($delta <= 0) {
+            $this->adjustUsedBytes($storage, $delta);
+
+            return;
+        }
+
+        $connection = $this->database->connection();
+        $grammar = $connection->getQueryGrammar();
+        $table = $grammar->wrapTable($storage->getTable());
+        $key = $grammar->wrap($storage->getKeyName());
+        $updated = $connection->update(
+            "update {$table} set used_bytes = used_bytes + ? where {$key} = ? and (quota_bytes is null or used_bytes + ? <= quota_bytes)",
+            [$delta, $storage->getKey(), $delta],
+        );
+
+        $storage->refresh();
+
+        if ($updated === 0) {
+            throw QuotaExceededException::forStorage(
+                storageId: $storage->id,
+                quotaBytes: $storage->quota_bytes ?? 0,
+                usedBytes: $storage->used_bytes,
+                incomingBytes: $delta,
+            );
+        }
+    }
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -58,10 +92,12 @@ final class StorageStoreRepository
      */
     public function adjustUsedBytes(Storage $storage, int $delta): Storage
     {
-        $table = $storage->getTable();
-        $key = $storage->getKeyName();
+        $connection = $this->database->connection();
+        $grammar = $connection->getQueryGrammar();
+        $table = $grammar->wrapTable($storage->getTable());
+        $key = $grammar->wrap($storage->getKeyName());
 
-        $storage->getConnection()->update(
+        $connection->update(
             query: sprintf(
                 'update %s set used_bytes = case when used_bytes + ? < 0 then 0 else used_bytes + ? end where %s = ?',
                 $table,

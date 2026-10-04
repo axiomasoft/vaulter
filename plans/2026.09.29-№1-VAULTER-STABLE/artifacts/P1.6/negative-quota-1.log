@@ -1,0 +1,24 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Concurrency\QuotaRaceTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit V02 admits exactly one 8 MiB upload into 10 MiB of free quota[39m[90m    [39m [90m1.31s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Concurrency\QuotaRaceTest[22m [90m>[39m it V02 admits exactly one 8 MiB…   
+[39;1m  Failed asserting that actual size 2 matches expected size 1.[39;22m
+
+  at [32mtests/Concurrency/QuotaRaceTest.php[39m:[32m30[39m
+     26▕         [0, 1],
+     27▕     ));
+     28▕     $won = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => $o->ok));
+     29▕     $lost = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => !$o->ok));
+  ➜  30▕     expect($won)->toHaveCount(1)->and($lost)->toHaveCount(1);
+     31▕     expect($lost[0]->failedWith(QuotaExceededException::class))->toBeTrue($lost[0]->message ?? '');
+     32▕     expect($drive->storage()->refresh()->used_bytes)->toBe(8 * 1024 * 1024)
+     33▕         ->and((int) File::query()->sum('size_bytes'))->toBe(8 * 1024 * 1024)
+     34▕         ->and(Blob::query()->count())->toBe(1)
+
+  [33m1   [39m[39;1mtests/Concurrency/QuotaRaceTest.php[39;22m:[39;1m30[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (1 assertions)[39m
+  [90mDuration:[39m [39m1.35s[39m
+

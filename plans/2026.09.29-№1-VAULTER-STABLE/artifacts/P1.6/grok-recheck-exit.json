@@ -1,0 +1,15 @@
+{
+  "exit": 0,
+  "stop_reason": "end_turn",
+  "session_id": "01a10709-7aa7-7861-914f-ee8cc5031df4",
+  "model_usage": {
+    "grok-4.7-build": {
+      "inputTokens": 297535,
+      "outputTokens": 16473,
+      "cacheReadInputTokens": 1335552,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 6,
+      "costUSD": 0.92594512
+    }
+  }
+}

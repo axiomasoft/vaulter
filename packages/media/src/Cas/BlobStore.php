@@ -7,6 +7,7 @@ namespace Vaulter\Media\Cas;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileVersion;
@@ -35,44 +36,40 @@ final readonly class BlobStore implements BlobStoreContract
      */
     public function commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob
     {
-        $disk ??= Config::defaultDisk();
-
-        // Stage + hash OUTSIDE the transaction: hashing a multi-GB upload must not
-        // hold the row/advisory lock. The lock guards only the liveness decision.
         $staged = $this->content->stage($stream);
-        $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
 
         try {
-            return $this->database->transaction(function () use (
-                $staged, $scope, $disk, $storageKey
-            ): Blob {
-                // H.3 invariant: the lock is the FIRST statement; every liveness
-                // decision below reads rows acquired after it.
-                $this->lock->acquire(scope: $scope->key(), sha256: $staged->sha256());
-
-                $result = $this->blobs->findOrCreate(
-                    sha256: $staged->sha256(),
-                    sizeBytes: $staged->sizeBytes(),
-                    storageKey: $storageKey,
-                    disk: $disk,
-                    scope: $scope,
-                    tenantId: $scope->tenantId(),
-                    storageId: $scope->storageId(),
-                );
-
-                // Promote bytes only when the row is newly created (dedup hit ⇒
-                // skip the physical write). promote() is itself idempotent and
-                // conditional, so a resurrected row whose object may be gone is
-                // re-promoted safely.
-                if ($result['created'] || !$this->content->exists($result['blob']->storage_key, $result['blob']->disk)) {
-                    $this->content->promote(staged: $staged, key: $result['blob']->storage_key, disk: $result['blob']->disk);
-                }
-
-                return $result['blob'];
-            });
+            return $this->commitStaged($staged, $scope, $disk);
         } finally {
             $staged->discard();
         }
+    }
+
+    public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
+    {
+        $disk ??= Config::defaultDisk();
+        $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
+
+        return $this->database->transaction(function () use ($staged, $scope, $disk, $storageKey): Blob {
+            $this->lock->acquire(scope: $scope->key(), sha256: $staged->sha256());
+
+            $result = $this->blobs->findOrCreate(
+                sha256: $staged->sha256(),
+                sizeBytes: $staged->sizeBytes(),
+                storageKey: $storageKey,
+                disk: $disk,
+                scope: $scope,
+                tenantId: $scope->tenantId(),
+                storageId: $scope->storageId(),
+            );
+
+            // Promotion is idempotent; a rollback leaves bytes for reconciliation.
+            if ($result['created'] || !$this->content->exists($result['blob']->storage_key, $result['blob']->disk)) {
+                $this->content->promote(staged: $staged, key: $result['blob']->storage_key, disk: $result['blob']->disk);
+            }
+
+            return $result['blob'];
+        });
     }
 
     /**

@@ -9,7 +9,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\CopyNodeData;
 use Vaulter\Drive\Events\NodeCopied;
 use Vaulter\Drive\Exceptions\CrossStorageMoveException;
+use Vaulter\Drive\Exceptions\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -61,44 +63,56 @@ final readonly class CopyNodeAction
 
         $this->tree->assertNotRoot(node: $source, operation: 'copy');
 
-        return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
-            $this->database->lockTreeShared($source->storage_id);
+        try {
+            return $this->database->transaction(function () use ($source, $destParentId, $name, $data): Node {
+                $this->database->lockTreeShared($source->storage_id);
 
-            $destination = $this->tree->locked($this->tree->lock([$destParentId]), $destParentId);
-            if (!$this->tree->sameStorage($destination, $source->storage_id)) {
-                throw CrossStorageMoveException::between(fromStorageId: $source->storage_id, toStorageId: $destination->storage_id);
-            }
+                // Freeze the source membership before inserting any copies, then lock
+                // every source node with the destination in ascending id order.
+                $sourceIds = array_values($this->nodes->subtree($source)->modelKeys());
+                $locked = $this->tree->lock([...$sourceIds, $destParentId]);
+                $current = $this->tree->locked($locked, $source->id);
+                $destination = $this->tree->locked($locked, $destParentId);
+                $resolvedName = $data->name === null ? $current->name : $name;
+                if (!$this->tree->sameStorage($destination, $source->storage_id)) {
+                    throw CrossStorageMoveException::between(fromStorageId: $source->storage_id, toStorageId: $destination->storage_id);
+                }
 
-            $this->tree->assertActiveFolder($destination);
+                $this->tree->assertActiveFolder($destination);
 
-            $exists = $this->nodes->siblingNameExists(
-                storage: $source->storage,
-                parentId: $destParentId,
-                name: $name,
-            );
+                $exists = $this->nodes->siblingNameExists(
+                    storage: $source->storage,
+                    parentId: $destParentId,
+                    name: $resolvedName,
+                );
 
-            if ($exists) {
-                throw NodeNameConflictException::forName(name: $name, parentId: $destParentId);
-            }
+                if ($exists) {
+                    throw NodeNameConflictException::forName(name: $resolvedName, parentId: $destParentId);
+                }
 
-            $addedBytes = 0;
-            $copy = $this->copyNode(source: $source, parentId: $destParentId, name: $name, data: $data, addedBytes: $addedBytes);
+                $addedBytes = 0;
+                $copy = $this->copyNode(source: $current, parentId: $destParentId, name: $resolvedName, data: $data, addedBytes: $addedBytes, sourceIds: $sourceIds);
 
-            if ($addedBytes > 0) {
-                $this->storageStore->adjustUsedBytes(storage: $source->storage, delta: $addedBytes);
-            }
+                if ($addedBytes > 0) {
+                    $this->storageStore->reserveBytes(storage: $source->storage, delta: $addedBytes);
+                }
 
-            event(new NodeCopied(source: $source, copy: $copy, actorId: $data->actorId));
+                event(new NodeCopied(source: $current, copy: $copy, actorId: $data->actorId));
 
-            return $copy;
-        });
+                return $copy;
+            }, 3);
+        } catch (CoreQuotaExceededException $e) {
+            throw new QuotaExceededException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     /**
      * Copy one node (recursing into a folder's children). $addedBytes accumulates
      * the live logical size the copy adds, for the used_bytes adjustment.
+     *
+     * @param list<int|string> $sourceIds
      */
-    private function copyNode(Node $source, int|string $parentId, string $name, CopyNodeData $data, int &$addedBytes): Node
+    private function copyNode(Node $source, int|string $parentId, string $name, CopyNodeData $data, int &$addedBytes, array $sourceIds): Node
     {
         $copy = $this->nodeStore->create([
             'storage_id' => $source->storage_id,
@@ -121,8 +135,8 @@ final readonly class CopyNodeAction
         }
 
         if ($source->kind === NodeKind::Folder) {
-            foreach ($source->children()->whereNull('trashed_at')->get() as $child) {
-                $this->copyNode(source: $child, parentId: $copy->id, name: $child->name, data: $data, addedBytes: $addedBytes);
+            foreach ($source->children()->whereIn('id', $sourceIds)->whereNull('trashed_at')->get() as $child) {
+                $this->copyNode(source: $child, parentId: $copy->id, name: $child->name, data: $data, addedBytes: $addedBytes, sourceIds: $sourceIds);
             }
         }
 
@@ -181,6 +195,7 @@ final readonly class CopyNodeAction
             currentVersionId: $version->id,
             mimeType: $sourceFile->mime_type,
             sizeBytes: $sourceFile->size_bytes,
+            versionNo: 1,
         );
 
         $this->nodeStore->update($copy, [
