@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-10-05
-inputs_sha256: 4acac9cf2f513929cbe630d2a56dc7d270beda366c4196d82029aae8e8f82b4c
+inputs_sha256: 9ea501173bdef0ecd4b812a227c15db2a167498b5189c6339d1cb1e24b596a91
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
 | P1 | Исправления T0 на текущих именах | 10/11 | 🟠 Done with deviations |
-| P2 | Канон имён и конфигурации | 2/7 | 🟡 In progress |
+| P2 | Канон имён и конфигурации | 3/7 | 🟡 In progress |
 
 ## Phase P0
 
@@ -58,7 +58,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P2.1 | Переименования классов core | 🟢 Done | 2026-10-05 |
 | P2.2 | Drive/documents combined canon and final validation | 🟢 Done | 2026-10-05 |
-| P2.3 | Verification of documents within the combined workset | ⬜ Not started | — |
+| P2.3 | Verification of documents within the combined workset | 🟢 Done | 2026-10-05 |
 | P2.4 | AzGuard из core в vaulter-azgard; media и filament | ⬜ Not started | — |
 | P2.5 | Канонический конфиг и типизированный доступ | ⬜ Not started | — |
 | P2.6 | Типы новых и переименованных колонок | ⬜ Not started | — |
@@ -162,6 +162,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-05 | codex/gpt-6.1-sol | plan-run · local-repair · Present-only metadata/projection repair; historical closure unchanged. Fresh current checks qualified in artifacts/P2.2/p21-present-metadata-repair-20261005T060658881213Z.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-05 | codex/gpt-6.1-sol | plan-run · closed-green · Owner ordered completion. Qualification E13-E16 green. Independent review attempt-0003 GREEN for candidate 113288b01c2bf7f19943adc84c238af7936f4cb3f5357c494b834f52fe8be601. Prior FINDINGS and incomplete transport retained.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-05 | grok/grok-4.7 | plan-run · in-progress · — |
+| 2026-10-05 | grok/grok-4.7 | plan-run · closed-green · Producer P2.2 closed-green at 459cc654. Qualification code-guidance, packages-pg and documents-arch green. No reviewer request and no claimed reviewer GREEN.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
