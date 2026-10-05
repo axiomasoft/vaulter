@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Actions\UploadFileAction;
-use Vaulter\Drive\Data\UploadFileData;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Drive\Exceptions\OffsetMismatchException;
+use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
@@ -29,7 +29,7 @@ beforeEach(function (): void {
 
 it('records tus upload bytes and chunk duration on PATCH', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -56,7 +56,7 @@ it('records tus upload bytes and chunk duration on PATCH', function (): void {
 
 it('records tus upload conflict on offset mismatch', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -86,7 +86,7 @@ it('records s3 upload bytes, chunk duration, and assemble metrics on complete', 
     $whole = $part1.$part2;
 
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
@@ -120,10 +120,10 @@ it('records s3 upload bytes, chunk duration, and assemble metrics on complete', 
 
 it('records single-shot upload bytes and chunk duration', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     $root = $drive->root();
 
-    app(UploadFileAction::class)->execute(new UploadFileData(
+    app(IngestFileAction::class)->execute(new IngestFileInput(
         storage: $storage,
         into: $root,
         stream: DriveTestHelpers::streamFor('single-shot'),

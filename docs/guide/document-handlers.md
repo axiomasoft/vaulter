@@ -172,7 +172,7 @@ The default set is registered from config (`config('vaulter.handlers')`):
 | `PreviewHandler` | `vaulter/preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `vaulter/pdf-preview` | 80 |
 | `DownloadOnlyHandler` | `vaulter/download` | `*` (catch-all) | download | `vaulter/download` | −1000 |
 
-A document node created via `CreateDocumentNodeAction` is stamped with the Vaulter document
+A document node created via `CreateDocumentAction` is stamped with the Vaulter document
 mime (`application/vnd.vaulter.document+json`), so it always routes to `TipTapHandler`
 regardless of any extension in its name.
 

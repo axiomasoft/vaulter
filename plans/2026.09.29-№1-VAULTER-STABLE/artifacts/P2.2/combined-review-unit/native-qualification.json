@@ -1,0 +1,138 @@
+{
+  "prepare": {
+    "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+    "item_id": "P2.2",
+    "position": {
+      "schema_version": "plan-recovery/v1",
+      "allowed": true,
+      "code": "RESUME_ITEM",
+      "requested_item": "P2.2",
+      "active_item": "P2.2",
+      "mode": "resume",
+      "run_id": "08750714b29a6d5a7792f308c7e281d3832ed1f76f0f1b29319a02f60f1c124b",
+      "attempt": 5,
+      "reason": "P2.2: continue durable execution"
+    },
+    "context": {
+      "item-spec": "### P2.2 — Drive/documents canon and combined workset review\n\n**Intent:** OPUS drive/documents canon/layout (R14), whole P2.2 + P2.3 review (D21).\n**Why:** OPUS 13; AD03/04.\n\n**Scope Included:** D21; all original P2.3 obligations in `artifacts/P2.2/combined-review-unit/P2.3-original.md`, without changing exclusions. Full OPUS Required Reads 0 minus ledger `note` transfers; D20 in full. R14 registrars/tests; unused types: src use→stop/escalate. Mechanical callers only, including three load files; core rollback fixture `version_no`. UPGRADE table, CHANGELOG [Unreleased], EN/RU docs/API golden. Preserve behavior, paths/names/JSON and P1.8 codes; docs/plan historical.\n\n**Scope Excluded:** All original P2.3 exclusions remain in force. OPUS/D20 future work: new Actions (P3.3/P3.7/P4.6), controller split (P6.1), DriveConfig (P2.5), recording traits (P5.1), command signatures (P7.2), other handle contract (P3.2/P3.3); other load changes.\n\n**Inputs:** `artifacts/P2-design/P2.2-opus.md`;\n`audits/2026-09-29-stable-audit/opus/03-glossary-and-renames.md` (§4);\n`audits/2026-09-29-stable-audit/opus/04-packages-and-layout.md` (§4);\n`packages/drive/src/DriveHandle.php`;\n`packages/drive/tests/Arch/ArchTest.php`.\n\n**Files:** `packages/documents/{src/**,tests/**,config/vaulter-documents.php,routes/documents.php}`, `packages/core/{config/vaulter.php,src/{Enums/CollaborationDriverType.php,Support/Config.php},tests/{Arch/__snapshots__/*,ObservabilityDocuments/**,Unit/EnumTest.php,Upgrade/**}}`, `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.3/{rename-map.php,rector-dry-run.txt}`, `{CH*,U*,docs/{guide/{ar*,au*,dr*,er*,f*,int*,m*,q*,r*,storage-a*,tra*,u*},reference/{cont*,e*,f*,r*},ru/{concepts/a*,guide/{ar*,dr*,f*,int*,m*,q*,r*,st*,tra*,u*},reference/{cont*,e*,f*,r*}}},load/app/{Console/{PrepareM*,S*},LoadS*},packages/{core/{src/Contracts/Drive/DriveHandle.*,tests/{Access/{AccessA*,AccessT*},Activity/R*,Arch/{A*,__snapshots__/*},Database/*,Drive/*,E2E/E2eS*,IdStrategy/{Bigint/H*,Ulid/H*},Observability/P83/{P83A*,P83S*},ObservabilityDocuments/P83DocumentsM*,Sharing/ShareS*,Support/U*,Ulid/*,Unit/W*,Upgrade/Fi*,Webhooks/{OutboxR*,OutboxS*}}},documents/tests/{Collaboration/{CollaborationW*,N*},Document/C*}}}`, `packages/{documents/tests/{Document/{DocumentC*,DocumentE*,DocumentN*,DocumentTestH*,DocumentTr*,Dom*,L*,NodeE*,NodeH*,P*,R*,S*,T*,V*},Feature/*},drive/{routes/*,src/{Actions/{Files/*,Nodes/*,Trash/*,Uploads/Comp*},Activity/*,Console/*,Data/{Files/*,Nodes/*,Uploads/I*},DriveH*,DriveM*,DriveP*,Enums/*,Events/{Drives/*,Files/*,Nodes/*,Uploads/*},Exceptions/{Nodes/*,Quota/*,Uploads/*},Http/{Controllers/{Drives/*,N*,Uploads/{S3MultipartP*,TusP*}},Requests/{Files/*,Folders/*,Nodes/*},Resources/{D*,FileR*}},Providers/*,Repositories/Uploads/UploadSessionS*,Uploads/**,V*,ValueObjects/*,Webhooks/*},tests/{Arch/__snapshots__/*,Concurrency/{D*,L*,M*,Q*,R*,T*},Drive/{CopyM*,Cr*}}}}`, `{packages/{drive/tests/{Drive/{F*,M*,R*,S*,T*,U*},Feature/{D*,M*,O*,Q*,R*,T*,U*},Observability/P84*,Panels/*,Pe*,Providers/*,Uploads/{R*,S*,TusF*,UploadI*,UploadSessionA*,UploadSessionC*}},filament/tests/Fixtures/D*},plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/{*.php,rector-dry-run.*}}`.\n\n**Required Reads:** 0) `artifacts/P2-design/P2.2-opus.md`;\n1) `packages/drive/src/DriveHandle.php`; 2) `packages/drive/src/VaulterDriveServiceProvider.php`;\n3) `packages/drive/routes/drive.php`; 4) `packages/drive/tests/Arch/ArchTest.php`;\n5) `artifacts/P2.1/rename-map.php`;\n6) `decisions/D20-p22-handle-methods.md`; 7) `decisions/D21-combined-workset-review.md`;\n8) `artifacts/P2.2/combined-review-unit/P2.3-original.md`;\n9) `artifacts/P2-design/P2.3-opus.md`.\n\n**Authority:** routine\n\n**Implementation Rules:** D21: one final independent review of the complete combined product, preserving existing P2.2 reviewer request/history/budget. All original P2.3 rules apply. R2 dry-run/log/apply; R3 no aliases; ADR-0017 Law 1/2 green, no new exceptions.\n\n**Code Guidance:** Original P2.3 Code Guidance also must be empty. Zero old-map FQNs/paths, removed types/orphans, flat Actions/Data/Exceptions in packages/*/{src,tests,routes}, load/app, docs/{guide,reference,ru}; no old renamed doc names or ShowDriveController::show; domain events, Profile/getId, DriveResource. Live filament StorageResource allowed.\n\n**Validation:**\n- Code Guidance → пусто.\n- Гейт drive, documents, filament и гейт core → exit 0; сетка P1 на PG → 0 failed, 0 skipped.\n- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Arch tests/Providers)` → 0 failed.\n\n- `(cd packages/documents && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Arch tests/Providers)` → 0 failed.\n- Independent Grok review of the entire P2.2 + P2.3 candidate → GREEN (D21).\n\n**Deliverables:** Original P2.3 deliverables in full;  Canon, registrars/tests, map/log, docs/golden.\n"
+    },
+    "phase": {
+      "id": "P2",
+      "path": "phases/P2/P2.md"
+    },
+    "snapshot": {
+      "schema_version": "plan-context-receipt/v1",
+      "item_id": "P2.2",
+      "snapshot_sha256": "687617c763d52faf0e15e54540e9bd44f53f569b250e69f2b63edfb124a465ed",
+      "members": [
+        {
+          "role": "plan-core",
+          "path": "plan.md",
+          "sha256": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+          "bytes": 20432
+        },
+        {
+          "role": "phase-context",
+          "path": "phases/P2/P2.md",
+          "sha256": "84b9906ed5d93e863969e451aaf553dfa86de2083c979354e8a1b75792625b3e",
+          "bytes": 26834
+        },
+        {
+          "role": "item-spec",
+          "path": "phases/P2/P2.2.md",
+          "sha256": "a3fce61d0caef94e9122276aa33664e191b02f6aef89ee8ca7283a578d0e7e5c",
+          "bytes": 4902
+        },
+        {
+          "role": "bundle",
+          "path": "bundles/P2.2.json",
+          "sha256": "6f1aec9ca8e621bd8f65428a6ed0657d0fc4aecf86b44a64dcfcc8fc83782475",
+          "bytes": 7639
+        },
+        {
+          "role": "item-state",
+          "path": "phases/P2/P2.2.state.md",
+          "sha256": "a19b1a816918c4a66e932340e38be8d686bdc78527a5563dcfeeb94c3fbc577e",
+          "bytes": 570
+        }
+      ]
+    },
+    "route": {
+      "required": {
+        "model_class": "implementation",
+        "effort": "medium"
+      },
+      "actual": {
+        "model_class": "frontier",
+        "effort": "high"
+      },
+      "capabilities": []
+    },
+    "authority": {
+      "class": "routine",
+      "granted": true,
+      "granted_by": "phases/P2/P2.2.md:P2.2",
+      "auto_allowed": [
+        "write the item's declared Files",
+        "run the item's Validation",
+        "close the item with one scoped commit"
+      ],
+      "stop_boundaries": [
+        "tag/push/release",
+        "fleet rollout",
+        "consumer repositories",
+        "FOREMAN outward parts"
+      ],
+      "loop_budget": {
+        "audit_rounds_max": 2,
+        "same_finding_max": 2
+      },
+      "observed_rounds": 0,
+      "audit_cap_remediation": false
+    },
+    "validation": {
+      "schema_version": "validation-admission/v1",
+      "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+      "item_id": "P2.2",
+      "disposition": "allow",
+      "checks": []
+    },
+    "batch_receipt": {
+      "schema_version": "batch-receipt/v1",
+      "batch_id": "B2-A",
+      "membership": [
+        "P2.2",
+        "P2.3"
+      ],
+      "invocation_digest": "c372d31032f0018a42f253dbdbdb58bd770ad5dcfb45709a1288acce8947d9a1",
+      "completed_prefix": [],
+      "routing_digest": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+      "spec_digest": "8b1384a4797ec1b5f54c24c2a8075854cf1c71165f2585e00036072dc9d0fee3",
+      "handoff_digest": "a3b13f995ce0add98620584d6eecafb84308bbe204e2dc1cd26b0f713b4dbe50",
+      "stop_disposition": "continue"
+    },
+    "owner_review": {
+      "schema_version": "owner-review-request/v1",
+      "item_id": "P2.2",
+      "reviewer": "grok/grok-4.7/500000",
+      "effort": "high",
+      "executor_session": "01a10a45-06cd-7b82-9786-9ef7d504d26c",
+      "invocation": "task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.2 P2.3 --reviewer=grok/grok-4.7/500k"
+    },
+    "work_context": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/.plan-cache/P2.2-work.json",
+    "action": "implement",
+    "runtime_provenance": {
+      "schema_version": "review-runtime/v1",
+      "verdict_schema": "review-verdict/v1",
+      "source_root": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task",
+      "sources": {
+        "review_packet.py": "3ada588e45a0b8e9b140f7ef668163ee61449338bf1da81d7b15b002158a9603",
+        "review_grok_acp.py": "0ea89accce4844b89b342e215eacf63132c10a9139aaf2a23128014dc537cd3e",
+        "review_sources.py": "c9a71ea6912551cdac7b97278faf4373177a290c86196f25241f642f24995657",
+        "file_manifest.py": "02cb03c77f8746b8406aafc385ea0a6cf11fc21aa4d99884c83109717c2be543",
+        "review_policy.py": "3f5b7ebd6bfff25de9dcb4095ce3061e9352660f6a78b43a5d0be906362456f8"
+      }
+    }
+  },
+  "status": "qualified"
+}

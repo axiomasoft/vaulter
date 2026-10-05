@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Events\Documents;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -20,7 +20,7 @@ final readonly class DocumentContentUpdated implements ShouldDispatchAfterCommit
 
     public function __construct(
         public Node $node,
-        public NodeDocumentVersion $version,
+        public DocumentRevision $version,
         public bool $created,
         public int|string|null $actorId = null,
         ?string $eventId = null,

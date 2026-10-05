@@ -22,7 +22,7 @@ use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use Throwable;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
+use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
@@ -349,10 +349,10 @@ final class LoadServiceProvider extends ServiceProvider
 
             $host = DriveTestHelpers::host($actorId);
             $drive = Vaulter::for($host);
-            $storage = $drive->storage();
+            $storage = $drive->model();
             $root = $drive->root();
 
-            // `Vaulter::for($host)->storage()` is find-or-create (idempotent per host
+            // `Vaulter::for($host)->model()` is find-or-create (idempotent per host
             // id — confirmed by repeat-calling this route against the SAME actor id
             // during P2.2 validation), but AccessTestHelpers::grant() is a plain
             // INSERT — a repeat call for the same (node, subject) trips the partial-

@@ -29,7 +29,7 @@ Vaulter — это строго типизированный слоистый La
 
 ```
 @vaulter/vue  ──HTTP/JSON──►  Controllers ─► FormRequests ─► DTOs (Data\*)
-              ──WebSocket──►  CollaborationDriver (Reverb | Hocuspocus)
+              ──WebSocket──►  CollaborationDriver (Hocuspocus)
        │
   AccessResolver (Vaulter-owned)  ◄── PermissionDriver (host, swappable)
        │                              + v_node_grants ACL
@@ -47,7 +47,7 @@ Vaulter — это строго типизированный слоистый La
 1. **Контроллер** через route-model-binding связывает `{storage}` (или `{node}`) через сменяемую
    модель, затем авторизует действие против [`AccessResolver`](#authorization).
 2. **FormRequest** валидирует, а **DTO** (`Vaulter\Data\*`) несёт типизированный payload.
-3. **Action** (`final readonly`, например `UploadFileAction`) открывает транзакцию, вызывает
+3. **Action** (`final readonly`, например `IngestFileAction`) открывает транзакцию, вызывает
    **CAS** для staging + дедупликации байтов, пишет строки `v_nodes` / `v_files` через
    **store-репозитории** и диспатчит доменный **Event** после коммита.
 4. Подписчики (`RecordsActivity`, `RecordsOutbox`) реагируют на событие, чтобы записать
@@ -55,7 +55,7 @@ Vaulter — это строго типизированный слоистый La
    ними напрямую.
 
 Эргономичная точка входа `Vaulter::for($entity)` возвращает
-[`DriveContext`](#the-drive-handle) (`Vaulter\Drive\DriveContext` из пакета
+[`DriveHandle`](#the-drive-handle) (`Vaulter\Drive\DriveHandle` из пакета
 `axioma-studio/vaulter-drive`), который оборачивает ровно этот конвейер для программного
 использования.
 
@@ -77,15 +77,15 @@ Action-у и сериализуют результат через Resource, ко
 Один use case на каждый, `final readonly`. Action открывает транзакцию, применяет бизнес-правила,
 вызывает репозитории/CAS и диспатчит доменное событие **после коммита**. Набор Drive на запись
 (`Vaulter\Drive\Actions\*`, требует `axioma-studio/vaulter-drive`):
-`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, `RenameNodeAction`,
-`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`. Actions
+`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, `RenameNodeAction`,
+`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `PurgeNodeAction`. Actions
 документных узлов живут в `Vaulter\Documents\Actions\*` (требует
 `axioma-studio/vaulter-documents`); сам core оставляет только
 `Vaulter\Actions\{Access,Sharing,Webhooks}\*`.
 
 ::: info Размещение авторизации
 Actions **не** выполняют никаких проверок доступа. Авторизация применяется один раз, на HTTP-границе
-(`NodeController` + `AccessResolver`), до запуска Action. `DriveContext` — тоже чистая поверхность
+(`NodeController` + `AccessResolver`), до запуска Action. `DriveHandle` — тоже чистая поверхность
 делегирования. Так решение о доступе остаётся ровно в одном месте.
 :::
 
@@ -138,8 +138,8 @@ Vaulter никогда не ссылается на конкретный кла�
 
 | Пакет | Namespace | Добавляет |
 |---|---|---|
-| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) и их события. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, драйверы форматов TipTap/Univer (добавляются в реестр core — сам движок принадлежит core с P0.4), экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveHandle`, `DriveProvisioner`, Drive Actions (`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, …) и их события. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, драйверы форматов TipTap/Univer (добавляются в реестр core — сам движок принадлежит core с P0.4), экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
 | `@vaulter/vue` | — | Drive UI + composable-функции (npm). |
@@ -151,14 +151,14 @@ Vaulter никогда не ссылается на конкретный кла�
 ## Drive-хэндл
 
 `Vaulter::for($entity, panel: '…')` — основная точка входа для интеграции. Это тонкий фасад над
-`VaulterManager`, возвращающий `DriveContext` из `axioma-studio/vaulter-drive` (пакет должен
+`VaulterManager`, возвращающий `DriveHandle` из `axioma-studio/vaulter-drive` (пакет должен
 быть установлен, чтобы этот хэндл был рабочим):
 
 ```php
 use Vaulter\Facades\Vaulter;
 
 // Get-or-create the storage mounted on $project in the 'default' panel,
-// returning an ergonomic DriveContext.
+// returning an ergonomic DriveHandle.
 $drive = Vaulter::for($project);
 
 $folder = $drive->createFolder('Contracts');
@@ -167,10 +167,10 @@ $drive->rename($node, 'signed.pdf');
 $children = $drive->list($folder); // Collection<Node>
 ```
 
-`VaulterManager::for()` находит-или-создаёт строку `v_storages` через `StorageManager`
+`VaulterManager::for()` находит-или-создаёт строку `v_storages` через `DriveProvisioner`
 (полиморфная тройка `(owner_type, owner_id, panel)` — ключ идемпотентности, защищённый частичным
 уникальным индексом), автоматически провижинит корневой узел `kind=folder` и возвращает
-`DriveContext`, чьи методы каждый делегируют одному Action или read-репозиторию. Хэндл не добавляет
+`DriveHandle`, чьи методы каждый делегируют одному Action или read-репозиторию. Хэндл не добавляет
 бизнес-логики — только предрезолвленное хранилище и нормализацию источника загрузки (PSR-стрим,
 `SplFileInfo` / `UploadedFile`, открытый ресурс или сырую строку — всё нормализуется к seekable-стриму).
 
@@ -303,9 +303,6 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 Yjs — источник истины; TipTap JSON — производная проекция. Транспорт сменяем за
 `CollaborationDriver` ([ADR-0001](/adr/0001-collaboration-transport)):
 
-- **`reverb`** (по умолчанию) — Yjs поверх Laravel Reverb. Vue-клиент присоединяется к **приватному**
-  broadcast-каналу `vaulter.documents.{nodeId}`; коллбэк channel-auth пропускает его через
-  `AccessResolver` (≥ `View` для подключения). Никакого лишнего сервиса, никакого room JWT.
 - **`hocuspocus`** — внешний Node-хаб (`hocuspocus-server/`). Клиент подключается с подписанным
   room JWT; хаб коллбэчит в вебхуки `collab/authenticate` + `collab/store`.
 
@@ -334,7 +331,7 @@ Yjs — источник истины; TipTap JSON — производная п
 
 | ADR | Что решает | Статус |
 |---|---|---|
-| [0001](/adr/0001-collaboration-transport) | Транспорт совместного редактирования — `CollaborationDriver`, Reverb по умолчанию против Hocuspocus. | accepted |
+| [0001](/adr/0001-collaboration-transport) | Транспорт совместного редактирования — `CollaborationDriver`, Hocuspocus и room-JWT; транспорт Yjs через Reverb удалён. | accepted |
 | [0002](/adr/0002-authorization-delegation) | Авторизация делегирована хосту (`PermissionResolver`). | refined by 0007 |
 | [0003](/adr/0003-embeddability-data-model) | Встраиваемость через сменяемые модели + двойной тип ключа. | superseded by 0009 / 0011 |
 | [0004](/adr/0004-content-format) | Контент в TipTap JSON + append-only ограниченная история версий. | accepted |

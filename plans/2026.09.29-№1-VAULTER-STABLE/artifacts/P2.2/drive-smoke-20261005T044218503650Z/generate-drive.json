@@ -1,0 +1,21 @@
+{
+  "schema_version": "snapshot-generation/v1",
+  "package": "drive",
+  "argv": [
+    "env",
+    "UPDATE_SNAPSHOT=1",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "APP_ENV=testing",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "tests/Arch/PublicApiSnapshotTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+  "golden_path": "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+  "pre_sha256": "366a04aba69c1c4d8db9b7888fa1b54a0923ef67338c7882ba0d6f03c548d70c",
+  "started_at": "2026-10-05T04:42:18.678798+00:00",
+  "exit_code": 0,
+  "post_sha256": "847a027f03b3377bfc6265a951b43c9fbd060955f780da463d711a0cb996a170",
+  "finished_at": "2026-10-05T04:42:18.826466+00:00"
+}

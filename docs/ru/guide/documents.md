@@ -30,7 +30,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 ],
 ```
 
-С выключенным флагом у `Vaulter\Documents\Models\Versions\NodeDocumentVersion` нет таблицы, а маршрутов
+С выключенным флагом у `Vaulter\Documents\Models\Revisions\DocumentRevision` нет таблицы, а маршрутов
 `storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions` не
 существует.
 :::
@@ -38,7 +38,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 ## Модель данных
 
 Узел-документ несёт свой указатель на голову так же, как узел-файл — `current_version_id` на
-узле указывает на головную `NodeDocumentVersion`. Таблица версий **append-only** (только
+узле указывает на головную `DocumentRevision`. Таблица версий **append-only** (только
 дозапись): зафиксированная версия неизменяема (нет `updated_at`, нет soft-delete), `version_no`
 монотонен в пределах узла, а уникальный индекс `(node_id, version_no)` — тот стержень, на котором
 сериализуются два конкурентных коммита.
@@ -64,7 +64,7 @@ HTML/Markdown — см. [Экспорт](./export.md).
 | `created_at` | timestamp, nullable | Только дозапись — `updated_at` нет. |
 
 ::: info Отличие от легаси-таблицы версий
-`NodeDocumentVersion` (привязана к узлу, `v_node_document_versions`) **отдельна** от легаси
+`DocumentRevision` (привязана к узлу, `v_node_document_versions`) **отдельна** от легаси
 `DocumentVersion` (привязана к id документа, `v_document_versions`). Легаси-путь остаётся
 нетронутым; эта страница документирует только путь, привязанный к узлу.
 :::
@@ -78,11 +78,11 @@ HTML/Markdown — см. [Экспорт](./export.md).
 ::: code-group
 
 ```php [PHP — Action]
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
-$node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+$node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
     storage: $storage,                       // the resolved v_storages row
     name:    'Design notes',
     content: TipTapContent::fromArray([
@@ -127,13 +127,13 @@ const node = await client.documentNodes.createNode(storageId, {
 
 :::
 
-Что происходит (`CreateDocumentNodeAction`):
+Что происходит (`CreateDocumentAction`):
 
 - Первым отрабатывает страж уникальности среди соседей — коллизия имён бросает
   `NodeNameConflictException`.
 - Одна транзакция создаёт узел, коммитит версию **v1** (`version_no = 1`,
   `is_autosave = false`, `status = committed`), перенаводит на неё `current_version_id`, затем
-  после коммита выбрасывает `DocumentNodeCreated`.
+  после коммита выбрасывает `DocumentCreated`.
 - Узел штампуется документным mime Vaulter
   (`application/vnd.vaulter.document+json`), поэтому он всегда маршрутизируется к обработчику
   редактора TipTap независимо от любого расширения в его имени. См.
@@ -170,7 +170,7 @@ curl https://app.test/api/vaulter/nodes/77/content
 :::
 
 На стороне сервера контроллер резолвит `head($node) ?? latest($node)` (указатель на голову,
-иначе — наибольший `version_no`) и возвращает `NodeDocumentVersionResource` **с** контентом.
+иначе — наибольший `version_no`) и возвращает `DocumentRevisionResource` **с** контентом.
 Листинг истории (ниже) опускает `content`, чтобы оставаться лёгким — только этот запрос одной
 версии несёт полный документ.
 
@@ -227,10 +227,10 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 
 ```php [PHP — Action]
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Data\UpdateDocumentContentData;
+use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
-app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
+app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
     node:     $node,
     content:  TipTapContent::fromArray($tipTapDoc),
     yjsState: null,                  // optional raw Yjs binary update
@@ -275,10 +275,10 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
 ```
 
 ```php [PHP — Action]
-use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
-use Vaulter\Data\CreateNamedVersionData;
+use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
+use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 
-app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
+app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
     node:        $node,
     label:       'Before client review',
     keepForever: true,
@@ -288,8 +288,8 @@ app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
 
 :::
 
-`CreateNamedVersionAction` копирует content/yjs/format текущей головы в свежую строку с
-`is_autosave = false`, перенаводит на неё голову, прунит и выбрасывает `DocumentVersionCreated`
+`CreateNamedRevisionAction` копирует content/yjs/format текущей головы в свежую строку с
+`is_autosave = false`, перенаводит на неё голову, прунит и выбрасывает `DocumentRevisionCreated`
 (`restored = false`). Именованная версия превращает рабочее состояние в устойчивый чекпоинт —
 в отличие от churn автосохранений.
 
@@ -353,9 +353,9 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
 ```php [PHP — Action]
-use Vaulter\Documents\Actions\Versions\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 
-app(RestoreDocumentVersionAction::class)->execute(
+app(RestoreDocumentRevisionAction::class)->execute(
     node:      $node,
     versionId: 12,
     actorId:   $user->getKey(),
@@ -364,16 +364,16 @@ app(RestoreDocumentVersionAction::class)->execute(
 
 :::
 
-`RestoreDocumentVersionAction` резолвит исходную версию **в границах узла** (id версии из другого
+`RestoreDocumentRevisionAction` резолвит исходную версию **в границах узла** (id версии из другого
 узла здесь никогда не восстановится), копирует её content/yjs/format в новую зафиксированную
 строку с меткой `Restored from vN`, перенаводит голову, прунит и выбрасывает
-`DocumentVersionCreated` с `restored = true`.
+`DocumentRevisionCreated` с `restored = true`.
 
 ## Прунинг и удержание
 
 История ограничена `config('vaulter.versions.max')` — числом самых свежих сохраняемых версий
 (`0` = без лимита). Прунинг выполняется **внутри** каждой транзакции записи
-(`NodeDocumentVersionStoreRepository::prune`) после создания/именования/восстановления.
+(`DocumentRevisionStoreRepository::prune`) после создания/именования/восстановления.
 
 ```php
 // config/vaulter.php
@@ -405,17 +405,17 @@ app(RestoreDocumentVersionAction::class)->execute(
 
 | Событие | Кем выбрасывается | Полезная нагрузка |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentNodeCreated` | создание | `node`, `version` (v1), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (v1), `actorId` |
 | `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение | `node`, `version`, `created` (bool — дозаписано против перезаписано), `actorId` |
-| `Vaulter\Documents\Events\Versions\DocumentVersionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Ошибки
 
 | Исключение | Когда |
 |---|---|
-| `Exceptions\Documents\NotADocumentNodeException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
-| `Documents\Exceptions\InvalidTipTapContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
-| `Exceptions\Documents\NodeDocumentVersionNotFoundException` | Восстановление нацелено на id версии, не принадлежащий узлу. |
+| `Exceptions\NotADocumentException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
+| `Documents\Exceptions\InvalidDocumentContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
+| `Exceptions\DocumentRevisionNotFoundException` | Восстановление нацелено на id версии, не принадлежащий узлу. |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |
 
 ## Дальше

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drive\Actions\CreateFolderAction;
-use Vaulter\Drive\Actions\TrashNodeAction;
-use Vaulter\Drive\Data\CreateDriveFolderData;
+use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
+use Vaulter\Drive\Actions\Trash\TrashNodeAction;
+use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -24,7 +24,7 @@ beforeEach(function (): void {
 
 it('never leaves a live node under a folder trashed concurrently', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storageId = $drive->storage()->getKey();
+    $storageId = $drive->model()->getKey();
     $top = $drive->createFolder('Top');
     $inner = $drive->createFolder('Inner', $top);
     $topId = $top->getKey();
@@ -32,7 +32,7 @@ it('never leaves a live node under a folder trashed concurrently', function (): 
 
     $outcomes = ForkRace::run([
         static fn (): string => (string) app(TrashNodeAction::class)->execute(Node::query()->findOrFail($topId))->getKey(),
-        static fn (): string => (string) app(CreateFolderAction::class)->execute(new CreateDriveFolderData(
+        static fn (): string => (string) app(CreateFolderAction::class)->execute(new CreateFolderInput(
             storage: Drive::query()->findOrFail($storageId),
             name: 'Late',
             parent: Node::query()->findOrFail($innerId),

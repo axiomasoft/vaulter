@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Actions\ForceDeleteNodeAction;
+use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
@@ -52,7 +52,7 @@ final class PurgeTrashCommand extends Command
     public function handle(
         NodeReadRepository $nodes,
         NodeStoreRepository $store,
-        ForceDeleteNodeAction $forceDelete,
+        PurgeNodeAction $forceDelete,
         MetricsRecorder $metrics,
     ): int {
         $retentionDays = $this->retentionDays();

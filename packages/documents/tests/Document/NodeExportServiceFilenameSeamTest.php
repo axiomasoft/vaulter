@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Contracts\ExportFilenameResolver;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -22,8 +22,8 @@ use Vaulter\Models\Drive\Node;
 beforeEach(function (): void {
     $this->drive = DocumentTestHelpers::drive();
 
-    $this->node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $this->drive->storage(),
+    $this->node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $this->drive->model(),
         name: 'Report',
         content: DocumentTestHelpers::content('Exportable body'),
         parent: $this->drive->root(),

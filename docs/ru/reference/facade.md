@@ -60,7 +60,7 @@ $drive = Vaulter::for($project, 'project_drive'); // именованная па
 использует HTTP-слой: `Drive`, связанный через route-model binding (разрешённый
 через сменяемый `config('vaulter.models.storage')`), напрямую отображается в
 `DriveHandle` без повторного вывода владельца. Панель хэндла отражает
-`$storage->panel`, поэтому его Action'ы выполняются в правильном scope панели.
+`$storage->profile`, поэтому его Action'ы выполняются в правильном scope панели.
 
 ```php
 $drive = Vaulter::forStorage($storage);
@@ -132,7 +132,7 @@ Vaulter::exporterFormats(); // ['html', 'markdown', 'pdf']
 ### `driver(?string $name = null): CollaborationDriver`
 
 Резолв драйвера совместного редактирования. По умолчанию имя —
-`config('vaulter.collaboration.driver')` (`reverb` или `hocuspocus`); класс драйвера
+`config('vaulter.collaboration.driver')` (`hocuspocus`); класс драйвера
 читается из `config('vaulter.collaboration.drivers.{name}.class')` и резолвится через
 контейнер. Неизвестный или несоответствующий драйвер бросает
 `Vaulter\Exceptions\VaulterException`.

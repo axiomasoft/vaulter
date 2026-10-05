@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Requests;
 
 use Illuminate\Database\Eloquent\Model;
-use Vaulter\Documents\Data\Comments\CreateNodeCommentData;
+use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -27,11 +27,11 @@ final class StoreNodeCommentRequest extends VaulterFormRequest
         ];
     }
 
-    public function toData(): CreateNodeCommentData
+    public function toData(): AddCommentInput
     {
         $user = $this->user();
 
-        return new CreateNodeCommentData(
+        return new AddCommentInput(
             body: $this->string('body')->toString(),
             authorType: $user instanceof Model ? $user->getMorphClass() : 'guest',
             authorId: $this->actorId() ?? 0,

@@ -15,7 +15,7 @@ Vaulter ships as a set of packages — install the ones your app needs:
 
 - **`axioma-studio/vaulter-core`** — the shared kernel (authorization, CAS contracts, sharing,
   panels, Artisan commands). Required by every other backend package.
-- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::for()` / `DriveContext`.
+- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::for()` / `DriveHandle`.
   Pulls in `axioma-studio/vaulter-media` (the CAS engine) automatically.
 - **`axioma-studio/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
@@ -92,7 +92,7 @@ auto-aliased as `Vaulter`). The methods you will use most:
 use Vaulter\Facades\Vaulter;
 
 // Open a Drive handle for a host entity (get-or-creates its storage + root folder).
-$drive = Vaulter::for($project);                 // DriveContext
+$drive = Vaulter::for($project);                 // DriveHandle
 $drive = Vaulter::for($project, 'project_drive'); // …within a named panel
 
 // Resolve panels.

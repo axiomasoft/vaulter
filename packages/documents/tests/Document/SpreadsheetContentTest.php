@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
 function spreadsheetStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';

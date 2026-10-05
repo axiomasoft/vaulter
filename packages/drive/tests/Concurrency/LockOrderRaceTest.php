@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Actions\MoveNodeAction;
-use Vaulter\Drive\Data\MoveNodeData;
+use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
+use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Concurrency\ForkRace;
@@ -27,7 +27,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
                         $attempts++;
                     }
                 });
-                $node = app(MoveNodeAction::class)->execute(new MoveNodeData(node: $moving, into: $folder));
+                $node = app(MoveNodeAction::class)->execute(new MoveNodeInput(node: $moving, into: $folder));
 
                 return ['id' => $node->id, 'attempts' => $attempts];
             },
@@ -56,7 +56,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
             }
             expect($node->id)->toBe($drive->root()->id);
         }
-        expect($drive->storage()->refresh()->used_bytes)->toBe((int) File::query()->sum('size_bytes'));
+        expect($drive->model()->refresh()->used_bytes)->toBe((int) File::query()->sum('size_bytes'));
     }
 });
 
@@ -113,7 +113,7 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
         foreach ($outcomes as $outcome) {
             expect($outcome->ok)->toBeTrue($outcome->exception.': '.$outcome->message);
         }
-        expect($drive->storage()->refresh()->used_bytes)->toBe(3 * strlen('shared bytes'))
+        expect($drive->model()->refresh()->used_bytes)->toBe(3 * strlen('shared bytes'))
             ->and((int) File::query()->sum('size_bytes'))->toBe(3 * strlen('shared bytes'));
     } finally {
         array_map('unlink', glob($barrier.'/*') ?: []);

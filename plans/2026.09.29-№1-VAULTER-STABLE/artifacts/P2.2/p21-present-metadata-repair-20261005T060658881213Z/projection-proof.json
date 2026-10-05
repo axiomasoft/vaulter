@@ -1,0 +1,13 @@
+{
+  "before_position": {
+    "status": "🟢 Done",
+    "attempt": 3,
+    "last_result": "closed-green"
+  },
+  "after_position": {
+    "status": "🟢 Done",
+    "attempt": 3,
+    "last_result": "closed-green"
+  },
+  "terminal_unchanged": true
+}

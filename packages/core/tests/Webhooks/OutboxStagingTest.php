@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Events\NodeCreated;
+use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -33,7 +33,7 @@ beforeEach(function (): void {
 // ─────────────────────────── one event ⇒ one outbox row ───────────────────────────
 
 it('stages exactly one outbox row when a storage is provisioned', function (): void {
-    DriveTestHelpers::drive()->storage();
+    DriveTestHelpers::drive()->model();
 
     $rows = Outbox::query()->where('event', EventType::DriveCreated->value)->get();
 
@@ -49,7 +49,7 @@ it('stages a folder.created row carrying the actor and a slim payload', function
     Outbox::query()->delete();
 
     $folder = AccessTestHelpers::folder($storage, null, 'reports');
-    event(new NodeCreated(node: $folder, actorId: 7));
+    event(new FolderCreated(node: $folder, actorId: 7));
 
     $rows = Outbox::query()->where('event', EventType::FolderCreated->value)->get();
 
@@ -125,8 +125,8 @@ it('retains an explicit occurrence id across reconstructed events', function ():
     Outbox::query()->delete();
     $eventId = (string) Str::ulid();
 
-    event(new NodeCreated(node: $node, actorId: 7, eventId: $eventId));
-    event(new NodeCreated(node: $node, actorId: 7, eventId: $eventId));
+    event(new FolderCreated(node: $node, actorId: 7, eventId: $eventId));
+    event(new FolderCreated(node: $node, actorId: 7, eventId: $eventId));
 
     $row = Outbox::query()->sole();
     expect($row->event_id)->toBe($eventId)
@@ -140,7 +140,7 @@ it('never serializes a share secret — only the non-secret token_prefix travels
 
     // Drive a node and assert the staged payload has no secret-shaped keys anywhere.
     $folder = AccessTestHelpers::folder($storage, null, 'safe');
-    event(new NodeCreated(node: $folder, actorId: 7));
+    event(new FolderCreated(node: $folder, actorId: 7));
 
     $payload = Outbox::query()->where('event', EventType::FolderCreated->value)->firstOrFail()->payload;
 

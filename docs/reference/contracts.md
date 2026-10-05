@@ -25,7 +25,7 @@ signatures and the binding point you swap it through.
 | Cas | `StorageDriver` | `config('vaulter.cas.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (legacy) |
-| Collaboration | `NodeCollaborationDriver` | container binding (node path) |
+| Collaboration | `CollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
@@ -321,7 +321,7 @@ For a custom byte backend (S3 / local), implement `StorageDriver` and bind it �
 
 ## Collaboration
 
-### `Vaulter\Contracts\Collaboration\NodeCollaborationDriver`
+### `Vaulter\Documents\Contracts\CollaborationDriver`
 
 The **node-tree** realtime-collaboration transport (the current path). Abstracts how
 a document node (`kind=document`, content on `v_node_document_versions`) is joined for
@@ -330,7 +330,7 @@ controller resolves it through `AccessResolver` and passes the granted ability i
 driver only encodes it into the session descriptor (`readOnly = ability is not Edit`).
 
 ```php
-interface NodeCollaborationDriver
+interface CollaborationDriver
 {
     public function type(): CollaborationDriverType;
 
@@ -339,7 +339,7 @@ interface NodeCollaborationDriver
 }
 ```
 
-### `Vaulter\Contracts\Collaboration\HostUserResolver`
+### `Vaulter\Documents\Contracts\HostUserResolver`
 
 Materialises a host user (`Authorizable`) by id, so the server-to-server
 collaboration webhook — which carries only a user id, no session — can run the
@@ -528,7 +528,7 @@ ship — `TusUploadHandler` (tus.io CORE: Creation + HEAD + PATCH, any Flysystem
 and `S3MultipartHandler` (object-store multipart, S3-style disks only). Every handler
 accumulates bytes resumably onto the staged temp, advancing the authoritative
 server-side `received_bytes`, and reports when the session is fully assembled. The
-assemble → commit step is **outside** the handler (`CommitUploadAction` →
+assemble → commit step is **outside** the handler (`CompleteUploadAction` →
 `BlobStore::commit`), so the "assembled bytes always go through the one race-free CAS"
 invariant holds for both protocols.
 

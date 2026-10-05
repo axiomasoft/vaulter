@@ -1,6 +1,6 @@
 ---
 title: Совместное редактирование
-description: Совместное редактирование документов в реальном времени на Yjs — Reverb (без отдельного сервиса) или внешний хаб Hocuspocus; рукопожатие токена, права из ability и развёртывание hocuspocus-server.
+description: Совместное редактирование документов в реальном времени на Yjs и внешний хаб Hocuspocus; рукопожатие токена, права из ability и развёртывание hocuspocus-server.
 outline: deep
 ---
 
@@ -9,7 +9,7 @@ outline: deep
 Vaulter редактирует **узлы-документы** (`kind = document`, контент в
 `v_node_document_versions`) совместно в реальном времени. Бесконфликтное слияние
 обеспечивает **Yjs** — бинарное CRDT-состояние является **источником истины**; JSON TipTap
-это производная проекция. Транспорт скрыт за контрактом `NodeCollaborationDriver`, с двумя
+это производная проекция. Транспорт скрыт за контрактом `CollaborationDriver`, с двумя
 реализациями на выбор через конфиг.
 
 ::: warning Перевод в процессе
@@ -18,23 +18,14 @@ Vaulter редактирует **узлы-документы** (`kind = document
 английской странице [Realtime Collaboration](/guide/collaboration).
 :::
 
-## Два драйвера
+## Драйвер совместного редактирования
 
-Yjs остаётся источником истины в обоих случаях; различается только транспорт.
+Yjs остаётся источником истины. Драйвер `hocuspocus` подключает внешний Node-хаб
+(`hocuspocus-server/`) через подписанный room-JWT и вебхуки сервер-к-серверу.
+Настройте URL хаба и секрет JWT в `config('vaulter.collaboration')`.
 
-| Драйвер | Транспорт | Отдельный сервис? | Авторизация |
-|---|---|---|---|
-| **`reverb`** (по умолчанию) | Yjs поверх Laravel Reverb (приватный канал) | Нет — чистый Laravel | Авторизация подписки через channel-auth Laravel |
-| **`hocuspocus`** | Внешний Node-хаб Hocuspocus (`hocuspocus-server/`) | Node-сервис | Подписанный room-JWT + вебхуки сервер-к-серверу |
-
-Драйвер выбирается через `config('vaulter.collaboration.driver')` (или переменную
-окружения `VAULTER_COLLAB_DRIVER`).
-
-::: tip Начните с Reverb
-Драйвер по умолчанию `reverb` **не требует отдельного сервиса**. Хаб Hocuspocus имеет смысл
-разворачивать, когда нужен выделенный Node-сервер совместного редактирования. Переключиться
-можно одним конфигом — формат данных, который потребляет Vue-клиент, идентичен.
-:::
+Reverb для совместного редактирования Yjs удалён; используйте Hocuspocus.
+Broadcast-каналы комментариев и проверки доступа сохраняются.
 
 ## Конфигурация
 
@@ -43,14 +34,11 @@ Yjs остаётся источником истины в обоих случа�
 ```php
 // config/vaulter.php
 'collaboration' => [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'reverb'),   // reverb | hocuspocus
+    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus
     'channel_prefix' => 'vaulter.documents',              // пространство имён комнаты
     'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
 
     'drivers' => [
-        'reverb' => [
-            'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
-        ],
         'hocuspocus' => [
             'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
             'secret' => env('VAULTER_COLLAB_SECRET'),      // ключ подписи room-JWT (HS256)
@@ -65,25 +53,6 @@ Yjs остаётся источником истины в обоих случа�
 `collab/authenticate` / `collab/store`) монтируются только при включённой фиче
 **`document_versions`** (схема `v_node_document_versions`). Если запрос отдаёт 404 —
 проверьте `config('vaulter.features.document_versions')`.
-:::
-
-## Reverb (по умолчанию, без отдельного сервиса)
-
-```bash
-composer require laravel/reverb
-php artisan reverb:install
-php artisan reverb:start
-```
-
-При `driver = reverb` поле `token` сессии — это имя **приватного канала**
-(`vaulter.documents.{nodeId}`), а `connection` — имя broadcast-соединения. Vue-клиент
-подключается к каналу через Laravel Echo; channel-auth авторизует подписку через
-`AccessResolver`. Room-JWT не выпускается, обратных вызовов в Laravel нет.
-
-::: warning Мост Echo↔Yjs предоставляете вы
-Reverb — это broadcast-транспорт Laravel, а не провайдер Yjs. Для драйвера `reverb` нужно
-передать `createReverbProvider`, который связывает Laravel Echo и awareness Yjs (см.
-английскую страницу). Для Hocuspocus мост не нужен.
 :::
 
 ## Hocuspocus (внешний Node-хаб)

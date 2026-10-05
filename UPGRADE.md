@@ -6,6 +6,128 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Document names and collaboration (AD03, AD04)
+
+Replace these document FQNs. The former names have no aliases. Controller
+class names and actions stay the same under their domain namespaces. Request
+names, routes, JSON fields, error codes, the `node_document_version` model key,
+and the `v_node_document_versions` table and its `version_no` column stay the same.
+
+| Before (`Vaulter\Documents\`) | After (`Vaulter\Documents\`) |
+|---|---|
+| `Models\Versions\NodeDocumentVersion` | `Models\Revisions\DocumentRevision` |
+| `Repositories\Versions\NodeDocumentVersionReadRepository` | `Repositories\Revisions\DocumentRevisionReadRepository` |
+| `Repositories\Versions\NodeDocumentVersionStoreRepository` | `Repositories\Revisions\DocumentRevisionStoreRepository` |
+| `Actions\Documents\CreateDocumentNodeAction` | `Actions\Documents\CreateDocumentAction` |
+| `Actions\Versions\CreateNamedVersionAction` | `Actions\Revisions\CreateNamedRevisionAction` |
+| `Actions\Versions\RestoreDocumentVersionAction` | `Actions\Revisions\RestoreDocumentRevisionAction` |
+| `Actions\Versions\ReleaseKeptVersionAction` | `Actions\Revisions\UpdateRevisionRetentionAction` |
+| `Actions\Collaboration\PersistYjsSnapshotAction` | `Actions\Collaboration\PersistCollaborationStateAction` |
+| `Actions\Comments\AddNodeCommentAction` | `Actions\Comments\AddCommentAction` |
+| `Actions\Comments\ResolveNodeCommentAction` | `Actions\Comments\ResolveCommentAction` |
+| `Actions\Comments\DeleteNodeCommentAction` | `Actions\Comments\DeleteCommentAction` |
+| `Data\Documents\CreateDocumentNodeData` | `Data\Documents\CreateDocumentInput` |
+| `Data\Documents\UpdateDocumentContentData` | `Data\Documents\UpdateDocumentContentInput` |
+| `Data\Versions\CreateNamedVersionData` | `Data\Revisions\CreateNamedRevisionInput` |
+| `Data\Comments\CreateNodeCommentData` | `Data\Comments\AddCommentInput` |
+| `Data\Collaboration\PersistYjsSnapshotData` | `Data\Collaboration\PersistCollaborationStateInput` |
+| `Data\Collaboration\CollaborationSessionData` | `Data\Collaboration\CollaborationSession` |
+| `Events\Documents\DocumentNodeCreated` | `Events\Documents\DocumentCreated` |
+| `Events\Versions\DocumentVersionCreated` | `Events\Revisions\DocumentRevisionCreated` |
+| `Events\Comments\NodeCommentAdded` | `Events\Comments\CommentAdded` |
+| `Events\Comments\NodeCommentResolved` | `Events\Comments\CommentResolved` |
+| `Events\Comments\NodeCommentDeleted` | `Events\Comments\CommentDeleted` |
+| `Exceptions\NodeDocumentVersionNotFoundException` | `Exceptions\DocumentRevisionNotFoundException` |
+| `Exceptions\NotADocumentNodeException` | `Exceptions\NotADocumentException` |
+| `Exceptions\InvalidTipTapContentException` | `Exceptions\InvalidDocumentContentException` |
+| `Contracts\Collaboration\NodeCollaborationDriver` | `Contracts\CollaborationDriver` |
+| `Contracts\Collaboration\HostUserResolver` | `Contracts\HostUserResolver` |
+| `Contracts\Export\ExportFilenameResolver` | `Contracts\ExportFilenameResolver` |
+| `Collaboration\NodeCollaborationDriverManager` | `Collaboration\CollaborationDriverManager` |
+| `Collaboration\HocuspocusNodeCollaborationDriver` | `Collaboration\HocuspocusCollaborationDriver` |
+| `Http\Resources\NodeDocumentVersionResource` | `Http\Resources\DocumentRevisionResource` |
+| `Http\Controllers\DocumentNodeController` | `Http\Controllers\Documents\DocumentNodeController` |
+| `Http\Controllers\NodeCommentController` | `Http\Controllers\Comments\NodeCommentController` |
+| `Http\Controllers\NodeCollaborationController` | `Http\Controllers\Collaboration\NodeCollaborationController` |
+| `Collaboration\ReverbNodeCollaborationDriver` | Removed: use Hocuspocus |
+
+Reverb for Yjs collaboration is removed. Use `hocuspocus` and configure its hub
+URL and JWT secret. Remove `collaboration.drivers.reverb` and
+`VAULTER_COLLAB_CONNECTION`; `Config::reverbConnection()` and
+`CollaborationDriverType::Reverb` are removed. The Hocuspocus session keeps
+`connection: null`. Comment broadcast channels and their access checks remain.
+
+### Drive names and handle methods (AD03, AD04)
+
+Drive classes use domain namespaces. Replace the following FQNs; the old names
+and removed classes have no aliases. Routes, middleware and JSON fields retain
+their current behavior. Entry points `Vaulter::for()` and `forStorage()` remain.
+
+| Before | After |
+|---|---|
+| `Vaulter\Drive\DriveContext` | `Vaulter\Drive\DriveHandle` |
+| `Vaulter\Drive\DriveManager` | `Vaulter\Drive\DriveHandleFactory` |
+| `Vaulter\Drive\StorageManager` | `Vaulter\Drive\DriveProvisioner` |
+| `Vaulter\Drive\Actions\ForceDeleteNodeAction` | `Vaulter\Drive\Actions\Trash\PurgeNodeAction` |
+| `Vaulter\Drive\Actions\UploadFileAction` | `Vaulter\Drive\Actions\Files\IngestFileAction` |
+| `Vaulter\Drive\Actions\Uploads\CommitUploadAction` | `Vaulter\Drive\Actions\Uploads\CompleteUploadAction` |
+| `Vaulter\Drive\Data\CreateDriveFolderData` | `Vaulter\Drive\Data\Nodes\CreateFolderInput` |
+| `Vaulter\Drive\Data\UploadFileData` | `Vaulter\Drive\Data\Files\IngestFileInput` |
+| `Vaulter\Drive\Data\Uploads\UploadInitData` | `Vaulter\Drive\Data\Uploads\InitiateUploadInput` |
+| `Vaulter\Drive\Events\StorageCreated` | `Vaulter\Drive\Events\Drives\DriveCreated` |
+| `Vaulter\Drive\Events\NodeCreated` | `Vaulter\Drive\Events\Nodes\FolderCreated` |
+| `Vaulter\Drive\Events\NodeForceDeleted` | `Vaulter\Drive\Events\Nodes\NodePurged` |
+| `Vaulter\Drive\Events\FileUploaded` | `Vaulter\Drive\Events\Files\FileUploaded` |
+| `Vaulter\Drive\Events\NodeVersionCommitted` | `Vaulter\Drive\Events\Files\FileRevisionAdded` |
+| `Vaulter\Drive\Exceptions\CrossStorageMoveException` | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
+| `Vaulter\Drive\Exceptions\CycleException` | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
+| `Vaulter\Drive\Exceptions\QuotaExceededException` | `Vaulter\Drive\Exceptions\Quota\QuotaExceededException` |
+| `Vaulter\Drive\Http\Controllers\StorageController` | `Vaulter\Drive\Http\Controllers\Drives\ShowDriveController` |
+| `Vaulter\Drive\Http\Controllers\Uploads\TusUploadController` | `Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController` |
+| `Vaulter\Drive\Http\Controllers\Uploads\S3MultipartController` | `Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController` |
+| `Vaulter\Drive\Http\Resources\StorageResource` | `Vaulter\Drive\Http\Resources\DriveResource` |
+| `Vaulter\Drive\Http\Resources\FileVersionResource` | `Vaulter\Drive\Http\Resources\FileRevisionResource` |
+| `Vaulter\Drive\Support\Uploads\MagicByteSniffer` | `Vaulter\Drive\Uploads\Inspection\MimeSniffer` |
+| `Vaulter\Drive\Support\Uploads\StagedUpload` | `Vaulter\Drive\Uploads\StagedUpload` |
+| `Vaulter\Drive\Actions\CreateFolderAction` | `Vaulter\Drive\Actions\Nodes\CreateFolderAction` |
+| `Vaulter\Drive\Actions\RenameNodeAction` | `Vaulter\Drive\Actions\Nodes\RenameNodeAction` |
+| `Vaulter\Drive\Actions\MoveNodeAction` | `Vaulter\Drive\Actions\Nodes\MoveNodeAction` |
+| `Vaulter\Drive\Actions\CopyNodeAction` | `Vaulter\Drive\Actions\Nodes\CopyNodeAction` |
+| `Vaulter\Drive\Actions\TrashNodeAction` | `Vaulter\Drive\Actions\Trash\TrashNodeAction` |
+| `Vaulter\Drive\Actions\RestoreNodeAction` | `Vaulter\Drive\Actions\Trash\RestoreNodeAction` |
+| `Vaulter\Drive\Data\RenameNodeData` | `Vaulter\Drive\Data\Nodes\RenameNodeInput` |
+| `Vaulter\Drive\Data\MoveNodeData` | `Vaulter\Drive\Data\Nodes\MoveNodeInput` |
+| `Vaulter\Drive\Data\CopyNodeData` | `Vaulter\Drive\Data\Nodes\CopyNodeInput` |
+| `Vaulter\Drive\Events\NodeRenamed` | `Vaulter\Drive\Events\Nodes\NodeRenamed` |
+| `Vaulter\Drive\Events\NodeMoved` | `Vaulter\Drive\Events\Nodes\NodeMoved` |
+| `Vaulter\Drive\Events\NodeCopied` | `Vaulter\Drive\Events\Nodes\NodeCopied` |
+| `Vaulter\Drive\Events\NodeTrashed` | `Vaulter\Drive\Events\Nodes\NodeTrashed` |
+| `Vaulter\Drive\Events\NodeRestored` | `Vaulter\Drive\Events\Nodes\NodeRestored` |
+| `Vaulter\Drive\Events\UploadSessionInitiated` | `Vaulter\Drive\Events\Uploads\UploadInitiated` |
+| `Vaulter\Drive\Events\UploadSessionAborted` | `Vaulter\Drive\Events\Uploads\UploadAborted` |
+| `Vaulter\Drive\Events\UploadSessionExpired` | `Vaulter\Drive\Events\Uploads\UploadExpired` |
+| `Vaulter\Drive\Exceptions\OffsetMismatchException` | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
+| `Vaulter\Drive\Exceptions\StagedUploadMissingException` | `Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException` |
+| `Vaulter\Drive\Exceptions\UploadConflictException` | `Vaulter\Drive\Exceptions\Uploads\UploadConflictException` |
+| `Vaulter\Drive\Exceptions\UploadContentMismatchException` | `Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException` |
+| `Vaulter\Drive\Http\Requests\CreateFolderRequest` | `Vaulter\Drive\Http\Requests\Folders\CreateFolderRequest` |
+| `Vaulter\Drive\Http\Requests\UploadFileRequest` | `Vaulter\Drive\Http\Requests\Files\UploadFileRequest` |
+| `Vaulter\Drive\Http\Requests\CopyNodeRequest` | `Vaulter\Drive\Http\Requests\Nodes\CopyNodeRequest` |
+| `Vaulter\Drive\Http\Requests\MoveNodeRequest` | `Vaulter\Drive\Http\Requests\Nodes\MoveNodeRequest` |
+| `Vaulter\Drive\Http\Requests\RenameNodeRequest` | `Vaulter\Drive\Http\Requests\Nodes\RenameNodeRequest` |
+| `Vaulter\Drive\ValueObjects\WorkspaceRef` | Removed; unused |
+| `Vaulter\Drive\Enums\BulkAction` | Removed; unused |
+| `$handle->storage(): Drive` | `$handle->model(): Drive` |
+| `$handle->panel(): string` | `$handle->profile(): Profile` |
+
+`profile()` returns the registered `Vaulter\Profiles\Profile` object. Use
+`$handle->profile()->getId()` when a string profile ID is needed. Both the core
+interface and the drive implementation expose these methods; update typed callers.
+
+The drive provider delegates bindings and HTTP registration to individually tested
+`Providers\BindingsRegistrar` and `Providers\HttpRegistrar`.
+
+
 ### Canonical schema 0.3 (P2.7)
 
 Back up the database and object store before running `php artisan migrate --force`
@@ -70,7 +192,7 @@ as stage → commitStaged → discard in `finally`. The outer upload owns cleanu
 and reuses prepared bytes on transaction retries.
 
 Quota reservations now run before CAS promotion. Subtree copies that exceed quota
-throw the existing `Vaulter\Drive\Exceptions\QuotaExceededException` and roll
+throw the existing `Vaulter\Drive\Exceptions\Quota\QuotaExceededException` and roll
 back completely. The core repository throws its common base,
 `Vaulter\Exceptions\Drive\QuotaExceededException`; Drive Actions preserve the
 existing exception type and HTTP 413 `quota_exceeded` response.
@@ -131,7 +253,7 @@ New PHP surface: `AccessResolver::evaluateMany()`, `AclFolder`, `NodePage` and
 
 Before: Actions accepted any node of the drive as a parent, so a folder, upload, move,
 copy or document could land inside a file, a document or a trashed folder; a `null`
-parent in `CreateDocumentNodeAction` (and in Drive Actions called directly) wrote a
+parent in `CreateDocumentAction` (and in Drive Actions called directly) wrote a
 second parentless node that the root listing never showed; the root could be renamed,
 moved or trashed; two concurrent moves could form a cycle; `forceDelete` purged live
 nodes; restoring or trashing twice was a silent no-op. After:
@@ -140,7 +262,7 @@ nodes; restoring or trashing twice was a silent no-op. After:
   locks inside the transaction: otherwise `InvalidDestinationException`
   (409, `invalid_destination`); a folder of another drive raises
   `CrossStorageMoveException` (409, `cross_drive_operation`) from Drive Actions and
-  `InvalidDestinationException` from `CreateDocumentNodeAction`.
+  `InvalidDestinationException` from `CreateDocumentAction`.
 - A `null` destination always means the drive root (`root_node_id`).
 - The root cannot be renamed, moved, copied, trashed or force-deleted (409, `invalid_destination`).
 - Trashing a node already in the trash raises `InvalidDestinationException`; restoring or
@@ -256,7 +378,7 @@ key is unchanged. Actions, upload repositories, CAS services and webhook/activit
 now receive this singleton through constructor injection. Resolve them through Laravel's
 container, or provide `database: app(VaulterDatabase::class)` when constructing them directly.
 Custom transaction code can use the same singleton; acquire tree/CAS locks inside its
-`transaction()` callback. The shipped UploadSession, UploadPart, NodeComment and NodeDocumentVersion models
+`transaction()` callback. The shipped UploadSession, UploadPart, NodeComment and DocumentRevision models
 now also follow this key, so their Eloquent writes participate in the same transaction.
 A custom replacement model must resolve the same connection to preserve atomicity.
 
@@ -286,11 +408,11 @@ Baseline at the time of the switch: `--min=95` = `floor(Score) - 5`, measured 20
 ### `documents/src/Access/HostUserResolver` moves into `Collaboration/` (VLT-CANON P2.4)
 
 **Why.** `Access/` in `vaulter-documents` held exactly one class, and it was not an access-control
-class: `HostUserResolver` implements `Vaulter\Documents\Contracts\Collaboration\HostUserResolver`
+class: `HostUserResolver` implements `Vaulter\Documents\Contracts\HostUserResolver`
 and exists purely to let the M4b collaboration webhook materialise an `Authorizable` from a bare
 user id (see its own docblock: "purely collaboration-webhook machinery"). Its folder disagreed
 with its contract. It now sits next to the collaboration drivers it serves
-(`NodeCollaborationDriverManager`, `HocuspocusNodeCollaborationDriver`, …). core's `Access/` and
+(`CollaborationDriverManager`, `HocuspocusCollaborationDriver`, …). core's `Access/` and
 `Webhooks/` domain-service folders were also audited against ADR-0017 in this pass — both conform
 (they are in fact ADR-0017's own reference shape for the pattern) and needed no change.
 
@@ -299,7 +421,7 @@ with its contract. It now sits next to the collaboration drivers it serves
 | `Vaulter\Documents\Access\HostUserResolver` | `Vaulter\Documents\Collaboration\HostUserResolver` |
 
 Only hosts that bind or reference the *default* implementation directly are affected — the
-contract FQCN (`Vaulter\Documents\Contracts\Collaboration\HostUserResolver`) that hosts normally
+contract FQCN (`Vaulter\Documents\Contracts\HostUserResolver`) that hosts normally
 type-hint or swap is unchanged. Pre-1.0 — hard rename, no alias phase. Pure move: zero behavior
 change.
 
@@ -312,7 +434,7 @@ with TipTap-only ones; `drive/src/Uploads/` mixed orchestrator classes with pure
 class now sits in the domain-service folder or layer matching its actual role — the registry/driver
 classes join `Engines/Handlers` (mirrors core's `Vaulter\Engines\Handlers`), the two evaluators join
 the existing `Export`/`Collaboration` domain-service folders (ADR-0017) alongside their siblings
-(`HtmlExporter`/`MarkdownExporter`; `NodeCollaborationDriverManager`/drivers), the TipTap-only
+(`HtmlExporter`/`MarkdownExporter`; `CollaborationDriverManager`/drivers), the TipTap-only
 Support helpers get a `TipTap` domain sub-namespace, and the Uploads helpers join a new
 `Support/Uploads`. Pre-1.0 — hard rename, no alias phase. Pure move: zero behavior change.
 
@@ -333,8 +455,8 @@ Support helpers get a `TipTap` domain sub-namespace, and the Uploads helpers joi
 
 | Old | New |
 |---|---|
-| `Vaulter\Drive\Uploads\MagicByteSniffer` | `Vaulter\Drive\Support\Uploads\MagicByteSniffer` |
-| `Vaulter\Drive\Uploads\StagedUpload` | `Vaulter\Drive\Support\Uploads\StagedUpload` |
+| `Vaulter\Drive\Uploads\MagicByteSniffer` | `Vaulter\Drive\Uploads\Inspection\MimeSniffer` |
+| `Vaulter\Drive\Uploads\StagedUpload` | `Vaulter\Drive\Uploads\StagedUpload` |
 | `Vaulter\Drive\Uploads\UploadModels` | `Vaulter\Drive\Support\Uploads\UploadModels` |
 
 `Vaulter\Drive\Uploads\{UploadSessionManager,S3MultipartHandler,TusUploadHandler}` are orchestrators
@@ -401,7 +523,7 @@ NO bound node (`UpdateDocumentContentRequest::isRichText()`'s no-node fallback) 
 `false` (kind-neutral — no claim without a resolved handler) instead of `true`; this path is only
 reachable outside normal route-model-binding and has no known consumer.
 
-**`CreateDocumentNodeData::$format` default changed from the literal `'tiptap'` to
+**`CreateDocumentInput::$format` default changed from the literal `'tiptap'` to
 `DocumentType::RichText->value` (`'richtext'`).** `'tiptap'` was never a valid `DocumentType`
 value (see the P0.4 value-space note above) — only direct construction of this DTO (bypassing the
 HTTP create endpoint, which always supplies `format` explicitly via
@@ -513,7 +635,7 @@ unaffected.
 **Why.** `core` declares only the kind-neutral `DocumentContent` contract (§P0.2); it must not
 know the concrete shape of any handler's content. `TipTapContent`, `LinkSchemeValidator` (its
 URL-scheme allow-list guard), `OpaqueDocumentContent`, the `#[TiptapExtensions]` attribute, and
-`InvalidTipTapContentException` were still physically in `packages/core` — a leftover of the P2 #5
+`InvalidDocumentContentException` were still physically in `packages/core` — a leftover of the P2 #5
 extraction. P0.3 moves all five into the TipTap driver's own package, `vaulter-documents`. This is
 a **breaking change to public FQCNs only**: the store-time allow-list, the read-time decay, and
 the URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byte.
@@ -524,7 +646,7 @@ the URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byt
 | `Vaulter\ValueObjects\Documents\LinkSchemeValidator` | `Vaulter\Documents\ValueObjects\LinkSchemeValidator` |
 | `Vaulter\ValueObjects\Documents\OpaqueDocumentContent` | `Vaulter\Documents\ValueObjects\OpaqueDocumentContent` |
 | `Vaulter\Attributes\TiptapExtensions` | `Vaulter\Documents\Attributes\TiptapExtensions` |
-| `Vaulter\Exceptions\Documents\InvalidTipTapContentException` | `Vaulter\Documents\Exceptions\InvalidTipTapContentException` |
+| `Vaulter\Exceptions\Documents\InvalidDocumentContentException` | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 
 **Who breaks.** Any code (host or third-party) that names one of the old FQCNs directly —
 `instanceof` checks, `catch` clauses, `use` imports, a custom `#[TiptapExtensions]`-tagged enum
@@ -544,17 +666,17 @@ longer carries `->default('tiptap')`. The engine that writes a version now stamp
 explicitly — a silent `'tiptap'` DB default is exactly the stale mime→editor association H.5
 exists to prevent (D4/D12).
 
-**This changes the value written on two paths.** `CreateDocumentNodeAction`,
-`CreateNamedVersionAction` and `RestoreDocumentVersionAction` already stamped `format` on every
+**This changes the value written on two paths.** `CreateDocumentAction`,
+`CreateNamedRevisionAction` and `RestoreDocumentRevisionAction` already stamped `format` on every
 INSERT and are unaffected. But **`UpdateDocumentContentAction` (autosave) and
-`PersistYjsSnapshotAction` (Yjs snapshot) did NOT** — when they appended a NEW version row for an
+`PersistCollaborationStateAction` (Yjs snapshot) did NOT** — when they appended a NEW version row for an
 existing document (outside the autosave-debounce window), they let the DB default fill the
 column. Both now carry the format forward from the node's head version
 (`$head?->format ?? DocumentType::RichText->value`). Consequence: for a **non-rich-text document**
 (e.g. a `markdown` node, or a `univer` spreadsheet with `features.spreadsheets` on), an appended
 autosave/snapshot row used to be stamped `'tiptap'` regardless of the document's real format; it
 is now stamped with the document's actual format (`'markdown'`, `'univer'`, …). That value is
-surfaced to clients via `NodeDocumentVersionResource` (`format` field) and via the version-history
+surfaced to clients via `DocumentRevisionResource` (`format` field) and via the version-history
 API. **If your client branches on `format === 'tiptap'`, it must be updated** — a document whose
 head says `markdown` now has autosave rows that say `markdown` too, not `tiptap`. Rich-text
 documents are unaffected in practice (their head already carried `richtext`, and autosave rows
@@ -562,12 +684,12 @@ now inherit it instead of `'tiptap'` — see the value-space note below).
 
 **Value-space note.** The column has always mixed two vocabularies: `DocumentType` values
 (`richtext` / `table` / `markdown` / `template` — what `CreateDocumentNodeRequest` validates and
-what `CreateDocumentNodeAction` writes) and handler ids (`univer`, and formerly the `'tiptap'` DB
+what `CreateDocumentAction` writes) and handler ids (`univer`, and formerly the `'tiptap'` DB
 default, which is `TipTapHandler::id()` and is NOT a valid `DocumentType`). P0.4 does not unify
 them, and **no backfill ships**: rows written before this change keep whatever they were stamped
 with (including `'tiptap'` on old autosave rows of a markdown document). Treat `format` as an
 advisory label, not a closed enum — the handler is resolved from the node's mime, never from this
-column (D4). `CreateNamedVersionAction`'s no-head fallback changed from the literal `'tiptap'` to
+column (D4). `CreateNamedRevisionAction`'s no-head fallback changed from the literal `'tiptap'` to
 `DocumentType::RichText->value` (`'richtext'`) for the same reason.
 
 **Direct inserts.** If you insert `v_node_document_versions` rows yourself (bypassing the Actions
@@ -675,12 +797,12 @@ service classes (`UploadSessionManager`, `TusUploadHandler`, `S3MultipartHandler
 
 | Old FQCN | New FQCN |
 |:--|:--|
-| `Vaulter\Drive\Uploads\Actions\CommitUploadAction` | `Vaulter\Drive\Actions\Uploads\CommitUploadAction` |
+| `Vaulter\Drive\Uploads\Actions\CommitUploadAction` | `Vaulter\Drive\Actions\Uploads\CompleteUploadAction` |
 | `Vaulter\Drive\Uploads\Models\UploadSession` | `Vaulter\Drive\Models\Uploads\UploadSession` |
 | `Vaulter\Drive\Uploads\Models\UploadPart` | `Vaulter\Drive\Models\Uploads\UploadPart` |
 | `Vaulter\Drive\Uploads\Repositories\*` | `Vaulter\Drive\Repositories\Uploads\*` |
 | `Vaulter\Drive\Uploads\Enums\{UploadProtocol,UploadStatus}` | `Vaulter\Drive\Enums\Uploads\*` |
-| `Vaulter\Drive\Uploads\Data\UploadInitData` | `Vaulter\Drive\Data\Uploads\UploadInitData` |
+| `Vaulter\Drive\Uploads\Data\UploadInitData` | `Vaulter\Drive\Data\Uploads\InitiateUploadInput` |
 | `Vaulter\Drive\Uploads\Contracts\UploadProtocolHandler` | `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler` |
 | `Vaulter\Drive\Uploads\Http\Controllers\*` | `Vaulter\Drive\Http\Controllers\Uploads\*` |
 | `Vaulter\Drive\Uploads\Http\Requests\*` | `Vaulter\Drive\Http\Requests\Uploads\*` |
@@ -699,18 +821,18 @@ statements — the key public ones:
 | Old FQCN | New FQCN |
 |:--|:--|
 | `Vaulter\Documents\Models\NodeComment` | `Vaulter\Documents\Models\Comments\NodeComment` |
-| `Vaulter\Documents\Models\NodeDocumentVersion` | `Vaulter\Documents\Models\Versions\NodeDocumentVersion` |
+| `Vaulter\Documents\Models\NodeDocumentVersion` | `Vaulter\Documents\Models\Revisions\DocumentRevision` |
 | `Vaulter\Documents\Enums\DocumentType` | `Vaulter\Documents\Enums\Documents\DocumentType` |
 | `Vaulter\Documents\Enums\Capability` | `Vaulter\Documents\Enums\Documents\Capability` |
 | `Vaulter\Documents\Enums\ExportFormat` | `Vaulter\Documents\Enums\Export\ExportFormat` |
 | `Vaulter\Documents\Enums\CollaborationDriverType` | `Vaulter\Documents\Enums\Collaboration\CollaborationDriverType` |
-| `Vaulter\Documents\Events\NodeComment{Added,Deleted,Resolved}` | `Vaulter\Documents\Events\Comments\NodeComment{Added,Deleted,Resolved}` |
-| `Vaulter\Documents\Events\Document{ContentUpdated,NodeCreated}` | `Vaulter\Documents\Events\Documents\Document{ContentUpdated,NodeCreated}` |
-| `Vaulter\Documents\Events\DocumentVersionCreated` | `Vaulter\Documents\Events\Versions\DocumentVersionCreated` |
-| `Vaulter\Documents\Actions\*` (comment / document / version / snapshot) | `Vaulter\Documents\Actions\{Comments,Documents,Versions,Collaboration}\*` |
-| `Vaulter\Documents\Data\*` | `Vaulter\Documents\Data\{Comments,Documents,Versions,Collaboration}\*` |
+| `Vaulter\Documents\Events\NodeComment{Added,Deleted,Resolved}` | `Vaulter\Documents\Events\Comments\Comment{Added,Deleted,Resolved}` |
+| `Vaulter\Documents\Events\Document{ContentUpdated,NodeCreated}` | `Vaulter\Documents\Events\Documents\Document{ContentUpdated,Created}` |
+| `Vaulter\Documents\Events\DocumentVersionCreated` | `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` |
+| `Vaulter\Documents\Actions\*` (comment / document / version / snapshot) | `Vaulter\Documents\Actions\{Comments,Documents,Revisions,Collaboration}\*` |
+| `Vaulter\Documents\Data\*` | `Vaulter\Documents\Data\{Comments,Documents,Revisions,Collaboration}\*` |
 | `Vaulter\Documents\Repositories\NodeComment*Repository` | `Vaulter\Documents\Repositories\Comments\NodeComment*Repository` |
-| `Vaulter\Documents\Repositories\NodeDocumentVersion*Repository` | `Vaulter\Documents\Repositories\Versions\NodeDocumentVersion*Repository` |
+| `Vaulter\Documents\Repositories\NodeDocumentVersion*Repository` | `Vaulter\Documents\Repositories\Revisions\DocumentRevision*Repository` |
 
 Model config defaults (`vaulter.models.node_comment` / `node_document_version`) resolve to the new
 FQCNs automatically; a host that pinned the FQCN explicitly must update it. `filament`, `media` and
@@ -722,7 +844,7 @@ plugin convention as a documented ADR-0017 exception) and did not move.
 **What changed.** Rich-text content is validated against a **closed allow-list** before it is
 stored (`Vaulter\Documents\ValueObjects\TipTapContent::fromArray()`): unknown node types, unknown
 marks, attributes outside the per-type list, and `link.href`/`image.src` URLs whose scheme is not
-`http`/`https`/`mailto` all reject the whole document with `InvalidTipTapContentException`.
+`http`/`https`/`mailto` all reject the whole document with `InvalidDocumentContentException`.
 
 The shipped allow-list covers exactly what the package offers the editor through
 `#[TiptapExtensions]` on `DocumentType`:
@@ -734,7 +856,7 @@ The shipped allow-list covers exactly what the package offers the editor through
 - attributes: `heading.level`, `link.href|target|rel`, `image.src|alt|title`, `codeBlock.language`,
   `tableCell|tableHeader.colspan|rowspan|colwidth`.
 
-**Reading never throws.** `NodeDocumentVersion::tipTapContent()` **decays**: a snapshot written
+**Reading never throws.** `DocumentRevision::tipTapContent()` **decays**: a snapshot written
 before this validator existed (or by an extension you have since removed) comes back with the
 unknown nodes/marks/attribute keys stripped out, as the method always promised. Nothing in the
 database is migrated or rewritten.
@@ -908,7 +1030,7 @@ that you are re-opening the DoS lever).
   held by another actor) or `ValidationException` (the session was reclaimed while the part was in
   flight). It used to check `isOpen()` on the caller's stale snapshot and stage a part object onto
   an already-terminal session — bytes nothing would ever collect.
-- `StagedUpload::append()` throws the new `Vaulter\Drive\Exceptions\StagedUploadMissingException`
+- `StagedUpload::append()` throws the new `Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException`
   (409) when the session claims `offset > 0` but the staged object is gone, instead of silently
   writing the new chunk alone.
 - `UploadSessionStoreRepository::advanceReceived()` is a compare-and-set on the open statuses: it
@@ -940,7 +1062,7 @@ handler (surface a 409 / retry later). Clients must treat a 409 as "re-read `HEA
   the per-session lock, re-reads the status under it, moves the session to `assembled`, and runs
   your commit callback **inside** that critical section. Both shipped controllers (tus `PATCH`
   completion, S3 `complete-multipart`) now go through it instead of calling
-  `markAssembled()` + `CommitUploadAction::execute()` in the open.
+  `markAssembled()` + `CompleteUploadAction::execute()` in the open.
 - `UploadSessionStoreRepository::markCommitted()` is now a compare-and-set on `assembled`: it
   throws `UploadConflictException` (409) instead of force-writing `committed`, and the commit
   transaction rolls back with it.
@@ -955,7 +1077,7 @@ on "no staged bytes" or committed a **truncated** blob (the CAS re-hashes whatev
 nothing downstream could tell), and `markCommitted()` then resurrected the terminal row as
 `committed`.
 
-**Who is affected.** Hosts that drive `CommitUploadAction` themselves (a custom upload controller,
+**Who is affected.** Hosts that drive `CompleteUploadAction` themselves (a custom upload controller,
 a queued commit job), or call `markCommitted()` directly.
 
 **What you must check.** Wrap your commit in `commitAssembled()`:
@@ -969,7 +1091,7 @@ a new upload).
 
 ### The document read API now returns SANITIZED TipTap content (decayed + scheme-scrubbed), not the raw row (P5.2 / R-12)
 
-**What changed.** `NodeDocumentVersionResource` (behind `GET nodes/{node}/content`) no longer echoes
+**What changed.** `DocumentRevisionResource` (behind `GET nodes/{node}/content`) no longer echoes
 the persisted `content` column verbatim for TipTap documents. It now returns
 `TipTapContent::decayFrom(...)->withSanitizedUrls()`:
 
@@ -1318,7 +1440,7 @@ exactly as before (the host's default connection); nothing changes unless you ex
 **Known gap — `packages/drive`/`packages/documents` models.** Only the 12 `packages/core` models
 (`Node`, `Storage`, `NodeGrant`, `Activity`, `File`, `FileVersion`, `FileVersionBlob`, `NodeShare`,
 `Outbox`, `WebhookEndpoint`, `WebhookDelivery`, `Blob`) resolve `getConnectionName()` from this
-key. `UploadSession`/`UploadPart` (`packages/drive`) and `NodeComment`/`NodeDocumentVersion`
+key. `UploadSession`/`UploadPart` (`packages/drive`) and `NodeComment`/`DocumentRevision`
 (`packages/documents`) do NOT — their tables ARE created on `config('vaulter.connection')` (same
 `PanelTablesBuilder`), but the models still resolve to the host's default connection. If you set
 `VAULTER_DB_CONNECTION` to a non-default connection, these 4 models will throw "table not found"
@@ -1654,7 +1776,7 @@ model now carries an explicit, closed list:
 
 - **A closed `$fillable`** (only genuinely user-facing columns) on `Node`, `Storage`, `File`,
   `FileVersion`, `NodeShare`, `WebhookEndpoint`, `UploadSession`, `NodeComment`,
-  `NodeDocumentVersion` — a key outside the list is silently discarded by `fill()`/`create()`.
+  `DocumentRevision` — a key outside the list is silently discarded by `fill()`/`create()`.
 - **A fully `$guarded = ['*']`** (Eloquent's "totally guarded" state) on `Blob`, `FileVersionBlob`,
   `NodeGrant`, `Activity`, `Outbox`, `WebhookDelivery` — these rows are exclusively server-written
   today (CAS identity, ACL, audit trail, outbox/delivery bookkeeping), so `fill()`/`create()` with
@@ -1809,7 +1931,7 @@ runtime dependency of `vaulter-documents`.
 |:--|:--|:--|
 | `axioma-studio/vaulter-media` | `Vaulter\Media\*` | The CAS engine — `Sha256ContentStore`, `FlysystemStorageDriver`, `BlobStore`, `BlobGarbageCollector`, `BlobReconciler`, `StagedTempObject` (was `Vaulter\Cas\*`) — and the `vaulter:gc-blobs` / `vaulter:reconcile-blobs` commands. |
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\*` | `DriveContext`, `DriveManager`, `StorageManager`, the Drive Actions (`TrashNodeAction`, `UploadFileAction`), the Drive events (`FileUploaded`, `NodeCreated`, `NodeMoved`, `NodeTrashed`, `StorageCreated`, …), the Drive/Storage/Upload HTTP layer, the whole `Uploads\*` subtree (tus + S3-multipart), and the `vaulter:purge-trash` / `vaulter:sweep-uploads` commands. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\*` | The document Actions (`CreateDocumentNodeAction`, `UpdateDocumentContentAction`, `CreateNamedVersionAction`, `RestoreDocumentVersionAction`, the comment Actions, `PersistYjsSnapshotAction`), the `Collaboration\*` drivers, the handlers (`TipTapHandler`, `PreviewHandler`, `DownloadOnlyHandler`, `UniverHandler`), `HtmlExporter` / `MarkdownExporter`, the `NodeComment` / `NodeDocumentVersion` models and the document/collaboration/comment controllers. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\*` | The document Actions (`CreateDocumentAction`, `UpdateDocumentContentAction`, `CreateNamedRevisionAction`, `RestoreDocumentRevisionAction`, the comment Actions, `PersistCollaborationStateAction`), the `Collaboration\*` drivers, the handlers (`TipTapHandler`, `PreviewHandler`, `DownloadOnlyHandler`, `UniverHandler`), `HtmlExporter` / `MarkdownExporter`, the `NodeComment` / `DocumentRevision` models and the document/collaboration/comment controllers. |
 
 **What stays in `vaulter-core`.** The contracts and schema, so the seams a host implements against
 do not move: `Contracts\Cas\*`, the `v_blobs` schema, `Models\Cas\Blob`, `Enums\Cas\BlobStatus`,
@@ -1856,7 +1978,7 @@ seam (`Vaulter::resolvePermissionsWith()`, `permissionResolver()` and the
 table names.
 
 **What to do.** Move to `Vaulter::for()` and the node/document endpoints. Replace a
-`CollaborationDriver` implementation with `Contracts\NodeCollaborationDriver` (node-attached, see
+`CollaborationDriver` implementation with `Contracts\CollaborationDriver` (node-attached, see
 the collaboration notes above), and a `PermissionResolver` implementation with the host role driver.
 Drop the removed `vaulter.models.*` and `vaulter.permission_resolver` keys from your published
 config.

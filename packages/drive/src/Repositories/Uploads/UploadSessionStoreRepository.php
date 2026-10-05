@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Repositories\Uploads;
 use Illuminate\Database\QueryException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Exceptions\UploadConflictException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Support\Uploads\UploadModels;
 

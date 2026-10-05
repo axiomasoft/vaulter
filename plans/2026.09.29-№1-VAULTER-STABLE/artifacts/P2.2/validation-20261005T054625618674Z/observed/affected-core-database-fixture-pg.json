@@ -1,0 +1,25 @@
+{
+  "id": "core-database-fixture-pg",
+  "stage": "affected",
+  "argv": [
+    "env",
+    "-u",
+    "UPDATE_SNAPSHOT",
+    "APP_ENV=testing",
+    "DB_CONNECTION=pgsql",
+    "DB_HOST=127.0.0.1",
+    "DB_PORT=5432",
+    "DB_DATABASE=vaulter_test",
+    "DB_USERNAME=vaulter",
+    "DB_PASSWORD=secret",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "packages/core/tests/Database/VaulterDatabaseTest.php"
+  ],
+  "candidate_sha256": "d65b805fa0d69376d3e013a58e11e6628e540a995df9bf11fa7d3123063a9bf5",
+  "started_at": "2026-10-05T05:47:29.256157+00:00",
+  "finished_at": "2026-10-05T05:47:48.145482+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

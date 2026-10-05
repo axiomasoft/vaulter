@@ -6,10 +6,10 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Contracts\HostUserResolver;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
@@ -97,7 +97,7 @@ final class E2eServiceProvider extends ServiceProvider
         // Проверка персистентности снапшота: вернуть размер последнего yjs_state узла,
         // чтобы e2e-тест убедился, что debounced-снапшот хаба долетел до БД.
         Route::get('/e2e/snapshot/{node}', static function (int|string $node) {
-            $latest = NodeDocumentVersion::query()
+            $latest = DocumentRevision::query()
                 ->where('node_id', $node)
                 ->orderByDesc('number')
                 ->first();
@@ -116,7 +116,7 @@ final class E2eServiceProvider extends ServiceProvider
         Route::get('/e2e/setup', static function () {
             $host = DriveTestHelpers::host(random_int(1, 2_000_000_000));
             $drive = Vaulter::for($host);
-            $storage = $drive->storage();
+            $storage = $drive->model();
 
             $content = TipTapContent::fromArray([
                 'type' => 'doc',
@@ -130,7 +130,7 @@ final class E2eServiceProvider extends ServiceProvider
                 ],
             ]);
 
-            $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+            $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
                 storage: $storage,
                 name: 'E2E Spec',
                 content: $content,

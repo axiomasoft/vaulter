@@ -238,7 +238,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 |---|---|
 | `Exceptions\Documents\UnknownExportFormatException` | Экспорт запрашивает формат без зарегистрированного экспортёра (в сообщении перечислены доступные). |
 | `422 Unprocessable` | Query-параметр `format` у легаси `documents/{id}/export` не является зарегистрированным форматом экспортёра (правило валидации). |
-| `Exceptions\Documents\NotADocumentNodeException` | Экспорт узла нацелен на узел, который не `kind=document`. |
+| `Exceptions\NotADocumentException` | Экспорт узла нацелен на узел, который не `kind=document`. |
 
 ## Справочник
 

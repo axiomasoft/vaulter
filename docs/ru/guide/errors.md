@@ -23,12 +23,12 @@
 
 ## invalid-tiptap-content
 
-`InvalidTipTapContentException::missingDocNode()` — корень контента должен быть
+`InvalidDocumentContentException::missingDocNode()` — корень контента должен быть
 `{"type":"doc", …}`. Передайте валидный TipTap-документ в JSON или используйте `TipTapContent::empty()`.
 
 ## content-too-large
 
-`InvalidTipTapContentException::tooLarge()` — контент превышает
+`InvalidDocumentContentException::tooLarge()` — контент превышает
 `config('vaulter.max_document_size_kb')`. Разбейте документ или поднимите лимит.
 
 ## unknown-collaboration-driver

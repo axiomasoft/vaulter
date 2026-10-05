@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Drive\Events\FileUploaded;
-use Vaulter\Drive\Events\NodeVersionCommitted;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
+use Vaulter\Drive\Events\Files\FileRevisionAdded;
+use Vaulter\Drive\Events\Files\FileUploaded;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
@@ -54,19 +54,19 @@ it('увеличивает used_bytes в рамках транзакции за�
 
     $drive->upload(DriveTestHelpers::streamFor('1234567890'), originalName: 'x.bin');
 
-    expect($drive->storage()->refresh()->used_bytes)->toBe(10);
+    expect($drive->model()->refresh()->used_bytes)->toBe(10);
 });
 
 it('квота: загрузка сверх квоты отклоняется ДО коммита блоба', function (): void {
     $drive = DriveTestHelpers::drive();
-    $drive->storage()->forceFill(['quota_bytes' => 5])->save();
+    $drive->model()->forceFill(['quota_bytes' => 5])->save();
 
     expect(fn (): Node => $drive->upload(DriveTestHelpers::streamFor('too many bytes'), originalName: 'x.bin'))
         ->toThrow(QuotaExceededException::class);
 
     expect(Blob::query()->count())->toBe(0)
         ->and(Node::query()->where('kind', NodeKind::File->value)->count())->toBe(0)
-        ->and($drive->storage()->refresh()->used_bytes)->toBe(0);
+        ->and($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
 it('новая версия: бамп number, перенаведение head, прежняя superseded', function (): void {
@@ -89,16 +89,16 @@ it('новая версия корректирует used_bytes на дельт�
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(DriveTestHelpers::streamFor('aaaa'), originalName: 'doc.txt'); // 4 bytes
-    expect($drive->storage()->refresh()->used_bytes)->toBe(4);
+    expect($drive->model()->refresh()->used_bytes)->toBe(4);
 
     $drive->uploadVersion($node, DriveTestHelpers::streamFor('aaaaaaaaaa'), originalName: 'doc.txt'); // 10 bytes
 
     // delta = 10 − 4 = 6 → total 10 (the live head size, not the sum of versions).
-    expect($drive->storage()->refresh()->used_bytes)->toBe(10);
+    expect($drive->model()->refresh()->used_bytes)->toBe(10);
 });
 
 it('диспатчит FileUploaded для нового файла и NodeVersionCommitted для версии', function (): void {
-    Event::fake([FileUploaded::class, NodeVersionCommitted::class]);
+    Event::fake([FileUploaded::class, FileRevisionAdded::class]);
 
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('v1'), originalName: 'doc.txt');
@@ -107,5 +107,5 @@ it('диспатчит FileUploaded для нового файла и NodeVersio
 
     $drive->uploadVersion($node, DriveTestHelpers::streamFor('v2 longer'), originalName: 'doc.txt');
 
-    Event::assertDispatched(NodeVersionCommitted::class);
+    Event::assertDispatched(FileRevisionAdded::class);
 });

@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-10-04
-inputs_sha256: 35905b9fb64361a68b422200577c55c2895f53775200d16b17ca0e9ceb77d7a1
+through: 2026-10-05
+inputs_sha256: 4acac9cf2f513929cbe630d2a56dc7d270beda366c4196d82029aae8e8f82b4c
 generated_by: task plan-views status
 -->
 
@@ -17,7 +17,7 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
-| Last Updated | 2026-10-04 |
+| Last Updated | 2026-10-05 |
 
 ## 4. Phase Index & Status Board
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | 3/4 | 🟠 Done with deviations |
 | P1 | Исправления T0 на текущих именах | 10/11 | 🟠 Done with deviations |
-| P2 | Канон имён и конфигурации | 1/7 | 🟡 In progress |
+| P2 | Канон имён и конфигурации | 2/7 | 🟡 In progress |
 
 ## Phase P0
 
@@ -56,9 +56,9 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Переименования классов core | 🟢 Done | 2026-10-04 |
-| P2.2 | Переименования и раскладка drive | ⬜ Not started | — |
-| P2.3 | Переименования и раскладка documents без типов | ⬜ Not started | — |
+| P2.1 | Переименования классов core | 🟢 Done | 2026-10-05 |
+| P2.2 | Drive/documents combined canon and final validation | 🟢 Done | 2026-10-05 |
+| P2.3 | Verification of documents within the combined workset | ⬜ Not started | — |
 | P2.4 | AzGuard из core в vaulter-azgard; media и filament | ⬜ Not started | — |
 | P2.5 | Канонический конфиг и типизированный доступ | ⬜ Not started | — |
 | P2.6 | Типы новых и переименованных колонок | ⬜ Not started | — |
@@ -153,6 +153,15 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-10-04 | codex/current-session | plan-run · closed-green · P2.1 implemented; all 6 PHP package gates GREEN; PG 203 passed, no skips; negative control verified. No audit/review per D17. Azgard qualified on P0 dependency. Details: artifacts/P2.1/completion.md. Changes uncommitted; next P2.7. |
 | 2026-10-04 | codex | plan-run · in-progress · — |
 | 2026-10-04 | codex/gpt-6.1-sol/high | plan-run · closed-deviations · P2.7 complete. D18: actual migration order. D19: no new audits; Grok FINDINGS fixed, targeted checks green. MySQL baseline: P8.1. Evidence: artifacts/P2.7/completion.md.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · in-progress · — |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · decision-pending · P2.2 methods contradict deferred core interface. See findings/P2.2-handle-contract-conflict.md; awaiting owner choice. No product mutation. |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · decision-pending · decision queue: Q-P2.2-handle-contract-v1 |
+| 2026-10-05 | owner | plan-run · in-progress · decision queue: Q-P2.2-handle-contract-v1 |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · in-progress · D20 amended scope admitted; append-only recovery after queue administrative start with null run_id. |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · local-repair · Present-only metadata/projection repair; historical closure unchanged. Fresh current checks qualified in artifacts/P2.2/p21-present-metadata-repair-20261005T060658881213Z.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-10-05 | codex/gpt-6.1-sol | plan-run · closed-green · Owner ordered completion. Qualification E13-E16 green. Independent review attempt-0003 GREEN for candidate 113288b01c2bf7f19943adc84c238af7936f4cb3f5357c494b834f52fe8be601. Prior FINDINGS and incomplete transport retained.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

@@ -173,7 +173,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 | `PreviewHandler` | `vaulter/preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `vaulter/pdf-preview` | 80 |
 | `DownloadOnlyHandler` | `vaulter/download` | `*` (catch-all) | download | `vaulter/download` | −1000 |
 
-Узел-документ, созданный через `CreateDocumentNodeAction`, помечается mime-типом документа Vaulter
+Узел-документ, созданный через `CreateDocumentAction`, помечается mime-типом документа Vaulter
 (`application/vnd.vaulter.document+json`), поэтому он всегда маршрутизируется в `TipTapHandler`
 независимо от расширения в его имени.
 

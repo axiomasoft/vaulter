@@ -35,7 +35,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
-| `models.node_document_version` | `Vaulter\Documents\Models\Versions\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
+| `models.node_document_version` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |
 | `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
 | `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
@@ -379,12 +379,9 @@ Yjs — источник истины; TipTap JSON — производная п
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `reverb` | `reverb` \| `hocuspocus` |
+| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | `hocuspocus` |
 | `collaboration.channel_prefix` | — | `vaulter.documents` | Пространство имён комнаты; комната всегда `prefix.nodeId` |
 | `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Общий секрет, который Node-хаб предъявляет на S2S webhook-эндпойнтах. Когда null/пусто, webhook-поверхность принимает только валидный подписанный JWT |
-| `collaboration.drivers.reverb.class` | — | `Vaulter\Collaboration\ReverbCollaborationDriver` | Драйвер Reverb |
-| `collaboration.drivers.reverb.connection` | `VAULTER_COLLAB_CONNECTION` | `reverb` | Broadcast-соединение |
-| `collaboration.drivers.hocuspocus.class` | — | `Vaulter\Collaboration\HocuspocusCollaborationDriver` | Драйвер Hocuspocus |
 | `collaboration.drivers.hocuspocus.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба |
 | `collaboration.drivers.hocuspocus.app_id` | `VAULTER_COLLAB_APP_ID` | `null` | App id хаба |
 | `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | `null` | Ключ подписи room-JWT **и** ключ, по которому вебхуки проверяют JWT |

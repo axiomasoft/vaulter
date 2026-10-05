@@ -27,7 +27,7 @@ beforeEach(function (): void {
 
 function authStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 it('blocks an unauthorised show with 403', function (): void {

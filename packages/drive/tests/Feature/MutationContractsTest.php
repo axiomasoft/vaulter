@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
 it('keeps the complete storage and folder event contracts', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     $root = $storage->rootNode()->firstOrFail();
 
     $storageOutbox = Outbox::query()->where('event', EventType::DriveCreated->value)->sole();
@@ -67,7 +67,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
 });
 
 it('returns the complete storage API shape including toolbar abilities', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $data = $this->getJson('api/vaulter/storages/'.$storage->getKey())->assertOk()->json('data');
     $keys = array_keys($data);
@@ -93,7 +93,7 @@ it('returns the complete storage API shape including toolbar abilities', functio
 });
 
 it('rejects each malformed resumable upload field', function (array $overrides, string $field): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', array_merge([
         'protocol' => 'tus',
@@ -272,16 +272,16 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
     expect($payload['node_ids'])->toEqualCanonicalizing($ids);
     unset($payload['node_ids']);
     expect($outbox->profile)->toBe('default')
-        ->and($outbox->topic)->toBe((string) $drive->storage()->getKey())
+        ->and($outbox->topic)->toBe((string) $drive->model()->getKey())
         ->and($payload)->toEqual([
             'event_id' => $outbox->event_id,
             'actor_id' => '17',
-            'drive_id' => (string) $drive->storage()->getKey(),
+            'drive_id' => (string) $drive->model()->getKey(),
             'freed_bytes' => 5,
         ]);
     $activity = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
     expect($activity->actor_id)->toEqual(17)
-        ->and($activity->drive_id)->toEqual($drive->storage()->getKey())
+        ->and($activity->drive_id)->toEqual($drive->model()->getKey())
         ->and($activity->context['node_ids'])->toEqualCanonicalizing($ids)
         ->and(array_keys($activity->context))->toEqualCanonicalizing(['node_ids', 'freed_bytes'])
         ->and($activity->context['freed_bytes'])->toBe(5);

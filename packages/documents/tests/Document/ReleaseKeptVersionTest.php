@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
-use Vaulter\Documents\Actions\Versions\ReleaseKeptVersionAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Data\Versions\CreateNamedVersionData;
-use Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
+use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -22,8 +22,8 @@ function createDocumentForRelease(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Pinned',
         content: DocumentTestHelpers::content('seed'),
         parent: $drive->root(),
@@ -33,7 +33,7 @@ function createDocumentForRelease(): Node
 it('clears a keep_forever pin, F-P1.12-03', function (): void {
     $node = createDocumentForRelease();
 
-    $pinned = app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
+    $pinned = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'pinned',
         keepForever: true,
@@ -41,11 +41,11 @@ it('clears a keep_forever pin, F-P1.12-03', function (): void {
 
     expect($pinned->keep_forever)->toBeTrue();
 
-    $released = app(ReleaseKeptVersionAction::class)->execute($node->refresh(), $pinned->getKey());
+    $released = app(UpdateRevisionRetentionAction::class)->execute($node->refresh(), $pinned->getKey());
 
     expect($released->getKey())->toEqual($pinned->getKey())
         ->and($released->keep_forever)->toBeFalse()
-        ->and(NodeDocumentVersion::query()->whereKey($pinned->getKey())->first()->keep_forever)->toBeFalse();
+        ->and(DocumentRevision::query()->whereKey($pinned->getKey())->first()->keep_forever)->toBeFalse();
 });
 
 it('a released version re-enters the prune window on the next snapshot, F-P1.12-03', function (): void {
@@ -53,38 +53,38 @@ it('a released version re-enters the prune window on the next snapshot, F-P1.12-
 
     $node = createDocumentForRelease();
 
-    $pinned = app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
+    $pinned = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'pinned',
         keepForever: true,
     ));
 
     // Still pinned: churn does NOT prune it away.
-    app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(node: $node->refresh(), label: 'v2'));
-    expect(NodeDocumentVersion::query()->whereKey($pinned->getKey())->exists())->toBeTrue();
+    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node->refresh(), label: 'v2'));
+    expect(DocumentRevision::query()->whereKey($pinned->getKey())->exists())->toBeTrue();
 
-    app(ReleaseKeptVersionAction::class)->execute($node->refresh(), $pinned->getKey());
+    app(UpdateRevisionRetentionAction::class)->execute($node->refresh(), $pinned->getKey());
 
     // Released: the NEXT snapshot's prune pass can now sweep it (max=1, head excluded).
-    app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(node: $node->refresh(), label: 'v3'));
+    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node->refresh(), label: 'v3'));
 
-    expect(NodeDocumentVersion::query()->whereKey($pinned->getKey())->exists())->toBeFalse();
+    expect(DocumentRevision::query()->whereKey($pinned->getKey())->exists())->toBeFalse();
 });
 
 it('throws when releasing a version id that does not belong to the node', function (): void {
     $nodeA = createDocumentForRelease();
     $nodeB = createDocumentForRelease();
 
-    $versionA = NodeDocumentVersion::query()->where('node_id', $nodeA->getKey())->firstOrFail();
+    $versionA = DocumentRevision::query()->where('node_id', $nodeA->getKey())->firstOrFail();
 
-    expect(fn () => app(ReleaseKeptVersionAction::class)->execute($nodeB->refresh(), $versionA->getKey()))
-        ->toThrow(NodeDocumentVersionNotFoundException::class);
+    expect(fn () => app(UpdateRevisionRetentionAction::class)->execute($nodeB->refresh(), $versionA->getKey()))
+        ->toThrow(DocumentRevisionNotFoundException::class);
 });
 
 it('releases a keep_forever pin through the HTTP surface, F-P1.12-03', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 
-    $storage = DocumentTestHelpers::drive()->storage();
+    $storage = DocumentTestHelpers::drive()->model();
 
     $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
         'name' => 'Report',

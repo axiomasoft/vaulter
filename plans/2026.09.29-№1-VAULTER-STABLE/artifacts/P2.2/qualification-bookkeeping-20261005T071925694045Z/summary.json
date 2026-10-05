@@ -1,0 +1,14 @@
+{
+  "schema_version": "bookkeeping-qualification-summary/v1",
+  "status": "green",
+  "qualification": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/qualification-bookkeeping-20261005T071925694045Z/qualification.json",
+  "original_candidate_sha256": "b0e5b2255c9916a02702a47abc570fe93ebc67bab56a508f8dcf8a21ff22981e",
+  "current_candidate_sha256": "77c6ab5b712c7ac3bf47f2b3ba1ff249769eb6d29437946c4bc5e58549a71d31",
+  "original_full_green_gates": 28,
+  "structural_result": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/qualification-bookkeeping-20261005T071925694045Z/structural-result.json",
+  "structural_check_count": 5,
+  "actual_test_runs": "unchanged original b0 receipts",
+  "tests_rerun": false,
+  "generation_rerun": false,
+  "writer_released": true
+}

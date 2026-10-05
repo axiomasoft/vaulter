@@ -1,0 +1,13 @@
+{
+  "id": "php84-preflight",
+  "stage": "affected",
+  "argv": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "--check"
+  ],
+  "candidate_sha256": "d65b805fa0d69376d3e013a58e11e6628e540a995df9bf11fa7d3123063a9bf5",
+  "started_at": "2026-10-05T05:46:49.758743+00:00",
+  "finished_at": "2026-10-05T05:46:50.183195+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

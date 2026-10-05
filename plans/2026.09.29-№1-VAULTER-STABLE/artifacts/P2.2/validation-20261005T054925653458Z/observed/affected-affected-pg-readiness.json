@@ -1,0 +1,20 @@
+{
+  "id": "affected-pg-readiness",
+  "stage": "affected",
+  "argv": [
+    "pg_isready",
+    "-h",
+    "127.0.0.1",
+    "-p",
+    "5432",
+    "-U",
+    "vaulter",
+    "-d",
+    "vaulter_test"
+  ],
+  "candidate_sha256": "7666ab4ac5ccd3fc70dd6d5f16c38360c83f0f2d925f1a05bc04447c2981417f",
+  "started_at": "2026-10-05T05:50:03.592856+00:00",
+  "finished_at": "2026-10-05T05:50:03.620930+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

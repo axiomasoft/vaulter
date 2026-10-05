@@ -368,16 +368,12 @@ Yjs is the source of truth; the transport is swappable behind `driver`:
 
 ```php
 'collaboration' => [
-    'driver'         => env('VAULTER_COLLAB_DRIVER', 'reverb'), // reverb | hocuspocus
+    'driver'         => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'), // hocuspocus
     'channel_prefix' => 'vaulter.documents',
     'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
     'drivers' => [
-        'reverb' => [
-            'class'      => \Vaulter\Collaboration\ReverbCollaborationDriver::class,
-            'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
-        ],
         'hocuspocus' => [
-            'class'     => \Vaulter\Collaboration\HocuspocusCollaborationDriver::class,
+            'class'     => \Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver::class,
             'url'       => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
             'app_id'    => env('VAULTER_COLLAB_APP_ID'),
             'secret'    => env('VAULTER_COLLAB_SECRET'),
@@ -387,8 +383,6 @@ Yjs is the source of truth; the transport is swappable behind `driver`:
 ],
 ```
 
-- **`reverb`** (default) — Yjs over Laravel Reverb, no extra service; the Vue client joins the
-  private broadcast channel `{channel_prefix}.{nodeId}`, gated by the `AccessResolver`.
 - **`hocuspocus`** — an external Node hub; the client connects with a signed room JWT and the
   hub calls back into the collab webhooks.
 

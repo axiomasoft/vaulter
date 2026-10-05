@@ -1,0 +1,74 @@
+{
+  "observed_at": "2026-10-05T04:20:45.824312+00:00",
+  "lanes": [
+    {
+      "lane": "root",
+      "installed": {
+        "laravel/framework": "v13.17.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.4",
+        "phpstan/phpstan": "2.2.2"
+      },
+      "locked": {
+        "laravel/framework": "v13.17.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.4",
+        "phpstan/phpstan": "2.2.2"
+      },
+      "installed_sha256": "c02353af268564afa250171b7a00c35f6d0cf92745d06e4405177afbb8440429",
+      "lock_sha256": "6b25bd97aabc0b9d9f231c5d28114bbd61031a168faf274e61591cf3bfadfa20"
+    },
+    {
+      "lane": "drive",
+      "installed": {
+        "laravel/framework": "v13.19.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "locked": {
+        "laravel/framework": "v13.19.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "installed_sha256": "3e2c03a8df5f631f9a740d342bac101688a974275860bdf77b6b7cd4acf9bde3",
+      "lock_sha256": "f68259cb631d1cd8eff916493169250b216d2c99052be68c1cfd085d2f4aa4fb"
+    },
+    {
+      "lane": "documents",
+      "installed": {
+        "laravel/framework": "v13.34.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "locked": {
+        "laravel/framework": "v13.34.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "installed_sha256": "0c55f530a10ed6bb9d15a55a5ebba1eb362328feb4a626589fbc66b63e46aedf",
+      "lock_sha256": "b8bcc6062cdd457bbc14f12b5c314d0b132a7d4bc7c91c7e9bfcd326e8cd44e6"
+    },
+    {
+      "lane": "filament",
+      "installed": {
+        "laravel/framework": "v13.19.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "locked": {
+        "laravel/framework": "v13.34.0",
+        "orchestra/testbench": "v11.1.0",
+        "pestphp/pest": "v4.7.5",
+        "phpstan/phpstan": "2.2.5"
+      },
+      "installed_sha256": "486fb4433c7c33252c10ea8e5ee046027082a03e2790067080d93dcad5ec2a7d",
+      "lock_sha256": "e57bfbbdd8ce82bd6b138082ed0da1aac37ad6c3103ad7c572144596a5780d5a"
+    }
+  ],
+  "suites_run": false
+}

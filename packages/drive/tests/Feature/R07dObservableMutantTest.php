@@ -16,12 +16,12 @@ use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadPart;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
@@ -219,7 +219,7 @@ it('rejects an unstatable chunk when the ceiling is 1 byte and stages nothing', 
 it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void {
     config()->set('vaulter.uploads.max_chunk_bytes', 1);
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
@@ -241,7 +241,7 @@ it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void
 it('records an assemble duration of a few seconds, not the nanosecond product', function (): void {
     r07dMetrics();
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),

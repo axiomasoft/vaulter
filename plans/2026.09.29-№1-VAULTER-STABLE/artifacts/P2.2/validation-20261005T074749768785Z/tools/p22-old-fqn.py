@@ -1,0 +1,36 @@
+import json, re, sys
+from pathlib import Path
+root=Path.cwd(); plan='plans/2026.09.29-№1-VAULTER-STABLE'
+old=list(json.loads((root/plan/'artifacts/P2.2/rename-paths.json').read_text()))+['ValueObjects\\WorkspaceRef','Enums\\BulkAction']
+patterns=[re.compile(r'(?<![A-Za-z0-9_])'+re.escape('Vaulter\\Drive\\'+name)+r'(?![A-Za-z0-9_\\])') for name in old]
+# Code Guidance additionally bars flat classes left under layers.
+patterns.append(re.compile(r'Vaulter\\Drive\\(?:Actions\\[A-Z][A-Za-z]+Action\b|Data\\[A-Z][A-Za-z]+Data\b|Events\\(?:StorageCreated|NodeCreated|NodeForceDeleted|NodeVersionCommitted|UploadSession)|Exceptions\\[A-Z][A-Za-z]+Exception\b)'))
+files=[]
+for package in [root/'packages'/name for name in ['core','drive','documents','filament','media','azgard']]:
+    for name in ['src','tests','routes','config','database']:
+        directory=package/name
+        if directory.exists(): files.extend(p for p in directory.rglob('*') if p.is_file())
+for name in ['guide','reference','ru']:
+    directory=root/'docs'/name
+    if directory.exists(): files.extend(p for p in directory.rglob('*') if p.is_file())
+files += [root/'UPGRADE.md', root/'CHANGELOG.md']
+files.extend(p for p in (root/'load/app').rglob('*.php'))
+shorts=['DriveContext','DriveManager','StorageManager','StorageCreated','NodeCreated','NodeForceDeleted','NodeVersionCommitted','UploadSessionInitiated','UploadSessionAborted','UploadSessionExpired','CrossStorageMoveException','CycleException','FileVersionResource','MagicByteSniffer','CommitUploadAction','UploadInitData','CreateDriveFolderData','UploadFileData']
+shortpat=re.compile(r'\b(?:'+'|'.join(shorts)+r')\b|ShowDriveController::show')
+errors=[]
+for file in files:
+    try: text=file.read_text()
+    except (UnicodeError,OSError): continue
+    for number,line in enumerate(text.splitlines(),1):
+        if file.name == 'UPGRADE.md' and line.startswith('|') and len(line.split('|')) >= 4:
+            line='|'.join(line.split('|')[2:]) # historical Before column only excluded
+        normalized=re.sub(r'\\+',lambda m:'\\',line)
+        if any(pattern.search(normalized) for pattern in patterns) or (file.is_relative_to(root/'docs') and shortpat.search(normalized)): errors.append(f'{file.relative_to(root)}:{number}:{line}')
+for name in old:
+    path=root/'packages/drive/src'/(name.replace('\\','/')+'.php')
+    if path.exists(): errors.append('obsolete source remains: '+str(path.relative_to(root)))
+for name in ['packages/core/tests/ValueObjects/WorkspaceRefTest.php','packages/drive/tests/ValueObjects/WorkspaceRefTest.php']:
+    if (root/name).exists(): errors.append('dead orphan test: '+name)
+if errors:
+    print('\n'.join(errors)); sys.exit(1)
+print(json.dumps({'scanned_files':len(files),'old_fqns':len(old),'matches':0,'obsolete_paths':0,'dead_classes':0,'guidance':'empty'}))

@@ -1,0 +1,80 @@
+{
+  "candidate_sha256": "b0e5b2255c9916a02702a47abc570fe93ebc67bab56a508f8dcf8a21ff22981e",
+  "receipt": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T065203786153Z/canonical/b0e5b2255c9916a02702a47abc570fe93ebc67bab56a508f8dcf8a21ff22981e/p22-affected-20261005T065203786153Z/receipt.json",
+  "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T065203786153Z/canonical/b0e5b2255c9916a02702a47abc570fe93ebc67bab56a508f8dcf8a21ff22981e/p22-affected-20261005T065203786153Z/code-guidance.log",
+  "log_sha256": "153290cabf3c5db9c9a80b5ca54d9b72bf7eeb935f9e63c84b420ec2f93a2447",
+  "exit_code": 0,
+  "checks": [
+    {
+      "prose_contract_consistency": [
+        {
+          "path": "docs/guide/drive.md",
+          "profile_return_type": "Vaulter\\Profiles\\Profile",
+          "matches": 1
+        },
+        {
+          "path": "docs/ru/guide/drive.md",
+          "profile_return_type": "Vaulter\\Profiles\\Profile",
+          "matches": 1
+        },
+        {
+          "path": "docs/reference/rest-api.md",
+          "DriveResource_wire_keys": [
+            "abilities",
+            "created_at",
+            "disk",
+            "id",
+            "name",
+            "owner",
+            "panel",
+            "quota_bytes",
+            "root_node_id",
+            "slug",
+            "status",
+            "storage_type",
+            "updated_at",
+            "used_bytes"
+          ],
+          "source_consistent": true
+        },
+        {
+          "path": "docs/ru/reference/rest-api.md",
+          "DriveResource_wire_keys": [
+            "abilities",
+            "created_at",
+            "disk",
+            "id",
+            "name",
+            "owner",
+            "panel",
+            "quota_bytes",
+            "root_node_id",
+            "slug",
+            "status",
+            "storage_type",
+            "updated_at",
+            "used_bytes"
+          ],
+          "source_consistent": true
+        }
+      ],
+      "StorageResource_filament_is_live_and_allowed": true
+    },
+    {
+      "scanned_files": 911,
+      "old_fqns": 52,
+      "matches": 0,
+      "obsolete_paths": 0,
+      "dead_classes": 0,
+      "guidance": "empty"
+    }
+  ],
+  "criteria": [
+    "all prior Drive obsolete FQN/paths/dead orphan checks",
+    "exact short obsolete Drive names in active docs; live Filament StorageResource allowed",
+    "load/app caller FQN scan",
+    "profile() prose declares Vaulter\\Profiles\\Profile",
+    "DriveResource REST wire-key sets match current source; ShowDriveController::__invoke documented"
+  ],
+  "guidance": "empty"
+}

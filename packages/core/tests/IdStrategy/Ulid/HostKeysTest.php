@@ -36,7 +36,7 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $role->exists = true;
 
     $drive = DriveTestHelpers::drive(42);
-    $storage = $drive->storage()->refresh();
+    $storage = $drive->model()->refresh();
     $node = $drive->createFolder('UUID actor', actorId: $uuid)->refresh();
     $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $roleGrant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $role->getKey(), subjectType: $role->getMorphClass());

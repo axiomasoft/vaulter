@@ -1,0 +1,13 @@
+{
+  "id": "code-guidance",
+  "stage": "affected",
+  "argv": [
+    "python3",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/validation-20261005T054925653458Z/tools/old-fqn.py"
+  ],
+  "candidate_sha256": "7666ab4ac5ccd3fc70dd6d5f16c38360c83f0f2d925f1a05bc04447c2981417f",
+  "started_at": "2026-10-05T05:49:35.234571+00:00",
+  "finished_at": "2026-10-05T05:49:36.282369+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

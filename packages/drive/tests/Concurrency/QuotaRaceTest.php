@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevisionBlob;
@@ -15,7 +15,7 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();
-    $drive->storage()->forceFill(['quota_bytes' => 10 * 1024 * 1024])->save();
+    $drive->model()->forceFill(['quota_bytes' => 10 * 1024 * 1024])->save();
     // Different parents prevent the destination lock from hiding a broken quota UPDATE.
     $parents = [$drive->createFolder('A'), $drive->createFolder('B')];
     $outcomes = ForkRace::run(array_map(
@@ -29,7 +29,7 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     $lost = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => !$o->ok));
     expect($won)->toHaveCount(1)->and($lost)->toHaveCount(1);
     expect($lost[0]->failedWith(QuotaExceededException::class))->toBeTrue($lost[0]->message ?? '');
-    expect($drive->storage()->refresh()->used_bytes)->toBe(8 * 1024 * 1024)
+    expect($drive->model()->refresh()->used_bytes)->toBe(8 * 1024 * 1024)
         ->and((int) File::query()->sum('size_bytes'))->toBe(8 * 1024 * 1024)
         ->and(Blob::query()->count())->toBe(1)
         ->and(FileRevisionBlob::query()->count())->toBe(1);

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -30,8 +30,8 @@ function collabGateDocumentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),
         parent: $drive->root(),

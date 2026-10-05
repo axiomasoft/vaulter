@@ -106,9 +106,8 @@ app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 
 ## 3. Сервер совместного редактирования (опционально)
 
-У редактирования в реальном времени два транспорта. Драйвер по умолчанию `reverb` **не
-требует** доп. сервиса (работает поверх Laravel Reverb). Альтернатива — драйвер `hocuspocus`,
-использующий небольшой Node.js-хаб Hocuspocus с `Dockerfile` и `docker-compose.yml` в каталоге
+Редактирование в реальном времени использует драйвер `hocuspocus`
+и небольшой Node.js-хаб Hocuspocus с `Dockerfile` и `docker-compose.yml` в каталоге
 `hocuspocus-server/`:
 
 ```bash
@@ -116,7 +115,7 @@ cp hocuspocus-server/.env.example hocuspocus-server/.env
 docker compose -f hocuspocus-server/docker-compose.yml up -d
 ```
 
-Это нужно только когда `config('vaulter.collaboration.driver')` равен `hocuspocus`.
+Хаб нужен при включённом совместном редактировании.
 
 ## Проверка установки
 

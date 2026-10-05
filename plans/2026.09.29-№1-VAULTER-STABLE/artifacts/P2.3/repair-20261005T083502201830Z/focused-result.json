@@ -1,0 +1,21 @@
+{
+  "completed_at": "2026-10-05T08:35:38.193540+00:00",
+  "checks": [
+    {
+      "id": "documents-pint-fix",
+      "exit_code": 0,
+      "source_sha256": "03c9af65e17489f42bcf954612307c5be5f2481fc252c878634b8f0729affe00"
+    },
+    {
+      "id": "documents-pint",
+      "exit_code": 0,
+      "source_sha256": "03c9af65e17489f42bcf954612307c5be5f2481fc252c878634b8f0729affe00"
+    },
+    {
+      "id": "documents-phpstan",
+      "exit_code": 0,
+      "source_sha256": "03c9af65e17489f42bcf954612307c5be5f2481fc252c878634b8f0729affe00"
+    }
+  ],
+  "green": true
+}

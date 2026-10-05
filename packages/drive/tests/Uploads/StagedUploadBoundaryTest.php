@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\StagedUpload;
 
 beforeEach(function (): void {
     Storage::fake('local');

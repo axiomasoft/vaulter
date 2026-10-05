@@ -1,0 +1,8 @@
+{
+  "context_tokens": 500000,
+  "cwd": "/tmp/vaulter-review-p22-round2",
+  "effort": "high",
+  "model": "grok-4.7",
+  "session_id": "01a10af3-b58c-7f92-a522-31a598cf28b7",
+  "source": "/home/vostrikov/.grok/sessions/%2Ftmp%2Fvaulter-review-p22-round2/01a10af3-b58c-7f92-a522-31a598cf28b7/summary.json"
+}

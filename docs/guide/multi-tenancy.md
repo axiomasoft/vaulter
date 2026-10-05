@@ -75,7 +75,7 @@ your tenant-aware Storage model
         │  sets tenant_id on create (a `creating` observer, a global scope, …)
         ▼
    v_storages.tenant_id
-        │  UploadFileAction reads $storage->tenant_id
+        │  IngestFileAction reads $storage->tenant_id
         ▼
    BlobStore::commit(tenantId: …)
         │  bakes it into the scope segment + dedup key
@@ -83,11 +83,11 @@ your tenant-aware Storage model
    v_blobs.tenant_id  +  storage_key "t<id>/ab/cd/<sha256>"
 ```
 
-The provisioning path proves the point — `StorageManager::provision()` creates a
+The provisioning path proves the point — `DriveProvisioner::provision()` creates a
 storage **without** a `tenant_id`:
 
 ```php
-// Vaulter\Drive\StorageManager::provision() — no tenant_id is set here
+// Vaulter\Drive\DriveProvisioner::provision() — no tenant_id is set here
 $storage = $this->store->create([
     'panel'        => $panel,
     'owner_type'   => $owner->getMorphClass(),
@@ -100,11 +100,11 @@ $storage = $this->store->create([
 ```
 
 If you want `tenant_id` populated, your swapped-in `Storage` model must set it. From
-there it propagates automatically: `Vaulter\Drive\Actions\UploadFileAction` reads it
+there it propagates automatically: `Vaulter\Drive\Actions\Files\IngestFileAction` reads it
 straight off the storage row and hands it to the blob store:
 
 ```php
-// Vaulter\Drive\Actions\UploadFileAction
+// Vaulter\Drive\Actions\Files\IngestFileAction
 $blob = $this->blobs->commit(
     stream:    $data->stream,
     tenantId:  $data->storage->tenant_id,   // ← from the storage row, host-populated

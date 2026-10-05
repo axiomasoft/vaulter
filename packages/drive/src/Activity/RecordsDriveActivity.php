@@ -8,19 +8,19 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Activity\ActivityRecorder;
-use Vaulter\Drive\Events\FileUploaded;
-use Vaulter\Drive\Events\NodeCopied;
-use Vaulter\Drive\Events\NodeCreated;
-use Vaulter\Drive\Events\NodeForceDeleted;
-use Vaulter\Drive\Events\NodeMoved;
-use Vaulter\Drive\Events\NodeRenamed;
-use Vaulter\Drive\Events\NodeRestored;
-use Vaulter\Drive\Events\NodeTrashed;
-use Vaulter\Drive\Events\NodeVersionCommitted;
-use Vaulter\Drive\Events\StorageCreated;
-use Vaulter\Drive\Events\UploadSessionAborted;
-use Vaulter\Drive\Events\UploadSessionExpired;
-use Vaulter\Drive\Events\UploadSessionInitiated;
+use Vaulter\Drive\Events\Drives\DriveCreated;
+use Vaulter\Drive\Events\Files\FileRevisionAdded;
+use Vaulter\Drive\Events\Files\FileUploaded;
+use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Events\Nodes\NodeCopied;
+use Vaulter\Drive\Events\Nodes\NodeMoved;
+use Vaulter\Drive\Events\Nodes\NodePurged;
+use Vaulter\Drive\Events\Nodes\NodeRenamed;
+use Vaulter\Drive\Events\Nodes\NodeRestored;
+use Vaulter\Drive\Events\Nodes\NodeTrashed;
+use Vaulter\Drive\Events\Uploads\UploadAborted;
+use Vaulter\Drive\Events\Uploads\UploadExpired;
+use Vaulter\Drive\Events\Uploads\UploadInitiated;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Support\Identity;
 
@@ -45,22 +45,22 @@ final readonly class RecordsDriveActivity
 
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(StorageCreated::class, [self::class, 'handleStorageCreated']);
-        $events->listen(NodeCreated::class, [self::class, 'handleNodeCreated']);
+        $events->listen(DriveCreated::class, [self::class, 'handleStorageCreated']);
+        $events->listen(FolderCreated::class, [self::class, 'handleNodeCreated']);
         $events->listen(FileUploaded::class, [self::class, 'handleFileUploaded']);
-        $events->listen(NodeVersionCommitted::class, [self::class, 'handleVersionCommitted']);
+        $events->listen(FileRevisionAdded::class, [self::class, 'handleVersionCommitted']);
         $events->listen(NodeMoved::class, [self::class, 'handleNodeMoved']);
         $events->listen(NodeRenamed::class, [self::class, 'handleNodeRenamed']);
         $events->listen(NodeCopied::class, [self::class, 'handleNodeCopied']);
         $events->listen(NodeTrashed::class, [self::class, 'handleNodeTrashed']);
         $events->listen(NodeRestored::class, [self::class, 'handleNodeRestored']);
-        $events->listen(NodeForceDeleted::class, [self::class, 'handleNodeForceDeleted']);
-        $events->listen(UploadSessionInitiated::class, [self::class, 'handleUploadSessionInitiated']);
-        $events->listen(UploadSessionAborted::class, [self::class, 'handleUploadSessionAborted']);
-        $events->listen(UploadSessionExpired::class, [self::class, 'handleUploadSessionExpired']);
+        $events->listen(NodePurged::class, [self::class, 'handleNodeForceDeleted']);
+        $events->listen(UploadInitiated::class, [self::class, 'handleUploadSessionInitiated']);
+        $events->listen(UploadAborted::class, [self::class, 'handleUploadSessionAborted']);
+        $events->listen(UploadExpired::class, [self::class, 'handleUploadSessionExpired']);
     }
 
-    public function handleStorageCreated(StorageCreated $event): void
+    public function handleStorageCreated(DriveCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::DriveCreated,
@@ -74,10 +74,10 @@ final readonly class RecordsDriveActivity
                 'owner_id' => Identity::stringify($event->storage->owner_id),
                 'name' => $event->storage->name,
             ],
-        ), StorageCreated::class);
+        ), DriveCreated::class);
     }
 
-    public function handleNodeCreated(NodeCreated $event): void
+    public function handleNodeCreated(FolderCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
             verb: EventType::FolderCreated,
@@ -88,7 +88,7 @@ final readonly class RecordsDriveActivity
                 'name' => $event->node->name,
                 'parent_id' => Identity::stringify($event->node->parent_id),
             ],
-        ), NodeCreated::class);
+        ), FolderCreated::class);
     }
 
     public function handleFileUploaded(FileUploaded $event): void
@@ -106,7 +106,7 @@ final readonly class RecordsDriveActivity
         ), FileUploaded::class);
     }
 
-    public function handleVersionCommitted(NodeVersionCommitted $event): void
+    public function handleVersionCommitted(FileRevisionAdded $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->recordForNode(
             verb: EventType::FileRevisionAdded,
@@ -117,7 +117,7 @@ final readonly class RecordsDriveActivity
                 'version_id' => Identity::stringify($event->version->getKey()),
                 'size_bytes' => $event->version->size_bytes,
             ],
-        ), NodeVersionCommitted::class);
+        ), FileRevisionAdded::class);
     }
 
     public function handleNodeMoved(NodeMoved $event): void
@@ -190,7 +190,7 @@ final readonly class RecordsDriveActivity
      * the storage scope plus the deleted ids + freed bytes travel in the context (the
      * row is the only surviving trace).
      */
-    public function handleNodeForceDeleted(NodeForceDeleted $event): void
+    public function handleNodeForceDeleted(NodePurged $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::NodePurged,
@@ -200,7 +200,7 @@ final readonly class RecordsDriveActivity
                 'node_ids' => array_map(Identity::stringify(...), $event->nodeIds),
                 'freed_bytes' => $event->freedBytes,
             ],
-        ), NodeForceDeleted::class);
+        ), NodePurged::class);
     }
 
     /**
@@ -210,7 +210,7 @@ final readonly class RecordsDriveActivity
      * tenant/storage come from the record() scope scalars; upload_id/protocol/
      * target_name identify the session in the row).
      */
-    public function handleUploadSessionInitiated(UploadSessionInitiated $event): void
+    public function handleUploadSessionInitiated(UploadInitiated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadInitiated,
@@ -222,10 +222,10 @@ final readonly class RecordsDriveActivity
                 'protocol' => $event->session->protocol->value,
                 'target_name' => $event->session->target_name,
             ],
-        ), UploadSessionInitiated::class);
+        ), UploadInitiated::class);
     }
 
-    public function handleUploadSessionAborted(UploadSessionAborted $event): void
+    public function handleUploadSessionAborted(UploadAborted $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadAborted,
@@ -237,10 +237,10 @@ final readonly class RecordsDriveActivity
                 'protocol' => $event->session->protocol->value,
                 'received_bytes' => $event->session->received_bytes,
             ],
-        ), UploadSessionAborted::class);
+        ), UploadAborted::class);
     }
 
-    public function handleUploadSessionExpired(UploadSessionExpired $event): void
+    public function handleUploadSessionExpired(UploadExpired $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->record(
             verb: EventType::UploadExpired,
@@ -252,7 +252,7 @@ final readonly class RecordsDriveActivity
                 'protocol' => $event->session->protocol->value,
                 'received_bytes' => $event->session->received_bytes,
             ],
-        ), UploadSessionExpired::class);
+        ), UploadExpired::class);
     }
 
     /**

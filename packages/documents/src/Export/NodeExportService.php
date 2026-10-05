@@ -6,9 +6,9 @@ namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
-use Vaulter\Documents\Exceptions\NotADocumentNodeException;
-use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
+use Vaulter\Documents\Contracts\ExportFilenameResolver;
+use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Handlers\Capability;
@@ -41,7 +41,7 @@ use Vaulter\VaulterManager;
 final class NodeExportService
 {
     public function __construct(
-        private readonly NodeDocumentVersionReadRepository $versions,
+        private readonly DocumentRevisionReadRepository $versions,
         private readonly FileHandlerRegistry $handlers,
         private readonly VaulterManager $manager,
         private readonly FileDescriptorFactory $descriptors,
@@ -57,7 +57,7 @@ final class NodeExportService
     public function export(Node $node, string $format): DocumentExport
     {
         if (!$node->kind->isDocument()) {
-            throw NotADocumentNodeException::forNode($node->getKey());
+            throw NotADocumentException::forNode($node->getKey());
         }
 
         return $this->metrics->timing(
@@ -103,7 +103,7 @@ final class NodeExportService
     /**
      * The version content shaped for the node's resolved handler (P0.5, kind-neutral):
      * a rich-text handler's head decays to {@see TipTapContent} (never throws — see
-     * {@see NodeDocumentVersion::tipTapContent()}); any other editable handler's head
+     * {@see DocumentRevision::tipTapContent()}); any other editable handler's head
      * is an opaque snapshot, returned verbatim as {@see OpaqueDocumentContent}. A
      * non-rich-text node used to decay to an EMPTY TipTap doc here and export as
      * blank content instead of being refused by the exporter's narrowing guard

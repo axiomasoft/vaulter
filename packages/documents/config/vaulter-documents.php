@@ -6,7 +6,7 @@ use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,7 +31,7 @@ use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
 return [
     'models' => [
         'node_comment' => NodeComment::class,
-        'node_document_version' => NodeDocumentVersion::class,
+        'node_document_version' => DocumentRevision::class,
     ],
 
     'handlers' => [

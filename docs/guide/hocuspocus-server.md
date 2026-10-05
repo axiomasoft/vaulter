@@ -5,7 +5,7 @@ The optional Node service that powers Vaulter's realtime **document collaboratio
 
 > **Reverb is not a collaboration transport.** Laravel Reverb is a general broadcast bus
 > (notifications, presence, activity). Collaborative editing runs on Hocuspocus; the
-> `reverb` collaboration driver is deprecated. See [Realtime Collaboration](./collaboration).
+> `reverb` collaboration driver has been removed; use Hocuspocus. See [Realtime Collaboration](./collaboration).
 
 It is designed to be consumed as an **external, reusable image** — one published image
 serves many projects. You **reference** it, configure it entirely through environment

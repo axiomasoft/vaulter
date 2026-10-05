@@ -1,0 +1,14 @@
+{
+  "evidence_dir": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/p21-present-metadata-repair-20261005T060658881213Z",
+  "write_site": {
+    "pre_mutation": "allow",
+    "pre_final": "allow",
+    "reason_codes": {
+      "pre_mutation": null,
+      "pre_final": null
+    },
+    "content_hash": "226b9fac34fc7c23bcd56026697e22f7084c5e19d72cbb443678a25d5fc0e684"
+  },
+  "p22_lint_exit_code": 0,
+  "terminal_unchanged": true
+}

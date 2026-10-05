@@ -205,7 +205,7 @@ $blobStore->detach($fileVersion, $blob);   // байты здесь НЕ уда�
 $stream = $blobStore->read($blob);         // resource|null над каноническими байтами
 ```
 
-В Drive это связывается через `Vaulter\Drive\Actions\UploadFileAction`: он зондирует размер,
+В Drive это связывается через `Vaulter\Drive\Actions\Files\IngestFileAction`: он зондирует размер,
 проверяет квоту хранилища *до* коммита байтов, вызывает `BlobStore::commit()` внутри
 транзакции, затем создаёт `File` / `FileRevision` и ребро. `tenant_id` и `storage_id`,
 переданные в `commit()`, читаются прямо из строки владеющего `Storage`.

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 
@@ -28,14 +28,14 @@ beforeEach(function (): void {
 it('physically deletes a trashed document node\'s inline version content on purge, F-P1.12-02', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Sensitive',
         content: DocumentTestHelpers::content('erase me'),
         parent: $drive->root(),
     ));
 
-    expect(NodeDocumentVersion::query()->where('node_id', $node->getKey())->count())->toBe(1);
+    expect(DocumentRevision::query()->where('node_id', $node->getKey())->count())->toBe(1);
 
     $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
 
@@ -44,5 +44,5 @@ it('physically deletes a trashed document node\'s inline version content on purg
     // The node row and every v_node_document_versions row that FK-cascades off it
     // are physically gone — the inline content does not survive purge.
     expect(Node::withTrashed()->whereKey($node->getKey())->exists())->toBeFalse()
-        ->and(NodeDocumentVersion::query()->where('node_id', $node->getKey())->count())->toBe(0);
+        ->and(DocumentRevision::query()->where('node_id', $node->getKey())->count())->toBe(0);
 });

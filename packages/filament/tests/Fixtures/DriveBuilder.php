@@ -34,7 +34,7 @@ final class DriveBuilder
         $host->forceFill(['id' => $next]);
         $host->exists = true;
 
-        return Vaulter::for($host)->storage();
+        return Vaulter::for($host)->model();
     }
 
     /**

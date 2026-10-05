@@ -58,12 +58,12 @@ Vaulter\Contracts\Drive\DriveHandle
   createFolder(string $name, ?\Vaulter\Models\Drive\Node $parent = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   forceDelete(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): void
   list(?\Vaulter\Models\Drive\Node $folder = null): \Illuminate\Database\Eloquent\Collection
+  model(): \Vaulter\Models\Drive\Drive
   move(\Vaulter\Models\Drive\Node $node, ?\Vaulter\Models\Drive\Node $into = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  panel(): string
+  profile(): \Vaulter\Profiles\Profile
   rename(\Vaulter\Models\Drive\Node $node, string $name, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   restore(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   root(): \Vaulter\Models\Drive\Node
-  storage(): \Vaulter\Models\Drive\Drive
   trash(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   upload(mixed $source, ?\Vaulter\Models\Drive\Node $into = null, ?string $name = null, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   uploadVersion(\Vaulter\Models\Drive\Node $target, mixed $source, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
@@ -237,7 +237,6 @@ Vaulter\Support\Config
   permissionDrivers(): array
   publicMiddleware(): array
   publicRateLimitPerMinute(): int
-  reverbConnection(): string
   routePrefix(): string
   shareDefaultTtlHours(): int
   shareMaxTtlHours(): int

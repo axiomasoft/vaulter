@@ -235,7 +235,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 |---|---|
 | `Exceptions\Documents\UnknownExportFormatException` | An export requests a format with no registered exporter (the message lists the available ones). |
 | `422 Unprocessable` | The legacy `documents/{id}/export` `format` query is not a registered exporter format (validation rule). |
-| `Exceptions\Documents\NotADocumentNodeException` | The node export targets a node that is not `kind=document`. |
+| `Exceptions\NotADocumentException` | The node export targets a node that is not `kind=document`. |
 
 ## Reference
 

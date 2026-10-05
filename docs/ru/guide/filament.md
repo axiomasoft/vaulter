@@ -137,7 +137,7 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 #### StorageResource
 
 **Преимущественно на чтение** — вид на владеемые полиморфные корни дисков. Хранилища провизионируются
-ядровым `StorageManager` (get-or-create на хост-сущности), а не создаются из панели — поэтому этот
+ядровым `DriveProvisioner` (get-or-create на хост-сущности), а не создаются из панели — поэтому этот
 ресурс **не может создавать и редактировать** строку (`canCreate()` возвращает `false`); он лишь
 перечисляет и инспектирует.
 
@@ -151,7 +151,7 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 
 Сердце панели: единое дерево узлов `folder | file | document | shortcut`. Мутации — это **никогда** не
 редактирование плоской формы: каждое строковое действие вызывает ядровый Drive Action через
-[`DriveContext`](/ru/reference/facade):
+[`DriveHandle`](/ru/reference/facade):
 
 | Строковое действие | Ядровый путь | Право-гейт |
 |------------|-----------|----------------|

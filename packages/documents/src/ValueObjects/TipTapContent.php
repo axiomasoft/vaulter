@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\ValueObjects;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Support\Config;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Support\Config;
  *    whole document (F-P1.11-01/-02). Garbage never enters the store.
  *  - {@see decayFrom()} — READ time. Lenient: unknown nodes/marks/attribute KEYS are
  *    STRIPPED and a valid doc always comes back (never throws — the documents package's
- *    NodeDocumentVersion::tipTapContent() promises exactly this; core has no dependency on
+ *    DocumentRevision::tipTapContent() promises exactly this; core has no dependency on
  *    that package, one-way T6/D2, so it is named as plain text, never imported). One legacy
  *    snapshot must not take down preview, export and the whole listing UI.
  *
@@ -145,7 +145,7 @@ final readonly class TipTapContent implements DocumentContent
     public static function fromArray(array $doc): self
     {
         if (($doc['type'] ?? null) !== 'doc') {
-            throw InvalidTipTapContentException::missingDocNode();
+            throw InvalidDocumentContentException::missingDocNode();
         }
 
         self::validateChildren($doc['content'] ?? null);
@@ -302,7 +302,7 @@ final readonly class TipTapContent implements DocumentContent
         $size = $this->sizeInKb();
 
         if ($maxKb > 0 && $size > $maxKb) {
-            throw InvalidTipTapContentException::tooLarge($size, $maxKb);
+            throw InvalidDocumentContentException::tooLarge($size, $maxKb);
         }
 
         return $this;
@@ -322,12 +322,12 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         if (!is_array($content)) {
-            throw InvalidTipTapContentException::unknownNodeType('(non-array content)');
+            throw InvalidDocumentContentException::unknownNodeType('(non-array content)');
         }
 
         foreach ($content as $node) {
             if (!is_array($node)) {
-                throw InvalidTipTapContentException::unknownNodeType('(non-object node)');
+                throw InvalidDocumentContentException::unknownNodeType('(non-object node)');
             }
 
             /** @var array<string, mixed> $node */
@@ -343,7 +343,7 @@ final readonly class TipTapContent implements DocumentContent
         $type = $node['type'] ?? null;
 
         if (!is_string($type) || !in_array($type, self::allowedNodeTypes(), true)) {
-            throw InvalidTipTapContentException::unknownNodeType(is_string($type) ? $type : '(missing)');
+            throw InvalidDocumentContentException::unknownNodeType(is_string($type) ? $type : '(missing)');
         }
 
         self::validateAttributes($type, $node['attrs'] ?? null);
@@ -364,18 +364,18 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         if (!is_array($marks)) {
-            throw InvalidTipTapContentException::unknownMarkType('(non-array marks)');
+            throw InvalidDocumentContentException::unknownMarkType('(non-array marks)');
         }
 
         foreach ($marks as $mark) {
             if (!is_array($mark)) {
-                throw InvalidTipTapContentException::unknownMarkType('(non-object mark)');
+                throw InvalidDocumentContentException::unknownMarkType('(non-object mark)');
             }
 
             $type = $mark['type'] ?? null;
 
             if (!is_string($type) || !in_array($type, self::allowedMarkTypes(), true)) {
-                throw InvalidTipTapContentException::unknownMarkType(is_string($type) ? $type : '(missing)');
+                throw InvalidDocumentContentException::unknownMarkType(is_string($type) ? $type : '(missing)');
             }
 
             /** @var array<string, mixed> $mark */
@@ -408,7 +408,7 @@ final readonly class TipTapContent implements DocumentContent
 
         foreach (array_keys($attributes) as $key) {
             if (!is_string($key) || !in_array($key, $allowed, true)) {
-                throw InvalidTipTapContentException::disallowedAttribute($type, is_string($key) ? $key : '(non-string key)');
+                throw InvalidDocumentContentException::disallowedAttribute($type, is_string($key) ? $key : '(non-string key)');
             }
         }
 
@@ -422,19 +422,19 @@ final readonly class TipTapContent implements DocumentContent
 
         foreach ($attributes as $value) {
             if (self::carriesDangerousScheme($value)) {
-                throw InvalidTipTapContentException::disallowedUrlScheme(is_string($value) ? $value : '(nested value)');
+                throw InvalidDocumentContentException::disallowedUrlScheme(is_string($value) ? $value : '(nested value)');
             }
         }
 
         if ($type === 'heading' && array_key_exists('level', $attributes) && !is_numeric($attributes['level'])) {
-            throw InvalidTipTapContentException::disallowedAttribute('heading', 'level');
+            throw InvalidDocumentContentException::disallowedAttribute('heading', 'level');
         }
     }
 
     private static function validateUrl(mixed $url): void
     {
         if (!is_string($url) || !LinkSchemeValidator::isAllowed($url)) {
-            throw InvalidTipTapContentException::disallowedUrlScheme(is_string($url) ? $url : '(non-string)');
+            throw InvalidDocumentContentException::disallowedUrlScheme(is_string($url) ? $url : '(non-string)');
         }
     }
 

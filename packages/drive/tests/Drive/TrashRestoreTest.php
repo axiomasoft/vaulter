@@ -18,7 +18,7 @@ it('trash помечает узел и всё поддерево, used_bytes н�
     $sub = $drive->createFolder('Sub', $folder);
     $drive->upload(DriveTestHelpers::streamFor('bytes here'), into: $sub, originalName: 'f.bin');
 
-    $usedBefore = $drive->storage()->refresh()->used_bytes;
+    $usedBefore = $drive->model()->refresh()->used_bytes;
     expect($usedBefore)->toBe(10);
 
     $drive->trash($folder);
@@ -27,7 +27,7 @@ it('trash помечает узел и всё поддерево, used_bytes н�
     expect($folder->refresh()->trashed_at)->not->toBeNull()
         ->and($sub->refresh()->trashed_at)->not->toBeNull()
         // Trashed bytes still occupy storage — used_bytes is UNCHANGED.
-        ->and($drive->storage()->refresh()->used_bytes)->toBe($usedBefore);
+        ->and($drive->model()->refresh()->used_bytes)->toBe($usedBefore);
 });
 
 it('trash освобождает имя для нового сиблинга (partial-uniq исключает trashed)', function (): void {

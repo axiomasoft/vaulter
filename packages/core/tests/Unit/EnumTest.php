@@ -13,6 +13,6 @@ it('exposes document type metadata from attributes', function (): void {
 });
 
 it('labels collaboration drivers', function (): void {
-    expect(CollaborationDriverType::Reverb->label())->toBe('Laravel Reverb')
-        ->and(CollaborationDriverType::Hocuspocus->label())->toBe('Hocuspocus');
+    expect(CollaborationDriverType::Hocuspocus->label())->toBe('Hocuspocus')
+        ->and(CollaborationDriverType::cases())->toBe([CollaborationDriverType::Hocuspocus]);
 });

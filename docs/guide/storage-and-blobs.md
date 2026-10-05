@@ -208,7 +208,7 @@ $blobStore->detach($fileVersion, $blob);   // bytes are NOT deleted here — GC 
 $stream = $blobStore->read($blob);         // resource|null over the canonical bytes
 ```
 
-In the Drive, `UploadFileAction` prepares and hashes bytes through
+In the Drive, `IngestFileAction` prepares and hashes bytes through
 `ContentStore::stage()` before entering its SQL transaction. Inside the transaction,
 locks follow **drive → nodes by id → file aggregate → quota → CAS**. A revision
 reads its previous head and `version_count` from the locked file; its new number is

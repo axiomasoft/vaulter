@@ -1,0 +1,18 @@
+{
+  "ts": "2026-10-05T06:06:58Z",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P2.1",
+  "command": "plan-run",
+  "session_id": "01a10a45-06cd-7b82-9786-9ef7d504d26c",
+  "run_id": null,
+  "attempt": 1,
+  "actor": "codex/gpt-6.1-sol",
+  "friction": [
+    "local-repair"
+  ],
+  "result": "local-repair",
+  "cost_usd": null,
+  "num_turns": null,
+  "duration_ms": null,
+  "note": "Present-only metadata/projection repair; historical closure unchanged. Fresh current checks qualified in artifacts/P2.2/p21-present-metadata-repair-20261005T060658881213Z.\nwrite-site: pre_mutation: allow · pre_final: allow"
+}

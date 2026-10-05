@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /**
  * VLT-REMED P5.2 / R-01 (Blocker) — ВТОРОЙ, более тяжёлый удар барьера P0.1: он бил не
- * только по записи, но и по ЧТЕНИЮ. `NodeDocumentVersion::tipTapContent()` гидрировал
+ * только по записи, но и по ЧТЕНИЮ. `DocumentRevision::tipTapContent()` гидрировал
  * снапшот из БД тем же строгим `fromArray()`, и ЛЮБАЯ версия, сохранённая ДО P0.1 и
  * содержащая image/table/underline/textStyle/highlight, БРОСАЛА исключение при открытии,
  * превью и экспорте — вопреки собственному докблоку метода («decays to an empty doc rather
@@ -20,18 +20,18 @@ use Vaulter\Documents\ValueObjects\TipTapContent;
  * Контракт владельца (D27/D29): чтение ДЕГРАДИРУЕТ (strip неизвестного), запись остаётся
  * строгой. Данные в БД не мигрируются — decay работает на чтении.
  */
-function legacyVersion(array $content): NodeDocumentVersion
+function legacyVersion(array $content): DocumentRevision
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Legacy '.bin2hex(random_bytes(4)),
         content: DocumentTestHelpers::content('placeholder'),
         parent: $drive->root(),
     ));
 
-    $version = NodeDocumentVersion::query()->where('node_id', $node->getKey())->firstOrFail();
+    $version = DocumentRevision::query()->where('node_id', $node->getKey())->firstOrFail();
 
     // Перезаписываем снапшот «как он лежал до P0.1» — миграции данных нет, версия в БД
     // остаётся ровно такой, какой её записал старый код.
@@ -51,7 +51,7 @@ it('легаси-версия с неизвестными узлами ЧИТА�
         ],
     ]);
 
-    // До фикса — InvalidTipTapContentException прямо здесь.
+    // До фикса — InvalidDocumentContentException прямо здесь.
     $content = $version->tipTapContent();
 
     expect($content)->toBeInstanceOf(TipTapContent::class)

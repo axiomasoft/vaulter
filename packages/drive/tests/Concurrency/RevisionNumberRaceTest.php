@@ -38,7 +38,7 @@ it('V03 serializes revisions and accounts for their actual preceding heads', fun
         ->and($file->revision_count)->toBe(3)
         ->and($head->number)->toBe(3)
         ->and($node->refresh()->current_version_id)->toBe($head->id)
-        ->and($drive->storage()->refresh()->used_bytes)->toBe($head->size_bytes)
+        ->and($drive->model()->refresh()->used_bytes)->toBe($head->size_bytes)
         ->and($node->size_bytes)->toBe($head->size_bytes);
 });
 
@@ -99,7 +99,7 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
     }
 
     expect($injected)->toBeTrue()
-        ->and($drive->storage()->refresh()->used_bytes)->toBe(20)
+        ->and($drive->model()->refresh()->used_bytes)->toBe(20)
         ->and(File::query()->count())->toBe(1)
         ->and(FileRevision::query()->sole()->number)->toBe(1)
         ->and(Blob::query()->count())->toBe(1)

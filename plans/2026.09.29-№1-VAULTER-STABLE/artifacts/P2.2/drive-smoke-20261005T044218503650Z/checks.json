@@ -1,0 +1,119 @@
+[
+  {
+    "id": "drive-smoke",
+    "argv": [
+      "bash",
+      "-c",
+      "cd packages/drive && exec \"$@\"",
+      "drive-smoke",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "tests/Arch",
+      "tests/Providers",
+      "tests/Drive/StorageManagerTest.php",
+      "--display-warnings"
+    ],
+    "depends_on": []
+  },
+  {
+    "id": "core-snapshot-check",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+    ],
+    "depends_on": [
+      "drive-smoke"
+    ]
+  },
+  {
+    "id": "root-pint-check",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "depends_on": [
+      "core-snapshot-check"
+    ]
+  },
+  {
+    "id": "drive-pint-check",
+    "argv": [
+      "bash",
+      "-c",
+      "cd packages/drive && exec \"$@\"",
+      "drive-smoke",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "depends_on": [
+      "root-pint-check"
+    ]
+  },
+  {
+    "id": "root-phpstan",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M"
+    ],
+    "depends_on": [
+      "drive-pint-check"
+    ]
+  },
+  {
+    "id": "drive-phpstan",
+    "argv": [
+      "bash",
+      "-c",
+      "cd packages/drive && exec \"$@\"",
+      "drive-smoke",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "APP_ENV=testing",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--memory-limit=512M"
+    ],
+    "depends_on": [
+      "root-phpstan"
+    ]
+  }
+]

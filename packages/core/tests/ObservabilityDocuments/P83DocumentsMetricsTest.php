@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Documents\Actions\Collaboration\PersistYjsSnapshotAction;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationSessionService;
-use Vaulter\Documents\Data\Collaboration\PersistYjsSnapshotData;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
@@ -22,8 +22,8 @@ function p83DocumentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Metrics doc',
         content: DocumentTestHelpers::content('Body'),
         parent: $drive->root(),
@@ -48,7 +48,8 @@ it('records vaulter_export_duration_seconds', function (): void {
 });
 
 it('records vaulter_collab_session_issued_total', function (): void {
-    config()->set('vaulter.collaboration.driver', 'reverb');
+    config()->set('vaulter.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = p83DocumentNode();
     $actor = new TestUser;
@@ -70,7 +71,7 @@ it('records vaulter_collab_session_issued_total', function (): void {
 it('records vaulter_collab_snapshot_duration_seconds', function (): void {
     LoadTier::set('S');
 
-    app(PersistYjsSnapshotAction::class)->execute(new PersistYjsSnapshotData(
+    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
         node: p83DocumentNode(),
         yjsState: 'binary',
         actorId: 1,

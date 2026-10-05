@@ -289,7 +289,7 @@ export interface Activity {
 
 export type DocumentFormatName = 'richtext' | 'table' | 'markdown' | (string & {})
 
-/** A node-attached document version (`NodeDocumentVersionResource`). */
+/** A node-attached document version (`DocumentRevisionResource`). */
 export interface DocumentVersion {
   id: NodeId
   node_id: NodeId

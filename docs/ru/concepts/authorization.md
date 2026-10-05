@@ -18,7 +18,7 @@ Vaulter, — `AccessResolver`. Он складывает две полосы (la
 
 ::: info Две полосы, один авторитет
 `AccessResolver` (`Vaulter\Access\AccessResolver`) — единственный авторитет, к которому
-обращаются все Policy, `DriveContext`, контроллеры и Resource. Хост подключается к нему
+обращаются все Policy, `DriveHandle`, контроллеры и Resource. Хост подключается к нему
 через контракт `PermissionDriver`, но никогда не подменяет сам резолвер.
 :::
 
@@ -26,7 +26,7 @@ Vaulter, — `AccessResolver`. Он складывает две полосы (la
 
 | Метод | Возвращает | Назначение |
 |---|---|---|
-| `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | Единая точка «да/нет», которую зовут Policy и `DriveContext`. |
+| `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | Единая точка «да/нет», которую зовут Policy и `DriveHandle`. |
 | `effectiveGrants(Authorizable $actor, Node $node)` | `GrantSet` | Свёрнутый результат всего алгоритма — allow-маска, deny-маска, уровень. |
 | `abilitiesFor(Authorizable $actor, Node $node)` | `array<string, bool>` | Каждая `Ability` → разрешена/запрещена; заполняет объект `abilities` для UI. |
 | `canCreateInWorkspace(Authorizable $actor, Storage $storage)` | `bool` | Гейт создания папок/загрузок, где ещё нет узла. |

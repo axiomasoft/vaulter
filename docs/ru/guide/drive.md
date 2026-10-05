@@ -1,6 +1,6 @@
 ---
 title: Drive — хранилища, папки, файлы и узлы
-description: Vaulter Drive — одно хранилище на сущность хоста, единое дерево v_nodes и хэндл DriveContext (createFolder / upload / move / copy / rename / trash / restore / forceDelete / list).
+description: Vaulter Drive — одно хранилище на сущность хоста, единое дерево v_nodes и хэндл DriveHandle (createFolder / upload / move / copy / rename / trash / restore / forceDelete / list).
 outline: deep
 ---
 
@@ -10,10 +10,10 @@ outline: deep
 команда, пользователь, …) получает **контейнер-хранилище**, а каждое хранилище
 держит единое дерево смежности из **узлов** — папок, файлов и документов в одной
 таблице `v_nodes`. Ко всему этому вы обращаетесь через один эргономичный хэндл:
-`Vaulter::for($entity)`, который возвращает [`DriveContext`](/ru/reference/facade).
+`Vaulter::for($entity)`, который возвращает [`DriveHandle`](/ru/reference/facade).
 
 ::: tip Один хэндл, одно хранилище
-`DriveContext` привязан ровно к одной паре `(Storage, panel)`. Откройте его один
+`DriveHandle` привязан ровно к одной паре `(Drive, profile)`. Откройте его один
 раз на запрос и переиспользуйте — каждый метод ниже делегирует небольшому Action
 (на запись) или read-репозиторию; сам хэндл не добавляет бизнес-логики и не делает
 проверок доступа (авторизация обеспечивается на [границе REST](/ru/reference/rest-api)).
@@ -30,7 +30,7 @@ outline: deep
 
 `Vaulter::for()` — основная точка входа для интеграции. Она **находит-или-создаёт**
 строку хранилища для сущности (идемпотентно — второй вызов вернёт то же самое
-хранилище), автоматически провижинит корневую папку и отдаёт `DriveContext`:
+хранилище), автоматически провижинит корневую папку и отдаёт `DriveHandle`:
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -48,8 +48,8 @@ $drive = Vaulter::for($project, panel: 'attachments');
 защищённый частичным UNIQUE-индексом: конкурентные первые обращения сходятся на
 одной строке.
 
-::: details Уже есть модель Storage? Используйте `forStorage()`
-Когда строка хранилища уже разрешена (например, `Storage` привязан через
+::: details Уже есть модель Drive? Используйте `forStorage()`
+Когда строка хранилища уже разрешена (например, `Drive` привязан через
 route-model-binding), пропустите поиск по владельцу с помощью
 `Vaulter::forStorage($storage)`. Это тот шов, который использует HTTP-слой; панель
 хэндла отражает собственную `panel` хранилища.
@@ -67,19 +67,20 @@ $drive = Vaulter::forStorage($storage);
 
 ```php
 $root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->storage();    // Vaulter\Models\Drive\Drive
-$panel = $drive->panel();        // string
+$storage = $drive->model();    // Vaulter\Models\Drive\Drive
+$profile = $drive->profile();  // Vaulter\Profiles\Profile
+$profileId = $profile->getId(); // string
 ```
 
 ### Квота и использование
 
 Хранилище отслеживает `used_bytes` и опциональную `quota_bytes` (nullable = без
 квоты). Оба поля приводятся к integer на модели и отдаются как есть через
-[`StorageResource`](/ru/reference/rest-api#storages), чтобы UI мог отрисовать шкалу
+[`DriveResource`](/ru/reference/rest-api#storages), чтобы UI мог отрисовать шкалу
 использования:
 
 ```php
-$storage = $drive->storage();
+$storage = $drive->model();
 
 $storage->used_bytes;   // int — сейчас потреблённые байты
 $storage->quota_bytes;  // ?int — null означает без ограничений
@@ -104,11 +105,11 @@ $storage->quota_bytes;  // ?int — null означает без огранич�
 | `NodeKind::Document` | `document` | `v_node_document_versions` (TipTap/Yjs) |
 | `NodeKind::Shortcut` | `shortcut` | указатель на другой узел (`shortcut_target_id`) |
 
-Эта страница покрывает папки и файлы через `DriveContext`. У узлов-документов
+Эта страница покрывает папки и файлы через `DriveHandle`. У узлов-документов
 (rich-text/Yjs) свой поток создания/контента/версий — см.
 [Редактирование](/ru/guide/documents) и [Версии](/ru/guide/documents).
 
-## Методы DriveContext
+## Методы DriveHandle
 
 Все методы записи принимают опциональный `$actorId` (id пользователя хоста, которому
 атрибутируется операция) и возвращают затронутый `Node`; `forceDelete` возвращает
@@ -186,7 +187,7 @@ $node = $drive->upload(
 original name для `UploadedFile`, basename для `SplFileInfo`, иначе `upload.bin`).
 
 ::: tip Резюмируемые / большие загрузки
-`DriveContext::upload()` — это внутрипроцессный путь: он читает весь источник в
+`DriveHandle::upload()` — это внутрипроцессный путь: он читает весь источник в
 поток. Для браузерных загрузок больших файлов используйте вместо этого эндпоинты
 **резюмируемой загрузки** (tus / S3-multipart), которые собирают байты через *тот
 же* безгоночный CAS-коммит. См. [Загрузки](/ru/guide/uploads).
@@ -323,16 +324,16 @@ $children = $drive->list($folder);          // содержимое папки
 
 | Событие | Диспетчится |
 |---|---|
-| `Vaulter\Drive\Events\StorageCreated` | первый провижининг хранилища |
-| `Vaulter\Drive\Events\NodeCreated` | `createFolder()` |
-| `Vaulter\Drive\Events\FileUploaded` | `upload()` (новый файл) |
-| `Vaulter\Drive\Events\NodeVersionCommitted` | `uploadVersion()` / резюмируемый коммит |
-| `Vaulter\Drive\Events\NodeMoved` | `move()` |
-| `Vaulter\Drive\Events\NodeRenamed` | `rename()` |
-| `Vaulter\Drive\Events\NodeCopied` | `copy()` |
-| `Vaulter\Drive\Events\NodeTrashed` | `trash()` |
-| `Vaulter\Drive\Events\NodeRestored` | `restore()` |
-| `Vaulter\Drive\Events\NodeForceDeleted` | `forceDelete()` |
+| `Vaulter\Drive\Events\Drives\DriveCreated` | первый провижининг хранилища |
+| `Vaulter\Drive\Events\Nodes\FolderCreated` | `createFolder()` |
+| `Vaulter\Drive\Events\Files\FileUploaded` | `upload()` (новый файл) |
+| `Vaulter\Drive\Events\Files\FileRevisionAdded` | `uploadVersion()` / резюмируемый коммит |
+| `Vaulter\Drive\Events\Nodes\NodeMoved` | `move()` |
+| `Vaulter\Drive\Events\Nodes\NodeRenamed` | `rename()` |
+| `Vaulter\Drive\Events\Nodes\NodeCopied` | `copy()` |
+| `Vaulter\Drive\Events\Nodes\NodeTrashed` | `trash()` |
+| `Vaulter\Drive\Events\Nodes\NodeRestored` | `restore()` |
+| `Vaulter\Drive\Events\Nodes\NodePurged` | `forceDelete()` |
 
 Полные полезные нагрузки — в [справочнике событий](/ru/reference/events).
 
@@ -356,4 +357,4 @@ await list({ parentId: folderId })
 - [Справочник REST API](/ru/reference/rest-api) — каждый маршрут Drive с параметрами и ответами
 - [Загрузки](/ru/guide/uploads) — резюмируемые (tus / S3-multipart) загрузки
 - [Storage Panels](/ru/concepts/storage-panels) — настройка изолированных дисков на сущность
-- [API `DriveContext`](/ru/reference/facade) — полные сигнатуры методов
+- [API `DriveHandle`](/ru/reference/facade) — полные сигнатуры методов

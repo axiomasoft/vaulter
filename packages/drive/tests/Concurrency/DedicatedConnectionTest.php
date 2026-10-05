@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Actions\CreateFolderAction;
-use Vaulter\Drive\Data\CreateDriveFolderData;
+use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
+use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Concurrency\ForkRace;
@@ -32,7 +32,7 @@ it('rolls back an Action insertion on the dedicated Vaulter connection', functio
         throw new RuntimeException('failure after insertion');
     });
 
-    expect(fn () => app(CreateFolderAction::class)->execute(new CreateDriveFolderData(
+    expect(fn () => app(CreateFolderAction::class)->execute(new CreateFolderInput(
         storage: $storage,
         name: 'must roll back',
         parent: $storage->rootNode,

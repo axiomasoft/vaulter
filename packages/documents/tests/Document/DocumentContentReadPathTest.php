@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -10,7 +10,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 /**
  * VLT-REMED P5.2 / R-12 — ГЛАВНЫЙ путь чтения контента (GET nodes/{node}/content →
- * NodeDocumentVersionResource), тот самый, который монтирует в редактор SPA-компонент
+ * DocumentRevisionResource), тот самый, который монтирует в редактор SPA-компонент
  * VaulterDocumentNode.vue.
  *
  * Оба эшелона защиты от stored XSS (D4) мимо него: первый (store-time TipTapContent)
@@ -29,7 +29,7 @@ beforeEach(function (): void {
 
 function readPathStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 /**
@@ -40,9 +40,9 @@ function readPathStorage(): Drive
  */
 function seedLegacyHeadContent(int|string $nodeId, array $content): void
 {
-    $head = NodeDocumentVersion::query()->where('node_id', $nodeId)->orderByDesc('version_no')->firstOrFail();
+    $head = DocumentRevision::query()->where('node_id', $nodeId)->orderByDesc('version_no')->firstOrFail();
 
-    NodeDocumentVersion::query()->whereKey($head->getKey())->update(['content' => json_encode($content)]);
+    DocumentRevision::query()->whereKey($head->getKey())->update(['content' => json_encode($content)]);
 }
 
 it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {

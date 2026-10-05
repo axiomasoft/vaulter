@@ -1,0 +1,79 @@
+{
+  "session": "01a10a74-03ad-7080-a9e3-ada652756213",
+  "argv": [
+    "grok",
+    "--permission-mode",
+    "dontAsk",
+    "--tools",
+    "read_file,grep,list_dir",
+    "--allow",
+    "Read",
+    "--allow",
+    "Grep",
+    "--deny",
+    "MCPTool",
+    "--deny",
+    "Bash",
+    "--deny",
+    "Edit",
+    "--deny",
+    "Write",
+    "--no-subagents",
+    "--disable-web-search",
+    "--max-turns",
+    "1",
+    "agent",
+    "--no-leader",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "stdio"
+  ],
+  "complete": true,
+  "detail": "ACP stopReason=end_turn; usage_complete=True",
+  "observed_context": 500000,
+  "provider_route": {
+    "source": "/home/vostrikov/.grok/sessions/%2Fhome%2Fvostrikov%2Fprojects%2Fpackages%2Fvaulter/01a10a74-03ad-7080-a9e3-ada652756213/summary.json",
+    "session_id": "01a10a74-03ad-7080-a9e3-ada652756213",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_tokens": 500000
+  },
+  "heartbeats": [],
+  "read_ledger": {
+    "schema_version": "review-read-ledger/v1",
+    "reads": []
+  },
+  "provider_runtime": {
+    "executable": "/home/vostrikov/.local/bin/grok",
+    "sha256": "41626a53292324140b92556b9d42ff5542e3dcd04aff85eafb8689dd4adb44fc",
+    "agent_info": null
+  },
+  "usage": {
+    "inputTokens": 21603,
+    "outputTokens": 43,
+    "totalTokens": 21646,
+    "cachedReadTokens": 0,
+    "cacheCreationTokens": 0,
+    "reasoningTokens": 38,
+    "modelCalls": 1,
+    "apiDurationMs": 4260,
+    "costUsdTicks": 147777600,
+    "modelUsage": {
+      "grok-4.7-build": {
+        "inputTokens": 21603,
+        "outputTokens": 43,
+        "totalTokens": 21646,
+        "cachedReadTokens": 0,
+        "cacheCreationTokens": 0,
+        "reasoningTokens": 38,
+        "modelCalls": 1,
+        "apiDurationMs": 4260,
+        "costUsdTicks": 147777600
+      }
+    },
+    "numTurns": 1
+  }
+}

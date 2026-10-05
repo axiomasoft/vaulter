@@ -1,6 +1,6 @@
 ---
 title: Drive — storages, folders, files & nodes
-description: The Vaulter Drive — one storage per host entity, a unified v_nodes tree, and the DriveContext handle (createFolder / upload / move / copy / rename / trash / restore / forceDelete / list).
+description: The Vaulter Drive — one storage per host entity, a unified v_nodes tree, and the DriveHandle handle (createFolder / upload / move / copy / rename / trash / restore / forceDelete / list).
 outline: deep
 ---
 
@@ -10,10 +10,10 @@ The **Drive** is Vaulter's core domain: every host entity (a project, a team, a
 user, …) gets a **storage container**, and every storage holds a single
 adjacency tree of **nodes** — folders, files and documents in the same `v_nodes`
 table. You reach all of it through one ergonomic handle: `Vaulter::for($entity)`,
-which returns a [`DriveContext`](/reference/facade).
+which returns a [`DriveHandle`](/reference/facade).
 
 ::: tip One handle, one storage
-A `DriveContext` is bound to exactly one `(Storage, panel)` pair. Open it once
+A `DriveHandle` is bound to exactly one `(Drive, profile)` pair. Open it once
 per request and reuse it — every method below delegates to a small Action (write)
 or read repository; the handle itself adds no business logic and performs no
 access checks (authorization is enforced at the [REST boundary](/reference/rest-api)).
@@ -30,7 +30,7 @@ used/quota accounting the UI shows.
 
 `Vaulter::for()` is the primary integration entry point. It **get-or-creates** the
 storage row for the entity (idempotent — a second call returns the same storage),
-auto-provisions the root folder, and hands back a `DriveContext`:
+auto-provisions the root folder, and hands back a `DriveHandle`:
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -47,8 +47,8 @@ $drive = Vaulter::for($project, panel: 'attachments');
 The owner triple `(owner_type, owner_id, panel)` is the idempotency key, guarded by
 a partial UNIQUE index — concurrent first-touches converge on one row.
 
-::: details Already have a Storage model? Use `forStorage()`
-When the storage row is already resolved (e.g. a route-model-bound `Storage`), skip
+::: details Already have a Drive model? Use `forStorage()`
+When the storage row is already resolved (e.g. a route-model-bound `Drive`), skip
 the owner lookup with `Vaulter::forStorage($storage)`. This is the seam the HTTP
 layer uses; the handle's panel mirrors the storage's own `panel`.
 
@@ -71,11 +71,11 @@ operation's transaction:
 - **Destinations are live folders of the same drive.** Creating, uploading, moving or
   copying into a file, a document or a trashed folder raises
   `InvalidDestinationException` (409 `invalid_destination`); a folder of another drive
-  raises `CrossStorageMoveException` (409 `cross_drive_operation`).
+  raises `CrossDriveOperationException` (409 `cross_drive_operation`).
 - **The root is never an operand.** Renaming, moving, copying, trashing or
   force-deleting it raises `InvalidDestinationException`.
 - **No cycles.** A folder cannot move into itself or its own subtree
-  (`CycleException`, 409 `node_move_cycle`), even when two moves race.
+  (`NodeCycleException`, 409 `node_move_cycle`), even when two moves race.
 
 Every write takes the drive's tree lock first — exclusively for move, restore, trash and
 force-delete, shared for create, upload, copy and rename — and only then locks node rows.
@@ -85,18 +85,19 @@ them. A custom Action that changes the tree should follow the same order
 
 ```php
 $root = $drive->root();          // Vaulter\Models\Drive\Node
-$storage = $drive->storage();    // Vaulter\Models\Drive\Drive
-$panel = $drive->panel();        // string
+$storage = $drive->model();    // Vaulter\Models\Drive\Drive
+$profile = $drive->profile();  // Vaulter\Profiles\Profile
+$profileId = $profile->getId(); // string
 ```
 
 ### Quota & usage
 
 The storage tracks `used_bytes` and an optional `quota_bytes` (nullable = no
 quota). Both are integer-cast on the model and surfaced verbatim by the
-[`StorageResource`](/reference/rest-api#storages) so the UI can render a usage bar:
+[`DriveResource`](/reference/rest-api#storages) so the UI can render a usage bar:
 
 ```php
-$storage = $drive->storage();
+$storage = $drive->model();
 
 $storage->used_bytes;   // int — bytes currently consumed
 $storage->quota_bytes;  // ?int — null means unlimited
@@ -121,11 +122,11 @@ Every folder, file and document is a row in `v_nodes`, discriminated by its
 | `NodeKind::Document` | `document` | `v_node_document_versions` (TipTap/Yjs) |
 | `NodeKind::Shortcut` | `shortcut` | a pointer to another node (`shortcut_target_id`) |
 
-This page covers folders and files through the `DriveContext`. Document nodes
+This page covers folders and files through the `DriveHandle`. Document nodes
 (rich-text/Yjs) have their own create/content/version flow — see
 [Editing](/guide/documents) and [Versions](/guide/documents).
 
-## DriveContext methods
+## DriveHandle methods
 
 All write methods accept an optional `$actorId` (the host user id to attribute the
 operation to) and return the affected `Node`; `forceDelete` returns `void`.
@@ -206,7 +207,7 @@ When `$name` is omitted, Vaulter derives the stored name from the source (an
 `upload.bin`).
 
 ::: tip Resumable / large uploads
-`DriveContext::upload()` is the in-process path — it reads the whole source into a
+`DriveHandle::upload()` is the in-process path — it reads the whole source into a
 stream. For browser uploads of large files, use the **resumable upload** endpoints
 (tus / S3-multipart) instead, which assemble the bytes through the *same* race-free
 CAS commit. See [Uploads](/guide/uploads).
@@ -349,16 +350,16 @@ Drive writes dispatch domain events you can listen to:
 
 | Event | Dispatched by |
 |---|---|
-| `Vaulter\Drive\Events\StorageCreated` | first provisioning of a storage |
-| `Vaulter\Drive\Events\NodeCreated` | `createFolder()` |
-| `Vaulter\Drive\Events\FileUploaded` | `upload()` (new file) |
-| `Vaulter\Drive\Events\NodeVersionCommitted` | `uploadVersion()` / resumable commit |
-| `Vaulter\Drive\Events\NodeMoved` | `move()` |
-| `Vaulter\Drive\Events\NodeRenamed` | `rename()` |
-| `Vaulter\Drive\Events\NodeCopied` | `copy()` |
-| `Vaulter\Drive\Events\NodeTrashed` | `trash()` |
-| `Vaulter\Drive\Events\NodeRestored` | `restore()` |
-| `Vaulter\Drive\Events\NodeForceDeleted` | `forceDelete()` |
+| `Vaulter\Drive\Events\Drives\DriveCreated` | first provisioning of a storage |
+| `Vaulter\Drive\Events\Nodes\FolderCreated` | `createFolder()` |
+| `Vaulter\Drive\Events\Files\FileUploaded` | `upload()` (new file) |
+| `Vaulter\Drive\Events\Files\FileRevisionAdded` | `uploadVersion()` / resumable commit |
+| `Vaulter\Drive\Events\Nodes\NodeMoved` | `move()` |
+| `Vaulter\Drive\Events\Nodes\NodeRenamed` | `rename()` |
+| `Vaulter\Drive\Events\Nodes\NodeCopied` | `copy()` |
+| `Vaulter\Drive\Events\Nodes\NodeTrashed` | `trash()` |
+| `Vaulter\Drive\Events\Nodes\NodeRestored` | `restore()` |
+| `Vaulter\Drive\Events\Nodes\NodePurged` | `forceDelete()` |
 
 See the full payloads in the [events reference](/reference/events).
 
@@ -382,4 +383,4 @@ await list({ parentId: folderId })
 - [REST API reference](/reference/rest-api) — every Drive route with params and responses
 - [Uploads](/guide/uploads) — resumable (tus / S3-multipart) uploads
 - [Storage Panels](/guide/storage-panels) — configuring isolated drives per entity
-- [`DriveContext` API](/reference/facade) — full method signatures
+- [`DriveHandle` API](/reference/facade) — full method signatures

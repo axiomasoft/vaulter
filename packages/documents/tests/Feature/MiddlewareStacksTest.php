@@ -8,10 +8,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\Sanctum;
 use Laravel\Sanctum\SanctumServiceProvider;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
-use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Contracts\HostUserResolver;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
@@ -46,7 +46,7 @@ class MiddlewareStacksTestCase extends CollaborationEnabledTestCase
 uses(MiddlewareStacksTestCase::class, RefreshDatabase::class);
 
 it('requires Sanctum on protected routes and accepts an authenticated actor', function (): void {
-    $storage = DocumentTestHelpers::drive()->storage();
+    $storage = DocumentTestHelpers::drive()->model();
     $url = 'api/vaulter/storages/'.$storage->getKey().'/nodes';
     $this->getJson($url)->assertUnauthorized();
     Sanctum::actingAs((new MiddlewareStackUser)->forceFill(['id' => 17]));
@@ -62,8 +62,8 @@ it('serves a valid public share without a Sanctum token', function (): void {
 it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $drive = DocumentTestHelpers::drive();
     app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(), name: 'Hub', content: DocumentTestHelpers::content(), parent: $drive->root(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: $drive->root(),
     ));
     $body = ['node_id' => $node->getKey()];
     $timestamp = time();

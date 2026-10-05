@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Actions\MoveNodeAction;
-use Vaulter\Drive\Data\MoveNodeData;
-use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
+use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
@@ -53,7 +53,7 @@ it('records vaulter_http_request_duration_seconds for mapped routes', function (
 it('records vaulter_tree_query_duration_seconds for search queries', function (): void {
     LoadTier::set('M');
 
-    $storage = DriveTestHelpers::drive()->storage();
+    $storage = DriveTestHelpers::drive()->model();
     app(NodeReadRepository::class)->search($storage, 'needle');
 
     app(MetricsRecorder::class)->assertHistogram(
@@ -97,7 +97,7 @@ it('records vaulter_tree_cte_anchors when grant filtering resolves subtree ancho
 });
 
 it('records vaulter_activity_write_total when activity is persisted', function (): void {
-    $storage = DriveTestHelpers::drive()->storage();
+    $storage = DriveTestHelpers::drive()->model();
 
     app(ActivityRecorder::class)->record(
         verb: EventType::DriveCreated,
@@ -132,11 +132,11 @@ it('records vaulter_subtree_nodes_touched during move cycle guard', function ():
     $parent = $drive->createFolder('parent');
     $child = $drive->createFolder('child', $parent);
 
-    expect(fn () => app(MoveNodeAction::class)->execute(new MoveNodeData(
+    expect(fn () => app(MoveNodeAction::class)->execute(new MoveNodeInput(
         node: $parent,
         into: $child,
         actorId: 1,
-    )))->toThrow(CycleException::class);
+    )))->toThrow(NodeCycleException::class);
 
     app(MetricsRecorder::class)->assertHistogram(
         name: 'vaulter_subtree_nodes_touched',

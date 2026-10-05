@@ -29,3 +29,6 @@ uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collabora
 // routes register and the real grant-based algorithm runs. Kept apart from Document
 // so the two feature-gated TestCases never both claim the same path.
 uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
+
+// Registrar checks use a booted application without mutating the database.
+uses(TestCase::class)->in('Providers');

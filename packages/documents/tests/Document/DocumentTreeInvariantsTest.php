@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Drive\DriveContext;
+use Vaulter\Drive\DriveHandle;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Models\Drive\Node;
@@ -19,10 +19,10 @@ use Vaulter\Tests\Fixtures\TestUser;
  * folder (never a second parentless node), and an explicit parent must be a live
  * folder of the same drive.
  */
-function createDocumentUnder(DriveContext $drive, string $name, ?Node $parent): Node
+function createDocumentUnder(DriveHandle $drive, string $name, ?Node $parent): Node
 {
-    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content(),
         parent: $parent,
@@ -35,10 +35,10 @@ it('places a document without a parent under the drive root and lists it there',
 
     $node = createDocumentUnder($drive, 'Rootless', null);
 
-    expect($node->parent_id)->toEqual($drive->storage()->root_node_id)
-        ->and(Node::query()->where('drive_id', $drive->storage()->getKey())->whereNull('parent_id')->count())->toBe(1);
+    expect($node->parent_id)->toEqual($drive->model()->root_node_id)
+        ->and(Node::query()->where('drive_id', $drive->model()->getKey())->whereNull('parent_id')->count())->toBe(1);
 
-    $this->getJson('api/vaulter/storages/'.$drive->storage()->getKey().'/nodes')
+    $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes')
         ->assertOk()
         ->assertJsonPath('data.0.id', $node->getKey());
 });

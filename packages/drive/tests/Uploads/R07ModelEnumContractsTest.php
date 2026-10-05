@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Drive\Data\UploadFileData;
+use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Http\Resources\StorageResource;
+use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
@@ -92,14 +92,14 @@ it('R07Model resolves UploadFileData name from override not original', function 
     $storage = UploadTestHelpers::storage();
     $stream = DriveTestHelpers::streamFor('bytes');
 
-    $withOverride = new UploadFileData(
+    $withOverride = new IngestFileInput(
         storage: $storage,
         stream: $stream,
         originalName: 'original.bin',
         name: 'override.bin',
     );
 
-    $withoutOverride = new UploadFileData(
+    $withoutOverride = new IngestFileInput(
         storage: $storage,
         stream: $stream,
         originalName: 'original.bin',
@@ -111,7 +111,7 @@ it('R07Model resolves UploadFileData name from override not original', function 
 });
 
 it('R07Model returns the full UploadSessionResource JSON shape with nullables and ISO expires_at', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'resource-shape.bin',
         'total_size_bytes' => 16,
@@ -143,13 +143,13 @@ it('R07Model returns the full UploadSessionResource JSON shape with nullables an
 });
 
 it('R07Model returns all-false storage abilities without an actor or root node', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $storage->forceFill(['root_node_id' => null])->save();
 
     $guestRequest = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $guestRequest->setUserResolver(static fn (): null => null);
 
-    expect((new StorageResource($storage->refresh()))->toArray($guestRequest)['abilities'])->toEqual([
+    expect((new DriveResource($storage->refresh()))->toArray($guestRequest)['abilities'])->toEqual([
         'view' => false,
         'create_folder' => false,
         'upload' => false,
@@ -162,7 +162,7 @@ it('R07Model returns all-false storage abilities without an actor or root node',
 
 it('R07Model requires both root create ability and workspace gate for storage create flags', function (): void {
     config()->set('vaulter.drivers.permission', 'gate');
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $root = $storage->rootNode()->firstOrFail();
     $actor = (new TestUser)->forceFill(['id' => 17]);
 
@@ -172,7 +172,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
     $request = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $request->setUserResolver(static fn () => $actor);
 
-    expect((new StorageResource($storage))->toArray($request)['abilities'])->toEqual([
+    expect((new DriveResource($storage))->toArray($request)['abilities'])->toEqual([
         'view' => true,
         'create_folder' => false,
         'upload' => false,
@@ -180,20 +180,20 @@ it('R07Model requires both root create ability and workspace gate for storage cr
     ]);
 
     Gate::define('vaulter.create', static fn (): bool => true);
-    $storageReaderOnly = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storageReaderOnly = Vaulter::for(DriveTestHelpers::host())->model();
     AccessTestHelpers::grant($storageReaderOnly->rootNode()->firstOrFail(), GrantLevel::Reader, scope: GrantScope::Item, subjectId: 17);
 
-    expect((new StorageResource($storageReaderOnly))->toArray($request)['abilities'])->toEqual([
+    expect((new DriveResource($storageReaderOnly))->toArray($request)['abilities'])->toEqual([
         'view' => true,
         'create_folder' => false,
         'upload' => false,
         'manage' => false,
     ]);
 
-    $storageBoth = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storageBoth = Vaulter::for(DriveTestHelpers::host())->model();
     AccessTestHelpers::grant($storageBoth->rootNode()->firstOrFail(), GrantLevel::Writer, scope: GrantScope::Subtree, subjectId: 17);
 
-    expect((new StorageResource($storageBoth))->toArray($request)['abilities'])->toEqual([
+    expect((new DriveResource($storageBoth))->toArray($request)['abilities'])->toEqual([
         'view' => true,
         'create_folder' => true,
         'upload' => true,
@@ -202,12 +202,12 @@ it('R07Model requires both root create ability and workspace gate for storage cr
 });
 
 it('R07Model treats a non-Authorizable request user as having no actor for storage abilities', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $request = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $request->setUserResolver(static fn (): object => new stdClass);
 
-    expect((new StorageResource($storage))->toArray($request)['abilities'])->toEqual([
+    expect((new DriveResource($storage))->toArray($request)['abilities'])->toEqual([
         'view' => false,
         'create_folder' => false,
         'upload' => false,
@@ -216,7 +216,7 @@ it('R07Model treats a non-Authorizable request user as having no actor for stora
 });
 
 it('R07Model exposes real storage ability flags when actor and root are present', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertOk()

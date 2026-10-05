@@ -1,0 +1,6 @@
+{
+  "failed_native_candidate_sha256": "b993872c70d11d4a47108b3f8bc4817b13646a534247e18cf0e400e5f5eebb0b",
+  "before_source_sha256": "6a7603d60ac7ad7daaa1e9d6051e287adf1360caf55270470fcacbcf18c3803a",
+  "after_source_sha256": "40ccbd77020430718e96f52515ddb6591ed19ab068e32fb4a7853ea36449abfb",
+  "source": "packages/documents/src/Providers/BindingsRegistrar.php"
+}

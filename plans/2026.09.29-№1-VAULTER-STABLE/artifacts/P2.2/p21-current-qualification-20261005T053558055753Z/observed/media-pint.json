@@ -1,0 +1,27 @@
+{
+  "id": "media-pint",
+  "argv": [
+    "bash",
+    "-c",
+    "cd \"$1\" && shift && exec \"$@\"",
+    "validation",
+    "/home/vostrikov/projects/packages/vaulter/packages/media",
+    "env",
+    "-u",
+    "UPDATE_SNAPSHOT",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "CACHE_STORE=array",
+    "SESSION_DRIVER=array",
+    "QUEUE_CONNECTION=sync",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint",
+    "--test"
+  ],
+  "candidate_sha256": "588596e4f11daf022c98f35a9c8a92144b329460563afe520d8aee43674bd44b",
+  "started_at": "2026-10-05T05:36:08.246904+00:00",
+  "finished_at": "2026-10-05T05:36:14.346787+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

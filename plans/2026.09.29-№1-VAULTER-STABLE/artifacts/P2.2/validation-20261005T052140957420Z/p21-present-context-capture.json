@@ -1,0 +1,13 @@
+{
+  "captured_at": "2026-10-05T05:25:10.364431+00:00",
+  "timing": "during full runner after full started; not pre-full capture",
+  "full_started_path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T052140957420Z/canonical/91d35bdc247bee2867079b872fffdfec7091c0d388f26c1465d74280a16247b5/p22-full-01/started.json",
+  "full_started_sha256": "032dd80e76c797ff7831ed282f8864bb24adc605c7f523b030fc6a7669d53fe3",
+  "context": {
+    "schema_version": "validation-context/v1",
+    "spec_sha256": "a8cdafc2b117ab344f233d4c5ba62998673ed38e0b2b9a78895fa621e7e35680",
+    "head": "4b72efd3a909f441eb415182218140575e61e4c5",
+    "tree": "bfac77a20d33f4454d024ea93e75bf4cdbbea25a80dcc41dbcd6814666e36a68",
+    "environment_sha256": "609d004d41baff4e2a320a8df64c7920edf000fc257c824b3426077190d8cb16"
+  }
+}

@@ -1092,21 +1092,8 @@ final class Config
     }
 
     /**
-     * The Laravel broadcast connection the Reverb collaboration transport uses
-     * (config('vaulter.collaboration.drivers.reverb.connection'), default 'reverb').
-     * The Vue client opens its Echo connection against this name; the room is the
-     * private broadcast channel the auth endpoint gates.
-     */
-    public static function reverbConnection(): string
-    {
-        $value = config('vaulter.collaboration.drivers.reverb.connection', 'reverb');
-
-        return is_string($value) && $value !== '' ? $value : 'reverb';
-    }
-
-    /**
      * The collaboration room name for a node (M4b) — channel_prefix.nodeId. This is
-     * the single source of the room handle: the Reverb private broadcast channel, the
+     * the single source of the room handle: the private broadcast channel, the
      * Hocuspocus JWT `room` claim and the webhook `room` body all derive from it, so a
      * token is bound to EXACTLY one node (no cross-node access, H-hardening). Accepts
      * the raw Eloquent key (typed mixed) and stringifies it.

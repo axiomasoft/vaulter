@@ -1,14 +1,14 @@
-Vaulter\Documents\Contracts\Collaboration\HostUserResolver
-  find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
-
-Vaulter\Documents\Contracts\Collaboration\NodeCollaborationDriver
-  issueSession(\Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Access\Ability $ability, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSessionData
+Vaulter\Documents\Contracts\CollaborationDriver
+  issueSession(\Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Access\Ability $ability, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   type(): \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
 
-Vaulter\Documents\Contracts\Export\ExportFilenameResolver
+Vaulter\Documents\Contracts\ExportFilenameResolver
   resolve(\Vaulter\Models\Drive\Node $node, string $extension): string
 
-Vaulter\Documents\Events\Comments\NodeCommentAdded
+Vaulter\Documents\Contracts\HostUserResolver
+  find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
+
+Vaulter\Documents\Events\Comments\CommentAdded
   __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, ?string $eventId = null)
   broadcastAs(): string
   broadcastOn(): array
@@ -16,7 +16,7 @@ Vaulter\Documents\Events\Comments\NodeCommentAdded
   readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
   readonly string $eventId
 
-Vaulter\Documents\Events\Comments\NodeCommentDeleted
+Vaulter\Documents\Events\Comments\CommentDeleted
   __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
   broadcastAs(): string
   broadcastOn(): array
@@ -25,7 +25,7 @@ Vaulter\Documents\Events\Comments\NodeCommentDeleted
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Documents\Events\Comments\NodeCommentResolved
+Vaulter\Documents\Events\Comments\CommentResolved
   __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
   broadcastAs(): string
   broadcastOn(): array
@@ -35,23 +35,23 @@ Vaulter\Documents\Events\Comments\NodeCommentResolved
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentContentUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, bool $created, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly bool $created
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Documents\Events\Documents\DocumentNodeCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+Vaulter\Documents\Events\Documents\DocumentCreated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Documents\Events\Versions\DocumentVersionCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Documents\Models\Versions\NodeDocumentVersion $version
+Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly bool $restored
   readonly int|null|string $actorId

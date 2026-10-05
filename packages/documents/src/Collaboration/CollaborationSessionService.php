@@ -7,8 +7,8 @@ namespace Vaulter\Documents\Collaboration;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Documents\Data\Collaboration\CollaborationSessionData;
-use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Data\Collaboration\CollaborationSession;
+use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Models\Drive\Node;
@@ -17,7 +17,7 @@ use Vaulter\Support\Identity;
 
 /**
  * The read-only evaluator (master plan §7 / M4b) that turns an actor + a document node
- * into a {@see CollaborationSessionData}. It does NOT persist — it resolves the actor's
+ * into a {@see CollaborationSession}. It does NOT persist — it resolves the actor's
  * effective ability on the node through the (Vaulter-owned) AccessResolver, maps it to
  * a read/write level, and asks the configured transport driver to mint the session
  * descriptor.
@@ -31,7 +31,7 @@ final readonly class CollaborationSessionService
 {
     public function __construct(
         private AccessResolver $access,
-        private NodeCollaborationDriverManager $drivers,
+        private CollaborationDriverManager $drivers,
         private MetricsRecorder $metrics,
     ) {}
 
@@ -40,10 +40,10 @@ final readonly class CollaborationSessionService
      * node to be kind=document and the actor to hold at least Comment/View; the
      * session is writable only when the actor holds Edit.
      */
-    public function issue(Authorizable $actor, Node $node): CollaborationSessionData
+    public function issue(Authorizable $actor, Node $node): CollaborationSession
     {
         if (!$node->kind->isDocument()) {
-            throw NotADocumentNodeException::forNode($node->getKey());
+            throw NotADocumentException::forNode($node->getKey());
         }
 
         $ability = $this->grantedAbility($actor, $node);

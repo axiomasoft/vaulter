@@ -14,7 +14,7 @@ beforeEach(function (): void {
 });
 
 it('returns all resume headers from creation through commit', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $create = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'headers.bin',
         'total_size_bytes' => 4,
@@ -41,7 +41,7 @@ it('returns all resume headers from creation through commit', function (): void 
 });
 
 it('omits Upload-Length when the upload size is deferred', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'deferred.bin',
     ])->assertCreated()->json('data.upload_id');
@@ -63,7 +63,7 @@ it('omits Tus-Max-Size for unlimited uploads and advertises a one-byte ceiling',
 
 it('accepts Content-Length exactly at the chunk ceiling', function (): void {
     config()->set('vaulter.uploads.max_chunk_bytes', 4);
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'boundary.bin',
         'total_size_bytes' => 8,
@@ -78,7 +78,7 @@ it('accepts Content-Length exactly at the chunk ceiling', function (): void {
 });
 
 it('continues metadata whitelisting after an unknown key and lets headers override JSON', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'metadata.bin',
         'metadata' => ['filename' => 'json.bin'],

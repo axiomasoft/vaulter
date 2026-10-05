@@ -15,7 +15,7 @@ Vaulter поставляется набором пакетов — подклю�
 
 - **`axioma-studio/vaulter-core`** — общее ядро (авторизация, контракты CAS, sharing, панели,
   Artisan-команды). Требуется для любого другого backend-пакета.
-- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::for()` / `DriveContext`.
+- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::for()` / `DriveHandle`.
   Автоматически подтягивает `axioma-studio/vaulter-media` (движок CAS).
 - **`axioma-studio/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
@@ -92,7 +92,7 @@ resolver комбинирует их с грантами на узлы. Реше
 use Vaulter\Facades\Vaulter;
 
 // Открыть Drive-хэндл для сущности (находит-или-создаёт её хранилище + корневую папку).
-$drive = Vaulter::for($project);                 // DriveContext
+$drive = Vaulter::for($project);                 // DriveHandle
 $drive = Vaulter::for($project, 'project_drive'); // …в именованной панели
 
 // Резолв панелей.

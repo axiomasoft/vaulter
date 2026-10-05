@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Vaulter\Documents\DocumentsModels;
 use Vaulter\Documents\Enums\Export\ExportFormat;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 it('maps every export format to its public value, mime type and extension', function (): void {
     expect(ExportFormat::values())->toBe(['html', 'markdown'])
@@ -19,7 +19,7 @@ it('maps every export format to its public value, mime type and extension', func
 
 it('returns the configured document-owned model classes', function (): void {
     expect(DocumentsModels::comment())->toBe(NodeComment::class)
-        ->and(DocumentsModels::documentVersion())->toBe(NodeDocumentVersion::class);
+        ->and(DocumentsModels::documentVersion())->toBe(DocumentRevision::class);
 });
 
 it('rejects configured model classes outside the document-owned inheritance seams', function (): void {
@@ -31,5 +31,5 @@ it('rejects configured model classes outside the document-owned inheritance seam
     config()->set('vaulter.models.node_document_version', stdClass::class);
 
     expect(fn () => DocumentsModels::documentVersion())
-        ->toThrow(RuntimeException::class, 'must extend '.NodeDocumentVersion::class);
+        ->toThrow(RuntimeException::class, 'must extend '.DocumentRevision::class);
 });

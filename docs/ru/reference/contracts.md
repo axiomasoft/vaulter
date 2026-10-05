@@ -24,7 +24,7 @@ outline: deep
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (легаси) |
 | Collaboration | `CollaborationDriver` | `config('vaulter.collaboration.drivers.*.class')` (легаси-путь документов) |
-| Collaboration | `NodeCollaborationDriver` | привязка в контейнере (путь узлов) |
+| Collaboration | `CollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
 | Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
@@ -268,7 +268,7 @@ interface StorageAdapter
 
 ## Collaboration
 
-### `Vaulter\Contracts\Collaboration\NodeCollaborationDriver`
+### `Vaulter\Documents\Contracts\CollaborationDriver`
 
 Транспорт совместного редактирования в реальном времени по **дереву узлов** (текущий путь).
 Абстрагирует то, как узел-документ (`kind=document`, контент в `v_node_document_versions`)
@@ -277,7 +277,7 @@ interface StorageAdapter
 драйвер лишь кодирует его в дескриптор сессии (`readOnly = право не Edit`).
 
 ```php
-interface NodeCollaborationDriver
+interface CollaborationDriver
 {
     public function type(): CollaborationDriverType;
 
@@ -286,10 +286,10 @@ interface NodeCollaborationDriver
 }
 ```
 
-### `Vaulter\Contracts\Collaboration\CollaborationDriver` (легаси)
+### `Vaulter\Documents\Contracts\CollaborationDriver` (легаси)
 
 **Легаси**-транспорт совместного редактирования для документов, привязанный к модели
-`Document`, прикреплённой через `document_id`. Сосуществует с `NodeCollaborationDriver`;
+`Document`, прикреплённой через `document_id`. Сосуществует с `CollaborationDriver`;
 хост выбирает один и тот же транспорт для обоих через
 `config('vaulter.collaboration.driver')`. Класс драйвера берётся из
 `config('vaulter.collaboration.drivers.{name}.class')`.
@@ -308,7 +308,7 @@ interface CollaborationDriver
 }
 ```
 
-### `Vaulter\Contracts\Collaboration\HostUserResolver`
+### `Vaulter\Documents\Contracts\HostUserResolver`
 
 Материализует пользователя хоста (`Authorizable`) по id, чтобы серверный вебхук совместного
 редактирования (server-to-server) — который несёт лишь id пользователя, без сессии — мог
@@ -459,7 +459,7 @@ interface ShareTokenGenerator
 любой Flysystem-диск) и `S3MultipartHandler` (multipart объектного хранилища, только
 S3-совместимые диски). Каждый обработчик резюмируемо накапливает байты в сложенный временный
 файл, продвигая авторитетный серверный `received_bytes`, и сообщает, когда сессия полностью
-собрана. Шаг «собрать → зафиксировать» находится **вне** обработчика (`CommitUploadAction`
+собрана. Шаг «собрать → зафиксировать» находится **вне** обработчика (`CompleteUploadAction`
 → `BlobStore::commit`), так что инвариант «собранные байты всегда проходят через единый
 свободный от гонок CAS» держится для обоих протоколов.
 

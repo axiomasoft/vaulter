@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
-use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
@@ -121,7 +121,7 @@ it('rejects a javascript: link href at store time, F-P1.11-01', function (): voi
             ]],
         ]],
     ]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('rejects obfuscated javascript:/data: schemes at store time, F-P1.11-01', function (string $href): void {
     TipTapContent::fromArray([
@@ -140,14 +140,14 @@ it('rejects obfuscated javascript:/data: schemes at store time, F-P1.11-01', fun
     'embedded tab' => ["java\tscript:alert(1)"],
     'BiDi override' => ["\u{202E}javascript:alert(1)"],
     'data URI' => ['data:text/html;base64,PHNjcmlwdD4='],
-])->throws(InvalidTipTapContentException::class);
+])->throws(InvalidDocumentContentException::class);
 
 it('rejects an unknown node type at store time, F-P1.11-02', function (): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'script', 'content' => []]],
     ]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('rejects an unknown attribute at store time, F-P1.11-02', function (): void {
     TipTapContent::fromArray([
@@ -158,7 +158,7 @@ it('rejects an unknown attribute at store time, F-P1.11-02', function (): void {
             'content' => [],
         ]],
     ]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 // ─── R-07 — второй эшелон D4 (render-time HTML-санитайзер) ──────────────────
 

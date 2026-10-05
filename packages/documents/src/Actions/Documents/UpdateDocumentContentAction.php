@@ -6,13 +6,13 @@ namespace Vaulter\Documents\Actions\Documents;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Data\Documents\UpdateDocumentContentData;
+use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
-use Vaulter\Documents\Exceptions\NotADocumentNodeException;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
-use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionReadRepository;
-use Vaulter\Documents\Repositories\Versions\NodeDocumentVersionStoreRepository;
+use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
+use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Config;
@@ -30,18 +30,18 @@ use Vaulter\Support\Config;
 final readonly class UpdateDocumentContentAction
 {
     public function __construct(
-        private NodeDocumentVersionReadRepository $read,
-        private NodeDocumentVersionStoreRepository $store,
+        private DocumentRevisionReadRepository $read,
+        private DocumentRevisionStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
     ) {}
 
-    public function execute(UpdateDocumentContentData $data): NodeDocumentVersion
+    public function execute(UpdateDocumentContentInput $data): DocumentRevision
     {
         $node = $data->node;
 
         if (!$node->kind->isDocument()) {
-            throw NotADocumentNodeException::forNode($node->getKey());
+            throw NotADocumentException::forNode($node->getKey());
         }
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
@@ -52,7 +52,7 @@ final readonly class UpdateDocumentContentAction
             $data->content->ensureWithin(Config::maxDocumentSizeKb());
         }
 
-        return $this->database->transaction(function () use ($node, $data): NodeDocumentVersion {
+        return $this->database->transaction(function () use ($node, $data): DocumentRevision {
             $head = $this->read->head($node);
 
             if ($head !== null && $this->shouldOverwrite($head)) {
@@ -106,7 +106,7 @@ final readonly class UpdateDocumentContentAction
      * within the debounce window. A committed/named head, or an autosave older than
      * the window, forces a fresh row so the history keeps the older state.
      */
-    private function shouldOverwrite(NodeDocumentVersion $head): bool
+    private function shouldOverwrite(DocumentRevision $head): bool
     {
         if (!$head->is_autosave) {
             return false;
@@ -132,7 +132,7 @@ final readonly class UpdateDocumentContentAction
      *
      * @return array<string, mixed>
      */
-    private function payload(UpdateDocumentContentData $data): array
+    private function payload(UpdateDocumentContentInput $data): array
     {
         return [
             'content' => $data->content->toArray(),

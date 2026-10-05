@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
@@ -19,15 +21,16 @@ use Vaulter\Tests\Fixtures\TestUser;
 beforeEach(function (): void {
     // Реальная выдача прав из грантов (база), а не открытый null-драйвер.
     config()->set('vaulter.drivers.permission', 'database');
-    config()->set('vaulter.collaboration.driver', 'reverb');
+    config()->set('vaulter.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 });
 
 function grantedDocumentNode(?GrantLevel $level, int $actorId = 1): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),
         parent: $drive->root(),
@@ -62,7 +65,7 @@ it('issues a read-only session for a commenter (no edit)', function (): void {
 
     test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
         ->assertOk()
-        ->assertJsonPath('data.driver', 'reverb')
+        ->assertJsonPath('data.driver', 'hocuspocus')
         ->assertJsonPath('data.read_only', true)
         ->assertJsonPath('data.node_id', $node->getKey())
         ->assertJsonPath('data.room', 'vaulter.documents.'.$node->getKey());
@@ -81,10 +84,14 @@ it('issues a writable session for a writer (edit)', function (): void {
     actAsCollaborator();
     $node = grantedDocumentNode(level: GrantLevel::Writer);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
+    $response = test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
         ->assertOk()
         ->assertJsonPath('data.read_only', false)
-        ->assertJsonPath('data.token', 'vaulter.documents.'.$node->getKey());
+        ->assertJsonPath('data.connection', null);
+
+    $claims = JWT::decode($response->json('data.token'), new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
+    expect($claims->room)->toBe('vaulter.documents.'.$node->getKey())
+        ->and($claims->readOnly)->toBeFalse();
 });
 
 it('returns a hocuspocus descriptor with url + JWT when that driver is configured', function (): void {
@@ -106,7 +113,7 @@ it('returns a hocuspocus descriptor with url + JWT when that driver is configure
 it('409s when the target node is a folder, not a document', function (): void {
     actAsCollaborator();
     $drive = DocumentTestHelpers::drive();
-    $folder = AccessTestHelpers::folder($drive->storage(), null, 'plain-folder');
+    $folder = AccessTestHelpers::folder($drive->model(), null, 'plain-folder');
     AccessTestHelpers::grant($folder, GrantLevel::Writer);
 
     // A folder has no document payload — collab is document-only.

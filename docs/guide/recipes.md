@@ -32,7 +32,7 @@ final class TaskDriveController
         $drive = Vaulter::for($task);
 
         return response()->json([
-            'storage' => $drive->storage()->id,
+            'storage' => $drive->model()->id,
             'nodes'   => $drive->list(), // Collection<Node> of the root's children
         ]);
     }

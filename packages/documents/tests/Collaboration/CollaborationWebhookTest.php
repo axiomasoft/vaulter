@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Firebase\JWT\JWT;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
-use Vaulter\Documents\Contracts\Collaboration\HostUserResolver;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Contracts\HostUserResolver;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
@@ -67,8 +67,8 @@ function webhookDocumentNode(?GrantLevel $level = GrantLevel::Writer, int $actor
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),
         parent: $drive->root(),
@@ -114,7 +114,7 @@ it('persists the yjs snapshot with the shared secret (bytea round-trips, size se
         ->assertOk()
         ->assertJsonPath('data.node_id', $node->getKey());
 
-    $version = NodeDocumentVersion::query()
+    $version = DocumentRevision::query()
         ->where('node_id', $node->getKey())
         ->orderByDesc('version_no')
         ->firstOrFail();
@@ -138,7 +138,7 @@ it('persists a yjs snapshot WITHOUT a projection, leaving Yjs the source of trut
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
         ->assertOk();
 
-    $version = NodeDocumentVersion::query()
+    $version = DocumentRevision::query()
         ->where('node_id', $node->getKey())
         ->orderByDesc('version_no')
         ->firstOrFail();
@@ -155,7 +155,7 @@ it('rejects a store call with no secret and no JWT', function (): void {
         'yjs_state' => base64_encode('bytes'),
     ])->assertStatus(401);
 
-    expect(NodeDocumentVersion::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
+    expect(DocumentRevision::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
         ->toBeFalse();
 });
 
@@ -183,7 +183,7 @@ it('accepts a store call authenticated by a writable room JWT', function (): voi
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['Authorization' => 'Bearer '.roomJwt($node, readOnly: false)]))
         ->assertOk();
 
-    expect(NodeDocumentVersion::query()->where('node_id', $node->getKey())->orderByDesc('version_no')->firstOrFail()->yjs_state)
+    expect(DocumentRevision::query()->where('node_id', $node->getKey())->orderByDesc('version_no')->firstOrFail()->yjs_state)
         ->toBe($yjs);
 });
 
@@ -212,7 +212,7 @@ it('forbids a JWT minted for node A from storing to node B (room bound to node)'
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['Authorization' => 'Bearer '.roomJwt($nodeA, readOnly: false)]))
         ->assertForbidden();
 
-    expect(NodeDocumentVersion::query()->where('node_id', $nodeB->getKey())->where('version_no', '>', 1)->exists())
+    expect(DocumentRevision::query()->where('node_id', $nodeB->getKey())->where('version_no', '>', 1)->exists())
         ->toBeFalse();
 });
 
@@ -247,7 +247,7 @@ it('resolves the node when the hub sends node_id EQUAL to the room name (regress
         ->assertOk()
         ->assertJsonPath('data.node_id', $node->getKey());
 
-    expect(NodeDocumentVersion::query()
+    expect(DocumentRevision::query()
         ->where('node_id', $node->getKey())
         ->orderByDesc('version_no')
         ->firstOrFail()
@@ -268,7 +268,7 @@ it('rejects a store call with valid secret identity but NO signature at all', fu
     ], ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET])
         ->assertStatus(401);
 
-    expect(NodeDocumentVersion::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
+    expect(DocumentRevision::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
         ->toBeFalse();
 });
 

@@ -1,0 +1,19 @@
+{
+  "schema_version": "unchanged-generation-qualification/v1",
+  "captured_at": "2026-10-05T06:54:07.584042+00:00",
+  "generation_rerun": false,
+  "completed_generation_result": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/generation-20261005T050333760780Z/generation-result.json",
+  "precise_generation_assessment": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/generation-20261005T050333760780Z/generation-assessment.json",
+  "generation_completed_at": "2026-10-05T05:04:32.847533+00:00",
+  "generation_drive_warning_retained": true,
+  "api_source_members_compared": 348,
+  "api_source_drift": [],
+  "golden_members_compared": 4,
+  "golden_baseline_receipt": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T054925653458Z/canonical/7666ab4ac5ccd3fc70dd6d5f16c38360c83f0f2d925f1a05bc04447c2981417f/p22-full-01/receipt.json",
+  "golden_drift": [],
+  "qualified_for_api_source_and_goldens": true,
+  "limitation": "Generation source snapshot included test/doc inputs; current qualification is precise API source/runtime inputs plus unchanged API goldens. No whole original generation candidate equality claimed.",
+  "api_source_added": [],
+  "api_source_removed": [],
+  "api_source_inventory_compared": true
+}

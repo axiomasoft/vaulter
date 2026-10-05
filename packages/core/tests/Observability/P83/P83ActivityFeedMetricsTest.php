@@ -26,7 +26,7 @@ it('records vaulter_activity_feed_duration_seconds for storage feed reads', func
     config()->set('vaulter.features.activity', true);
 
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     AccessTestHelpers::grant($drive->root(), GrantLevel::Reader, subjectId: 1);
 
     $user = new TestUser;

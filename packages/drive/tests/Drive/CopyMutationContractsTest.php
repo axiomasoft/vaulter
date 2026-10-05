@@ -18,7 +18,7 @@ it('copies node and current version attributes and charges the exact logical siz
     $drive->uploadVersion($source, DriveTestHelpers::streamFor('second bytes'), actorId: 7);
     $source->refresh()->forceFill(['is_pinned' => true, 'inherit_grants' => false])->save();
     $head = $source->currentVersion()->firstOrFail();
-    $used = $drive->storage()->refresh()->used_bytes;
+    $used = $drive->model()->refresh()->used_bytes;
 
     $copy = $drive->copy($source, $dest, actorId: 17)->refresh();
     $file = $copy->file()->firstOrFail();
@@ -46,7 +46,7 @@ it('copies node and current version attributes and charges the exact logical siz
         ->and($version->original_name)->toBe($head->original_name)
         ->and($version->created_by)->toEqual(17)
         ->and($version->committed_at->equalTo(now()))->toBeTrue()
-        ->and($drive->storage()->refresh()->used_bytes)->toBe($used + 12)
+        ->and($drive->model()->refresh()->used_bytes)->toBe($used + 12)
         ->and(Blob::query()->count())->toBe(2);
 
     $sourceEdge = $head->blobs()->sole()->pivot;
@@ -62,10 +62,10 @@ it('charges only live copied descendants and excludes trashed children', functio
     $drive->upload(DriveTestHelpers::streamFor('abc'), into: $folder, originalName: 'live.bin');
     $trashed = $drive->upload(DriveTestHelpers::streamFor('old bytes'), into: $folder, originalName: 'trashed.bin');
     $drive->trash($trashed);
-    $used = $drive->storage()->refresh()->used_bytes;
+    $used = $drive->model()->refresh()->used_bytes;
 
     $copy = $drive->copy($folder, name: 'Copy');
 
     expect($copy->children()->pluck('name')->all())->toBe(['live.bin'])
-        ->and($drive->storage()->refresh()->used_bytes)->toBe($used + 3);
+        ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);
 });

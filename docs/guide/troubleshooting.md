@@ -219,21 +219,6 @@ auth 403s.
 
 **Why & fix.**
 
-- **Reverb driver (default).** The Vue client joins the private broadcast channel
-  `vaulter.documents.{nodeId}`; the channel-auth callback gates it through the `AccessResolver`
-  (the actor needs at least `View` on the node). A 403 here means the actor genuinely lacks
-  `View` — check the grants, not the socket. Ensure Reverb is running and your
-  `config('broadcasting')` connection matches `config('vaulter.collaboration.drivers.reverb.connection')`.
-- **`document_versions` feature.** The node-room authorization and the Documents routes only mount
-  when the `document_versions` feature is on. If the editor never appears, confirm:
-
-  ```php
-  // config/vaulter.php
-  'features' => [
-      'document_versions' => true, // gates the editor schema, routes, and node-room auth
-  ],
-  ```
-
 - **Hocuspocus driver.** The Node hub calls back into `collab/authenticate` + `collab/store`.
   Those endpoints accept **only** a valid shared secret or a signed room JWT — never open. A 401
   from the hub usually means `VAULTER_COLLAB_WEBHOOK_SECRET` (or the driver `secret`) differs

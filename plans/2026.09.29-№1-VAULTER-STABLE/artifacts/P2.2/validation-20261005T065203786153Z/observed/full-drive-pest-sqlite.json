@@ -1,0 +1,28 @@
+{
+  "id": "drive-pest-sqlite",
+  "stage": "full",
+  "argv": [
+    "bash",
+    "-c",
+    "cd \"$1\" && shift && exec \"$@\"",
+    "validation",
+    "/home/vostrikov/projects/packages/vaulter/packages/drive",
+    "env",
+    "-u",
+    "UPDATE_SNAPSHOT",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "CACHE_STORE=array",
+    "SESSION_DRIVER=array",
+    "QUEUE_CONNECTION=sync",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci"
+  ],
+  "candidate_sha256": "b0e5b2255c9916a02702a47abc570fe93ebc67bab56a508f8dcf8a21ff22981e",
+  "started_at": "2026-10-05T06:56:55.762865+00:00",
+  "finished_at": "2026-10-05T06:57:44.468503+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

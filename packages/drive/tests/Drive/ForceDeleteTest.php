@@ -37,13 +37,13 @@ it('forceDelete уменьшает used_bytes на освобождённый р
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(DriveTestHelpers::streamFor('1234567890'), originalName: 'f.bin'); // 10
-    expect($drive->storage()->refresh()->used_bytes)->toBe(10);
+    expect($drive->model()->refresh()->used_bytes)->toBe(10);
 
     $drive->trash($node);
 
     $drive->forceDelete($node);
 
-    expect($drive->storage()->refresh()->used_bytes)->toBe(0);
+    expect($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
 it('forceDelete тумбстонит всё поддерево (deleted_at)', function (): void {

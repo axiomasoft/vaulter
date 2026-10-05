@@ -7,19 +7,19 @@ namespace Vaulter\Load\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Support\Uploads\UploadModels;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\Storage;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -45,7 +45,7 @@ final class PrepareMemoryFixturesCommand extends Command
         UploadSessionManager $sessions,
         UploadSessionStoreRepository $sessionStore,
         StagedUpload $stagedUpload,
-        CommitUploadAction $commit,
+        CompleteUploadAction $commit,
     ): int {
         $action = (string) $this->argument('action');
 
@@ -64,7 +64,7 @@ final class PrepareMemoryFixturesCommand extends Command
         UploadSessionManager $sessions,
         UploadSessionStoreRepository $sessionStore,
         StagedUpload $stagedUpload,
-        CommitUploadAction $commit,
+        CompleteUploadAction $commit,
     ): int {
         $fixtureId = (string) $this->option('fixture-id');
         $runPrefix = (string) $this->option('run-prefix');
@@ -168,7 +168,7 @@ final class PrepareMemoryFixturesCommand extends Command
         UploadSessionManager $sessions,
         UploadSessionStoreRepository $sessionStore,
         StagedUpload $stagedUpload,
-        CommitUploadAction $commit,
+        CompleteUploadAction $commit,
         string $fixtureId,
         int $sizeBytes,
         string $payloadPath,
@@ -177,7 +177,7 @@ final class PrepareMemoryFixturesCommand extends Command
         $actorId = (int) $this->option('actor');
         $host = DriveTestHelpers::host($actorId);
         $drive = Vaulter::for($host);
-        $storage = $drive->storage();
+        $storage = $drive->model();
         $root = $drive->root();
         self::grantOwnerOnce($root, $actorId);
 
@@ -192,7 +192,7 @@ final class PrepareMemoryFixturesCommand extends Command
         ];
 
         if ($want('tus_final_patch')) {
-            $tusSession = $sessions->initiate(new UploadInitData(
+            $tusSession = $sessions->initiate(new InitiateUploadInput(
                 storage: $storage,
                 protocol: UploadProtocol::Tus,
                 targetParent: $root,
@@ -218,7 +218,7 @@ final class PrepareMemoryFixturesCommand extends Command
         }
 
         if ($want('s3_putpart') || $want('s3_complete_postfix')) {
-            $partsSession = $sessions->initiate(new UploadInitData(
+            $partsSession = $sessions->initiate(new InitiateUploadInput(
                 storage: $storage,
                 protocol: UploadProtocol::S3Multipart,
                 targetParent: $root,
@@ -339,14 +339,14 @@ final class PrepareMemoryFixturesCommand extends Command
         UploadSessionManager $sessions,
         UploadSessionStoreRepository $sessionStore,
         StagedUpload $stagedUpload,
-        CommitUploadAction $commit,
-        Storage $storage,
+        CompleteUploadAction $commit,
+        Drive $storage,
         Node $root,
         string $fixtureId,
         int $sizeBytes,
         string $payloadPath,
     ): Node {
-        $session = $sessions->initiate(new UploadInitData(
+        $session = $sessions->initiate(new InitiateUploadInput(
             storage: $storage,
             protocol: UploadProtocol::Tus,
             targetParent: $root,

@@ -24,7 +24,7 @@ beforeEach(function (): void {
 
 function protocolStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-before: 302/422)', function (): void {

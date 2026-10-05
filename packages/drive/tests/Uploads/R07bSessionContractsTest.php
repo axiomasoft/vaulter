@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Activity\RecordsDriveActivity;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Events\NodeForceDeleted;
-use Vaulter\Drive\Events\UploadSessionAborted;
-use Vaulter\Drive\Events\UploadSessionExpired;
-use Vaulter\Drive\Exceptions\UploadConflictException;
+use Vaulter\Drive\Events\Nodes\NodePurged;
+use Vaulter\Drive\Events\Uploads\UploadAborted;
+use Vaulter\Drive\Events\Uploads\UploadExpired;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
@@ -73,7 +73,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
     $tenantId = 99887766;
     $storage = r07bReqTenantStorage($tenantId);
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -87,7 +87,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
 
 it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCast)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -100,7 +100,7 @@ it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCa
 
 it('R07b: initiate target_name stored from UploadInitData (L74 RemoveArrayItem target_name)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -125,7 +125,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
     ]);
     $node->save();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetNode: $node,
@@ -137,7 +137,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
 
 it('R07b: initiate metadata=[] stores null not empty-array (L77 RemoveArrayItem metadata coalesce)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -151,7 +151,7 @@ it('R07b: initiate metadata=[] stores null not empty-array (L77 RemoveArrayItem 
 
 it('R07b: initiate non-empty metadata is stored as-is (L77 sanity)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -172,7 +172,7 @@ it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 Boolea
     // With BooleanOr: max===0 && totalSizeBytes===null = false → tries comparison → null > 0 = false → ok
     // With BooleanOr and totalSizeBytes=999: max===0 && 999===null = false → 999 > 0 → throws
     // Original: max===0 || ... = true → returns (no error)
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -189,7 +189,7 @@ it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', fu
 
     // With IncrementInteger on 0: max <= 1 → 1 <= 1 = true → returns early → no error
     // Original: 1 <= 0 = false → checks 2 > 1 → throws
-    expect(fn () => app(UploadSessionManager::class)->initiate(new UploadInitData(
+    expect(fn () => app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -202,7 +202,7 @@ it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', fu
     config()->set('vaulter.uploads.max_bytes', 1);
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -223,7 +223,7 @@ it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem act
 
     // Both sessions have actorId=null — should succeed even with cap=1
     foreach (['null-a.bin', 'null-b.bin'] as $name) {
-        $manager->initiate(new UploadInitData(
+        $manager->initiate(new InitiateUploadInput(
             storage: $storage,
             protocol: UploadProtocol::Tus,
             targetParent: $root,
@@ -242,7 +242,7 @@ it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArr
     $manager = app(UploadSessionManager::class);
 
     foreach (range(1, 3) as $i) {
-        $manager->initiate(new UploadInitData(
+        $manager->initiate(new InitiateUploadInput(
             storage: $storage,
             protocol: UploadProtocol::Tus,
             targetParent: $root,
@@ -356,7 +356,7 @@ it('R07b: handleUploadSessionAborted records all three context keys (L237/238 Re
 
     // Call handler directly (synchronous, no ShouldDispatchAfterCommit delay in test context)
     app(RecordsDriveActivity::class)->handleUploadSessionAborted(
-        new UploadSessionAborted($session, actorId: 42),
+        new UploadAborted($session, actorId: 42),
     );
 
     $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
@@ -372,7 +372,7 @@ it('R07b: handleUploadSessionAborted upload_id context is the session upload_id 
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(RecordsDriveActivity::class)->handleUploadSessionAborted(
-        new UploadSessionAborted($session->refresh()),
+        new UploadAborted($session->refresh()),
     );
 
     $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
@@ -389,7 +389,7 @@ it('R07b: handleUploadSessionExpired records all three context keys (L252/253 Re
     $session->refresh();
 
     app(RecordsDriveActivity::class)->handleUploadSessionExpired(
-        new UploadSessionExpired($session),
+        new UploadExpired($session),
     );
 
     $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
@@ -409,7 +409,7 @@ it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 ex
     );
 
     app(RecordsDriveActivity::class)->handleUploadSessionExpired(
-        new UploadSessionExpired($session->refresh()),
+        new UploadExpired($session->refresh()),
     );
 
     $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
@@ -435,7 +435,7 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
     ]);
     $node1->save();
 
-    app(RecordsDriveActivity::class)->handleNodeForceDeleted(new NodeForceDeleted(
+    app(RecordsDriveActivity::class)->handleNodeForceDeleted(new NodePurged(
         storageId: $storage->getKey(),
         nodeIds: [$node1->getKey()],
         freedBytes: 0,

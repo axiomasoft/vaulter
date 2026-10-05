@@ -398,11 +398,11 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Models\Sharing\NodeShare',
         'Vaulter\Drive\Models\Uploads\UploadSession',
         'Vaulter\Models\Activity\Activity',
-        'Vaulter\Documents\Models\Versions\NodeDocumentVersion',
+        'Vaulter\Documents\Models\Revisions\DocumentRevision',
         'Vaulter\Enums\Drive\NodeKind',
         'Vaulter\Enums\Access\Ability',
         'Vaulter\Events\Sharing\NodeShareCreated',
-        'Vaulter\Drive\Exceptions\CycleException',
+        'Vaulter\Drive\Exceptions\Nodes\NodeCycleException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
         'Vaulter\Exceptions\Profiles\UnknownProfileException',
         'Vaulter\Repositories\Drive\NodeReadRepository',
@@ -542,7 +542,7 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
  * are cut: the 7 Contracts\Handlers extensibility VOs + UnknownExportFormatException/
  * UnsupportedDocumentContentException moved to core (kernel-shared, T6/D2 finding);
  * TipTapContent/LinkSchemeValidator/OpaqueDocumentContent/TiptapExtensions/
- * InvalidTipTapContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
+ * InvalidDocumentContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
  * isolation, core never knew their shape beyond the DocumentContent contract); the
  * FileHandlerRegistry/NodePresenter contracts + `Vaulter::handlers()->register()` resolve
  * the documents package's bindings without naming its classes; HostUserResolver
@@ -568,7 +568,7 @@ test('core source never references the vaulter-azgard package (P2.1)', function 
 /**
  * VLT-CANON P0.3/P3.2 — TipTap is fully isolated behind the opaque
  * {@see DocumentContent} seam; core must never name a
- * concrete TipTap CLASS (`TipTapContent`, `TiptapExtensions`, `InvalidTipTapContentException`,
+ * concrete TipTap CLASS (`TipTapContent`, `TiptapExtensions`, `InvalidDocumentContentException`,
  * …) in real code. Matches the CamelCase class-name spelling only — the lower-case
  * `vaulter.tiptap.*` config keys (Support/Config.php) are a deliberate, documented
  * pass-through for a host's own TipTap extensions (VLT-REMED D27/D28) and are NOT a

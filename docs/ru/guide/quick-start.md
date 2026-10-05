@@ -11,7 +11,7 @@ outline: deep
 
 ::: tip Предусловие
 Установлен `axioma-studio/vaulter-drive` (этот разбор использует `Vaulter::for()`,
-`DriveContext`, загрузки — всё это функции Drive) и выполнены миграции. Если нет —
+`DriveHandle`, загрузки — всё это функции Drive) и выполнены миграции. Если нет —
 сначала пройдите [Установку](/ru/guide/installation) (это две команды).
 :::
 
@@ -39,7 +39,7 @@ Laravel-приложению **не нужна никакая настройка
 ## 2. Открыть диск и работать с ним
 
 `Vaulter::for($entity)` находит-или-создаёт хранилище сущности (и его корневую папку) и
-возвращает `DriveContext` — удобный хэндл для всего диска. Всё ниже — настоящие методы на нём:
+возвращает `DriveHandle` — удобный хэндл для всего диска. Всё ниже — настоящие методы на нём:
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -61,7 +61,7 @@ $node = $drive->upload(
 $drive->list($reports);   // Illuminate\Database\Eloquent\Collection<Node>
 ```
 
-Это полностью рабочий диск. Несколько остальных методов `DriveContext`:
+Это полностью рабочий диск. Несколько остальных методов `DriveHandle`:
 
 ```php
 $drive->rename($node, 'Q3 report.pdf');

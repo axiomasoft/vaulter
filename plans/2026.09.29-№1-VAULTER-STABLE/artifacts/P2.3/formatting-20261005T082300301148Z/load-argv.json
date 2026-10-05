@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint",
+    "load/app/Console/PrepareMemoryFixturesCommand.php",
+    "load/app/Console/SeedLoadDatasetCommand.php",
+    "load/app/LoadServiceProvider.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "files": [
+    "load/app/Console/PrepareMemoryFixturesCommand.php",
+    "load/app/Console/SeedLoadDatasetCommand.php",
+    "load/app/LoadServiceProvider.php"
+  ]
+}

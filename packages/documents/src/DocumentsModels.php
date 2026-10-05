@@ -6,14 +6,14 @@ namespace Vaulter\Documents;
 
 use RuntimeException;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Support\Config;
 
 /**
  * Typed resolvers for the swappable node-comment / document-version models (P2 #5 /
  * ADR-0015). Core's Support\Config returns an opaque `class-string<Model>` for these
  * (it must not name a vaulter-documents class); this package OWNS NodeComment/
- * NodeDocumentVersion, so it narrows the configured class back to its concrete type
+ * DocumentRevision, so it narrows the configured class back to its concrete type
  * here — a real guard (a misconfigured host class that does not extend the base fails
  * loudly), not a phpdoc cast.
  */
@@ -36,15 +36,15 @@ final class DocumentsModels
     }
 
     /**
-     * @return class-string<NodeDocumentVersion>
+     * @return class-string<DocumentRevision>
      */
     public static function documentVersion(): string
     {
         $class = Config::nodeDocumentVersionModel();
 
-        if (!is_a($class, NodeDocumentVersion::class, true)) {
+        if (!is_a($class, DocumentRevision::class, true)) {
             throw new RuntimeException(
-                "Configured vaulter.models.node_document_version [{$class}] must extend ".NodeDocumentVersion::class.'.',
+                "Configured vaulter.models.node_document_version [{$class}] must extend ".DocumentRevision::class.'.',
             );
         }
 

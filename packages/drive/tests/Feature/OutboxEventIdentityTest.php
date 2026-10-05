@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Drive\Events\NodeRenamed;
+use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Support\Config;

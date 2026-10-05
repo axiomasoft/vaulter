@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Export;
 
-use Vaulter\Documents\Contracts\Export\ExportFilenameResolver;
+use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Models\Drive\Node;
 
 /**

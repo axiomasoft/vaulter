@@ -1,6 +1,6 @@
 ---
 title: Realtime Collaboration
-description: Realtime, conflict-free document editing in Vaulter with Yjs — Reverb (no extra service) or an external Hocuspocus hub, the collab-token handshake, read-only-from-ability, deploying hocuspocus-server, and the @vaulter/vue wiring.
+description: Realtime, conflict-free document editing in Vaulter with Yjs and an external Hocuspocus hub, the collab-token handshake, read-only-from-ability, deploying hocuspocus-server, and the @vaulter/vue wiring.
 outline: deep
 ---
 
@@ -9,7 +9,7 @@ outline: deep
 Vaulter edits **document nodes** (`kind = document`, content on `v_node_document_versions`)
 collaboratively in realtime. The conflict-free merge is powered by **Yjs** — the binary
 CRDT state is the **source of truth**; the TipTap JSON is a derived projection. The
-transport sits behind the [`NodeCollaborationDriver`](#drivers) contract, with two
+transport sits behind the [`CollaborationDriver`](#drivers) contract, with two
 implementations you choose by config.
 
 ::: info This page covers the node-tree path (M4b)
@@ -21,28 +21,16 @@ to the `v_documents` model; both coexist and a host picks the same transport for
 documented here. See [ADR-0001](/adr/0001-collaboration-transport).
 :::
 
-## The two drivers
+## The collaboration driver
 
-Yjs is the source of truth either way; only the transport differs.
+Yjs is the source of truth; Hocuspocus provides the collaboration transport.
+The default `hocuspocus` driver connects to an external Node hub
+(`hocuspocus-server/`) with a signed room JWT and server-to-server webhooks.
+`CollaborationDriverType` retains its `hocuspocus` case; unknown driver names
+produce an explicit configuration error.
 
-| Driver | Transport | Extra service? | Auth model |
-|---|---|---|---|
-| **`hocuspocus`** (default) | External Node Hocuspocus hub (`hocuspocus-server/`) | A Node service | A signed room JWT + server-to-server webhooks |
-| **`reverb`** (deprecated for Yjs) | Yjs over Laravel Reverb (private broadcast channel) | None — pure Laravel | Laravel channel-auth gates the subscription |
-
-Select one with `config('vaulter.collaboration.driver')` (or the `VAULTER_COLLAB_DRIVER`
-env var). The driver class map is keyed by the `CollaborationDriverType` enum
-(`reverb` / `hocuspocus`), so the manager refuses an unknown value with a clear error
-rather than a silent fallback.
-
-::: tip Start with Hocuspocus
-The default `hocuspocus` driver is the recommended collaborative-editing transport (see
-[Hocuspocus Server](./hocuspocus-server) to deploy the hub) — it is the only path with
-server-side content-gating and a real read-only guarantee on the socket. `reverb` relays
-peer client-events without server-side content gating, so it cannot enforce read-only on
-the socket nor debounce persistence the way a Yjs backend does; it is kept only for
-backward compatibility.
-:::
+Reverb for Yjs collaboration has been removed. Use Hocuspocus for document editing.
+Laravel broadcast channels still carry comment events with their existing access checks.
 
 ## Config
 
@@ -51,14 +39,11 @@ All keys live under `config('vaulter.collaboration')`:
 ```php
 // config/vaulter.php
 'collaboration' => [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus | reverb
+    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus
     'channel_prefix' => 'vaulter.documents',              // room namespace
     'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
 
     'drivers' => [
-        'reverb' => [
-            'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
-        ],
         'hocuspocus' => [
             'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
             'secret' => env('VAULTER_COLLAB_SECRET'),      // HS256 room-JWT signing key
@@ -70,10 +55,9 @@ All keys live under `config('vaulter.collaboration')`:
 
 | Key | Env | Default | Purpose |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus` \| `reverb`). |
+| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus`). |
 | `collaboration.channel_prefix` | — | `vaulter.documents` | Room namespace. A room is **always** `channel_prefix.nodeId`. |
 | `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret the Hocuspocus hub presents on the webhooks. When unset, the webhook surface accepts a valid signed room JWT only — it is **never open**. |
-| `collaboration.drivers.reverb.connection` | `VAULTER_COLLAB_CONNECTION` | `reverb` | The Laravel broadcast connection the Vue Echo client opens. |
 | `collaboration.drivers.hocuspocus.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
 | `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints the room JWT with **and** verifies an incoming JWT against. Required for the Hocuspocus path. |
 | `collaboration.drivers.hocuspocus.token_ttl` | — | `3600` | Lifetime (seconds) of a minted room JWT. |
@@ -103,7 +87,6 @@ Vue client ──POST /api/vaulter/nodes/{node}/collab/token──▶ Laravel
             ◀────────── CollaborationSession ──────────────┘
             │
             ▼
-  reverb     → join private channel  vaulter.documents.{nodeId}  (Echo/Reverb)
   hocuspocus → open ws to hub url with the room JWT as the token
 ```
 
@@ -118,13 +101,12 @@ Vue client ──POST /api/vaulter/nodes/{node}/collab/token──▶ Laravel
 
 ::: tip Read-only is derived, never requested
 A token never over-grants relative to the actor's ability. The `read_only` flag rides the
-session for both transports: the Reverb broadcast auth refuses edits a viewer cannot make,
-and the Hocuspocus hub drops a read-only connection's document updates server-side.
+session, and the Hocuspocus hub drops a read-only connection's document updates server-side.
 :::
 
 ### The session descriptor
 
-Both drivers return the same shape (`Vaulter\Data\CollaborationSession::toArray()`):
+The driver returns (`Vaulter\Documents\Data\Collaboration\CollaborationSession::toArray()`):
 
 ```json
 {
@@ -138,40 +120,18 @@ Both drivers return the same shape (`Vaulter\Data\CollaborationSession::toArray(
 }
 ```
 
-| Field | Reverb | Hocuspocus |
-|---|---|---|
-| `driver` | `reverb` | `hocuspocus` |
-| `room` | `channel_prefix.nodeId` (the private channel name) | `channel_prefix.nodeId` (the JWT `room` claim) |
-| `node_id` | the document node id | the document node id |
-| `read_only` | from the actor's ability | from the actor's ability |
-| `token` | the **private channel name** (Reverb authenticates out-of-band) | a signed HS256 JWT `{room, sub, readOnly, iat, exp}` |
-| `url` | `null` (client connects via Echo) | the hub WebSocket URL |
-| `connection` | the broadcast connection name | `null` |
+| Field | Hocuspocus |
+|---|---|
+| `driver` | `hocuspocus` |
+| `room` | `channel_prefix.nodeId`, carried in the JWT `room` claim |
+| `node_id` | The document node id |
+| `read_only` | Derived from the actor's ability |
+| `token` | Signed HS256 JWT `{room, sub, readOnly, iat, exp}` |
+| `url` | The hub WebSocket URL |
+| `connection` | `null`, retained for JSON compatibility |
 
-The **room is always `channel_prefix.nodeId`**, so a session is bound to exactly one node
-— a token minted for node A can never address node B. The Hocuspocus JWT carries the same
-room in a signed claim; the Reverb channel name *is* the room.
-
-## Reverb (default, no extra service)
-
-```bash
-composer require laravel/reverb
-php artisan reverb:install
-php artisan reverb:start
-```
-
-With `driver = reverb` the session's `token` is the **private channel name**
-(`vaulter.documents.{nodeId}`) and `connection` is the broadcast connection
-(`config('vaulter.collaboration.drivers.reverb.connection')`, default `reverb`). The Vue
-client joins that private channel over Laravel Echo; the channel-auth endpoint authorizes
-the subscription through the AccessResolver-backed broadcast callback. There is no room
-JWT and no callback into Laravel — everything stays inside your app.
-
-::: warning You supply the Echo↔Yjs bridge
-Reverb is a Laravel broadcast transport, not a Yjs provider. For the `reverb` driver you
-must pass a `createReverbProvider` that bridges Laravel Echo to Yjs awareness — see
-[Reverb provider bridge](#reverb-provider-bridge). Hocuspocus needs no bridge.
-:::
+A session is bound to exactly one node: its signed room claim is always
+`channel_prefix.nodeId`.
 
 ## Hocuspocus (external Node hub)
 
@@ -309,7 +269,7 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub
 
 The `useNodeCollaboration` composable does the full handshake: it fetches the room token
 from the node collab endpoint, then builds a Yjs session over it — the Hocuspocus
-transport via `@hocuspocus/provider`, the Reverb transport via a host-supplied bridge.
+transport via `@hocuspocus/provider`.
 
 ```ts
 import { useNodeCollaboration } from '@vaulter/vue'
@@ -362,7 +322,6 @@ import { VaulterDocumentNode } from '@vaulter/vue'
     :node-id="nodeId"
     :component-map="componentMap"
     :collaboration="true"
-    :collaboration-providers="{ createReverbProvider }"
     @collaborating="(readonly) => { /* a Yjs session opened */ }"
   />
 </template>
@@ -371,8 +330,7 @@ import { VaulterDocumentNode } from '@vaulter/vue'
 - `collaboration` (default `true`) — set `false` to force the autosave path even for a
   collaborative handler.
 - `collaboration-providers` — forwarded to `useNodeCollaboration`; supply
-  `createReverbProvider` here for the Reverb driver (and/or `createHocuspocusProvider` to
-  override the default Hocuspocus provider).
+  `createHocuspocusProvider` to override the default Hocuspocus provider.
 - It emits `collaborating(readonly: boolean)` once a Yjs session opens. If the token
   handshake fails (collab unavailable / not configured) it **falls back** to the autosave
   path rather than blocking the editor.
@@ -381,37 +339,10 @@ Read-only is enforced end to end: `isReadonly` is `true` when the `readonly` pro
 **or** the session is read-only, and in collaborative mode the Yjs session drives
 persistence so the client autosave is inert.
 
-### Reverb provider bridge
-
-The Hocuspocus transport works out of the box (`@hocuspocus/provider`). The **Reverb**
-transport is never hard-required, so you supply a bridge that connects Laravel Echo to Yjs:
-
-```ts
-const session = useNodeCollaboration(nodeId, {
-  providers: {
-    createReverbProvider({ channel, connection, document }) {
-      // `channel`    — the private channel name (the session token)
-      // `connection` — the broadcast connection name
-      // `document`   — the shared Y.Doc to apply remote updates into
-      // Subscribe via Echo, relay Yjs updates over whisper/events, and return:
-      return {
-        awareness: /* your awareness, or null */ null,
-        isConnected: () => true,
-        onConnectionChange: (handler) => {/* … */ return () => {}},
-        destroy: () => {/* unsubscribe */},
-      }
-    },
-  },
-})
-```
-
-Without a `createReverbProvider`, the `reverb` driver throws at session build:
-*"The reverb collaboration driver requires a `createReverbProvider`…"*.
-
 ## Extending
 
 The transport is a single seam. To add one, add a `CollaborationDriverType` case and a
-`NodeCollaborationDriver` implementation — the manager resolves it by enum, no
+`CollaborationDriver` implementation — the manager resolves it by enum, no
 stringly-typed lookup. The driver's only job is to encode the AccessResolver's decision
 (the `Ability`) into the session descriptor's `read_only` flag (and, for a JWT transport,
 the room claim); it never makes the authorization decision itself.

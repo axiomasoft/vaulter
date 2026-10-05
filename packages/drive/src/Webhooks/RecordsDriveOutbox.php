@@ -7,16 +7,16 @@ namespace Vaulter\Drive\Webhooks;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use Vaulter\Drive\Events\FileUploaded;
-use Vaulter\Drive\Events\NodeCopied;
-use Vaulter\Drive\Events\NodeCreated;
-use Vaulter\Drive\Events\NodeForceDeleted;
-use Vaulter\Drive\Events\NodeMoved;
-use Vaulter\Drive\Events\NodeRenamed;
-use Vaulter\Drive\Events\NodeRestored;
-use Vaulter\Drive\Events\NodeTrashed;
-use Vaulter\Drive\Events\NodeVersionCommitted;
-use Vaulter\Drive\Events\StorageCreated;
+use Vaulter\Drive\Events\Drives\DriveCreated;
+use Vaulter\Drive\Events\Files\FileRevisionAdded;
+use Vaulter\Drive\Events\Files\FileUploaded;
+use Vaulter\Drive\Events\Nodes\FolderCreated;
+use Vaulter\Drive\Events\Nodes\NodeCopied;
+use Vaulter\Drive\Events\Nodes\NodeMoved;
+use Vaulter\Drive\Events\Nodes\NodePurged;
+use Vaulter\Drive\Events\Nodes\NodeRenamed;
+use Vaulter\Drive\Events\Nodes\NodeRestored;
+use Vaulter\Drive\Events\Nodes\NodeTrashed;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Support\Identity;
 use Vaulter\Webhooks\OutboxRecorder;
@@ -43,19 +43,19 @@ final readonly class RecordsDriveOutbox
 
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(StorageCreated::class, [self::class, 'handleStorageCreated']);
-        $events->listen(NodeCreated::class, [self::class, 'handleNodeCreated']);
+        $events->listen(DriveCreated::class, [self::class, 'handleStorageCreated']);
+        $events->listen(FolderCreated::class, [self::class, 'handleNodeCreated']);
         $events->listen(FileUploaded::class, [self::class, 'handleFileUploaded']);
-        $events->listen(NodeVersionCommitted::class, [self::class, 'handleVersionCommitted']);
+        $events->listen(FileRevisionAdded::class, [self::class, 'handleVersionCommitted']);
         $events->listen(NodeMoved::class, [self::class, 'handleNodeMoved']);
         $events->listen(NodeRenamed::class, [self::class, 'handleNodeRenamed']);
         $events->listen(NodeCopied::class, [self::class, 'handleNodeCopied']);
         $events->listen(NodeTrashed::class, [self::class, 'handleNodeTrashed']);
         $events->listen(NodeRestored::class, [self::class, 'handleNodeRestored']);
-        $events->listen(NodeForceDeleted::class, [self::class, 'handleNodeForceDeleted']);
+        $events->listen(NodePurged::class, [self::class, 'handleNodeForceDeleted']);
     }
 
-    public function handleStorageCreated(StorageCreated $event): void
+    public function handleStorageCreated(DriveCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::DriveCreated,
@@ -68,10 +68,10 @@ final readonly class RecordsDriveOutbox
                 'name' => $event->storage->name,
             ],
             actorId: $event->actorId,
-        ), StorageCreated::class);
+        ), DriveCreated::class);
     }
 
-    public function handleNodeCreated(NodeCreated $event): void
+    public function handleNodeCreated(FolderCreated $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::FolderCreated,
@@ -86,7 +86,7 @@ final readonly class RecordsDriveOutbox
                 'name' => $event->node->name,
             ],
             actorId: $event->actorId,
-        ), NodeCreated::class);
+        ), FolderCreated::class);
     }
 
     public function handleFileUploaded(FileUploaded $event): void
@@ -108,7 +108,7 @@ final readonly class RecordsDriveOutbox
         ), FileUploaded::class);
     }
 
-    public function handleVersionCommitted(NodeVersionCommitted $event): void
+    public function handleVersionCommitted(FileRevisionAdded $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::FileRevisionAdded,
@@ -123,7 +123,7 @@ final readonly class RecordsDriveOutbox
                 'size_bytes' => $event->version->size_bytes,
             ],
             actorId: $event->actorId,
-        ), NodeVersionCommitted::class);
+        ), FileRevisionAdded::class);
     }
 
     public function handleNodeMoved(NodeMoved $event): void
@@ -216,7 +216,7 @@ final readonly class RecordsDriveOutbox
      * reconcile its own mirror). The panel is the default panel — the storage is the
      * only surviving scope and the event does not carry it.
      */
-    public function handleNodeForceDeleted(NodeForceDeleted $event): void
+    public function handleNodeForceDeleted(NodePurged $event): void
     {
         $this->safely(fn (): mixed => $this->recorder->stage(
             event: EventType::NodePurged,
@@ -229,7 +229,7 @@ final readonly class RecordsDriveOutbox
                 'freed_bytes' => $event->freedBytes,
             ],
             actorId: $event->actorId,
-        ), NodeForceDeleted::class);
+        ), NodePurged::class);
     }
 
     /**

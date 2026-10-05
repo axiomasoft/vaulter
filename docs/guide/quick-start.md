@@ -11,7 +11,7 @@ uploaded file, and a listing — then the Vue UI on top.
 
 ::: tip Prerequisite
 You have installed `axioma-studio/vaulter-drive` (this walkthrough uses `Vaulter::for()`,
-`DriveContext`, uploads — all Drive features) and run the migrations. If not, do
+`DriveHandle`, uploads — all Drive features) and run the migrations. If not, do
 [Installation](/guide/installation) first (it is two commands).
 :::
 
@@ -40,7 +40,7 @@ configuring a driver is covered in [Host-role driver](/guide/permission-drivers)
 ## 2. Open a drive and use it
 
 `Vaulter::for($entity)` get-or-creates the entity's storage (and its root folder) and returns
-a `DriveContext` — the ergonomic handle for the whole drive. Everything below is a real
+a `DriveHandle` — the ergonomic handle for the whole drive. Everything below is a real
 method on it:
 
 ```php
@@ -63,7 +63,7 @@ $node = $drive->upload(
 $drive->list($reports);   // Illuminate\Database\Eloquent\Collection<Node>
 ```
 
-That is a fully working drive. A handful of the other `DriveContext` methods:
+That is a fully working drive. A handful of the other `DriveHandle` methods:
 
 ```php
 $drive->rename($node, 'Q3 report.pdf');

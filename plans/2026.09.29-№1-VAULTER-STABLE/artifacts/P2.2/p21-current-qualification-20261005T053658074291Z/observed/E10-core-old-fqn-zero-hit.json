@@ -1,0 +1,13 @@
+{
+  "id": "E10-core-old-fqn-zero-hit",
+  "argv": [
+    "python3",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/p21-current-qualification-20261005T053658074291Z/tools/old-fqn.py",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/p21-current-qualification-20261005T053658074291Z"
+  ],
+  "candidate_sha256": "11f4fde00dc0df3bdb0fb4ef584ee42b9bb827d4a7e405fb233dc4bf67e0ba25",
+  "started_at": "2026-10-05T05:37:04.704612+00:00",
+  "finished_at": "2026-10-05T05:37:05.637353+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

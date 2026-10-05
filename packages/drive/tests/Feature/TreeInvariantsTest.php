@@ -7,9 +7,9 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Drive\DriveContext;
-use Vaulter\Drive\Exceptions\CrossStorageMoveException;
-use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Drive\DriveHandle;
+use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -32,13 +32,13 @@ beforeEach(function (): void {
 /**
  * A destination that is not a live folder of the drive.
  */
-function invalidDestination(DriveContext $drive, string $kind): Node
+function invalidDestination(DriveHandle $drive, string $kind): Node
 {
     return match ($kind) {
         'file' => $drive->upload(DriveTestHelpers::streamFor('bytes'), originalName: 'target.bin'),
         // Drive cannot depend on documents; a document node is a plain kind=document row.
         'document' => app(NodeStoreRepository::class)->create([
-            'drive_id' => $drive->storage()->getKey(),
+            'drive_id' => $drive->model()->getKey(),
             'parent_id' => $drive->root()->getKey(),
             'kind' => NodeKind::Document,
             'name' => 'Spec',
@@ -56,7 +56,7 @@ it('rejects creating a folder under a non-folder or trashed destination', functi
 
     expect(fn (): Node => $drive->createFolder('Child', $destination))->toThrow(InvalidDestinationException::class);
 
-    $this->postJson('api/vaulter/storages/'.$drive->storage()->getKey().'/folders', [
+    $this->postJson('api/vaulter/storages/'.$drive->model()->getKey().'/folders', [
         'name' => 'Child',
         'parent_id' => $destination->getKey(),
     ])->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
@@ -69,7 +69,7 @@ it('rejects uploading a file into a non-folder or trashed destination', function
     expect(fn (): Node => $drive->upload(DriveTestHelpers::streamFor('x'), into: $destination, originalName: 'x.bin'))
         ->toThrow(InvalidDestinationException::class);
 
-    $this->postJson('api/vaulter/storages/'.$drive->storage()->getKey().'/uploads', [
+    $this->postJson('api/vaulter/storages/'.$drive->model()->getKey().'/uploads', [
         'parent_id' => $destination->getKey(),
         'file' => UploadedFile::fake()->createWithContent('x.txt', 'x'),
     ])->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
@@ -109,7 +109,7 @@ it('re-homes a restore to the root when the original parent is no longer a live 
 
     $this->postJson('api/vaulter/nodes/'.$child->getKey().'/restore')
         ->assertOk()
-        ->assertJsonPath('data.parent_id', $drive->storage()->root_node_id);
+        ->assertJsonPath('data.parent_id', $drive->model()->root_node_id);
 });
 
 it('refuses to restore a node that is not in the trash', function (): void {
@@ -135,7 +135,7 @@ it('rejects a folder of another drive as the destination', function (string $ope
         'copy' => fn (): Node => $drive->copy($node, $foreign),
     };
 
-    expect($run)->toThrow(CrossStorageMoveException::class);
+    expect($run)->toThrow(CrossDriveOperationException::class);
 
     // Over HTTP a foreign node id is not addressable through this drive at all.
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => $foreign->getKey()])
@@ -148,7 +148,7 @@ it('renders a cross-drive operation as 409 cross_drive_operation', function (): 
 
     $exception = rescue(fn (): Node => $drive->createFolder('Child', $foreign), fn (Throwable $e): Throwable => $e, report: false);
 
-    expect($exception)->toBeInstanceOf(CrossStorageMoveException::class);
+    expect($exception)->toBeInstanceOf(CrossDriveOperationException::class);
 
     $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
 
@@ -211,15 +211,15 @@ it('rejects moving a folder into its own subtree', function (): void {
     $parent = $drive->createFolder('Parent');
     $child = $drive->createFolder('Child', $parent);
 
-    expect(fn (): Node => $drive->move($parent, $child))->toThrow(CycleException::class)
-        ->and(fn (): Node => $drive->move($parent, $parent))->toThrow(CycleException::class);
+    expect(fn (): Node => $drive->move($parent, $child))->toThrow(NodeCycleException::class)
+        ->and(fn (): Node => $drive->move($parent, $parent))->toThrow(NodeCycleException::class);
 });
 
 it('resolves a missing destination to the root instead of a parentless node', function (): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->createFolder('Nested', $drive->createFolder('Top'));
-    $storageId = $drive->storage()->getKey();
-    $rootId = $drive->storage()->root_node_id;
+    $storageId = $drive->model()->getKey();
+    $rootId = $drive->model()->root_node_id;
 
     $this->postJson('api/vaulter/storages/'.$storageId.'/folders', ['name' => 'Created'])
         ->assertJsonPath('data.parent_id', $rootId);
@@ -238,7 +238,7 @@ it('allows exactly one parentless node per drive', function (): void {
     $drive = DriveTestHelpers::drive();
 
     expect(fn () => app(NodeStoreRepository::class)->create([
-        'drive_id' => $drive->storage()->getKey(),
+        'drive_id' => $drive->model()->getKey(),
         'parent_id' => null,
         'kind' => NodeKind::Folder,
         'name' => 'Second root',
@@ -304,7 +304,7 @@ it("locks a new version's target before the CAS lock", function (): void {
     expect($nodeLock)->not->toBeNull()
         ->and($blobWork)->not->toBeNull()
         ->and($nodeLock)->toBeLessThan($blobWork)
-        ->and($drive->storage()->refresh()->used_bytes)->toBe(8);
+        ->and($drive->model()->refresh()->used_bytes)->toBe(8);
 });
 
 it('refuses a new version for a node deleted after it was loaded', function (): void {

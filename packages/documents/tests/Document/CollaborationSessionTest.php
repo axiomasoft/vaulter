@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Collaboration\HocuspocusNodeCollaborationDriver;
-use Vaulter\Documents\Collaboration\NodeCollaborationDriverManager;
-use Vaulter\Documents\Collaboration\ReverbNodeCollaborationDriver;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Collaboration\CollaborationDriverManager;
+use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
@@ -20,44 +19,19 @@ use Vaulter\Support\Config;
  * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует readOnly из
  * способности (Edit → writable, иначе read-only), Hocuspocus подписывает JWT с
  * правильными claim'ами/exp, а комната всегда привязана к одному узлу. Это «сердце»
- * выдачи токена — проверяем форму дескриптора для обоих транспортов отдельно от HTTP.
+ * выдачи токена — проверяем форму дескриптора для Hocuspocus отдельно от HTTP.
  */
 function documentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('First draft'),
         parent: $drive->root(),
     ));
 }
-
-it('issues a reverb session whose token is the private room channel', function (): void {
-    config()->set('vaulter.collaboration.driver', 'reverb');
-
-    $node = documentNode();
-    $session = app(ReverbNodeCollaborationDriver::class)->issueSession($node, Ability::Edit, actorId: 7);
-
-    expect($session->driver)->toBe(CollaborationDriverType::Reverb)
-        ->and($session->room)->toBe(Config::collaborationRoom($node->getKey()))
-        ->and($session->room)->toBe('vaulter.documents.'.$node->getKey())
-        ->and($session->token)->toBe($session->room)
-        ->and($session->readOnly)->toBeFalse()
-        ->and($session->url)->toBeNull()
-        ->and($session->connection)->toBe('reverb');
-});
-
-it('marks a reverb session read-only for a non-edit ability', function (): void {
-    $node = documentNode();
-
-    $view = app(ReverbNodeCollaborationDriver::class)->issueSession($node, Ability::View, actorId: 7);
-    $comment = app(ReverbNodeCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 7);
-
-    expect($view->readOnly)->toBeTrue()
-        ->and($comment->readOnly)->toBeTrue();
-});
 
 it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function (): void {
     config()->set('vaulter.collaboration.driver', 'hocuspocus');
@@ -67,7 +41,7 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
 
     $node = documentNode();
     $before = time();
-    $session = app(HocuspocusNodeCollaborationDriver::class)->issueSession($node, Ability::Edit, actorId: 42);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, Ability::Edit, actorId: 42);
 
     expect($session->driver)->toBe(CollaborationDriverType::Hocuspocus)
         ->and($session->url)->toBe('ws://hub:1234')
@@ -88,7 +62,7 @@ it('encodes readOnly=true into the hocuspocus JWT for a comment ability', functi
     config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = documentNode();
-    $session = app(HocuspocusNodeCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 1);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 1);
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
@@ -102,7 +76,7 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
     $nodeA = documentNode();
     $nodeB = documentNode();
 
-    $sessionA = app(HocuspocusNodeCollaborationDriver::class)->issueSession($nodeA, Ability::Edit, actorId: 1);
+    $sessionA = app(HocuspocusCollaborationDriver::class)->issueSession($nodeA, Ability::Edit, actorId: 1);
     $claimsA = JWT::decode($sessionA->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     // The token for node A carries node A's room — never node B's.
@@ -111,21 +85,18 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
 });
 
 it('resolves the node-collaboration driver from config', function (): void {
-    $manager = app(NodeCollaborationDriverManager::class);
-
-    config()->set('vaulter.collaboration.driver', 'reverb');
-    expect($manager->driver())->toBeInstanceOf(ReverbNodeCollaborationDriver::class);
+    $manager = app(CollaborationDriverManager::class);
 
     config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    expect($manager->driver())->toBeInstanceOf(HocuspocusNodeCollaborationDriver::class);
+    expect($manager->driver())->toBeInstanceOf(HocuspocusCollaborationDriver::class);
 });
 
 it('rejects an unknown node-collaboration driver with an operator-facing remedy', function (): void {
-    $manager = app(NodeCollaborationDriverManager::class);
+    $manager = app(CollaborationDriverManager::class);
 
     expect(fn () => $manager->driver('unknown'))
         ->toThrow(
             VaulterException::class,
-            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter.collaboration.driver) to one of: reverb, hocuspocus.',
+            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter.collaboration.driver) to hocuspocus.',
         );
 });

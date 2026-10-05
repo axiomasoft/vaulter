@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Drive\Exceptions\UploadContentMismatchException;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
+use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Cas\Blob;
@@ -138,7 +138,7 @@ it('commit отклоняет объект с mime image/png и magic-bytes ZIP,
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($zipBytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
         ->toThrow(UploadContentMismatchException::class);
 
     // Nothing was committed — the type-confused object is refused before the blob.

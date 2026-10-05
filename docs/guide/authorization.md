@@ -21,7 +21,7 @@ decision deterministic. The role drivers are covered in
 [Grants](./grants).
 
 ::: info Two lanes, one authority
-The `AccessResolver` is the single authority every Policy, `DriveContext`, controller
+The `AccessResolver` is the single authority every Policy, `DriveHandle`, controller
 and Resource asks. It lives at `Vaulter\Access\AccessResolver`. The host plugs into
 it through the `PermissionDriver` contract — never by replacing the resolver.
 :::
@@ -32,7 +32,7 @@ it through the `PermissionDriver` contract — never by replacing the resolver.
 
 | Method | Returns | Purpose |
 |---|---|---|
-| `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | The single yes/no entry point Policies and the `DriveContext` call. |
+| `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | The single yes/no entry point Policies and the `DriveHandle` call. |
 | `effectiveGrants(Authorizable $actor, Node $node)` | `GrantSet` | The folded result of the whole algorithm — allow-mask, deny-mask, level. |
 | `abilitiesFor(Authorizable $actor, Node $node)` | `array<string, bool>` | Every `Ability` mapped to allowed/denied — fills the UI `abilities` object. |
 | `canCreateInWorkspace(Authorizable $actor, Storage $storage)` | `bool` | The create gate for folders/uploads, where there is no existing node. |

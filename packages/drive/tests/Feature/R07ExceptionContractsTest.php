@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Drive\Exceptions\CrossStorageMoveException;
-use Vaulter\Drive\Exceptions\CycleException;
-use Vaulter\Drive\Exceptions\OffsetMismatchException;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
-use Vaulter\Drive\Exceptions\StagedUploadMissingException;
-use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Exceptions\UploadContentMismatchException;
+use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
+use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -58,7 +58,7 @@ it('R07Exception keeps UploadConflictException forClosedSession message and 409 
 it('R07Exception keeps CycleException forMove message', function (): void {
     $nodeId = 42;
     $intoId = 99;
-    $exception = CycleException::forMove($nodeId, $intoId);
+    $exception = NodeCycleException::forMove($nodeId, $intoId);
 
     expect($exception->getMessage())->toBe(
         "[Vaulter] Cannot move node [{$nodeId}] into [{$intoId}] — the destination is the node itself or one of ".
@@ -124,7 +124,7 @@ it('R07Exception keeps UploadContentMismatchException forSession message and 422
 it('R07Exception keeps CrossStorageMoveException between message', function (): void {
     $from = 1;
     $to = 2;
-    $exception = CrossStorageMoveException::between($from, $to);
+    $exception = CrossDriveOperationException::between($from, $to);
 
     expect($exception->getMessage())->toBe(
         "[Vaulter] Cannot move a node from storage [{$from}] into storage [{$to}]. ".
@@ -151,7 +151,7 @@ it('R07Exception keeps OffsetMismatchException message render headers and JSON a
 });
 
 it('R07Exception surfaces offset mismatch over HTTP with the full message and tus headers', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'r07-offset.bin',
         'total_size_bytes' => 20,

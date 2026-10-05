@@ -6,18 +6,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Exceptions\UploadContentMismatchException;
+use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
@@ -43,7 +43,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
     ]);
     $folder->save();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $folder,
@@ -93,7 +93,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
 it('initiate stores null metadata when the client sent an empty map', function (): void {
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -108,7 +108,7 @@ it('initiate stores null metadata when the client sent an empty map', function (
 it('initiate leaves a tus session ready for PATCH after handler initialise', function (): void {
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -134,7 +134,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
 
-    $exact = $manager->initiate(new UploadInitData(
+    $exact = $manager->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $root,
@@ -144,7 +144,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
 
     expect($exact->total_size_bytes)->toBe(10);
 
-    expect(fn () => $manager->initiate(new UploadInitData(
+    expect(fn () => $manager->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $root,
@@ -158,7 +158,7 @@ it('active-session cap allows max minus one and rejects at the ceiling', functio
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
-    $data = fn (string $name): UploadInitData => new UploadInitData(
+    $data = fn (string $name): InitiateUploadInput => new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $root,
@@ -217,7 +217,7 @@ it('commit commits PNG bytes when declared mime matches and discards staged temp
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and(Blob::query()->count())->toBe(1)
@@ -250,7 +250,7 @@ it('commit places a new file under the session target_parent_id, not implicit ro
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     expect($node->parent_id)->toEqual($folder->getKey())
         ->and($node->parent_id)->not->toEqual($root->getKey());
@@ -272,7 +272,7 @@ it('commit fails loud when the session storage row is missing', function (): voi
     UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingStorageId]);
     $session = $session->fresh();
 
-    expect(fn () => app(CommitUploadAction::class)->execute($session))
+    expect(fn () => app(CompleteUploadAction::class)->execute($session))
         ->toThrow(RuntimeException::class, 'storage');
 });
 
@@ -285,7 +285,7 @@ it('commit rejects image/jpg declared when magic bytes are PNG', function (): vo
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
         ->toThrow(UploadContentMismatchException::class);
 
     expect(Blob::query()->count())->toBe(0);

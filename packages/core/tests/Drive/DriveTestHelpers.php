@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Drive;
 
-use Vaulter\Drive\DriveContext;
+use Vaulter\Drive\DriveHandle;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Fixtures\Panels\FakeProject;
 
@@ -33,7 +33,7 @@ final class DriveTestHelpers
     /**
      * Open a Drive handle for a fresh host entity.
      */
-    public static function drive(?int $id = null): DriveContext
+    public static function drive(?int $id = null): DriveHandle
     {
         return Vaulter::for(self::host($id));
     }

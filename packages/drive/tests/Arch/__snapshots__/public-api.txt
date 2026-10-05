@@ -4,64 +4,14 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
-Vaulter\Drive\Events\FileUploaded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\File $file
-  readonly \Vaulter\Models\Drive\FileRevision $version
-  readonly \Vaulter\Models\Drive\Node $node
+Vaulter\Drive\Events\Drives\DriveCreated
+  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Drive $storage
+  readonly \Vaulter\Models\Drive\Node $root
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Drive\Events\NodeCopied
-  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $copy
-  readonly \Vaulter\Models\Drive\Node $source
-  readonly int|null|string $actorId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeCreated
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeForceDeleted
-  __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $actorId = null, ?string $eventId = null)
-  readonly array $nodeIds
-  readonly int $freedBytes
-  readonly int|null|string $actorId
-  readonly int|string $storageId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeMoved
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
-  readonly int|null|string $fromParentId
-  readonly int|null|string $toParentId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeRenamed
-  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
-  readonly string $eventId
-  readonly string $fromName
-  readonly string $toName
-
-Vaulter\Drive\Events\NodeRestored
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeTrashed
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
-  readonly string $eventId
-
-Vaulter\Drive\Events\NodeVersionCommitted
+Vaulter\Drive\Events\Files\FileRevisionAdded
   __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\FileRevision $version
@@ -70,26 +20,76 @@ Vaulter\Drive\Events\NodeVersionCommitted
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Drive\Events\StorageCreated
-  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
-  readonly \Vaulter\Models\Drive\Drive $storage
-  readonly \Vaulter\Models\Drive\Node $root
+Vaulter\Drive\Events\Files\FileUploaded
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\File $file
+  readonly \Vaulter\Models\Drive\FileRevision $version
+  readonly \Vaulter\Models\Drive\Node $node
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Drive\Events\UploadSessionAborted
+Vaulter\Drive\Events\Nodes\FolderCreated
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Nodes\NodeCopied
+  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $copy
+  readonly \Vaulter\Models\Drive\Node $source
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Nodes\NodeMoved
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly int|null|string $fromParentId
+  readonly int|null|string $toParentId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Nodes\NodePurged
+  __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $actorId = null, ?string $eventId = null)
+  readonly array $nodeIds
+  readonly int $freedBytes
+  readonly int|null|string $actorId
+  readonly int|string $storageId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Nodes\NodeRenamed
+  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+  readonly string $fromName
+  readonly string $toName
+
+Vaulter\Drive\Events\Nodes\NodeRestored
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Nodes\NodeTrashed
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Uploads\UploadAborted
   __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Drive\Events\UploadSessionExpired
+Vaulter\Drive\Events\Uploads\UploadExpired
   __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly int|null|string $actorId
   readonly string $eventId
 
-Vaulter\Drive\Events\UploadSessionInitiated
+Vaulter\Drive\Events\Uploads\UploadInitiated
   __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly int|null|string $actorId

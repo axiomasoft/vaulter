@@ -60,7 +60,7 @@ beforeEach(function (): void {
 
 function r07ActionStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 it('accepts an upload that fills the quota exactly and rejects one byte over', function (): void {
@@ -149,13 +149,13 @@ it('deep-copies every live descendant and charges the summed logical bytes', fun
     $root = $drive->createFolder('Root');
     $child = $drive->createFolder('Child', $root);
     $drive->upload(DriveTestHelpers::streamFor('abc'), into: $child, originalName: 'leaf.bin');
-    $used = $drive->storage()->refresh()->used_bytes;
+    $used = $drive->model()->refresh()->used_bytes;
 
     $copy = $drive->copy($root, name: 'Root copy');
 
     expect($copy->children()->sole()->name)->toBe('Child')
         ->and($copy->children()->sole()->children()->sole()->name)->toBe('leaf.bin')
-        ->and($drive->storage()->refresh()->used_bytes)->toBe($used + 3);
+        ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);
 });
 
 it('rename to the same name emits no rename activity or outbox row', function (): void {

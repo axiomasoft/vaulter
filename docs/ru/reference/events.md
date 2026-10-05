@@ -17,11 +17,11 @@ Vaulter диспетчеризует события Laravel по четырём 
   транзакция БД зафиксирована (ни один слушатель не отработает над строкой, которую потом
   откатят). Это подавляющее большинство событий Vaulter.
 - **`ShouldBroadcast`** — событие вдобавок транслируется в realtime-канал. Транслируются
-  только события узловых комментариев (все в домене Documents): `NodeCommentAdded`,
-  `NodeCommentResolved`, `NodeCommentDeleted`.
+  только события узловых комментариев (все в домене Documents): `CommentAdded`,
+  `CommentResolved`, `CommentDeleted`.
 
 ```php
-use Vaulter\Drive\Events\FileUploaded;
+use Vaulter\Drive\Events\Files\FileUploaded;
 
 Event::listen(function (FileUploaded $event): void {
     // $event->node, $event->file, $event->version, $event->actorId
@@ -52,16 +52,16 @@ Event::listen(function (FileUploaded $event): void {
 
 | Событие | Транслируется? | Payload конструктора |
 |---|---|---|
-| `DocumentNodeCreated` | После коммита | `Node $node, NodeDocumentVersion $version, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | После коммита | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentVersionCreated` | После коммита | `Node $node, NodeDocumentVersion $version, bool $restored = false, int\|string\|null $actorId = null` |
-| `NodeCommentAdded` | **Да** (`ShouldBroadcast`) | `NodeComment $comment` |
-| `NodeCommentResolved` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
-| `NodeCommentDeleted` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `DocumentCreated` | После коммита | `Node $node, DocumentRevision $version, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | После коммита | `Node $node, DocumentRevision $version, bool $created, int\|string\|null $actorId = null` |
+| `DocumentRevisionCreated` | После коммита | `Node $node, DocumentRevision $version, bool $restored = false, int\|string\|null $actorId = null` |
+| `CommentAdded` | **Да** (`ShouldBroadcast`) | `NodeComment $comment` |
+| `CommentResolved` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `CommentDeleted` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 
 ::: info Путь, привязанный к узлу
-`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` работают на
-**узловом** пути (`Node` + `NodeDocumentVersion`, за фичей `document_versions`). События
+`DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` работают на
+**узловом** пути (`Node` + `DocumentRevision`, за фичей `document_versions`). События
 `NodeComment*` покрывают треды узловых комментариев (ADR-0014). У Vaulter больше нет
 других доменов документных событий — прежние события DocVault, привязанные к
 `document_id`, были полностью исключены (ADR-0014).
@@ -75,9 +75,9 @@ Event::listen(function (FileUploaded $event): void {
 
 | Событие | `broadcastAs()` | Ключи `broadcastWith()` |
 |---|---|---|
-| `NodeCommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
-| `NodeCommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
-| `NodeCommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
+| `CommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
+| `CommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
+| `CommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
 
 ```php
 // Слушатель на стороне Echo (фронтенд)
@@ -93,20 +93,20 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 | Событие | Payload конструктора |
 |---|---|
-| `StorageCreated` | `Storage $storage, Node $root, int\|string\|null $actorId = null` |
-| `NodeCreated` | `Node $node, int\|string\|null $actorId = null` |
-| `FileUploaded` | `Node $node, File $file, FileRevision $version, int\|string\|null $actorId = null` |
-| `NodeVersionCommitted` | `Node $node, File $file, FileRevision $version, int $versionNo, int\|string\|null $actorId = null` |
-| `NodeRenamed` | `Node $node, string $fromName, string $toName, int\|string\|null $actorId = null` |
-| `NodeMoved` | `Node $node, int\|string\|null $fromParentId, int\|string\|null $toParentId, int\|string\|null $actorId = null` |
-| `NodeCopied` | `Node $source, Node $copy, int\|string\|null $actorId = null` |
-| `NodeTrashed` | `Node $node, int\|string\|null $actorId = null` |
-| `NodeRestored` | `Node $node, int\|string\|null $actorId = null` |
-| `NodeForceDeleted` | `int\|string $storageId, array $nodeIds, int $freedBytes, int\|string\|null $actorId = null` |
+| `Drives\DriveCreated` | `Drive $storage, Node $root, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\FolderCreated` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Files\FileUploaded` | `Node $node, File $file, FileRevision $version, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Files\FileRevisionAdded` | `Node $node, File $file, FileRevision $version, int $versionNo, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeRenamed` | `Node $node, string $fromName, string $toName, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeMoved` | `Node $node, int\|string\|null $fromParentId, int\|string\|null $toParentId, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeCopied` | `Node $source, Node $copy, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeTrashed` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeRestored` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodePurged` | `int\|string $storageId, array $nodeIds, int $freedBytes, int\|string\|null $actorId = null, ?string $eventId = null` |
 
-- `StorageCreated` — срабатывает, когда `Vaulter::for()` находит-или-создаёт строку
+- `Drives\DriveCreated` — срабатывает, когда `Vaulter::for()` находит-или-создаёт строку
   `v_storages`; `$root` — автоматически подготовленный узел корневой папки.
-- `NodeForceDeleted` — обратите внимание, оно несёт **id**, а не модели (`$storageId`,
+- `Nodes\NodePurged` — обратите внимание, оно несёт **id**, а не модели (`$storageId`,
   `array $nodeIds`) плюс `$freedBytes`; оно испускается уже после того, как поддерево
   исчезло, так что его строк больше не существует. Слушатели могут запланировать GC и
   освободить квоту.

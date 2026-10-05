@@ -55,7 +55,7 @@ editLink: false
 
 ## Drive
 
-Единое дерево файлов/папок `v_nodes` (`StorageController`, `NodeController`,
+Единое дерево файлов/папок `v_nodes` (`ShowDriveController`, `NodeController`,
 `DownloadController`). Эндпоинты уровня коллекции хранилища несут `{storage}` в пути;
 эндпоинты уровня узла выводят хранилище из привязанного `{node}`.
 
@@ -63,9 +63,9 @@ editLink: false
 
 #### `GET storages/{storage}`
 
-Прочитать метаданные контейнера хранилища, корневой узел и использование. → `StorageController::show`
+Прочитать метаданные контейнера хранилища, корневой узел и использование. → `ShowDriveController::__invoke`
 
-**Ответ** (`StorageResource`):
+**Ответ** (`DriveResource`):
 
 ```json
 {
@@ -290,7 +290,7 @@ editLink: false
 Документный узел плюс его текущее head-содержимое. → `content`
 
 **Гейт:** `Ability::View` (и узел должен быть `kind=document`, иначе —
-`NotADocumentNodeException`). **Ответ:** `NodeDocumentVersionResource` со встроенным
+`NotADocumentException`). **Ответ:** `DocumentRevisionResource` со встроенным
 содержимым.
 
 #### `PATCH nodes/{node}/content`
@@ -302,14 +302,14 @@ editLink: false
 | `content` | required, array (TipTap doc) |
 | `yjs_state` | nullable, string (base64 Yjs-бинарь) |
 
-**Гейт:** `Ability::Edit`. **Ответ:** `200` `NodeDocumentVersionResource`
+**Гейт:** `Ability::Edit`. **Ответ:** `200` `DocumentRevisionResource`
 (автосохранение семантически является обновлением, даже когда была дописана новая строка версии).
 
 #### `GET nodes/{node}/document-versions`
 
 История версий документного узла, новейшие сначала. → `versions`
 
-**Гейт:** `Ability::View`. **Ответ:** пагинированный `NodeDocumentVersionResource`.
+**Гейт:** `Ability::View`. **Ответ:** пагинированный `DocumentRevisionResource`.
 
 #### `POST nodes/{node}/document-versions`
 
@@ -320,13 +320,13 @@ editLink: false
 | `label` | required, string, max 255 |
 | `keep_forever` | nullable, boolean |
 
-**Гейт:** `Ability::Edit`. **Ответ:** `201` `NodeDocumentVersionResource`.
+**Гейт:** `Ability::Edit`. **Ответ:** `201` `DocumentRevisionResource`.
 
 #### `POST nodes/{node}/document-versions/{version}/restore`
 
 Восстановить предыдущую версию (переводит head на её копию). → `restore`
 
-**Гейт:** `Ability::Edit`. **Ответ:** `201` `NodeDocumentVersionResource`.
+**Гейт:** `Ability::Edit`. **Ответ:** `201` `DocumentRevisionResource`.
 
 #### `GET nodes/{node}/handler`
 
@@ -350,7 +350,7 @@ editLink: false
 ## Резюмируемые загрузки
 
 Порезанные на чанки, резюмируемые загрузки, которые собираются через *тот же* безгоночный
-CAS-коммит (`TusUploadController`, `S3MultipartController`). **Гейтится фичей `uploads`.**
+CAS-коммит (`TusProtocolController`, `S3MultipartProtocolController`). **Гейтится фичей `uploads`.**
 См. [Загрузки](/ru/guide/uploads).
 
 `{upload_id}` — это УНИКАЛЬНый хэндл сессии на стороне клиента: обычный скаляр, который
@@ -360,7 +360,7 @@ CAS-коммит (`TusUploadController`, `S3MultipartController`). **Гейти�
 
 #### `POST storages/{storage}/resumable-uploads`
 
-Создать резюмируемую сессию (tus Creation). → `TusUploadController::create`
+Создать резюмируемую сессию (tus Creation). → `TusProtocolController::create`
 
 | Параметр | Правило |
 |---|---|
@@ -438,7 +438,7 @@ CAS-коммит (`TusUploadController`, `S3MultipartController`). **Гейти�
 #### `POST resumable-uploads/{upload_id}/parts`
 
 Записать (подписать/проксировать) пронумерованную часть; тело — это байты части. Повторная
-загрузка того же `part_no` заменяет её. → `S3MultipartController::parts`
+загрузка того же `part_no` заменяет её. → `S3MultipartProtocolController::parts`
 
 | Параметр | Где | Примечания |
 |---|---|---|
@@ -777,7 +777,7 @@ room-JWT и привязывает вызов к его узлу (JWT для у�
 
 ## Смотрите также
 
-- [Drive](/ru/guide/drive) — хэндл `DriveContext`, который оборачивают маршруты Drive
+- [Drive](/ru/guide/drive) — хэндл `DriveHandle`, который оборачивают маршруты Drive
 - [Корзина и восстановление](/ru/guide/trash) — жизненный цикл маршрутов корзины
 - [Загрузки](/ru/guide/uploads) · [Публичные ссылки](/ru/guide/sharing) · [Совместное редактирование](/ru/guide/collaboration)
 - [Справочник событий](/ru/reference/events) · [Справочник enum'ов](/ru/reference/contracts)

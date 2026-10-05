@@ -1,0 +1,15 @@
+{
+  "purpose": "inference capability probe; not review or GREEN",
+  "manifest": {
+    "route": {
+      "provider": "grok",
+      "model": "grok-4.7",
+      "context_tokens": 500000
+    },
+    "effort": "high",
+    "executor_session": "01a10a45-06cd-7b82-9786-9ef7d504d26c"
+  },
+  "prompt": "Reply only runtime-probe-ok; do not read files or call tools.",
+  "max_turns": 1,
+  "inactivity_timeout": 60
+}

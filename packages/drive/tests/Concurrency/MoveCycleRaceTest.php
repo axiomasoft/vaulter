@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Drive\Actions\MoveNodeAction;
-use Vaulter\Drive\Data\MoveNodeData;
-use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
+use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
@@ -22,7 +22,7 @@ beforeEach(function (): void {
 
 function raceMove(int|string $nodeId, int|string $intoId): Closure
 {
-    return static fn (): string => (string) app(MoveNodeAction::class)->execute(new MoveNodeData(
+    return static fn (): string => (string) app(MoveNodeAction::class)->execute(new MoveNodeInput(
         node: Node::query()->findOrFail($nodeId),
         into: Node::query()->findOrFail($intoId),
     ))->getKey();
@@ -60,7 +60,7 @@ function assertOneMoveWins(array $outcomes): void
 
     expect($won)->toHaveCount(1)
         ->and($lost)->toHaveCount(1)
-        ->and($lost[0]->failedWith(CycleException::class))->toBeTrue("the losing move failed with {$lost[0]->exception}: {$lost[0]->message}");
+        ->and($lost[0]->failedWith(NodeCycleException::class))->toBeTrue("the losing move failed with {$lost[0]->exception}: {$lost[0]->message}");
 }
 
 it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', function (): void {

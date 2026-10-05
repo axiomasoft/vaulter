@@ -7,11 +7,11 @@ use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Exceptions\StagedUploadMissingException;
+use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -39,7 +39,7 @@ function r07bS3RawSession(int $totalSizeBytes): UploadSession
  */
 function r07bS3CtlStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 /**

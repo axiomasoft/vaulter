@@ -30,7 +30,7 @@ when you extend a seam or debug a layer.
 
 ```
 @vaulter/vue  ──HTTP/JSON──►  Controllers ─► FormRequests ─► DTOs (Data\*)
-              ──WebSocket──►  CollaborationDriver (Reverb | Hocuspocus)
+              ──WebSocket──►  CollaborationDriver (Hocuspocus)
        │
   AccessResolver (Vaulter-owned)  ◄── PermissionDriver (host, swappable)
        │                              + v_node_grants ACL
@@ -48,14 +48,14 @@ A typical write — say `POST storages/{storage}/uploads` — flows top to botto
 1. The **controller** route-model-binds the `{storage}` (or `{node}`) through the swappable
    model, then authorizes the action against the [`AccessResolver`](#authorization).
 2. A **FormRequest** validates and a **DTO** (`Vaulter\Data\*`) carries the typed payload.
-3. An **Action** (`final readonly`, e.g. `UploadFileAction`) opens the transaction, calls the
+3. An **Action** (`final readonly`, e.g. `IngestFileAction`) opens the transaction, calls the
    **CAS** to stage + dedup the bytes, writes the `v_nodes` / `v_files` rows through **store
    repositories**, and dispatches a domain **Event** after commit.
 4. Subscribers (`RecordsActivity`, `RecordsOutbox`) react to the event to write the activity
    feed and stage the transactional outbox — Vaulter never couples the Action to them.
 
 The ergonomic entry point `Vaulter::for($entity)` returns a
-[`DriveContext`](#the-drive-handle) (`Vaulter\Drive\DriveContext`, shipped by
+[`DriveHandle`](#the-drive-handle) (`Vaulter\Drive\DriveHandle`, shipped by
 `axioma-studio/vaulter-drive`) that wraps exactly this pipeline for programmatic use.
 
 ## Layers
@@ -76,14 +76,14 @@ provider — so a host can point the config at a subclass and binding keeps work
 One use case each, `final readonly`. An Action opens the transaction, enforces business rules,
 calls repositories/CAS, and dispatches a domain event **after commit**. The Drive write set
 (`Vaulter\Drive\Actions\*`, requires `axioma-studio/vaulter-drive`):
-`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, `RenameNodeAction`,
-`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `ForceDeleteNodeAction`. Document-node
+`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, `RenameNodeAction`,
+`CopyNodeAction`, `TrashNodeAction`, `RestoreNodeAction`, `PurgeNodeAction`. Document-node
 Actions live under `Vaulter\Documents\Actions\*` (requires `axioma-studio/vaulter-documents`);
 core itself only keeps `Vaulter\Actions\{Access,Sharing,Webhooks}\*`.
 
 ::: info Authorization placement
 Actions perform **no** access checks. Authorization is enforced once, at the HTTP boundary
-(`NodeController` + `AccessResolver`), before the Action runs. `DriveContext` is likewise a
+(`NodeController` + `AccessResolver`), before the Action runs. `DriveHandle` is likewise a
 pure delegation surface. This keeps the access decision in exactly one place.
 :::
 
@@ -136,8 +136,8 @@ Drive and Documents each ship as their own package:
 
 | Package | Namespace | Adds |
 |---|---|---|
-| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveContext`, `StorageManager`, the Drive Actions (`CreateFolderAction`, `UploadFileAction`, `MoveNodeAction`, …) and their Events. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the TipTap/Univer format drivers (added to core's registry — the engine itself is core-owned since P0.4), node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidTipTapContentException`). |
+| `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveHandle`, `DriveProvisioner`, the Drive Actions (`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, …) and their Events. |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the TipTap/Univer format drivers (added to core's registry — the engine itself is core-owned since P0.4), node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). |
@@ -148,14 +148,14 @@ installing the matching package (see [Installation](/guide/installation)).
 ## The Drive handle
 
 `Vaulter::for($entity, panel: '…')` is the primary integration entry point. It is a thin
-facade over `VaulterManager`, returning a `DriveContext` from `axioma-studio/vaulter-drive`
+facade over `VaulterManager`, returning a `DriveHandle` from `axioma-studio/vaulter-drive`
 (the package must be installed for this handle to be usable):
 
 ```php
 use Vaulter\Facades\Vaulter;
 
 // Get-or-create the storage mounted on $project in the 'default' panel,
-// returning an ergonomic DriveContext.
+// returning an ergonomic DriveHandle.
 $drive = Vaulter::for($project);
 
 $folder = $drive->createFolder('Contracts');
@@ -164,9 +164,9 @@ $drive->rename($node, 'signed.pdf');
 $children = $drive->list($folder); // Collection<Node>
 ```
 
-`VaulterManager::for()` get-or-creates the `v_storages` row through `StorageManager` (the
+`VaulterManager::for()` get-or-creates the `v_storages` row through `DriveProvisioner` (the
 polymorphic `(owner_type, owner_id, panel)` triple is the idempotency key, guarded by a partial
-unique index), auto-provisions a `kind=folder` root node, and returns a `DriveContext` whose
+unique index), auto-provisions a `kind=folder` root node, and returns a `DriveHandle` whose
 methods each delegate to one Action or the read repository. The handle adds no business logic —
 only a pre-resolved storage and upload-source normalisation (a PSR stream, `SplFileInfo` /
 `UploadedFile`, an open resource, or a raw string all normalise to a seekable stream).
@@ -296,9 +296,6 @@ another scope's bytes ([ADR-0012](/adr/0012-dedup-scope)). See the
 Yjs is the source of truth; TipTap JSON is the derived projection. The transport is swappable
 behind `CollaborationDriver` ([ADR-0001](/adr/0001-collaboration-transport)):
 
-- **`reverb`** (default) — Yjs over Laravel Reverb. The Vue client joins the **private**
-  broadcast channel `vaulter.documents.{nodeId}`; the channel-auth callback gates it through the
-  `AccessResolver` (≥ `View` to connect). No extra service, no room JWT.
 - **`hocuspocus`** — an external Node hub (`hocuspocus-server/`). The client connects with a
   signed room JWT; the hub calls back into the `collab/authenticate` + `collab/store` webhooks.
 
@@ -327,7 +324,7 @@ The reasoning behind every choice above lives in the [ADRs](/adr/). The full set
 
 | ADR | Decides | Status |
 |---|---|---|
-| [0001](/adr/0001-collaboration-transport) | Collaboration transport — `CollaborationDriver`, Reverb default vs Hocuspocus. | accepted |
+| [0001](/adr/0001-collaboration-transport) | Collaboration transport — `CollaborationDriver`, Hocuspocus room JWTs; Reverb Yjs transport removed. | accepted |
 | [0002](/adr/0002-authorization-delegation) | Authorization delegated to the host (`PermissionResolver`). | refined by 0007 |
 | [0003](/adr/0003-embeddability-data-model) | Embeddability via swappable models + dual key type. | superseded by 0009 / 0011 |
 | [0004](/adr/0004-content-format) | TipTap JSON content + append-only bounded version history. | accepted |

@@ -1,0 +1,9 @@
+{
+  "stage": "install-before-candidate",
+  "runtime_checks_started": false,
+  "candidate_created": false,
+  "exit_code": 1,
+  "error": "AssertionError: Expected all 31 P2.3 class renames, got 34",
+  "cause": "obsolete runner baseline count; actual map has31 normative renames+3 samebasename HTTP controller moves",
+  "resolution": "authoritative34 runner assertion; resume incomplete unusedfixedbase, existingfiles mustmatch"
+}

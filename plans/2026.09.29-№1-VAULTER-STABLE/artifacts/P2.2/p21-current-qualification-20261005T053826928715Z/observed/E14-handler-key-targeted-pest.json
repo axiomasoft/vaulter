@@ -1,0 +1,23 @@
+{
+  "id": "E14-handler-key-targeted-pest",
+  "argv": [
+    "env",
+    "-u",
+    "UPDATE_SNAPSHOT",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "CACHE_STORE=array",
+    "SESSION_DRIVER=array",
+    "QUEUE_CONNECTION=sync",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "packages/core/tests/Feature/FileHandlerKeyTest.php"
+  ],
+  "candidate_sha256": "5b91283f015682b78f53f948b6d269e9def8adaeffa8b260033b2875a472d768",
+  "started_at": "2026-10-05T05:39:19.512719+00:00",
+  "finished_at": "2026-10-05T05:39:20.061254+00:00",
+  "exit_code": 0,
+  "runtime_verified_before_after": true
+}

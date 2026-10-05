@@ -5,17 +5,17 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
-use Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException;
-use Vaulter\Documents\Exceptions\NotADocumentNodeException;
+use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
+use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
-use Vaulter\Drive\Exceptions\CrossStorageMoveException;
-use Vaulter\Drive\Exceptions\CycleException;
-use Vaulter\Drive\Exceptions\OffsetMismatchException;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
-use Vaulter\Drive\Exceptions\StagedUploadMissingException;
-use Vaulter\Drive\Exceptions\UploadConflictException;
-use Vaulter\Drive\Exceptions\UploadContentMismatchException;
+use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
+use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Exceptions\Documents\UnknownExportFormatException;
@@ -67,17 +67,17 @@ it('renders each domain exception with its stable code and HTTP status', functio
 })->with([
     'permission denied' => [PermissionDeniedException::forAbility('update'), 'permission_denied', 403],
     'name conflict' => [$nameConflict = NodeNameConflictException::forName('duplicate', null), 'node_name_conflict', 409, ['errors' => ['name' => [$nameConflict->getMessage()]]]],
-    'move cycle' => [CycleException::forMove(1, 2), 'node_move_cycle', 409],
-    'cross drive' => [CrossStorageMoveException::between(1, 2), 'cross_drive_operation', 409],
+    'move cycle' => [NodeCycleException::forMove(1, 2), 'node_move_cycle', 409],
+    'cross drive' => [CrossDriveOperationException::between(1, 2), 'cross_drive_operation', 409],
     'quota' => [QuotaExceededException::forStorage(1, 10, 9, 2), 'quota_exceeded', 413],
     'upload conflict' => [UploadConflictException::forSession('upload'), 'upload_conflict', 409],
     'staged upload missing' => [StagedUploadMissingException::forSession('upload', 7), 'upload_conflict', 409],
     'offset mismatch' => [new OffsetMismatchException(serverOffset: 7), 'upload_offset_mismatch', 409],
     'mime mismatch' => [UploadContentMismatchException::forSession('upload', 'image/png'), 'upload_rejected', 422, ['reason' => 'mime_mismatch']],
-    'not a document' => [NotADocumentNodeException::forNode(1), 'not_a_document', 409],
+    'not a document' => [NotADocumentException::forNode(1), 'not_a_document', 409],
     'unknown document type' => [UnknownDocumentTypeException::forType('unknown', ['tiptap']), 'unknown_document_type', 422],
-    'invalid tiptap' => [InvalidTipTapContentException::missingDocNode(), 'invalid_document_content', 422, ['reason' => 'invalid_tiptap']],
-    'document revision missing' => [NodeDocumentVersionNotFoundException::forNode(1, 2), 'document_revision_not_found', 404],
+    'invalid tiptap' => [InvalidDocumentContentException::missingDocNode(), 'invalid_document_content', 422, ['reason' => 'invalid_tiptap']],
+    'document revision missing' => [DocumentRevisionNotFoundException::forNode(1, 2), 'document_revision_not_found', 404],
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],

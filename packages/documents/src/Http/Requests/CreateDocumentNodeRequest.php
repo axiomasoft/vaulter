@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  * Validates a create-document-node request (§2.5 / M4a). The destination parent +
  * target storage are route/repository resolved by the controller; this Request owns
  * the name + initial content + format validation and builds the value objects the
- * controller hands to CreateDocumentNodeAction.
+ * controller hands to CreateDocumentAction.
  *
  * It is HANDLER-AWARE (§7 level 2): an optional `mime` selects the document format.
  * With none, the node is a rich-text TipTap document (the historical default). With a

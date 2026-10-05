@@ -17,7 +17,7 @@ it('derives the ulid strategy from the legacy id_type (BC)', function (): void {
 });
 
 it('uses ULID keys when configured', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     expect($storage->getKey())->toBeString()
         ->and(strlen((string) $storage->getKey()))->toBe(26);

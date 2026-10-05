@@ -1,0 +1,62 @@
+{
+  "adapter_attestation": {
+    "canonical_command_sha256": "sha256:ea6da7ab23e0ab9e9d1d9640beed2eddf1db823fd874a7f2aca9e8e561724131",
+    "command_id": "task:plan-run",
+    "package": "task",
+    "version": "0.28.3"
+  },
+  "commit_sha": "4b72efd3a909f441eb415182218140575e61e4c5",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:aa38805a61e6bce36da63ed6ada155993fff4e5b53bbd7d1eac53b79cf89c6fa",
+    "plan": "sha256:e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+    "state": "sha256:119e29a1f03183a7974b7c080013c1fdfa5f4340d5d860039a4ce37b6b3aff93"
+  },
+  "journal": {
+    "batch_receipt": {
+      "batch_id": "B2-A",
+      "completed_prefix": [],
+      "handoff_digest": "a3b13f995ce0add98620584d6eecafb84308bbe204e2dc1cd26b0f713b4dbe50",
+      "invocation_digest": "c372d31032f0018a42f253dbdbdb58bd770ad5dcfb45709a1288acce8947d9a1",
+      "membership": [
+        "P2.2",
+        "P2.3"
+      ],
+      "routing_digest": "e915a80391602bab410ca1632ce8ce08f2df40fc7eb690cdf76ca10b7ea4bca8",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "a6d0705fc02f33c080bc7282ccaaef784d1457df8630b665170eada7f2435c3d",
+      "stop_disposition": "continue"
+    },
+    "command": "plan-run",
+    "line": 78,
+    "result": "closed-green",
+    "run_id": "08750714b29a6d5a7792f308c7e281d3832ed1f76f0f1b29319a02f60f1c124b",
+    "sha256": "sha256:1959dcf948881cca57bc7d673fcea8b6ee157a29bcb804f067619a45a5299268"
+  },
+  "next_exact": "run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.3",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "rationale": {
+    "open_risks": "retained in item states, decisions and acceptance.",
+    "remaining": "actual successor above; no execution authority is added."
+  },
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.3\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | B2-A |\n| Model | implementation |\n| Thinking | medium |\n| Context | continue-root |\n| Command | $ task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.3 |",
+  "route": {
+    "batch": "B2-A",
+    "command": "$ task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.3",
+    "context": "continue-root",
+    "model": "implementation",
+    "thinking": "medium"
+  },
+  "schema_version": "terminal-delivery-receipt/v1",
+  "status": "🟢 Done",
+  "subject": "P2.2"
+}

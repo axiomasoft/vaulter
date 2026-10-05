@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Exceptions\OffsetMismatchException;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
@@ -32,7 +32,7 @@ function initiateTus(int $totalBytes, string $name = 'big.bin'): UploadSession
 {
     $storage = UploadTestHelpers::storage();
 
-    return app(UploadSessionManager::class)->initiate(new UploadInitData(
+    return app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -74,7 +74,7 @@ it('PATCH-чанки → HEAD-offset растёт → assemble → commit соз
     // Assemble → commit through the SAME race-free CAS.
     $manager = app(UploadSessionManager::class);
     $manager->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->name)->toBe('hello.txt')
@@ -105,7 +105,7 @@ it('resume после разрыва: второй клиент читает HEA
         ->and($result['offset'])->toBe(16);
 
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     // The reassembled bytes are intact (server-stitched at the authoritative offset).
     $version = $node->currentVersion()->first();
@@ -147,13 +147,13 @@ it('дедуп: идентичная резюмируемая загрузка �
     $a = initiateTus(totalBytes: strlen($bytes), name: 'a.bin');
     app(TusUploadHandler::class)->patch($a->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($a->refresh());
-    app(CommitUploadAction::class)->execute($a->refresh());
+    app(CompleteUploadAction::class)->execute($a->refresh());
 
     // Second resumable upload of the SAME bytes (different storage/session).
     $b = initiateTus(totalBytes: strlen($bytes), name: 'b.bin');
     app(TusUploadHandler::class)->patch($b->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($b->refresh());
-    app(CommitUploadAction::class)->execute($b->refresh());
+    app(CompleteUploadAction::class)->execute($b->refresh());
 
     // global dedup so two storages share the blob; assert one physical blob.
     config()->set('vaulter.dedup.scope', 'global');
@@ -166,7 +166,7 @@ it('лживый client sha256 игнорируется — адрес счит�
     $bytes = 'the real bytes';
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -177,7 +177,7 @@ it('лживый client sha256 игнорируется — адрес счит�
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     // The committed version's hash is the REAL content hash, not the client's lie.
     $version = $node->currentVersion()->first();
@@ -189,7 +189,7 @@ it('квота: сборка сверх квоты отклоняется на c
     $bytes = 'this is definitely too many bytes for the quota';
     $storage = UploadTestHelpers::storage(quotaBytes: 5);
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -200,7 +200,7 @@ it('квота: сборка сверх квоты отклоняется на c
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
         ->toThrow(QuotaExceededException::class);
 
     // No blob committed, quota untouched.
@@ -212,7 +212,7 @@ it('over-size: initiate сверх max_bytes отклоняется ДО при�
     config()->set('vaulter.uploads.max_bytes', 10);
     $storage = UploadTestHelpers::storage();
 
-    expect(fn () => app(UploadSessionManager::class)->initiate(new UploadInitData(
+    expect(fn () => app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -240,7 +240,7 @@ it('abort чистит staged temp и помечает aborted', function (): vo
 it('новая версия: резюмируемая загрузка на существующий узел бампит number', function (): void {
     // Seed a v1 file via a first resumable upload.
     $storage = UploadTestHelpers::storage();
-    $v1 = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $v1 = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
@@ -249,12 +249,12 @@ it('новая версия: резюмируемая загрузка на су
     ));
     app(TusUploadHandler::class)->patch($v1->refresh(), UploadTestHelpers::streamFor('v1'), 0);
     app(UploadSessionManager::class)->markAssembled($v1->refresh());
-    $node = app(CommitUploadAction::class)->execute($v1->refresh());
+    $node = app(CompleteUploadAction::class)->execute($v1->refresh());
 
     $firstVersionId = $node->current_version_id;
 
     // A NEW-VERSION resumable upload onto that node.
-    $v2 = app(UploadSessionManager::class)->initiate(new UploadInitData(
+    $v2 = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::Tus,
         targetNode: $node,
@@ -262,7 +262,7 @@ it('новая версия: резюмируемая загрузка на су
     ));
     app(TusUploadHandler::class)->patch($v2->refresh(), UploadTestHelpers::streamFor('version two!'), 0);
     app(UploadSessionManager::class)->markAssembled($v2->refresh());
-    $updated = app(CommitUploadAction::class)->execute($v2->refresh());
+    $updated = app(CompleteUploadAction::class)->execute($v2->refresh());
 
     $file = $updated->file;
 

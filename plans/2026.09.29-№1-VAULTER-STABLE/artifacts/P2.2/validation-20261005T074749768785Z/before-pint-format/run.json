@@ -1,0 +1,9 @@
+{
+  "stamp": "20261005T080211806194Z",
+  "attempts": {
+    "affected": "p22p23-affected-20261005T081212234496Z",
+    "full": "p22p23-full-20261005T081212234496Z"
+  },
+  "sole_evidence_writer_authorized": true,
+  "prior_attempts_preserved": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T074749768785Z/before-successor-closure-and-shortname-fix"
+}

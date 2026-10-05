@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Resources\Drive\NodeResource;
@@ -18,8 +18,8 @@ use Vaulter\Models\Drive\Node;
 it('resolves a document node to the TipTap handler descriptor', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Doc',
         content: DocumentTestHelpers::content(),
         parent: $drive->root(),
@@ -36,8 +36,8 @@ it('resolves a document node to the TipTap handler descriptor', function (): voi
 it('embeds the handler descriptor in the NodeResource payload', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
-        storage: $drive->storage(),
+    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+        storage: $drive->model(),
         name: 'Payload',
         content: DocumentTestHelpers::content(),
         parent: $drive->root(),
@@ -70,7 +70,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
     /** @var Node $node */
     $node = new $model;
     $node->forceFill([
-        'drive_id' => $drive->storage()->id,
+        'drive_id' => $drive->model()->id,
         'parent_id' => $drive->root()->id,
         'kind' => NodeKind::File,
         'name' => 'scan.pdf',

@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Collaboration;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Vaulter\Documents\Contracts\Collaboration\HostUserResolver as HostUserResolverContract;
 
 /**
  * The default {@see HostUserResolverContract}: materialise a host user by id by
@@ -20,7 +19,7 @@ use Vaulter\Documents\Contracts\Collaboration\HostUserResolver as HostUserResolv
  * Returns null when no user provider is available or the id resolves to nothing (the
  * webhook then answers allowed=false rather than failing open).
  */
-final readonly class HostUserResolver implements HostUserResolverContract
+final readonly class HostUserResolver implements \Vaulter\Documents\Contracts\HostUserResolver
 {
     public function __construct(
         private AuthFactory $auth,

@@ -16,19 +16,19 @@ Codes are a stable public contract (AD29).
 |:--|:--|:--|
 | `permission_denied` | 403 | `Vaulter\Exceptions\Access\PermissionDeniedException` |
 | `node_name_conflict` | 409 | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
-| `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\CycleException` |
-| `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\CrossStorageMoveException` |
+| `node_move_cycle` | 409 | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
+| `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
 | `invalid_destination` | 409 | `Vaulter\Exceptions\Nodes\InvalidDestinationException` |
 | `node_not_trashed` | 409 | `Vaulter\Exceptions\Nodes\NodeNotTrashedException` |
-| `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\QuotaExceededException` |
-| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\UploadConflictException` |
-| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\StagedUploadMissingException` |
-| `upload_offset_mismatch` | 409 | `Vaulter\Drive\Exceptions\OffsetMismatchException` |
-| `upload_rejected` | 422 | `Vaulter\Drive\Exceptions\UploadContentMismatchException` |
-| `not_a_document` | 409 | `Vaulter\Documents\Exceptions\NotADocumentNodeException` |
+| `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\Quota\QuotaExceededException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\UploadConflictException` |
+| `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException` |
+| `upload_offset_mismatch` | 409 | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
+| `upload_rejected` | 422 | `Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException` |
+| `not_a_document` | 409 | `Vaulter\Documents\Exceptions\NotADocumentException` |
 | `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
-| `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidTipTapContentException` |
-| `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\NodeDocumentVersionNotFoundException` |
+| `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
+| `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
@@ -84,18 +84,18 @@ Unicode NFC when ext-intl is installed. Rendered as 422 `validation_failed` with
 
 ## invalid-tiptap-content
 
-`InvalidTipTapContentException::missingDocNode()` — the content root must be
+`InvalidDocumentContentException::missingDocNode()` — the content root must be
 `{"type":"doc", …}`. Pass a valid TipTap JSON document or use `TipTapContent::empty()`.
 
 ## content-too-large
 
-`InvalidTipTapContentException::tooLarge()` — the content exceeds
+`InvalidDocumentContentException::tooLarge()` — the content exceeds
 `config('vaulter.max_document_size_kb')`. Split the document or raise the limit.
 
 ## unknown-collaboration-driver
 
-`VaulterException` from `NodeCollaborationDriverManager` — `config('vaulter.collaboration.driver')`
-is not one of the registered `CollaborationDriverType` cases (`reverb`, `hocuspocus`). Set it
+`VaulterException` from `CollaborationDriverManager` — `config('vaulter.collaboration.driver')`
+is not one of the registered `CollaborationDriverType` cases (`hocuspocus`). Set it
 to a valid transport name.
 
 ## missing-jwt
@@ -116,12 +116,12 @@ environment.
 
 ## cross-storage-move
 
-`CrossStorageMoveException` — a move stays within one storage tree. Copy across storages,
+`CrossDriveOperationException` — a move stays within one storage tree. Copy across storages,
 or re-home the node into the destination storage explicitly instead of moving it.
 
 ## document-version-not-found
 
-`NodeDocumentVersionNotFoundException` — the version does not exist or belongs to a
+`DocumentRevisionNotFoundException` — the version does not exist or belongs to a
 different node. List the node's history (`GET .../document-versions`) and restore an id
 from it.
 
@@ -140,7 +140,7 @@ Run the printed `composer require`.
 
 ## move-cycle
 
-`CycleException` — the move destination is the node itself or one of its own
+`NodeCycleException` — the move destination is the node itself or one of its own
 descendants, which would create a cycle. Choose a destination outside the moved node's
 subtree.
 
@@ -156,7 +156,7 @@ trash. Trash the node first; a live node is never purged directly.
 
 ## not-a-document-node
 
-`NotADocumentNodeException` — document content/version operations require a
+`NotADocumentException` — document content/version operations require a
 `kind=document` node (its payload lives in `v_node_document_versions`). Create the
 document via the document-node create endpoint first, or target a document node.
 

@@ -838,14 +838,6 @@ return [
     |                  collab/authenticate + collab/store webhooks below. This is the
     |                  only path with awareness sync + server-debounced persistence
     |                  and a real read-only guarantee on the socket.
-    |   'reverb'     — DEPRECATED for Yjs document editing. Reverb is Laravel's
-    |                  general broadcast bus (Pusher protocol) — great for app
-    |                  notifications/presence/activity, but it relays peer client-
-    |                  events without server-side content gating, so it cannot
-    |                  enforce read-only on the socket nor debounce persistence the
-    |                  way a Yjs backend does. Pushing Yjs through it is a custom
-    |                  protocol, not a standard TipTap integration. Kept only for
-    |                  backward compatibility; use 'hocuspocus' for collaboration.
     |
     | channel_prefix is the room namespace; a room is ALWAYS prefix.nodeId so a
     | token is bound to exactly one node (no cross-node access).
@@ -879,9 +871,6 @@ return [
         'webhook_timestamp_tolerance' => 300,
 
         'drivers' => [
-            'reverb' => [
-                'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
-            ],
             'hocuspocus' => [
                 'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
                 'app_id' => env('VAULTER_COLLAB_APP_ID'),

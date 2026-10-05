@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
-use Vaulter\Drive\StorageManager;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\EventType;
@@ -116,13 +116,13 @@ it('move within the same parent is a no-op without NodeMoved activity', function
 it('forceDelete on a folder subtree records zero freed bytes and skips quota adjustment', function (): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->createFolder('Empty tree');
-    $used = $drive->storage()->refresh()->used_bytes;
+    $used = $drive->model()->refresh()->used_bytes;
 
     $drive->trash($folder);
 
     $drive->forceDelete($folder, actorId: 17);
 
-    expect($drive->storage()->refresh()->used_bytes)->toBe($used)
+    expect($drive->model()->refresh()->used_bytes)->toBe($used)
         ->and(Activity::query()->where('verb', EventType::NodePurged->value)->sole()->context)->toEqual([
             'node_ids' => [(string) $folder->getKey()],
             'freed_bytes' => 0,
@@ -139,10 +139,10 @@ it('restore re-homes to the storage root when the original parent was trashed', 
 
     $restored = $drive->restore($child->refresh(), actorId: 17);
 
-    expect($restored->parent_id)->toEqual($drive->storage()->root_node_id)
+    expect($restored->parent_id)->toEqual($drive->model()->root_node_id)
         ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
             'name' => 'Child',
-            'parent_id' => (string) $drive->storage()->root_node_id,
+            'parent_id' => (string) $drive->model()->root_node_id,
         ]);
 });
 
@@ -150,8 +150,8 @@ it('upload session initiated activity carries the exact lifecycle context', func
     $drive = DriveTestHelpers::drive();
     Activity::query()->delete();
 
-    $session = app(UploadSessionManager::class)->initiate(new UploadInitData(
-        storage: $drive->storage(),
+    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
+        storage: $drive->model(),
         protocol: UploadProtocol::Tus,
         targetParent: $drive->root(),
         targetName: 'ctx.bin',
@@ -198,7 +198,7 @@ it('DriveContext upload from a string uses the provided original name for the ve
 
 it('StorageManager root() provisions a missing root with an empty name', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     $oldRootId = $storage->root_node_id;
 
     // The root row must be gone for good: even a soft-deleted parentless row is the
@@ -206,7 +206,7 @@ it('StorageManager root() provisions a missing root with an empty name', functio
     $storage->forceFill(['root_node_id' => null])->save();
     Node::query()->whereKey($oldRootId)->forceDelete();
 
-    $root = app(StorageManager::class)->root($storage->refresh());
+    $root = app(DriveProvisioner::class)->root($storage->refresh());
 
     expect($root->parent_id)->toBeNull()
         ->and($root->name)->toBe('')

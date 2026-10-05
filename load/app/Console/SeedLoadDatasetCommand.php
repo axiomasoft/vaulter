@@ -260,7 +260,7 @@ final class SeedLoadDatasetCommand extends Command
     {
         $host = DriveTestHelpers::host(self::SEED_OWNER_ACTOR_ID);
         $drive = Vaulter::for($host);
-        $storage = $drive->storage();
+        $storage = $drive->model();
         $root = $drive->root();
 
         AccessTestHelpers::grant(

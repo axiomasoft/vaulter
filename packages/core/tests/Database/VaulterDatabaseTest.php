@@ -6,7 +6,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Models\Drive\Drive;
@@ -34,7 +34,7 @@ it('resolves the same dedicated connection as Vaulter models', function (string 
     UploadSession::class,
     UploadPart::class,
     NodeComment::class,
-    NodeDocumentVersion::class,
+    DocumentRevision::class,
 ]);
 
 it('refuses locks without a transaction on its connection', function (string $method): void {
@@ -98,8 +98,8 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
         NodeComment::class => [
             'node_id' => $node->getKey(), 'author_type' => 'user', 'author_id' => 1, 'body' => 'test',
         ],
-        NodeDocumentVersion::class => [
-            'node_id' => $node->getKey(), 'number' => 1, 'format' => 'tiptap',
+        DocumentRevision::class => [
+            'node_id' => $node->getKey(), 'version_no' => 1, 'format' => 'tiptap',
         ],
     };
     $before = $modelClass::query()->count();
@@ -115,7 +115,7 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
     UploadSession::class,
     UploadPart::class,
     NodeComment::class,
-    NodeDocumentVersion::class,
+    DocumentRevision::class,
 ]);
 
 it('takes the tree lock in shared mode for single-parent writes on PostgreSQL', function (): void {

@@ -59,7 +59,7 @@ $drive = Vaulter::for($project, 'project_drive'); // a named panel
 Open a Drive handle bound to an already-resolved `Drive` row. This is the seam the
 HTTP layer uses: a route-model-bound `Drive` (resolved through the swappable
 `config('vaulter.models.storage')`) maps straight to a `DriveHandle` without
-re-deriving the owner. The handle's panel mirrors `$storage->panel`, so its Actions
+re-deriving the owner. The handle's panel mirrors `$storage->profile`, so its Actions
 run inside the right panel scope.
 
 ```php

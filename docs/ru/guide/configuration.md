@@ -316,16 +316,12 @@ Bearer-ссылки — отдельный публичный канал; хра
 
 ```php
 'collaboration' => [
-    'driver'         => env('VAULTER_COLLAB_DRIVER', 'reverb'), // reverb | hocuspocus
+    'driver'         => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'), // hocuspocus
     'channel_prefix' => 'vaulter.documents',
     'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
     'drivers' => [
-        'reverb' => [
-            'class'      => \Vaulter\Collaboration\ReverbCollaborationDriver::class,
-            'connection' => env('VAULTER_COLLAB_CONNECTION', 'reverb'),
-        ],
         'hocuspocus' => [
-            'class'     => \Vaulter\Collaboration\HocuspocusCollaborationDriver::class,
+            'class'     => \Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver::class,
             'url'       => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
             'app_id'    => env('VAULTER_COLLAB_APP_ID'),
             'secret'    => env('VAULTER_COLLAB_SECRET'),
@@ -335,8 +331,6 @@ Bearer-ссылки — отдельный публичный канал; хра
 ],
 ```
 
-- **`reverb`** (по умолчанию) — Yjs поверх Laravel Reverb, без доп. сервиса; Vue-клиент
-  подключается к приватному broadcast-каналу `{channel_prefix}.{nodeId}`, гейтит `AccessResolver`.
 - **`hocuspocus`** — внешний Node-хаб; клиент подключается с подписанным room-JWT, а хаб зовёт
   обратно в collab-вебхуки.
 

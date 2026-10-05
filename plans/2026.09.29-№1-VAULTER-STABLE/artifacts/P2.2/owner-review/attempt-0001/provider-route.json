@@ -1,0 +1,8 @@
+{
+  "context_tokens": 500000,
+  "cwd": "/tmp/vaulter-review-p22-20261005",
+  "effort": "high",
+  "model": "grok-4.7",
+  "session_id": "01a10aab-7bd7-7ea0-a755-5eacf5f1bf66",
+  "source": "/home/vostrikov/.grok/sessions/%2Ftmp%2Fvaulter-review-p22-20261005/01a10aab-7bd7-7ea0-a755-5eacf5f1bf66/summary.json"
+}

@@ -1,0 +1,30 @@
+{
+  "reason": "Restore Testbench global container immediately after isolated Application construction; verify decoded sanitizer href semantics, retaining unsafe-scheme rejection.",
+  "before": {
+    "packages/documents/tests/Providers/BindingsRegistrarTest.php": "039195c04961e382eeefe795cc01cce53d5bffec5ad7695453d89376605ab10f",
+    "packages/documents/tests/Providers/CollaborationRegistrarTest.php": "caae0328584146c9a43beee6cdf40070e17ddceb0b9bda47dcd380d298bdf901"
+  },
+  "api_source_unchanged": true,
+  "after_before_formatter": {
+    "packages/documents/tests/Providers/BindingsRegistrarTest.php": "391332428e7d455e12dc4730af4ece0699485ba1194a33411fa0bb421a2b3cda",
+    "packages/documents/tests/Providers/CollaborationRegistrarTest.php": "4f6e1bc4fbe72ba2bc4b614b5ed082f4eac41f687911fe7e453cc6e3f6e74063"
+  },
+  "after": {
+    "packages/documents/tests/Providers/BindingsRegistrarTest.php": "391332428e7d455e12dc4730af4ece0699485ba1194a33411fa0bb421a2b3cda",
+    "packages/documents/tests/Providers/CollaborationRegistrarTest.php": "a9586011f301bcab3fe81be969470b29d8e5c82fa4cb9d417d4870f45e1d73a0"
+  },
+  "formatter": {
+    "argv": [
+      "scripts/php84",
+      "packages/documents/vendor/bin/pint",
+      "packages/documents/tests/Providers/BindingsRegistrarTest.php",
+      "packages/documents/tests/Providers/CollaborationRegistrarTest.php"
+    ],
+    "exit_code": 0,
+    "changed_files": [
+      "packages/documents/tests/Providers/CollaborationRegistrarTest.php"
+    ],
+    "rule": "ordered_imports",
+    "evidence_origin": "actual tool invocation immediately following repair, recorded after completion"
+  }
+}

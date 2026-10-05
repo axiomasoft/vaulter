@@ -225,22 +225,6 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 
 **Почему и решение.**
 
-- **Драйвер Reverb (по умолчанию).** Vue-клиент присоединяется к приватному broadcast-каналу
-  `vaulter.documents.{nodeId}`; колбэк авторизации канала гейтит его через `AccessResolver`
-  (актору нужно как минимум `View` на узле). 403 здесь означает, что у актора действительно нет
-  `View` — проверяйте гранты, а не сокет. Убедитесь, что Reverb запущен и ваше соединение
-  `config('broadcasting')` совпадает с
-  `config('vaulter.collaboration.drivers.reverb.connection')`.
-- **Фича `document_versions`.** Авторизация комнаты узла и маршруты Documents монтируются только
-  когда включена фича `document_versions`. Если редактор так и не появляется, подтвердите:
-
-  ```php
-  // config/vaulter.php
-  'features' => [
-      'document_versions' => true, // gates the editor schema, routes, and node-room auth
-  ],
-  ```
-
 - **Драйвер Hocuspocus.** Node-хаб делает колбэки в `collab/authenticate` + `collab/store`. Эти
   эндпоинты принимают **только** валидный общий секрет или подписанный JWT комнаты — открытыми они
   не бывают. 401 от хаба обычно означает, что `VAULTER_COLLAB_WEBHOOK_SECRET` (или `secret`

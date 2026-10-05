@@ -30,7 +30,7 @@ routes are only registered when it is on:
 ],
 ```
 
-With the flag off, `Vaulter\Documents\Models\Versions\NodeDocumentVersion` has no table and the
+With the flag off, `Vaulter\Documents\Models\Revisions\DocumentRevision` has no table and the
 `storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions`
 routes do not exist.
 :::
@@ -38,7 +38,7 @@ routes do not exist.
 ## The data model
 
 A document node carries its head pointer the same way a file node does — `current_version_id`
-on the node points at the head `NodeDocumentVersion`. The version table is **append-only**:
+on the node points at the head `DocumentRevision`. The version table is **append-only**:
 a committed version is immutable (no `updated_at`, no soft-delete), `version_no` is monotonic
 per node, and the unique `(node_id, version_no)` index is the backbone two concurrent commits
 serialise on.
@@ -64,7 +64,7 @@ serialise on.
 | `created_at` | timestamp, nullable | Append-only — there is no `updated_at`. |
 
 ::: info Distinct from the legacy version table
-`NodeDocumentVersion` (node-attached, `v_node_document_versions`) is **separate** from the
+`DocumentRevision` (node-attached, `v_node_document_versions`) is **separate** from the
 legacy `DocumentVersion` (document-id-attached, `v_document_versions`). The legacy path stays
 intact; this page documents only the node-attached path.
 :::
@@ -78,11 +78,11 @@ version, atomically. Content is a TipTap document wrapped in
 ::: code-group
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\Documents\CreateDocumentNodeAction;
-use Vaulter\Data\CreateDocumentNodeData;
+use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
-$node = app(CreateDocumentNodeAction::class)->execute(new CreateDocumentNodeData(
+$node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
     storage: $storage,                       // the resolved v_storages row
     name:    'Design notes',
     content: TipTapContent::fromArray([
@@ -127,12 +127,12 @@ const node = await client.documentNodes.createNode(storageId, {
 
 :::
 
-What happens (`CreateDocumentNodeAction`):
+What happens (`CreateDocumentAction`):
 
 - The sibling-unique guard runs first — a name clash throws `NodeNameConflictException`.
 - One transaction creates the node, commits the **v1** version (`version_no = 1`,
   `is_autosave = false`, `status = committed`), repoints `current_version_id` to it, then
-  fires `DocumentNodeCreated` after commit.
+  fires `DocumentCreated` after commit.
 - The node is stamped with the Vaulter document mime
   (`application/vnd.vaulter.document+json`) so it always routes to the TipTap editor handler
   regardless of any extension in its name. See [Document Handlers](./document-handlers.md).
@@ -168,7 +168,7 @@ curl https://app.test/api/vaulter/nodes/77/content
 :::
 
 Server-side the controller resolves `head($node) ?? latest($node)` (the head pointer, else
-the highest `version_no`) and returns a `NodeDocumentVersionResource` **with** content. The
+the highest `version_no`) and returns a `DocumentRevisionResource` **with** content. The
 history listing (below) omits `content` to stay light — only this single-version fetch carries
 the full doc.
 
@@ -224,10 +224,10 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
 
 ```php [PHP — the Action]
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Data\UpdateDocumentContentData;
+use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
-app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentData(
+app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
     node:     $node,
     content:  TipTapContent::fromArray($tipTapDoc),
     yjsState: null,                  // optional raw Yjs binary update
@@ -271,10 +271,10 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\Versions\CreateNamedVersionAction;
-use Vaulter\Data\CreateNamedVersionData;
+use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
+use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 
-app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
+app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
     node:        $node,
     label:       'Before client review',
     keepForever: true,
@@ -284,8 +284,8 @@ app(CreateNamedVersionAction::class)->execute(new CreateNamedVersionData(
 
 :::
 
-`CreateNamedVersionAction` copies the current head's content/yjs/format into a fresh
-`is_autosave = false` row, repoints the head to it, prunes, and fires `DocumentVersionCreated`
+`CreateNamedRevisionAction` copies the current head's content/yjs/format into a fresh
+`is_autosave = false` row, repoints the head to it, prunes, and fires `DocumentRevisionCreated`
 (`restored = false`). A named version converts the working state into a durable checkpoint —
 distinct from autosave churn.
 
@@ -349,9 +349,9 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
 ```php [PHP — the Action]
-use Vaulter\Documents\Actions\Versions\RestoreDocumentVersionAction;
+use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 
-app(RestoreDocumentVersionAction::class)->execute(
+app(RestoreDocumentRevisionAction::class)->execute(
     node:      $node,
     versionId: 12,
     actorId:   $user->getKey(),
@@ -360,16 +360,16 @@ app(RestoreDocumentVersionAction::class)->execute(
 
 :::
 
-`RestoreDocumentVersionAction` resolves the source version **bounded to the node** (a version
+`RestoreDocumentRevisionAction` resolves the source version **bounded to the node** (a version
 id from another node never restores here), copies its content/yjs/format into a new committed
-row labelled `Restored from vN`, repoints the head, prunes, and fires `DocumentVersionCreated`
+row labelled `Restored from vN`, repoints the head, prunes, and fires `DocumentRevisionCreated`
 with `restored = true`.
 
 ## Pruning & retention
 
 The history is bounded by `config('vaulter.versions.max')` — the number of most-recent
 versions kept (`0` = unlimited). Pruning runs **inside** each write transaction
-(`NodeDocumentVersionStoreRepository::prune`) after a create/named/restore.
+(`DocumentRevisionStoreRepository::prune`) after a create/named/restore.
 
 ```php
 // config/vaulter.php
@@ -401,17 +401,17 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Event | Fired by | Payload |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentNodeCreated` | create | `node`, `version` (v1), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (v1), `actorId` |
 | `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
-| `Vaulter\Documents\Events\Versions\DocumentVersionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Errors
 
 | Exception | When |
 |---|---|
-| `Exceptions\Documents\NotADocumentNodeException` | A content/version operation targets a node that is not `kind=document`. |
-| `Documents\Exceptions\InvalidTipTapContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
-| `Exceptions\Documents\NodeDocumentVersionNotFoundException` | A restore targets a version id that does not belong to the node. |
+| `Exceptions\NotADocumentException` | A content/version operation targets a node that is not `kind=document`. |
+| `Documents\Exceptions\InvalidDocumentContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
+| `Exceptions\DocumentRevisionNotFoundException` | A restore targets a version id that does not belong to the node. |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |
 
 ## Next

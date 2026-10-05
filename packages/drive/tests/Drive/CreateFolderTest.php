@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
-use Vaulter\Drive\Events\NodeCreated;
+use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
@@ -19,7 +19,7 @@ it('создаёт папку в корне хранилища (под root-уз
     expect($folder->kind)->toBe(NodeKind::Folder)
         ->and($folder->name)->toBe('Docs')
         ->and($folder->parent_id)->toEqual($drive->root()->getKey())
-        ->and($folder->drive_id)->toEqual($drive->storage()->getKey());
+        ->and($folder->drive_id)->toEqual($drive->model()->getKey());
 });
 
 it('создаёт вложенную папку под родителем', function (): void {
@@ -62,13 +62,13 @@ it('разрешает одинаковые имена в разных роди�
 });
 
 it('диспатчит NodeCreated при создании папки', function (): void {
-    Event::fake([NodeCreated::class]);
+    Event::fake([FolderCreated::class]);
 
     $folder = DriveTestHelpers::drive()->createFolder('Docs');
 
     Event::assertDispatched(
-        NodeCreated::class,
-        fn (NodeCreated $event): bool => $event->node->getKey() === $folder->getKey(),
+        FolderCreated::class,
+        fn (FolderCreated $event): bool => $event->node->getKey() === $folder->getKey(),
     );
 });
 

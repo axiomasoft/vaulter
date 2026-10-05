@@ -131,8 +131,7 @@ step beyond your app's own bundler (Vite, etc.). Vue `^3.4` is a peer dependency
 
 ## 3. Collaboration server (optional)
 
-Realtime editing has two transports. The default `reverb` driver needs **no extra service**
-(it rides Laravel Reverb). The alternative `hocuspocus` driver uses a small Node.js Hocuspocus
+Realtime editing uses the `hocuspocus` driver and a small Node.js Hocuspocus
 hub, shipped with a `Dockerfile` and `docker-compose.yml` under `hocuspocus-server/`:
 
 ```bash
@@ -140,7 +139,7 @@ cp hocuspocus-server/.env.example hocuspocus-server/.env
 docker compose -f hocuspocus-server/docker-compose.yml up -d
 ```
 
-You only need this when `config('vaulter.collaboration.driver')` is `hocuspocus`. Details and
+The hub is required when realtime collaboration is enabled. Details and
 the full env contract are in [Collaboration → Server](/guide/collaboration).
 
 ## Verify the install

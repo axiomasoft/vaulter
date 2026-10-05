@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
@@ -28,7 +28,7 @@ beforeEach(function (): void {
 
 function chunkLimitStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 it('ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк ограничен, RV-03', function (): void {

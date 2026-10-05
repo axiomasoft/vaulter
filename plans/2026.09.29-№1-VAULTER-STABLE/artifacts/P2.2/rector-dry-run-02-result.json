@@ -1,0 +1,10 @@
+{
+  "exit_code": 2,
+  "expected_exit_for_changes": 2,
+  "totals": {
+    "changed_files": 118,
+    "errors": 0
+  },
+  "product_candidate": "d761949f271f24428aef3087c0dc1f0bb6b4f59fd68d90cc191ca8945582a2e3",
+  "map_sha256": "a6e15081f77060b521a989784bca66f64c8b6d8f121737f078c1daa6d8c011f5"
+}

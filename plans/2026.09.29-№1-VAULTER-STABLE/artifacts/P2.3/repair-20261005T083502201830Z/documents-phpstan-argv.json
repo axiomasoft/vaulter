@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "env",
+    "-u",
+    "UPDATE_SNAPSHOT",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "CACHE_STORE=array",
+    "SESSION_DRIVER=array",
+    "QUEUE_CONNECTION=sync",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/phpstan",
+    "analyse",
+    "--memory-limit=512M",
+    "--no-progress"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+  "source_sha256": "03c9af65e17489f42bcf954612307c5be5f2481fc252c878634b8f0729affe00"
+}

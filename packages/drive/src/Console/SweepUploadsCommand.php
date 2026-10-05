@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
-use Vaulter\Drive\Exceptions\UploadConflictException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Observability\TracingAttributes;

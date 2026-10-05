@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 /**
- * Mass-assignment hardening (P1.4 / B13): NodeComment/NodeDocumentVersion used to
+ * Mass-assignment hardening (P1.4 / B13): NodeComment/DocumentRevision used to
  * carry `$guarded = []` (F-P1.8-02). author_id/node_id are morph/FK identity columns
  * and status/version_no are lifecycle bookkeeping — none of them may be set through
  * a future `fill($request->all())`.
@@ -27,8 +27,8 @@ it('never mass-assigns author_id/node_id on NodeComment via fill() (F-P1.8-02)',
         ->and($comment->body)->toBe('legit comment text');
 });
 
-it('never mass-assigns node_id/status on NodeDocumentVersion via fill() (F-P1.8-02)', function (): void {
-    $version = new NodeDocumentVersion;
+it('never mass-assigns node_id/status on DocumentRevision via fill() (F-P1.8-02)', function (): void {
+    $version = new DocumentRevision;
     $version->fill([
         'node_id' => 999,
         'status' => 'committed',

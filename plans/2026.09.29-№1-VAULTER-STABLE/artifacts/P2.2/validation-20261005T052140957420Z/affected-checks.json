@@ -1,0 +1,206 @@
+[
+  {
+    "id": "php84-preflight",
+    "argv": [
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "--check"
+    ],
+    "depends_on": []
+  },
+  {
+    "id": "sqlite-preflight",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "php",
+      "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T052140957420Z/tools/environment.php"
+    ],
+    "depends_on": [
+      "php84-preflight"
+    ]
+  },
+  {
+    "id": "actual-source-reflection",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "php",
+      "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T052140957420Z/tools/reflection.php"
+    ],
+    "depends_on": [
+      "sqlite-preflight"
+    ]
+  },
+  {
+    "id": "code-guidance",
+    "argv": [
+      "python3",
+      "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T052140957420Z/tools/old-fqn.py"
+    ],
+    "depends_on": [
+      "actual-source-reflection"
+    ]
+  },
+  {
+    "id": "core-pint",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core"
+    ],
+    "depends_on": [
+      "code-guidance"
+    ]
+  },
+  {
+    "id": "core-phpstan",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "-c",
+      "phpstan.neon",
+      "--memory-limit=1G",
+      "--no-progress"
+    ],
+    "depends_on": [
+      "core-pint"
+    ]
+  },
+  {
+    "id": "drive-pint",
+    "argv": [
+      "bash",
+      "-c",
+      "cd \"$1\" && shift && exec \"$@\"",
+      "validation",
+      "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pint",
+      "--test"
+    ],
+    "depends_on": [
+      "core-phpstan"
+    ]
+  },
+  {
+    "id": "drive-phpstan",
+    "argv": [
+      "bash",
+      "-c",
+      "cd \"$1\" && shift && exec \"$@\"",
+      "validation",
+      "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/phpstan",
+      "analyse",
+      "--no-progress",
+      "--memory-limit=512M"
+    ],
+    "depends_on": [
+      "drive-pint"
+    ]
+  },
+  {
+    "id": "drive-affected",
+    "argv": [
+      "bash",
+      "-c",
+      "cd \"$1\" && shift && exec \"$@\"",
+      "validation",
+      "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Arch",
+      "tests/Providers",
+      "tests/Drive/StorageManagerTest.php"
+    ],
+    "depends_on": [
+      "drive-phpstan"
+    ]
+  },
+  {
+    "id": "core-upgrade-guide",
+    "argv": [
+      "env",
+      "-u",
+      "UPDATE_SNAPSHOT",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "CACHE_STORE=array",
+      "SESSION_DRIVER=array",
+      "QUEUE_CONNECTION=sync",
+      "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Support/UpgradeGuideCoverageTest.php"
+    ],
+    "depends_on": [
+      "drive-affected"
+    ]
+  }
+]

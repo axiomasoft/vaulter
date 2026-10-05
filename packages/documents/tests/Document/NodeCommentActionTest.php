@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Support\Facades\Event;
-use Vaulter\Documents\Actions\Comments\AddNodeCommentAction;
-use Vaulter\Documents\Actions\Comments\DeleteNodeCommentAction;
-use Vaulter\Documents\Actions\Comments\ResolveNodeCommentAction;
-use Vaulter\Documents\Data\Comments\CreateNodeCommentData;
-use Vaulter\Documents\Events\Comments\NodeCommentAdded;
-use Vaulter\Documents\Events\Comments\NodeCommentDeleted;
-use Vaulter\Documents\Events\Comments\NodeCommentResolved;
+use Vaulter\Documents\Actions\Comments\AddCommentAction;
+use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
+use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
+use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Events\Comments\CommentAdded;
+use Vaulter\Documents\Events\Comments\CommentDeleted;
+use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -21,9 +21,9 @@ use Vaulter\Tests\Fixtures\TestUser;
  * author), resolve (tombstone + actor) and delete (permanent), each dispatching its
  * broadcast event on the node's collaboration channel.
  */
-function nodeCommentData(?int $parentId = null): CreateNodeCommentData
+function nodeCommentData(?int $parentId = null): AddCommentInput
 {
-    return new CreateNodeCommentData(
+    return new AddCommentInput(
         body: 'looks good',
         authorType: (new TestUser)->getMorphClass(),
         authorId: 1,
@@ -32,20 +32,20 @@ function nodeCommentData(?int $parentId = null): CreateNodeCommentData
     );
 }
 
-it('adds a comment and dispatches NodeCommentAdded on the node channel', function (): void {
-    Event::fake([NodeCommentAdded::class]);
+it('adds a comment and dispatches CommentAdded on the node channel', function (): void {
+    Event::fake([CommentAdded::class]);
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'commentable');
 
-    $comment = app(AddNodeCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
 
     expect($comment->node_id)->toBe($node->getKey())
         ->and($comment->author_type)->toBe((new TestUser)->getMorphClass())
         ->and($comment->anchor)->toBe(['from' => 1, 'to' => 4])
         ->and($comment->isResolved())->toBeFalse();
 
-    Event::assertDispatched(NodeCommentAdded::class, function (NodeCommentAdded $event) use ($node): bool {
+    Event::assertDispatched(CommentAdded::class, function (CommentAdded $event) use ($node): bool {
         $channels = $event->broadcastOn();
 
         return $channels[0] instanceof PrivateChannel
@@ -59,7 +59,7 @@ it('threads a reply under its parent', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'threaded');
 
-    $action = app(AddNodeCommentAction::class);
+    $action = app(AddCommentAction::class);
     $root = $action->execute($node, nodeCommentData());
     $reply = $action->execute($node, nodeCommentData(parentId: (int) $root->getKey()));
 
@@ -68,33 +68,33 @@ it('threads a reply under its parent', function (): void {
 });
 
 it('resolves a comment, stamping resolved_at + resolved_by and dispatching the event', function (): void {
-    Event::fake([NodeCommentResolved::class]);
+    Event::fake([CommentResolved::class]);
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'resolvable');
-    $comment = app(AddNodeCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
 
-    $resolved = app(ResolveNodeCommentAction::class)->execute($comment, resolvedBy: 42);
+    $resolved = app(ResolveCommentAction::class)->execute($comment, resolvedBy: 42);
 
     expect($resolved->isResolved())->toBeTrue()
         ->and($resolved->resolved_by)->toBe(42);
 
-    Event::assertDispatched(NodeCommentResolved::class, fn (NodeCommentResolved $e): bool => $e->actorId === 42);
+    Event::assertDispatched(CommentResolved::class, fn (CommentResolved $e): bool => $e->actorId === 42);
 });
 
-it('permanently deletes a comment and dispatches NodeCommentDeleted', function (): void {
-    Event::fake([NodeCommentDeleted::class]);
+it('permanently deletes a comment and dispatches CommentDeleted', function (): void {
+    Event::fake([CommentDeleted::class]);
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'deletable');
-    $comment = app(AddNodeCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
     $id = $comment->getKey();
 
-    app(DeleteNodeCommentAction::class)->execute($comment, actorId: 5);
+    app(DeleteCommentAction::class)->execute($comment, actorId: 5);
 
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 
-    Event::assertDispatched(NodeCommentDeleted::class, function (NodeCommentDeleted $e) use ($id): bool {
+    Event::assertDispatched(CommentDeleted::class, function (CommentDeleted $e) use ($id): bool {
         return $e->comment->getKey() === $id && $e->actorId === 5;
     });
 });

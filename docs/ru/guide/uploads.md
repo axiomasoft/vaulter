@@ -66,7 +66,7 @@ feature-флагом `uploads` (`config('vaulter.features.uploads')`, по ум�
 
 ## Цели
 
-Сессия может нацеливаться на одну из двух форм (это зеркалит `UploadFileData`):
+Сессия может нацеливаться на одну из двух форм (это зеркалит `IngestFileInput`):
 
 - **Новый файл** → задайте `parent_id` (или опустите его для корня хранилища) и `name`; коммит
   создаёт узел `kind=file` в этой папке.
@@ -90,13 +90,13 @@ feature-флагом `uploads` (`config('vaulter.features.uploads')`, по ум�
 
 | Метод    | Маршрут                                      | Контроллер / действие        | Назначение |
 | -------- | -------------------------------------------- | ---------------------------- | ------- |
-| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusUploadController@create` | Открыть сессию (возвращает `Location` + `upload_id`). |
-| `GET`    | `/resumable-uploads/{upload_id}`             | `TusUploadController@status` | Опросить статус сессии. |
-| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusUploadController@head`   | Авторитетный `Upload-Offset` (точка возобновления). |
-| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusUploadController@patch`  | Дописать чанк; по завершении собрать→закоммитить. |
-| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusUploadController@abort`  | Прервать (staged-temp + multipart освобождаются). |
-| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartController@parts`| Записать (подписать/проксировать) нумерованную часть. |
-| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartController@complete` | Complete-multipart → собрать → закоммитить. |
+| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusProtocolController@create` | Открыть сессию (возвращает `Location` + `upload_id`). |
+| `GET`    | `/resumable-uploads/{upload_id}`             | `TusProtocolController@status` | Опросить статус сессии. |
+| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusProtocolController@head`   | Авторитетный `Upload-Offset` (точка возобновления). |
+| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusProtocolController@patch`  | Дописать чанк; по завершении собрать→закоммитить. |
+| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusProtocolController@abort`  | Прервать (staged-temp + multipart освобождаются). |
+| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartProtocolController@parts`| Записать (подписать/проксировать) нумерованную часть. |
+| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartProtocolController@complete` | Complete-multipart → собрать → закоммитить. |
 
 Прямой one-shot-путь — это эндпоинт загрузки Drive
 `POST /storages/{storage}/uploads` (multipart-форма `file` + опциональные `parent_id` / `node_id`
@@ -118,7 +118,7 @@ tus-обработчик реализует три операции CORE нап�
 3. **PATCH** — `patch()` дописывает чанк `application/offset+octet-stream` по объявленному
    `Upload-Offset`. Смещение **обязано** совпасть с текущим смещением сервера (иначе tus-`409 Conflict`
    — где лягут байты, решает сервер, а не клиент). Когда `received_bytes`
-   достигает `total_size_bytes`, контроллер запускает `markAssembled` → `CommitUploadAction` и
+   достигает `total_size_bytes`, контроллер запускает `markAssembled` → `CompleteUploadAction` и
    возвращает созданный узел (`201`).
 
 ::: code-group
@@ -208,11 +208,11 @@ curl -X POST https://app.test/api/vaulter/resumable-uploads/<upload_id>/complete
 
 ## Сборка → CAS-коммит и дедупликация
 
-`CommitUploadAction` — это **единственное место**, где staged-байты пересекают границу Drive, и
+`CompleteUploadAction` — это **единственное место**, где staged-байты пересекают границу Drive, и
 делает он это тем же путём без гонок, что и one-shot-загрузка:
 
 ```
-staged temp → UploadFileData → UploadFileAction → BlobStore.commit
+staged temp → IngestFileInput → IngestFileAction → BlobStore.commit
 ```
 
 Всё это работает в одной внешней транзакции, так что сессия никогда не остаётся закоммиченной
@@ -221,7 +221,7 @@ staged temp → UploadFileData → UploadFileAction → BlobStore.commit
 1. staged-temp считывается обратно как поток (он живёт на диске сессии под префиксом `tmp/`,
    ключом которого выступает `upload_id`, так что многогигабайтная загрузка переживает несколько
    запросов).
-2. `UploadFileAction` кладёт его локально, **пересчитывает `sha256`** и вызывает
+2. `IngestFileAction` кладёт его локально, **пересчитывает `sha256`** и вызывает
    `BlobStore.commit` — дедупликация, конечный автомат без гонок, учёт ссылок и квота применяются.
    Два одинаковых файла коммитятся в **один и тот же блоб** (контент-адресуемая дедупликация);
    `assembled_blob_id` сессии устанавливается в тот блоб, в который сдедупились байты — читается из

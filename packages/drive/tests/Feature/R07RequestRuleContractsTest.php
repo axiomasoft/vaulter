@@ -36,7 +36,7 @@ function r07ResumableUrl(string|int $storageId): string
 
 function r07StorageId(): string|int
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage()->getKey();
+    return Vaulter::for(DriveTestHelpers::host())->model()->getKey();
 }
 
 function r07NameSeparatorMessage(): string
@@ -148,7 +148,7 @@ it('R07Request keeps only scalar metadata values in CreateUploadSessionRequest',
 
 it('R07Request validates multipart upload file parent and name rules', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
 
     $this->postJson($base, [
@@ -225,7 +225,7 @@ it('R07Request accepts nullable move parent_id only', function (): void {
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => null])
         ->assertOk()
-        ->assertJsonPath('data.parent_id', $drive->storage()->root_node_id);
+        ->assertJsonPath('data.parent_id', $drive->model()->root_node_id);
 });
 
 it('R07Request validates rename name rules and custom separator message', function (): void {
@@ -248,7 +248,7 @@ it('R07Request validates rename name rules and custom separator message', functi
 
 it('R07Request validates create-folder name and nullable parent_id', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
     $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
     $child = $drive->createFolder('Parent');
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Exceptions\StagedUploadMissingException;
-use Vaulter\Drive\Support\Uploads\MagicByteSniffer;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
+use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Models\Drive\Drive;
 
@@ -121,7 +121,7 @@ it('accepts an idempotent retransmit when the upload is already complete at the 
 });
 
 it('MagicByteSniffer accepts generic declared mime without requiring agreement', function (string $declared): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor(r07PngBytes());
 
     try {
@@ -136,7 +136,7 @@ it('MagicByteSniffer accepts generic declared mime without requiring agreement',
 ]);
 
 it('MagicByteSniffer accepts null declared mime as generic', function (): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor(r07PngBytes());
 
     try {
@@ -147,7 +147,7 @@ it('MagicByteSniffer accepts null declared mime as generic', function (): void {
 });
 
 it('MagicByteSniffer accepts matching PNG bytes for image/png including charset trimming and case', function (): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor(r07PngBytes());
 
     try {
@@ -158,7 +158,7 @@ it('MagicByteSniffer accepts matching PNG bytes for image/png including charset 
 });
 
 it('MagicByteSniffer folds image/jpg to image/jpeg for agreement', function (): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $jpeg = base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA//2Q==', true) ?: '';
     $stream = UploadTestHelpers::streamFor($jpeg);
 
@@ -170,7 +170,7 @@ it('MagicByteSniffer folds image/jpg to image/jpeg for agreement', function (): 
 });
 
 it('MagicByteSniffer rejects a concrete declared mime that contradicts PNG magic', function (): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor(r07PngBytes());
 
     try {
@@ -189,7 +189,7 @@ it('MagicByteSniffer rejects PNG declared when the head is a ZIP archive', funct
     $zipBytes = (string) file_get_contents($zipPath);
     @unlink($zipPath);
 
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor($zipBytes);
 
     try {
@@ -200,7 +200,7 @@ it('MagicByteSniffer rejects PNG declared when the head is a ZIP archive', funct
 });
 
 it('MagicByteSniffer accepts an empty stream head without contradicting a concrete declared mime', function (): void {
-    $sniffer = app(MagicByteSniffer::class);
+    $sniffer = app(MimeSniffer::class);
     $stream = UploadTestHelpers::streamFor('');
 
     try {

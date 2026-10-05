@@ -26,7 +26,7 @@ beforeEach(function (): void {
 
 function univerStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 const RIVAL_XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';

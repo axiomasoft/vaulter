@@ -83,7 +83,7 @@ disabled.
 
 ## Targets
 
-A session can target one of two shapes (it mirrors `UploadFileData`):
+A session can target one of two shapes (it mirrors `IngestFileInput`):
 
 - **New file** → set `parent_id` (or omit it for the storage root) and a `name`; the commit
   creates a `kind=file` node under that folder.
@@ -107,13 +107,13 @@ route-model bound — the controller resolves the session and re-authorizes its 
 
 | Method   | Route                                        | Controller / action          | Purpose |
 | -------- | -------------------------------------------- | ---------------------------- | ------- |
-| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusUploadController@create` | Open a session (returns `Location` + `upload_id`). |
-| `GET`    | `/resumable-uploads/{upload_id}`             | `TusUploadController@status` | Poll the session status. |
-| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusUploadController@head`   | The authoritative `Upload-Offset` (resume point). |
-| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusUploadController@patch`  | Append a chunk; on completion assemble→commit. |
-| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusUploadController@abort`  | Abort (staged temp + multipart reclaimed). |
-| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartController@parts`| Record (sign/proxy) a numbered part. |
-| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartController@complete` | Complete-multipart → assemble → commit. |
+| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusProtocolController@create` | Open a session (returns `Location` + `upload_id`). |
+| `GET`    | `/resumable-uploads/{upload_id}`             | `TusProtocolController@status` | Poll the session status. |
+| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusProtocolController@head`   | The authoritative `Upload-Offset` (resume point). |
+| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusProtocolController@patch`  | Append a chunk; on completion assemble→commit. |
+| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusProtocolController@abort`  | Abort (staged temp + multipart reclaimed). |
+| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartProtocolController@parts`| Record (sign/proxy) a numbered part. |
+| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartProtocolController@complete` | Complete-multipart → assemble → commit. |
 
 The direct one-shot path is the Drive upload endpoint
 `POST /storages/{storage}/uploads` (a multipart form `file` + optional `parent_id` / `node_id`
@@ -135,7 +135,7 @@ self-contained over Flysystem + the session table) and works on **any disk**.
 3. **PATCH** — `patch()` appends the `application/offset+octet-stream` chunk at the declared
    `Upload-Offset`. The offset **must** match the server's current offset (a tus `409 Conflict`
    otherwise — the server, not the client, decides where the bytes go). When `received_bytes`
-   reaches `total_size_bytes`, the controller drives `markAssembled` → `CommitUploadAction` and
+   reaches `total_size_bytes`, the controller drives `markAssembled` → `CompleteUploadAction` and
    returns the created node (`201`).
 
 ::: code-group
@@ -225,18 +225,18 @@ the handler — the record/complete contract is unchanged.
 
 ## Assemble → CAS commit & dedup
 
-`CommitUploadAction` is the **one place** staged bytes cross into the Drive, and it does so
+`CompleteUploadAction` is the **one place** staged bytes cross into the Drive, and it does so
 through the same race-free path a one-shot upload uses:
 
 ```
-staged temp → UploadFileData → UploadFileAction → ContentStore.stage → quota → BlobStore.commitStaged
+staged temp → IngestFileInput → IngestFileAction → ContentStore.stage → quota → BlobStore.commitStaged
 ```
 
 The whole thing runs in one outer transaction so a session is never half-committed:
 
 1. The staged temp is read back as a stream (it lives on the session's disk under a `tmp/`
    prefix keyed by `upload_id`, so a multi-GB upload survives across requests).
-2. `UploadFileAction` stages it locally, **recomputes the `sha256`**, and calls
+2. `IngestFileAction` stages it locally, **recomputes the `sha256`**, and calls
    `BlobStore.commitStaged` — dedup, the race-free state machine, ref-accounting and quota all apply.
    Two identical files commit to the **same blob** (content-addressed dedup); the session's
    `assembled_blob_id` is set to the blob the bytes deduped into — read from the committed

@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Drive\Http\Requests\UploadFileRequest;
+use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Facades\Vaulter;
@@ -48,7 +48,7 @@ function r07bReqBuildFile(array $data): UploadFileRequest
 
 function r07bReqStorageBase(): string
 {
-    return 'api/vaulter/storages/'.Vaulter::for(DriveTestHelpers::host())->storage()->getKey();
+    return 'api/vaulter/storages/'.Vaulter::for(DriveTestHelpers::host())->model()->getKey();
 }
 
 function r07bReqUploadId(string $storageId, array $extra = []): string
@@ -256,7 +256,7 @@ it('R07b: purge-trash non-numeric --days falls back to the configured default (L
 
 it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction must run (L94)', function (): void {
     $drive = DriveTestHelpers::drive();
-    $storage = $drive->storage();
+    $storage = $drive->model();
 
     $file = $drive->upload('bytes for quota test', originalName: 'quota-r07b.txt');
     $usedAfterUpload = $storage->refresh()->used_bytes;

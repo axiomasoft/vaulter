@@ -17,11 +17,11 @@ Two delivery contracts are in play:
   transaction commits (no listener acts on a row that gets rolled back). This is the
   vast majority of Vaulter events.
 - **`ShouldBroadcast`** — the event is also broadcast to a realtime channel. Only the
-  node-comment events broadcast (all in the Documents domain): `NodeCommentAdded`,
-  `NodeCommentResolved`, `NodeCommentDeleted`.
+  node-comment events broadcast (all in the Documents domain): `CommentAdded`,
+  `CommentResolved`, `CommentDeleted`.
 
 ```php
-use Vaulter\Drive\Events\FileUploaded;
+use Vaulter\Drive\Events\Files\FileUploaded;
 
 Event::listen(function (FileUploaded $event): void {
     // $event->node, $event->file, $event->version, $event->actorId
@@ -52,16 +52,16 @@ All `ShouldDispatchAfterCommit`.
 
 | Event | Broadcasts? | Constructor payload |
 |---|---|---|
-| `DocumentNodeCreated` | After commit | `Node $node, NodeDocumentVersion $version, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | After commit | `Node $node, NodeDocumentVersion $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentVersionCreated` | After commit | `Node $node, NodeDocumentVersion $version, bool $restored = false, int\|string\|null $actorId = null` |
-| `NodeCommentAdded` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment` |
-| `NodeCommentResolved` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
-| `NodeCommentDeleted` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `DocumentCreated` | After commit | `Node $node, DocumentRevision $version, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | After commit | `Node $node, DocumentRevision $version, bool $created, int\|string\|null $actorId = null` |
+| `DocumentRevisionCreated` | After commit | `Node $node, DocumentRevision $version, bool $restored = false, int\|string\|null $actorId = null` |
+| `CommentAdded` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment` |
+| `CommentResolved` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+| `CommentDeleted` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 
 ::: info Node-attached path
-`DocumentNodeCreated`, `DocumentContentUpdated`, `DocumentVersionCreated` operate on the
-**node-attached** document path (`Node` + `NodeDocumentVersion`, gated on the
+`DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` operate on the
+**node-attached** document path (`Node` + `DocumentRevision`, gated on the
 `document_versions` feature). The `NodeComment*` events cover the node-comment threads
 (ADR-0014). Vaulter has no other document-events domain — the earlier document-id-attached
 DocVault events were fully excised (ADR-0014).
@@ -75,9 +75,9 @@ same room open editors join for collaboration.
 
 | Event | `broadcastAs()` | `broadcastWith()` keys |
 |---|---|---|
-| `NodeCommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
-| `NodeCommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
-| `NodeCommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
+| `CommentAdded` | `node-comment.added` | `id`, `node_id`, `parent_id`, `body`, `created_at` |
+| `CommentResolved` | `node-comment.resolved` | `id`, `node_id`, `resolved_at`, `resolved_by` |
+| `CommentDeleted` | `node-comment.deleted` | `id`, `node_id` |
 
 ```php
 // Echo-side listener (front-end)
@@ -93,20 +93,20 @@ All `ShouldDispatchAfterCommit`.
 
 | Event | Constructor payload |
 |---|---|
-| `StorageCreated` | `Storage $storage, Node $root, int\|string\|null $actorId = null` |
-| `NodeCreated` | `Node $node, int\|string\|null $actorId = null` |
-| `FileUploaded` | `Node $node, File $file, FileRevision $version, int\|string\|null $actorId = null` |
-| `NodeVersionCommitted` | `Node $node, File $file, FileRevision $version, int $versionNo, int\|string\|null $actorId = null` |
-| `NodeRenamed` | `Node $node, string $fromName, string $toName, int\|string\|null $actorId = null` |
-| `NodeMoved` | `Node $node, int\|string\|null $fromParentId, int\|string\|null $toParentId, int\|string\|null $actorId = null` |
-| `NodeCopied` | `Node $source, Node $copy, int\|string\|null $actorId = null` |
-| `NodeTrashed` | `Node $node, int\|string\|null $actorId = null` |
-| `NodeRestored` | `Node $node, int\|string\|null $actorId = null` |
-| `NodeForceDeleted` | `int\|string $storageId, array $nodeIds, int $freedBytes, int\|string\|null $actorId = null` |
+| `Drives\DriveCreated` | `Drive $storage, Node $root, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\FolderCreated` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Files\FileUploaded` | `Node $node, File $file, FileRevision $version, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Files\FileRevisionAdded` | `Node $node, File $file, FileRevision $version, int $versionNo, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeRenamed` | `Node $node, string $fromName, string $toName, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeMoved` | `Node $node, int\|string\|null $fromParentId, int\|string\|null $toParentId, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeCopied` | `Node $source, Node $copy, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeTrashed` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodeRestored` | `Node $node, int\|string\|null $actorId = null, ?string $eventId = null` |
+| `Nodes\NodePurged` | `int\|string $storageId, array $nodeIds, int $freedBytes, int\|string\|null $actorId = null, ?string $eventId = null` |
 
-- `StorageCreated` — fires when `Vaulter::for()` get-or-creates a `v_storages` row;
+- `Drives\DriveCreated` — fires when `Vaulter::for()` get-or-creates a `v_storages` row;
   `$root` is the auto-provisioned root folder node.
-- `NodeForceDeleted` — note this carries **ids**, not models (`$storageId`,
+- `Nodes\NodePurged` — note this carries **ids**, not models (`$storageId`,
   `array $nodeIds`) plus `$freedBytes`; it's emitted after the subtree is gone, so its
   rows no longer exist. Listeners can schedule GC and release quota.
 

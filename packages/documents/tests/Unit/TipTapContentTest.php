@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Enums\Documents\DocumentType;
-use Vaulter\Documents\Exceptions\InvalidTipTapContentException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 
 it('accepts a valid TipTap document', function (): void {
@@ -14,7 +14,7 @@ it('accepts a valid TipTap document', function (): void {
 
 it('rejects a non-doc root node', function (): void {
     TipTapContent::fromArray(['type' => 'paragraph']);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('builds an empty document', function (): void {
     expect(TipTapContent::empty()->toArray())->toBe(['type' => 'doc', 'content' => []]);
@@ -29,13 +29,13 @@ it('throws when the content exceeds the size limit', function (): void {
     $large = ['type' => 'doc', 'content' => array_fill(0, 2000, $paragraph)];
 
     TipTapContent::fromArray($large)->ensureWithin(1);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 // ─── F-P1.11-02 — closed node/mark/attribute allow-list (store time) ────────
 
 it('rejects an unknown node type', function (): void {
     TipTapContent::fromArray(['type' => 'doc', 'content' => [['type' => 'script']]]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('rejects an unknown mark type', function (): void {
     // NB: 'underline' USED to be the example here — it is canonical since VLT-REMED P5.2
@@ -47,14 +47,14 @@ it('rejects an unknown mark type', function (): void {
             'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'blink']]]],
         ]],
     ]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('rejects an attribute outside the allow-list for the node type', function (): void {
     TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'paragraph', 'attrs' => ['align' => 'center'], 'content' => []]],
     ]);
-})->throws(InvalidTipTapContentException::class);
+})->throws(InvalidDocumentContentException::class);
 
 it('accepts the full allowed node/mark set', function (): void {
     $content = TipTapContent::fromArray([
@@ -126,7 +126,7 @@ it('store-time allow-list принимает характерный узел К�
             }
 
             expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probe]]))
-                ->not->toThrow(InvalidTipTapContentException::class);
+                ->not->toThrow(InvalidDocumentContentException::class);
 
             $checked++;
         }
@@ -152,7 +152,7 @@ it('store-time allow-list принимает характерный узел К�
  */
 it('store-time allow-list принимает АТРИБУТЫ, которые extension реально сериализует, R-01', function (array $node): void {
     expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$node]]))
-        ->not->toThrow(InvalidTipTapContentException::class);
+        ->not->toThrow(InvalidDocumentContentException::class);
 })->with([
     'Link: весь мешок марки, включая class=null' => [[
         'type' => 'paragraph',
@@ -183,7 +183,7 @@ it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты 
         ]],
     ]];
 
-    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidTipTapContentException::class);
+    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
 
     config()->set('vaulter.tiptap.extra_nodes', ['mention']);
     config()->set('vaulter.tiptap.extra_marks', ['highlight']);
@@ -216,7 +216,7 @@ it('конфиг-шов: URL-несущий атрибут ХОСТА прове
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'iframe', 'attrs' => ['src' => $url]]],
-    ]))->toThrow(InvalidTipTapContentException::class);
+    ]))->toThrow(InvalidDocumentContentException::class);
 })->with([
     'javascript' => ['javascript:alert(1)'],
     'data URI' => ['data:text/html,<script>alert(1)</script>'],
@@ -233,7 +233,7 @@ it('конфиг-шов: URL-атрибут под неочевидным име
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'embed', 'attrs' => ['location' => 'javascript:alert(1)']]],
-    ]))->toThrow(InvalidTipTapContentException::class);
+    ]))->toThrow(InvalidDocumentContentException::class);
 });
 
 it('конфиг-шов: URL-атрибут хоста с разрешённой схемой принимается, R-11', function (): void {
@@ -251,7 +251,7 @@ it('конфиг-шов: URL-атрибут хоста с разрешённой
 
 it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут хоста на чтении, R-11', function (): void {
     // Легаси-снимок (записан до барьера / при другом конфиге) декеится на чтении с
-    // сохранением значений — и уходит в редактор через NodeDocumentVersionResource.
+    // сохранением значений — и уходит в редактор через DocumentRevisionResource.
     // Скраб JSON-пути обязан покрывать и хостовые URL-атрибуты, а не только канон.
     config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
     config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src']]);
@@ -276,7 +276,7 @@ it('конфиг-шов НЕ расширяет схемы URL-несущих а
             'type' => 'paragraph',
             'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]]],
         ]],
-    ]))->toThrow(InvalidTipTapContentException::class);
+    ]))->toThrow(InvalidDocumentContentException::class);
 });
 
 // ─── F-P1.11-01 — URL scheme allow-list (link.href + image.src) ─────────────
@@ -294,7 +294,7 @@ it('rejects a disallowed link href scheme', function (string $href): void {
     'vbscript' => ['vbscript:msgbox(1)'],
     'data' => ['data:text/html,<script>alert(1)</script>'],
     'missing href' => [''],
-])->throws(InvalidTipTapContentException::class);
+])->throws(InvalidDocumentContentException::class);
 
 it('rejects a disallowed image src scheme, R-01', function (string $src): void {
     TipTapContent::fromArray([
@@ -305,7 +305,7 @@ it('rejects a disallowed image src scheme, R-01', function (string $src): void {
     'javascript' => ['javascript:alert(1)'],
     'data URI' => ['data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg=='],
     'missing src' => [''],
-])->throws(InvalidTipTapContentException::class);
+])->throws(InvalidDocumentContentException::class);
 
 it('accepts http, https and mailto link href schemes', function (string $href): void {
     $content = TipTapContent::fromArray([
@@ -374,7 +374,7 @@ it('decayFrom() на мусорном корне отдаёт пустой doc, 
 //
 // Два инварианта, которые R-12/R-11 оставили открытыми:
 //
-//  1. То, что пакет САМ отдал редактору (NodeDocumentVersionResource::readableContent() =
+//  1. То, что пакет САМ отдал редактору (DocumentRevisionResource::readableContent() =
 //     decayFrom() + withSanitizedUrls()), обязано сохраняться обратно. Скраб, который
 //     выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты — оставлял узел без них, и fromArray()
 //     ронял PATCH: любой легаси-документ с относительной ссылкой становился НЕСОХРАНЯЕМЫМ.
@@ -442,7 +442,7 @@ it('fail-closed по значению: опасная схема в ЛЮБОМ �
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
         'content' => [['type' => 'embed', 'attrs' => [$attribute => $value]]],
-    ]))->toThrow(InvalidTipTapContentException::class);
+    ]))->toThrow(InvalidDocumentContentException::class);
 })->with([
     'source' => ['source', 'javascript:alert(1)'],
     'dataSrc' => ['dataSrc', 'vbscript:msgbox(1)'],

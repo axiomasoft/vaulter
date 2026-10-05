@@ -137,7 +137,7 @@ operation the admin cannot perform.
 #### StorageResource
 
 A **read-mostly** view of the ownable, polymorphic disk roots. Storages are provisioned by the core
-`StorageManager` (get-or-create on a host entity), never minted from the panel — so this resource
+`DriveProvisioner` (get-or-create on a host entity), never minted from the panel — so this resource
 **cannot create or edit** a row (`canCreate()` returns `false`); it lists and inspects.
 
 - **Model**: resolved via `Config::storageModel()` (`Vaulter\Models\Drive\Drive` by default).
@@ -150,7 +150,7 @@ A **read-mostly** view of the ownable, polymorphic disk roots. Storages are prov
 
 The heart of the panel: the unified `folder | file | document | shortcut` node tree. Mutations are
 **never** flat-form edits — each row action calls a core Drive Action through the
-[`DriveContext`](/reference/facade):
+[`DriveHandle`](/reference/facade):
 
 | Row action | Core path | Gating ability |
 |------------|-----------|----------------|

@@ -7,8 +7,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Drive\Events\NodeForceDeleted;
-use Vaulter\Drive\Exceptions\QuotaExceededException;
+use Vaulter\Drive\Events\Nodes\NodePurged;
+use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
@@ -64,7 +64,7 @@ beforeEach(function (): void {
 
 function r07bActStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 // ---------------------------------------------------------------------------
@@ -79,17 +79,17 @@ it('UploadFile L78: shrinking version passes when quota is at capacity (delta is
 
     // Upload an 8-byte file to fill storage to exactly 8 bytes.
     $node = $drive->upload(DriveTestHelpers::streamFor('12345678'), originalName: 'f.bin');
-    expect($drive->storage()->refresh()->used_bytes)->toBe(8);
+    expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
     // Clamp quota to current usage — any positive delta would now fail.
-    $drive->storage()->forceFill(['quota_bytes' => 8])->save();
+    $drive->model()->forceFill(['quota_bytes' => 8])->save();
 
     // Upload a 6-byte version (delta = 6 − 8 = −2 ≤ 0) — must NOT throw.
     // MinusToPlus mutant: delta = 6 + 8 = 14 → quota check fires → exception.
     $drive->uploadVersion($node, DriveTestHelpers::streamFor('abcdef'), originalName: 'f.bin');
 
     // used_bytes drops to 6 (delta = −2).
-    expect($drive->storage()->refresh()->used_bytes)->toBe(6);
+    expect($drive->model()->refresh()->used_bytes)->toBe(6);
 });
 
 // L80 IfNegated / L81 RemoveMethodCall: assertNameAvailable is called for new
@@ -111,12 +111,12 @@ it('UploadFile L106: used_bytes is decremented when the new version is exactly 1
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(DriveTestHelpers::streamFor('12345'), originalName: 'f.bin'); // 5 bytes
-    expect($drive->storage()->refresh()->used_bytes)->toBe(5);
+    expect($drive->model()->refresh()->used_bytes)->toBe(5);
 
     $drive->uploadVersion($node, DriveTestHelpers::streamFor('1234'), originalName: 'f.bin'); // 4 bytes, delta = −1
     // DecrementInteger mutant: condition becomes $delta !== -1, which is FALSE for delta=−1
     // → adjustUsedBytes is skipped → used_bytes stays at 5. Test fails on the expect below.
-    expect($drive->storage()->refresh()->used_bytes)->toBe(4);
+    expect($drive->model()->refresh()->used_bytes)->toBe(4);
 });
 
 // L196/L203 CoalesceRemoveLeft: when a new-version upload carries a different
@@ -158,7 +158,7 @@ it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes 
     $node = $drive->upload(DriveTestHelpers::streamFor('hello'), originalName: 'f.bin'); // 5 bytes; used=5
 
     // Force storage into over-quota state (used > quota).
-    $drive->storage()->forceFill(['quota_bytes' => 4, 'used_bytes' => 5])->save();
+    $drive->model()->forceFill(['quota_bytes' => 4, 'used_bytes' => 5])->save();
 
     // New version of same 5-byte size → delta = 5 − 5 = 0. Must NOT throw.
     // SmallerOrEqualToSmaller mutant: $delta <= 0 → $delta < 0; delta=0 is not <0
@@ -166,7 +166,7 @@ it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes 
     $drive->uploadVersion($node, DriveTestHelpers::streamFor('world'), originalName: 'f.bin');
 
     // used_bytes stays at 5 (delta=0, adjustUsedBytes not called for 0 delta).
-    expect($drive->storage()->refresh()->used_bytes)->toBe(5);
+    expect($drive->model()->refresh()->used_bytes)->toBe(5);
 });
 
 // L249 Increment: delta=1 must NOT be skipped (1 > 0 is true).  With the
@@ -174,7 +174,7 @@ it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes 
 // the check is bypassed — quota is violated silently.
 it('UploadFile L249 Increment: a 1-byte over-quota upload is rejected', function (): void {
     $drive = DriveTestHelpers::drive();
-    $drive->storage()->forceFill(['quota_bytes' => 5, 'used_bytes' => 5])->save();
+    $drive->model()->forceFill(['quota_bytes' => 5, 'used_bytes' => 5])->save();
 
     // delta = 1 − 0 = 1 (new file). Must exceed quota: 5+1 > 5 → throw.
     // Increment mutant: $delta <= 1 → skips check → upload silently succeeds.
@@ -188,14 +188,14 @@ it('UploadFile L249 Increment: a 1-byte over-quota upload is rejected', function
 // used + (S+1) > quota → spurious QuotaExceededException.
 it('UploadFile L312 Increment: probeSize probe does not add a phantom byte at the quota boundary', function (): void {
     $drive = DriveTestHelpers::drive();
-    $drive->storage()->forceFill(['quota_bytes' => 100, 'used_bytes' => 91])->save();
+    $drive->model()->forceFill(['quota_bytes' => 100, 'used_bytes' => 91])->save();
 
     // Stream of 9 bytes. delta = 9 − 0 = 9. Check: 91+9 = 100, not > 100 → passes.
     // Increment mutant: probedSize=10 → delta=10 → 91+10=101 > 100 → throws. Test fails.
     $node = $drive->upload(DriveTestHelpers::streamFor('123456789'), originalName: 'f.bin');
 
     expect($node)->toBeInstanceOf(Node::class);
-    expect($drive->storage()->refresh()->used_bytes)->toBe(100);
+    expect($drive->model()->refresh()->used_bytes)->toBe(100);
 });
 
 // L319 EmptyStringToNotEmpty: the extension() helper must return null when the
@@ -305,12 +305,12 @@ it('NodeController L383/L385: per_page is clamped to exactly 1 at the lower boun
 it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', function (): void {
     $drive = DriveTestHelpers::drive();
     $source = $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'tiny.bin');
-    $usedBefore = $drive->storage()->refresh()->used_bytes;
+    $usedBefore = $drive->model()->refresh()->used_bytes;
 
     $drive->copy($source, name: 'tiny-copy.bin');
 
     // Increment mutant: addedBytes > 1 → 1 is not > 1 → skip → used_bytes unchanged.
-    expect($drive->storage()->refresh()->used_bytes)->toBe($usedBefore + 1);
+    expect($drive->model()->refresh()->used_bytes)->toBe($usedBefore + 1);
 });
 
 // L94 FalseToTrue / L95 TrueToFalse:
@@ -457,14 +457,14 @@ it('DownloadController L115 second CoalesceRemoveLeft: node mime_type is used wh
 it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte from used_bytes', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'tiny.bin'); // 1 byte
-    expect($drive->storage()->refresh()->used_bytes)->toBe(1);
+    expect($drive->model()->refresh()->used_bytes)->toBe(1);
 
     $drive->trash($node);
 
     $drive->forceDelete($node);
 
     // Increment mutant: freedBytes > 1 → skip adjustUsedBytes → used_bytes stays at 1.
-    expect($drive->storage()->refresh()->used_bytes)->toBe(0);
+    expect($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
 // L67 UnwrapArrayValues: nodeIds in NodeForceDeleted must be a list (array_values
@@ -472,7 +472,7 @@ it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte
 // modelKeys() is already numerically indexed so this mutation is equivalent —
 // noted here for traceability; the assertion documents the list contract.
 it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds list', function (): void {
-    Event::fake([NodeForceDeleted::class]);
+    Event::fake([NodePurged::class]);
     $drive = DriveTestHelpers::drive();
     $node = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'f.bin');
     $nodeId = $node->getKey();
@@ -481,7 +481,7 @@ it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds 
 
     $drive->forceDelete($node);
 
-    Event::assertDispatched(NodeForceDeleted::class, function (NodeForceDeleted $e) use ($nodeId): bool {
+    Event::assertDispatched(NodePurged::class, function (NodePurged $e) use ($nodeId): bool {
         // Must be a list: keys are 0, 1, 2, … (array_values guarantee).
         $isListIndexed = array_values($e->nodeIds) === $e->nodeIds;
 

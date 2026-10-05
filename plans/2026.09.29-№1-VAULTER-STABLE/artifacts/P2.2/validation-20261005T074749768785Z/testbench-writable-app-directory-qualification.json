@@ -1,0 +1,299 @@
+{
+  "roots": [
+    "vendor/orchestra/testbench-core/laravel/app",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app"
+  ],
+  "excluded_directory_metadata": {
+    "vendor/orchestra/testbench-core/laravel/app": [
+      66305,
+      9467123,
+      16893,
+      4096,
+      1791183390587100311,
+      1791183390587100311
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Providers": [
+      66305,
+      9467168,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Exceptions": [
+      66305,
+      9467138,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Models": [
+      66305,
+      9467163,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Console": [
+      66305,
+      9467130,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Http": [
+      66305,
+      9467147,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Http/Middleware": [
+      66305,
+      9467158,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "vendor/orchestra/testbench-core/laravel/app/Http/Controllers": [
+      66305,
+      9467149,
+      16893,
+      4096,
+      1782215408000000000,
+      1782753855546812321
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app": [
+      66305,
+      11274113,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Providers": [
+      66305,
+      11274166,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Exceptions": [
+      66305,
+      11274137,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Models": [
+      66305,
+      11274159,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Console": [
+      66305,
+      11274131,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Http": [
+      66305,
+      11274145,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Http/Middleware": [
+      66305,
+      11274153,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Http/Controllers": [
+      66305,
+      11274148,
+      16893,
+      4096,
+      1782215408000000000,
+      1790089224836919997
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app": [
+      66305,
+      11288644,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Providers": [
+      66305,
+      11288672,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Exceptions": [
+      66305,
+      11288652,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Models": [
+      66305,
+      11288668,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Console": [
+      66305,
+      11288649,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Http": [
+      66305,
+      11288656,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Http/Middleware": [
+      66305,
+      11288663,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Http/Controllers": [
+      66305,
+      11288658,
+      16893,
+      4096,
+      1782215408000000000,
+      1782978189537572924
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app": [
+      66305,
+      11298668,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530798968
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Providers": [
+      66305,
+      11298699,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530769159
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Exceptions": [
+      66305,
+      11298677,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530798968
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Models": [
+      66305,
+      11298694,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530769159
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Console": [
+      66305,
+      11298672,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530798968
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Http": [
+      66305,
+      11298682,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530798968
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Http/Middleware": [
+      66305,
+      11298689,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530769159
+    ],
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Http/Controllers": [
+      66305,
+      11298684,
+      16893,
+      4096,
+      1782215408000000000,
+      1782982901530769159
+    ]
+  },
+  "retained_static_file_identities_sha256": [
+    "vendor/orchestra/testbench-core/laravel/app/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Providers/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Exceptions/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Models/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Console/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Http/Middleware/.gitkeep",
+    "vendor/orchestra/testbench-core/laravel/app/Http/Controllers/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Providers/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Exceptions/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Models/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Console/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Http/Middleware/.gitkeep",
+    "packages/drive/vendor/orchestra/testbench-core/laravel/app/Http/Controllers/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Providers/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Exceptions/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Models/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Console/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Http/Middleware/.gitkeep",
+    "packages/documents/vendor/orchestra/testbench-core/laravel/app/Http/Controllers/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Providers/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Exceptions/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Models/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Console/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Http/Middleware/.gitkeep",
+    "packages/filament/vendor/orchestra/testbench-core/laravel/app/Http/Controllers/.gitkeep"
+  ],
+  "all_static_runtime_file_identities_unchanged": true,
+  "prior_actual_core_counts": "652passed38skipped17risky7883assertions; wrapper postguard failed",
+  "prior_failed_receipt_retained": true
+}

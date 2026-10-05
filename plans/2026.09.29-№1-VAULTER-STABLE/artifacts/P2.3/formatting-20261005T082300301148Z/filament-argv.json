@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint",
+    "tests/Fixtures/DriveBuilder.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+  "files": [
+    "packages/filament/tests/Fixtures/DriveBuilder.php"
+  ]
+}

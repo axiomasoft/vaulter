@@ -40,7 +40,7 @@ Swappable Eloquent models. Point any entry at your own subclass to add behaviour
 | `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
 | `models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
 | `models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
-| `models.node_document_version` | `Vaulter\Documents\Models\Versions\NodeDocumentVersion` | `axioma-studio/vaulter-documents` |
+| `models.node_document_version` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |
 | `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
 | `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
@@ -417,12 +417,9 @@ swappable behind the driver.
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `reverb` | `reverb` \| `hocuspocus` |
+| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | `hocuspocus` |
 | `collaboration.channel_prefix` | — | `vaulter.documents` | The room namespace; a room is always `prefix.nodeId` |
 | `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Shared secret the Node hub presents on the S2S webhook endpoints. When null/empty the webhook surface accepts only a valid signed JWT |
-| `collaboration.drivers.reverb.class` | — | `Vaulter\Collaboration\ReverbCollaborationDriver` | The Reverb driver |
-| `collaboration.drivers.reverb.connection` | `VAULTER_COLLAB_CONNECTION` | `reverb` | The broadcast connection |
-| `collaboration.drivers.hocuspocus.class` | — | `Vaulter\Collaboration\HocuspocusCollaborationDriver` | The Hocuspocus driver |
 | `collaboration.drivers.hocuspocus.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL |
 | `collaboration.drivers.hocuspocus.app_id` | `VAULTER_COLLAB_APP_ID` | `null` | The hub app id |
 | `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | `null` | Room-JWT signing key **and** the key the webhooks verify a JWT against |

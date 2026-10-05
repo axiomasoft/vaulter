@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Document classes now use revisions, canonical Action/Input names and domain controller namespaces (AD03, AD04). Documents registration is split into independently tested bindings, HTTP and collaboration registrars.
+
+- Drive classes use canonical names and domain namespaces; DriveHandle exposes
+  `model(): Drive` and `profile(): Profile` through its core interface, and the
+  provider delegates to tested registrars (AD03, AD04). Unused WorkspaceRef and
+  BulkAction removed; see UPGRADE.md for the FQN migration map.
+
 - Canonical 0.3 schema and upgrade migrations №1, №2, №4, №8, №9: drives,
   file revisions, ordinary grant uniqueness, event and subscription conversion;
   fresh tables are independent of runtime features (P2.7; see UPGRADE.md).
@@ -91,12 +98,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vaulter transactions, CAS/tree locks, raw queries and after-commit callbacks now use
   `vaulter.connection` through the new `Vaulter\Database\VaulterDatabase` singleton,
   preserving atomicity when the host default connection differs (N01, AD25).
-  UploadSession, UploadPart, NodeComment and NodeDocumentVersion also resolve that
+  UploadSession, UploadPart, NodeComment and DocumentRevision also resolve that
   connection so their writes cannot autocommit outside those transactions.
 - Release workflows now keep the root npm lockfile, test the npm workspace before
   publishing, pass the PHP split token through the action's supported environment,
   reject tags whose exact SHA lacks the ordinary CI checks, and publish the GHCR
   image under the source repository owner.
+
+### Removed
+
+- Reverb Yjs collaboration driver and its configuration; use Hocuspocus. Routes, request names, JSON, error codes and revision storage columns remain unchanged.
 
 ## [0.2.0] — 2026-07-15
 
@@ -164,14 +175,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   direction is one-way (drive → core+media; no cycle).
 - **BREAKING (pre-1.0): document editing, version history, comments and realtime collaboration
   moved out of `vaulter-core` into the new standalone package `axioma-studio/vaulter-documents`**
-  (P2 #5, D2). The document Actions (`CreateDocumentNodeAction`, `UpdateDocumentContentAction`,
-  `CreateNamedVersionAction`, `RestoreDocumentVersionAction`, `AddNodeCommentAction`,
-  `ResolveNodeCommentAction`, `DeleteNodeCommentAction`, `PersistYjsSnapshotAction`), the default
-  `Access\HostUserResolver`, the `Collaboration\*` drivers (`HocuspocusNodeCollaborationDriver`,
-  `ReverbNodeCollaborationDriver`, `NodeCollaborationDriverManager`, `CollaborationCall`,
+  (P2 #5, D2). The document Actions (`CreateDocumentAction`, `UpdateDocumentContentAction`,
+  `CreateNamedRevisionAction`, `RestoreDocumentRevisionAction`, `AddCommentAction`,
+  `ResolveCommentAction`, `DeleteCommentAction`, `PersistCollaborationStateAction`), the default
+  `Access\HostUserResolver`, the `Collaboration\*` drivers (`HocuspocusCollaborationDriver`,
+  `ReverbNodeCollaborationDriver`, `CollaborationDriverManager`, `CollaborationCall`,
   `CollaborationCallResolver`), the document handlers (`TipTapHandler`, `PreviewHandler`,
   `DownloadOnlyHandler`, `UniverHandler`), the `HtmlExporter` / `MarkdownExporter`, the
-  `NodeComment` / `NodeDocumentVersion` models and the document/collaboration/comment HTTP
+  `NodeComment` / `DocumentRevision` models and the document/collaboration/comment HTTP
   controllers moved from `Vaulter\*` to `Vaulter\Documents\*`. Hosts referencing those FQCNs
   directly, or relying on `vaulter-core` alone for document editing, versioning, comments or
   collaboration, must now also `require axioma-studio/vaulter-documents`.
@@ -217,8 +228,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contract; it must not know any handler's concrete shape. Moved (same class names, new FQCN
   root `Vaulter\Documents\*`): `ValueObjects\Documents\{TipTapContent,LinkSchemeValidator,
   OpaqueDocumentContent}` → `Documents\ValueObjects\*`; `Attributes\TiptapExtensions` →
-  `Documents\Attributes\TiptapExtensions`; `Exceptions\Documents\InvalidTipTapContentException` →
-  `Documents\Exceptions\InvalidTipTapContentException`. The store-time allow-list, read-time
+  `Documents\Attributes\TiptapExtensions`; `Exceptions\Documents\InvalidDocumentContentException` →
+  `Documents\Exceptions\InvalidDocumentContentException`. The store-time allow-list, read-time
   decay and URL-scheme scrub (F-P1.11-01/-02, R-01/R-11/R-12) are unchanged byte-for-byte. A
   core-only host (no `vaulter-documents` installed) is unaffected. `config('vaulter.tiptap.*')`
   stays in core (host-facing config, not a TipTap shape). See `UPGRADE.md`.
@@ -238,12 +249,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `UPGRADE.md`.
 - **BREAKING (pre-1.0): `v_node_document_versions.format` no longer carries a schema
   `default('tiptap')`; the autosave and Yjs-snapshot writers now stamp the format explicitly**
-  (VLT-CANON P0.4). `UpdateDocumentContentAction` and `PersistYjsSnapshotAction` previously let
+  (VLT-CANON P0.4). `UpdateDocumentContentAction` and `PersistCollaborationStateAction` previously let
   the DB default fill `format` when appending a NEW version row to an existing document — so a
   **markdown or univer document's autosave rows were stamped `'tiptap'` regardless of its real
   format**. They now carry the head version's format forward. The value reaches clients through
-  `NodeDocumentVersionResource.format` and the version-history API: **a client branching on
-  `format === 'tiptap'` must be updated.** `CreateNamedVersionAction`'s no-head fallback likewise
+  `DocumentRevisionResource.format` and the version-history API: **a client branching on
+  `format === 'tiptap'` must be updated.** `CreateNamedRevisionAction`'s no-head fallback likewise
   changed from the literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`). No
   backfill ships — pre-existing rows keep their stored value; `format` is an advisory label, the
   handler is always resolved from the node's mime (D4). See `UPGRADE.md`.
@@ -256,7 +267,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   P0.4 open finding). A non-rich-text node's export now returns its own `OpaqueDocumentContent`
   shape instead of decaying to an empty TipTap document — `HtmlExporter`/`MarkdownExporter`'s
   existing narrowing guard now correctly rejects it with `UnsupportedDocumentContentException`
-  instead of silently rendering blank content. `CreateDocumentNodeData::$format`'s default
+  instead of silently rendering blank content. `CreateDocumentInput::$format`'s default
   changed from the invalid literal `'tiptap'` to `DocumentType::RichText->value` (`'richtext'`).
   See `UPGRADE.md`.
 - **The AzGuard bridge is named `axioma-studio/vaulter-azgard`, not

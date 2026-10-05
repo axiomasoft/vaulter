@@ -6,7 +6,7 @@ use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Models\Versions\NodeDocumentVersion;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
@@ -14,7 +14,7 @@ use Vaulter\Handlers\Builtin\PreviewHandler;
 /**
  * Cache-safe config merge (P3.5 / B22 / F-P2.2-01, D19 characterization).
  *
- * `VaulterDocumentsServiceProvider::packageRegistered()` used to `require` the
+ * `BindingsRegistrar::register()` used to `require` the
  * package config file and recompute the `vaulter.models`/`vaulter.handlers`/
  * `vaulter.exporters` merge unconditionally on every request, even under
  * `config:cache` — file I/O in `register()` the `.claude/rules/service-provider.md`
@@ -26,7 +26,7 @@ use Vaulter\Handlers\Builtin\PreviewHandler;
  */
 it('merges documents package defaults into vaulter.models/handlers/exporters (F-P2.2-01)', function (): void {
     expect(config('vaulter.models.node_comment'))->toBe(NodeComment::class)
-        ->and(config('vaulter.models.node_document_version'))->toBe(NodeDocumentVersion::class)
+        ->and(config('vaulter.models.node_document_version'))->toBe(DocumentRevision::class)
         ->and(config('vaulter.handlers'))->toContain(TipTapHandler::class, PreviewHandler::class, DownloadOnlyHandler::class)
         ->and(config('vaulter.exporters.html'))->toBe(HtmlExporter::class)
         ->and(config('vaulter.exporters.markdown'))->toBe(MarkdownExporter::class);
@@ -45,7 +45,7 @@ it('lets a host-defined vaulter.models key win over the package default on re-me
 
     expect(config('vaulter.models.node_comment'))->toBe('App\\Models\\CustomNodeComment')
         // The OTHER default in the same key is untouched by the host's partial override.
-        ->and(config('vaulter.models.node_document_version'))->toBe(NodeDocumentVersion::class);
+        ->and(config('vaulter.models.node_document_version'))->toBe(DocumentRevision::class);
 });
 
 it('guards the config file-read/merge behind configurationIsCached() in source (F-P2.2-01)', function (): void {
@@ -53,7 +53,7 @@ it('guards the config file-read/merge behind configurationIsCached() in source (
     // sit behind the same guard mergeConfigFrom() uses internally, so it is skipped
     // once the host has run `config:cache` — the defect this item closes was the
     // ABSENCE of this guard (unconditional file I/O in register() on every request).
-    $source = file_get_contents(__DIR__.'/../../src/VaulterDocumentsServiceProvider.php');
+    $source = file_get_contents(__DIR__.'/../../src/Providers/BindingsRegistrar.php');
 
     expect($source)->toContain('!$this->app->configurationIsCached()')
         ->and($source)->toMatch(

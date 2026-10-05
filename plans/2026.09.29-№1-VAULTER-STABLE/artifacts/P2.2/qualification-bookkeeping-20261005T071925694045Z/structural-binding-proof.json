@@ -1,0 +1,42 @@
+{
+  "captured_before_first_validate_evidence": true,
+  "current_behavioral_candidate_sha256": "77c6ab5b712c7ac3bf47f2b3ba1ff249769eb6d29437946c4bc5e58549a71d31",
+  "structural_candidate_sha256": "d0d337960477ca5a43ff15a5c471519dc792b4c8f0bb74adad3fd334243d1935",
+  "structural_tool_sha256": "3b52df257d8ba560e302139edbe91feee961092be330453eae4f1e1268099317",
+  "runtime_pins_count": 149,
+  "old_receipts_unchanged": true,
+  "all_gate_files_bound": true,
+  "argv_file_bindings": [
+    {
+      "check": "current-bookkeeping-equivalence",
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/qualification-bookkeeping-20261005T071925694045Z/tools/bookkeeping.py",
+      "binding": "current-structural-candidate"
+    },
+    {
+      "check": "current-php84-preflight",
+      "path": "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "binding": "current-structural-candidate"
+    },
+    {
+      "check": "current-sqlite-environment",
+      "path": "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "binding": "current-structural-candidate"
+    },
+    {
+      "check": "current-sqlite-environment",
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/validation-20261005T065203786153Z/tools/environment.php",
+      "binding": "current-structural-candidate"
+    },
+    {
+      "check": "current-pg-exact-target",
+      "path": "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+      "binding": "current-structural-candidate"
+    },
+    {
+      "check": "current-pg-exact-target",
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/validation-20261005T065203786153Z/tools/pg-preflight.php",
+      "binding": "current-structural-candidate"
+    }
+  ],
+  "native_runner_pinned": "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan-work.py"
+}

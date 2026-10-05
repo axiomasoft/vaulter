@@ -24,7 +24,7 @@ beforeEach(function (): void {
 });
 
 it('initiate пишет activity-строку upload.initiated с актором и upload_id (F-P1.4-13, red-before: нет строки)', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'activity-init.bin',
@@ -39,7 +39,7 @@ it('initiate пишет activity-строку upload.initiated с актором
 });
 
 it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before: нет строки)', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'activity-abort.bin',
@@ -56,7 +56,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
 });
 
 it('sweep-expire пишет activity-строку upload.expired без актора (F-P1.4-13, red-before: нет строки)', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'activity-expire.bin',
@@ -95,7 +95,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
  * upload a morph target (or moved `Node`) trips this.
  */
 it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->storage();
+    $storage = Vaulter::for(DriveTestHelpers::host())->model();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'morph-invariant.bin',

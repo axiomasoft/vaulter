@@ -58,7 +58,7 @@ trashed node can be restored: anything else raises `NodeNotTrashedException`
 ### Force-deleting
 
 ```php
-$drive->forceDelete($node);    // permanent — dispatches NodeForceDeleted
+$drive->forceDelete($node);    // permanent — dispatches NodePurged
 ```
 
 Force-delete only purges from the trash: a live node raises `NodeNotTrashedException`

@@ -29,7 +29,7 @@ final class TipTapHandler implements FileHandler
 
     /**
      * The canonical mime a Vaulter document node carries — the structural TipTap
-     * JSON envelope. A node created through CreateDocumentNodeAction is stamped with
+     * JSON envelope. A node created through CreateDocumentAction is stamped with
      * this, so a document node always routes here regardless of a title extension.
      */
     public const string DOCUMENT_MIME = 'application/vnd.vaulter.document+json';

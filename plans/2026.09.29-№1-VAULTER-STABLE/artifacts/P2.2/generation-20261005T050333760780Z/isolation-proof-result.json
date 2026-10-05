@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "php",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/generation-20261005T050333760780Z/isolation-proof.php",
+    "/home/vostrikov/projects/packages/vaulter"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "2026-10-05T05:04:32.609459+00:00",
+  "finished_at": "2026-10-05T05:04:32.649192+00:00",
+  "exit_code": 0,
+  "source_candidate_sha256": "6b7c1546a630635ef98e66f5e1a4a68bdc334357349e3983dd01f296c3da881a"
+}

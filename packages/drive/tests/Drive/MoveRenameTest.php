@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
-use Vaulter\Drive\Exceptions\CrossStorageMoveException;
-use Vaulter\Drive\Exceptions\CycleException;
+use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -32,7 +32,7 @@ it('цикл-гард: запрет перемещения в самого се�
     $folder = $drive->createFolder('A');
 
     expect(fn () => $drive->move($folder, $folder))
-        ->toThrow(CycleException::class);
+        ->toThrow(NodeCycleException::class);
 });
 
 it('цикл-гард: запрет перемещения в собственного потомка', function (): void {
@@ -42,7 +42,7 @@ it('цикл-гард: запрет перемещения в собственн
     $child = $drive->createFolder('child', $a);
 
     expect(fn () => $drive->move($a, $child))
-        ->toThrow(CycleException::class);
+        ->toThrow(NodeCycleException::class);
 });
 
 it('move отклоняет конфликт имён в месте назначения', function (): void {
@@ -66,7 +66,7 @@ it('move отклоняет кросс-storage перемещение', function
     $foreignParent = $driveB->createFolder('B');
 
     expect(fn () => $driveA->move($node, $foreignParent))
-        ->toThrow(CrossStorageMoveException::class);
+        ->toThrow(CrossDriveOperationException::class);
 });
 
 it('rename меняет имя и проверяет конфликт сиблингов', function (): void {

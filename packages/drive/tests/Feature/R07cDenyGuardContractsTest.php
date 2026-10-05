@@ -56,7 +56,7 @@ beforeEach(function (): void {
 
 function r07cStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 function r07cDeny(): void

@@ -43,8 +43,8 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 
 | Событие | Тип | Когда |
 |---|---|---|
-| `Vaulter\Documents\Events\Comments\NodeCommentAdded` | broadcast | комментарий опубликован |
-| `Vaulter\Documents\Events\Comments\NodeCommentResolved` | domain (после коммита) | комментарий разрешён |
-| `Vaulter\Documents\Events\Comments\NodeCommentDeleted` | domain (после коммита) | комментарий удалён |
+| `Vaulter\Documents\Events\Comments\CommentAdded` | broadcast | комментарий опубликован |
+| `Vaulter\Documents\Events\Comments\CommentResolved` | domain (после коммита) | комментарий разрешён |
+| `Vaulter\Documents\Events\Comments\CommentDeleted` | domain (после коммита) | комментарий удалён |
 
 Слушайте эти события в своём приложении, чтобы отправлять уведомления или отражать активность.

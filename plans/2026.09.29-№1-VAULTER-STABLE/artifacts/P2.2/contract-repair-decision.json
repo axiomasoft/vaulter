@@ -1,0 +1,74 @@
+{
+  "schema_version": "repair-decision/v1",
+  "plan_id": "2026.09.29-№1-VAULTER-STABLE",
+  "item_id": "P2.2",
+  "origin": "checkpoint",
+  "original_carrier": {
+    "command": "P2.2 handle method compatibility preflight",
+    "digest": "7da710a29a5b197ea4cd91d069256564a68e7255b43745ede0a4fd909ed560c7",
+    "result": "red"
+  },
+  "baseline": {
+    "reproduced": true,
+    "carrier": {
+      "command": "P2.2 handle method compatibility preflight",
+      "digest": "7da710a29a5b197ea4cd91d069256564a68e7255b43745ede0a4fd909ed560c7",
+      "result": "red"
+    }
+  },
+  "candidate": {
+    "delta_proved": true,
+    "evidence_ids": [
+      "artifacts/P2.2/contract-preflight-results.json"
+    ]
+  },
+  "affected_paths": [
+    {
+      "path": "packages/core/src/Contracts/Drive/DriveHandle.php",
+      "owner_item": "P3.2",
+      "declared_file": false
+    },
+    {
+      "path": "packages/drive/src/DriveContext.php",
+      "owner_item": "P2.2",
+      "declared_file": true
+    }
+  ],
+  "bounded_diff": {
+    "files_changed": 0,
+    "max_files": 3,
+    "reversible": true
+  },
+  "material_surface": {
+    "public": true,
+    "frozen": true,
+    "security": false,
+    "schema": false,
+    "dependency": false,
+    "authority": false,
+    "irreversible": false,
+    "product": false,
+    "test_topology": false
+  },
+  "pre_validation": [
+    {
+      "command": "P2.2 handle method compatibility preflight",
+      "digest": "7da710a29a5b197ea4cd91d069256564a68e7255b43745ede0a4fd909ed560c7",
+      "result": "red"
+    }
+  ],
+  "post_validation": [],
+  "evidence_ids": [
+    "findings/P2.2-handle-contract-conflict.md",
+    "artifacts/P2.2/contract-preflight-results.json"
+  ],
+  "design": {
+    "decision_question": "Defer model/profile to P3.2 or include the two core interface methods and callers in P2.2?",
+    "evidence_gap": "No accepted Owner-D# resolves P2.2 Included 2 against Excluded DriveHandle contract and R3.",
+    "alternatives": [
+      "Defer only the two method changes to P3.2; keep current core interface and P2.2 implementation methods.",
+      "Admit the two core interface changes and necessary callers in P2.2; keep other P3.2 scope deferred."
+    ],
+    "expected_artifact": "Accepted Owner-D# and consistent P2.2 specification/ledger/bundle."
+  }
+}

@@ -57,7 +57,7 @@ Some route groups only mount when a feature flag is enabled in
 
 ## Drive
 
-The unified `v_nodes` file/folder tree (`StorageController`, `NodeController`,
+The unified `v_nodes` file/folder tree (`ShowDriveController`, `NodeController`,
 `DownloadController`). Storage-collection endpoints carry `{storage}` in the path;
 node-scoped endpoints derive the storage from the bound `{node}`.
 
@@ -65,9 +65,9 @@ node-scoped endpoints derive the storage from the bound `{node}`.
 
 #### `GET storages/{storage}`
 
-Read a storage container's metadata, root node and usage. → `StorageController::show`
+Read a storage container's metadata, root node and usage. → `ShowDriveController::__invoke`
 
-**Response** (`StorageResource`):
+**Response** (`DriveResource`):
 
 ```json
 {
@@ -339,7 +339,7 @@ Create a `kind=document` node with its v1 version. → `store`
 The document node plus its current head content. → `content`
 
 **Gate:** `Ability::View` (and the node must be `kind=document`, else a
-`NotADocumentNodeException`). **Response:** `NodeDocumentVersionResource` with the
+`NotADocumentException`). **Response:** `DocumentRevisionResource` with the
 content embedded.
 
 #### `PATCH nodes/{node}/content`
@@ -351,14 +351,14 @@ Autosave the document content (the debounce path). → `update`
 | `content` | required, array (TipTap doc) |
 | `yjs_state` | nullable, string (base64 Yjs binary) |
 
-**Gate:** `Ability::Edit`. **Response:** `200` `NodeDocumentVersionResource`
+**Gate:** `Ability::Edit`. **Response:** `200` `DocumentRevisionResource`
 (autosave is semantically an update even when a new version row was appended).
 
 #### `GET nodes/{node}/document-versions`
 
 The version history of a document node, newest first. → `versions`
 
-**Gate:** `Ability::View`. **Response:** paginated `NodeDocumentVersionResource`.
+**Gate:** `Ability::View`. **Response:** paginated `DocumentRevisionResource`.
 
 #### `POST nodes/{node}/document-versions`
 
@@ -369,13 +369,13 @@ Snapshot the current head as a **named** version. → `storeVersion`
 | `label` | required, string, max 255 |
 | `keep_forever` | nullable, boolean |
 
-**Gate:** `Ability::Edit`. **Response:** `201` `NodeDocumentVersionResource`.
+**Gate:** `Ability::Edit`. **Response:** `201` `DocumentRevisionResource`.
 
 #### `POST nodes/{node}/document-versions/{version}/restore`
 
 Restore a prior version (repoints the head to a copy of it). → `restore`
 
-**Gate:** `Ability::Edit`. **Response:** `201` `NodeDocumentVersionResource`.
+**Gate:** `Ability::Edit`. **Response:** `201` `DocumentRevisionResource`.
 
 #### `GET nodes/{node}/handler`
 
@@ -399,7 +399,7 @@ Export the document node's head content in the requested format. → `export`
 ## Resumable uploads
 
 Chunked, resumable uploads that assemble through the *same* race-free CAS commit
-(`TusUploadController`, `S3MultipartController`). **Gated on the `uploads`
+(`TusProtocolController`, `S3MultipartProtocolController`). **Gated on the `uploads`
 feature.** See [Uploads](/guide/uploads).
 
 The `{upload_id}` is the client's UNIQUE session handle — a plain scalar, resolved
@@ -409,7 +409,7 @@ by the controller (which asserts it belongs to an authorized target).
 
 #### `POST storages/{storage}/resumable-uploads`
 
-Create a resumable session (tus Creation). → `TusUploadController::create`
+Create a resumable session (tus Creation). → `TusProtocolController::create`
 
 | Param | Rule |
 |---|---|
@@ -488,7 +488,7 @@ the tus toggle are separate.
 #### `POST resumable-uploads/{upload_id}/parts`
 
 Record (sign/proxy) a numbered part; the body is the part bytes. A re-upload of the
-same `part_no` replaces it. → `S3MultipartController::parts`
+same `part_no` replaces it. → `S3MultipartProtocolController::parts`
 
 | Param | In | Notes |
 |---|---|---|
@@ -844,7 +844,7 @@ origins `@vaulter/vue` is served from) before shipping to production.
 
 ## See also
 
-- [Drive](/guide/drive) — the `DriveContext` handle the Drive routes wrap
+- [Drive](/guide/drive) — the `DriveHandle` handle the Drive routes wrap
 - [Trash & restore](/guide/trash) — the trash routes' lifecycle
 - [Uploads](/guide/uploads) · [Sharing](/guide/sharing) · [Collaboration](/guide/collaboration)
 - [Events reference](/reference/events) · [Enums reference](/reference/contracts)

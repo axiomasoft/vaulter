@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
@@ -34,7 +34,7 @@ function initiateS3(int $totalBytes, string $name = 'multi.bin'): UploadSession
 {
     $storage = UploadTestHelpers::storage();
 
-    return app(UploadSessionManager::class)->initiate(new UploadInitData(
+    return app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
@@ -62,7 +62,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
     $handler->complete($session->refresh());
 
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->size_bytes)->toBe(20)
@@ -87,7 +87,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
 
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     // The committed bytes are the REPLACEMENT (bbbbb), not the original.
     $version = $node->currentVersion()->first();
@@ -105,7 +105,7 @@ it('лживый ETag не используется как адрес — сер
     // the server-recomputed content sha256 — they are unrelated.
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CommitUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute($session->refresh());
 
     $version = $node->currentVersion()->first();
     expect($version->sha256)->toBe(hash('sha256', $bytes))
@@ -170,7 +170,7 @@ it('дедуп: multipart-сборка против идентичной пре�
         $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor($bytes));
         $handler->complete($session->refresh());
         app(UploadSessionManager::class)->markAssembled($session->refresh());
-        app(CommitUploadAction::class)->execute($session->refresh());
+        app(CompleteUploadAction::class)->execute($session->refresh());
     }
 
     // Two file nodes + two versions, but ONE physical blob (global dedup).

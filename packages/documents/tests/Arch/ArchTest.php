@@ -79,7 +79,7 @@ arch('internal namespaces are not used outside the package (E3.1)')
  * sat directly in the layer root with no domain sub-namespace, unlike core's
  * `Actions/Sharing`, `Enums/Webhooks`, … . P4.10 DISCHARGED it: the flat classes were
  * grouped under domain sub-namespaces (`Actions/Comments`, `Actions/Documents`,
- * `Actions/Versions`, `Actions/Collaboration`, `Enums/Export`, `Models/Versions`, …).
+ * `Actions/Revisions`, `Actions/Collaboration`, `Enums/Export`, `Models/Revisions`, …).
  * This test now asserts the CANON (no non-allow-listed class flat at a layer root)
  * and passes GREEN; the `->todo()` was removed by P4.10.
  *

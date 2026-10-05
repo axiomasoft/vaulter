@@ -33,7 +33,7 @@ beforeEach(function (): void {
  */
 function driveStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->storage();
+    return Vaulter::for(DriveTestHelpers::host())->model();
 }
 
 it('runs the full CRUD cycle: folder → upload → list → show → rename → move → copy → trash → restore → force', function (): void {

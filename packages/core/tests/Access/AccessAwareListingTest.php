@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Drive\Http\Resources\StorageResource;
+use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -331,7 +331,7 @@ it('renders all-false storage abilities for a null actor at the Resource layer',
     AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
 
     // A bare request resolves $request->user() === null — the no-actor path.
-    $abilities = StorageResource::make($storage->refresh())->toArray(Request::create('/'))['abilities'];
+    $abilities = DriveResource::make($storage->refresh())->toArray(Request::create('/'))['abilities'];
 
     expect($abilities)->toBe([
         'view' => false,

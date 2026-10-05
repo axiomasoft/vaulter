@@ -1,0 +1,73 @@
+{
+  "schema_version": "snapshot-generation/v2",
+  "package": "drive",
+  "argv": [
+    "env",
+    "UPDATE_SNAPSHOT=1",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "APP_ENV=testing",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "tests/Arch/PublicApiSnapshotTest.php",
+    "--do-not-cache-result"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+  "golden_path": "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+  "pre_sha256": "847a027f03b3377bfc6265a951b43c9fbd060955f780da463d711a0cb996a170",
+  "source_candidate_sha256": "6b7c1546a630635ef98e66f5e1a4a68bdc334357349e3983dd01f296c3da881a",
+  "source_candidate_file_count": 591,
+  "source_candidate_manifest": "source-candidate-before-drive.json",
+  "environment": {
+    "php_version": "8.4.26",
+    "php_binary": "/usr/bin/php8.4",
+    "environment": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:"
+    },
+    "packages": {
+      "core": {
+        "resolved_default": "testing",
+        "resolved_connection": {
+          "driver": "sqlite",
+          "database": ":memory:",
+          "prefix": ""
+        },
+        "live_database_list": [
+          {
+            "seq": 0,
+            "name": "main",
+            "file": ""
+          }
+        ],
+        "scope": "actual TestCase defineEnvironment resolved through Illuminate config; PDO read-only probe; snapshot Arch tests do not boot TestCase or migrate"
+      },
+      "drive": {
+        "resolved_default": "testing",
+        "resolved_connection": {
+          "driver": "sqlite",
+          "database": ":memory:",
+          "prefix": ""
+        },
+        "live_database_list": [
+          {
+            "seq": 0,
+            "name": "main",
+            "file": ""
+          }
+        ],
+        "scope": "actual TestCase defineEnvironment resolved through Illuminate config; PDO read-only probe; snapshot Arch tests do not boot TestCase or migrate"
+      }
+    }
+  },
+  "started_at": "2026-10-05T05:04:32.760693+00:00",
+  "exit_code": 0,
+  "post_sha256": "847a027f03b3377bfc6265a951b43c9fbd060955f780da463d711a0cb996a170",
+  "finished_at": "2026-10-05T05:04:32.847365+00:00",
+  "source_candidate_after_sha256": "6b7c1546a630635ef98e66f5e1a4a68bdc334357349e3983dd01f296c3da881a",
+  "source_candidate_unchanged": true,
+  "result_summary": "1 warning (2 assertions)",
+  "stdout_log": "generate-drive.stdout.log",
+  "stderr_log": "generate-drive.stderr.log"
+}

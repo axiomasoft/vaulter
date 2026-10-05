@@ -1,0 +1,12 @@
+{
+  "baseline_head": "4b72efd3a909f441eb415182218140575e61e4c5",
+  "sha256": "7da710a29a5b197ea4cd91d069256564a68e7255b43745ede0a4fd909ed560c7",
+  "inputs": {
+    "packages/core/src/Contracts/Drive/DriveHandle.php": "253da2c4f65eafa32952537b2730f924cae2e5c5c2831b6e5824e62cca1817b3",
+    "packages/drive/src/DriveContext.php": "c3b912413c8f491b587fb38b89a3e66a6ba63eb73740336ee49cdebac3ec18bc",
+    "packages/core/src/Profiles/ProfileRegistry.php": "af74245a311335a78fa192c1676d2855b4f67f9430584774df35ed3dcb87bf98",
+    "packages/core/tests/Arch/__snapshots__/public-api.txt": "cfe7587a8dc62c078615e0f1c8196b892b965f8ac14b43f41c091793a33488a1",
+    "plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.2.md": "07c320cb99f5f53a3e3dd45853de169269bc34beee7010158a46d3f809664bc9",
+    "plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.md": "b2009149c591896c163560972b6abbf15e8078b3de6df428758102ec1f0c72a1"
+  }
+}

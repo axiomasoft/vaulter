@@ -5,17 +5,17 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Drive\Actions\Uploads\CommitUploadAction;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Exceptions\StagedUploadMissingException;
-use Vaulter\Drive\Exceptions\UploadConflictException;
+use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Drive\Node;
@@ -175,7 +175,7 @@ it('коммит реклеймленной сессии отбивается, �
     // commit — одно и то же окно; на реальной гонке байты исчезают ПОСЕРЕДИНЕ стрима).
     UploadSession::query()->whereKey($session->getKey())->update(['status' => UploadStatus::Expired->value]);
 
-    expect(fn () => app(CommitUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
         ->toThrow(UploadConflictException::class);
 
     $after = UploadSession::query()->findOrFail($session->getKey());

@@ -75,7 +75,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
         │  ставит tenant_id при создании (observer `creating`, глобальный скоуп, …)
         ▼
    v_storages.tenant_id
-        │  UploadFileAction читает $storage->tenant_id
+        │  IngestFileAction читает $storage->tenant_id
         ▼
    BlobStore::commit(tenantId: …)
         │  запекает его в сегмент области + ключ дедупликации
@@ -83,11 +83,11 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
    v_blobs.tenant_id  +  storage_key "t<id>/ab/cd/<sha256>"
 ```
 
-Путь провижининга подтверждает мысль — `StorageManager::provision()` создаёт хранилище
+Путь провижининга подтверждает мысль — `DriveProvisioner::provision()` создаёт хранилище
 **без** `tenant_id`:
 
 ```php
-// Vaulter\Drive\StorageManager::provision() — здесь tenant_id не ставится
+// Vaulter\Drive\DriveProvisioner::provision() — здесь tenant_id не ставится
 $storage = $this->store->create([
     'panel'        => $panel,
     'owner_type'   => $owner->getMorphClass(),
@@ -100,11 +100,11 @@ $storage = $this->store->create([
 ```
 
 Если хотите заполнять `tenant_id`, ваша подставленная модель `Storage` должна его ставить.
-Дальше он распространяется автоматически: `Vaulter\Drive\Actions\UploadFileAction` читает его
+Дальше он распространяется автоматически: `Vaulter\Drive\Actions\Files\IngestFileAction` читает его
 прямо со строки хранилища и передаёт в blob store:
 
 ```php
-// Vaulter\Drive\Actions\UploadFileAction
+// Vaulter\Drive\Actions\Files\IngestFileAction
 $blob = $this->blobs->commit(
     stream:    $data->stream,
     tenantId:  $data->storage->tenant_id,   // ← со строки хранилища, заполнено хостом

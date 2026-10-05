@@ -9,6 +9,8 @@ use Vaulter\Drive\Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability');
 
+uses(TestCase::class)->in('Providers');
+
 // Панели живут отдельной директорией, потому что им нужен ДРУГОЙ TestCase: панель обязана
 // попасть в конфиг ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4), а Pest
 // разрешает ровно один базовый TestCase на директорию.

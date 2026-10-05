@@ -37,7 +37,7 @@ beforeEach(function (): void {
 // ─────────────────────────────── one event ⇒ one row ──────────────────────────
 
 it('writes one drive.created row with the storage scope and root target', function (): void {
-    $storage = DriveTestHelpers::drive()->storage();
+    $storage = DriveTestHelpers::drive()->model();
 
     $row = ActivityTestHelpers::only(EventType::DriveCreated->value);
 

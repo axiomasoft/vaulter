@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "scripts/php84",
+    "vendor/bin/rector",
+    "process",
+    "--config",
+    "plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.2/rename-map.php",
+    "--dry-run",
+    "--no-progress-bar",
+    "--no-diffs"
+  ],
+  "start": "2026-10-05T04:34:49.196793+00:00",
+  "exit_code": 255,
+  "candidate_sha256": "d761949f271f24428aef3087c0dc1f0bb6b4f59fd68d90cc191ca8945582a2e3"
+}

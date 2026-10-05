@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
-use Vaulter\Documents\Http\Controllers\DocumentNodeController;
-use Vaulter\Documents\Http\Controllers\NodeCollaborationController;
-use Vaulter\Documents\Http\Controllers\NodeCommentController;
+use Vaulter\Documents\Http\Controllers\Collaboration\NodeCollaborationController;
+use Vaulter\Documents\Http\Controllers\Comments\NodeCommentController;
+use Vaulter\Documents\Http\Controllers\Documents\DocumentNodeController;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Support\Config;
@@ -57,7 +57,7 @@ Route::prefix(Config::routePrefix())
 
             // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
             // authorized via the AccessResolver (≥ View/Comment to connect, read-only
-            // unless Edit), returning the transport-agnostic CollaborationSessionData
+            // unless Edit), returning the transport-agnostic CollaborationSession
             // descriptor. Gated on BOTH 'document_versions' (the schema the session
             // reads/writes against) AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
             // D13/D20) — the realtime surface is a SEPARATE opt-in over base

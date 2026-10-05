@@ -11,17 +11,16 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
-use Vaulter\Drive\Data\Uploads\UploadInitData;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Events\UploadSessionAborted;
-use Vaulter\Drive\Events\UploadSessionExpired;
-use Vaulter\Drive\Events\UploadSessionInitiated;
-use Vaulter\Drive\Exceptions\UploadConflictException;
+use Vaulter\Drive\Events\Uploads\UploadAborted;
+use Vaulter\Drive\Events\Uploads\UploadExpired;
+use Vaulter\Drive\Events\Uploads\UploadInitiated;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Support\Uploads\StagedUpload;
 use Vaulter\Support\Config;
 
 /**
@@ -56,7 +55,7 @@ final readonly class UploadSessionManager
      * a UNIQUE upload_id, stamps the TTL, and lets the protocol handler initialise
      * its side (S3 CreateMultipartUpload; a no-op for tus).
      */
-    public function initiate(UploadInitData $data): UploadSession
+    public function initiate(InitiateUploadInput $data): UploadSession
     {
         $this->assertWithinMaxBytes($data->totalSizeBytes);
         $this->assertWithinActiveSessionCap($data->actorId);
@@ -85,7 +84,7 @@ final readonly class UploadSessionManager
         $session = $session->refresh();
 
         // F-P1.4-13: the lifecycle audit gap — create had no activity trace at all.
-        event(new UploadSessionInitiated($session, $data->actorId));
+        event(new UploadInitiated($session, $data->actorId));
 
         return $session;
     }
@@ -181,7 +180,7 @@ final readonly class UploadSessionManager
             terminal: UploadStatus::Aborted,
             // F-P1.4-13: the lifecycle audit gap — abort had no activity trace at all.
             audit: static function (UploadSession $aborted) use ($actorId): void {
-                event(new UploadSessionAborted($aborted, $actorId));
+                event(new UploadAborted($aborted, $actorId));
             },
         );
     }
@@ -203,7 +202,7 @@ final readonly class UploadSessionManager
             terminal: UploadStatus::Expired,
             // F-P1.4-13: the lifecycle audit gap — expire had no activity trace at all.
             audit: static function (UploadSession $expired): void {
-                event(new UploadSessionExpired($expired));
+                event(new UploadExpired($expired));
             },
         );
     }
@@ -303,7 +302,7 @@ final readonly class UploadSessionManager
         }
     }
 
-    private function tenantId(UploadInitData $data): int|string|null
+    private function tenantId(InitiateUploadInput $data): int|string|null
     {
         return $data->storage->tenant_id;
     }

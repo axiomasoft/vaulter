@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Drive\Http\Controllers\DownloadController;
+use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\NodeController;
-use Vaulter\Drive\Http\Controllers\StorageController;
-use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartController;
-use Vaulter\Drive\Http\Controllers\Uploads\TusUploadController;
+use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
+use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Support\Config;
 
@@ -35,7 +35,7 @@ Route::prefix(Config::routePrefix())
                 Route::get('shared', [NodeController::class, 'shared']);
             }
 
-            Route::get('storages/{storage}', [StorageController::class, 'show']);
+            Route::get('storages/{storage}', ShowDriveController::class);
 
             Route::get('storages/{storage}/nodes', [NodeController::class, 'index']);
             Route::get('storages/{storage}/search', [NodeController::class, 'search']);
@@ -67,20 +67,20 @@ Route::prefix(Config::routePrefix())
                 Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
                     // tus.io CORE — create lives under the storage; the resumable ops
                     // address the session by its upload_id handle.
-                    Route::post('storages/{storage}/resumable-uploads', [TusUploadController::class, 'create']);
+                    Route::post('storages/{storage}/resumable-uploads', [TusProtocolController::class, 'create']);
 
-                    Route::get('resumable-uploads/{upload_id}', [TusUploadController::class, 'status']);
-                    Route::match(['head'], 'resumable-uploads/{upload_id}', [TusUploadController::class, 'head']);
-                    Route::patch('resumable-uploads/{upload_id}', [TusUploadController::class, 'patch']);
-                    Route::delete('resumable-uploads/{upload_id}', [TusUploadController::class, 'abort']);
+                    Route::get('resumable-uploads/{upload_id}', [TusProtocolController::class, 'status']);
+                    Route::match(['head'], 'resumable-uploads/{upload_id}', [TusProtocolController::class, 'head']);
+                    Route::patch('resumable-uploads/{upload_id}', [TusProtocolController::class, 'patch']);
+                    Route::delete('resumable-uploads/{upload_id}', [TusProtocolController::class, 'abort']);
                     // tus OPTIONS discovery (F-P1.4-07) — answerable for ANY {upload_id}
                     // literal, resolved or not: the CORE protocol requires this endpoint
                     // to advertise capabilities WITHOUT resolving a session.
-                    Route::options('resumable-uploads/{upload_id}', [TusUploadController::class, 'options']);
+                    Route::options('resumable-uploads/{upload_id}', [TusProtocolController::class, 'options']);
 
                     // S3-style multipart — parts + complete on the same session handle.
-                    Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartController::class, 'parts']);
-                    Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartController::class, 'complete']);
+                    Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartProtocolController::class, 'parts']);
+                    Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartProtocolController::class, 'complete']);
                 });
             }
 

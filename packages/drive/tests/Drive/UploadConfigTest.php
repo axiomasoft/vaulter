@@ -25,7 +25,7 @@ beforeEach(function (): void {
 
 function uploadConfigStorage(): string
 {
-    return (string) Vaulter::for(DriveTestHelpers::host())->storage()->getKey();
+    return (string) Vaulter::for(DriveTestHelpers::host())->model()->getKey();
 }
 
 it('maxUploadKb falls back to the document size limit when unset', function (): void {

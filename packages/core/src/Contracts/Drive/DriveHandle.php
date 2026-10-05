@@ -7,6 +7,7 @@ namespace Vaulter\Contracts\Drive;
 use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\Profile;
 
 /**
  * The ergonomic Drive handle bound to one (Storage, panel) — the surface
@@ -20,9 +21,9 @@ use Vaulter\Models\Drive\Node;
  */
 interface DriveHandle
 {
-    public function storage(): Drive;
+    public function model(): Drive;
 
-    public function panel(): string;
+    public function profile(): Profile;
 
     /**
      * The storage's root folder node (§2.1).
