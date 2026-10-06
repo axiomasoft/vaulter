@@ -1,0 +1,38 @@
+{
+  "candidate": "a2b39f509802e1946226b113101328eb1be54394",
+  "verdict": "GREEN",
+  "confirmed_findings": [],
+  "repairs": [],
+  "material_residuals": [
+    {
+      "area": "Legacy default-profile selection",
+      "owner": "PLAN2.P3.2/P3.3 canonical manager and handle migration"
+    },
+    {
+      "area": "Current ShareController profile integration",
+      "owner": "PLAN2.P3.4 sharing operation/HTTP consumer migration"
+    },
+    {
+      "area": "Retention helper fresh locked file input",
+      "owner": "PLAN2.P3.3/P3.7 rewritten revision action wiring"
+    },
+    {
+      "area": "Legacy documents/comments HTTP concealment contract",
+      "owner": "PLAN2.P4/P6 new guards and HTTP contract"
+    },
+    {
+      "area": "Disabled grants removes deny contribution too",
+      "disposition": "Specified policy; retained host role lane, no correction"
+    },
+    {
+      "area": "Purge per-root unexpected failure handling including unknown profile",
+      "owner": "PLAN2.P3.3 explicitly owns continue/report/exit1 root failure behavior"
+    },
+    {
+      "area": "Persisted scan runtime/private scanner/strict tenancy",
+      "owner": "PLAN2.P3.7/P3.8"
+    }
+  ],
+  "validation": "Reviewer inspected existing receipts; no new tests run and no product source delta. All reviewed file SHA-256 values unchanged.",
+  "permission": "Owner explicitly requested Grok 4.7 subagent review and execution of findings; no confirmed finding requires repair."
+}

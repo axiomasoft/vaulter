@@ -1,0 +1,25 @@
+{
+  "source": "native Grok summary.json + final assistant message",
+  "session_id": "437eefb6-4435-4902-aa23-f38277639ddf",
+  "agent_id": "ag1.3c55996535246bf8d53190b297c1a3d",
+  "model": "grok-4.7",
+  "effort": "high",
+  "session_kind": "headless",
+  "context_parameter": null,
+  "candidate": "a2b39f509802e1946226b113101328eb1be54394",
+  "independent_from_executor": true,
+  "candidate_preserved": true,
+  "tools": {
+    "read_file": 84,
+    "grep": 52,
+    "list_dir": 1
+  },
+  "verdict": "GREEN",
+  "confirmed_findings": 0,
+  "actual_final_model_id": "grok-4.7-build",
+  "final_message_stop_reason": null,
+  "stop_reason": "end_turn",
+  "native_output_sha256": "5d51d6cadb6b220b5302d5e1751435306c1c4ebce6921d4659ba4008dbb847c2",
+  "export_note": "Public final response and usage exported; private reviewer thought omitted. Original native output retained locally.",
+  "duration_seconds": 1237.673
+}

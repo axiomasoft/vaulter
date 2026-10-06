@@ -1,0 +1,190 @@
+{
+  "commit": "a2b39f509802e1946226b113101328eb1be54394",
+  "base": "a2b39f509802e1946226b113101328eb1be54394^",
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "b8f21b2dcf1c91235fb21dcbd016fa7768364f650448d16e209821dfcfcd44df"
+    },
+    {
+      "path": "UPGRADE.md",
+      "sha256": "c16b5b894c88ac3ddad16febbe7de2e87bdcfcff87ee1d0cb2c51ac89c4e666f"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "sha256": "0e82d2a8d07417a63d561fedda8c80ea0483632792d43bc2e5d16c06e05422ef"
+    },
+    {
+      "path": "packages/core/src/Access/AccessResolver.php",
+      "sha256": "dbb03d27702d82c310e407cdf776ef4c707ca22a15c75751c39005b6f334e82c"
+    },
+    {
+      "path": "packages/core/src/Access/OperationGuard.php",
+      "sha256": "6cd4fa6679b61894a746c9c346a2069193952e05d6ce6f4733b4dad8612ae427"
+    },
+    {
+      "path": "packages/core/src/Configuration/ConfigValidator.php",
+      "sha256": "fe629c61c1c4344c6a3fac73fe970fc39b5f6ab9b4fa1bea4111105600465817"
+    },
+    {
+      "path": "packages/core/src/Configuration/ScanConfig.php",
+      "sha256": "d50b94eacfa4f7631cedf4fd2f21fc68aa82b3d2b091f74d8cbad4a3e686668c"
+    },
+    {
+      "path": "packages/core/src/Configuration/VaulterConfig.php",
+      "sha256": "a243ab494792213530bb3472544dd1f9bc773c8b8a040f2dd1b7261edc5adc56"
+    },
+    {
+      "path": "packages/core/src/Console/MakeProfileCommand.php",
+      "sha256": "103685dd98bcc1dcdee2d5a372b81f638f235a00ec0b07db55282332487e913f"
+    },
+    {
+      "path": "packages/core/src/Content/OffScanPolicyResolver.php",
+      "sha256": "03ea0718d0c5ece88cdd89a124cf14d61cad0764f1f9360f5e9bff565182681e"
+    },
+    {
+      "path": "packages/core/src/Content/ScanPolicySpec.php",
+      "sha256": "4577b627892cdf803e56f0c023921bb3d35f6269f19caabb9356f928e32deed5"
+    },
+    {
+      "path": "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
+      "sha256": "c182f821f426661bfed407b0d91c6902acd1e29379ec2bc1ef82ef09fa54aebe"
+    },
+    {
+      "path": "packages/core/src/Enums/Cas/ScanMode.php",
+      "sha256": "c8ca6ed8d63ac5a06a1d6e1d242f711ed3347b61d45bb55d9fcd7a7e0bca3a74"
+    },
+    {
+      "path": "packages/core/src/Profiles/DefaultProfile.php",
+      "sha256": "540867d0baac62d14b3ca90d0ae44286cbfdb53eb89401b6191ba2a78ef2fa46"
+    },
+    {
+      "path": "packages/core/src/Profiles/Profile.php",
+      "sha256": "7ad481ae25889a0d5a4f64726c72547a97fbe3e9ebad743bbf5e27c884d65d1e"
+    },
+    {
+      "path": "packages/core/src/Profiles/ProfilePolicy.php",
+      "sha256": "a8e3cfbfb8e369f22327d2451ae0a3490636e0fabafc05ad57aba0e0ef653ddb"
+    },
+    {
+      "path": "packages/core/src/Profiles/ProfileRegistry.php",
+      "sha256": "b2858fbac2cbdf2f74ac77f29e58ae78b2f0a1a22e90fe9c59fc43c123861584"
+    },
+    {
+      "path": "packages/core/src/Profiles/UploadPolicy.php",
+      "sha256": "709224132f52755fbbdcd348fb68c1d7dc3a9f34b0b47bdc03a4111cb442944e"
+    },
+    {
+      "path": "packages/core/src/Providers/BindingsRegistrar.php",
+      "sha256": "aaeb492faf4273c0f03382bce11606badbeb0534a7a1a71b097932255fea6939"
+    },
+    {
+      "path": "packages/core/stubs/profile/profile-provider.stub",
+      "sha256": "a9b0862e6b453133aa3892c7ea2279c866d0165f6b7bfd99046eaef62532c427"
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "sha256": "11114e5ce6fd49389da4dd46236eda2b1f279f225e225dc26550c82053e7e207"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/public-api.txt",
+      "sha256": "13b759077bd1488fbcac4117a3bd14a151dc56949c54846bd73c7b417281808b"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Panels/OverrideDefaultProfile.php",
+      "sha256": "011f46006ea0d50b2dbe16198d6f31b4d3eff2387800d355c8611f463a8fa30d"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Panels/ProjectProfile.php",
+      "sha256": "7013718c1feec5fa7913aae41a3d521e5ca8fff6af3aa78bfc359a79ea57ae6b"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Panels/TeamProfile.php",
+      "sha256": "d0840ab70b60a203586d3644458bb440ec6675510a47497bd48736928224cbcc"
+    },
+    {
+      "path": "packages/core/tests/IdStrategy/Ulid/HostKeysTest.php",
+      "sha256": "b0893a7f691f00bfd0238c4a2cbfbe83d4e2ee87473c7b1dfd26fa58861ae531"
+    },
+    {
+      "path": "packages/core/tests/Operations/OperationGuardTest.php",
+      "sha256": "85a00cdc708a7b04ea71d12d58d8382caf6a65933547e6347a59f5192b471ef6"
+    },
+    {
+      "path": "packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "sha256": "9cbb65e2cf7cdc72d825058aede030bc87e07c9bf3239b2a2e5f2fcc2ea02ecc"
+    },
+    {
+      "path": "packages/core/tests/Operations/ProfileGuardBoundaryTest.php",
+      "sha256": "7df0421ffea9803993f8aaf8c7398ecc34830759142125699c1f25d402ba7e17"
+    },
+    {
+      "path": "packages/core/tests/Profiles/FrozenProfileTest.php",
+      "sha256": "f52bd01882326088ad449655ef16e2cce0631e80b62157991fa59c609a8a77a7"
+    },
+    {
+      "path": "packages/core/tests/Profiles/MakeProfileCommandTest.php",
+      "sha256": "6e92b942787aac62e627d141326d0ac2292660a14ad13b06c6e7ac97b5f20573"
+    },
+    {
+      "path": "packages/core/tests/Profiles/ProfilePolicyTest.php",
+      "sha256": "dfc4ba0f24fcfe69de8d809ed80bce50855ea5920679aa4c589f2ce8badc6f7f"
+    },
+    {
+      "path": "packages/core/tests/Profiles/ProfileRegistryTest.php",
+      "sha256": "2891b07fbf11a533d79ba679dede44968b046ba2ee31b2d5723a3b5a9a019a68"
+    },
+    {
+      "path": "packages/core/tests/Profiles/ScanPolicyAlgebraTest.php",
+      "sha256": "b251e999a1fa320baf73e5783687a214e07944a0e59f3d1a35f2e739160375f0"
+    },
+    {
+      "path": "packages/core/tests/Webhooks/DeliverWebhookTest.php",
+      "sha256": "248805ec4190013e4ca7cdfbc205bab5c5f531daf103a2d6a3336b48009f4714"
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Comments/NodeCommentController.php",
+      "sha256": "b6e50141d8e30ef298f82ae47b94c8e88e12fb90b85883ed3ddd88ab16215213"
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Documents/DocumentNodeController.php",
+      "sha256": "d65180e38b295c82bcf40ad4ec7b14e37d005a9d033895a484492bc420553465"
+    },
+    {
+      "path": "packages/documents/tests/Profiles/ProfileBoundaryTest.php",
+      "sha256": "2b5dd9f274883f65f0d3753cbd2e9ecc229c47c725f2a28f80b658578f62535f"
+    },
+    {
+      "path": "packages/drive/src/Configuration/DriveConfig.php",
+      "sha256": "4696788452bbd34daeeacfcddc4f28e0fc0f82144544733eddca04359e7f5cef"
+    },
+    {
+      "path": "packages/drive/src/Console/PurgeTrashCommand.php",
+      "sha256": "dd64c9ab06679d49bbbf33e5395ea604077b68222a2dc2db359407cf9d229412"
+    },
+    {
+      "path": "packages/drive/src/DriveProvisioner.php",
+      "sha256": "43d48605d13f7ec7240a9127e01326b08e5ee6d1ca83fa87c11febb63c74b864"
+    },
+    {
+      "path": "packages/drive/src/Files/FileRevisionRetention.php",
+      "sha256": "be0d933e20d4b4fcde1ac42574a2c8a1878d556c679efd15e2abc717d1039f7a"
+    },
+    {
+      "path": "packages/drive/src/Policies/UploadPolicy.php",
+      "sha256": "7dcf93dccc413167a353a73ef8d6f9acbf184edc56cebc878af13ecf317238c2"
+    },
+    {
+      "path": "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+      "sha256": "9017bd5d2abcdd549ee55455787860d0364b152321ae223500ac2be17170904f"
+    },
+    {
+      "path": "packages/drive/tests/Drive/StorageManagerTest.php",
+      "sha256": "e215b9d1c028a172af98761bbb072cf2ba4e16b10196b832640e6d0020b4d2e4"
+    },
+    {
+      "path": "packages/drive/tests/Profiles/ProfileRuntimeTest.php",
+      "sha256": "a42c32d6fa57dd0f825ea2495916eda8678e091398d92233ec7aea4f70954e80"
+    }
+  ]
+}
