@@ -11,18 +11,6 @@ use Illuminate\Support\Facades\Log;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Activity\Activity;
-use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
-use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\ProfileProvider;
 
 final readonly class ConfigValidator
@@ -51,20 +39,20 @@ final readonly class ConfigValidator
         $config->webhooks()->urlGuard();
         $config->sharing()->tokenGenerator();
         foreach ([
-            'drive' => Drive::class,
-            'node' => Node::class,
-            'file' => File::class,
-            'file_revision' => FileRevision::class,
-            'file_revision_blob' => FileRevisionBlob::class,
-            'blob' => Blob::class,
-            'grant' => NodeGrant::class,
-            'node_share' => NodeShare::class,
-            'activity' => Activity::class,
-            'outbox' => Outbox::class,
-            'webhook_endpoint' => WebhookEndpoint::class,
-            'webhook_delivery' => WebhookDelivery::class,
-        ] as $key => $base) {
-            self::assertModel('vaulter.models.'.$key, $config->model($key), $base);
+            'drive',
+            'node',
+            'file',
+            'file_revision',
+            'file_revision_blob',
+            'blob',
+            'grant',
+            'node_share',
+            'activity',
+            'outbox',
+            'webhook_endpoint',
+            'webhook_delivery',
+        ] as $key) {
+            $config->model($key);
         }
 
         $classes = [$config->defaultProfile(), ...$config->profileProviders()];
