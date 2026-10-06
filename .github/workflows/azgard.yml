@@ -47,7 +47,9 @@ jobs:
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
           git -C ../azguard fetch --depth=1 origin de09959e238c92c1f5fdf974cfbc3202a69fbd8e
-          git -C ../azguard checkout --detach FETCH_HEAD
+          # Path packages version themselves as dev-<branch>. The require is
+          # dev-main, so the qualified commit has to sit on a local main branch.
+          git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2

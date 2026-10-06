@@ -9,6 +9,7 @@ use Vaulter\Support\Config;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 it('upgrades legacy panel tables idempotently on the configured connection and rolls back', function (): void {
+    $previousConnection = config('vaulter.connection');
     config()->set('database.connections.claim_upgrade', [
         'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
     ]);
@@ -36,6 +37,7 @@ it('upgrades legacy panel tables idempotently on the configured connection and r
         expect($schema->hasColumn('v_webhook_deliveries', 'claim_token'))->toBeFalse()
             ->and(DB::connection('claim_upgrade')->table('v_webhook_deliveries')->count())->toBe(1);
     } finally {
+        config()->set('vaulter.connection', $previousConnection);
         DB::purge('claim_upgrade');
     }
 });

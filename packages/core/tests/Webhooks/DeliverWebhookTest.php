@@ -306,6 +306,7 @@ it('does not let an expired worker overwrite the replacement attempt', function 
 });
 
 it('delivers on the custom model connection without holding a transaction during HTTP', function (): void {
+    $previousConnection = config('vaulter.connection');
     config()->set('database.connections.delivery_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
     config()->set('vaulter.connection', 'delivery_other');
 
@@ -326,6 +327,7 @@ it('delivers on the custom model connection without holding a transaction during
         expect($delivery->refresh()->status)->toBe('delivered')->and($delivery->claim_token)->toBeNull();
         Http::assertSentCount(1);
     } finally {
+        config()->set('vaulter.connection', $previousConnection);
         DB::purge('delivery_other');
     }
 });

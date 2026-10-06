@@ -26,14 +26,15 @@ return new class extends Migration
             return;
         }
 
+        $schema = Schema::connection(Config::connection());
         $table = Config::table('webhook_endpoints');
 
-        if (!Schema::hasTable($table)) {
+        if (!$schema->hasTable($table)) {
             return;
         }
 
-        if (Schema::getColumnType($table, 'signing_secret') !== 'text') {
-            Schema::table($table, static function (Blueprint $blueprint): void {
+        if ($schema->getColumnType($table, 'signing_secret') !== 'text') {
+            $schema->table($table, static function (Blueprint $blueprint): void {
                 $blueprint->text('signing_secret')->change();
             });
         }
@@ -47,15 +48,16 @@ return new class extends Migration
             return;
         }
 
+        $schema = Schema::connection(Config::connection());
         $table = Config::table('webhook_endpoints');
 
-        if (!Schema::hasTable($table)) {
+        if (!$schema->hasTable($table)) {
             return;
         }
 
         app(SigningSecretEncryptor::class)->decryptToPlaintext($table);
 
-        Schema::table($table, static function (Blueprint $blueprint): void {
+        $schema->table($table, static function (Blueprint $blueprint): void {
             $blueprint->string('signing_secret')->change();
         });
     }
