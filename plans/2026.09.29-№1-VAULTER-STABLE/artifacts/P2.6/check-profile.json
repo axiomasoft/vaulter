@@ -1,0 +1,60 @@
+{
+  "item": "P2.6",
+  "recorded_at": "2026-10-06T13:00:00+03:00",
+  "runtime": "codex/gpt-6.1-sol/low",
+  "route": "implementation/low",
+  "impact": "packages/core schema introspection, schema tests, PostgreSQL upgrade assertions, database compatibility documentation",
+  "paths": [
+    "packages/core/src/Schema/KeyColumnInspector.php",
+    "packages/core/src/Schema/ValueObjects/KeyColumnExpectation.php",
+    "packages/core/src/Schema/ValueObjects/KeyColumnMismatch.php",
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/database/migrations/2026_10_01_000007_blob_scope_key.php",
+    "packages/core/tests/Schema/KeyColumnTypesTest.php",
+    "packages/core/tests/Upgrade/Canon03UpgradeTest.php",
+    "docs/guide/database-compatibility.md"
+  ],
+  "dependency_closure": [
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/src/Schema/HostKeyColumns.php",
+    "packages/core/src/Schema/AutoIncrementIds.php",
+    "packages/core/src/Schema/UlidIds.php",
+    "packages/core/src/Schema/Uuid7Ids.php",
+    "packages/core/database/migrations",
+    "packages/core/tests/TestCase.php",
+    "packages/core/tests/Upgrade/LoadsV02Fixture.php"
+  ],
+  "focused_checks": [
+    {
+      "environment": "PG",
+      "cwd": ".",
+      "command": "env APP_ENV=testing $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/KeyColumnTypesTest.php packages/core/tests/Upgrade/Canon03UpgradeTest.php",
+      "expected": "exit 0; 0 failed; 0 skipped",
+      "covers": "fresh bigint/ulid/uuid7 with string/bigint host keys and v0.2 bigint/ulid upgrades"
+    },
+    {
+      "environment": "MySQL",
+      "cwd": ".",
+      "command": "env APP_ENV=testing $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/KeyColumnTypesTest.php",
+      "expected": "exit 0; 0 failed",
+      "covers": "fresh key-column types on MySQL"
+    },
+    {
+      "environment": "PG",
+      "cwd": ".",
+      "command": "temporary v_outbox.drive_id varchar(64) under bigint, run KeyColumnTypesTest, restore exact bytes, rerun green",
+      "expected": "negative run fails on outbox.drive_id; restored run exits 0",
+      "covers": "inspector sensitivity"
+    }
+  ],
+  "fast_checks": [
+    "scripts/php84 vendor/bin/pint --test <changed PHP files>",
+    "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress"
+  ],
+  "phase_barrier": "P2 V901-V926 on final stable result; V921 reuses V919 Upgrade+Schema receipt; V926 requires existing or newly authorized O-3 hosted non-mutation evidence",
+  "deferred_broad_checks": [
+    "V901-V925 after focused acceptance is green",
+    "V926 pending valid owner O-3 evidence if no reusable final-candidate receipt exists"
+  ],
+  "mutation_tools": "excluded"
+}

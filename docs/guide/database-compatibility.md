@@ -28,7 +28,8 @@ Back up and stop writes before changing code/schema. See
 |---|---|---|
 | **PostgreSQL 14+** | **Recommended.** The full test suite runs against Postgres in CI across every id strategy. | Production. Everything below works natively. |
 | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
-| **MySQL 8+ / MariaDB** | Host-key types and upgrade DDL are tested. Full installation currently hits the MySQL 8 `sibling_active` generated-column/FK incompatibility. | Full schema compatibility is a pending release gate. |
+| **MySQL 8+** | Supported. Functional unique indexes enforce live siblings and the single drive root while preserving cascading foreign keys. | Production where Postgres-only locking and index features are not required. |
+| **MariaDB** | Schema and host-key DDL are supported; the complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
 
 ::: tip PHP extension
 Postgres needs the `pdo_pgsql` extension. It ships with most PHP distributions; on a stock
@@ -65,9 +66,10 @@ The primary-key strategy is configurable (see
 | `uuid7` | native `uuid` on Postgres | Time-ordered UUIDs; uses Postgres' native `uuid` type. |
 
 The recursive folder tree (`v_nodes.parent_id → v_nodes.id`) is a self-referencing foreign
-key. PostgreSQL and SQLite migrate it under all three strategies. MySQL 8 currently
-rejects the STORED `sibling_active` column over the cascading `parent_id` foreign key
-(error 1215); this pre-existing installation defect remains a release gate.
+key and migrates under all three strategies. PostgreSQL and SQLite use partial unique
+indexes for live sibling names and the single root. MySQL 8 expresses the same predicates
+as functional unique indexes, so `ON DELETE CASCADE` remains valid without stored generated
+columns based on foreign-key fields.
 
 ## Case-insensitive search
 
@@ -89,6 +91,12 @@ Fresh schemas already have the target type; repeated upgrades do no work. SQLite
 upgrade is a no-op because its columns are dynamically typed. Incompatible values cause
 a driver error rather than being discarded. Rollback restores the configured Vaulter
 ID strategy and can also fail when newly stored host keys no longer fit it.
+
+Vaulter also ships an internal read-only `KeyColumnInspector`. It checks all 27 host-key
+columns plus the REF and fixed-length string columns introduced or renamed by the 0.3
+schema against `ids.host_keys` and `ids.strategy`. It reports missing columns and type or
+length mismatches without changing the database; the doctor command uses this inventory
+to diagnose drift.
 
 If you use the optional [`spatie` permission driver](/guide/permission-drivers): a node grant
 addressed to a spatie **role** stores that role's **primary key** in `v_node_grants.subject_id`

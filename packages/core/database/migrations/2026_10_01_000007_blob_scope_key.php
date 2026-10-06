@@ -18,6 +18,21 @@ return new class extends Migration
             return;
         }
 
+        $columns = array_column($schema->getColumns($name), null, 'name');
+        if (($columns['storage_key']['type_name'] ?? null) === 'text') {
+            $longestValue = $db->table($name)->selectRaw('max(char_length(storage_key)) as length')->value('length');
+            if ($longestValue !== null && !is_int($longestValue) && !is_string($longestValue)) {
+                throw new RuntimeException('Unable to read the legacy blob storage_key length.');
+            }
+
+            $longest = $longestValue === null ? 0 : (int) $longestValue;
+            if ($longest > 255) {
+                throw new RuntimeException('Legacy blob storage_key exceeds the canonical 255-character limit.');
+            }
+
+            $schema->table($name, fn (Blueprint $table) => $table->string('storage_key')->change());
+        }
+
         if (!$schema->hasColumn($name, 'scope_key')) {
             $schema->table($name, fn (Blueprint $table) => $table->string('scope_key', 191)->nullable());
         }
@@ -59,7 +74,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
+        $db = app(VaulterDatabase::class)->connection();
+        $schema = $db->getSchemaBuilder();
         $name = app(DatabaseConfig::class)->table('blobs');
         if (!$schema->hasTable($name) || !$schema->hasColumn($name, 'scope_key')) {
             return;
@@ -77,5 +93,13 @@ return new class extends Migration
             $schema->table($name, fn (Blueprint $table) => $table->dropUnique($name.'_scope_sha_uniq'));
         }
         $schema->table($name, fn (Blueprint $table) => $table->dropColumn('scope_key'));
+
+        // MySQL cannot restore a full-value UNIQUE index on TEXT. Its pre-0.3
+        // schema was therefore not installable, so retain the safe VARCHAR form
+        // when rolling back the otherwise reversible scope-key migration.
+        $columns = array_column($schema->getColumns($name), null, 'name');
+        if ($db->getDriverName() !== 'mysql' && ($columns['storage_key']['type_name'] ?? null) === 'varchar') {
+            $schema->table($name, fn (Blueprint $table) => $table->text('storage_key')->change());
+        }
     }
 };

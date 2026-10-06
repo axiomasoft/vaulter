@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Symfony\Component\Process\ExecutableFinder;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Schema\KeyColumnInspector;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -39,6 +41,11 @@ it('preserves historical rows and event subscriptions through upgrade rollback a
     }
 
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+    expect((new KeyColumnInspector(
+        app(VaulterDatabase::class),
+        app(DatabaseConfig::class),
+        app(IdsConfig::class),
+    ))->mismatches())->toBe([]);
     foreach (['drives' => 3, 'nodes' => 40, 'files' => 16, 'file_revisions' => 22, 'file_revision_blobs' => 22, 'node_grants' => 3, 'node_shares' => 4, 'activity' => 74, 'outbox' => 68, 'webhook_deliveries' => 4, 'webhook_endpoints' => 1] as $entity => $count) {
         expect($db->table(app(DatabaseConfig::class)->table($entity))->count())->toBe($count);
     }

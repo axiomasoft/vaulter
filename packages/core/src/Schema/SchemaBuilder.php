@@ -239,8 +239,10 @@ final class SchemaBuilder
 
         // Scope-qualified storage_key: "<scope>/ab/cd/<sha256>" (H.3 / D18′). A
         // scope-free path under per-scope dedup would let one GC delete another
-        // scope's live bytes.
-        $table->text('storage_key');
+        // scope's live bytes. BlobScope bounds canonical keys below 255 bytes;
+        // VARCHAR keeps the full-value UNIQUE portable to MySQL without a lossy
+        // prefix index or a hash surrogate.
+        $table->string('storage_key');
 
         // Blob state machine (logic is M1b; the columns exist now): pending →
         // committed → tombstoned → deleting → deleted. No standalone index on
@@ -1024,9 +1026,10 @@ final class SchemaBuilder
      *  - PostgreSQL / SQLite: a PARTIAL unique index on (parent_id, lower(name))
      *    WHERE deleted_at IS NULL AND trashed_at IS NULL — a trashed or
      *    soft-deleted duplicate name is allowed, a live one is rejected.
-     *  - MySQL/MariaDB: no partial indexes, so a stored generated column folds the
-     *    active liveness into a value (NULL when trashed/deleted, which is exempt
-     *    from UNIQUE) and a plain unique index sits on it.
+     *  - MySQL: no partial indexes, so a functional key part folds active liveness
+     *    into a value (NULL when trashed/deleted, which is exempt from UNIQUE).
+     *    Keeping the expression inside the index is essential: a stored generated
+     *    column based on parent_id is incompatible with its cascading FK.
      */
     private function addSiblingUniqueIndex(string $table): void
     {
@@ -1044,13 +1047,21 @@ final class SchemaBuilder
             return;
         }
 
-        if ($driver === 'mysql' || $driver === 'mariadb') {
+        if ($driver === 'mysql') {
+            $this->dbConnection()->statement(
+                sprintf('CREATE UNIQUE INDEX `%s` ON `%s` ', $name, $table).
+                '(`parent_id`, ((CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL THEN LOWER(`name`) ELSE NULL END)))',
+            );
+
+            return;
+        }
+
+        if ($driver === 'mariadb') {
             $this->dbConnection()->statement(
                 sprintf('ALTER TABLE `%s` ADD COLUMN `sibling_active` VARCHAR(512) ', $table).
                 'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL '.
                 "THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED",
             );
-
             $this->dbConnection()->statement(sprintf('ALTER TABLE `%s` ADD UNIQUE INDEX `%s` (`sibling_active`)', $table, $name));
 
             return;
@@ -1069,8 +1080,9 @@ final class SchemaBuilder
      * shows, and sibling-unique cannot catch duplicates because NULL parents differ.
      *
      *  - PostgreSQL / SQLite: a PARTIAL unique index on (drive_id) WHERE parent_id IS NULL.
-     *  - MySQL/MariaDB: a stored generated column carries drive_id only for a
-     *    parentless row (NULL otherwise, exempt from UNIQUE) under a plain unique index.
+     *  - MySQL: a functional key part emits 1 only for a parentless row. Combined
+     *    with drive_id it enforces one root per drive without a stored generated
+     *    column based on cascading FK columns.
      *
      * Public so the upgrade migration adds the same index to an existing table.
      */
@@ -1087,9 +1099,18 @@ final class SchemaBuilder
             return;
         }
 
-        if ($driver === 'mysql' || $driver === 'mariadb') {
-            // Two auto-committing DDL statements: each step is skipped when already
-            // applied, so an upgrade interrupted between them can simply be re-run.
+        if ($driver === 'mysql') {
+            if (!$this->schemaConnection()->hasIndex($table, $name)) {
+                $this->dbConnection()->statement(
+                    sprintf('CREATE UNIQUE INDEX `%s` ON `%s` ', $name, $table).
+                    '(`drive_id`, ((CASE WHEN `parent_id` IS NULL THEN 1 ELSE NULL END)))',
+                );
+            }
+
+            return;
+        }
+
+        if ($driver === 'mariadb') {
             if (!$this->schemaConnection()->hasColumn($table, 'root_drive')) {
                 $this->dbConnection()->statement(
                     sprintf('ALTER TABLE `%s` ADD COLUMN `root_drive` VARCHAR(64) ', $table).
