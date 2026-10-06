@@ -21,6 +21,9 @@ permissions:
 
 jobs:
   release:
+    # Publishing and the Version Packages PR belong to the canonical repository.
+    # A CI mirror (ax1oma/vaulter-mirror) has no npm token and must not open that PR.
+    if: github.repository == 'axiomasoft/vaulter'
     name: Changesets release
     runs-on: ubuntu-latest
 

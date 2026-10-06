@@ -20,6 +20,9 @@ concurrency:
 
 jobs:
   build:
+    # GitHub Pages for the docs site is the canonical repository. A CI mirror
+    # does not have that environment, and a failed deploy must not paint main red.
+    if: github.repository == 'axiomasoft/vaulter'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

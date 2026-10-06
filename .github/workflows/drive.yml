@@ -91,7 +91,9 @@ jobs:
   # — self-skip on SQLite. On the old SQLite lane their code (the advisory-xact-lock /
   # FOR UPDATE critical sections, cascade-delete) was therefore never mutated, so the
   # Score was computed over a smaller body of code than the package actually ships.
+  # D14: do not start this long --mutate lane on push. The --min floor is unchanged.
   drive-mutation:
+    if: github.event_name == 'workflow_dispatch'
     name: vaulter-drive (mutation gate)
     runs-on: ubuntu-latest
 

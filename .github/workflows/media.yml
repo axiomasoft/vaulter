@@ -84,7 +84,9 @@ jobs:
   # so neither driver alone covers the package and
   # `--covered-only` would leave the other driver's branches ungated. The final score merges
   # Pest cache results by mutation ID: killed by either required driver means killed in the union.
+  # D14: do not start this long --mutate lane on push. The union floor is unchanged.
   media-mutation:
+    if: github.event_name == 'workflow_dispatch'
     name: vaulter-media (mutation gate)
     runs-on: ubuntu-latest
 

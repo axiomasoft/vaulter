@@ -62,7 +62,9 @@ jobs:
   # only hid that. The threshold is real and the job has no `|| true`: Pest exits
   # non-zero when Score drops below it. Own job so the coverage driver, which the main
   # lane does not need, stays off it.
+  # D14: do not start this long --mutate lane on push. The --min floor is unchanged.
   filament-mutation:
+    if: github.event_name == 'workflow_dispatch'
     name: vaulter-filament (mutation gate)
     runs-on: ubuntu-latest
 

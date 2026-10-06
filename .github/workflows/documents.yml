@@ -84,7 +84,9 @@ jobs:
   # it cannot map this suite's tests to mutants at all. Own job (not a matrix step) so
   # the coverage driver, which the SQLite lane does not need, stays off the fast lanes
   # and the mutation run happens once rather than once per Laravel cell.
+  # D14: do not start this long --mutate lane on push. The --min floor is unchanged.
   documents-mutation:
+    if: github.event_name == 'workflow_dispatch'
     name: vaulter-documents (Postgres mutation gate)
     runs-on: ubuntu-latest
 

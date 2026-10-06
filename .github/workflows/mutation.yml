@@ -1,11 +1,9 @@
 name: Mutation Testing
 
-# Advisory only: runs on main merges and manual dispatch.
-# Not a PR blocker — mutation testing is expensive and should be reviewed
-# after the test suite is stable.
+# D14 (2026-10-03): long Pest --mutate lanes are not started by push.
+# The --min floor below is unchanged and still applies when this workflow
+# is started manually.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

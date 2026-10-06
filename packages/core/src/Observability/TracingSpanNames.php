@@ -9,11 +9,11 @@ namespace Vaulter\Observability;
  */
 final class TracingSpanNames
 {
-    public const UPLOAD_SWEEP = 'vaulter.action.upload.sweep';
+    public const string UPLOAD_SWEEP = 'vaulter.action.upload.sweep';
 
-    public const WEBHOOK_RELAY = 'vaulter.action.webhook.relay';
+    public const string WEBHOOK_RELAY = 'vaulter.action.webhook.relay';
 
-    public const WEBHOOK_RETRY = 'vaulter.action.webhook.retry';
+    public const string WEBHOOK_RETRY = 'vaulter.action.webhook.retry';
 
-    public const WEBHOOK_DELIVERY = 'vaulter.job.webhook.delivery';
+    public const string WEBHOOK_DELIVERY = 'vaulter.job.webhook.delivery';
 }
