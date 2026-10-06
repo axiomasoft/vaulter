@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -12,7 +15,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 /**
  * The NODE-attached comment HTTP surface (ADR-0014 шаг 1), the additive twin of the
  * legacy document_id-bound CommentController. Authorization runs through the real
- * database grant resolver: read ≥ View, create = Comment (both the Read bit), and
+ * database grant resolver: read ≥ View, create = the dedicated Comment bit, and
  * resolve/delete = the AUTHOR of the comment OR Manage on the node. These tests pin
  * the author-or-Manage boundary that a green happy-path would miss.
  */
@@ -28,9 +31,9 @@ $commentNode = static function (GrantLevel $level, int $subjectId = 1, string $n
 
 $url = static fn (Node $node): string => 'api/vaulter/nodes/'.$node->getKey().'/comments';
 
-// A viewer/commenter shares the Read bit, so a Reader can both list and create.
+// A commenter creates the thread; a reader may only list it.
 it('lists the node comment thread for a viewer', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Reader);
+    [, $node] = $commentNode(GrantLevel::Commenter);
     $this->actingAs($user(1));
 
     $this->postJson($url($node), ['body' => 'first'])->assertCreated();
@@ -40,6 +43,25 @@ it('lists the node comment thread for a viewer', function () use ($user, $commen
     expect($response->json('data'))->toHaveCount(2)
         ->and(collect($response->json('data'))->pluck('body')->all())
         ->toEqualCanonicalizing(['first', 'second']);
+});
+
+it('V29 denies Reader comment creation and Commenter editing', function () use ($user, $commentNode, $url): void {
+    [, $node] = $commentNode(GrantLevel::Reader);
+    $this->actingAs($user(1));
+    $this->getJson($url($node))->assertOk();
+    $this->postJson($url($node), ['body' => 'forbidden'])->assertForbidden();
+    AccessTestHelpers::grant($node, GrantLevel::Commenter, subjectId: 2);
+    $this->actingAs($user(2));
+    $this->postJson($url($node), ['body' => 'allowed'])->assertCreated();
+    expect(app(AccessResolver::class)->can($user(2), Ability::Edit, $node))->toBeFalse();
+});
+
+it('vetoes Commenter creation with a same-node comment deny', function () use ($user, $commentNode, $url): void {
+    [, $node] = $commentNode(GrantLevel::Commenter);
+    AccessTestHelpers::grant($node, GrantLevel::Reader, effect: Effect::Deny, permissions: 32);
+    $this->actingAs($user(1));
+    $this->postJson($url($node), ['body' => 'forbidden'])->assertForbidden();
+    expect(NodeComment::query()->where('node_id', $node->id)->exists())->toBeFalse();
 });
 
 it('403s the thread listing without any grant', function () use ($user): void {

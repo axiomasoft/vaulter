@@ -49,7 +49,7 @@ use Vaulter\Enums\Access\GrantLevel;
  *     addressed to, so the driver contributes just the actor (documented limitation:
  *     a host that grants v_node_grants rows to AzGuard roles should additionally model
  *     those as Subjects, e.g. via a subclass; the guard answers the scoped checks);
- *   - canCreateInWorkspace = hasPermissionIn(type, id, the create permission).
+ *   - canCreateIn = hasPermissionIn(type, id, the create permission).
  *
  * The actor's AzgardGuard is obtained leniently: if the actor itself implements the
  * seam (the host's User uses an AzGuard-backed adapter directly — the cleaner path,
@@ -86,11 +86,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         // Node-blind: AccessScope carries the workspace, not a Node, so the role lane is
         // the WORKSPACE-scoped permission check (composite order step 2). A null
         // workspace means there is nothing for AzGuard to scope against.
-        if ($scope->workspaceType === null || $scope->workspaceId === null) {
-            return null;
-        }
-
-        $granted = $this->highestLevelGranted($guard, $scope->workspaceType, $scope->workspaceId);
+        $granted = $this->highestLevelGranted($guard, $scope->driveOwner->type, $scope->driveOwner->id);
 
         if ($granted === null) {
             return null;
@@ -142,7 +138,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
      * workspace-scoped check (hasPermissionIn) with the configured create permission —
      * the folder/upload create path has no existing node to resolve against (§6).
      */
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         $guard = $this->guardFor($actor);
 
@@ -151,8 +147,8 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         }
 
         return $guard->hasPermissionIn(
-            contextType: $workspaceType,
-            contextId: $workspaceId,
+            contextType: $scope->driveOwner->type,
+            contextId: $scope->driveOwner->id,
             permission: $this->permissions->createPermission(),
         );
     }

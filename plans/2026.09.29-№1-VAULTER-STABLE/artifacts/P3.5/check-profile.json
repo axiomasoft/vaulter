@@ -1,0 +1,182 @@
+{
+  "item": "PLAN2.P3.5",
+  "recorded_at": "2026-10-06T19:02:54.341524+00:00",
+  "base_commit": "ec82ef70ba28493e198f2d3ec8e9461e061669ef",
+  "runtime": {
+    "php": "scripts/php84 (PHP 8.4)",
+    "executor": "codex/gpt-6.1-sol/high",
+    "reviewer": "grok/grok-4.7/high",
+    "review_context": null,
+    "task": "installed native scripts/plan.py (v3)"
+  },
+  "affected_packages": [
+    "core",
+    "azgard",
+    "drive",
+    "documents",
+    "filament"
+  ],
+  "affected_paths": [
+    "packages/core/src/Enums/Access/{Permission,Ability,GrantLevel}.php",
+    "packages/core/src/Contracts/Access/PermissionDriver.php",
+    "packages/core/src/ValueObjects/Access/OwnerRef.php",
+    "packages/core/src/Access/ValueObjects/AccessScope.php",
+    "packages/core/src/Access/{AccessResolver,PermissionDriverManager,OperationGuard}.php",
+    "packages/core/src/Access/Drivers/*.php",
+    "packages/core/src/Testing/NullPermissionDriver.php",
+    "packages/core/src/Testing/Contracts/PermissionDriverContractTests.php",
+    "packages/core/src/Actions/Access/GrantNodeAccessAction.php",
+    "packages/core/tests/{Access,Fixtures/Access,Unit}/*.php",
+    "packages/azgard/src/{AzgardPermissionDriver,AzgardPermissionMap}.php",
+    "packages/azgard/tests/*.php",
+    "packages/documents/tests/Comment/NodeCommentApiTest.php",
+    "packages/core/tests/Operations/ProfilePermissionDriverTest.php",
+    "packages/{core,azgard,documents}/tests/Arch/__snapshots__/public-api.txt",
+    "@plan/artifacts/P3.5/check-profile.json",
+    "@plan/artifacts/P3.5/completion.json",
+    "UPGRADE.md",
+    "CHANGELOG.md",
+    "packages/drive/src/Http/Controllers/NodeController.php",
+    "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+    "packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php",
+    "packages/drive/src/Http/Resources/DriveResource.php",
+    "packages/documents/src/Http/Controllers/Documents/DocumentNodeController.php",
+    "packages/filament/src/Resources/NodeResource.php",
+    "packages/drive/tests/Feature/DriveAuthorizationTest.php",
+    "packages/drive/tests/Feature/TusProtocolTest.php",
+    "packages/drive/tests/Uploads/S3MultipartTest.php",
+    "packages/documents/tests/Document/DocumentNodeApiTest.php",
+    "packages/filament/tests/Feature/NodeResourceTest.php",
+    "packages/drive/tests/Feature/DriveResourceCreateGateTest.php",
+    "packages/filament/tests/Feature/NodeResourceCreateGateTest.php"
+  ],
+  "additional_dependency_closure": [
+    "packages/core/src/Repositories/Drive/NodeReadRepository.php (profile-aware candidates)",
+    "packages/core/src/Configuration/ConfigValidator.php (reject null for selected profile drivers)",
+    "packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php (allBits caller)",
+    "packages/core/tests/Spatie/SpatieDriverTest.php",
+    "packages/core/tests/Operations/OperationGuardTest.php",
+    "packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php",
+    "packages/drive/tests/Feature/R07cDenyGuardContractsTest.php",
+    "packages/drive/tests/Feature/R07dObservableMutantTest.php",
+    "packages/core/tests/Arch/ArchTest.php: exact Testing/Contracts directory contents pinned to the specified public suite",
+    "packages/core/tests/Arch/PublicApiSnapshotTest.php and packages/azgard/tests/Arch/PublicApiSnapshotTest.php: frozen new API"
+  ],
+  "environment": {
+    "APP_ENV": "testing",
+    "DB_CONNECTION": "sqlite",
+    "DB_DATABASE": ":memory:"
+  },
+  "db_isolation": "TestCase configurations use transient sqlite memory; no external DB touched. Tests use local fake disks; no hosted actions.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Access packages/core/tests/Unit/AccessEnumsTest.php packages/core/tests/Operations/ProfilePermissionDriverTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Comment/NodeCommentApiTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit 0; small affected adapter suite, not blanket six-package run",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign.",
+      "expect": "Applicable invariants проверены; один осмысленный RED→restored GREEN, не изменены working bytes",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/DriveAuthorizationTest.php tests/Feature/TusProtocolTest.php tests/Uploads/S3MultipartTest.php tests/Feature/DriveResourceCreateGateTest.php",
+      "expect": "exit 0; named allow/deny create in HTTP/tus/S3 и DriveResource abilities; executed_tests>0, skipped=0",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentNodeApiTest.php",
+      "expect": "exit 0; document create allow/deny через canCreateIn; executed_tests>0, skipped=0",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V6",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/NodeResourceTest.php tests/Feature/NodeResourceCreateGateTest.php",
+      "expect": "exit 0; обе Filament create gates allow/deny и profile restriction; executed_tests>0, skipped=0",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V7",
+      "cmd": "env APP_ENV=testing ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit 0; package-wide supported PHPStan, no undefined canCreateInWorkspace calls",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V8",
+      "cmd": "env APP_ENV=testing ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit 0; package-wide supported PHPStan, no undefined canCreateInWorkspace calls",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V9",
+      "cmd": "env APP_ENV=testing ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit 0; package-wide supported PHPStan, no undefined canCreateInWorkspace calls",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    }
+  ],
+  "additional_checks": [
+    "core Access + Spatie + Operations affected suites; sharing input regression; all affected Arch suites",
+    "Pint actual changed/new PHP only",
+    "one PHPStan per impacted package; V7/V8/V9 satisfy respective V80 lanes"
+  ],
+  "negative_control": "isolated temporary source copy: disable profile-selected driver and prove named profile isolation test RED, restore exact SHA then GREEN",
+  "deferred_broad_barrier": "PLAN2.P3.8 full non-mutation phase barrier",
+  "review_policy": "At end, full owned candidate; fresh native Grok read-only session; no context option; maximum one correction and finding-focused re-review",
+  "preexisting_dirty": "Owner plan/design/knowledge/views changes preserved; no preexisting product edits.",
+  "actual_runtime": "PHP 8.4.26",
+  "actual_owning_php_files": "php-files.json",
+  "actual_product_files": "candidate-files.json",
+  "correction": {
+    "review_finding": "Grok round1 High: mixed profiles open authoritative sibling listings",
+    "owning_files": [
+      "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "packages/filament/tests/Feature/ResourceListingScopeTest.php"
+    ],
+    "validation": [
+      "core Access listing/shared/storage tests + ProfilePermissionDriverTest",
+      "Filament ResourceListingScopeTest + V6 named create tests",
+      "core/filament PHPStan",
+      "Pint actual correction files",
+      "isolated negative control rerun; original artifacts archived"
+    ],
+    "unaffected_lanes": "No unrelated full suite; preserve original V1 equivalence/enums/driver outputs except changed candidate paths, newly qualify owning paths by focused checks."
+  }
+}

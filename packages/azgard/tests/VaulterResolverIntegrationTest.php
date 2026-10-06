@@ -10,6 +10,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The bridge driving the REAL Vaulter AzgardPermissionDriver: the adapter is bound as
@@ -31,7 +32,7 @@ it('grants an absolute override from an AzGuard super-admin (wildcard)', functio
     $user = SpyAzgardUser::make()->grantGlobal(['*']);
     bindAdapterFor($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
     expect(azgardDriver()->override($user, $scope))->toBe(Effect::Allow);
 });
@@ -40,7 +41,7 @@ it('defers (no override) for a non super-admin', function (): void {
     $user = SpyAzgardUser::make()->grantGlobal(['documents.view']);
     bindAdapterFor($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
     expect(azgardDriver()->override($user, $scope))->toBeNull();
 });
@@ -50,7 +51,7 @@ it('folds a workspace-scoped permission into the matching grant level', function
     $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.update']);
     bindAdapterFor($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
     $decision = azgardDriver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
@@ -62,7 +63,7 @@ it('yields no decision when the workspace grants nothing', function (): void {
     $user = SpyAzgardUser::make();
     bindAdapterFor($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
     expect(azgardDriver()->resolve(Subject::ofModel($user), $user, $scope))->toBeNull();
 });
@@ -71,8 +72,8 @@ it('gates workspace creation through the create permission', function (): void {
     $user = SpyAzgardUser::make()->grantInWorkspace('project', 5, ['documents.create']);
     bindAdapterFor($user);
 
-    expect(azgardDriver()->canCreateInWorkspace($user, 'project', 5))->toBeTrue()
-        ->and(azgardDriver()->canCreateInWorkspace($user, 'project', 6))->toBeFalse();
+    expect(azgardDriver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 5), driveId: 1)))->toBeTrue()
+        ->and(azgardDriver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 6), driveId: 1)))->toBeFalse();
 });
 
 it('exposes only the actor in its subject-set', function (): void {

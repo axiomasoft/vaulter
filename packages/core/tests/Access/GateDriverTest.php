@@ -12,6 +12,7 @@ use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The Gate host-role driver (§6 / H.2): a super ability grants the override; the
@@ -27,7 +28,7 @@ it('grants an absolute override from a super-admin gate', function (): void {
     Gate::define('vaulter.super', fn (TestUser $user): bool => $user->getKey() === 1);
 
     $driver = app(GatePermissionDriver::class);
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 9);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
     expect($driver->override(AccessTestHelpers::user(id: 1), $scope))->toBe(Effect::Allow)
         ->and($driver->override(AccessTestHelpers::user(id: 2), $scope))->toBeNull();
@@ -49,7 +50,7 @@ it('maps a gate ability to a role-grant level', function (): void {
 
     $driver = app(GatePermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
     $decision = $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
@@ -78,7 +79,7 @@ it('lets a gate-mapped ability raise access in the AccessResolver with no ACL ro
 it('returns no role decision when no mapped ability is granted (pass-through)', function (): void {
     $driver = app(GatePermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
     expect($driver->resolve(Subject::ofModel($actor), $actor, $scope))->toBeNull()
         ->and($driver->override($actor, $scope))->toBeNull();
@@ -86,13 +87,13 @@ it('returns no role decision when no mapped ability is granted (pass-through)', 
 
 it('gates workspace creation through the configured create ability', function (): void {
     // The create ability receives [workspaceType, workspaceId]; allow only project 5.
-    Gate::define('vaulter.create', fn (TestUser $user, string $type, int|string $id): bool => $id === 5);
+    Gate::define('vaulter.create', fn (TestUser $user, array $context): bool => $context['drive_owner']->id === 5);
 
     $driver = app(GatePermissionDriver::class);
     $actor = AccessTestHelpers::user();
 
-    expect($driver->canCreateInWorkspace($actor, 'project', 5))->toBeTrue()
-        ->and($driver->canCreateInWorkspace($actor, 'project', 6))->toBeFalse();
+    expect($driver->canCreateIn($actor, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 5), driveId: 1)))->toBeTrue()
+        ->and($driver->canCreateIn($actor, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 6), driveId: 1)))->toBeFalse();
 });
 
 it('the gate ability check is node-blind — it receives the workspace context only', function (): void {
@@ -106,15 +107,16 @@ it('the gate ability check is node-blind — it receives the workspace context o
 
     $driver = app(GatePermissionDriver::class);
     $actor = AccessTestHelpers::user();
-    $scope = new AccessScope(panel: 'team', workspaceType: 'project', workspaceId: 42);
+    $scope = new AccessScope(profile: 'team', driveOwner: new OwnerRef(type: 'project', id: 42), driveId: 1);
 
     $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
-    expect($seen)->toBe([
-        'panel' => 'team',
-        'workspace_type' => 'project',
-        'workspace_id' => 42,
-    ]);
+    expect($seen['profile'])->toBe('team')
+        ->and($seen['drive_owner']->type)->toBe('project')
+        ->and($seen['drive_owner']->id)->toBe(42)
+        ->and($seen['drive_id'])->toBe(1)
+        ->and($seen['node_owner'])->toBeNull()
+        ->and($seen['tenant_id'])->toBeNull();
 });
 
 it('exposes only the actor in its subject-set (the Gate has no role subjects)', function (): void {

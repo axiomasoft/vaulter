@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Ability;
@@ -16,6 +17,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SpatieUser;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The spatie/laravel-permission host-role driver (§6 / H.2 / D22): a role-granted
@@ -64,7 +66,7 @@ it('resolves a permission granted directly to the actor (team-scoped)', function
     $user->givePermissionTo('vaulter.edit');
 
     $driver = app(SpatiePermissionDriver::class);
-    $scope = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 1), driveId: 1);
 
     $decision = $driver->resolve(Subject::ofModel($user), $user, $scope);
 
@@ -74,7 +76,8 @@ it('resolves a permission granted directly to the actor (team-scoped)', function
 
 it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', function (): void {
     $user = spatieUser();
-    setTeam(7);
+    $storage = AccessTestHelpers::storage();
+    setTeamForStorage($storage);
 
     $role = Role::findOrCreate('editor', 'web');
     $user->assignRole($role);
@@ -89,7 +92,6 @@ it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', func
         ->and($roleSubjects[0]->id)->toBe($role->getKey());
 
     // Now wire a grant to that role (by its key) on a node and confirm the resolver allows it.
-    $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'role-granted');
 
     AccessTestHelpers::grant(
@@ -114,8 +116,8 @@ it('isolates two teams — a permission in team A does not leak into team B', fu
 
     $driver = app(SpatiePermissionDriver::class);
 
-    $scopeA = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
-    $scopeB = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 2);
+    $scopeA = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 1), driveId: 1);
+    $scopeB = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 2), driveId: 1);
 
     // The driver runs the team-switch internally per scope: team 1 sees the grant,
     // team 2 does not — no cross-team leak.
@@ -133,7 +135,7 @@ it('restores the previous team id after a scoped check (symmetric team-switch)',
     $driver->resolve(
         Subject::ofModel($user),
         $user,
-        new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 3),
+        new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 3), driveId: 1),
     );
 
     // The active team is exactly what it was before the scoped check — the driver
@@ -168,7 +170,7 @@ it('forgets the cached permissions on mutation (no stale grant after revoke)', f
     $user->givePermissionTo('vaulter.edit');
 
     $driver = app(SpatiePermissionDriver::class);
-    $scope = new AccessScope(panel: 'default', workspaceType: 'team', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 1), driveId: 1);
 
     expect($driver->resolve(Subject::ofModel($user), $user, $scope))->not->toBeNull();
 
@@ -191,8 +193,8 @@ it('gates workspace creation through the team-scoped create permission', functio
     $driver = app(SpatiePermissionDriver::class);
 
     // Created in team 5 → allowed; team 6 has no such grant → denied.
-    expect($driver->canCreateInWorkspace($user, 'team', 5))->toBeTrue()
-        ->and($driver->canCreateInWorkspace($user, 'team', 6))->toBeFalse();
+    expect($driver->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 5), driveId: 1)))->toBeTrue()
+        ->and($driver->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 6), driveId: 1)))->toBeFalse();
 });
 
 it('contributes the actor plus its roles to the subject-set', function (): void {
@@ -233,4 +235,22 @@ it('expires a time-boxed role grant at read time', function (): void {
     expect(app(AccessResolver::class)->can($user, Ability::Edit, $folder))->toBeFalse();
 
     Carbon::setTestNow();
+});
+
+it('enumerates profile subjects within the drive owner team and restores ambient relations', function (): void {
+    $user = spatieUser();
+    setTeam(1);
+    $role = Role::findOrCreate('scoped', 'web');
+    $user->assignRole($role);
+    $saved = $user->load('roles')->getRelations();
+    $driver = app(SpatiePermissionDriver::class);
+    $manager = app(PermissionDriverManager::class);
+    $a = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 1), driveId: 1);
+    $b = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'team', id: 2), driveId: 2);
+    $one = $manager->subjectsFor($driver, $user, $a);
+    $two = $manager->subjectsFor($driver, $user, $b);
+    expect(array_map(static fn (Subject $subject): string => $subject->type.':'.$subject->id, $one))->toContain('role:'.$role->id)
+        ->and(array_map(static fn (Subject $subject): string => $subject->type.':'.$subject->id, $two))->not->toContain('role:'.$role->id)
+        ->and(app(PermissionRegistrar::class)->getPermissionsTeamId())->toBe(1)
+        ->and($user->getRelations())->toBe($saved);
 });

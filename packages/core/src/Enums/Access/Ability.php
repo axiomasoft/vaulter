@@ -13,7 +13,8 @@ namespace Vaulter\Enums\Access;
  * Per H.2 there is no orphan stringly-typed delete action: permanent delete folds
  * into the DELETE bit (Organizer/Manage), so Trash and Delete both require DELETE.
  *
- *   View/Download/Comment → READ
+ *   View/Download         → READ
+ *   Comment               → COMMENT
  *   Edit                  → UPDATE
  *   Create/Copy           → CREATE
  *   Move                  → UPDATE+CREATE (re-parent = update here, create there)
@@ -44,13 +45,14 @@ enum Ability: string
     public function requiredBits(): int
     {
         return match ($this) {
-            self::View, self::Download, self::Comment => Permission::Read->value,
+            self::View, self::Download => Permission::Read->value,
+            self::Comment => Permission::Comment->value,
             self::Edit => Permission::Update->value,
             self::Create, self::Copy => Permission::Create->value,
             self::Move => Permission::Update->value | Permission::Create->value,
             self::Trash, self::Restore, self::Delete => Permission::Delete->value,
             self::Share => Permission::Share->value,
-            self::Manage => Permission::allBits(),
+            self::Manage => Permission::all(),
         };
     }
 

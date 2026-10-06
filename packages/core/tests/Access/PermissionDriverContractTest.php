@@ -12,6 +12,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 
@@ -54,6 +55,9 @@ function decisionsOver(AccessResolver $resolver): array
         effect: Effect::Deny,
         scope: GrantScope::Item,
     );
+
+    $contract = new PermissionDriverContractTests;
+    $contract->assertPermissionDriverContract($resolver, $actor, $parent, $child);
 
     return [
         'parent.edit' => $resolver->can($actor, Ability::Edit, $parent),

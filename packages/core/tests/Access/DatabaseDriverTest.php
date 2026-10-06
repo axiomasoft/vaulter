@@ -35,7 +35,7 @@ it('lets the database lane create in a workspace by default', function (): void 
 
     $storage = AccessTestHelpers::storage();
 
-    expect(app(AccessResolver::class)->canCreateInWorkspace(AccessTestHelpers::user(), $storage))->toBeTrue();
+    expect(app(AccessResolver::class)->canCreateIn(AccessTestHelpers::user(), $storage))->toBeTrue();
 });
 
 it('subjectsFor returns the actor itself in the pure-DB lane', function (): void {

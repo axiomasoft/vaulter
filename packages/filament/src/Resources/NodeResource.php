@@ -360,7 +360,7 @@ final class NodeResource extends Resource
     private static function folderOptions(Node $record): array
     {
         $actor = PanelActor::current();
-        if ($actor === null || !app(AccessResolver::class)->canCreateInWorkspace($actor, $record->storage)) {
+        if ($actor === null || !app(AccessResolver::class)->canCreateIn($actor, $record->storage)) {
             return [];
         }
 
@@ -385,7 +385,7 @@ final class NodeResource extends Resource
         $access = app(AccessResolver::class);
 
         if ($actor === null || $destination === null
-            || !$access->canCreateInWorkspace($actor, $record->storage)
+            || !$access->canCreateIn($actor, $record->storage)
             || !$access->can($actor, Ability::Create, $destination)
         ) {
             throw PermissionDeniedException::forAbility(Ability::Create->value);

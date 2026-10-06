@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Access;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Access\ValueObjects\AccessScope;
+use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
+use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * Resolves the active {@see PermissionDriver} from config (H.2), keyed by the driver
@@ -58,20 +63,36 @@ final class PermissionDriverManager
     {
         $key ??= $this->accessConfig->permissionDriver();
 
-        if (isset($this->resolved[$key])) {
-            return $this->resolved[$key];
-        }
-
         $class = $this->classFor($key);
 
         if (is_a($class, NonProductionPermissionDriver::class, allow_string: true) && $this->isProduction) {
             throw MissingPermissionDriverException::nullDriverInProduction($key);
         }
 
+        $cacheKey = $key.'|'.$class;
+        if (isset($this->resolved[$cacheKey])) {
+            return $this->resolved[$cacheKey];
+        }
+
         /** @var PermissionDriver $driver */
         $driver = $this->container->make($class);
 
-        return $this->resolved[$key] = $driver;
+        return $this->resolved[$cacheKey] = $driver;
+    }
+
+    public function forProfile(string $profile): PermissionDriver
+    {
+        return $this->driver($this->container->make(ProfileRegistry::class)->get($profile)->getPermissionDriver());
+    }
+
+    /** @internal
+     * @return list<Subject>
+     */
+    public function subjectsFor(PermissionDriver $driver, Authorizable $actor, AccessScope $scope): array
+    {
+        return $driver instanceof SpatiePermissionDriver
+            ? $driver->subjectsForIn($actor, $scope)
+            : $driver->subjectsFor($actor);
     }
 
     /**

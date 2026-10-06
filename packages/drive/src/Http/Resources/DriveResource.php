@@ -87,7 +87,7 @@ final class DriveResource extends JsonResource
         $flags = $resolver->abilitiesFor($actor, $root);
 
         $canCreate = ($flags[Ability::Create->value] ?? false)
-            && $resolver->canCreateInWorkspace($actor, $storage);
+            && $resolver->canCreateIn($actor, $storage);
 
         return [
             'view' => $flags[Ability::View->value] ?? false,

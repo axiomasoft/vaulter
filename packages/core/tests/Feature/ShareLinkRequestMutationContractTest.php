@@ -29,7 +29,7 @@ it('rejects every invalid share-link request boundary', function (array $payload
 })->with([
     'permissions must be an integer' => [['permissions' => 'read'], 'permissions'],
     'permissions cannot be negative' => [['permissions' => -1], 'permissions'],
-    'permissions cannot exceed the CRUDS mask' => [['permissions' => Permission::allBits() + 1], 'permissions'],
+    'permissions cannot exceed the CRUDS mask' => [['permissions' => Permission::all() + 1], 'permissions'],
     'level must be a GrantLevel' => [['level' => 'super-owner'], 'level'],
     'scope must be a GrantScope' => [['scope' => 'workspace'], 'scope'],
     'password must be a string' => [['password' => ['secret']], 'password'],
@@ -85,4 +85,9 @@ it('preserves an explicit zero permission mask', function (): void {
     ])->assertCreated();
 
     expect(NodeShare::query()->sole()->permissions)->toBe(0);
+});
+
+it('rejects anonymous commenter shares', function (): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['level' => 'commenter'])->assertUnprocessable();
+    expect(NodeShare::query()->count())->toBe(0);
 });

@@ -71,6 +71,11 @@ final readonly class ConfigValidator
             $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config));
             foreach ($registry->all() as $profile) {
                 $policy->validate($profile);
+                $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();
+                self::assertImplements('vaulter.access.permission_drivers.'.$profileKey, $drivers[$profileKey] ?? '', PermissionDriver::class);
+                if ($app->environment('production') && is_a($drivers[$profileKey], NonProductionPermissionDriver::class, true)) {
+                    throw new InvalidConfigurationException('[Vaulter] Non-production profile permission driver "'.$profileKey.'" is forbidden in production.');
+                }
             }
             (new ScanConfig($this->config))->scanner();
         } catch (InvalidProfileException $exception) {

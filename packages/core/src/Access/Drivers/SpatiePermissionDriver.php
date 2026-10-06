@@ -26,10 +26,10 @@ use Vaulter\Enums\Access\GrantLevel;
  *     teams are enabled), so a v_node_grants row granted to a role/team matches;
  *   - resolve(subject, actor, scope) = per requested level, the mapped spatie
  *     permission is checked via $actor->hasPermissionTo($name) — wrapped in
- *     setPermissionsTeamId($scope->workspaceId) so the check is team-scoped, then
+ *     setPermissionsTeamId($scope->driveOwner->id) so the check is team-scoped, then
  *     the previous team id and the actor's loaded relations are RESTORED;
  *   - override = a configurable super-permission (a super-role owns it);
- *   - canCreateInWorkspace = hasPermissionTo(create) in the workspace's team context.
+ *   - canCreateIn = hasPermissionTo(create) in the workspace's team context.
  *
  * spatie/laravel-permission is an OPTIONAL host dependency: it ships as require-dev
  * (for this package's own tests) only, and every runtime touch of the spatie API is
@@ -132,6 +132,26 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
         return $subjects;
     }
 
+    /** @internal
+     * @return list<Subject>
+     */
+    public function subjectsForIn(Authorizable $actor, AccessScope $scope): array
+    {
+        if (!$this->isAvailable() || !$actor instanceof Model) {
+            return $this->subjectsFor($actor);
+        }
+
+        return $this->withTeam($scope, function () use ($actor): array {
+            $roles = $actor->getRelations();
+            $actor->unsetRelation('roles')->unsetRelation('permissions');
+            try {
+                return $this->subjectsFor($actor);
+            } finally {
+                $actor->setRelations($roles);
+            }
+        });
+    }
+
     /**
      * The consumer-facing cache-reset seam (H.2 / D22): after a host mutates an
      * actor's roles/permissions OUTSIDE spatie's own assign/remove helpers (which
@@ -154,13 +174,11 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
         $registrar->forgetCachedPermissions();
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         if (!$this->isAvailable() || !$actor instanceof Model) {
             return false;
         }
-
-        $scope = new AccessScope(panel: 'default', workspaceType: $workspaceType, workspaceId: $workspaceId);
 
         return $this->withTeam(
             $scope,
@@ -191,7 +209,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
         $registrar = $this->registrar();
         $previous = $registrar->getPermissionsTeamId();
 
-        $registrar->setPermissionsTeamId($scope->workspaceId);
+        $registrar->setPermissionsTeamId($scope->driveOwner->id);
 
         try {
             return $callback();

@@ -275,7 +275,7 @@ final class DocumentNodeController extends Controller
         $target = $destination ?? $this->driveRoot($storage);
 
         if ($actor === null
-            || !$this->access->canCreateInWorkspace($actor, $storage)
+            || !$this->access->canCreateIn($actor, $storage)
             || !$this->access->can($actor, Ability::Create, $target)
         ) {
             throw PermissionDeniedException::forAbility(Ability::Create->value);

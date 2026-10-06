@@ -24,7 +24,7 @@ use Vaulter\Enums\Access\Effect;
  *     role/team membership can subclass and append those subjects);
  *   - override = null  — no super-admin bypass in the pure-DB lane;
  *   - resolve  = null  — no external role grants; the ACL is the sole authority;
- *   - canCreateInWorkspace = true unless a grant says otherwise (the AccessResolver
+ *   - canCreateIn = true unless a grant says otherwise (the AccessResolver
  *     still applies CREATE-bit grants on the destination).
  *
  * This is the out-of-the-box driver and what makes the Database lane work in a
@@ -74,7 +74,7 @@ class DatabasePermissionDriver implements GrantAuthoritativeDriver, PermissionDr
         return [Subject::ofModel($actor)];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         // The standalone lane has no workspace-level role gate; per-node CREATE
         // grants are enforced by the AccessResolver against the destination node.

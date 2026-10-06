@@ -96,7 +96,7 @@ it('preserves absolute overrides, empty subjects and role grants in batch', func
     'role and deny' => [null, GrantLevel::Owner, true],
 ]);
 
-it('evaluates override and role once per storage and node owner and subjects once per batch', function (): void {
+it('evaluates override and role once per storage and node owner and subjects once per scope in the batch', function (): void {
     $storageA = AccessTestHelpers::storage();
     $storageB = AccessTestHelpers::storage();
     $nodes = [
@@ -135,7 +135,7 @@ it('evaluates override and role once per storage and node owner and subjects onc
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
     $batch = $resolver->evaluateMany($actor, $nodes);
-    expect($overrides)->toBe(3)->and($roles)->toBe(2)->and($subjectCalls)->toBe(1);
+    expect($overrides)->toBe(3)->and($roles)->toBe(2)->and($subjectCalls)->toBe(2);
     foreach ($nodes as $node) {
         expect((array) $batch[(string) $node->id])->toBe((array) $resolver->effectiveGrants($actor, $node));
     }

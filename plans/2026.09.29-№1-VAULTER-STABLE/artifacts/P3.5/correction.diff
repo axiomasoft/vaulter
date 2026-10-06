@@ -1,0 +1,139 @@
+--- reviewed/packages/core/src/Repositories/Drive/NodeReadRepository.php
++++ corrected/packages/core/src/Repositories/Drive/NodeReadRepository.php
+@@ -485,38 +485,22 @@
+     }
+ 
+     /**
+-     * Whether the access-aware grant narrowing applies to a listing. It does ONLY
+-     * when the 'grants' feature is on AND the active permission driver is
+-     * {@see GrantAuthoritativeDriver} with {@see GrantAuthoritativeDriver::isGrantAuthoritative()}
+-     * true — i.e. treats v_node_grants as the SOLE authority for read-visibility (the
+-     * standalone {@see DatabasePermissionDriver}).
+-     *
+-     * The gate keys on the CAPABILITY, NOT on the driver KEY string: a host that
+-     * SUBCLASSES DatabasePermissionDriver under the same 'database' key to add a
+-     * role/team lane or a super-admin override() confers access on nodes with NO grant
+-     * anchor — so it overrides isGrantAuthoritative() to return false (the interface is
+-     * inherited and cannot be un-declared), and the listing stays OPEN. For the
+-     * gate/spatie/bridge/null drivers the host's roles govern and v_node_grants is not
+-     * the source of truth, so a grant-id constraint would WRONGLY hide nodes the host
+-     * role lane allows; they don't implement the capability either ⇒ listing stays OPEN
+-     * (the safe default that never wrongly hides).
+-     *
+-     * Public so a caller listing a page through a NON-queryForUser path (the children
+-     * cursor, the admin table) can decide whether to narrow the query to the
+-     * candidate set up front.
++     * Whether any profile needs a grant candidate predicate. Mixed installations
++     * must keep that predicate: an open host lane only opens its own drives.
++     * Candidate ids are an optimization; Node listings still exact-filter access.
+      */
+     public function grantFilteringApplies(): bool
+     {
+         foreach (app(ProfileRegistry::class)->all() as $profile) {
+             $driver = $this->drivers->forProfile($profile->getKey());
+-            if (!$this->vaulterConfig->featureEnabled('grants', $profile->getKey())
+-                || !$driver instanceof GrantAuthoritativeDriver
+-                || !$driver->isGrantAuthoritative()) {
+-                return false;
++            if ($this->vaulterConfig->featureEnabled('grants', $profile->getKey())
++                && $driver instanceof GrantAuthoritativeDriver
++                && $driver->isGrantAuthoritative()) {
++                return true;
+             }
+         }
+ 
+-        return true;
++        return false;
+     }
+ 
+     /**
+@@ -537,11 +521,21 @@
+     {
+         $driveModel = $this->vaulterConfig->model('drive');
+         $anchors = [];
++        $openIds = [];
+         foreach ($driveModel::query()->cursor() as $drive) {
+-            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
++            $driver = $this->drivers->forProfile($drive->profile);
++            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)
++                || !$driver instanceof GrantAuthoritativeDriver
++                || !$driver->isGrantAuthoritative()) {
++                foreach ($this->query()->where('drive_id', $drive->id)->pluck('id') as $id) {
++                    if (!is_int($id) && !is_string($id)) {
++                        throw new \LogicException('Invalid candidate node identity.');
++                    }
++                    $openIds[] = $id;
++                }
++
+                 continue;
+             }
+-            $driver = $this->drivers->forProfile($drive->profile);
+             $subjects = $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive));
+             $rows = $this->grants->allowAnchorsFor(subjects: $subjects, now: Carbon::now());
+             $nodeIds = [];
+@@ -557,11 +551,14 @@
+         }
+ 
+         if ($anchors === []) {
+-            return [];
++            return $openIds;
+         }
+ 
+         /** @var array<string, int|string> $ids */
+         $ids = [];
++        foreach ($openIds as $id) {
++            $ids[Identity::stringify($id)] = $id;
++        }
+         /** @var array<string, int|string> $subtreeAnchorIds */
+         $subtreeAnchorIds = [];
+ 
+--- reviewed/packages/filament/tests/Feature/ResourceListingScopeTest.php
++++ corrected/packages/filament/tests/Feature/ResourceListingScopeTest.php
+@@ -8,6 +8,10 @@
+ use Vaulter\Filament\Resources\NodeGrantResource;
+ use Vaulter\Filament\Resources\NodeShareResource;
+ use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
++use Vaulter\Models\Drive\Node;
++use Vaulter\Profiles\Profile;
++use Vaulter\Profiles\ProfileRegistry;
++use Vaulter\Repositories\Drive\NodeReadRepository;
+ 
+ /*
+  * F-P1.10-01 (Major) — the four previously-unscoped Filament resources
+@@ -114,3 +118,36 @@
+ 
+     expect(ActivityResource::getEloquentQuery()->count())->toBe(0);
+ });
++
++it('isolates database resources from a sibling profile with an open candidate lane', function (string $mode): void {
++    config()->set('vaulter.access.permission_driver', 'database');
++    $owner = DriveBuilder::user(1);
++    $stranger = DriveBuilder::user(2);
++    $visible = DriveBuilder::storage();
++    $hidden = DriveBuilder::storage();
++    $open = DriveBuilder::storage();
++    $hiddenNode = DriveBuilder::folder($hidden, 'hidden-mixed');
++    $openNode = DriveBuilder::folder($open, 'open-mixed');
++    DriveBuilder::grant($visible->rootNode()->first(), $owner);
++    $hiddenGrant = DriveBuilder::grant($hiddenNode, $stranger);
++    $this->actingAs($stranger);
++    NodeShareResource::createFromData(['node_id' => $hiddenNode->id, 'level' => 'reader', 'permissions' => 1]);
++    $this->actingAs($owner);
++    $open->profile = 'open';
++    $open->save();
++    $registry = new ProfileRegistry;
++    $registry->register((new Profile)->key('default'));
++    $profile = (new Profile)->key('open');
++    $mode === 'gate' ? $profile->permissionDriver('gate') : $profile->grants(false);
++    $registry->register($profile);
++    $registry->freeze();
++    app()->instance(ProfileRegistry::class, $registry);
++    $nodes = app(NodeReadRepository::class);
++    expect(DriveResource::getEloquentQuery()->pluck('id')->all())->toContain($visible->id, $open->id)->not->toContain($hidden->id)
++        ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($hiddenGrant->id)
++        ->and(NodeShareResource::getEloquentQuery()->pluck('node_id')->all())->not->toContain($hiddenNode->id)
++        ->and(ActivityResource::getEloquentQuery()->pluck('target_id')->all())->not->toContain($hiddenNode->id);
++    expect($nodes->candidateNodeIds($owner))->toContain($visible->root_node_id, $openNode->id)->not->toContain($hiddenNode->id);
++    $query = $nodes->constrainToAccessible(Node::query(), $owner);
++    expect($query->pluck('id')->all())->toContain($openNode->id)->not->toContain($hiddenNode->id);
++})->with(['gate', 'disabled']);

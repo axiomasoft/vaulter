@@ -8,6 +8,10 @@ use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /*
  * F-P1.10-01 (Major) — the four previously-unscoped Filament resources
@@ -114,3 +118,36 @@ it('ActivityResource lists activity targeting a reachable node and hides a forei
 
     expect(ActivityResource::getEloquentQuery()->count())->toBe(0);
 });
+
+it('isolates database resources from a sibling profile with an open candidate lane', function (string $mode): void {
+    config()->set('vaulter.access.permission_driver', 'database');
+    $owner = DriveBuilder::user(1);
+    $stranger = DriveBuilder::user(2);
+    $visible = DriveBuilder::storage();
+    $hidden = DriveBuilder::storage();
+    $open = DriveBuilder::storage();
+    $hiddenNode = DriveBuilder::folder($hidden, 'hidden-mixed');
+    $openNode = DriveBuilder::folder($open, 'open-mixed');
+    DriveBuilder::grant($visible->rootNode()->first(), $owner);
+    $hiddenGrant = DriveBuilder::grant($hiddenNode, $stranger);
+    $this->actingAs($stranger);
+    NodeShareResource::createFromData(['node_id' => $hiddenNode->id, 'level' => 'reader', 'permissions' => 1]);
+    $this->actingAs($owner);
+    $open->profile = 'open';
+    $open->save();
+    $registry = new ProfileRegistry;
+    $registry->register((new Profile)->key('default'));
+    $profile = (new Profile)->key('open');
+    $mode === 'gate' ? $profile->permissionDriver('gate') : $profile->grants(false);
+    $registry->register($profile);
+    $registry->freeze();
+    app()->instance(ProfileRegistry::class, $registry);
+    $nodes = app(NodeReadRepository::class);
+    expect(DriveResource::getEloquentQuery()->pluck('id')->all())->toContain($visible->id, $open->id)->not->toContain($hidden->id)
+        ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($hiddenGrant->id)
+        ->and(NodeShareResource::getEloquentQuery()->pluck('node_id')->all())->not->toContain($hiddenNode->id)
+        ->and(ActivityResource::getEloquentQuery()->pluck('target_id')->all())->not->toContain($hiddenNode->id);
+    expect($nodes->candidateNodeIds($owner))->toContain($visible->root_node_id, $openNode->id)->not->toContain($hiddenNode->id);
+    $query = $nodes->constrainToAccessible(Node::query(), $owner);
+    expect($query->pluck('id')->all())->toContain($openNode->id)->not->toContain($hiddenNode->id);
+})->with(['gate', 'disabled']);

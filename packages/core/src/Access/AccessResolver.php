@@ -82,8 +82,8 @@ final class AccessResolver
      */
     public function effectiveGrants(Authorizable $actor, Node $node): GrantSet
     {
-        $driver = $this->drivers->driver();
         $storage = $this->storageOf($node);
+        $driver = $this->drivers->forProfile($storage->profile);
         $scope = $this->scopeFor($storage, $node);
 
         // ── H.2 step 1: host override (super-admin) — absolute, both directions.
@@ -97,7 +97,7 @@ final class AccessResolver
             return GrantSet::superDenied();
         }
 
-        $subjects = $driver->subjectsFor($actor);
+        $subjects = $this->drivers->subjectsFor($driver, $actor, $scope);
 
         // ── H.2 steps 2 + 3: the ACL allow-mask + deny-mask from the bounded walk.
         [$aclAllowBits, $deniedBits, $aclLevel] = $this->resolveAcl(node: $node, subjects: $subjects);
@@ -105,7 +105,7 @@ final class AccessResolver
         // ── H.2 step 4: granted = max(aclAllow, roleAllow). The role lane can RAISE
         // the allow-mask but it is folded BEFORE the deny veto, so it cannot
         // resurrect a denied bit.
-        [$roleAllowBits, $roleLevel] = $this->resolveRole(
+        [$roleAllowBits, $roleLevel, $roleDeniedBits] = $this->resolveRole(
             driver: $driver,
             actor: $actor,
             scope: $scope,
@@ -113,6 +113,7 @@ final class AccessResolver
         );
 
         $allowedBits = $aclAllowBits | $roleAllowBits;
+        $deniedBits |= $roleDeniedBits;
         $level = $this->maxLevel($aclLevel, $roleLevel);
 
         // ── H.2 step 5: the FINAL veto is baked into GrantSet::allows() — an ability
@@ -135,7 +136,28 @@ final class AccessResolver
             return [];
         }
         $nodes->loadMissing('storage');
-        $driver = $this->drivers->driver();
+        $groups = [];
+        $drivers = [];
+        foreach ($nodes as $node) {
+            $drive = $this->storageOf($node);
+            $driver = $this->drivers->forProfile($drive->profile);
+            $key = json_encode([$drive->id, $drive->profile, $driver::class, $node->owner_id], JSON_THROW_ON_ERROR);
+            $groups[$key][] = $node;
+            $drivers[$key] = $driver;
+        }
+        $sets = [];
+        foreach ($groups as $key => $group) {
+            $sets += $this->evaluateGroup($actor, $group, $drivers[$key]);
+        }
+
+        return $sets;
+    }
+
+    /** @param list<Node> $nodes
+     * @return array<string, GrantSet>
+     */
+    private function evaluateGroup(Authorizable $actor, array $nodes, PermissionDriver $driver): array
+    {
         $groups = [];
         foreach ($nodes as $node) {
             $key = json_encode([Identity::stringify($node->drive_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
@@ -162,7 +184,7 @@ final class AccessResolver
         if ($pending === []) {
             return $sets;
         }
-        $subjects = $driver->subjectsFor($actor);
+        $subjects = $this->drivers->subjectsFor($driver, $actor, $this->scopeFor($this->storageOf($nodes[0]), $nodes[0]));
         $roles = [];
         foreach ($scopes as $key => $scope) {
             $roles[$key] = $this->resolveRole($driver, $actor, $scope, $subjects);
@@ -208,8 +230,8 @@ final class AccessResolver
             $mask = $this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)
                 ? $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level'])
                 : AclMask::none();
-            [$roleAllow, $roleLevel] = $roles[$key];
-            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied, level: $this->maxLevel($mask->level, $roleLevel));
+            [$roleAllow, $roleLevel, $roleDenied] = $roles[$key];
+            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied | $roleDenied, level: $this->maxLevel($mask->level, $roleLevel));
         }
 
         return $sets;
@@ -269,8 +291,8 @@ final class AccessResolver
      */
     public function explain(Authorizable $actor, Ability $ability, Node $node): AccessExplanation
     {
-        $driver = $this->drivers->driver();
         $storage = $this->storageOf($node);
+        $driver = $this->drivers->forProfile($storage->profile);
         $scope = $this->scopeFor($storage, $node);
 
         $override = $driver->override($actor, $scope);
@@ -299,14 +321,14 @@ final class AccessResolver
             );
         }
 
-        $subjects = $driver->subjectsFor($actor);
+        $subjects = $this->drivers->subjectsFor($driver, $actor, $scope);
 
         [$aclAllowBits, $deniedBits, $aclLevel, $aces] = $this->resolveAclWithProvenance(
             node: $node,
             subjects: $subjects,
         );
 
-        [$roleAllowBits, $roleLevel] = $this->resolveRole(
+        [$roleAllowBits, $roleLevel, $roleDeniedBits] = $this->resolveRole(
             driver: $driver,
             actor: $actor,
             scope: $scope,
@@ -314,6 +336,7 @@ final class AccessResolver
         );
 
         $allowedBits = $aclAllowBits | $roleAllowBits;
+        $deniedBits |= $roleDeniedBits;
         $level = $this->maxLevel($aclLevel, $roleLevel);
 
         // Fold through the SAME GrantSet the hot path uses so the explained verdict
@@ -337,12 +360,11 @@ final class AccessResolver
      * host-role driver's workspace gate (the folder/upload create path has no
      * existing node to resolve against). canCreate for folders/uploads (§6).
      */
-    public function canCreateInWorkspace(Authorizable $actor, Drive $storage): bool
+    public function canCreateIn(Authorizable $actor, Drive $drive): bool
     {
-        return $this->drivers->driver()->canCreateInWorkspace(
+        return $this->drivers->forProfile($drive->profile)->canCreateIn(
             actor: $actor,
-            workspaceType: $storage->owner_type,
-            workspaceId: $storage->owner_id,
+            scope: AccessScope::forDrive($drive),
         );
     }
 
@@ -379,9 +401,27 @@ final class AccessResolver
      */
     public function sharedNodeIds(Authorizable $actor): array
     {
-        $subjects = $this->drivers->driver()->subjectsFor($actor);
+        $ids = [];
+        $driveModel = $this->vaulterConfig->model('drive');
+        $nodeModel = $this->vaulterConfig->model('node');
+        foreach ($driveModel::query()->cursor() as $drive) {
+            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+                continue;
+            }
+            $driver = $this->drivers->forProfile($drive->profile);
+            $subjects = $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive));
+            $candidates = $this->grants->nodeIdsSharedWith(subjects: $subjects, now: Carbon::now());
+            foreach (array_chunk($candidates, 500) as $chunk) {
+                foreach ($nodeModel::query()->where('drive_id', $drive->id)->whereKey($chunk)->pluck('id') as $id) {
+                    if (!is_int($id) && !is_string($id)) {
+                        throw new \LogicException('Invalid shared node identity.');
+                    }
+                    $ids[] = $id;
+                }
+            }
+        }
 
-        return $this->grants->nodeIdsSharedWith(subjects: $subjects, now: Carbon::now());
+        return $ids;
     }
 
     /**
@@ -606,8 +646,8 @@ final class AccessResolver
      * deny path is, but per H.2 the role lane primarily contributes allows (the
      * final veto, computed from ACL deny, is what a role can never override).
      *
-     * @param  list<Subject>                     $subjects
-     * @return array{0: int, 1: GrantLevel|null}
+     * @param  list<Subject>                             $subjects
+     * @return array{0: int, 1: GrantLevel|null, 2: int}
      */
     private function resolveRole(
         PermissionDriver $driver,
@@ -617,11 +657,17 @@ final class AccessResolver
     ): array {
         $bits = 0;
         $level = null;
+        $denied = 0;
 
         foreach ($subjects as $subject) {
             $decision = $driver->resolve($subject, $actor, $scope);
 
-            if (!$decision instanceof Decision || !$decision->isAllow()) {
+            if (!$decision instanceof Decision) {
+                continue;
+            }
+            if ($decision->isDeny()) {
+                $denied |= $decision->bits;
+
                 continue;
             }
 
@@ -629,7 +675,7 @@ final class AccessResolver
             $level = $this->maxLevel($level, $decision->level);
         }
 
-        return [$bits, $level];
+        return [$bits, $level, $denied];
     }
 
     /**
@@ -703,12 +749,7 @@ final class AccessResolver
             ? null
             : new Subject(type: $storage->owner_type, id: $node->owner_id);
 
-        return new AccessScope(
-            panel: $storage->profile,
-            workspaceType: $storage->owner_type,
-            workspaceId: $storage->owner_id,
-            nodeOwner: $owner,
-        );
+        return AccessScope::forDrive($storage, $owner);
     }
 
     private function storageOf(Node $node): Drive

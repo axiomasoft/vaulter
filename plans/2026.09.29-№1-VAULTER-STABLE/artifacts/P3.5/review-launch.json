@@ -1,0 +1,17 @@
+{
+  "session_id": "88248487-e844-42ce-91ac-fa55a5ceffb6",
+  "provider": "grok",
+  "model": "grok-4.7",
+  "reasoning_effort": "high",
+  "permission_mode": "plan",
+  "context_option": null,
+  "no_subagents": true,
+  "candidate": "candidate-files.json",
+  "resume": {
+    "permission_mode": "default",
+    "tools": "read_file,grep,list_dir",
+    "context_option": null,
+    "same_session": true,
+    "reason": "Previous transport cancelled before verdict; resume read-only without shell calls."
+  }
+}

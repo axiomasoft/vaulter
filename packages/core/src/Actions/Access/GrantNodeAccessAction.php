@@ -38,7 +38,7 @@ final readonly class GrantNodeAccessAction
     {
         // Fail-loud (F-P1.2-01) BEFORE persisting: a grant to a role/team subject under
         // a driver that cannot enumerate role subjects would be silently inert.
-        $this->guardEnumerableSubject($data);
+        $this->guardEnumerableSubject($node, $data);
 
         // The event fires INSIDE the transaction (F-P1.7-03): the outbox/activity rows
         // stage in the SAME commit as the grant — no crash window between commit and
@@ -66,13 +66,13 @@ final readonly class GrantNodeAccessAction
      * notices immediately. The direction is safe (an inert grant grants nothing), so
      * production degrades to a log line rather than a broken write path.
      */
-    private function guardEnumerableSubject(GrantNodeAccessInput $data): void
+    private function guardEnumerableSubject(Node $node, GrantNodeAccessInput $data): void
     {
         if (!$this->isRoleLikeSubject($data->subject)) {
             return;
         }
 
-        $driver = $this->drivers->driver();
+        $driver = $this->drivers->forProfile($node->storage()->firstOrFail()->profile);
 
         if ($this->drivers->enumeratesRoleSubjects($driver)) {
             return;

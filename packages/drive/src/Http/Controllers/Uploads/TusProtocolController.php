@@ -537,7 +537,7 @@ final class TusProtocolController extends Controller
         $actor = $this->authorizable($request);
 
         if ($actor === null
-            || !$this->access->canCreateInWorkspace($actor, $storage)
+            || !$this->access->canCreateIn($actor, $storage)
             || !$this->access->can($actor, Ability::Create, $destination)
         ) {
             throw PermissionDeniedException::forAbility(Ability::Create->value);

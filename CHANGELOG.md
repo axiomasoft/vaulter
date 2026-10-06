@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Profile permission drivers and Comment (PLAN2.P3.5, OPUS D11 / AD01)
+
+`Permission::Comment = 32` is independent of Read. `Permission::all()` replaces
+`allBits()` and the removed `All` case, returning 63. Reader/Commenter/Writer/
+Organizer/Owner masks are 1/33/39/47/63; Reader cannot comment. Existing raw masks
+are preserved; levels are expanded when read, so stored Owner levels include Comment.
+
+`PermissionDriver::canCreateIn(Authorizable, AccessScope)` and
+`AccessResolver::canCreateIn(Authorizable, Drive)` replace `canCreateInWorkspace`.
+AccessScope now contains profile, driveOwner (OwnerRef), driveId, nodeOwner and
+optional tenantId. OwnerRef uses the host morph alias and key. Gate abilities,
+including create, receive one context array with `profile`, `drive_owner`,
+`drive_id`, `node_owner`, `tenant_id`. Update host Gate callbacks and drivers.
+Every permission path selects the drive profile's driver with the global key as
+fallback. Driver instances are cached by key and configured class; access results
+are recomputed on each call. Anonymous Commenter share requests are rejected;
+public share mint enforcement remains PLAN2.P3.4. Hosts can reuse
+`Testing\Contracts\PermissionDriverContractTests` on their own ACL fixtures.
+
 ### Added
 
 - Full profile builder, immutable upload policies and container-resolved frozen

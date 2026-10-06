@@ -18,9 +18,9 @@ use Vaulter\Support\Concerns\HasLabel;
  * ability) — there is no orphan stringly-typed delete level.
  *
  *   reader    → READ
- *   commenter → READ                 (comment is a view-side capability)
- *   writer    → READ|UPDATE|CREATE
- *   organizer → READ|UPDATE|CREATE|DELETE
+ *   commenter → READ|COMMENT
+ *   writer    → READ|COMMENT|UPDATE|CREATE
+ *   organizer → READ|COMMENT|UPDATE|CREATE|DELETE
  *   owner     → ALL (adds SHARE / management)
  */
 enum GrantLevel: string
@@ -65,13 +65,14 @@ enum GrantLevel: string
     {
         return match ($this) {
             self::Reader => Permission::Read->value,
-            self::Commenter => Permission::Read->value,
-            self::Writer => Permission::Read->value | Permission::Update->value | Permission::Create->value,
+            self::Commenter => Permission::Read->value | Permission::Comment->value,
+            self::Writer => Permission::Read->value | Permission::Comment->value | Permission::Update->value | Permission::Create->value,
             self::Organizer => Permission::Read->value
+                | Permission::Comment->value
                 | Permission::Update->value
                 | Permission::Create->value
                 | Permission::Delete->value,
-            self::Owner => Permission::allBits(),
+            self::Owner => Permission::all(),
         };
     }
 

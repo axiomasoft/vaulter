@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Vaulter\Azgard\AzgardPermissionDriver;
 
 /**
  * VLT-REL P2.2 — executable freeze of vaulter-azgard's public composer surface for the `0.1.0`
@@ -248,6 +249,8 @@ test('vaulter-azgard public API surface matches the frozen golden (VLT-REL P2.2)
             $blocks[] = vaulterSnapshotInterface($configuration);
         }
     }
+
+    $blocks[] = vaulterSnapshotInterface(AzgardPermissionDriver::class);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

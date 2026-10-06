@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -19,6 +20,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
@@ -483,33 +485,22 @@ final class NodeReadRepository
     }
 
     /**
-     * Whether the access-aware grant narrowing applies to a listing. It does ONLY
-     * when the 'grants' feature is on AND the active permission driver is
-     * {@see GrantAuthoritativeDriver} with {@see GrantAuthoritativeDriver::isGrantAuthoritative()}
-     * true — i.e. treats v_node_grants as the SOLE authority for read-visibility (the
-     * standalone {@see DatabasePermissionDriver}).
-     *
-     * The gate keys on the CAPABILITY, NOT on the driver KEY string: a host that
-     * SUBCLASSES DatabasePermissionDriver under the same 'database' key to add a
-     * role/team lane or a super-admin override() confers access on nodes with NO grant
-     * anchor — so it overrides isGrantAuthoritative() to return false (the interface is
-     * inherited and cannot be un-declared), and the listing stays OPEN. For the
-     * gate/spatie/bridge/null drivers the host's roles govern and v_node_grants is not
-     * the source of truth, so a grant-id constraint would WRONGLY hide nodes the host
-     * role lane allows; they don't implement the capability either ⇒ listing stays OPEN
-     * (the safe default that never wrongly hides).
-     *
-     * Public so a caller listing a page through a NON-queryForUser path (the children
-     * cursor, the admin table) can decide whether to narrow the query to the
-     * candidate set up front.
+     * Whether any profile needs a grant candidate predicate. Mixed installations
+     * must keep that predicate: an open host lane only opens its own drives.
+     * Candidate ids are an optimization; Node listings still exact-filter access.
      */
     public function grantFilteringApplies(): bool
     {
-        $driver = $this->drivers->driver();
+        foreach (app(ProfileRegistry::class)->all() as $profile) {
+            $driver = $this->drivers->forProfile($profile->getKey());
+            if ($this->vaulterConfig->featureEnabled('grants', $profile->getKey())
+                && $driver instanceof GrantAuthoritativeDriver
+                && $driver->isGrantAuthoritative()) {
+                return true;
+            }
+        }
 
-        return $this->vaulterConfig->featureEnabled('grants')
-            && $driver instanceof GrantAuthoritativeDriver
-            && $driver->isGrantAuthoritative();
+        return false;
     }
 
     /**
@@ -528,15 +519,46 @@ final class NodeReadRepository
      */
     public function candidateNodeIds(Authorizable $actor): array
     {
-        $subjects = $this->drivers->driver()->subjectsFor($actor);
-        $anchors = $this->grants->allowAnchorsFor(subjects: $subjects, now: Carbon::now());
+        $driveModel = $this->vaulterConfig->model('drive');
+        $anchors = [];
+        $openIds = [];
+        foreach ($driveModel::query()->cursor() as $drive) {
+            $driver = $this->drivers->forProfile($drive->profile);
+            if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)
+                || !$driver instanceof GrantAuthoritativeDriver
+                || !$driver->isGrantAuthoritative()) {
+                foreach ($this->query()->where('drive_id', $drive->id)->pluck('id') as $id) {
+                    if (!is_int($id) && !is_string($id)) {
+                        throw new \LogicException('Invalid candidate node identity.');
+                    }
+                    $openIds[] = $id;
+                }
 
-        if ($anchors->isEmpty()) {
-            return [];
+                continue;
+            }
+            $subjects = $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive));
+            $rows = $this->grants->allowAnchorsFor(subjects: $subjects, now: Carbon::now());
+            $nodeIds = [];
+            foreach (array_chunk($rows->pluck('node_id')->all(), 500) as $chunk) {
+                array_push($nodeIds, ...$this->query()->where('drive_id', $drive->id)->whereKey($chunk)->pluck('id')->all());
+            }
+            $keys = array_fill_keys(array_map(Identity::stringify(...), $nodeIds), true);
+            foreach ($rows as $row) {
+                if (isset($keys[Identity::stringify($row->node_id)])) {
+                    $anchors[] = $row;
+                }
+            }
+        }
+
+        if ($anchors === []) {
+            return $openIds;
         }
 
         /** @var array<string, int|string> $ids */
         $ids = [];
+        foreach ($openIds as $id) {
+            $ids[Identity::stringify($id)] = $id;
+        }
         /** @var array<string, int|string> $subtreeAnchorIds */
         $subtreeAnchorIds = [];
 

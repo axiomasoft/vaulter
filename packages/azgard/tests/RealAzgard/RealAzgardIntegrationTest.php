@@ -15,6 +15,7 @@ use Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles\DocsViewerRole;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * END-TO-END against the REAL AzGuard stack (no doubles): a real Eloquent AzGuard user
@@ -52,7 +53,7 @@ it('resolves a real AzGuard super-admin to a Vaulter absolute-allow override', f
     registerGrants(fn (FakeGrantSource $f) => $f->wildcard());
     bindRealAdapter($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 7), driveId: 1);
 
     // Real chain: Vaulter override → adapter.isSuperAdmin → AzGuard permissionSet->isWildcard.
     expect($user->isSuperAdmin())->toBeTrue()
@@ -63,7 +64,7 @@ it('defers when the real user is not a super-admin', function (): void {
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 7);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 7), driveId: 1);
 
     expect($user->isSuperAdmin())->toBeFalse()
         ->and(driver()->override($user, $scope))->toBeNull();
@@ -76,7 +77,7 @@ it('folds a real workspace-context permission into the matching Vaulter grant le
     registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.update'));
     bindRealAdapter($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
     $decision = driver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
@@ -89,17 +90,17 @@ it('gates real workspace creation through the create permission', function (): v
     registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.create'));
     bindRealAdapter($user);
 
-    expect(driver()->canCreateInWorkspace($user, 'project', 5))->toBeTrue();
+    expect(driver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 5), driveId: 1)))->toBeTrue();
 });
 
 it('yields no decision when the real user holds nothing in the workspace', function (): void {
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);
+    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
     expect(driver()->resolve(Subject::ofModel($user), $user, $scope))->toBeNull()
-        ->and(driver()->canCreateInWorkspace($user, 'project', 1))->toBeFalse();
+        ->and(driver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1)))->toBeFalse();
 });
 
 it('resolves a real DB-backed scoped role through the adapter (entity lane)', function (): void {

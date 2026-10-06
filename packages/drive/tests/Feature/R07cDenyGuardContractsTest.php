@@ -42,7 +42,7 @@ final class R07cDenyRoleDriver implements PermissionDriver
         return [];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         return false;
     }

@@ -11,10 +11,10 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
 
 /**
- * The host's pluggable, per-panel role lane (master plan H.2 / D6). It bridges the
+ * The host's pluggable, per-profile role lane (master plan H.2 / D6). It bridges the
  * host application's identity + role system into Vaulter WITHOUT leaking Vaulter's
  * own domain: it never receives a Node and never deals in magic-string actions —
- * only an Authorizable actor and an {@see AccessScope} (panel + workspace coordinates
+ * only an Authorizable actor and an {@see AccessScope} (profile + drive owner/id + tenant coordinates
  * + node owner). The Vaulter-owned, NON-swappable {@see AccessResolver}
  * combines this driver's answers with the v_node_grants ACL.
  *
@@ -54,9 +54,9 @@ interface PermissionDriver
     public function subjectsFor(Authorizable $actor): array;
 
     /**
-     * May the actor create nodes in the given host workspace? Used by the folder/
+     * May the actor create nodes in the given drive scope? Used by the folder/
      * upload create path, where there is no existing node to resolve against
-     * (`canCreate`). The workspace is identified by its host morph type + id.
+     * (`canCreate`). The scope carries drive/owner/profile/tenant identities, never a Node.
      */
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool;
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool;
 }

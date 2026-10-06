@@ -54,7 +54,7 @@ it('requires both the workspace gate and parent Create permission', function ():
     $driver->shouldReceive('subjectsFor')->andReturn([Subject::ofModel(AccessTestHelpers::user())]);
     $driver->shouldReceive('override')->andReturn(null);
     $driver->shouldReceive('resolve')->andReturn(null);
-    $driver->shouldReceive('canCreateInWorkspace')->andReturn(false);
+    $driver->shouldReceive('canCreateIn')->andReturn(false);
     app()->instance(PermissionDriver::class, $driver);
     config()->set('vaulter.access.permission_drivers.no_create', PermissionDriver::class);
     config()->set('vaulter.access.permission_driver', 'no_create');

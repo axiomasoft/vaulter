@@ -11,9 +11,9 @@ use Vaulter\Enums\Access\Permission;
  * whole engine reasons over. These pin the exact bits so a future edit cannot
  * silently widen or narrow a level.
  */
-it('computes ALL as the OR of every CRUDS bit', function (): void {
-    expect(Permission::allBits())->toBe(31)
-        ->and(Permission::All->value)->toBe(31);
+it('computes all six independent permission bits', function (): void {
+    expect(Permission::all())->toBe(63)
+        ->and(array_column(Permission::cases(), 'value'))->toBe([1, 2, 4, 8, 16, 32]);
 });
 
 it('ranks and bit-maps each grant level', function (
@@ -25,10 +25,10 @@ it('ranks and bit-maps each grant level', function (
         ->and($level->bits())->toBe($bits);
 })->with([
     'reader' => [GrantLevel::Reader, 1, 1],            // READ
-    'commenter' => [GrantLevel::Commenter, 2, 1],         // READ
-    'writer' => [GrantLevel::Writer, 3, 7],            // READ|UPDATE|CREATE
-    'organizer' => [GrantLevel::Organizer, 4, 15],        // +DELETE
-    'owner' => [GrantLevel::Owner, 5, 31],            // ALL
+    'commenter' => [GrantLevel::Commenter, 2, 33],         // READ
+    'writer' => [GrantLevel::Writer, 3, 39],            // READ|UPDATE|CREATE
+    'organizer' => [GrantLevel::Organizer, 4, 47],        // +DELETE
+    'owner' => [GrantLevel::Owner, 5, 63],            // ALL
 ]);
 
 it('implies lower-ranked levels but not higher ones', function (): void {
@@ -45,7 +45,7 @@ it('maps each ability to its required bits', function (
 })->with([
     'view' => [Ability::View, 1],
     'download' => [Ability::Download, 1],
-    'comment' => [Ability::Comment, 1],
+    'comment' => [Ability::Comment, 32],
     'edit' => [Ability::Edit, 2],
     'create' => [Ability::Create, 4],
     'move' => [Ability::Move, 6],     // UPDATE|CREATE
@@ -54,13 +54,14 @@ it('maps each ability to its required bits', function (
     'restore' => [Ability::Restore, 8],
     'delete' => [Ability::Delete, 8],   // collapses into DELETE (no orphan action)
     'share' => [Ability::Share, 16],
-    'manage' => [Ability::Manage, 31],
+    'manage' => [Ability::Manage, 63],
 ]);
 
 it('satisfies an ability only when ALL its required bits are present', function (): void {
     // Move needs UPDATE|CREATE (6); READ|UPDATE (3) is not enough, READ|UPDATE|CREATE (7) is.
     expect(Ability::Move->satisfiedBy(0b011))->toBeFalse()
         ->and(Ability::Move->satisfiedBy(0b111))->toBeTrue()
-        ->and(Ability::Manage->satisfiedBy(31))->toBeTrue()
+        ->and(Ability::Manage->satisfiedBy(63))->toBeTrue()
+        ->and(Ability::Manage->satisfiedBy(31))->toBeFalse()
         ->and(Ability::Manage->satisfiedBy(15))->toBeFalse();
 });

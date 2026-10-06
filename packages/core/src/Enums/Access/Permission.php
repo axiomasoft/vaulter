@@ -10,7 +10,7 @@ namespace Vaulter\Enums\Access;
  * An {@see Ability} maps to the bit(s) it requires, and {@see GrantLevel} maps to
  * the bitmask a level confers — so the whole engine reasons over one int.
  *
- *   READ=1  UPDATE=2  CREATE=4  DELETE=8  SHARE=16  ALL=31
+ *   READ=1  UPDATE=2  CREATE=4  DELETE=8  SHARE=16  COMMENT=32
  */
 enum Permission: int
 {
@@ -19,24 +19,24 @@ enum Permission: int
     case Create = 4;
     case Delete = 8;
     case Share = 16;
-    case All = 31;
+    case Comment = 32;
 
     /**
-     * The OR of every concrete CRUDS bit — the value of ALL (31). Computed from the
-     * cases so a future bit cannot drift out of sync with this constant.
+     * The OR of all six permission bits (63).
      */
-    public static function allBits(): int
+    public static function all(): int
     {
         return self::Read->value
             | self::Update->value
             | self::Create->value
             | self::Delete->value
-            | self::Share->value;
+            | self::Share->value
+            | self::Comment->value;
     }
 
     /**
      * Does the given bitmask contain every bit of $this permission? A request for a
-     * compound permission (e.g. ALL) is only satisfied when all its bits are set.
+     * permission is only satisfied when all its bits are set.
      */
     public function isSetIn(int $bits): bool
     {

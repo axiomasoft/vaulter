@@ -46,7 +46,7 @@ final class NullPermissionDriver implements NonEnumeratingPermissionDriver, NonP
         return [];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         return true;
     }

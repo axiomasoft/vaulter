@@ -5,7 +5,7 @@ Vaulter\Contracts\Access\GrantAuthoritativeDriver
   isGrantAuthoritative(): bool
 
 Vaulter\Contracts\Access\PermissionDriver
-  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): bool
   override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
   resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision
   subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
@@ -247,7 +247,7 @@ Vaulter\Access\AccessResolver
   __construct(\Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages)
   abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
   can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
-  canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $storage): bool
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $drive): bool
   effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
   evaluateMany(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $nodes): array
   explain(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\AccessExplanation
@@ -269,6 +269,21 @@ Vaulter\Data\Drive\NodePage
   getIterator(): \Traversable
   hasMore(): bool
   jsonSerialize(): array
+
+Vaulter\Access\ValueObjects\AccessScope
+  __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null, int|null|string $tenantId = null)
+  forDrive(\Vaulter\Models\Drive\Drive $drive, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null): \self
+  readonly ?\Vaulter\Access\ValueObjects\Subject $nodeOwner
+  readonly \Vaulter\ValueObjects\Access\OwnerRef $driveOwner
+  readonly int|null|string $tenantId
+  readonly int|string $driveId
+  readonly string $profile
+
+Vaulter\ValueObjects\Access\OwnerRef
+  __construct(string $type, int|string $id)
+  ofModel(\Illuminate\Database\Eloquent\Model $owner): \self
+  readonly int|string $id
+  readonly string $type
 
 Vaulter\ValueObjects\Access\Actor
   __serialize(): array
@@ -400,6 +415,38 @@ Vaulter\Enums\Operations\OperationKind
   Mutation = mutation
   ContentEgress = content_egress
   Purge = purge
+
+Vaulter\Testing\Contracts\PermissionDriverContractTests
+  assertPermissionDriverContract(\Vaulter\Access\AccessResolver $resolver, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $parent, \Vaulter\Models\Drive\Node $child): void
+
+Vaulter\Enums\Access\Permission
+  Read = 1
+  Update = 2
+  Create = 4
+  Delete = 8
+  Share = 16
+  Comment = 32
+
+Vaulter\Enums\Access\GrantLevel
+  Reader = reader
+  Commenter = commenter
+  Writer = writer
+  Organizer = organizer
+  Owner = owner
+
+Vaulter\Enums\Access\Ability
+  View = view
+  Download = download
+  Comment = comment
+  Edit = edit
+  Create = create
+  Move = move
+  Copy = copy
+  Trash = trash
+  Restore = restore
+  Share = share
+  Manage = manage
+  Delete = delete
 
 Vaulter\ValueObjects\Access\ActorRef::SYSTEM_TYPE = vaulter:system
 

@@ -7,6 +7,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -184,3 +185,10 @@ it('значение метаданных сверх лимита длины —
     expect($session->metadata['filename'])->toBe('a-very-l')
         ->and(strlen((string) $session->metadata['filename']))->toBe(8);
 });
+
+it('gates tus initiation through the profile driver', function (bool $allow): void {
+    $drive = protocolStorage();
+    ProfileCreateGate::install($allow);
+    $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', ['name' => 'profile.bin', 'total_size_bytes' => 5])
+        ->assertStatus($allow ? 201 : 403);
+})->with([true, false]);

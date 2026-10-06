@@ -5,37 +5,27 @@ declare(strict_types=1);
 namespace Vaulter\Access\ValueObjects;
 
 use Vaulter\Models\Drive\Drive;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
-/**
- * The workspace/panel context an access decision is evaluated within (master plan
- * H.2). It carries the panel, the host workspace coordinates (so a PermissionDriver
- * can resolve a workspace-scoped role without ever seeing a Node), and the node
- * owner — never a Node or a magic string, keeping the PermissionDriver contract
- * identity-model-agnostic and node-blind.
- *
- * Vaulter derives this from a Storage (its owner_type/owner_id ARE the workspace)
- * and the node's owner before handing it to the driver.
- */
+/** Node-blind identity coordinates for the selected profile's permission driver. */
 final readonly class AccessScope
 {
     public function __construct(
-        public string $panel,
-        public ?string $workspaceType = null,
-        public int|string|null $workspaceId = null,
+        public string $profile,
+        public OwnerRef $driveOwner,
+        public int|string $driveId,
         public ?Subject $nodeOwner = null,
+        public int|string|null $tenantId = null,
     ) {}
 
-    /**
-     * Derive the scope from the storage a node lives in (the workspace = the
-     * storage owner morph, §2.1) and the node's optional owner subject.
-     */
-    public static function forStorage(Drive $storage, ?Subject $nodeOwner = null): self
+    public static function forDrive(Drive $drive, ?Subject $nodeOwner = null): self
     {
         return new self(
-            panel: $storage->profile,
-            workspaceType: $storage->owner_type,
-            workspaceId: $storage->owner_id,
+            profile: $drive->profile,
+            driveOwner: new OwnerRef(type: $drive->owner_type, id: $drive->owner_id),
+            driveId: $drive->id,
             nodeOwner: $nodeOwner,
+            tenantId: $drive->tenant_id,
         );
     }
 }

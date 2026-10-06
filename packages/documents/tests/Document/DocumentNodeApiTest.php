@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -166,3 +167,10 @@ it('enforces named-version label and boolean boundaries', function (): void {
         ->assertJsonPath('data.snapshot_label', str_repeat('x', 255))
         ->assertJsonPath('data.keep_forever', true);
 });
+
+it('gates document creation through the profile driver', function (bool $allow): void {
+    $drive = documentStorage();
+    ProfileCreateGate::install($allow);
+    $this->postJson('api/vaulter/storages/'.$drive->id.'/documents', ['name' => 'profile-doc'])
+        ->assertStatus($allow ? 201 : 403);
+})->with([true, false]);

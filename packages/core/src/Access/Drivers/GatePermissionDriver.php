@@ -14,6 +14,7 @@ use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The Laravel-Gate host-role driver (master plan §6 / H.2) — a zero-extra-dependency
@@ -32,7 +33,7 @@ use Vaulter\Enums\Access\GrantLevel;
  *     mapped ability ('vaulter.view'/'vaulter.edit'/…); the HIGHEST allowed level
  *     becomes the Decision. The Gate check is Node-BLIND: it receives the AccessScope's
  *     panel + workspace coordinates, never a Node, so the contract stays swappable.
- *   - canCreateInWorkspace = the configured create ability, passed [type, id].
+ *   - canCreateIn = the configured create ability, passed the full node-blind scope context.
  *
  * Every Gate check goes through Gate::forUser($actor) so the driver is stateless and
  * never depends on the currently-authenticated user.
@@ -119,12 +120,12 @@ final class GatePermissionDriver implements PermissionDriver
 
     /**
      * May the actor create nodes in the host workspace? Delegates to the configured
-     * create ability, passing the workspace [type, id] as the ability arguments so
+     * create ability, passing the full node-blind scope context as the ability argument so
      * the host's gate/policy can decide per workspace.
      */
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
-        return $this->gateAllows($actor, $this->accessConfig->gateCreateAbility(), [$workspaceType, $workspaceId]);
+        return $this->gateAllows($actor, $this->accessConfig->gateCreateAbility(), [$this->contextFor($scope)]);
     }
 
     /**
@@ -140,19 +141,15 @@ final class GatePermissionDriver implements PermissionDriver
         return Gate::forUser($actor)->allows($ability, $arguments);
     }
 
-    /**
-     * The Node-BLIND context handed to a Gate ability: the panel + workspace
-     * coordinates from the AccessScope, never a Node. A host gate receives exactly the
-     * workspace it authorises within (the contract's identity-agnostic boundary).
-     *
-     * @return array{panel: string, workspace_type: ?string, workspace_id: int|string|null}
-     */
+    /** @return array{profile:string, drive_owner: OwnerRef, drive_id:int|string, node_owner:?Subject, tenant_id:int|string|null} */
     private function contextFor(AccessScope $scope): array
     {
         return [
-            'panel' => $scope->panel,
-            'workspace_type' => $scope->workspaceType,
-            'workspace_id' => $scope->workspaceId,
+            'profile' => $scope->profile,
+            'drive_owner' => $scope->driveOwner,
+            'drive_id' => $scope->driveId,
+            'node_owner' => $scope->nodeOwner,
+            'tenant_id' => $scope->tenantId,
         ];
     }
 

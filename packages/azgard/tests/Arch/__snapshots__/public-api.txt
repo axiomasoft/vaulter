@@ -22,3 +22,10 @@ Vaulter\Azgard\Configuration\AzgardConfig
   createPermission(): string
   panelId(): ?string
   permissions(): array
+
+Vaulter\Azgard\AzgardPermissionDriver
+  __construct(\Illuminate\Contracts\Container\Container $container, \Vaulter\Azgard\AzgardPermissionMap $permissions)
+  canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): bool
+  override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
+  resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision
+  subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array

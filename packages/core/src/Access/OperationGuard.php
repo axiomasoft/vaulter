@@ -48,7 +48,7 @@ final readonly class OperationGuard
             $this->requireView(grants: $grants, node: $parent);
             $drive = $parent->storage()->first() ?? throw NodeNotFoundException::forId($parent->id);
             $actor = $context->actor->authorizable();
-            if ($actor === null || !$this->resolver->canCreateInWorkspace(actor: $actor, storage: $drive) || !$grants->allows(Ability::Create)) {
+            if ($actor === null || !$this->resolver->canCreateIn(actor: $actor, drive: $drive) || !$grants->allows(Ability::Create)) {
                 throw PermissionDeniedException::forAbility(Ability::Create->value);
             }
         }

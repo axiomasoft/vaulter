@@ -76,7 +76,7 @@ final class R07dBitsDriver implements PermissionDriver
         return [Subject::ofModel($actor)];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
         return $this->workspaceCreate;
     }

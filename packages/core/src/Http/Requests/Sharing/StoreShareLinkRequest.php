@@ -20,7 +20,7 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * host-supplied; the controller authorizes Ability::Share on the node first.
  *
  * permissions defaults to READ (the safe minimum for a public link); the bitmask
- * is bounded to the CRUDS range (0..31). An EXPLICIT `expires_at` is bounded above
+ * is bounded to the permission range (0..63); anonymous Commenter shares are rejected. An EXPLICIT `expires_at` is bounded above
  * by `$sharingConfig->maxTtlHours()` (P1.2 / F-P1.3-03) — an omitted `expires_at`
  * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
  * which this request never sees.
@@ -33,8 +33,8 @@ final class StoreShareLinkRequest extends VaulterFormRequest
     public function rules(SharingConfig $sharingConfig): array
     {
         return [
-            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::allBits()],
-            'level' => ['nullable', Rule::enum(GrantLevel::class)],
+            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::all()],
+            'level' => ['nullable', Rule::enum(GrantLevel::class)->except([GrantLevel::Commenter])],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
             'password' => ['nullable', 'string', 'min:1', 'max:255'],
             'require_login' => ['nullable', 'boolean'],

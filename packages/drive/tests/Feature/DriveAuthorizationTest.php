@@ -11,6 +11,7 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -186,3 +187,10 @@ it('denies a download without a grant and allows it with one', function (): void
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertOk();
 });
+
+it('gates folder creation through the profile driver', function (bool $allow): void {
+    $drive = authStorage();
+    ProfileCreateGate::install($allow);
+    $this->postJson('api/vaulter/storages/'.$drive->id.'/folders', ['name' => 'profile-folder'])
+        ->assertStatus($allow ? 201 : 403);
+})->with([true, false]);

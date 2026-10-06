@@ -17,6 +17,8 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 
 /**
  * The S3-multipart path exercised against the FAKED 'local' disk (a real S3 is not
@@ -177,3 +179,21 @@ it('дедуп: multipart-сборка против идентичной пре�
     expect(FileRevision::query()->count())->toBe(2)
         ->and(Blob::query()->count())->toBe(1);
 });
+
+it('gates S3 initiation through the profile driver', function (bool $allow): void {
+    $drive = UploadTestHelpers::storage();
+    $this->actingAs(AccessTestHelpers::user());
+    ProfileCreateGate::install($allow);
+    $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', [
+        'name' => 'profile-s3.bin', 'total_size_bytes' => 5, 'protocol' => UploadProtocol::S3Multipart->value,
+    ])->assertStatus($allow ? 201 : 403);
+})->with([true, false]);
+
+it('gates the S3 parts controller through the profile driver', function (bool $allow): void {
+    $session = initiateS3(totalBytes: 5, name: 'profile-parts.bin');
+    $this->actingAs(AccessTestHelpers::user());
+    ProfileCreateGate::install($allow);
+    $this->call('POST', 'api/vaulter/resumable-uploads/'.$session->upload_id.'/parts',
+        ['part_no' => 1, 'byte_offset' => 0], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], 'hello')
+        ->assertStatus($allow ? 201 : 403);
+})->with([true, false]);
