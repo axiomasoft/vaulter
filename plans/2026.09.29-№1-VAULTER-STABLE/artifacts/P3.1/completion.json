@@ -1,0 +1,172 @@
+{
+  "item": "P3.1",
+  "status": "done",
+  "scope": "core security foundations; existing handle not activated",
+  "delivered": [
+    "Actor/ActorRef/OperationContext",
+    "NodeLocator persisted keys, configured model/connection and batch rebind",
+    "OperationGuard scope-first/system ACL-only, View concealment, create dual gate, fresh batch/scalar decisions",
+    "OperationKind metadata/mutation/content_egress/purge; no private scanner flag",
+    "Problem errors and extended public API golden/UPGRADE/CHANGELOG"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations packages/core/tests/Access/AccessResolverTest.php packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started_at": "2026-10-06T17:34:31.272652+00:00",
+      "duration_seconds": 36.049,
+      "exit": 0,
+      "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/V1.log",
+      "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":75,\"passed\":75,\"assertions\":5916,\"duration_ms\":35940}"
+    },
+    {
+      "id": "V2",
+      "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started_at": "2026-10-06T17:35:07.321739+00:00",
+      "duration_seconds": 0.77,
+      "exit": 0,
+      "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/V2.log",
+      "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":6,\"passed\":6,\"assertions\":26,\"duration_ms\":696}"
+    },
+    {
+      "id": "ARCH",
+      "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch",
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started_at": "2026-10-06T17:35:08.092229+00:00",
+      "duration_seconds": 10.802,
+      "exit": 0,
+      "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/ARCH.log",
+      "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":75,\"passed\":75,\"assertions\":872,\"duration_ms\":10710}"
+    },
+    {
+      "id": "PINT",
+      "command": [
+        "scripts/php84",
+        "vendor/bin/pint",
+        "--test",
+        "packages/core/src/Operations/NodeLocator.php",
+        "packages/core/src/Operations/OperationContext.php",
+        "packages/core/src/Providers/BindingsRegistrar.php",
+        "packages/core/src/Providers/AccessRegistrar.php",
+        "packages/core/src/Access/OperationGuard.php",
+        "packages/core/src/ValueObjects/Access/ActorRef.php",
+        "packages/core/src/ValueObjects/Access/Actor.php",
+        "packages/core/src/Exceptions/Access/MissingActorException.php",
+        "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+        "packages/core/src/Enums/Operations/OperationKind.php",
+        "packages/core/tests/Operations/OperationTaxonomyTest.php",
+        "packages/core/tests/Operations/ActorContextTest.php",
+        "packages/core/tests/Operations/NodeLocatorTest.php",
+        "packages/core/tests/Operations/ProblemMappingTest.php",
+        "packages/core/tests/Operations/OperationGuardTest.php",
+        "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "exit": 0,
+      "duration_seconds": 0.182,
+      "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/pint-final.log"
+    }
+  ],
+  "phpstan": {
+    "command": "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+    "cwd": ".",
+    "exit": 0,
+    "log": "phpstan-final.log"
+  },
+  "coverage": {
+    "command": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+    "exit": 0,
+    "log": "opus-coverage.log"
+  },
+  "negative_controls": [
+    {
+      "id": "NC-SCOPE",
+      "cwd": "/tmp/vaulter-P3.1-negative-glmdmrqs",
+      "command": [
+        "env",
+        "APP_ENV=testing",
+        "DB_CONNECTION=sqlite",
+        "DB_DATABASE=:memory:",
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Operations/OperationTaxonomyTest.php",
+        "--filter=SEC-R14"
+      ],
+      "source": "packages/core/src/Operations/NodeLocator.php",
+      "source_sha256": "eae9676faa584dc0614bf4572e54e9154f6732bf212f3d7a24e7bc50468df6d8",
+      "started_at": "2026-10-06T17:37:53.359405+00:00",
+      "runs": [
+        {
+          "state": "injected",
+          "exit": 1,
+          "duration_seconds": 0.703,
+          "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-SCOPE-injected.log",
+          "output": "{\"tool\":\"pest\",\"result\":\"failed\",\"tests\":6,\"passed\":5,\"assertions\":19,\"duration_ms\":631,\"failed\":1,\"failures\":[{\"test\":\"P\\\\Packages\\\\core\\\\tests\\\\Operations\\\\OperationTaxonomyTest::__pest_evaluable_it_SEC_R14_foreign_locator_and_every_system_guard_surface_reject_forged_scope\",\"file\":\"/tmp/vaulter-P3.1-negative-glmdmrqs/packages/core/tests/Operations/OperationTaxonomyTest.php\",\"line\":32,\"message\":\"Exception \\\"Vaulter\\\\Exceptions\\\\Nodes\\\\NodeNotFoundException\\\" not thrown.\"}]}",
+          "source_sha256": "71e4d216dd32ee9854f981aef32e114c89186fed82c513f95b8157189ba63431"
+        },
+        {
+          "state": "restored",
+          "exit": 0,
+          "duration_seconds": 0.676,
+          "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-SCOPE-restored.log",
+          "output": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":6,\"passed\":6,\"assertions\":26,\"duration_ms\":599}",
+          "source_sha256": "eae9676faa584dc0614bf4572e54e9154f6732bf212f3d7a24e7bc50468df6d8"
+        }
+      ]
+    },
+    {
+      "id": "NC-VIEW",
+      "cwd": "/tmp/vaulter-P3.1-negative-glmdmrqs",
+      "command": [
+        "env",
+        "APP_ENV=testing",
+        "DB_CONNECTION=sqlite",
+        "DB_DATABASE=:memory:",
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Operations/OperationGuardTest.php",
+        "--filter=conceals a hidden node"
+      ],
+      "source": "packages/core/src/Access/OperationGuard.php",
+      "source_sha256": "44492c889ac94c060fa6ceeafa34b7a029b37877445749627daa34684b3d2f85",
+      "started_at": "2026-10-06T17:37:54.739080+00:00",
+      "runs": [
+        {
+          "state": "injected",
+          "exit": 1,
+          "duration_seconds": 0.271,
+          "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-VIEW-injected.log",
+          "output": "{\"tool\":\"pest\",\"result\":\"failed\",\"tests\":1,\"passed\":0,\"assertions\":1,\"duration_ms\":195,\"failed\":1,\"failures\":[{\"test\":\"P\\\\Packages\\\\core\\\\tests\\\\Operations\\\\OperationGuardTest::__pest_evaluable_it_conceals_a_hidden_node_before_checking_the_requested_ability\",\"file\":\"/tmp/vaulter-P3.1-negative-glmdmrqs/packages/core/tests/Operations/OperationGuardTest.php\",\"line\":28,\"message\":\"Failed asserting that an instance of class Vaulter\\\\Exceptions\\\\Access\\\\PermissionDeniedException is an instance of class Vaulter\\\\Exceptions\\\\Nodes\\\\NodeNotFoundException.\"}]}",
+          "source_sha256": "0ddb8654d6206c479d0080812472a2c1f23c9223b5837f7c8e420a6fca09955e"
+        },
+        {
+          "state": "restored",
+          "exit": 0,
+          "duration_seconds": 0.262,
+          "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-VIEW-restored.log",
+          "output": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":1,\"passed\":1,\"assertions\":3,\"duration_ms\":189}",
+          "source_sha256": "44492c889ac94c060fa6ceeafa34b7a029b37877445749627daa34684b3d2f85"
+        }
+      ]
+    }
+  ],
+  "self_check": "invariant-self-check.json",
+  "research": "actor-error-research.json",
+  "deferred": "P3.6 profile, P3.7 content/private scanner, P3.8 tenancy and broad barrier; no sibling qualification claimed",
+  "review": {
+    "selector": "grok/grok-4.7",
+    "context_parameter": null,
+    "verdict": "GREEN",
+    "session_id": "5124c1a1-9dc5-4446-b381-dbddaee459d6",
+    "native_route_proof": "review-route.json",
+    "final_report": "review-verdict.md",
+    "duration_seconds": 869.949
+  },
+  "candidate_files": "candidate-files.json",
+  "completed_at": "2026-10-06T17:54:45.977555+00:00",
+  "delivery": "One scoped local commit of newly implemented core/docs/P3.1 evidence only. Pre-existing owner design/lifecycle carriers stay outside commit."
+}

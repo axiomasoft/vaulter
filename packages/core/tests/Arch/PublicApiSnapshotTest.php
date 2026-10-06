@@ -5,18 +5,26 @@ declare(strict_types=1);
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\AclFolder;
 use Vaulter\Access\ExactListing;
+use Vaulter\Access\OperationGuard;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Operations\OperationKind;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
+use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -292,6 +300,21 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
         $blocks[] = vaulterSnapshotInterface($class);
     }
+
+    foreach ([Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class] as $class) {
+        $reflection = new ReflectionClass($class);
+        $properties = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '').vaulterSnapshotType($property->getType()).' $'.$property->getName();
+        }
+        sort($properties);
+        $blocks[] = vaulterSnapshotInterface($class).($properties === [] ? '' : "\n".implode("\n", $properties));
+    }
+    $blocks[] = OperationKind::class."\n".implode("\n", array_map(
+        static fn (OperationKind $case): string => '  '.$case->name.' = '.$case->value,
+        OperationKind::cases(),
+    ));
+    $blocks[] = ActorRef::class.'::SYSTEM_TYPE = '.ActorRef::SYSTEM_TYPE;
 
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotInterface(BlobScope::class);

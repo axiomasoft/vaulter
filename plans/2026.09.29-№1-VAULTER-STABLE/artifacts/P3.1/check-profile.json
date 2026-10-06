@@ -1,0 +1,141 @@
+{
+  "schema": "vaulter.check-profile/v1",
+  "created_at": "2026-10-06T17:27:40.408311+00:00",
+  "route": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "source": "provider turn_context"
+  },
+  "runtime": "scripts/php84 (PHP 8.4), native Task 0.28.3 plan.py",
+  "affected_packages": [
+    "core"
+  ],
+  "paths": [
+    "packages/core/src/ValueObjects/Access/{Actor,ActorRef}.php",
+    "packages/core/src/Operations/{OperationContext,NodeLocator}.php",
+    "packages/core/src/Access/OperationGuard.php",
+    "packages/core/src/Exceptions/Access/MissingActorException.php",
+    "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+    "packages/core/src/Providers/{Bindings,Access}Registrar.php",
+    "packages/core/tests/Operations/*.php",
+    "packages/core/tests/Arch/__snapshots__/public-api.txt",
+    "@plan/artifacts/P3.1/check-profile.json",
+    "@plan/artifacts/P3.1/completion.json",
+    "UPGRADE.md",
+    "CHANGELOG.md",
+    "packages/core/tests/Operations/{ActorContextTest,NodeLocatorTest,OperationGuardTest,ProblemMappingTest}.php",
+    "packages/core/src/Enums/Operations/OperationKind.php",
+    "packages/core/tests/Operations/OperationTaxonomyTest.php",
+    "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+  ],
+  "consumers": "New primitives are not wired into existing handles; only core providers and new Operations tests consume them. No sibling API changes.",
+  "fixture_closure": [
+    "packages/core/tests/TestCase.php",
+    "packages/core/tests/Access/AccessTestHelpers.php",
+    "packages/core/tests/Fixtures/TestUser.php",
+    "tests/Pest.php",
+    "phpunit.xml",
+    "vendor/autoload.php",
+    "packages/core/src/Access/AccessResolver.php",
+    "packages/core/src/Models/Drive/Node.php",
+    "packages/core/src/Models/Drive/Drive.php"
+  ],
+  "environment": {
+    "APP_ENV": "testing",
+    "DB_CONNECTION": "sqlite",
+    "DB_DATABASE": ":memory:"
+  },
+  "isolation": "TestCase.suiteDatabaseConnection pins SQLite :memory:; explicit testing env. New DB tests opt into existing TestCase+RefreshDatabase per file; no shared disk writes.",
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations packages/core/tests/Access/AccessResolverTest.php packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips; actor/scope/ACL и пустой profile seam only, profile-deny не требуется до P3.6",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-SCOPE: cwd=.; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php --filter=SEC-R14\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design.",
+      "expect": "All applicable declared limited controls have RED→exact restored GREEN, candidate source hashes unchanged, named counts/output recorded; no mutation engine.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "expect": "exit0; SEC-R14 actor/scope/system ACL-only taxonomy, metadata/mutation/egress/purge; private scanner runtime not loaded yet. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "ARCH",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "cwd": "."
+    }
+  ],
+  "negative_controls": [
+    "NC-SCOPE: isolated temporary repository disables NodeLocator drive WHERE; exact SEC-R14 command RED, source SHA restored, same command GREEN.",
+    "NC-VIEW: isolated copy disables scalar View-first guard; named OperationGuardTest hidden test RED then original GREEN."
+  ],
+  "deferred": "Full phase non-mutation package and PG concurrency suites owned by P3.8; profile policy by P3.6, tenancy by P3.8, scanner by P3.7.",
+  "review": {
+    "selector": "grok/grok-4.7",
+    "context_parameter": null,
+    "timing": "After all own changes and checks; fresh read-only native session."
+  },
+  "initial_head": "f3da6f3eb51c0b51f8f0e0e35b9d9dcda68d36d3",
+  "profile_amendment": "Snapshot reflection carrier added before editing it; same declared new API and golden, no new sibling impact.",
+  "php_files": [
+    "packages/core/src/Operations/NodeLocator.php",
+    "packages/core/src/Operations/OperationContext.php",
+    "packages/core/src/Providers/BindingsRegistrar.php",
+    "packages/core/src/Providers/AccessRegistrar.php",
+    "packages/core/src/Access/OperationGuard.php",
+    "packages/core/src/ValueObjects/Access/ActorRef.php",
+    "packages/core/src/ValueObjects/Access/Actor.php",
+    "packages/core/src/Exceptions/Access/MissingActorException.php",
+    "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+    "packages/core/src/Enums/Operations/OperationKind.php",
+    "packages/core/tests/Operations/OperationTaxonomyTest.php",
+    "packages/core/tests/Operations/ActorContextTest.php",
+    "packages/core/tests/Operations/NodeLocatorTest.php",
+    "packages/core/tests/Operations/ProblemMappingTest.php",
+    "packages/core/tests/Operations/OperationGuardTest.php",
+    "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+  ],
+  "pint_command": [
+    "scripts/php84",
+    "vendor/bin/pint",
+    "--test",
+    "packages/core/src/Operations/NodeLocator.php",
+    "packages/core/src/Operations/OperationContext.php",
+    "packages/core/src/Providers/BindingsRegistrar.php",
+    "packages/core/src/Providers/AccessRegistrar.php",
+    "packages/core/src/Access/OperationGuard.php",
+    "packages/core/src/ValueObjects/Access/ActorRef.php",
+    "packages/core/src/ValueObjects/Access/Actor.php",
+    "packages/core/src/Exceptions/Access/MissingActorException.php",
+    "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+    "packages/core/src/Enums/Operations/OperationKind.php",
+    "packages/core/tests/Operations/OperationTaxonomyTest.php",
+    "packages/core/tests/Operations/ActorContextTest.php",
+    "packages/core/tests/Operations/NodeLocatorTest.php",
+    "packages/core/tests/Operations/ProblemMappingTest.php",
+    "packages/core/tests/Operations/OperationGuardTest.php",
+    "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "source": "native Grok summary.json",
+  "session_id": "5124c1a1-9dc5-4446-b381-dbddaee459d6",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "model": "grok-4.7",
+  "effort": "high",
+  "session_kind": "headless",
+  "agent_id": "ag1.65a1a6ecb2094d4ab239a996cf880f5b",
+  "context_parameter": null,
+  "independent_from_executor": true,
+  "verdict": "GREEN",
+  "stop_reason": "end_turn",
+  "candidate_preserved": true,
+  "actual_tool_calls": {
+    "read_file": 56,
+    "grep": 26,
+    "list_dir": 4
+  }
+}

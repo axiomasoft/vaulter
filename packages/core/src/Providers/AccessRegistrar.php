@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Access\OperationGuard;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\TenancyConfig;
@@ -20,7 +21,10 @@ use Vaulter\Support\TenantFootgunGuard;
 final class AccessRegistrar
 {
     public function register(Application $app): void
-    {        // Drive ACL (M2a / H.2): the host-role driver manager resolves the
+    {
+        $app->bind(OperationGuard::class);
+
+        // Drive ACL (M2a / H.2): the host-role driver manager resolves the
         // configured PermissionDriver (default 'database'), keyed per driver-key, and
         // enforces the null-driver fail-loud guard in production (D6″). The
         // AccessResolver (Vaulter-owned, NON-swappable) is auto-wired from it.

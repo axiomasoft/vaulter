@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Core operation security primitives: `Actor`/serializable `ActorRef`, immutable
+  `OperationContext`, scoped `NodeLocator` and `OperationGuard` (AD05, AD07,
+  PLAN2.P3.1). Node models supply persisted keys; caller attributes and relations
+  cannot establish authority. Missing actor maps to `actor_required`/401, hidden
+  or foreign nodes to 404, and visible capability denials to 403. Public operation
+  categories distinguish metadata, mutations, content egress and purge.
+  Profile and tenant enforcement connect in the following integration steps.
+
 ### Changed
 
 - Configuration now belongs to each package (`vaulter`, `vaulter-media`, `vaulter-drive`,

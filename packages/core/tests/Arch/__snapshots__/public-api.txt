@@ -263,6 +263,79 @@ Vaulter\Data\Drive\NodePage
   hasMore(): bool
   jsonSerialize(): array
 
+Vaulter\ValueObjects\Access\Actor
+  __serialize(): array
+  authorizable(): ?\Illuminate\Contracts\Auth\Access\Authorizable
+  isSystem(): bool
+  ref(): \Vaulter\ValueObjects\Access\ActorRef
+  system(string $reason): \self
+  user(\Illuminate\Contracts\Auth\Access\Authorizable $user): \self
+
+Vaulter\ValueObjects\Access\ActorRef
+  __construct(?string $type, int|null|string $id, ?string $reason = null)
+  readonly ?string $reason
+  readonly ?string $type
+  readonly int|null|string $id
+
+Vaulter\Operations\OperationContext
+  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null)
+  system(\Vaulter\Models\Drive\Drive $drive, string $reason, ?string $correlationId = null): \self
+  readonly ?string $idempotencyKey
+  readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\ValueObjects\Access\Actor $actor
+  readonly string $correlationId
+
+Vaulter\Operations\NodeLocator
+  __construct(\Vaulter\Configuration\VaulterConfig $config, \Vaulter\Database\VaulterDatabase $database)
+  find(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
+
+Vaulter\Access\OperationGuard
+  __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator)
+  abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
+  authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
+  visible(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
+
+Vaulter\Exceptions\Access\MissingActorException
+  __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)
+  __toString(): string
+  __wakeup()
+  getCode()
+  getFile(): string
+  getLine(): int
+  getMessage(): string
+  getPrevious(): ?\Throwable
+  getTrace(): array
+  getTraceAsString(): string
+  httpStatus(): int
+  problemCode(): string
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+  required(): \self
+
+Vaulter\Exceptions\Profiles\ProfileRestrictionException
+  __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)
+  __toString(): string
+  __wakeup()
+  forOperation(string $operation): \self
+  getCode()
+  getFile(): string
+  getLine(): int
+  getMessage(): string
+  getPrevious(): ?\Throwable
+  getTrace(): array
+  getTraceAsString(): string
+  httpStatus(): int
+  problemCode(): string
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
+Vaulter\Enums\Operations\OperationKind
+  Metadata = metadata
+  Mutation = mutation
+  ContentEgress = content_egress
+  Purge = purge
+
+Vaulter\ValueObjects\Access\ActorRef::SYSTEM_TYPE = vaulter:system
+
 Vaulter\Database\VaulterDatabase
   __construct(\Vaulter\Configuration\DatabaseConfig $databaseConfig, \Illuminate\Database\DatabaseManager $db)
   advisoryLock(string $key): void

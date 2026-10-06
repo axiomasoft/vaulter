@@ -1,0 +1,74 @@
+[
+  {
+    "id": "NC-SCOPE",
+    "cwd": "/tmp/vaulter-P3.1-negative-glmdmrqs",
+    "command": [
+      "env",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "--filter=SEC-R14"
+    ],
+    "source": "packages/core/src/Operations/NodeLocator.php",
+    "source_sha256": "eae9676faa584dc0614bf4572e54e9154f6732bf212f3d7a24e7bc50468df6d8",
+    "started_at": "2026-10-06T17:37:53.359405+00:00",
+    "runs": [
+      {
+        "state": "injected",
+        "exit": 1,
+        "duration_seconds": 0.703,
+        "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-SCOPE-injected.log",
+        "output": "{\"tool\":\"pest\",\"result\":\"failed\",\"tests\":6,\"passed\":5,\"assertions\":19,\"duration_ms\":631,\"failed\":1,\"failures\":[{\"test\":\"P\\\\Packages\\\\core\\\\tests\\\\Operations\\\\OperationTaxonomyTest::__pest_evaluable_it_SEC_R14_foreign_locator_and_every_system_guard_surface_reject_forged_scope\",\"file\":\"/tmp/vaulter-P3.1-negative-glmdmrqs/packages/core/tests/Operations/OperationTaxonomyTest.php\",\"line\":32,\"message\":\"Exception \\\"Vaulter\\\\Exceptions\\\\Nodes\\\\NodeNotFoundException\\\" not thrown.\"}]}",
+        "source_sha256": "71e4d216dd32ee9854f981aef32e114c89186fed82c513f95b8157189ba63431"
+      },
+      {
+        "state": "restored",
+        "exit": 0,
+        "duration_seconds": 0.676,
+        "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-SCOPE-restored.log",
+        "output": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":6,\"passed\":6,\"assertions\":26,\"duration_ms\":599}",
+        "source_sha256": "eae9676faa584dc0614bf4572e54e9154f6732bf212f3d7a24e7bc50468df6d8"
+      }
+    ]
+  },
+  {
+    "id": "NC-VIEW",
+    "cwd": "/tmp/vaulter-P3.1-negative-glmdmrqs",
+    "command": [
+      "env",
+      "APP_ENV=testing",
+      "DB_CONNECTION=sqlite",
+      "DB_DATABASE=:memory:",
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Operations/OperationGuardTest.php",
+      "--filter=conceals a hidden node"
+    ],
+    "source": "packages/core/src/Access/OperationGuard.php",
+    "source_sha256": "44492c889ac94c060fa6ceeafa34b7a029b37877445749627daa34684b3d2f85",
+    "started_at": "2026-10-06T17:37:54.739080+00:00",
+    "runs": [
+      {
+        "state": "injected",
+        "exit": 1,
+        "duration_seconds": 0.271,
+        "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-VIEW-injected.log",
+        "output": "{\"tool\":\"pest\",\"result\":\"failed\",\"tests\":1,\"passed\":0,\"assertions\":1,\"duration_ms\":195,\"failed\":1,\"failures\":[{\"test\":\"P\\\\Packages\\\\core\\\\tests\\\\Operations\\\\OperationGuardTest::__pest_evaluable_it_conceals_a_hidden_node_before_checking_the_requested_ability\",\"file\":\"/tmp/vaulter-P3.1-negative-glmdmrqs/packages/core/tests/Operations/OperationGuardTest.php\",\"line\":28,\"message\":\"Failed asserting that an instance of class Vaulter\\\\Exceptions\\\\Access\\\\PermissionDeniedException is an instance of class Vaulter\\\\Exceptions\\\\Nodes\\\\NodeNotFoundException.\"}]}",
+        "source_sha256": "0ddb8654d6206c479d0080812472a2c1f23c9223b5837f7c8e420a6fca09955e"
+      },
+      {
+        "state": "restored",
+        "exit": 0,
+        "duration_seconds": 0.262,
+        "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/NC-VIEW-restored.log",
+        "output": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":1,\"passed\":1,\"assertions\":3,\"duration_ms\":189}",
+        "source_sha256": "44492c889ac94c060fa6ceeafa34b7a029b37877445749627daa34684b3d2f85"
+      }
+    ]
+  }
+]

@@ -6,6 +6,39 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Operation security foundations (AD05, AD07, PLAN2.P3.1)
+
+Core now provides `Vaulter\ValueObjects\Access\Actor` and `ActorRef`,
+`Vaulter\Operations\OperationContext` and `NodeLocator`, and
+`Vaulter\Access\OperationGuard`. Existing DriveHandle calls retain their current
+surface until the subsequent atomic handle migration.
+
+Construct a user actor with `Actor::user($user)`, or explicitly select
+`OperationContext::system($drive, 'nightly import')` in trusted jobs and commands.
+System reasons are trimmed, nonempty and at most 191 bytes. User identities must
+come from Eloquent or Authenticatable; changing a bound user's identity requires
+a new actor. Jobs serialize `ActorRef` and the drive key, then resolve the user and
+current permissions at execution. Serializing an `Actor` is rejected.
+
+Use `NodeLocator::find($context, $key)` before authorizing an operation. Model
+arguments contribute only their persisted key; the locator re-fetches the
+configured node model on Vaulter's connection within the bound drive. Trashed
+nodes require the explicit internal `includeTrashed` mode. The guard also
+re-fetches node arguments, checks scope before system bypass, and evaluates View
+before the requested capability. `visible()` rebinds and evaluates candidates in
+batch, preserves input order and excludes inaccessible nodes. No ACL decisions
+are cached across calls.
+
+`MissingActorException` uses the normative `actor_required` code with HTTP 401;
+hidden/foreign nodes use `node_not_found`/404, visible capability denial uses
+`permission_denied`/403, and `ProfileRestrictionException` defines
+`profile_restriction`/403. The existing JSON error renderer is retained.
+`OperationKind` categorizes public operations and grants no private scanner
+capability. Profile policy, strict tenancy and content availability connect in
+their subsequent integration steps; these foundations do not activate them.
+Authorization precedes mutation locks: revocation affects the next authorization
+call, with the documented interval between authorization and lock acquisition.
+
 ### Package-owned configuration and typed access (AD26, P2.5)
 
 Merge your published configuration into the new package files before removing the

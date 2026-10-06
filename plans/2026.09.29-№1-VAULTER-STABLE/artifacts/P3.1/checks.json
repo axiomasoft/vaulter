@@ -1,0 +1,60 @@
+[
+  {
+    "id": "V1",
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations packages/core/tests/Access/AccessResolverTest.php packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "started_at": "2026-10-06T17:34:31.272652+00:00",
+    "duration_seconds": 36.049,
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/V1.log",
+    "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":75,\"passed\":75,\"assertions\":5916,\"duration_ms\":35940}"
+  },
+  {
+    "id": "V2",
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "started_at": "2026-10-06T17:35:07.321739+00:00",
+    "duration_seconds": 0.77,
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/V2.log",
+    "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":6,\"passed\":6,\"assertions\":26,\"duration_ms\":696}"
+  },
+  {
+    "id": "ARCH",
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch",
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "started_at": "2026-10-06T17:35:08.092229+00:00",
+    "duration_seconds": 10.802,
+    "exit": 0,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/ARCH.log",
+    "stdout": "{\"tool\":\"pest\",\"result\":\"passed\",\"tests\":75,\"passed\":75,\"assertions\":872,\"duration_ms\":10710}"
+  },
+  {
+    "id": "PINT",
+    "command": [
+      "scripts/php84",
+      "vendor/bin/pint",
+      "--test",
+      "packages/core/src/Operations/NodeLocator.php",
+      "packages/core/src/Operations/OperationContext.php",
+      "packages/core/src/Providers/BindingsRegistrar.php",
+      "packages/core/src/Providers/AccessRegistrar.php",
+      "packages/core/src/Access/OperationGuard.php",
+      "packages/core/src/ValueObjects/Access/ActorRef.php",
+      "packages/core/src/ValueObjects/Access/Actor.php",
+      "packages/core/src/Exceptions/Access/MissingActorException.php",
+      "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+      "packages/core/src/Enums/Operations/OperationKind.php",
+      "packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "packages/core/tests/Operations/ActorContextTest.php",
+      "packages/core/tests/Operations/NodeLocatorTest.php",
+      "packages/core/tests/Operations/ProblemMappingTest.php",
+      "packages/core/tests/Operations/OperationGuardTest.php",
+      "packages/core/tests/Arch/PublicApiSnapshotTest.php"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/vaulter",
+    "exit": 0,
+    "duration_seconds": 0.182,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.1/pint-final.log"
+  }
+]

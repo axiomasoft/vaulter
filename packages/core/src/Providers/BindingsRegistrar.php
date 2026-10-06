@@ -32,6 +32,7 @@ use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
+use Vaulter\Operations\NodeLocator;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
@@ -58,6 +59,7 @@ final class BindingsRegistrar
         $app->singleton(ConfigValidator::class);
 
         $app->singleton(VaulterDatabase::class);
+        $app->bind(NodeLocator::class);
         $app->singleton(IdStrategyResolver::class);
 
         // Container-owned, scoped (F-P2.1-05 / P4.6 review): the enum-attribute
