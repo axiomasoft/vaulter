@@ -11,8 +11,8 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\RateLimiter;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 final class HttpRegistrar
@@ -34,7 +34,7 @@ final class HttpRegistrar
     {
         if (RateLimiter::limiter('vaulter-public') === null) {
             RateLimiter::for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
-                Config::publicRateLimitPerMinute(),
+                app(RoutesConfig::class)->publicRateLimit(),
             )->by($request->ip() ?? 'unknown'));
         }
 
@@ -45,7 +45,7 @@ final class HttpRegistrar
                     ? 'actor:'.Identity::stringify($user->getAuthIdentifier())
                     : 'ip:'.($request->ip() ?? 'unknown');
 
-                return Limit::perMinute(Config::uploadsRateLimitPerMinute())->by($key);
+                return Limit::perMinute(app(RoutesConfig::class)->uploadsRateLimit())->by($key);
             });
         }
     }

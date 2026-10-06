@@ -7,8 +7,8 @@ namespace Vaulter\Exceptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Support\Config;
 
 /**
  * Base for every Vaulter error — catch this to handle all package failures.
@@ -21,7 +21,7 @@ class VaulterException extends RuntimeException
             return false;
         }
 
-        if (!$request->expectsJson() && !$request->is(trim(Config::routePrefix(), '/').'/*')) {
+        if (!$request->expectsJson() && !$request->is(trim(app(RoutesConfig::class)->prefix(), '/').'/*')) {
             return false;
         }
 

@@ -22,7 +22,7 @@ beforeEach(function (): void {
         $this->markTestSkipped('FK cascadeOnDelete is not enforced on the default SQLite test connection.');
     }
 
-    config()->set('vaulter.trash.retention_days', 30);
+    config()->set('vaulter-drive.trash.retention_days', 30);
 });
 
 it('physically deletes a trashed document node\'s inline version content on purge, F-P1.12-02', function (): void {

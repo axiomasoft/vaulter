@@ -14,7 +14,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
     $this->actor = AccessTestHelpers::user();
     $this->actingAs($this->actor);
     $this->storage = AccessTestHelpers::storage();
@@ -55,7 +55,7 @@ it('V09 reaches the 301st candidate across empty pages and hides denied nodes ev
 });
 
 it('V22 enforces a child deny after the Gate role lane allows the workspace', function (): void {
-    config()->set('vaulter.drivers.permission', 'gate');
+    config()->set('vaulter.access.permission_driver', 'gate');
     Gate::define('vaulter.view', fn (): bool => true);
     $hidden = AccessTestHelpers::folder($this->storage, $this->folder, 'hidden');
     $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');

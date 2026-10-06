@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Collaboration;
 use Illuminate\Support\Carbon;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -16,7 +17,6 @@ use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\Support\DocumentContentHasher;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -42,6 +42,7 @@ final readonly class PersistCollaborationStateAction
         private NodeStoreRepository $nodes,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     public function execute(PersistCollaborationStateInput $data): DocumentRevision
@@ -55,7 +56,7 @@ final readonly class PersistCollaborationStateAction
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
         // time. The Yjs binary state is the source of truth and is unbounded here by
         // design (§7); only the optional TipTap JSON projection is size-checked.
-        $data->content?->ensureWithin(Config::maxDocumentSizeKb());
+        $data->content?->ensureWithin($this->documentsConfig->maxContentSizeKb());
 
         return $this->metrics->timing(
             name: 'vaulter_collab_snapshot_duration_seconds',
@@ -93,7 +94,7 @@ final readonly class PersistCollaborationStateAction
 
                 $this->store->prune(
                     node: $node,
-                    max: Config::maxDocumentVersions(),
+                    max: $this->documentsConfig->revisionLimit(),
                     headId: $version->getKey(),
                 );
 
@@ -122,7 +123,7 @@ final readonly class PersistCollaborationStateAction
             return false;
         }
 
-        $debounce = Config::autosaveDebounceSeconds();
+        $debounce = $this->documentsConfig->autosaveDebounceSeconds();
 
         if ($debounce === 0) {
             return true;

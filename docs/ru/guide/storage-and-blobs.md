@@ -40,7 +40,7 @@ ContentStore::promote() ─► пишем staged-байты в "<scope>/ab/cd/<s
 v_file_version_blobs    ─► РЕБРО, которое удерживает блоб живым (истина о живучести)
 ```
 
-Работу делят три контракта, и все три сменяемы через `config('vaulter.cas')`:
+Работу делят три контракта, и все три сменяемы через `config('vaulter-media')`:
 
 | Контракт | По умолчанию | Ответственность |
 |---|---|---|
@@ -49,12 +49,11 @@ v_file_version_blobs    ─► РЕБРО, которое удерживает �
 | `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Тонкая абстракция над Flysystem: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
-// config/vaulter.php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
-],
+// config/vaulter-media.php
+'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
+
 ```
 
 Все три биндятся в сервис-провайдере и резолвятся через контейнер, поэтому значения безопасны
@@ -121,14 +120,14 @@ Staged-объект (`Vaulter\Media\Cas\StagedTempObject`, реализующи�
 `readStream()` и идемпотентный `discard()`, который удаляет temp-файл, как только байты
 запромоучены (или коммит откатился).
 
-## Дедупликация и `dedup.scope`
+## Дедупликация и `vaulter-media.dedup.scope`
 
 Область дедупа решает границу, в пределах которой контент-адрес уникален:
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|storage
+    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|drive
 ],
 ```
 
@@ -157,7 +156,7 @@ SQLite даже там, где advisory-блокировка ниже — no-op.
 Область вшита в `storage_key` каждого блоба *и* в уникальный индекс. Выберите её на этапе
 установки. `tenant` — безопасное значение по умолчанию для мультитенантных приложений, потому
 что мешает одному тенанту узнать, что другой держит данный файл (утечка существования), ценой
-хранения идентичных байтов по одному разу на тенант. О том, как `dedup.scope = tenant`
+хранения идентичных байтов по одному разу на тенант. О том, как `vaulter-media.dedup.scope = tenant`
 взаимодействует с тенантностью хоста, см. [Мультитенантность](/ru/guide/multi-tenancy).
 :::
 
@@ -288,7 +287,7 @@ advisory-блокировка — no-op.
 ### Запуск сборщика
 
 ```bash
-# Обе фазы (mark + sweep), grace из config('vaulter.gc.grace_hours'):
+# Обе фазы (mark + sweep), grace из config('vaulter-media.gc.grace_hours'):
 php artisan vaulter:blobs:gc
 
 # Переопределить grace-окно (нижняя граница 1h):
@@ -301,7 +300,7 @@ php artisan vaulter:blobs:gc --pending
 Команда печатает подсчёт по фазам — `Tombstoned X, swept Y, skipped Z (grace Nh)`.
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'gc' => [
     'grace_hours'        => env('VAULTER_GC_GRACE_HOURS', 24),
     // Отдельное, обычно более щедрое окно для обхода диска на orphan-объекты
@@ -313,7 +312,7 @@ php artisan vaulter:blobs:gc --pending
 ::: warning Grace-окно должно переживать вашу самую медленную загрузку
 Tombstone-блоб может быть воскрешён идущей загрузкой того же `sha256`. Grace должно быть
 **≥ худшей задержки многочастевого коммита**, чтобы загрузка успела воскресить первой. Оно
-ограничено снизу 1h в `Config::gcGraceHours()` вне зависимости от конфига — никогда не ставьте
+ограничено снизу 1h в `MediaConfig::gcGraceHours()` вне зависимости от конфига — никогда не ставьте
 его в ноль в расчёте на мгновенную очистку.
 :::
 
@@ -429,8 +428,8 @@ PostgreSQL/MySQL. Запускайте отчёт локально или prune 
 :::
 
 ::: details Orphan-grace отделён от GC-grace
-Обход orphan-объектов использует `config('vaulter.gc.orphan_grace_hours')` (env
-`VAULTER_ORPHAN_GRACE_HOURS`), который **по умолчанию равен `gc.grace_hours`** (24) и ограничен
+Обход orphan-объектов использует `config('vaulter-media.gc.orphan_grace_hours')` (env
+`VAULTER_ORPHAN_GRACE_HOURS`), который **по умолчанию равен `vaulter-media.gc.grace_hours`** (24) и ограничен
 снизу 1h. Держите его ≥ вашей худшей задержки многочастевого коммита по той же причине, по
 которой GC-grace должно быть щедрым: идущая резюмируемая загрузка может запромоутить свои байты
 задолго до коммита своей строки, и свежий объект нельзя принять за orphan.
@@ -477,7 +476,7 @@ PostgreSQL/MySQL. Запускайте отчёт локально или prune 
 - [Конфигурация](/ru/guide/configuration) — все ключи `cas` / `dedup` / `gc` / `storage` в
   одном месте.
 - [Мультитенантность](/ru/guide/multi-tenancy) — как тенантность хоста питает `tenant_id` в
-  блобах и почему `dedup.scope = tenant` важен.
+  блобах и почему `vaulter-media.dedup.scope = tenant` важен.
 - [Рецепты › Свой storage-драйвер](/ru/guide/recipes) — поменять диск / подключить свой
   `ContentStore`.
 - [Рецепты › Cron для GC блобов и reconcile](/ru/guide/recipes) — продовые операции.

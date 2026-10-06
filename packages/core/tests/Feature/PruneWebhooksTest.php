@@ -340,7 +340,7 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
     $terminal = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
     forceDeliveryTimestamps($terminal, updatedAt: Carbon::now()->subDays(99));
 
-    config()->set('vaulter.features.reliability', false);
+    config()->set('vaulter.features.webhooks', false);
 
     $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
         ->expectsOutputToContain('Reliability feature is off')
@@ -352,7 +352,7 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
 });
 
 it('12b) does not error when reliability is off and there is nothing seeded', function (): void {
-    config()->set('vaulter.features.reliability', false);
+    config()->set('vaulter.features.webhooks', false);
 
     expect(runPrune())->toContain('nothing to prune');
 });

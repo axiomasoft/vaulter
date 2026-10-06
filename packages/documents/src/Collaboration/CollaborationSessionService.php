@@ -7,12 +7,12 @@ namespace Vaulter\Documents\Collaboration;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -33,6 +33,7 @@ final readonly class CollaborationSessionService
         private AccessResolver $access,
         private CollaborationDriverManager $drivers,
         private MetricsRecorder $metrics,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     /**
@@ -57,7 +58,7 @@ final readonly class CollaborationSessionService
         $this->metrics->counter(
             name: 'vaulter_collab_session_issued_total',
             labels: [
-                'driver' => Config::collaborationDriverName(),
+                'driver' => $this->documentsConfig->collaborationDriver(),
                 'ability' => $ability->value,
             ],
         );

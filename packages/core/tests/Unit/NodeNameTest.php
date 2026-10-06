@@ -6,7 +6,7 @@ use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Support\NodeName;
 use Vaulter\Tests\TestCase;
 
-// NodeName reads the configured byte limit, so it needs the application container.
+// NodeName receives the package-owned byte limit explicitly.
 uses(TestCase::class);
 
 it('normalizes a valid name', function (string $given, string $expected): void {
@@ -41,10 +41,8 @@ it('rejects an invalid name', function (string $given, string $reason): void {
 ]);
 
 it('measures the limit against the configured byte length', function (): void {
-    config()->set('vaulter.drive.name_rules.max_length', 4);
-
-    expect(NodeName::normalize('abcd'))->toBe('abcd')
-        ->and(fn () => NodeName::normalize('abcde'))->toThrow(InvalidNodeNameException::class, 'longer than 4 bytes');
+    expect(NodeName::normalize('abcd', maxLength: 4))->toBe('abcd')
+        ->and(fn () => NodeName::normalize('abcde', maxLength: 4))->toThrow(InvalidNodeNameException::class, 'longer than 4 bytes');
 });
 
 it('renders as a 422 validation error on the name field', function (): void {

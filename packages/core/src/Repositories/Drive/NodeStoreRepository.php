@@ -7,8 +7,8 @@ namespace Vaulter\Repositories\Drive;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -21,6 +21,10 @@ use Vaulter\Support\Identity;
  */
 final class NodeStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -30,7 +34,7 @@ final class NodeStoreRepository
         // literal array from a Drive Action (never raw request input reaching this
         // repository) — mass-assignment guarding belongs at the HTTP boundary
         // (Node::$guarded), not on this trusted internal seam.
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $node = new $model;
         $node->forceFill($attributes);
         $node->save();
@@ -137,7 +141,7 @@ final class NodeStoreRepository
             return;
         }
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $model::query()->whereKey($ids->all())->delete();
     }
 
@@ -162,7 +166,7 @@ final class NodeStoreRepository
             return;
         }
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $model::query()->withTrashed()->whereKey($ids->all())->forceDelete();
     }
 
@@ -191,7 +195,7 @@ final class NodeStoreRepository
             return null;
         }
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         /** @var Node|null $node */
         $node = $model::query()
@@ -224,7 +228,7 @@ final class NodeStoreRepository
             return new Collection;
         }
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $node = new $model;
 
         return $model::query()
@@ -262,7 +266,7 @@ final class NodeStoreRepository
      */
     private function newQuery(): Builder
     {
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         return $model::query();
     }

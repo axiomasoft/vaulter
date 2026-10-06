@@ -190,7 +190,7 @@ function persistedIssuer(): TestUser
 }
 
 it('resolves while its issuer still holds Ability::Share on the node (F-P1.3-02)', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-ok');
@@ -204,7 +204,7 @@ it('resolves while its issuer still holds Ability::Share on the node (F-P1.3-02)
 });
 
 it('404s once its issuer no longer holds Ability::Share on the node (confused deputy, F-P1.3-02)', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-revoked');
@@ -221,7 +221,7 @@ it('404s once its issuer no longer holds Ability::Share on the node (confused de
 });
 
 it('404s once its issuer is no longer resolvable (deleted account, F-P1.3-02)', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-gone');
@@ -237,7 +237,7 @@ it('404s once its issuer is no longer resolvable (deleted account, F-P1.3-02)', 
 });
 
 it('leaves a share with no recorded issuer unaffected (nothing to re-verify, F-P1.3-02)', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'no-issuer');

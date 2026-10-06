@@ -61,8 +61,8 @@ All `ShouldDispatchAfterCommit`.
 
 ::: info Node-attached path
 `DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` operate on the
-**node-attached** document path (`Node` + `DocumentRevision`, gated on the
-`document_versions` feature). The `NodeComment*` events cover the node-comment threads
+**node-attached** document path (`Node` + `DocumentRevision`, enabled with the
+Documents package). The `NodeComment*` events cover the node-comment threads
 (ADR-0014). Vaulter has no other document-events domain — the earlier document-id-attached
 DocVault events were fully excised (ADR-0014).
 :::
@@ -128,7 +128,7 @@ See [Usage → Sharing](/guide/sharing).
 
 ## Reliability note
 
-When `features.reliability` is on, an after-commit subscriber (the `OutboxRecorder`)
+When `features.webhooks` is on, an after-commit subscriber (the `OutboxRecorder`)
 stages domain events into `v_outbox` in the same request as the mutation; the
 `vaulter:relay-outbox` command then fans each row out into signed webhook deliveries.
 Consumers must **dedupe on the `event_id`** carried in the payload — the outbox is
@@ -138,5 +138,5 @@ idempotent by `event_id`, but a delivery may be re-queued. See
 ## See also
 
 - [Commands reference](/reference/commands) — the relay/retry/GC schedulables
-- [Configuration reference](/reference/configuration) — `features.reliability`, `collaboration.channel_prefix`, `webhooks.*`
+- [Configuration reference](/reference/configuration) — `features.webhooks`, `vaulter-documents.collaboration.broadcast.channel_prefix`, `webhooks.*`
 - [Contracts reference](/reference/contracts) — the models these payloads carry

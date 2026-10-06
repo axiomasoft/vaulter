@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Actions\Documents;
 
 use Illuminate\Support\Carbon;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
@@ -15,7 +16,6 @@ use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Write a document node's content — the AUTOSAVE path (§2.5 / M4a). Within the
@@ -34,6 +34,7 @@ final readonly class UpdateDocumentContentAction
         private DocumentRevisionStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     public function execute(UpdateDocumentContentInput $data): DocumentRevision
@@ -49,7 +50,7 @@ final readonly class UpdateDocumentContentAction
         // is handler-agnostic (DocumentContent); the limit only applies to the
         // TipTap shape, not an opaque non-rich-text snapshot (e.g. a spreadsheet).
         if ($data->content instanceof TipTapContent) {
-            $data->content->ensureWithin(Config::maxDocumentSizeKb());
+            $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
         return $this->database->transaction(function () use ($node, $data): DocumentRevision {
@@ -86,7 +87,7 @@ final readonly class UpdateDocumentContentAction
 
             $this->store->prune(
                 node: $node,
-                max: Config::maxDocumentVersions(),
+                max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
 
@@ -112,7 +113,7 @@ final readonly class UpdateDocumentContentAction
             return false;
         }
 
-        $debounce = Config::autosaveDebounceSeconds();
+        $debounce = $this->documentsConfig->autosaveDebounceSeconds();
 
         if ($debounce === 0) {
             return true;

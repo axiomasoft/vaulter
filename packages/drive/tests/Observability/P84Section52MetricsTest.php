@@ -20,7 +20,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
     $this->app->forgetInstance(MetricsRecorder::class);

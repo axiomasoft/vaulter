@@ -11,6 +11,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Collaboration\CollaborationCall;
 use Vaulter\Documents\Collaboration\CollaborationSessionService;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -21,7 +22,6 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 
 /**
  * The M4b realtime-collaboration HTTP surface for document nodes (master plan §7 /
@@ -50,6 +50,7 @@ final class NodeCollaborationController extends Controller
         private readonly CollaborationSessionService $sessions,
         private readonly AccessResolver $access,
         private readonly HostUserResolver $users,
+        private readonly DocumentsConfig $documentsConfig,
     ) {}
 
     /**
@@ -152,7 +153,7 @@ final class NodeCollaborationController extends Controller
             throw NotADocumentException::forNode($node->getKey());
         }
 
-        $room = Config::collaborationRoom($node->getKey());
+        $room = $this->documentsConfig->collaborationRoom($node->getKey());
 
         if (!$call->mayAddressRoom($room)) {
             // The presented JWT was minted for a DIFFERENT node's room — refuse,
@@ -180,13 +181,13 @@ final class NodeCollaborationController extends Controller
         // ключом — нормализуем через префикс канала; для голого id nodeIdFromRoom()
         // возвращает значение как есть (без префикса — no-op).
         if (is_string($nodeId) && $nodeId !== '') {
-            return Config::nodeIdFromRoom($nodeId);
+            return $this->documentsConfig->nodeIdFromRoom($nodeId);
         }
 
         $room = $request->input('room');
 
         if (is_string($room) && $room !== '') {
-            return Config::nodeIdFromRoom($room);
+            return $this->documentsConfig->nodeIdFromRoom($room);
         }
 
         abort(422, 'A collaboration call must carry node_id or room.');

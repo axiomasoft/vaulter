@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 
 beforeEach(function (): void {
     if (!in_array(app(VaulterDatabase::class)->driver(), ['mysql', 'mariadb'], true)) {
         $this->markTestSkipped('MySQL host-key DDL requires MySQL or MariaDB.');
     }
-    config()->set('vaulter.table_prefix', 'hk_test_');
+    config()->set('vaulter.database.table_prefix', 'hk_test_');
 });
 
 it('preserves values, nullability and indexes when upgrading and restoring MySQL host keys', function (string $strategy): void {
-    config()->set('vaulter.ids.default', $strategy);
+    config()->set('vaulter.ids.strategy', $strategy);
     config()->set('vaulter.ids.host_keys', 'string');
     $db = app(VaulterDatabase::class)->connection();
     $schema = $db->getSchemaBuilder();
@@ -37,7 +37,7 @@ it('preserves values, nullability and indexes when upgrading and restoring MySQL
     ];
     try {
         foreach ($map as $entity => $columns) {
-            $table = Config::table($entity);
+            $table = app(DatabaseConfig::class)->table($entity);
             $schema->create($table, function (Blueprint $blueprint) use ($columns, $ids): void {
                 foreach ($columns as $column => $nullable) {
                     if ($column === 'tenant_id' || !$nullable) {
@@ -51,7 +51,7 @@ it('preserves values, nullability and indexes when upgrading and restoring MySQL
         }
         $indexes = [];
         foreach ($map as $entity => $columns) {
-            $indexes[$entity] = $schema->getIndexes(Config::table($entity));
+            $indexes[$entity] = $schema->getIndexes(app(DatabaseConfig::class)->table($entity));
         }
         $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
         $migration->up();
@@ -62,7 +62,7 @@ it('preserves values, nullability and indexes when upgrading and restoring MySQL
         $migration->up();
         expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
         foreach ($map as $entity => $columns) {
-            $table = Config::table($entity);
+            $table = app(DatabaseConfig::class)->table($entity);
             $metadata = array_column($schema->getColumns($table), null, 'name');
             $row = (array) $db->table($table)->first();
             expect($schema->getIndexes($table))->toBe($indexes[$entity]);
@@ -74,14 +74,14 @@ it('preserves values, nullability and indexes when upgrading and restoring MySQL
         }
         $migration->down();
         foreach ($map as $entity => $columns) {
-            $metadata = array_column($schema->getColumns(Config::table($entity)), null, 'name');
+            $metadata = array_column($schema->getColumns(app(DatabaseConfig::class)->table($entity)), null, 'name');
             foreach ($columns as $column => $nullable) {
                 expect($metadata[$column]['type'])->toBe($strategy === 'bigint' ? 'bigint unsigned' : 'char(26)');
             }
         }
     } finally {
         foreach (array_keys($map) as $entity) {
-            $schema->dropIfExists(Config::table($entity));
+            $schema->dropIfExists(app(DatabaseConfig::class)->table($entity));
         }
     }
 })->with(['bigint', 'ulid']);
@@ -90,7 +90,7 @@ it('creates each configured MySQL host type and leaves it unchanged on upgrade',
     config()->set('vaulter.ids.host_keys', $type);
     $db = app(VaulterDatabase::class)->connection();
     $schema = $db->getSchemaBuilder();
-    $table = Config::table('node_grants');
+    $table = app(DatabaseConfig::class)->table('node_grants');
     try {
         $schema->create($table, function (Blueprint $blueprint): void {
             HostKeyColumns::add($blueprint, 'subject_id', nullable: false, index: true);

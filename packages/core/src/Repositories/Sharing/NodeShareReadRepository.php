@@ -6,9 +6,9 @@ namespace Vaulter\Repositories\Sharing;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 
 /**
  * Read-side queries over v_node_shares (§2.7 / M2c). It resolves a LIVE share by
@@ -19,6 +19,10 @@ use Vaulter\Support\Config;
  */
 final class NodeShareReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The LIVE share whose token hashes to $tokenHash (not revoked, not expired),
      * or null. The caller still runs the timing-safe compare, the use-budget check
@@ -26,7 +30,7 @@ final class NodeShareReadRepository
      */
     public function findLiveByTokenHash(string $tokenHash, Carbon $now): ?NodeShare
     {
-        $model = Config::nodeShareModel();
+        $model = $this->vaulterConfig->model('node_share');
 
         /** @var NodeShare|null $share */
         $share = $model::query()
@@ -43,7 +47,7 @@ final class NodeShareReadRepository
      */
     public function find(int|string $id): ?NodeShare
     {
-        $model = Config::nodeShareModel();
+        $model = $this->vaulterConfig->model('node_share');
 
         return $model::query()->find($id);
     }
@@ -57,7 +61,7 @@ final class NodeShareReadRepository
      */
     public function forNode(Node $node): Builder
     {
-        $model = Config::nodeShareModel();
+        $model = $this->vaulterConfig->model('node_share');
 
         return $model::query()
             ->where('node_id', $node->getKey())

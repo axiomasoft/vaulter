@@ -24,12 +24,8 @@ class UlidTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        // Exercise the legacy id_type knob: with ids.default cleared, the
-        // resolved strategy is derived from id_type (the BC path). The base
-        // TestCase pins ids.default=bigint, so clear it here first.
-        $app['config']->set('vaulter.ids.default', null);
-        $app['config']->set('vaulter.id_type', 'ulid');
-        $app['config']->set('vaulter.tenant.enabled', true);
+        $app['config']->set('vaulter.ids.strategy', 'ulid');
+        $app['config']->set('vaulter.tenancy.enabled', true);
 
         // This suite exercises ULID key handling + tenant_id COLUMN emission, not
         // query-level tenant isolation — swap in the non-enforcing test double so

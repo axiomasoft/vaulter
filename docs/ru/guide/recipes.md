@@ -78,9 +78,9 @@ php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 
 ```php
 // config/vaulter.php
-'panels' => [
+'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
-],
+]],
 ```
 
 ```php
@@ -96,7 +96,6 @@ final class TaskDriveStoragePanel extends ProfileProvider
             ->id('task_drive')
             ->host(\App\Models\Task::class)
             ->storageType('team')
-            ->feature('document_versions', true) // enable in-app rich-text editing
             ->feature('share_links', true);      // enable bearer share links
     }
 }
@@ -124,9 +123,8 @@ Vaulter **не** навязывает мультитенантность — т�
 
 ```php
 // config/vaulter.php
-'tenant' => [
+'tenancy' => [
     'enabled' => true,        // VAULTER_TENANT_ENABLED — adds a tenant_id column to the schema
-    'column'  => 'tenant_id',
 ],
 ```
 
@@ -154,7 +152,7 @@ final class Node extends BaseNode
 'models' => [
     // ...
     'node'    => \App\Models\Vaulter\Node::class,
-    'storage' => \App\Models\Vaulter\Storage::class,
+    'drive' => \App\Models\Vaulter\Storage::class,
 ],
 ```
 
@@ -164,13 +162,15 @@ final class Node extends BaseNode
 утечь *самим фактом существования* файла между тенантами ([ADR-0012](/adr/0012-dedup-scope)):
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
+// config/vaulter-media.php
 'dedup' => ['scope' => 'tenant'], // the default; never use 'global' for untrusted tenants
-'ids'   => ['default' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+// config/vaulter.php
+'ids'   => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Область тенанта — ответственность хоста
-Если вы выставите `dedup.scope = 'global'` при нескольких тенантах, вы соглашаетесь на побочный
+Если вы выставите `vaulter-media.dedup.scope = 'global'` при нескольких тенантах, вы соглашаетесь на побочный
 канал существования между тенантами. Держите `tenant` (или `storage`), если тенанты не доверяют
 друг другу. Если вы подставляете тенант-осведомлённую модель, именно она — а не Vaulter — обязана
 применять scope на *каждом* запросе.
@@ -258,22 +258,22 @@ final class AppRoleDriver implements PermissionDriver
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'app'),
-],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
-'permission_drivers' => [
+    'permission_drivers' => [
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
+    ],
 ],
 ```
 
 ::: tip Сначала возьмите готовую полосу
 Для Laravel Gate, Spatie Permission v8 или AzGuard свой класс **не** нужен — выставьте
-`drivers.permission` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
-(`vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
+`access.permission_driver` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
+(`vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
 `composer require axioma-studio/vaulter-azgard`: provider сам регистрирует драйвер
 и адаптер. Модель пользователя должна реализовать `AzgardBackedUser` — см.
 [Драйверы прав](/ru/guide/permission-drivers).
@@ -363,7 +363,7 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 ::: details Проверьте дескриптор, уходящий клиенту
 `GET nodes/{node}/handler` возвращает `id` подобранного обработчика, его возможности и `ViewerDescriptor`
 для узла — ровно то, что читает Vue-клиент, чтобы выбрать реализацию редактора/превью. (Этот
-маршрут завязан на фичу `document_versions`.)
+маршрут доступен при установленном `vaulter-documents`.)
 :::
 
 ## Переключить диск хранилища на S3 {#s3-disk}
@@ -391,7 +391,7 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 VAULTER_DISK=s3-vaulter
 ```
 
-`config('vaulter.storage.default_disk')` — канонический CAS-диск, используемый, когда строка
+`config('vaulter-media.disk')` — канонический CAS-диск, используемый, когда строка
 хранилища не закрепляет собственный `disk`. Штатный `FlysystemStorageDriver` уже делает всё
 правильно на S3: условное создание (`If-None-Match: *`), короткоживущие подписанные URL через
 `temporaryUrl` и раскладку ключей с квалификацией по области.
@@ -409,12 +409,11 @@ CAS-бакет должен быть **без версионирования**. 
 `Vaulter\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
 
 ```php
-// config/vaulter.php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \App\Vaulter\S3ChecksumDriver::class, // your driver
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
-],
+// config/vaulter-media.php
+'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \App\Vaulter\S3ChecksumDriver::class, // your driver
+'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
+
 ```
 
 Поверхность `StorageDriver`: `disk()`, `put($key, $stream, $disk, $ifNoneMatch, $options)`,
@@ -459,7 +458,7 @@ final class PdfExporter implements DocumentExporter
 ::: code-group
 
 ```php [config]
-// config/vaulter.php
+// config/vaulter-documents.php
 'exporters' => [
     'html'     => \Vaulter\Export\HtmlExporter::class,
     'markdown' => \Vaulter\Export\MarkdownExporter::class,
@@ -500,7 +499,7 @@ final class ShortTokenGenerator implements ShareTokenGenerator
 
 ```php
 // config/vaulter.php
-'share' => [
+'sharing' => [
     'token_generator' => \App\Vaulter\ShortTokenGenerator::class,
     'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),
     'prefix_length'   => 8,
@@ -537,7 +536,7 @@ Schedule::command('vaulter:blobs:reconcile')->dailyAt('03:00');
 Schedule::command('vaulter:sweep-uploads')->hourly();
 ```
 
-Окно отсрочки — `config('vaulter.gc.grace_hours')` (по умолчанию 24, с нижней границей 1ч). Оно
+Окно отсрочки — `config('vaulter-media.gc.grace_hours')` (по умолчанию 24, с нижней границей 1ч). Оно
 **обязано** быть ≥ вашей худшей задержки commit многочастевой загрузки, чтобы загрузка в полёте
 успела воскресить помеченный надгробием блоб первой.
 
@@ -615,7 +614,7 @@ Vaulter поставляет тестовые дубли под `Vaulter\Testing
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.
-config()->set('vaulter.drivers.permission', 'null'); // non-production only
+config()->set('vaulter.access.permission_driver', 'null'); // non-production only
 
 $drive = Vaulter::for($task);
 $node  = $drive->upload('hello', name: 'note.txt');

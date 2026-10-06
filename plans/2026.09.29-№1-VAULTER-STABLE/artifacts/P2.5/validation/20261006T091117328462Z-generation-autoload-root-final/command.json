@@ -1,0 +1,14 @@
+{
+  "command": [
+    "scripts/php84",
+    "composer",
+    "dump-autoload",
+    "--no-scripts",
+    "--no-interaction"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T091117328462Z",
+  "candidate_before": "9e2e627ec3ada864f9da79d7ac5c442486eb6a779424eb63dd0dd3a53d6648bf",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true
+}

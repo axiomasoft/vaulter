@@ -6,8 +6,8 @@ namespace Vaulter\Http\Resources\Sharing;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Configuration\SharingConfig;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 
 /**
  * The read shape of a bearer share-link (§2.7 / M2c). It NEVER serializes the
@@ -82,6 +82,6 @@ final class NodeShareResource extends JsonResource
      */
     private function shareUrl(string $token): string
     {
-        return Config::shareUrlBase().'/'.$token;
+        return app(SharingConfig::class)->urlBase().'/'.$token;
     }
 }

@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Support\Config;
 
 /**
  * A content-addressable, immutable payload (master plan §2.3): identified by its
@@ -23,7 +24,7 @@ use Vaulter\Support\Config;
  * truth is the existence of a v_file_revision_blobs edge (H.3). The byte handling
  * and GC commit-flow are M1b — this is the schema + model only.
  *
- * Swappable via config('vaulter.models.blob').
+ * Swappable via configuration key vaulter.models.blob.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id
@@ -68,7 +69,7 @@ class Blob extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('blobs');
+        return app(DatabaseConfig::class)->table('blobs');
     }
 
     /**
@@ -79,12 +80,12 @@ class Blob extends Model
     public function versions(): BelongsToMany
     {
         return $this->belongsToMany(
-            related: Config::fileVersionModel(),
-            table: Config::table('file_revision_blobs'),
+            related: app(VaulterConfig::class)->model('file_revision'),
+            table: app(DatabaseConfig::class)->table('file_revision_blobs'),
             foreignPivotKey: 'blob_id',
             relatedPivotKey: 'file_revision_id',
         )
-            ->using(Config::fileVersionBlobModel())
+            ->using(app(VaulterConfig::class)->model('file_revision_blob'))
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
     }
 

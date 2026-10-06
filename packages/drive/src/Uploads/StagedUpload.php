@@ -8,10 +8,10 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 
 /**
  * The staged temp for a resumable upload (§2.8 / H.3). The bytes accumulate on the
@@ -40,6 +40,7 @@ final readonly class StagedUpload
 
     public function __construct(
         private StorageDriver $driver,
+        private DriveConfig $driveConfig,
     ) {}
 
     /**
@@ -249,7 +250,7 @@ final readonly class StagedUpload
      */
     private function assertChunkWithinLimit(mixed $chunk): void
     {
-        $max = Config::uploadMaxChunkBytes();
+        $max = $this->driveConfig->maxChunkSize();
 
         if ($max <= 0) {
             return;
@@ -277,7 +278,7 @@ final readonly class StagedUpload
      */
     private function copyChunkWithinLimit(mixed $chunk, mixed $buffer): void
     {
-        $max = Config::uploadMaxChunkBytes();
+        $max = $this->driveConfig->maxChunkSize();
 
         if ($max <= 0) {
             stream_copy_to_stream($chunk, $buffer);

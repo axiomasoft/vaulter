@@ -20,7 +20,7 @@ production:
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
 or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 ```
 
@@ -33,8 +33,8 @@ silently open a prod install ([ADR-0007](/adr/0007-pluggable-authorization)).
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
 
@@ -46,7 +46,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — the standalone default. Authorizes purely from `v_node_grants` rows, zero
   host dependency. Use it if you only need per-node grants.
 - **`gate` / `spatie` / `azgard`** — bridge your existing role system; fill the matching
-  `vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*` config block.
+  `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*` config block.
 - A **custom** driver — see the [recipe](/guide/recipes#permission-driver).
 
 ::: warning Config cache hides the env you forgot
@@ -57,7 +57,7 @@ changing `.env`.
 
 ## Azgard / Corex morph aliases not aligned {#azgard-morphs}
 
-**Symptom.** With `drivers.permission = 'azgard'`, permission checks return `false` for users
+**Symptom.** With `access.permission_driver = 'azgard'`, permission checks return `false` for users
 who clearly hold the role, or a `Class "AzGuard\…" not found` style error surfaces, or grants
 addressed to a workspace never match.
 
@@ -82,7 +82,7 @@ workspace/owner morph types with AzGuard/Corex.
 
    ```php
    // config/vaulter.php
-   'ids' => ['default' => 'ulid'],
+   'ids' => ['strategy' => 'ulid'],
    ```
 
    ```dotenv
@@ -110,7 +110,7 @@ another tenant is observably cheaper (no new physical write) — a confused-depu
 **Symptom B — bytes not deduping where you expected**, or a GC in one scope deleting another
 scope's object.
 
-**Why.** `config('vaulter.dedup.scope')` is the boundary the `sha256` content address is unique
+**Why.** `config('vaulter-media.dedup.scope')` is the boundary the `sha256` content address is unique
 within, and it drives **both** the dedup-unique index and the scope-qualified storage key
 `<scope>/ab/cd/<sha256>` ([ADR-0012](/adr/0012-dedup-scope)):
 
@@ -123,7 +123,7 @@ within, and it drives **both** the dedup-unique index and the scope-qualified st
 **Fix.**
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
     'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'),
 ],
@@ -195,18 +195,18 @@ collide with Vaulter's.
   php artisan migrate
   ```
 
-- **Prefix.** Every Vaulter table reads `config('vaulter.table_prefix')` (default `v_`). The
+- **Prefix.** Every Vaulter table reads `config('vaulter.database.table_prefix')` (default `v_`). The
   published migrations and the models both read it, so change it in **one** place. If you flip the
   prefix **after** migrating, the models look for `<newprefix>…` tables that don't exist — set the
   prefix **before** the first migrate, or rename the tables to match.
 
   ```php
   // config/vaulter.php
-  'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
+  'database' => ['table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_')],
   ```
 
-- **Per-entity rename.** To rename a single table without changing the global prefix, use
-  `config('vaulter.table_names')` — `SchemaBuilder` and the models resolve through it.
+- **Legacy table names.** `vaulter.table_names` is an upgrade input only.
+  `DatabaseConfig::legacyTable()` locates old physical tables; current models use canonical names.
 
 - **Profiles.** All profiles share the configured schema; own-table generation is removed.
 
@@ -230,13 +230,13 @@ still referenced.
 **Why & fix.**
 
 - **Disk resolution.** A blob's bytes live on the storage's `disk` if it pins one, else
-  `config('vaulter.storage.default_disk')` (`VAULTER_DISK`). If you change `VAULTER_DISK` after
+  `config('vaulter-media.disk')` (`VAULTER_DISK`). If you change `VAULTER_DISK` after
   uploading, old blobs still point at the old disk — don't move the disk out from under existing
   blobs.
 - **Never version the CAS bucket.** On S3 the CAS bucket must be **unversioned**. S3
   lifecycle/versioning as a deletion mechanism will fight Vaulter's two-phase GC. The only
   lifecycle rule to add is `AbortIncompleteMultipartUpload` ([ADR-0006](/adr/0006-content-addressed-blobs-gc)).
-- **GC grace too short.** If GC seems to delete live bytes, raise `config('vaulter.gc.grace_hours')`
+- **GC grace too short.** If GC seems to delete live bytes, raise `config('vaulter-media.gc.grace_hours')`
   to ≥ your worst-case multipart-commit latency, so an in-flight upload can resurrect a tombstoned
   blob first. See the [blob GC recipe](/guide/recipes#blob-gc).
 - **Drift.** If `ref_count` looks wrong, it's a cache — run `php artisan vaulter:blobs:reconcile`
@@ -249,7 +249,7 @@ still referenced.
 **Why & fix.** Check that the requested profile is registered:
 
 - **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (or a route) named a
-  panel that isn't registered. Register its provider FQCN in `config('vaulter.panels')`, or use
+  panel that isn't registered. Register its provider FQCN in `config('vaulter.profiles.providers')`, or use
   the `default` panel.
 
 ## Empty "Last updated" in the docs {#last-updated}

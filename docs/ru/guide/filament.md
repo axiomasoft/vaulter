@@ -140,7 +140,7 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 ресурс **не может создавать и редактировать** строку (`canCreate()` возвращает `false`); он лишь
 перечисляет и инспектирует.
 
-- **Модель**: определяется через `Config::storageModel()` (по умолчанию `Vaulter\Models\Drive\Drive`).
+- **Модель**: определяется через `app(\Vaulter\Configuration\VaulterConfig::class)->model('drive')` (по умолчанию `Vaulter\Models\Drive\Drive`).
 - **Таблица**: имя, владелец (`owner_type #owner_id`), диск, использованные байты, квота (`∞`, когда
   безлимит), статус, дата создания. Сортировка по умолчанию — `created_at desc`.
 - **Infolist** (страница просмотра): секции Drive / Owner / Usage, с человекочитаемым форматом байтов.
@@ -170,7 +170,7 @@ Vaulter::forStorage($record->storage)->rename(
 );
 ```
 
-- **Модель**: `Config::nodeModel()` (`Vaulter\Models\Drive\Node`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
 - **Таблица**: иконка типа (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), имя (корневые строки показывают `(root)`), бейдж типа, хранилище,
   родитель, размер, дата помещения в корзину, дата создания.
@@ -211,7 +211,7 @@ app(GrantNodeAccessAction::class)->execute(
 );
 ```
 
-- **Модель**: `Config::grantModel()` (`Vaulter\Models\Access\NodeGrant`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
 - **Таблица**: узел, субъект (`type #id`), бейдж уровня, бейдж эффекта (deny → danger), область, сырые
   биты (по умолчанию скрыты), срок истечения (`Never`, когда null), дата создания. Фильтры: эффект,
   уровень.
@@ -255,10 +255,10 @@ $minted = app(CreateShareLinkAction::class)->execute(
 );
 
 // Показывается ровно один раз — потом из строки уже не восстановить:
-//   Config::shareUrlBase() . '/' . $minted->token
+//   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Модель**: `Config::nodeShareModel()` (`Vaulter\Models\Sharing\NodeShare`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
 - **Таблица**: узел, бейдж `token_prefix…`, уровень, область, вычисляемый бейдж статуса
   (`Live` / `Revoked` / `Expired` / `Exhausted`), иконка require-login, счётчик использований
   (`n / max`, когда есть лимит), срок истечения, дата создания. Фильтр: тернарный `Revoked`.
@@ -273,7 +273,7 @@ $minted = app(CreateShareLinkAction::class)->execute(
 по построению append-only, поэтому ресурс не создаётся, не редактируется и не удаляется
 (`canCreate`/`canEdit`/`canDelete` — все возвращают `false`).
 
-- **Модель**: `Config::activityModel()` (`Vaulter\Models\Activity\Activity`).
+- **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
 - **Таблица**: бейдж глагола, актор (`type #id`), цель (`type #id`), хранилище, когда. Фильтр: глагол
   (`SelectFilter` по кейсам `EventType`).
 - **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
@@ -284,7 +284,7 @@ $minted = app(CreateShareLinkAction::class)->execute(
 ### Легаси-поверхность вокруг документов
 
 Она остаётся для хостов, всё ещё сидящих на таблицах вокруг документов. Каждый ресурс определяет свою
-модель через хелпер `Config::*Model()`, так что подменённая модель по-прежнему остаётся под контролем.
+модель через хелпер `VaulterConfig::model(string)`, так что подменённая модель по-прежнему остаётся под контролем.
 
 | Ресурс | Модель по умолчанию | Чем управляет |
 |----------|---------------|-----------------|
@@ -296,7 +296,7 @@ $minted = app(CreateShareLinkAction::class)->execute(
 
 ## Подменяемость моделей
 
-Каждый ресурс определяет свою модель через хелпер `Vaulter\Support\Config::*Model()`
+Каждый ресурс определяет свою модель через хелпер `Vaulter\Configuration\VaulterConfig::model(string)`
 (`storageModel()`, `nodeModel()`, `grantModel()`, `nodeShareModel()`, `activityModel()`, …). Если ваше
 хост-приложение подменяет модель Vaulter на подкласс, Filament-ресурсы продолжают управлять ею без
 каких-либо изменений.

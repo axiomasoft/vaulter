@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -49,10 +49,10 @@ return new class extends Migration
         $grammar = $connection->getQueryGrammar();
 
         foreach (self::COLUMNS as $entity => $columns) {
-            $table = Config::table($entity);
+            $table = app(DatabaseConfig::class)->table($entity);
             // #3 precedes the revision-table rename in #4, including on rollback.
             if ($entity === 'file_revisions' && !$schema->hasTable($table)) {
-                $table = $schema->hasTable(Config::table('file_versions')) ? Config::table('file_versions') : Config::legacyTable('file_versions');
+                $table = $schema->hasTable(app(DatabaseConfig::class)->table('file_versions')) ? app(DatabaseConfig::class)->table('file_versions') : app(DatabaseConfig::class)->legacyTable('file_versions');
             }
 
             if (!$schema->hasTable($table)) {

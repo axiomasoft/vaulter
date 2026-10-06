@@ -86,8 +86,7 @@ it('matches the fresh schema after upgrading each historical strategy', function
     $this->loadV02Fixture($strategy);
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $upgrade = vaulterSchemaSnapshot();
-    config()->set('vaulter.features.document_versions', true);
-    config()->set('vaulter.features.comments', true);
+    config()->set('vaulter-documents.comments.enabled', true);
     $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
     $differences = vaulterSchemaDifferences($upgrade, vaulterSchemaSnapshot());
     $path = dirname(__DIR__, 4).'/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7';

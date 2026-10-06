@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Read-side queries over v_node_grants (§2.6). It fetches the live, non-expired
@@ -20,6 +20,10 @@ use Vaulter\Support\Config;
  */
 final class GrantReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * Every live, non-expired grant addressed to any subject in $subjects on any
      * node in $nodeIds. One query backs the whole ancestor walk: the resolver
@@ -38,7 +42,7 @@ final class GrantReadRepository
             return $empty;
         }
 
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
         $grants = $model::query()
@@ -63,7 +67,7 @@ final class GrantReadRepository
      */
     public function forNode(Node $node): Builder
     {
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         return $model::query()
             ->where('node_id', $node->getKey())
@@ -92,7 +96,7 @@ final class GrantReadRepository
             return $empty;
         }
 
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
         $grants = $model::query()
@@ -118,7 +122,7 @@ final class GrantReadRepository
             return [];
         }
 
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         /** @var list<int|string> $ids */
         $ids = $model::query()

@@ -21,6 +21,7 @@ import argparse
 import csv
 import hashlib
 import io
+import json
 import re
 import sys
 from pathlib import Path
@@ -175,12 +176,29 @@ def owners_map() -> dict[tuple[str, str], list[str]]:
     return result
 
 
+def uses_json_plan() -> bool:
+    return (PLAN / "plan.json").exists() or any((PLAN / "phases").glob("P*/phase.json"))
+
+
 def detailed_phases() -> list[str]:
-    return sorted(p.name for p in (PLAN / "phases").iterdir() if p.is_dir())
+    phases = []
+    for path in (PLAN / "phases").iterdir():
+        if not path.is_dir():
+            continue
+        carrier = path / "phase.json"
+        if carrier.exists():
+            if json.loads(carrier.read_text(encoding="utf-8")).get("design") == "detailed":
+                phases.append(path.name)
+        elif not uses_json_plan():
+            phases.append(path.name)
+    return sorted(phases)
 
 
 def phase_items(phase: str) -> set[str]:
-    return {p.stem for p in (PLAN / "phases" / phase).glob(f"{phase}.*.md") if not p.stem.endswith(".state")}
+    directory = PLAN / "phases" / phase
+    suffix = "json" if uses_json_plan() else "md"
+    return {p.stem for p in directory.glob(f"{phase}.*.{suffix}")
+            if re.fullmatch(r"P\d+\.\d+", p.stem)}
 
 
 def planned_items() -> set[str]:
@@ -188,13 +206,23 @@ def planned_items() -> set[str]:
     known: set[str] = set()
     for phase in detailed_phases():
         known |= phase_items(phase)
-    for path in (PLAN / "backlog").glob("P*.md"):
-        known |= set(re.findall(r"^- (P\d+\.\d+) —", path.read_text(encoding="utf-8"), re.M))
+    for path in (PLAN / "phases").glob("P*/phase.json"):
+        phase = json.loads(path.read_text(encoding="utf-8"))
+        # JSON migration retained future-item declarations in the skeleton's
+        # sections. They remain declarations, never detailed item contracts.
+        for section in phase.get("sections", []):
+            known |= set(re.findall(r"^- (P\d+\.\d+) —", section.get("text", ""), re.M))
+    if not uses_json_plan():
+        for path in (PLAN / "backlog").glob("P*.md"):
+            known |= set(re.findall(r"^- (P\d+\.\d+) —", path.read_text(encoding="utf-8"), re.M))
     return known
 
 
 def plan_decisions() -> set[str]:
-    return {p.name[:3] for p in (PLAN / "decisions").glob("D[0-9][0-9]-*.md")}
+    directory = PLAN / "decisions"
+    if uses_json_plan():
+        return {p.stem for p in directory.glob("D[0-9][0-9].json")}
+    return {p.name[:3] for p in directory.glob("D[0-9][0-9]-*.md")}
 
 
 def owner_phase(owner: str) -> str | None:
@@ -273,16 +301,32 @@ def check(only_phase: str | None) -> int:
                 elif target_phase in ledgers and uid not in ledgers[target_phase]:
                     problems.append(f"{phase}: единица {uid} передана в {o}, но её нет в ledger-{target_phase}.tsv")
         for item in sorted(items):
-            artifact = PLAN / "artifacts" / f"{phase}-design" / f"{item}-opus.md"
+            uses_json = uses_json_plan()
+            artifact = (PLAN / "knowledge" / f"artifacts-{phase}-design-{item}-opus.json" if uses_json
+                        else PLAN / "artifacts" / f"{phase}-design" / f"{item}-opus.md")
             if not artifact.exists():
                 problems.append(f"{item}: нет дословного входа {artifact.relative_to(PLAN)}")
                 continue
             try:
-                expected_text = render_text(item, units=fresh)
+                if uses_json:
+                    expected_sections = literal_sections(item, units=fresh)
+                else:
+                    expected_text = render_text(item, units=fresh)
             except KeyError as exc:
                 problems.append(f"{item}: вход не генерируется: неизвестная единица {exc}")
                 continue
-            if artifact.read_text(encoding="utf-8") != expected_text:
+            if uses_json:
+                try:
+                    document = json.loads(artifact.read_text(encoding="utf-8"))
+                    actual_sections = [(section["title"], section["text"]) for section in document["sections"]]
+                    matches = (document["id"] == artifact.stem
+                               and document["title"] == expected_sections[0][0]
+                               and actual_sections == expected_sections)
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    matches = False
+            else:
+                matches = artifact.read_text(encoding="utf-8") == expected_text
+            if not matches:
                 problems.append(f"{item}: дословный вход устарел или повреждён; пересоберите `render --item {item}`")
     for p in problems:
         print(p)
@@ -290,6 +334,42 @@ def check(only_phase: str | None) -> int:
     print(f"opus-coverage {'OK' if not problems else 'FAIL'}: {total} единиц, {len(sections)} секций, "
           f"{len(problems)} нарушений")
     return 1 if problems else 0
+
+
+def literal_sections(item: str, *, units: list[dict] | None = None) -> list[tuple[str, str]]:
+    """The exact rendered headings/bodies stored by the canonical JSON migration.
+
+    Only the outer Markdown heading/separator newlines become JSON structure.
+    Unit text, notes, ordering and all internal whitespace remain literal.
+    """
+    phase = item.split(".")[0]
+    by_id = {u["id"]: u for u in (all_units() if units is None else units)}
+    rows = [r for r in read_tsv(HERE / f"ledger-{phase}.tsv")
+            if item in [x.strip() for x in r["items"].split(",")]]
+    sections = [(f"OPUS — дословные требования для {item} ({len(rows)} единиц)",
+                 "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n"
+                 "> или к явному отказу через D# плана (D06).")]
+    current = None
+    for row in rows:
+        unit = by_id[row["id"]]
+        heading = f"{unit['file']} — {unit['section']}"
+        note = f" — _{row['note']}_" if row.get("note") else ""
+        body = f"- `{unit['id']}`{note}"
+        if unit["kind"] != "heading":
+            body += f"\n\n{unit['source_text']}"
+        if current == heading:
+            title, text = sections[-1]
+            sections[-1] = (title, text + "\n\n" + body)
+        else:
+            sections.append((heading, body))
+            current = heading
+        if unit["kind"] == "heading":
+            # The migration lifted the literal bodyless Markdown heading into
+            # JSON structure, after its unit-id marker. Preserve that section
+            # rather than misclassifying it as missing unit text.
+            match = HEADING.match(unit["source_text"])
+            sections.append((match.group(2).strip(), ""))
+    return [(title, text.strip()) for title, text in sections]
 
 
 def render_text(item: str, *, units: list[dict] | None = None) -> str:

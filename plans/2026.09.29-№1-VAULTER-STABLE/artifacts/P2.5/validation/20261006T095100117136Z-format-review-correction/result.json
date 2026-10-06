@@ -1,0 +1,19 @@
+{
+  "command": [
+    "scripts/php84",
+    "vendor/bin/pint",
+    "packages/media/src/Configuration/MediaConfig.php",
+    "packages/media/tests/Configuration/MediaConfigTest.php",
+    "packages/drive/src/Configuration/DriveConfig.php",
+    "packages/drive/tests/Configuration/DriveConfigTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T095100117136Z",
+  "candidate_before": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true,
+  "exit_code": 0,
+  "seconds": 0.631,
+  "candidate_after": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "candidate_stable": true
+}

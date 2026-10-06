@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Support\Uploads\UploadModels;
 
 /*
  * Критическая секция upload-сессии обещает ОДНО на всех движках: «не смог взять лок» — это
@@ -36,7 +36,7 @@ it('acquireForPatch на MySQL берёт НЕблокирующий лок — 
     // Репозиторий ветвится по драйверу ДЕФОЛТНОГО соединения — переключаем на время замера.
     config()->set('database.default', $driver);
 
-    $model = UploadModels::session();
+    $model = app(DriveConfig::class)->model('upload_session');
     $session = new $model;
     $session->forceFill(['id' => 1, 'upload_id' => 'upload-1']);
 

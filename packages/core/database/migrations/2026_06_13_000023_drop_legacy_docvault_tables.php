@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 
 /**
  * ADR-0014 шаг 2 — drop the legacy document_id-bound DocVault tables.
@@ -23,7 +23,7 @@ return new class extends Migration
     public function up(): void
     {
         // Children first (they carry the FK to v_documents / v_document_folders), then
-        // the parents. Config::table() applies the configured prefix and falls back to
+        // the parents. app(\Vaulter\Configuration\DatabaseConfig::class)->table() applies the configured prefix and falls back to
         // the historical base name now that the table_names entries are gone.
         foreach ([
             'document_shares',
@@ -33,7 +33,7 @@ return new class extends Migration
             'documents',
             'document_folders',
         ] as $entity) {
-            Schema::dropIfExists(Config::table($entity));
+            Schema::dropIfExists(app(DatabaseConfig::class)->table($entity));
         }
     }
 

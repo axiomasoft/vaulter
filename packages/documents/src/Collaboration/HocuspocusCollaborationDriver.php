@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Collaboration;
 
 use Firebase\JWT\JWT;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Exceptions\CollaborationConfigException;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -31,6 +31,10 @@ use Vaulter\Support\Identity;
  */
 final readonly class HocuspocusCollaborationDriver implements CollaborationDriver
 {
+    public function __construct(
+        private DocumentsConfig $documentsConfig,
+    ) {}
+
     public function type(): CollaborationDriverType
     {
         return CollaborationDriverType::Hocuspocus;
@@ -42,13 +46,13 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
             throw CollaborationConfigException::missingJwt();
         }
 
-        $secret = Config::collaborationJwtSecret();
+        $secret = $this->documentsConfig->hubJwtSecret();
 
         if ($secret === null) {
             throw CollaborationConfigException::missingSecret();
         }
 
-        $room = Config::collaborationRoom($node->getKey());
+        $room = $this->documentsConfig->collaborationRoom($node->getKey());
         $readOnly = $ability !== Ability::Edit;
 
         $issuedAt = time();
@@ -58,7 +62,7 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
                 'sub' => Identity::stringify($actorId),
                 'readOnly' => $readOnly,
                 'iat' => $issuedAt,
-                'exp' => $issuedAt + Config::collaborationTokenTtl(),
+                'exp' => $issuedAt + $this->documentsConfig->hubTokenTtl(),
             ],
             key: $secret,
             alg: 'HS256',
@@ -70,7 +74,7 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
             nodeId: Identity::key($node->getKey()) ?? Identity::stringify($node->getKey()),
             readOnly: $readOnly,
             token: $token,
-            url: Config::collaborationHubUrl(),
+            url: $this->documentsConfig->hubUrl(),
             connection: null,
         );
     }

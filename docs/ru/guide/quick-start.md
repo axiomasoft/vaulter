@@ -26,8 +26,8 @@ Laravel-приложению **не нужна никакая настройка
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => 'gate', // database (по умолчанию) | gate | spatie | azgard | <ваш FQCN>
+'access' => [
+    'permission_driver' => 'gate', // database (по умолчанию) | gate | spatie | azgard | <ваш FQCN>
 ],
 ```
 
@@ -81,7 +81,7 @@ $drive->uploadVersion($node, source: $newBytes); // новая версия на
 
 ## 3. Отдать наружу по API (один маршрут)
 
-Drive REST-маршруты уже смонтированы под `api/vaulter` (`route_prefix`). Вашему приложению
+Drive REST-маршруты уже смонтированы под `api/vaulter` (`routes.prefix`). Вашему приложению
 нужно лишь передать id хранилища на фронтенд — обычно из сущности:
 
 ```php

@@ -7,8 +7,8 @@ namespace Vaulter\Exceptions\Schema;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * Thrown when config('vaulter.ids.default') (or an explicit key) names a
- * strategy that is not registered in config('vaulter.ids.strategies').
+ * Thrown when configuration key vaulter.ids.strategy (or an explicit key) names a
+ * strategy that is not registered in configuration key vaulter.ids.strategies.
  */
 final class UnknownIdStrategyException extends VaulterException
 {

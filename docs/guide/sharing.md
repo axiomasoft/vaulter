@@ -138,7 +138,7 @@ async function mint() {
 :::
 
 The create response carries the raw `token` and a full `url` (built from
-`config('vaulter.share.url_base')` + the token). **Every list/show response omits them** —
+`config('vaulter.sharing.url_base')` + the token). **Every list/show response omits them** —
 the token is unrecoverable from the stored row, so capture it now.
 
 ```json
@@ -294,7 +294,7 @@ The hardening is in the code, not bolted on:
 
 ```php
 // config/vaulter.php
-'share' => [
+'sharing' => [
     // The \Vaulter\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
     // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (48 chars).
     'token_generator' => RandomShareTokenGenerator::class,

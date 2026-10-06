@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -40,7 +40,7 @@ it('refuses to export a non-rich-text (Univer) node to HTML instead of rendering
         'content' => ['id' => 'wb1', 'sheets' => ['s1' => ['name' => 'Sheet1', 'cellData' => []]]],
     ])->assertCreated()->json('data.id');
 
-    $node = Config::nodeModel()::query()->findOrFail($nodeId);
+    $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
 
     expect(fn () => app(NodeExportService::class)->export($node, 'html'))
         ->toThrow(UnsupportedDocumentContentException::class);
@@ -55,7 +55,7 @@ it('refuses to export a non-rich-text (Univer) node to Markdown instead of rende
         'content' => ['id' => 'wb1', 'sheets' => ['s1' => ['name' => 'Sheet1', 'cellData' => []]]],
     ])->assertCreated()->json('data.id');
 
-    $node = Config::nodeModel()::query()->findOrFail($nodeId);
+    $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
 
     expect(fn () => app(NodeExportService::class)->export($node, 'markdown'))
         ->toThrow(UnsupportedDocumentContentException::class);

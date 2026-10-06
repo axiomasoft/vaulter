@@ -367,7 +367,7 @@ is explicit:
 
 > The open null host-role driver is forbidden in production. Why: it grants every actor
 > full access; running it in prod would expose every node. Fix: set
-> `config('vaulter.drivers.permission')` to a real driver (`database`/`gate`/`spatie`/
+> `config('vaulter.access.permission_driver')` to a real driver (`database`/`gate`/`spatie`/
 > `azgard`) or bind your own `PermissionDriver`.
 
 ::: danger Never ship the null driver

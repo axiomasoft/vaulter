@@ -10,7 +10,7 @@ use Vaulter\Models\Drive\Node;
  * A bare Node subclass — no behaviour change, no scope added. It exists ONLY to
  * be a non-default `config('vaulter.models.node')` value: F-P1.9-01's boot-time
  * footgun guard ({@see TenantFootgunGuard::check()})
- * fires when `vaulter.tenant.enabled=true` AND the node model is still the
+ * fires when `vaulter.tenancy.enabled=true` AND the node model is still the
  * package default, on the theory that the default carries no tenant scope. Tests
  * that deliberately run `tenant.enabled=true` for a reason OTHER than exercising
  * that exact misconfiguration (UlidModeTest: ULID key handling + schema column

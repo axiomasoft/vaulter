@@ -23,6 +23,6 @@ class Uuid7StrategyTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.ids.default', 'uuid7');
+        $app['config']->set('vaulter.ids.strategy', 'uuid7');
     }
 }

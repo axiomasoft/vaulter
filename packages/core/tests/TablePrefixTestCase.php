@@ -23,6 +23,6 @@ class TablePrefixTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.table_prefix', 'custom_');
+        $app['config']->set('vaulter.database.table_prefix', 'custom_');
     }
 }

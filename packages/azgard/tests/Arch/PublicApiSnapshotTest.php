@@ -243,5 +243,11 @@ test('vaulter-azgard public API surface matches the frozen golden (VLT-REL P2.2)
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
 
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Configuration', 'Vaulter\Azgard\Configuration') as $configuration) {
+        if (str_ends_with($configuration, 'Config')) {
+            $blocks[] = vaulterSnapshotInterface($configuration);
+        }
+    }
+
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

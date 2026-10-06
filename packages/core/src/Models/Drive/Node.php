@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * A node in the unified folder|file|document adjacency tree (master plan §2.2,
@@ -25,7 +26,7 @@ use Vaulter\Support\Config;
  * The recursive relationships come from staudenmeir/laravel-adjacency-list; the
  * adjacency key column is parent_id and the local key is the strategy-driven
  * primary key (ulid|uuid7|bigint), so descendants()/ancestors() resolve the same
- * under every id strategy. Swappable — point config('vaulter.models.node') at a
+ * under every id strategy. Swappable — point configuration key vaulter.models.node at a
  * subclass for tenant scoping.
  *
  * @property int|string      $id
@@ -88,7 +89,7 @@ class Node extends Model
         // Honour an explicitly-set table (staudenmeir swaps it to the recursive
         // CTE alias during descendants()/ancestors()); only fall back to the
         // shared schema name when none was set.
-        return $this->table ?? Config::table('nodes');
+        return $this->table ?? app(DatabaseConfig::class)->table('nodes');
     }
 
     /**
@@ -141,7 +142,7 @@ class Node extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'parent_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -149,7 +150,7 @@ class Node extends Model
      */
     public function children(): HasMany
     {
-        return $this->hasMany(Config::nodeModel(), 'parent_id');
+        return $this->hasMany(app(VaulterConfig::class)->model('node'), 'parent_id');
     }
 
     /**
@@ -157,7 +158,7 @@ class Node extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(Config::storageModel(), 'drive_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -165,7 +166,7 @@ class Node extends Model
      */
     public function file(): BelongsTo
     {
-        return $this->belongsTo(Config::fileModel(), 'file_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('file'), 'file_id');
     }
 
     /**
@@ -173,7 +174,7 @@ class Node extends Model
      */
     public function currentVersion(): BelongsTo
     {
-        return $this->belongsTo(Config::fileVersionModel(), 'current_version_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('file_revision'), 'current_version_id');
     }
 
     /**

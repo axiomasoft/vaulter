@@ -18,12 +18,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 use UnitEnum;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
 use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Support\Config;
 
 /**
  * The audit-feed admin surface (master plan §2.9 / §3): a READ-ONLY view of the
@@ -32,7 +32,7 @@ use Vaulter\Support\Config;
  * so this resource is non-creatable, non-editable and non-deletable: it lists and
  * inspects, never mutates.
  *
- * The model resolves through {@see Config::activityModel()} for swappability.
+ * The model resolves through {@see app(VaulterConfig::class)->model('activity')} for swappability.
  */
 final class ActivityResource extends Resource
 {
@@ -45,7 +45,7 @@ final class ActivityResource extends Resource
     #[Override]
     public static function getModel(): string
     {
-        return Config::activityModel();
+        return app(VaulterConfig::class)->model('activity');
     }
 
     /**
@@ -73,7 +73,7 @@ final class ActivityResource extends Resource
             return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
-        $nodeMorphClass = (new (Config::nodeModel()))->getMorphClass();
+        $nodeMorphClass = (new (app(VaulterConfig::class)->model('node')))->getMorphClass();
 
         return $query
             ->where('target_type', $nodeMorphClass)

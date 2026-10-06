@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+  "started_at": "20261006T082214308963Z",
+  "candidate_before": "1c46f0b84938d50ce5b19f909fd508d0a0efc915600e9776e841b32562ce1e4f",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true
+}

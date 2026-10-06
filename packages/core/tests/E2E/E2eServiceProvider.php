@@ -7,13 +7,13 @@ namespace Vaulter\Tests\E2E;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
@@ -38,14 +38,13 @@ final class E2eServiceProvider extends ServiceProvider
     {
         // Должно встать ДО boot VaulterServiceProvider, где маршруты гейтятся по фиче.
         config([
-            'vaulter.features.document_versions' => true,
             // P3.1 (F-P1.6-01, D20): the realtime surface now needs its OWN opt-in
             // ON TOP of document_versions — the e2e stand exercises collab/token +
             // the webhooks, so it must flip this too (default false).
-            'vaulter.features.collaboration' => true,
-            'vaulter.drivers.permission' => 'database',
-            'vaulter.ids.default' => 'bigint',
-            'vaulter.middleware' => ['api', E2eActingAs::class],
+            'vaulter-documents.collaboration.enabled' => true,
+            'vaulter.access.permission_driver' => 'database',
+            'vaulter.ids.strategy' => 'bigint',
+            'vaulter.routes.middleware.authenticated' => ['api', E2eActingAs::class],
         ]);
 
         // Вебхук collab/authenticate несёт только JWT sub (id) — материализуем по нему
@@ -144,7 +143,7 @@ final class E2eServiceProvider extends ServiceProvider
                 'node_id' => $node->getKey(),
                 'writer_user' => 1,
                 'viewer_user' => 2,
-                'room' => Config::collaborationRoom($node->getKey()),
+                'room' => app(DocumentsConfig::class)->collaborationRoom($node->getKey()),
             ]);
         });
     }

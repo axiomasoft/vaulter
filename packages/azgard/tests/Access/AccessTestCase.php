@@ -20,7 +20,7 @@ abstract class AccessTestCase extends TestCase
             'prefix' => '',
         ]);
         $app['config']->set('cache.default', 'array');
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

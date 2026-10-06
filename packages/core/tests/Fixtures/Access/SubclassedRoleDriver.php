@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Support\SpatieConfig;
+use Vaulter\Configuration\AccessConfig;
 
 /**
  * A host driver following the DOCUMENTED extension path (F-P1.2-01 review): it
@@ -36,7 +36,7 @@ final class SubclassedRoleDriver extends DatabasePermissionDriver
 
         return [
             Subject::ofModel($actor),
-            new Subject(type: SpatieConfig::roleSubjectType(), id: '7'),
+            new Subject(type: app(AccessConfig::class)->spatieRoleSubjectType(), id: '7'),
         ];
     }
 }

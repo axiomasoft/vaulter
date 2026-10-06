@@ -8,15 +8,18 @@ use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use LogicException;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 
 final class VaulterDatabase
 {
-    public function __construct(private readonly DatabaseManager $db) {}
+    public function __construct(
+        private readonly DatabaseConfig $databaseConfig,
+        private readonly DatabaseManager $db,
+    ) {}
 
     public function connection(): Connection
     {
-        return $this->db->connection(Config::connection());
+        return $this->db->connection($this->databaseConfig->connection());
     }
 
     public function driver(): string
@@ -51,7 +54,7 @@ final class VaulterDatabase
             return;
         }
 
-        $this->connection()->table(Config::table('drives'))
+        $this->connection()->table($this->databaseConfig->table('drives'))
             ->where('id', $storageId)->lockForUpdate()->first(['id']);
     }
 

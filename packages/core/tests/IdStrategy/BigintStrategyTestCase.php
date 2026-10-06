@@ -24,6 +24,6 @@ class BigintStrategyTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 }

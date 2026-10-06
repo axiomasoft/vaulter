@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\IdStrategy;
-use Vaulter\Support\Config;
 
 /**
  * Static migration helper over the resolved IdStrategy. Hand-written migrations
  * call these helpers instead of hard-coding column types, so "ulid vs uuid7 vs
- * bigint" stays driven by config('vaulter.ids.default'). Key/reference/morphs route through the strategy;
+ * bigint" stays driven by configuration key vaulter.ids.strategy. Key/reference/morphs route through the strategy;
  * hostKey/actor/tenant use the independent host-key type; panel/extra_data/bits/reference add
  * the per-table convention columns from the master plan §2.0.
  */
@@ -78,11 +79,11 @@ final class VaulterSchema
      */
     public static function tenant(Blueprint $table): void
     {
-        if (!Config::tenantEnabled()) {
+        if (!app(TenancyConfig::class)->enabled()) {
             return;
         }
 
-        HostKeyColumns::add(table: $table, column: Config::tenantColumn(), nullable: true, index: true);
+        HostKeyColumns::add(table: $table, column: TenancyConfig::COLUMN, nullable: true, index: true);
     }
 
     /**
@@ -99,7 +100,7 @@ final class VaulterSchema
      */
     public static function extraData(Blueprint $table): void
     {
-        if (!Config::extraDataEnabled()) {
+        if (!app(VaulterConfig::class)->extraDataEnabled()) {
             return;
         }
 

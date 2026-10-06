@@ -15,7 +15,6 @@ use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Support\Config;
 
 /**
  * Public entry point for host-app integration: open Drive handles, register drive
@@ -55,7 +54,7 @@ final class VaulterManager
     /**
      * Open a Drive handle bound to an already-resolved storage row. This is the
      * seam the HTTP layer uses: a route-model-bound Drive (resolved through the
-     * swappable config('vaulter.models.storage')) maps straight to a DriveHandle
+     * swappable configuration key vaulter.models.drive) maps straight to a DriveHandle
      * without re-deriving the owner. The handle's panel mirrors the storage's own
      * panel so its Actions run inside the right panel scope.
      */
@@ -161,7 +160,7 @@ final class VaulterManager
             return $this->exporters[$format];
         }
 
-        $configured = Config::exporters();
+        $configured = $this->configuredExporters();
 
         if (isset($configured[$format])) {
             /** @var DocumentExporter $exporter */
@@ -179,8 +178,21 @@ final class VaulterManager
     public function exporterFormats(): array
     {
         return array_values(array_unique([
-            ...array_keys(Config::exporters()),
+            ...array_keys($this->configuredExporters()),
             ...array_keys($this->exporters),
         ]));
+    }
+
+    /** @return array<string, class-string<DocumentExporter>> */
+    private function configuredExporters(): array
+    {
+        if (!$this->container->bound('vaulter.document_exporters')) {
+            return [];
+        }
+
+        /** @var array<string, class-string<DocumentExporter>> $exporters */
+        $exporters = $this->container->make('vaulter.document_exporters');
+
+        return $exporters;
     }
 }

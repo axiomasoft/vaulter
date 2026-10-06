@@ -54,7 +54,7 @@ final class R07StreamingOnlyStorageDriver implements StorageDriver
 
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));
 });
 

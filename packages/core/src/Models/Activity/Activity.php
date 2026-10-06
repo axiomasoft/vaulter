@@ -7,11 +7,11 @@ namespace Vaulter\Models\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * An APPEND-ONLY audit/activity row (master plan §2.9 / M2c-activity). ONE row per
@@ -26,7 +26,7 @@ use Vaulter\Support\Config;
  * actor, and a storage-level row has no node target. ip/user_agent/request_id are
  * captured from the current request when one exists and degrade to null off it.
  *
- * Swappable — point config('vaulter.models.activity') at a subclass for tenant
+ * Swappable — point configuration key vaulter.models.activity at a subclass for tenant
  * scoping or extra behaviour.
  *
  * @property int|string               $id
@@ -67,7 +67,7 @@ class Activity extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('activity');
+        return app(DatabaseConfig::class)->table('activity');
     }
 
     /**

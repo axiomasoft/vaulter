@@ -49,7 +49,7 @@ See [Guide → Installation](/guide/installation).
 Scaffold a consumer-owned `ProfileProvider` class in `app/Vaulter/Profiles` from a
 stub. It does **not** touch the published config and does **not** generate migrations —
 a panel is a zero-migration config-envelope over the shared `v_*` schema by default.
-Registering the provider FQCN in `config('vaulter.panels')` is a deliberate next step
+Registering the provider FQCN in `config('vaulter.profiles.providers')` is a deliberate next step
 the command prints.
 
 ```
@@ -72,7 +72,7 @@ See [Concepts → Storage panels](/guide/storage-panels).
 Two-phase, race-safe blob garbage collection (ACL-blind, system context). Marks
 unreferenced committed blobs as tombstoned with a grace deadline, then sweeps
 tombstoned blobs past grace to a physical delete. The grace window comes from
-`config('vaulter.gc.grace_hours')` (floored at 1h) unless `--grace` overrides it.
+`config('vaulter-media.gc.grace_hours')` (floored at 1h) unless `--grace` overrides it.
 
 ```
 vaulter:blobs:gc
@@ -116,7 +116,7 @@ is released. A trashed node whose parent is also trashed is skipped (no double-p
 
 ```
 vaulter:purge-trash
-    {--days=} Override the retention window (config vaulter.trash.retention_days)
+    {--days=} Override the retention window (config vaulter-drive.trash.retention_days)
 ```
 
 ```bash
@@ -129,7 +129,7 @@ See [Usage → Search & trash](/guide/search-trash).
 ## `vaulter:sweep-uploads`
 
 Abort and clean up stale resumable-upload sessions past their TTL
-(`config('vaulter.uploads.session_ttl_hours')`). The staged temp file and any S3
+(`config('vaulter-drive.uploads.resumable.session_ttl_hours')`). The staged temp file and any S3
 multipart state are reclaimed, and the session status flips to `expired`.
 
 ```
@@ -152,7 +152,7 @@ See [Usage → Uploads](/guide/uploads).
 Relay pending outbox events to webhook endpoints and re-dispatch due retries. Each
 pending `v_outbox` row fans out into one signed `v_webhook_deliveries` row per
 subscribed active endpoint, and the HTTP POST is queued. At-least-once with
-exponential backoff + DLQ. Gated by `features.reliability`.
+exponential backoff + DLQ. Gated by `features.webhooks`.
 
 ```
 vaulter:relay-outbox
@@ -168,7 +168,7 @@ See [Recipes → Reliability & webhooks](/guide/recipes).
 ## `vaulter:retry-webhooks`
 
 Re-dispatch webhook deliveries whose backoff window has elapsed. Gated by
-`features.reliability`.
+`features.webhooks`.
 
 ```
 vaulter:retry-webhooks
@@ -185,7 +185,7 @@ php artisan vaulter:retry-webhooks
 Delete SETTLED outbox rows (`dispatched`, older than the retention window) and
 TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention window).
 An in-flight row (`pending`/`failed`) is never touched — the relay/retry sweep still
-owns it. Gated by `features.reliability` (no-ops with a notice when off). The window
+owns it. Gated by `features.webhooks` (no-ops with a notice when off). The window
 comes from `config('vaulter.webhooks.retention_days')` (default 30) unless `--days`
 overrides it.
 
@@ -223,6 +223,6 @@ Schedule::command('vaulter:prune-webhooks')->weekly();
 
 ## See also
 
-- [Configuration reference](/reference/configuration) — `gc.*`, `trash.*`, `uploads.*`, `webhooks.*`, `features.reliability`
+- [Configuration reference](/reference/configuration) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
 - [Events reference](/reference/events) — what the relay fans out
 - [Facade & Manager](/reference/facade) — the runtime API

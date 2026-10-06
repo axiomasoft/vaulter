@@ -6,7 +6,7 @@ namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
 use Vaulter\Media\Cas\BlobReconciler;
-use Vaulter\Support\Config;
+use Vaulter\Media\Configuration\MediaConfig;
 
 /**
  * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
@@ -30,6 +30,12 @@ use Vaulter\Support\Config;
  */
 final class ReconcileBlobsCommand extends Command
 {
+    public function __construct(
+        private readonly MediaConfig $mediaConfig,
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'vaulter:blobs:reconcile
         {--orphans : Also walk the disk for orphan objects (bytes with no blob row)}
         {--disk= : The disk to scan for orphans (defaults to the configured CAS disk)}
@@ -99,7 +105,7 @@ final class ReconcileBlobsCommand extends Command
         $this->components->info(
             "Orphan walk ({$mode}): scanned {$result['scanned']}, found ".count($result['orphans']).
             ", pruned {$result['pruned']}, skipped {$result['skipped']} ".
-            '(disk '.($disk ?? Config::defaultDisk()).', grace '.Config::orphanGraceHours($grace).'h).',
+            '(disk '.($disk ?? $this->mediaConfig->disk()).', grace '.$this->mediaConfig->orphanGraceHours($grace).'h).',
         );
 
         if ($pruneRefused) {

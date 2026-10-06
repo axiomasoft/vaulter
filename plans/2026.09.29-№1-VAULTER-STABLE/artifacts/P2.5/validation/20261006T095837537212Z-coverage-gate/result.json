@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python3",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py",
+    "check"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T095837537212Z",
+  "candidate_before": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false,
+  "exit_code": 0,
+  "seconds": 0.088,
+  "candidate_after": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "candidate_stable": true
+}

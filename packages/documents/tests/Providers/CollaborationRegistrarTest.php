@@ -21,10 +21,9 @@ it('binds the host user resolver in an isolated container', function (): void {
     expect($app->make(HostUserResolver::class))->toBeInstanceOf(DefaultHostUserResolver::class);
 });
 
-it('preserves the channel prefix and rejects sessions when a required feature is disabled', function (bool $documents, bool $collaboration): void {
-    config()->set('vaulter.collaboration.channel_prefix', 'host.documents');
-    config()->set('vaulter.features.document_versions', $documents);
-    config()->set('vaulter.features.collaboration', $collaboration);
+it('preserves the channel prefix and rejects sessions when collaboration is disabled', function (bool $collaboration): void {
+    config()->set('vaulter-documents.collaboration.broadcast.channel_prefix', 'host.documents');
+    config()->set('vaulter-documents.collaboration.enabled', $collaboration);
     $callback = null;
     Broadcast::shouldReceive('channel')->once()->withArgs(function (string $name, Closure $authorize) use (&$callback): bool {
         $callback = $authorize;
@@ -36,4 +35,4 @@ it('preserves the channel prefix and rejects sessions when a required feature is
 
     expect($callback)->toBeInstanceOf(Closure::class)
         ->and($callback(Mockery::mock(Authenticatable::class), 123))->toBeFalse();
-})->with([[false, false], [true, false], [false, true], [true, true]]);
+})->with([false, true]);

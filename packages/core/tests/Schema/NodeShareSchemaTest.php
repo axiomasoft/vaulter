@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Schema\ForceCreates;
@@ -17,7 +18,7 @@ use Vaulter\Tests\Schema\ForceCreates;
  * UNIQUE, and a row stores the hash — never the raw token.
  */
 it('creates the v_node_shares table with every §2.7 column', function (): void {
-    $table = Config::table('node_shares');
+    $table = app(DatabaseConfig::class)->table('node_shares');
 
     expect(Schema::hasColumns($table, [
         'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'permissions',
@@ -31,7 +32,7 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'doc');
 
-    $model = Config::nodeShareModel();
+    $model = app(VaulterConfig::class)->model('node_share');
     $hash = ShareToken::hash('the-token');
 
     $base = [
@@ -58,7 +59,7 @@ it('stores the token hash, never the raw token', function (): void {
     $share = ShareToken::hash('raw-secret');
 
     /** @var NodeShare $row */
-    $row = ForceCreates::make(Config::nodeShareModel(), [
+    $row = ForceCreates::make(app(VaulterConfig::class)->model('node_share'), [
         'node_id' => $node->getKey(),
         'token_hash' => $share,
         'token_prefix' => 'raw-secr',

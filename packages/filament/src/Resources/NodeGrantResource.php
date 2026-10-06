@@ -25,6 +25,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
@@ -35,7 +36,6 @@ use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * The per-node ACL admin surface (master plan §2.6 / §3): list, create and revoke
@@ -48,7 +48,7 @@ use Vaulter\Support\Config;
  *   - revoke → {@see RevokeNodeAccessAction} (drops every grant a subject holds).
  * Both require Ability::Share on the target node, gated through the AccessResolver,
  * so the panel never bypasses the ACL. The model resolves through
- * {@see Config::grantModel()} for swappability.
+ * {@see app(VaulterConfig::class)->model('grant')} for swappability.
  */
 final class NodeGrantResource extends Resource
 {
@@ -61,7 +61,7 @@ final class NodeGrantResource extends Resource
     #[Override]
     public static function getModel(): string
     {
-        return Config::grantModel();
+        return app(VaulterConfig::class)->model('grant');
     }
 
     /**
@@ -314,7 +314,7 @@ final class NodeGrantResource extends Resource
             return null;
         }
 
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         return $model::query()->find($id);
     }
@@ -324,7 +324,7 @@ final class NodeGrantResource extends Resource
      */
     private static function nodeOptions(): array
     {
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         /** @var array<int|string, string> $options */
         $options = $model::query()

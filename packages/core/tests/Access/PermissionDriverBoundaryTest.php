@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Testing\NullPermissionDriver;
@@ -34,8 +35,8 @@ it('retains actor-only classification without naming an optional bridge', functi
 });
 
 it('rejects the open testing driver in production through a neutral contract', function (): void {
-    config()->set('vaulter.permission_drivers.open', NullPermissionDriver::class);
-    $manager = new PermissionDriverManager(container: app(), isProduction: true);
+    config()->set('vaulter.access.permission_drivers.open', NullPermissionDriver::class);
+    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: true);
 
     expect(fn () => $manager->driver('open'))->toThrow(MissingPermissionDriverException::class);
 });

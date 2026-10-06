@@ -71,7 +71,7 @@ provideVaulterClient(app, client)
 
 | Опция | Тип | По умолчанию | Примечания |
 |--------|------|---------|-------|
-| `baseUrl` | `string` | `/api/vaulter` | соответствует конфигу `route_prefix` на бэкенде. Хвостовые слэши обрезаются |
+| `baseUrl` | `string` | `/api/vaulter` | соответствует конфигу `routes.prefix` на бэкенде. Хвостовые слэши обрезаются |
 | `headers` | `Record<string, string>` или `() => Record<string, string>` | — | дополнительные заголовки запроса или геттер (например, ротируемый bearer-токен) |
 | `csrfToken` | `string` | — | отправляется как `X-CSRF-TOKEN` |
 | `fetch` | `typeof fetch` | глобальный `fetch` | своя реализация fetch |

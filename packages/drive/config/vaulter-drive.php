@@ -5,18 +5,26 @@ declare(strict_types=1);
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
-/*
-|--------------------------------------------------------------------------
-| Vaulter Drive — swappable-model defaults (P2 #5 / ADR-0015, T9)
-|--------------------------------------------------------------------------
-| The resumable-upload models are OWNED by vaulter-drive: core no longer ships
-| their class defaults (Support\Config guard-throws when the key is absent). The
-| provider merges this array under the existing `vaulter.models` key so a host's
-| config('vaulter.models.upload_session') resolves without any core change. The
-| v_upload_sessions / v_upload_parts SCHEMA stays in core (schema-owner, T2).
-*/
-
 return [
-    'upload_session' => UploadSession::class,
-    'upload_part' => UploadPart::class,
+    'uploads' => [
+        'max_file_size' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120),
+        'allowed_mime_types' => [],
+        'resumable' => [
+            'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
+            'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608),
+            'max_chunk_size' => env('VAULTER_UPLOAD_MAX_CHUNK_BYTES', 67_108_864),
+            'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
+            'max_active_sessions_per_actor' => env('VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS', 20),
+            'metadata' => [
+                'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+                'max_value_length' => 512,
+            ],
+        ],
+    ],
+    'names' => ['max_length' => 255],
+    'trash' => ['retention_days' => 30],
+    'models' => [
+        'upload_session' => UploadSession::class,
+        'upload_part' => UploadPart::class,
+    ],
 ];

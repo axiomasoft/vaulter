@@ -44,7 +44,7 @@ final readonly class BlobScope
         return match ($dedupScope) {
             'global' => self::global(),
             'tenant' => $tenantId === null ? self::global() : self::tenant($tenantId),
-            'storage' => self::drive($storageId),
+            'drive', 'storage' => self::drive($storageId),
             default => throw new InvalidArgumentException('Unknown CAS dedup scope.'),
         };
     }
@@ -106,7 +106,7 @@ final readonly class BlobScope
 
     public function dedupScope(): string
     {
-        return $this->kind === 'drive' ? 'storage' : $this->kind;
+        return $this->kind;
     }
 
     public function tenantId(): ?string

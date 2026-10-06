@@ -16,9 +16,9 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
-    config()->set('vaulter.gc.grace_hours', 2);
-    config()->set('vaulter.gc.orphan_grace_hours', 3);
+    config()->set('vaulter-media.dedup.scope', 'tenant');
+    config()->set('vaulter-media.gc.grace_hours', 2);
+    config()->set('vaulter-media.gc.orphan_grace_hours', 3);
     Carbon::setTestNow('2026-09-25 12:00:00');
 });
 
@@ -39,7 +39,7 @@ it('reports the configured GC grace when no override is supplied', function (): 
 });
 
 it('reports the exact pending sweep totals', function (): void {
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('pending command contract'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('pending command contract'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $blob->forceFill([
         'status' => BlobStatus::Pending,
         'first_seen_at' => now()->subHours(8),
@@ -61,8 +61,8 @@ it('reports exact reconcile totals and the clean-row verdict', function (): void
 });
 
 it('reports every dangling row identity', function (): void {
-    $first = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling first'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $second = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling second'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $first = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling first'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $second = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling second'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     Storage::disk('local')->delete([$first->storage_key, $second->storage_key]);
 
     $exit = Artisan::call('vaulter:blobs:reconcile');

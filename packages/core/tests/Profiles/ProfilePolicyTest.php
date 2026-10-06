@@ -14,7 +14,7 @@ it('применяет дефолты фич Vaulter с override панели', 
         ->and($panel->featureEnabled('activity'))->toBeTrue()
         ->and($panel->featureEnabled('uploads'))->toBeTrue()
         ->and($panel->featureEnabled('extra_data'))->toBeTrue()
-        ->and($panel->featureEnabled('reliability'))->toBeTrue()
+        ->and($panel->featureEnabled('webhooks'))->toBeTrue()
         ->and($panel->featureEnabled('share_links'))->toBeFalse()
         ->and($panel->featureEnabled('public_listing'))->toBeFalse()
         ->and($panel->featureEnabled('document_versions'))->toBeFalse();

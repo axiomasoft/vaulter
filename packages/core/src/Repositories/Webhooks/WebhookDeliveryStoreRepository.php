@@ -6,8 +6,8 @@ namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookDelivery;
-use Vaulter\Support\Config;
 
 /**
  * The write side of webhook-delivery row work (master plan §2.11 / D14 / M3b).
@@ -20,6 +20,10 @@ use Vaulter\Support\Config;
  */
 final readonly class WebhookDeliveryStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The terminal-row predicate, applied identically by both the count and the
      * delete so a dry-run reports exactly what a real run would remove: status in
@@ -84,7 +88,7 @@ final readonly class WebhookDeliveryStoreRepository
 
     private function keyName(): string
     {
-        $model = Config::webhookDeliveryModel();
+        $model = $this->vaulterConfig->model('webhook_delivery');
 
         return (new $model)->getKeyName();
     }
@@ -95,7 +99,7 @@ final readonly class WebhookDeliveryStoreRepository
     private function newQuery(): Builder
     {
         /** @var class-string<WebhookDelivery> $model */
-        $model = Config::webhookDeliveryModel();
+        $model = $this->vaulterConfig->model('webhook_delivery');
 
         return $model::query();
     }

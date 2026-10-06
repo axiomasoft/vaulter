@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for the v_file_revision_blobs edge table — the GC liveness
@@ -19,6 +19,10 @@ use Vaulter\Support\Config;
  */
 final readonly class FileRevisionBlobStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * Create (or re-affirm) a version↔blob edge.
      *
@@ -80,7 +84,7 @@ final readonly class FileRevisionBlobStoreRepository
      */
     private function query(): Builder
     {
-        $model = Config::fileVersionBlobModel();
+        $model = $this->vaulterConfig->model('file_revision_blob');
 
         /** @var Builder<FileRevisionBlob> $query */
         $query = $model::query();

@@ -26,7 +26,7 @@ final class CollaborationConfigException extends VaulterException
     {
         return new self(
             '[Vaulter] Missing the Hocuspocus collaboration signing secret. '
-            .'Why: minting/verifying a room JWT needs config(vaulter.collaboration.drivers.hocuspocus.secret). '
+            .'Why: minting/verifying a room JWT needs config(vaulter-documents.collaboration.hub.jwt_secret). '
             .'Fix: set VAULTER_COLLAB_SECRET in your environment. '
             .'Docs: '.self::docs('missing-collab-secret'),
         );

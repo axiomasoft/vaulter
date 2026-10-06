@@ -1,0 +1,16 @@
+{
+  "command": [
+    "scripts/php84",
+    "vendor/bin/phpstan",
+    "analyse",
+    "-c",
+    "phpstan.neon",
+    "--memory-limit=1G",
+    "--no-progress"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T082945233872Z",
+  "candidate_before": "363f45fdbb78e0b95056b9aad61f6387a637371000f723d5d3238242feba8113",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false
+}

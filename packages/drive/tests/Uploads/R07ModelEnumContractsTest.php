@@ -161,7 +161,7 @@ it('R07Model returns all-false storage abilities without an actor or root node',
 });
 
 it('R07Model requires both root create ability and workspace gate for storage create flags', function (): void {
-    config()->set('vaulter.drivers.permission', 'gate');
+    config()->set('vaulter.access.permission_driver', 'gate');
     $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $root = $storage->rootNode()->firstOrFail();
     $actor = (new TestUser)->forceFill(['id' => 17]);

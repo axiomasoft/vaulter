@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Sharing;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 
 /**
@@ -39,7 +39,7 @@ final class ShareTestHelpers
         int $useCount = 0,
         ?Carbon $revokedAt = null,
     ): NodeShare {
-        $model = Config::nodeShareModel();
+        $model = app(VaulterConfig::class)->model('node_share');
 
         /** @var NodeShare $share */
         $share = new $model;

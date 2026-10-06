@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Revisions;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -13,7 +14,6 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Snapshot a document node's current head content as a NAMED (non-autosave) version
@@ -32,6 +32,7 @@ final readonly class CreateNamedRevisionAction
         private DocumentRevisionStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     public function execute(CreateNamedRevisionInput $data): DocumentRevision
@@ -65,7 +66,7 @@ final readonly class CreateNamedRevisionAction
 
             $this->store->prune(
                 node: $node,
-                max: Config::maxDocumentVersions(),
+                max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
 

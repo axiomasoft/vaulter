@@ -1,0 +1,21 @@
+{
+  "command": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "tests/Arch/ConfigurationBoundaryTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+  "started_at": "20261006T092557298704Z",
+  "candidate_before": "815e77407461b202c4e72b76822fd3dee934be6749516dd99afd37ab02ba0fec",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false,
+  "exit_code": 1,
+  "seconds": 0.729,
+  "candidate_after": "815e77407461b202c4e72b76822fd3dee934be6749516dd99afd37ab02ba0fec",
+  "candidate_stable": true
+}

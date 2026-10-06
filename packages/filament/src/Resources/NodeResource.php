@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Override;
 use UnitEnum;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -31,7 +32,6 @@ use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 
 /**
  * The Drive-node admin surface (master plan §2.2 / §3) — the heart of the panel. It
@@ -47,7 +47,7 @@ use Vaulter\Support\Config;
  * {@see Ability} on that node through the AccessResolver (Edit→rename, Move→move,
  * Trash→trash, Restore→restore, Delete→forceDelete), with the full deny-veto applied,
  * so the panel never bypasses the ACL even though the table lists the candidate set.
- * The model resolves through {@see Config::nodeModel()} so a swapped Node is still
+ * The model resolves through {@see app(VaulterConfig::class)->model('node')} so a swapped Node is still
  * governed here.
  */
 final class NodeResource extends Resource
@@ -63,7 +63,7 @@ final class NodeResource extends Resource
     #[Override]
     public static function getModel(): string
     {
-        return Config::nodeModel();
+        return app(VaulterConfig::class)->model('node');
     }
 
     #[Override]
@@ -364,7 +364,7 @@ final class NodeResource extends Resource
             return [];
         }
 
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         return $model::query()
             ->where('drive_id', $record->drive_id)
@@ -401,7 +401,7 @@ final class NodeResource extends Resource
             return null;
         }
 
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         /** @var Node|null $folder */
         $folder = $model::query()
@@ -417,7 +417,7 @@ final class NodeResource extends Resource
      */
     private static function storageOptions(): array
     {
-        $model = Config::storageModel();
+        $model = app(VaulterConfig::class)->model('drive');
 
         /** @var array<int|string, string> $options */
         $options = $model::query()

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Middleware;
 
 use Illuminate\Http\Request;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\RoutesConfig;
 
 /**
  * §9 logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
@@ -34,7 +34,7 @@ final class VaulterThrottledRouteMap
 
     public static function resolve(Request $request): ?string
     {
-        $prefix = trim(Config::routePrefix(), '/');
+        $prefix = trim(app(RoutesConfig::class)->prefix(), '/');
         $path = trim($request->path(), '/');
 
         if ($prefix !== '' && str_starts_with($path, $prefix)) {

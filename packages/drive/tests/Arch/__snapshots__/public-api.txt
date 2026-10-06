@@ -4,6 +4,21 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
   isComplete(\Vaulter\Drive\Models\Uploads\UploadSession $session): bool
   protocol(): \Vaulter\Drive\Enums\Uploads\UploadProtocol
 
+Vaulter\Drive\Configuration\DriveConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  allowedMimeTypes(): array
+  chunkSize(): int
+  maxActiveSessionsPerActor(): int
+  maxChunkSize(): int
+  maxFileSize(): int
+  metadataAllowedKeys(): array
+  metadataMaxValueLength(): int
+  model(string $key): string
+  nameMaxLength(): int
+  resumableEnabled(): bool
+  sessionTtlHours(): int
+  trashRetentionDays(): int
+
 Vaulter\Drive\Events\Drives\DriveCreated
   __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Models\Drive\Drive $storage

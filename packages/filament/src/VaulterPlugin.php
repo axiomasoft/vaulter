@@ -7,12 +7,13 @@ namespace Vaulter\Filament;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Filament\Configuration\FilamentConfig;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
-use Vaulter\Support\Config;
 
 /**
  * Vaulter Filament plugin (Filament 5).
@@ -23,9 +24,9 @@ use Vaulter\Support\Config;
  *
  * It registers the Drive/permissions resources (Drive, Node, NodeGrant,
  * NodeShare, Activity), each toggleable through
- * config('vaulter-filament.resources.*').
+ * FilamentConfig.
  *
- * Resources resolve their model through Vaulter\Support\Config::*Model(), so a host
+ * Resources resolve their model through VaulterConfig::model(), so a host
  * that swaps a model keeps being governed by these resources.
  */
 final class VaulterPlugin implements Plugin
@@ -108,9 +109,9 @@ final class VaulterPlugin implements Plugin
 
     /**
      * Whether a resource is enabled: its OWN config toggle
-     * (config('vaulter-filament.resources.{key}'), default true) AND — when the
+     * (FilamentConfig::resourceEnabled, default true) AND — when the
      * resource's schema is behind a core feature flag — that flag
-     * (`Config::featureEnabled()`). Without the AND-condition, a host that disabled
+     * (`app(VaulterConfig::class)->featureEnabled()`). Without the AND-condition, a host that disabled
      * the `activity` subsystem but left `ActivityResource`'s own default-on toggle
      * untouched would keep the resource registered against a subsystem it turned
      * off, turning a legitimate "subsystem off" configuration into a broken
@@ -119,13 +120,12 @@ final class VaulterPlugin implements Plugin
      */
     private function resourceEnabled(string $key, ?string $feature): bool
     {
-        $value = config("vaulter-filament.resources.{$key}", true);
-        $toggledOn = is_bool($value) ? $value : true;
+        $toggledOn = app(FilamentConfig::class)->resourceEnabled($key);
 
         if (!$toggledOn) {
             return false;
         }
 
-        return $feature === null || Config::featureEnabled($feature);
+        return $feature === null || app(VaulterConfig::class)->featureEnabled($feature);
     }
 }

@@ -68,7 +68,7 @@ missing.
 | `VAULTER_BACKEND_URL` | `http://localhost` | Your Laravel app base URL the hub calls back into. **Required in production.** |
 | `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter route prefix. Webhooks resolve to `{BACKEND}/{PREFIX}/collab/{authenticate,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Explicit full webhook base; overrides the two above (reverse proxy / split host). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. Must equal the Laravel `vaulter.collaboration.webhook_secret`. Unset ⇒ the hub authenticates webhooks with the forwarded room JWT alone (never open). |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. Must equal the Laravel `vaulter-documents.collaboration.hub.webhook_secret`. Unset ⇒ the hub authenticates webhooks with the forwarded room JWT alone (never open). |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout. |
 
 ### Security

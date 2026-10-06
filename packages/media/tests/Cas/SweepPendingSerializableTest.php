@@ -6,12 +6,14 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Media\Cas\BlobGarbageCollector;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
@@ -30,7 +32,7 @@ beforeEach(function (): void {
     }
 
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('sweepPending ретраит транзиентный serialization-failure 40001 вместо проброса, F-P1.5-02', function (): void {
@@ -98,6 +100,8 @@ it('sweepPending ретраит транзиентный serialization-failure 4
         app(FileRevisionBlobStoreRepository::class),
         app(MetricsRecorder::class),
         app(VaulterDatabase::class),
+        mediaConfig: app(MediaConfig::class),
+        vaulterConfig: app(VaulterConfig::class),
     );
 
     // Pre-fix: the first 40001 propagates and aborts the pass. Post-fix: the unit is

@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Enums\Events\EventType;
@@ -96,7 +98,7 @@ it('records webhook delivery metrics on successful deliver', function (): void {
     $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint());
 
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
 
     $recorder = app(MetricsRecorder::class);
     $recorder->assertHistogram(name: 'vaulter_webhook_queue_wait_seconds', labels: ['outcome' => 'success']);
@@ -140,7 +142,7 @@ it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', fun
 });
 
 it('records prune webhook metrics when rows are reclaimed', function (): void {
-    config()->set('vaulter.features.reliability', true);
+    config()->set('vaulter.features.webhooks', true);
     config()->set('vaulter.webhooks.retention_days', 0);
 
     $threshold = now()->subDay();

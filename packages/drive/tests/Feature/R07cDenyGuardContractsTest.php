@@ -50,7 +50,7 @@ final class R07cDenyRoleDriver implements PermissionDriver
 
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 41]));
 });
 
@@ -62,8 +62,8 @@ function r07cStorage(): Drive
 function r07cDeny(): void
 {
     app()->instance(R07cDenyRoleDriver::class, new R07cDenyRoleDriver);
-    config()->set('vaulter.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
-    config()->set('vaulter.drivers.permission', 'r07cdeny');
+    config()->set('vaulter.access.permission_drivers.r07cdeny', R07cDenyRoleDriver::class);
+    config()->set('vaulter.access.permission_driver', 'r07cdeny');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }

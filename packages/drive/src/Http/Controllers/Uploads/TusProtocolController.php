@@ -9,7 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
@@ -26,7 +28,6 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -57,6 +58,8 @@ final class TusProtocolController extends Controller
         private readonly NodeReadRepository $nodes,
         private readonly AccessResolver $access,
         private readonly CompleteUploadAction $commit,
+        private readonly DriveConfig $driveConfig,
+        private readonly RoutesConfig $routesConfig,
     ) {}
 
     /**
@@ -208,7 +211,7 @@ final class TusProtocolController extends Controller
             'Tus-Extension' => 'creation,termination',
         ];
 
-        $maxBytes = Config::uploadMaxBytes();
+        $maxBytes = $this->driveConfig->maxFileSize();
 
         if ($maxBytes > 0) {
             $headers['Tus-Max-Size'] = (string) $maxBytes;
@@ -384,7 +387,7 @@ final class TusProtocolController extends Controller
      */
     private function assertContentLengthWithinLimit(Request $request): void
     {
-        $max = Config::uploadMaxChunkBytes();
+        $max = $this->driveConfig->maxChunkSize();
         $declared = $request->server('CONTENT_LENGTH');
 
         if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {
@@ -423,8 +426,8 @@ final class TusProtocolController extends Controller
      */
     private function sanitizeMetadata(array $metadata): array
     {
-        $allowedKeys = Config::uploadMetadataAllowedKeys();
-        $maxLength = Config::uploadMetadataMaxValueLength();
+        $allowedKeys = $this->driveConfig->metadataAllowedKeys();
+        $maxLength = $this->driveConfig->metadataMaxValueLength();
 
         $sanitized = [];
 
@@ -471,12 +474,12 @@ final class TusProtocolController extends Controller
 
     private function locationFor(Request $request, UploadSession $session): string
     {
-        return rtrim($request->getSchemeAndHttpHost().'/'.Config::routePrefix(), '/').('/uploads/'.$session->upload_id);
+        return rtrim($request->getSchemeAndHttpHost().'/'.$this->routesConfig->prefix(), '/').('/uploads/'.$session->upload_id);
     }
 
     private function assertTusEnabled(): void
     {
-        if (!Config::tusEnabled()) {
+        if (!$this->driveConfig->resumableEnabled()) {
             abort(403, 'The tus resumable-upload protocol is disabled.');
         }
     }

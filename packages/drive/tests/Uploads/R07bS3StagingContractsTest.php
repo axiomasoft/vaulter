@@ -78,7 +78,7 @@ function r07bS3PutPart(string $uploadId, string $body, array $extraServer = []):
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ it('[r07bS3] isComplete returns true when exactly one byte is assembled after co
 // would limit the read to 1 byte — the etag/sha256 from a truncated stream would
 // disagree with what was declared, catching both the read limit and the check.
 it('[r07bS3] max_chunk_bytes zero is treated as unlimited and all bytes are recorded intact', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 0);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 0);
     $bytes = str_repeat('x', 20); // 20 bytes; truncated to 1 by the >=0 mutation
     $session = r07bS3RawSession(totalSizeBytes: strlen($bytes));
 
@@ -178,7 +178,7 @@ it('[r07bS3] max_chunk_bytes zero is treated as unlimited and all bytes are reco
 //        would reject a chunk equal to max) and Decrement (strlen > max-1 same effect).
 // A chunk exactly at the ceiling must succeed; the > must remain strict.
 it('[r07bS3] exactly max_chunk_bytes is accepted without triggering the ceiling', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $session = r07bS3RawSession(totalSizeBytes: 100);
 
     $result = app(S3MultipartHandler::class)->putPart(
@@ -297,7 +297,7 @@ it('[r07bStage] rangeMatches at offset one correctly skips the first byte before
 // not a 413; the Content-Length gate must fire before any bytes are consumed.
 it('[r07bS3] controller rejects a declared Content-Length above max_chunk_bytes with 413', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
 
     $storage = r07bS3CtlStorage();
     $uploadId = r07bS3CreateSession($storage, ['total_size_bytes' => 100]);
@@ -349,7 +349,7 @@ it('[r07bS3] controller forbids a different authenticated user from accessing an
 // must be 201, proving the <= is preserved.
 it('[r07bS3] controller accepts a declared Content-Length exactly equal to max_chunk_bytes', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
 
     $storage = r07bS3CtlStorage();
     $uploadId = r07bS3CreateSession($storage, ['total_size_bytes' => 100]);

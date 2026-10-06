@@ -22,7 +22,7 @@ use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 /**
@@ -156,7 +156,7 @@ it('дедуп: идентичная резюмируемая загрузка �
     app(CompleteUploadAction::class)->execute($b->refresh());
 
     // global dedup so two storages share the blob; assert one physical blob.
-    config()->set('vaulter.dedup.scope', 'global');
+    config()->set('vaulter-media.dedup.scope', 'global');
 
     expect(Node::query()->where('kind', NodeKind::File->value)->count())->toBe(2)
         ->and(FileRevision::query()->count())->toBe(2);
@@ -209,7 +209,7 @@ it('квота: сборка сверх квоты отклоняется на c
 });
 
 it('over-size: initiate сверх max_bytes отклоняется ДО приёма байт', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 10);
+    config()->set('vaulter-drive.uploads.max_file_size', 10);
     $storage = UploadTestHelpers::storage();
 
     expect(fn () => app(UploadSessionManager::class)->initiate(new InitiateUploadInput(

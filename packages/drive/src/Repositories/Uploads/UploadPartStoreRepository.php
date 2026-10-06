@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_upload_parts (§2.8 / M3a). The S3-multipart part record:
@@ -17,7 +17,10 @@ use Vaulter\Support\Config;
  */
 final class UploadPartStoreRepository
 {
-    public function __construct(private readonly VaulterDatabase $database) {}
+    public function __construct(
+        private readonly VaulterDatabase $database,
+        private readonly DriveConfig $driveConfig,
+    ) {}
 
     /**
      * Record (or REPLACE) a part for a session (§2.8). A re-upload of part N
@@ -34,7 +37,7 @@ final class UploadPartStoreRepository
         ?string $partSha256 = null,
         int|string|null $tempBlobId = null,
     ): UploadPart {
-        $model = Config::uploadPartModel();
+        $model = $this->driveConfig->model('upload_part');
         $table = (new $model)->getTable();
 
         $values = [
@@ -86,7 +89,7 @@ final class UploadPartStoreRepository
      */
     public function forSession(UploadSession $session): Collection
     {
-        $model = Config::uploadPartModel();
+        $model = $this->driveConfig->model('upload_part');
 
         /** @var Collection<int, UploadPart> $parts */
         $parts = $model::query()

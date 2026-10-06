@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Symfony\Component\Process\ExecutableFinder;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -32,8 +32,8 @@ function nodesCleanupMigration(): object
 it('moves every second root under its drive root, logs each move and adds the root index', function (): void {
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = Config::table('nodes');
-    $roots = $db->table(Config::legacyTable('storages'))->pluck('root_node_id', 'id')->map(static fn ($id): string => (string) $id);
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+    $roots = $db->table(app(DatabaseConfig::class)->legacyTable('storages'))->pluck('root_node_id', 'id')->map(static fn ($id): string => (string) $id);
     $orphans = $db->table($nodes)->whereNull('parent_id')->whereNotIn('id', $roots->values())->orderBy('id')->get();
 
     expect($db->table($nodes)->whereNull('parent_id')->count())->toBeGreaterThan($roots->count())
@@ -56,7 +56,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
     expect($renamed->name)->toBe('Projects (legacy 1)')
         ->and($db->table($nodes)->where('id', 39)->value('name'))->toBe('Loose note');
 
-    $activity = $db->table(Config::table('activity'))->whereRaw("context->>'reason' = 'n04_repair'")->orderBy('target_id')->get();
+    $activity = $db->table(app(DatabaseConfig::class)->table('activity'))->whereRaw("context->>'reason' = 'n04_repair'")->orderBy('target_id')->get();
     expect($activity)->toHaveCount($orphans->count());
 
     $row = $activity->firstWhere('target_id', 40);
@@ -73,13 +73,13 @@ it('moves every second root under its drive root, logs each move and adds the ro
         ]);
 
     $before = $db->table($nodes)->orderBy('id')->get()->all();
-    $activityCount = $db->table(Config::table('activity'))->count();
+    $activityCount = $db->table(app(DatabaseConfig::class)->table('activity'))->count();
 
     nodesCleanupMigration()->up();
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
 
     expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before)
-        ->and($db->table(Config::table('activity'))->count())->toBe($activityCount);
+        ->and($db->table(app(DatabaseConfig::class)->table('activity'))->count())->toBe($activityCount);
 
     expect(fn () => $db->table($nodes)->insert([
         'profile' => 'default',
@@ -93,7 +93,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
 it('drops the root index on rollback and keeps the repaired tree', function (): void {
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = Config::table('nodes');
+    $nodes = app(DatabaseConfig::class)->table('nodes');
 
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     nodesCleanupMigration()->down();
@@ -109,8 +109,8 @@ it('drops the root index on rollback and keeps the repaired tree', function (): 
 it('refuses to guess the root of a drive without root_node_id', function (): void {
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = Config::table('nodes');
-    $storages = $db->table(Config::legacyTable('storages'));
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+    $storages = $db->table(app(DatabaseConfig::class)->legacyTable('storages'));
     $storages->clone()->where('id', 1)->update(['root_node_id' => null]);
     (require __DIR__.'/../../database/migrations/2026_10_01_000002_rename_storages_to_drives.php')->up();
     $before = $db->table($nodes)->orderBy('id')->get()->all();
@@ -122,14 +122,14 @@ it('refuses to guess the root of a drive without root_node_id', function (): voi
         expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before);
     } finally {
         // The next test's setUp migrates whatever schema is left behind.
-        $db->table(Config::table('drives'))->where('id', 1)->update(['root_node_id' => 1]);
+        $db->table(app(DatabaseConfig::class)->table('drives'))->where('id', 1)->update(['root_node_id' => 1]);
     }
 });
 
 it('keeps a renamed long name within the name column', function (): void {
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = Config::table('nodes');
+    $nodes = app(DatabaseConfig::class)->table('nodes');
     $long = str_repeat('a', 246).'.txt';
 
     $db->table($nodes)->insert([
@@ -148,7 +148,7 @@ it('keeps a renamed long name within the name column', function (): void {
 it('shortens an extension that cannot fit beside the legacy marker', function (): void {
     $this->loadV02Fixture('bigint');
     $db = app(VaulterDatabase::class)->connection();
-    $nodes = Config::table('nodes');
+    $nodes = app(DatabaseConfig::class)->table('nodes');
     $long = 'a.'.str_repeat('b', 253);
 
     $db->table($nodes)->insert([

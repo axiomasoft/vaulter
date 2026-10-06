@@ -65,19 +65,19 @@ abstract class TestCase extends OrchestraTestCase
 
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
-        $app['config']->set('vaulter.middleware', []);
+        $app['config']->set('vaulter.routes.middleware.authenticated', []);
 
         // The base suite runs OPEN: the env-gated NullPermissionDriver (non-prod only,
         // H.2 / D6″) grants every actor full access, so the M1c Drive tests keep
         // their open behaviour. The M2a ACL tests opt INTO the 'database' driver
         // explicitly to exercise real grant resolution.
-        $app['config']->set('vaulter.drivers.permission', 'null');
+        $app['config']->set('vaulter.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy for the base suite. The published
         // config now defaults to ulid (D9); the legacy default-panel document
         // tests assert bigint keys, so the foundation suite keeps bigint and the
         // UlidTestCase exercises the ulid path explicitly.
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

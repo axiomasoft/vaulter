@@ -27,21 +27,19 @@ Vaulter даёт вам колонку `tenant_id` на своих таблиц�
 
 ```php
 // config/vaulter.php
-'tenant' => [
+'tenancy' => [
     'enabled' => env('VAULTER_TENANT_ENABLED', false),
-    'column'  => 'tenant_id',
 ],
 ```
 
-- `tenant.enabled` — глобальный флаг, читается через `Config::tenantEnabled()`.
-- `tenant.column` — имя колонки, читается через `Config::tenantColumn()` (по умолчанию
-  `tenant_id`).
+- `tenancy.enabled` — глобальный флаг, читается через `TenancyConfig::enabled()`.
+- Колонка всегда называется `tenant_id` (`TenancyConfig::COLUMN`).
 
 ### Пара слов о колонке `tenant_id`
 
 Таблицы Drive (`v_storages`, `v_nodes`, `v_blobs`, `v_files`, …) **всегда** несут
-nullable-колонку `tenant_id`, независимо от `tenant.enabled`. Это сделано намеренно:
-UNIQUE-индекс дедупликации блобов ключуется на `tenant_id` при `dedup.scope = tenant`,
+nullable-колонку `tenant_id`, независимо от `tenancy.enabled`. Это сделано намеренно:
+UNIQUE-индекс дедупликации блобов ключуется на `tenant_id` при `vaulter-media.dedup.scope = tenant`,
 поэтому колонка обязана существовать, чтобы индекс можно было определить. Когда тенантность
 выключена, индекс просто охватывает `NULL`-колонку.
 
@@ -59,7 +57,7 @@ private function tenant(Blueprint $table, IdStrategy $ids): void
 `Vaulter\Models\Sharing\NodeShare`, …) как `int|string|null $tenant_id`.
 
 ::: tip
-Флаг `tenant.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и
+Флаг `tenancy.enabled` — это то, на что должны ориентироваться *ваши* tenant-aware модели и
 миграции. Сам Vaulter читает его лишь для того, чтобы решить, применять ли опциональную
 колонку на таблицах **легаси-DocVault** (`Vaulter\Schema\VaulterSchema::tenant()` условный);
 современные таблицы Drive выпускают колонку безусловно, как объяснено выше.
@@ -93,7 +91,7 @@ $storage = $this->store->create([
     'owner_type'   => $owner->getMorphClass(),
     'owner_id'     => $owner->getKey(),
     'name'         => $this->defaultName($owner),
-    'disk'         => Config::defaultDisk(),
+    'disk'         => app(\Vaulter\Media\Configuration\MediaConfig::class)->disk(),
     'storage_type' => $this->storageType($panel),
     'used_bytes'   => 0,
 ]);
@@ -126,7 +124,7 @@ $blob = $this->blobs->commit(
 // config/vaulter.php
 'models' => [
     // …
-    'storage' => \App\Models\Vaulter\TenantStorage::class,
+    'drive' => \App\Models\Vaulter\TenantStorage::class,
     'node'    => \App\Models\Vaulter\TenantNode::class,
     'blob'    => \App\Models\Vaulter\TenantBlob::class,
     // …
@@ -174,27 +172,26 @@ class TenantStorage extends BaseStorage
 ## Взаимодействие с областью дедупликации
 
 Тенантность и [контент-адресуемое хранилище](/ru/guide/storage-and-blobs) встречаются на одной
-настройке: `dedup.scope`.
+настройке: `vaulter-media.dedup.scope`.
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|storage
+    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|drive
 ],
 ```
 
 Для мультитенантной установки значение по умолчанию `tenant` почти всегда — то, что вам нужно:
 
-| `dedup.scope` | Поведение в мультитенантном приложении |
+| `vaulter-media.dedup.scope` | Поведение в мультитенантном приложении |
 |---|---|
-| `tenant` *(по умолчанию)* | `UNIQUE (tenant_id, sha256)`. Одинаковые байты хранятся **один раз на тенанта**. Нет межтенантной **утечки существования** — тенант A никогда не узнает, что тенант B держит некий файл. `storage_key` префиксуется `t<id>/…`, так что сборка мусора одного тенанта никогда не тронет байты другого. |
-| `global` | `UNIQUE (sha256)`. Байты дедуплицируются **между тенантами** — дешевле по хранению, но тенант может вывести, что другой тенант держит идентичные байты. Выбирайте, только когда это допустимо. |
-| `storage` | `UNIQUE (storage_id, sha256)`. Дедупликация per storage container — граница ещё уже, чем per tenant. |
+| `tenant` *(по умолчанию)* | Одинаковые байты хранятся **один раз на тенанта**. Нет межтенантной **утечки существования** — тенант A никогда не узнает, что тенант B держит некий файл. `storage_key` префиксуется `t<id>/…`, так что сборка мусора одного тенанта никогда не тронет байты другого. |
+| `global` | Байты дедуплицируются **между тенантами** — дешевле по хранению, но тенант может вывести, что другой тенант держит идентичные байты. Выбирайте, только когда это допустимо. |
+| `drive` | Дедупликация per storage container — граница ещё уже, чем per tenant. |
 
-::: warning Выбирайте область на этапе установки
-`dedup.scope` запекается в `storage_key` каждого блоба **и** в уникальный индекс. Это по сути
-дверь в одну сторону — сменить позже значит переписывать ключи и индекс. Для изоляции по
-тенантам без утечки существования держите `tenant`.
+::: tip Смена области по умолчанию
+Старые блобы сохраняют `scope_key`; новые загрузки используют текущую область.
+Для изоляции тенантов без утечки наличия файлов оставьте `tenant`.
 :::
 
 ::: details Почему `tenant` предотвращает утечку существования
@@ -251,7 +248,7 @@ AZ_GUARD_MORPH_TYPE=ulid
 ```php
 // Vaulter\Azgard\Contracts\AzgardGuard (docblock)
 // The $contextType / $entity morph types MUST be registered Corex morph aliases
-// aligned with vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
+// aligned with vaulter.ids.strategy=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
 ```
 
 ::: info Установите мост AzGuard
@@ -266,13 +263,13 @@ AZ_GUARD_MORPH_TYPE=ulid
 
 Типичная установка Vaulter со скоупом по тенантам:
 
-1. Поставьте `tenant.enabled = true` и оставьте `tenant.column = 'tenant_id'`.
-2. Оставьте `dedup.scope = tenant`, чтобы блобы были изолированы по тенантам без утечки
+1. Поставьте `tenancy.enabled = true`.
+2. Оставьте `vaulter-media.dedup.scope = tenant`, чтобы блобы были изолированы по тенантам без утечки
    существования.
 3. Отнаследуйте те модели Vaulter, что нужно скоупить (как минимум `storage`; обычно `node`,
    `file`, `blob`, `activity`), и направьте на них карту `models`. Каждый подкласс штампует
    `tenant_id` при создании и применяет ваш глобальный скоуп.
-4. Если используете AzGuard для авторизации, оставьте `ids.default = ulid` и согласуйте
+4. Если используете AzGuard для авторизации, оставьте `ids.strategy = ulid` и согласуйте
    конфигурацию морфов Corex / AzGuard, как выше.
 
 Дальше каждая загрузка автоматически протягивает тенант к своему блобу, а ваш слой моделей —
@@ -281,7 +278,7 @@ AZ_GUARD_MORPH_TYPE=ulid
 ## См. также
 
 - [Хранилище и блобы](/ru/guide/storage-and-blobs) — контент-адресуемое хранилище, в которое
-  впадают `tenant_id` и `dedup.scope`.
+  впадают `tenant_id` и `vaulter-media.dedup.scope`.
 - [Конфигурация](/ru/guide/configuration) — полные ключи `tenant`, `dedup`, `ids` и `models`.
 - [Авторизация › Драйвер ролей хоста](/ru/guide/permission-drivers) — драйвер AzGuard и
   конфиг `vaulter-azgard.*`.

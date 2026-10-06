@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * The version ↔ blob edge (master plan §2.4): the GC truth. A blob is live iff an
  * edge here references it, so this table is never soft-deleted and its composite
  * primary key is (file_revision_id, blob_id, role, ordinal). Swappable via
- * config('vaulter.models.file_version_blob').
+ * configuration key vaulter.models.file_revision_blob.
  *
  * @property int|string $file_revision_id
  * @property int|string $blob_id
@@ -42,7 +42,7 @@ class FileRevisionBlob extends Pivot
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('file_revision_blobs');
+        return app(DatabaseConfig::class)->table('file_revision_blobs');
     }
 
     /**

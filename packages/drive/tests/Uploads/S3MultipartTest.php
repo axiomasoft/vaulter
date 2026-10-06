@@ -27,7 +27,7 @@ use Vaulter\Models\Drive\FileRevision;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 function initiateS3(int $totalBytes, string $name = 'multi.bin'): UploadSession
@@ -161,7 +161,7 @@ it('abort удаляет per-part объекты и помечает aborted', f
 });
 
 it('дедуп: multipart-сборка против идентичной прежней загрузки → один блоб (global)', function (): void {
-    config()->set('vaulter.dedup.scope', 'global');
+    config()->set('vaulter-media.dedup.scope', 'global');
     $bytes = 'shared multipart payload bytes';
 
     foreach (['a.bin', 'b.bin'] as $name) {

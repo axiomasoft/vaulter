@@ -48,7 +48,7 @@ it('промоушен пишет во временный ключ и атома
 
     Storage::set('local', $spy);
 
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
     $finalKey = 'tenant/de/ad/deadbeefcafe';
 
     $stream = fopen('php://temp', 'r+b');
@@ -108,7 +108,7 @@ it('promote: move вернул false → put возвращает false и temp 
 
     Storage::set('local', $spy);
 
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
     $finalKey = 'tenant/de/ad/deadbeefcafe';
 
     $stream = fopen('php://temp', 'r+b');
@@ -157,7 +157,7 @@ it('object store (атомарная запись) → put пишет прямо
 
     Storage::set('s3', $spy);
 
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
     $finalKey = 'tenant/de/ad/deadbeefcafe';
 
     $stream = fopen('php://temp', 'r+b');

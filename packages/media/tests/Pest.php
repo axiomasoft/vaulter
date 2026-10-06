@@ -15,3 +15,5 @@ foreach (glob(__DIR__.'/Cas/*Test.php') as $file) {
         ? DatabaseMigrations::class
         : RefreshDatabase::class)->in($file);
 }
+
+uses(TestCase::class)->in('Configuration');

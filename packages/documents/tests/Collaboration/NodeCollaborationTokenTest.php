@@ -20,9 +20,9 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     // Реальная выдача прав из грантов (база), а не открытый null-драйвер.
-    config()->set('vaulter.drivers.permission', 'database');
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 });
 
 function grantedDocumentNode(?GrantLevel $level, int $actorId = 1): Node
@@ -95,9 +95,9 @@ it('issues a writable session for a writer (edit)', function (): void {
 });
 
 it('returns a hocuspocus descriptor with url + JWT when that driver is configured', function (): void {
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.url', 'ws://hub:1234');
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-documents.collaboration.hub.url', 'ws://hub:1234');
 
     actAsCollaborator();
     $node = grantedDocumentNode(level: GrantLevel::Writer);

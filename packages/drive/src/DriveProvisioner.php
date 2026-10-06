@@ -9,12 +9,12 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Get-or-create a storage container for a host entity within a panel (§2.1), with
@@ -35,6 +35,7 @@ final readonly class DriveProvisioner
         private DriveStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
+        private MediaConfig $mediaConfig,
     ) {}
 
     /**
@@ -78,7 +79,7 @@ final readonly class DriveProvisioner
                 'owner_type' => $owner->getMorphClass(),
                 'owner_id' => $owner->getKey(),
                 'name' => $this->defaultName($owner),
-                'disk' => Config::defaultDisk(),
+                'disk' => $this->mediaConfig->disk(),
                 'used_bytes' => 0,
             ]);
 

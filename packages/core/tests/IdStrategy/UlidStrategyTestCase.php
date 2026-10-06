@@ -23,6 +23,6 @@ class UlidStrategyTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.ids.default', 'ulid');
+        $app['config']->set('vaulter.ids.strategy', 'ulid');
     }
 }

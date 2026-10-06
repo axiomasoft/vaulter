@@ -49,7 +49,7 @@ it('clears a keep_forever pin, F-P1.12-03', function (): void {
 });
 
 it('a released version re-enters the prune window on the next snapshot, F-P1.12-03', function (): void {
-    config()->set('vaulter.versions.max', 1);
+    config()->set('vaulter-documents.revisions.limit', 1);
 
     $node = createDocumentForRelease();
 

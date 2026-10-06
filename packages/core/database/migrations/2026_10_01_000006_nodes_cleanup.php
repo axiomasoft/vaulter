@@ -5,10 +5,11 @@ declare(strict_types=1);
 use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -27,7 +28,7 @@ return new class extends Migration
     public function up(): void
     {
         $connection = app(VaulterDatabase::class)->connection();
-        $nodes = Config::table('nodes');
+        $nodes = app(DatabaseConfig::class)->table('nodes');
 
         if (!$connection->getSchemaBuilder()->hasTable($nodes)) {
             return;
@@ -46,7 +47,7 @@ return new class extends Migration
     public function down(): void
     {
         $connection = app(VaulterDatabase::class)->connection();
-        $nodes = Config::table('nodes');
+        $nodes = app(DatabaseConfig::class)->table('nodes');
         $schema = $connection->getSchemaBuilder();
 
         if (!$schema->hasTable($nodes)) {
@@ -69,7 +70,7 @@ return new class extends Migration
     private function refuseUnknownRoots(Connection $connection, string $nodes): void
     {
         $ambiguous = $connection->table($nodes.' as n')
-            ->join(Config::table('drives').' as s', 's.id', '=', 'n.drive_id')
+            ->join(app(DatabaseConfig::class)->table('drives').' as s', 's.id', '=', 'n.drive_id')
             ->whereNull('n.parent_id')
             ->whereNull('s.root_node_id')
             ->groupBy('n.drive_id')
@@ -88,7 +89,7 @@ return new class extends Migration
     private function repairSecondRoots(Connection $connection, string $nodes): void
     {
         $orphans = $connection->table($nodes.' as n')
-            ->join(Config::table('drives').' as s', 's.id', '=', 'n.drive_id')
+            ->join(app(DatabaseConfig::class)->table('drives').' as s', 's.id', '=', 'n.drive_id')
             ->whereNull('n.parent_id')
             ->whereNotNull('s.root_node_id')
             ->whereColumn('n.id', '<>', 's.root_node_id')
@@ -96,7 +97,7 @@ return new class extends Migration
             ->orderBy('n.id')
             ->get(['n.id', 'n.tenant_id', 'n.drive_id', 'n.name', 'n.trashed_at', 'n.deleted_at', 's.root_node_id']);
 
-        $nodeModel = Config::nodeModel();
+        $nodeModel = app(VaulterConfig::class)->model('node');
         $targetType = (new $nodeModel)->getMorphClass();
 
         foreach ($orphans as $orphan) {
@@ -111,7 +112,7 @@ return new class extends Migration
                 'name' => $name,
             ]);
 
-            $activityModel = Config::activityModel();
+            $activityModel = app(VaulterConfig::class)->model('activity');
 
             /** @var Activity $activity */
             $activity = new $activityModel;

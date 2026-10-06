@@ -8,7 +8,7 @@ namespace Vaulter\Contracts\Handlers;
  * Renders a document's content ({@see DocumentContent}, the same opaque payload
  * the write path stores) into an export format. Built-in HTML and Markdown
  * exporters ship with the package; register your own (PDF, DOCX, …) via
- * config('vaulter.exporters') or Vaulter::registerExporter().
+ * configuration key vaulter-documents.exporters or Vaulter::registerExporter().
  *
  * The contract does not assume TipTap — an exporter narrows to the concrete
  * content shape it understands (e.g. TipTapContent) internally, the same way a

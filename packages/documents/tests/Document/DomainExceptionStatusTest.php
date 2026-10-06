@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -26,7 +27,6 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
-use Vaulter\Support\Config;
 use Vaulter\Testing\NullPermissionDriver;
 
 it('renders each domain exception with its stable code and HTTP status', function (
@@ -35,7 +35,7 @@ it('renders each domain exception with its stable code and HTTP status', functio
     int $status,
     array $extras = [],
 ): void {
-    $path = trim(Config::routePrefix(), '/').'/__v24';
+    $path = trim(app(RoutesConfig::class)->prefix(), '/').'/__v24';
     Route::get($path, static function () use ($exception): never {
         throw $exception;
     });

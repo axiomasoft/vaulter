@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Symfony\Component\Process\ExecutableFinder;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -48,7 +48,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
         // Only the host-key columns: later upgrade steps in the same batch legitimately
         // change other columns (the N04 repair re-parents nodes) and add activity rows.
-        $legacy = Config::legacyTable(match ($entity) {
+        $legacy = app(DatabaseConfig::class)->legacyTable(match ($entity) {
             'drives' => 'storages', 'file_revisions' => 'file_versions', default => $entity,
         });
         $query = $db->table($legacy);
@@ -68,18 +68,18 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $count = 0;
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
-        expect($db->table(Config::table($entity))->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
+        expect($db->table(app(DatabaseConfig::class)->table($entity))->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
             ->get(['id', ...$columns])->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
-                ->where('table_name', Config::table($entity))->where('column_name', $column)->first();
+                ->where('table_name', app(DatabaseConfig::class)->table($entity))->where('column_name', $column)->first();
             expect($metadata->data_type)->toBe('character varying')
                 ->and($metadata->character_maximum_length)->toBe(64);
             $count++;
         }
     }
     expect($count)->toBe(27);
-    $owners = $db->table(Config::table('drives'))->orderBy('owner_id')->pluck('owner_id')->all();
+    $owners = $db->table(app(DatabaseConfig::class)->table('drives'))->orderBy('owner_id')->pluck('owner_id')->all();
     expect($owners)->toBe($strategy === 'bigint' ? ['1', '2', '3'] : [
         '01ARZ3NDEKTSV4RRFFQ69G5FAV', '01ARZ3NDEKTSV4RRFFQ69G5FAW', '01ARZ3NDEKTSV4RRFFQ69G5FAX',
     ]);
@@ -97,7 +97,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
-                ->where('table_name', Config::legacyTable(match ($entity) {
+                ->where('table_name', app(DatabaseConfig::class)->legacyTable(match ($entity) {
                     'drives' => 'storages', 'file_revisions' => 'file_versions', default => $entity,
                 }))->where('column_name', $column)->first();
             expect($metadata->data_type)->toBe($strategy === 'bigint' ? 'bigint' : 'character');
@@ -109,9 +109,9 @@ it('refuses a nonnumeric host-key conversion without changing fixture rows', fun
     $this->loadV02Fixture('ulid');
     $db = app(VaulterDatabase::class)->connection();
     (require __DIR__.'/../../database/migrations/2026_10_01_000002_rename_storages_to_drives.php')->up();
-    $owners = $db->table(Config::table('drives'))->orderBy('id')->pluck('owner_id')->all();
+    $owners = $db->table(app(DatabaseConfig::class)->table('drives'))->orderBy('id')->pluck('owner_id')->all();
     config()->set('vaulter.ids.host_keys', 'bigint');
     $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
     expect(fn () => $db->transaction(fn () => $migration->up()))->toThrow(QueryException::class);
-    expect($db->table(Config::table('drives'))->orderBy('id')->pluck('owner_id')->all())->toBe($owners);
+    expect($db->table(app(DatabaseConfig::class)->table('drives'))->orderBy('id')->pluck('owner_id')->all())->toBe($owners);
 });

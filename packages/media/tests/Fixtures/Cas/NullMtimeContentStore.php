@@ -27,9 +27,12 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 final readonly class NullMtimeContentStore implements ContentStore, ListableContentStore
 {
-    public function __construct(
-        private ContentStore $inner = new Sha256ContentStore(new FlysystemStorageDriver),
-    ) {}
+    private ContentStore $inner;
+
+    public function __construct(?ContentStore $inner = null)
+    {
+        $this->inner = $inner ?? new Sha256ContentStore(app(FlysystemStorageDriver::class));
+    }
 
     /**
      * Always null — the whole point of the fixture (age unknown ⇒ caller skips).

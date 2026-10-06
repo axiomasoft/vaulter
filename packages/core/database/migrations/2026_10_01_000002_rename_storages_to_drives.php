@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -19,8 +19,8 @@ return new class extends Migration
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
         foreach (['storages', 'nodes', 'blobs', 'files', 'file_versions', 'file_version_blobs', 'node_grants', 'node_shares', 'node_comments', 'node_document_versions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'] as $entity) {
-            $legacy = Config::legacyTable($entity);
-            $standard = Config::table($entity);
+            $legacy = app(DatabaseConfig::class)->legacyTable($entity);
+            $standard = app(DatabaseConfig::class)->table($entity);
             if ($legacy !== $standard) {
                 if ($schema->hasTable($legacy) && $schema->hasTable($standard)) {
                     throw new RuntimeException(sprintf('Conflicting legacy tables: %s and %s', $legacy, $standard));
@@ -31,10 +31,10 @@ return new class extends Migration
             }
         }
 
-        $this->renameTable(Config::table('storages'), Config::table('drives'));
+        $this->renameTable(app(DatabaseConfig::class)->table('storages'), app(DatabaseConfig::class)->table('drives'));
         foreach (['drives', 'nodes', 'outbox'] as $entity) {
             $this->renameColumn($entity, 'panel', 'profile');
-            $name = Config::table($entity);
+            $name = app(DatabaseConfig::class)->table($entity);
             if ($schema->hasTable($name)) {
                 $columns = array_column($schema->getColumns($name), null, 'name');
                 if (($columns['profile']['type'] ?? '') !== 'character varying(64)' && ($columns['profile']['type'] ?? '') !== 'varchar(64)') {
@@ -47,9 +47,9 @@ return new class extends Migration
             $this->renameColumn($entity, 'storage_id', 'drive_id');
         }
 
-        $drives = Config::table('drives');
-        if ($schema->hasIndex($drives, Config::table('storages').'_owner_panel_uniq')) {
-            $schema->table($drives, fn (Blueprint $table) => $table->dropIndex(Config::table('storages').'_owner_panel_uniq'));
+        $drives = app(DatabaseConfig::class)->table('drives');
+        if ($schema->hasIndex($drives, app(DatabaseConfig::class)->table('storages').'_owner_panel_uniq')) {
+            $schema->table($drives, fn (Blueprint $table) => $table->dropIndex(app(DatabaseConfig::class)->table('storages').'_owner_panel_uniq'));
         }
 
         $this->dropColumns('drives', ['owner_active', 'storage_type', 'slug', 'default_node_permissions', 'deleted_at']);
@@ -63,7 +63,7 @@ return new class extends Migration
 
         // Revision tables wait for #4 when their 0.2 equivalents exist.
         foreach (['drives', 'nodes', 'blobs', 'files', 'node_grants', 'node_shares', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries', 'node_document_versions', 'node_comments'] as $entity) {
-            if (!$schema->hasTable(Config::table($entity))) {
+            if (!$schema->hasTable(app(DatabaseConfig::class)->table($entity))) {
                 (new SchemaBuilder)->createTable($entity);
             }
         }
@@ -78,7 +78,7 @@ return new class extends Migration
         }
 
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $drives = Config::table('drives');
+        $drives = app(DatabaseConfig::class)->table('drives');
         if (!$schema->hasTable($drives)) {
             return;
         }
@@ -102,8 +102,8 @@ return new class extends Migration
 
         foreach (['drives', 'nodes', 'outbox'] as $entity) {
             $this->renameColumn($entity, 'profile', 'panel');
-            if ($schema->hasTable(Config::table($entity))) {
-                $schema->table(Config::table($entity), fn (Blueprint $table) => $table->string('panel')->default('default')->change());
+            if ($schema->hasTable(app(DatabaseConfig::class)->table($entity))) {
+                $schema->table(app(DatabaseConfig::class)->table($entity), fn (Blueprint $table) => $table->string('panel')->default('default')->change());
             }
         }
 
@@ -115,9 +115,9 @@ return new class extends Migration
             $this->renameKeys($entity, ['drives' => 'storages', 'drive_id' => 'storage_id', '_drive_idx' => '_storage_idx', '_profile_' => '_panel_']);
         }
 
-        $this->renameTable($drives, Config::table('storages'));
+        $this->renameTable($drives, app(DatabaseConfig::class)->table('storages'));
         $db = app(VaulterDatabase::class)->connection();
-        $name = Config::table('storages');
+        $name = app(DatabaseConfig::class)->table('storages');
         if (!$schema->hasIndex($name, $name.'_owner_panel_uniq')) {
             if ($db->getDriverName() === 'pgsql' || $db->getDriverName() === 'sqlite') {
                 $g = $db->getQueryGrammar();
@@ -130,8 +130,8 @@ return new class extends Migration
         // Restore configured 0.2 physical names after restoring their canonical
         // historical names. Missing feature tables are deliberately retained.
         foreach (['storages', 'nodes', 'blobs', 'files', 'file_versions', 'file_version_blobs', 'node_grants', 'node_shares', 'node_comments', 'node_document_versions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'] as $entity) {
-            $standard = Config::table($entity);
-            $legacy = Config::legacyTable($entity);
+            $standard = app(DatabaseConfig::class)->table($entity);
+            $legacy = app(DatabaseConfig::class)->legacyTable($entity);
             if ($standard !== $legacy) {
                 $this->renameKeys($entity, [$standard => $legacy]);
                 $this->renameTable($standard, $legacy);
@@ -156,7 +156,7 @@ return new class extends Migration
     private function renameColumn(string $entity, string $from, string $to): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if ($schema->hasTable($name) && $schema->hasColumn($name, $from) && !$schema->hasColumn($name, $to)) {
             $schema->table($name, fn (Blueprint $table) => $table->renameColumn($from, $to));
         }
@@ -184,7 +184,7 @@ return new class extends Migration
     {
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }
@@ -217,7 +217,7 @@ return new class extends Migration
     private function dropColumns(string $entity, array $columns): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }

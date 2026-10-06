@@ -15,11 +15,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Override;
 use UnitEnum;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
 use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 
 /**
  * The drive admin surface (master plan §2.1 / §3): a read-mostly view of
@@ -28,7 +28,7 @@ use Vaulter\Support\Config;
  * host entity), never minted from the panel, so this resource never creates/edits a
  * row; it lists and inspects.
  *
- * The model resolves through {@see Config::storageModel()} so a host that swaps the
+ * The model resolves through {@see app(VaulterConfig::class)->model('drive')} so a host that swaps the
  * Drive model still gets governed here.
  */
 final class DriveResource extends Resource
@@ -44,7 +44,7 @@ final class DriveResource extends Resource
     #[Override]
     public static function getModel(): string
     {
-        return Config::storageModel();
+        return app(VaulterConfig::class)->model('drive');
     }
 
     /**

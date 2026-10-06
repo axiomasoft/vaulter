@@ -16,14 +16,16 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
-use Vaulter\Support\Config;
 
 /**
  * Load-host-only query trace (P3.1). Opt-in via LOAD_DB_TRACE; never stores bindings or rendered SQL.
  */
 final class QueryTraceRecorder
 {
+    private readonly RoutesConfig $routesConfig;
+
     private bool $registered = false;
 
     /** @var list<array<string, mixed>> */
@@ -36,6 +38,11 @@ final class QueryTraceRecorder
     private ?string $commandId = null;
 
     private ?string $invocationId = null;
+
+    public function __construct(?RoutesConfig $routesConfig = null)
+    {
+        $this->routesConfig = $routesConfig ?? app(RoutesConfig::class);
+    }
 
     public function register(): void
     {
@@ -150,7 +157,7 @@ final class QueryTraceRecorder
 
     private function operationFor(Request $request): ?string
     {
-        $prefix = trim(Config::routePrefix(), '/');
+        $prefix = trim($this->routesConfig->prefix(), '/');
         $path = trim($request->path(), '/');
 
         if ($prefix !== '' && str_starts_with($path, $prefix)) {

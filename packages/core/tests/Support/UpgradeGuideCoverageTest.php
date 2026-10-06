@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Support\Config;
+use Vaulter\Drive\Configuration\DriveConfig;
 
 /*
  * VLT-REMED P5.2 / R-06 — системный пробел UPGRADE.md (подтверждает MORNING-QUEUE §4).
@@ -27,19 +28,19 @@ it('UPGRADE.md документирует контракт TipTap-контент
     expect(TipTapContent::allowedNodeTypes())->toContain('image', 'table')
         ->and(TipTapContent::allowedMarkTypes())->toContain('underline');
 
-    config()->set('vaulter.tiptap.extra_nodes', ['mention']);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
     expect(TipTapContent::allowedNodeTypes())->toContain('mention');
 
     // …и дока про это говорит.
     expect(upgradeGuide())
-        ->toContain('vaulter.tiptap.extra_nodes')
+        ->toContain('vaulter-documents.tiptap.extra_nodes')
         ->toContain('(P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)');
 });
 
 it('UPGRADE.md документирует УДАЛЁННЫЙ ключ follow_redirects, и ключа действительно нет, R-06', function (): void {
     // Факт кода: ключа нет ни в шипуемом конфиге, ни как аксессора Config.
     expect(config('vaulter.webhooks.delivery.follow_redirects'))->toBeNull()
-        ->and(method_exists(Config::class, 'webhookFollowRedirects'))->toBeFalse();
+        ->and(method_exists(WebhooksConfig::class, 'followRedirects'))->toBeFalse();
 
     expect(upgradeGuide())->toContain('`webhooks.delivery.follow_redirects` is removed');
 });
@@ -80,7 +81,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
  * ВКЛЮЧЁННЫМ. Guard держит оба конца — дефолт в шипуемом конфиге и запись про него.
  */
 it('UPGRADE.md обещает включённый per-chunk кап — и дефолт в конфиге действительно непустой, RV-03', function (): void {
-    expect(Config::uploadMaxChunkBytes())->toBe(67_108_864);
+    expect(app(DriveConfig::class)->maxChunkSize())->toBe(67_108_864);
 
     expect(upgradeGuide())->toContain('now SHIPS ENABLED (64 MiB)');
 });

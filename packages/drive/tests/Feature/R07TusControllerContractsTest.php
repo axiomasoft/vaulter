@@ -37,7 +37,7 @@ function r07SessionId(Drive $storage, array $overrides = []): string
 }
 
 it('returns 403 on HEAD PATCH DELETE and OPTIONS when tus is disabled', function (): void {
-    config()->set('vaulter.uploads.tus.enabled', false);
+    config()->set('vaulter-drive.uploads.resumable.enabled', false);
     $storage = r07Storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 17);
     $uri = 'api/vaulter/resumable-uploads/'.$session->upload_id;
@@ -87,7 +87,7 @@ it('accepts PATCH content-type with parameters after application/offset+octet-st
 });
 
 it('OPTIONS advertises Tus-Max-Size as the decimal max_bytes when capped at ten', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 10);
+    config()->set('vaulter-drive.uploads.max_file_size', 10);
 
     $this->call('OPTIONS', 'api/vaulter/resumable-uploads/discovery')
         ->assertNoContent()
@@ -181,7 +181,7 @@ it('metadata skips empty keys and round-trips base64 values from Upload-Metadata
 });
 
 it('metadata values longer than max_value_length are truncated', function (): void {
-    config()->set('vaulter.uploads.metadata.max_value_length', 6);
+    config()->set('vaulter-drive.uploads.resumable.metadata.max_value_length', 6);
     $storage = r07Storage();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -194,7 +194,7 @@ it('metadata values longer than max_value_length are truncated', function (): vo
 });
 
 it('413 on CONTENT_LENGTH max plus one includes Tus-Resumable and names the ceiling', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $uploadId = r07SessionId(r07Storage());
 
     $response = $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
@@ -213,7 +213,7 @@ it('413 on CONTENT_LENGTH max plus one includes Tus-Resumable and names the ceil
 });
 
 it('accepts CONTENT_LENGTH exactly at max_chunk_bytes', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $uploadId = r07SessionId(r07Storage(), ['total_size_bytes' => 16]);
 
     $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
@@ -225,7 +225,7 @@ it('accepts CONTENT_LENGTH exactly at max_chunk_bytes', function (): void {
 });
 
 it('treats max_chunk_bytes zero as unlimited for declared CONTENT_LENGTH', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 0);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 0);
     $uploadId = r07SessionId(r07Storage(), ['total_size_bytes' => 128]);
 
     $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
@@ -286,7 +286,7 @@ it('403s PATCH when no authenticated actor is present', function (): void {
 });
 
 it('Location header normalizes a trailing slash on the route prefix', function (): void {
-    config()->set('vaulter.route_prefix', 'api/vaulter/');
+    config()->set('vaulter.routes.prefix', 'api/vaulter/');
     $storage = r07Storage();
 
     $response = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -302,7 +302,7 @@ it('Location header normalizes a trailing slash on the route prefix', function (
 });
 
 it('guardCreate workspace AND node create cannot be split under the null ACL driver', function (): void {
-    // The Drive suite pins vaulter.drivers.permission=null — every authenticated actor
+    // The Drive suite pins vaulter.access.permission_driver=null — every authenticated actor
     // receives both workspace-create and node-create, so a single-permission-denied case
     // is not expressible here without swapping the permission driver (out of R07 scope).
     expect(true)->toBeTrue();

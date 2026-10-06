@@ -7,6 +7,7 @@ namespace Vaulter\Webhooks;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\LazyCollection;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -16,7 +17,6 @@ use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -36,6 +36,7 @@ use Vaulter\Support\Identity;
 final class OutboxRelay
 {
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private readonly MetricsRecorder $metrics,
         private readonly TraceRecorder $tracer,
         private readonly VaulterDatabase $database,
@@ -78,7 +79,7 @@ final class OutboxRelay
     private function claimPending(int $limit): Collection
     {
         /** @var class-string<Outbox> $outboxClass */
-        $outboxClass = Config::outboxModel();
+        $outboxClass = $this->vaulterConfig->model('outbox');
 
         return $this->database->transaction(function () use ($outboxClass, $limit): Collection {
             /** @var Collection<int, Outbox> $messages */
@@ -126,7 +127,7 @@ final class OutboxRelay
     private function subscribedEndpoints(string $event): LazyCollection
     {
         /** @var class-string<WebhookEndpoint> $endpointClass */
-        $endpointClass = Config::webhookEndpointModel();
+        $endpointClass = $this->vaulterConfig->model('webhook_endpoint');
 
         $key = (new $endpointClass)->getKeyName();
 
@@ -140,7 +141,7 @@ final class OutboxRelay
     private function createDelivery(Outbox $message, WebhookEndpoint $endpoint): WebhookDelivery
     {
         /** @var class-string<WebhookDelivery> $deliveryClass */
-        $deliveryClass = Config::webhookDeliveryModel();
+        $deliveryClass = $this->vaulterConfig->model('webhook_delivery');
 
         // forceFill (P1.4/F-P1.8-02): WebhookDelivery is intentionally fully
         // guarded — this is the relay's own trusted seam, never raw request input.

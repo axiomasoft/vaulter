@@ -8,6 +8,31 @@ Vaulter\Documents\Contracts\ExportFilenameResolver
 Vaulter\Documents\Contracts\HostUserResolver
   find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
 
+Vaulter\Documents\Configuration\DocumentsConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  autosaveDebounceSeconds(): int
+  channelPrefix(): string
+  collaborationDriver(): string
+  collaborationEnabled(): bool
+  collaborationRoom(mixed $nodeId): string
+  commentsEnabled(): bool
+  enabledDocumentTypes(): array
+  exporters(): array
+  hubJwtSecret(): ?string
+  hubTimestampTolerance(): int
+  hubTokenTtl(): int
+  hubUrl(): ?string
+  hubWebhookSecret(): ?string
+  maxContentSizeKb(): int
+  model(string $key): string
+  nodeIdFromRoom(string $room): string
+  revisionLimit(): int
+  spreadsheetsEnabled(): bool
+  tiptapExtraAttributes(): array
+  tiptapExtraMarks(): array
+  tiptapExtraNodes(): array
+  tiptapUrlAttributes(): array
+
 Vaulter\Documents\Events\Comments\CommentAdded
   __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, ?string $eventId = null)
   broadcastAs(): string

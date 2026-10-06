@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+  "started_at": "20261006T082208109088Z",
+  "candidate_before": "656818d7c32a7acd8620f70966d8f5ef02a43fd7c32fc78557cd0e2dcb39dd77",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true,
+  "exit_code": 0,
+  "seconds": 6.154,
+  "candidate_after": "1c46f0b84938d50ce5b19f909fd508d0a0efc915600e9776e841b32562ce1e4f",
+  "candidate_stable": false
+}

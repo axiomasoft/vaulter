@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D24",
+  "title": "P2.5 executable configuration boundaries and immutable v0.2 fixture",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "P2.5 executable configuration boundaries and immutable v0.2 fixture",
+  "decision": "Replace retired-helper raw PHP text matching with an executable-dependency AST check using public nikic/php-parser APIs. Parse all six affected packages src/tests/config/database/routes, including classless tests and unused imports; detect retired names independent of class availability and literal class strings in documented class-consuming contexts. Keep current documentation text hygiene and native/direct source config-access checks. Historical vaulter-0.2.php is immutable historical evidence: verify independently pinned SHA-256 before execution. Comments in PHP are not executable dependencies. Preserve the exact fixture bytes/path. Direct parser dependency is declared for root and core test installations. Computed dynamic class names are outside this bounded static guarantee; no claim of arbitrary dynamic PHP proof. Required final suite, V28, PG matrix and both original negative controls remain unchanged; add alias/group/class-string/classless/comment/fixture-integrity negative controls.",
+  "rationale": "Exact historical fixture contains four retired-helper references in comments. Original raw match and byte-exact fixture requirements cannot both pass. Native Pest Arch filters names through class_exists and misses deleted-class references; token-only scans do not reliably resolve namespace/import aliases. AST plus independent artifact-integrity validation preserves historical evidence and strengthens executable dependency enforcement, without a fixture-specific code exemption or hidden scope change. Owner selected «AST + SHA-256 (рекомендую): структурная проверка кода без исключения для фикстуры» and requested a considered architecture.",
+  "applies_to": [
+    "P2.5"
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

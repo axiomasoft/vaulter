@@ -6,9 +6,9 @@ namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Support\Uploads\UploadModels;
 
 /**
  * Read-side lookups over v_upload_sessions (§2.8 / M3a). The resumable endpoints
@@ -17,6 +17,10 @@ use Vaulter\Drive\Support\Uploads\UploadModels;
  */
 final class UploadSessionReadRepository
 {
+    public function __construct(
+        private readonly DriveConfig $driveConfig,
+    ) {}
+
     public function find(int|string $id): ?UploadSession
     {
         return $this->query()->find($id);
@@ -71,7 +75,7 @@ final class UploadSessionReadRepository
      */
     private function query(): Builder
     {
-        $model = UploadModels::session();
+        $model = $this->driveConfig->model('upload_session');
 
         return $model::query();
     }

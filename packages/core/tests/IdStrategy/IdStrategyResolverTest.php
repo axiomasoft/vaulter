@@ -18,7 +18,7 @@ it('resolves each strategy key to its class', function (): void {
 });
 
 it('falls back to the configured default when no key is given', function (): void {
-    config()->set('vaulter.ids.default', 'ulid');
+    config()->set('vaulter.ids.strategy', 'ulid');
 
     expect(app(IdStrategyResolver::class)->resolve())->toBeInstanceOf(UlidIds::class);
 });

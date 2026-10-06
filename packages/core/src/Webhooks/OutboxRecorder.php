@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Webhooks;
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -11,7 +12,6 @@ use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -38,6 +38,7 @@ use Vaulter\Support\Identity;
 class OutboxRecorder
 {
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private readonly MetricsRecorder $metrics,
     ) {}
 
@@ -142,7 +143,7 @@ class OutboxRecorder
         int|string|null $actorId,
     ): ?Outbox {
         /** @var class-string<Outbox> $outboxClass */
-        $outboxClass = Config::outboxModel();
+        $outboxClass = $this->vaulterConfig->model('outbox');
 
         if ($outboxClass::query()->where('event_id', $eventId)->exists()) {
             return null;

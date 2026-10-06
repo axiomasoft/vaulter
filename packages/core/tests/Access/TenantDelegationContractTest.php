@@ -35,7 +35,7 @@ it('never lets an actor granted in one storage reach a node in another via can()
     // assertions. The suite default ('null' driver) is intentionally OPEN — it
     // would trivially pass can()=true for both nodes and defeat the point of this
     // contract test.
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storageA = AccessTestHelpers::storage();
     $storageB = AccessTestHelpers::storage();

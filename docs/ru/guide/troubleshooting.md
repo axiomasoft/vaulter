@@ -20,7 +20,7 @@ outline: deep
 ```
 [Vaulter] The open null host-role driver [null] is forbidden in production.
 Why: it grants every actor full access; running it in prod would expose every node.
-Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie|azgard)
+Fix: set config(vaulter.access.permission_driver) to a real driver (database|gate|spatie|azgard)
 or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 ```
 
@@ -33,8 +33,8 @@ or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
 
@@ -46,7 +46,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — автономный дефолт. Авторизует чисто из строк `v_node_grants`, без зависимости
   от хоста. Берите его, если нужны только гранты на узлы.
 - **`gate` / `spatie` / `azgard`** — мост к вашей существующей системе ролей; заполните
-  соответствующий блок конфига `vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`.
+  соответствующий блок конфига `vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`.
 - **Свой** драйвер — см. [рецепт](/ru/guide/recipes#permission-driver).
 
 ::: warning Кэш конфига прячет env, который вы забыли
@@ -57,7 +57,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 
 ## morph-алиасы Azgard / Corex не согласованы {#azgard-morphs}
 
-**Симптом.** При `drivers.permission = 'azgard'` проверки прав возвращают `false` для пользователей,
+**Симптом.** При `access.permission_driver = 'azgard'` проверки прав возвращают `false` для пользователей,
 которые явно держат роль, либо всплывает ошибка вида `Class "AzGuard\…" not found`, либо гранты,
 адресованные workspace, никогда не совпадают.
 
@@ -82,7 +82,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 
    ```php
    // config/vaulter.php
-   'ids' => ['default' => 'ulid'],
+   'ids' => ['strategy' => 'ulid'],
    ```
 
    ```dotenv
@@ -111,7 +111,7 @@ morph-типе, а не в адаптере.
 **Симптом B — байты не дедуплицируются там, где вы ждали**, либо GC в одной области удаляет объект
 другой области.
 
-**Почему.** `config('vaulter.dedup.scope')` — это граница, в пределах которой уникален
+**Почему.** `config('vaulter-media.dedup.scope')` — это граница, в пределах которой уникален
 контент-адрес `sha256`, и она задаёт **и** уникальный индекс дедупликации, **и** квалифицированный
 областью ключ хранения `<scope>/ab/cd/<sha256>` ([ADR-0012](/adr/0012-dedup-scope)):
 
@@ -124,7 +124,7 @@ morph-типе, а не в адаптере.
 **Решение.**
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
     'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'),
 ],
@@ -199,19 +199,18 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   php artisan migrate
   ```
 
-- **Префикс.** Каждая таблица Vaulter читает `config('vaulter.table_prefix')` (по умолчанию `v_`).
+- **Префикс.** Каждая таблица Vaulter читает `config('vaulter.database.table_prefix')` (по умолчанию `v_`).
   Опубликованные миграции и модели читают его обе, так что меняйте его в **одном** месте. Если вы
   переключите префикс **после** миграции, модели будут искать таблицы `<newprefix>…`, которых не
   существует — задайте префикс **до** первой миграции или переименуйте таблицы под него.
 
   ```php
   // config/vaulter.php
-  'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
+  'database' => ['table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_')],
   ```
 
-- **Переименование по сущности.** Чтобы переименовать одну таблицу без изменения глобального
-  префикса, используйте `config('vaulter.table_names')` — `SchemaBuilder` и модели резолвят
-  через него.
+- **Старые имена таблиц.** `vaulter.table_names` — только вход upgrade-миграций.
+  `DatabaseConfig::legacyTable()` находит старые таблицы; модели используют канонические имена.
 
 - **Профили.** Все профили используют общую схему; генерация собственных таблиц удалена.
 
@@ -235,7 +234,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 **Почему и решение.**
 
 - **Резолв диска.** Байты блоба лежат на диске `disk` хранилища, если оно его закрепляет, иначе на
-  `config('vaulter.storage.default_disk')` (`VAULTER_DISK`). Если вы поменяете `VAULTER_DISK` после
+  `config('vaulter-media.disk')` (`VAULTER_DISK`). Если вы поменяете `VAULTER_DISK` после
   загрузки, старые блобы всё ещё указывают на старый диск — не уводите диск из-под существующих
   блобов.
 - **Никогда не версионируйте CAS-бакет.** На S3 CAS-бакет должен быть **без версионирования**.
@@ -243,7 +242,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   Единственное lifecycle-правило, которое стоит добавить, — `AbortIncompleteMultipartUpload`
   ([ADR-0006](/adr/0006-content-addressed-blobs-gc)).
 - **Слишком короткий grace у GC.** Если кажется, что GC удаляет живые байты, поднимите
-  `config('vaulter.gc.grace_hours')` до значения ≥ вашей худшей задержки коммита multipart, чтобы
+  `config('vaulter-media.gc.grace_hours')` до значения ≥ вашей худшей задержки коммита multipart, чтобы
   загрузка в полёте успела воскресить блоб с меткой tombstone. См.
   [рецепт GC блобов](/ru/guide/recipes#blob-gc).
 - **Дрейф.** Если `ref_count` выглядит неправильным — это кэш; запустите
@@ -257,7 +256,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 
 - **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (или маршрут) назвал
   панель, которая не зарегистрирована. Зарегистрируйте FQCN её провайдера в
-  `config('vaulter.panels')` или используйте панель `default`.
+  `config('vaulter.profiles.providers')` или используйте панель `default`.
 
 ## Пустое «Last updated» в документации {#last-updated}
 

@@ -7,9 +7,9 @@ namespace Vaulter\Models\Webhooks;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * A transactional-outbox row (master plan §2.11 / D14 / M3b): a domain event
@@ -17,7 +17,7 @@ use Vaulter\Support\Config;
  * half (the OutboxRecorder) is idempotent by it, so the same event never stages a
  * duplicate row, and the relay drains each row exactly once.
  *
- * Swappable — point config('vaulter.models.outbox') at a subclass for tenant
+ * Swappable — point configuration key vaulter.models.outbox at a subclass for tenant
  * scoping or extra behaviour.
  *
  * @property int|string           $id
@@ -53,7 +53,7 @@ class Outbox extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('outbox');
+        return app(DatabaseConfig::class)->table('outbox');
     }
 
     /**

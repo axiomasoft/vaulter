@@ -9,11 +9,11 @@ use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -29,6 +29,7 @@ final readonly class BlobStore implements BlobStoreContract
         private BlobStoreRepository $blobs,
         private FileRevisionBlobStoreRepository $edges,
         private VaulterDatabase $database,
+        private MediaConfig $mediaConfig,
     ) {}
 
     /**
@@ -47,7 +48,7 @@ final readonly class BlobStore implements BlobStoreContract
 
     public function commitStaged(StagedObject $staged, BlobScope $scope, ?string $disk = null): Blob
     {
-        $disk ??= Config::defaultDisk();
+        $disk ??= $this->mediaConfig->disk();
         $storageKey = $this->content->keyFor(scope: $scope, sha256: $staged->sha256());
 
         return $this->database->transaction(function () use ($staged, $scope, $disk, $storageKey): Blob {

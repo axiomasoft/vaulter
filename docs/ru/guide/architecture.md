@@ -64,12 +64,12 @@ Vaulter — это строго типизированный слоистый La
 ### HTTP-край — Controllers, FormRequests, Resources
 
 Тонкий край. Маршруты живут в `packages/core/routes/api.php`, монтируются под
-`config('vaulter.route_prefix')` (по умолчанию `api/vaulter`). Контроллеры авторизуют, передают DTO
+`config('vaulter.routes.prefix')` (по умолчанию `api/vaulter`). Контроллеры авторизуют, передают DTO
 Action-у и сериализуют результат через Resource, который встраивает вычисленный объект `abilities`,
 чтобы Vue-клиент рисовал только разрешённые действия.
 
 Параметры маршрута `{storage}` и `{node}` связываются со **сменяемыми** моделями
-(`config('vaulter.models.storage|node')`) через `Route::bind`, зарегистрированный в сервис-провайдере,
+(`config('vaulter.models.drive|node')`) через `Route::bind`, зарегистрированный в сервис-провайдере,
 — поэтому хост может указать в конфиге на подкласс, и связывание продолжит работать.
 
 ### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Actions\*`
@@ -99,7 +99,7 @@ store-репозитории (`NodeStoreRepository`, `DriveStoreRepository`, …
 ### Models — сменяемые, резолвятся через `Config`
 
 Vaulter никогда не ссылается на конкретный класс модели напрямую в доменном коде; он резолвит через
-`Vaulter\Support\Config` по `config('vaulter.models.*')`. Хост наследует модель, чтобы добавить
+`Vaulter\Configuration\VaulterConfig` по `config('vaulter.models.*')`. Хост наследует модель, чтобы добавить
 поведение ULID, тенант-скоуп или аудит. Модели — единственная часть пакета, которая **не** `final`
 (их должно быть можно расширять); всё остальное — `final`.
 
@@ -201,13 +201,12 @@ final class ProjectDriveProfile extends ProfileProvider
         return $panel
             ->id('project_drive')
             ->host(\App\Models\Project::class)
-            ->storageType('team')
-            ->feature('document_versions', true);
+            ->storageType('team');
     }
 }
 ```
 
-Зарегистрируйте провайдер в `config('vaulter.panels')`. `ProfileRegistry` разрешает
+Зарегистрируйте провайдер в `config('vaulter.profiles.providers')`. `ProfileRegistry` разрешает
 профили при загрузке приложения. Создайте провайдер командой
 `php artisan vaulter:make:profile <name>`. Все профили используют общую схему;
 собственные таблицы, карты моделей, pipelines и resource-хуки удалены.
@@ -215,8 +214,8 @@ final class ProjectDriveProfile extends ProfileProvider
 
 ## Модель данных
 
-Всё живёт в префиксной схеме `v_*` (`config('vaulter.table_prefix')`, по умолчанию `v_`), с одной
-стратегией идентификаторов на инсталляцию (`config('vaulter.ids.default')`, по умолчанию `ulid`).
+Всё живёт в префиксной схеме `v_*` (`config('vaulter.database.table_prefix')`, по умолчанию `v_`), с одной
+стратегией идентификаторов на инсталляцию (`config('vaulter.ids.strategy')`, по умолчанию `ulid`).
 
 | Таблица | Что держит |
 |---|---|
@@ -226,7 +225,7 @@ final class ProjectDriveProfile extends ProfileProvider
 | `v_blobs` | CAS: по одной строке на `(scope, sha256)` с жизненным циклом `BlobStatus` ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | Пер-узловой ACL с наследованием + вето-запретом. |
 | `v_node_shares` | Bearer-ссылки (share) — хранение только хеша токена ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | Documents: история версий документа, привязанного к узлу (за фичей `document_versions`). |
+| `v_node_document_versions` | Documents: история версий документа, привязанного к узлу (при установленном Documents). |
 | `v_upload_sessions` / `v_upload_parts` | Сессии резюмируемых загрузок. |
 | `v_activity` | Append-only лента активности. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | Слой надёжности транзакционного outbox + вебхуков. |
@@ -248,7 +247,7 @@ arch-тестом — см. [Устранение неполадок](/ru/guide/
   `subjectsFor(Authorizable)` (актор → пользователи + роли + команды) и
   `canCreateInWorkspace(...)`. Поставляемые полосы: `database` (по умолчанию, автономная),
   `gate`, `spatie`, `azgard` и не-прод `null`. Меняется через
-  `config('vaulter.drivers.permission')`.
+  `config('vaulter.access.permission_driver')`.
 - **`AccessResolver`** — принадлежит Vaulter, `final`, **не** сменяем. Прогоняет канонический
   алгоритм поверх `v_node_grants` в комбинации с драйвером.
 
@@ -281,7 +280,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
 
 Бинарная плоскость — это контент-адресуемое хранилище, а не `spatie/laravel-medialibrary`
 ([ADR-0008](/adr/0008-media-library-decision)). Три сменяемых сервиса
-(`config('vaulter.cas.*')`):
+(`config('vaulter-media.*')`):
 
 - **`ContentStore`** (`Sha256ContentStore`) — стейджит байты в seekable-временный файл и вычисляет
   контент-адрес `sha256` из застейдженного файла (никогда из живого стрима или присланного клиентом
@@ -294,7 +293,7 @@ ACL по идентичности и канал **bearer-ссылок** оцен
   который конкурентная загрузка снова зареференсила.
 
 Физический ключ **квалифицирован по scope** — `<scope>/ab/cd/<sha256>`, где `<scope>` следует
-`config('vaulter.dedup.scope')` (`tenant` по умолчанию), поэтому сборка мусора одного scope никогда
+`config('vaulter-media.dedup.scope')` (`tenant` по умолчанию), поэтому сборка мусора одного scope никогда
 не может удалить байты другого scope ([ADR-0012](/adr/0012-dedup-scope)). См.
 [рецепт сборки мусора блобов](/ru/guide/recipes#blob-gc) и
 [рецепт кастомного storage-драйвера](/ru/guide/recipes#s3-disk).
@@ -313,14 +312,14 @@ Yjs — источник истины; TipTap JSON — производная п
 
 | Контракт | Привязка через | Задокументировано в |
 |---|---|---|
-| `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Рецепты — кастомный драйвер прав](/ru/guide/recipes#permission-driver) |
+| `Contracts\Access\PermissionDriver` | `config('vaulter.access.permission_driver')` | [Рецепты — кастомный драйвер прав](/ru/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (легаси) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
 | `Vaulter\Azgard\Contracts\AzgardGuard` | привязка из `vaulter-azgard` | [Устранение неполадок — морфы Azgard](/ru/guide/troubleshooting#azgard-morphs) |
-| `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Рецепты — переход на S3](/ru/guide/recipes#s3-disk) |
-| `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
+| `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Рецепты — переход на S3](/ru/guide/recipes#s3-disk) |
+| `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |
-| `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
-| `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
+| `Contracts\Handlers\DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
+| `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | тег контейнера | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
 | `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |
 | `config('vaulter.models.*')` | конфиг | [ADR-0003](/adr/0003-embeddability-data-model) |

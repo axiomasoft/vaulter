@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\VaulterConfig;
 
 /**
  * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16) — schema green guard, no
@@ -45,7 +45,7 @@ it('v_blobs does not carry a redundant single-column status index — a strict p
 
     expect($columnSets)->not->toContain(['status'])
         ->and($columnSets)->toContain(['status', 'ref_count', 'delete_after_at']);
-})->skip(fn (): bool => !Config::featureEnabled('blobs'), 'v_blobs only exists when the blobs feature is enabled');
+});
 
 it('v_activity carries the (created_at) feed index exactly once, not twice (F-P4.1-02)', function (): void {
     $duplicates = array_filter(
@@ -54,4 +54,4 @@ it('v_activity carries the (created_at) feed index exactly once, not twice (F-P4
     );
 
     expect($duplicates)->toHaveCount(1);
-})->skip(fn (): bool => !Config::featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');
+})->skip(fn (): bool => !app(VaulterConfig::class)->featureEnabled('activity'), 'v_activity only exists when the activity feature is enabled');

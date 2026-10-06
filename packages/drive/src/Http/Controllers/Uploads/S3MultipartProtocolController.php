@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
@@ -22,7 +23,6 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -47,6 +47,7 @@ final class S3MultipartProtocolController extends Controller
         private readonly NodeReadRepository $nodes,
         private readonly AccessResolver $access,
         private readonly CompleteUploadAction $commit,
+        private readonly DriveConfig $driveConfig,
     ) {}
 
     /**
@@ -218,7 +219,7 @@ final class S3MultipartProtocolController extends Controller
      */
     private function assertContentLengthWithinLimit(Request $request): void
     {
-        $max = Config::uploadMaxChunkBytes();
+        $max = $this->driveConfig->maxChunkSize();
         $declared = $request->server('CONTENT_LENGTH');
 
         if ($max <= 0 || !is_numeric($declared) || (int) $declared <= $max) {

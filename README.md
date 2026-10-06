@@ -25,21 +25,20 @@ host is not currently CI-verified.
 
 ## Features
 
-- **Documents** *(opt-in — enable via `config('vaulter.features.document_versions')`)* —
+- **Documents** *(enabled when `vaulter-documents` is installed)* —
   TipTap-JSON content, four built-in types (rich text, table, markdown, template),
   soft-delete + trash, restore, permanent purge, **move**, **duplicate**, **bulk** operations and
   title/content **search**.
-- **Versions** *(opt-in — `config('vaulter.features.document_versions')`)* — named snapshots,
+- **Versions** *(enabled when `vaulter-documents` is installed)* — named snapshots,
   history and one-click restore, with pruning to a configurable cap.
 - **Folders** — a hierarchical tree scoped to a workspace.
 - **Permissions** — delegated entirely to your app via `PermissionResolver`; computed **abilities**
   (`view/comment/edit/manage/delete`) are shipped to the front-end on every document.
-- **Real-time collaboration** *(opt-in — `config('vaulter.features.document_versions')` **and**
-  `config('vaulter.features.collaboration')`, both required)* — Yjs over a pluggable
+- **Real-time collaboration** *(opt-in — `config('vaulter-documents.collaboration.enabled')`)* — Yjs over a pluggable
   `CollaborationDriver`: an external **Hocuspocus** Node hub by default, or **Laravel Reverb**
   (no extra service, deprecated for Yjs editing). Server-side state sync + `content.synced`
   broadcast.
-- **Comments** *(opt-in — `config('vaulter.features.comments')`)* — threaded, optionally
+- **Comments** *(enabled by default — `config('vaulter-documents.comments.enabled')`)* — threaded, optionally
   anchored, broadcast live (`comment.added`).
 - **Share links** *(opt-in — `config('vaulter.features.share_links')`)* — tokenized,
   level-scoped, optionally expiring public links.

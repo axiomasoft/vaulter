@@ -42,7 +42,7 @@ abstract class RealAzgardTestCase extends Orchestra
     protected function defineEnvironment($app): void
     {
         $app['config']->set('az-guard.cache.store', 'array');
-        $app['config']->set('vaulter.drivers.permission', 'azgard');
+        $app['config']->set('vaulter.access.permission_driver', 'azgard');
     }
 
     /**

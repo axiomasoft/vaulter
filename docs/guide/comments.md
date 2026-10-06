@@ -2,8 +2,8 @@
 
 Document **nodes** support threaded, optionally anchored comments. Reading requires the
 **`view`** ability; posting requires **`comment`**; resolving or deleting requires being the
-comment's **author** or holding **`manage`** on the node. Comments are gated on the `comments`
-feature and are broadcast so open editors can show them live.
+comment's **author** or holding **`manage`** on the node. Comments default to enabled at `vaulter-documents.comments.enabled` and are
+broadcast so open editors can show them live.
 
 ## API
 

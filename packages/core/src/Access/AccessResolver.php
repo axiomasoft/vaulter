@@ -14,6 +14,7 @@ use Vaulter\Access\ValueObjects\AclMask;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
@@ -24,7 +25,6 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -60,6 +60,7 @@ use Vaulter\Support\Identity;
 final class AccessResolver
 {
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
         private readonly DriveReadRepository $storages,
@@ -659,7 +660,7 @@ final class AccessResolver
     {
         $chain = [$node];
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         /** @var Collection<int, Node> $ancestors */
         $ancestors = $model::withMaxDepth(

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/phpstan",
+    "analyse",
+    "--no-progress",
+    "--memory-limit=512M"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+  "started_at": "20261006T084251616821Z",
+  "candidate_before": "f5d2412a16851094d3f94c5ef5745784fb286dc0b648072dbbe045240e012f4a",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false,
+  "exit_code": 0,
+  "seconds": 1.474,
+  "candidate_after": "f5d2412a16851094d3f94c5ef5745784fb286dc0b648072dbbe045240e012f4a",
+  "candidate_stable": true
+}

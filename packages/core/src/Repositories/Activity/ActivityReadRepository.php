@@ -6,11 +6,11 @@ namespace Vaulter\Repositories\Activity;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Read-side queries over v_activity (§2.9 / M2c-activity). The feed is scoped to a
@@ -24,6 +24,10 @@ use Vaulter\Support\Config;
  */
 final class ActivityReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The activity feed for a whole storage tree, newest-first. Optionally narrowed
      * to a single verb. (verb, created_at) and (drive_id, created_at) are indexed.
@@ -91,7 +95,7 @@ final class ActivityReadRepository
      */
     private function base(?EventType $verb): Builder
     {
-        $model = Config::activityModel();
+        $model = $this->vaulterConfig->model('activity');
 
         $query = $model::query()->newestFirst();
 

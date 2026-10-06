@@ -39,8 +39,7 @@ function collabGateDocumentNode(): Node
 }
 
 it('collab/token 404s when collaboration is off even though document_versions is on, F-P1.6-01', function (): void {
-    expect(config('vaulter.features.document_versions'))->toBeTrue();
-    expect(config('vaulter.features.collaboration'))->toBeFalse();
+    expect(config('vaulter-documents.collaboration.enabled'))->toBeFalse();
 
     $node = collabGateDocumentNode();
 

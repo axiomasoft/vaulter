@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Support\GateConfig;
 
 /**
  * The Laravel-Gate host-role driver (master plan §6 / H.2) — a zero-extra-dependency
@@ -39,6 +39,10 @@ use Vaulter\Support\GateConfig;
  */
 final class GatePermissionDriver implements PermissionDriver
 {
+    public function __construct(
+        private readonly AccessConfig $accessConfig,
+    ) {}
+
     /**
      * Per requested level (low → high) the Gate is asked the mapped ability; the
      * highest one it allows becomes the role Decision the AccessResolver folds in.
@@ -57,7 +61,7 @@ final class GatePermissionDriver implements PermissionDriver
 
         $granted = null;
 
-        foreach (GateConfig::abilityMap() as $levelValue => $ability) {
+        foreach ($this->accessConfig->gateAbilityMap() as $levelValue => $ability) {
             $level = GrantLevel::tryFrom($levelValue);
 
             if ($level === null) {
@@ -85,7 +89,7 @@ final class GatePermissionDriver implements PermissionDriver
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
-        if ($this->gateAllows($actor, GateConfig::superAbility(), [$this->contextFor($scope)])) {
+        if ($this->gateAllows($actor, $this->accessConfig->gateSuperAbility(), [$this->contextFor($scope)])) {
             return Effect::Allow;
         }
 
@@ -120,7 +124,7 @@ final class GatePermissionDriver implements PermissionDriver
      */
     public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
     {
-        return $this->gateAllows($actor, GateConfig::createAbility(), [$workspaceType, $workspaceId]);
+        return $this->gateAllows($actor, $this->accessConfig->gateCreateAbility(), [$workspaceType, $workspaceId]);
     }
 
     /**

@@ -78,9 +78,9 @@ register the provider FQCN in `config/vaulter.php`:
 
 ```php
 // config/vaulter.php
-'panels' => [
+'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
-],
+]],
 ```
 
 ```php
@@ -96,7 +96,6 @@ final class TaskDriveStoragePanel extends ProfileProvider
             ->id('task_drive')
             ->host(\App\Models\Task::class)
             ->storageType('team')
-            ->feature('document_versions', true) // enable in-app rich-text editing
             ->feature('share_links', true);      // enable bearer share links
     }
 }
@@ -123,9 +122,8 @@ moving parts.
 
 ```php
 // config/vaulter.php
-'tenant' => [
+'tenancy' => [
     'enabled' => true,        // VAULTER_TENANT_ENABLED — adds a tenant_id column to the schema
-    'column'  => 'tenant_id',
 ],
 ```
 
@@ -152,7 +150,7 @@ final class Node extends BaseNode
 'models' => [
     // ...
     'node'    => \App\Models\Vaulter\Node::class,
-    'storage' => \App\Models\Vaulter\Storage::class,
+    'drive' => \App\Models\Vaulter\Storage::class,
 ],
 ```
 
@@ -162,13 +160,15 @@ Per-tenant dedup is already the default, so a global dedup namespace can't leak 
 *existence* of a file across tenants ([ADR-0012](/adr/0012-dedup-scope)):
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
+// config/vaulter-media.php
 'dedup' => ['scope' => 'tenant'], // the default; never use 'global' for untrusted tenants
-'ids'   => ['default' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
+// config/vaulter.php
+'ids'   => ['strategy' => 'ulid'], // ULID aligns with CoreX / AzGuard morph keys (ADR-0011)
 ```
 
 ::: warning Tenant scope is the host's responsibility
-If you set `dedup.scope = 'global'` with multiple tenants you accept a cross-tenant existence
+If you set `vaulter-media.dedup.scope = 'global'` with multiple tenants you accept a cross-tenant existence
 side channel. Keep it `tenant` (or `storage`) unless the tenants trust one another. If you swap
 in a tenant-aware model, that model — not Vaulter — must apply the scope on *every* query.
 :::
@@ -254,22 +254,22 @@ Register it as a named driver and select it:
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'app'),
-],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'app'),
 
-'permission_drivers' => [
+    'permission_drivers' => [
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
+    ],
 ],
 ```
 
 ::: tip Use a shipped lane first
 For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom class — set
-`drivers.permission` to `gate` / `spatie` / `azgard` and fill the matching config block
-(`vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`). For AzGuard install
+`access.permission_driver` to `gate` / `spatie` / `azgard` and fill the matching config block
+(`vaulter.access.gate.*` / `vaulter.access.spatie.*` / `vaulter-azgard.*`). For AzGuard install
 `composer require axioma-studio/vaulter-azgard`: its provider registers the driver
 and adapter automatically. The user model must implement `AzgardBackedUser` — see
 [Permission drivers](/guide/permission-drivers).
@@ -358,7 +358,7 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 ::: details Confirm the descriptor that ships to the client
 `GET nodes/{node}/handler` returns the resolved handler's `id`, capabilities and `ViewerDescriptor`
 for a node — exactly what the Vue client reads to pick an editor/preview implementation. (This
-route is gated on the `document_versions` feature.)
+route is enabled by installing `vaulter-documents`.)
 :::
 
 ## Swap the storage disk to S3 {#s3-disk}
@@ -386,7 +386,7 @@ only change config — no custom class needed.
 VAULTER_DISK=s3-vaulter
 ```
 
-`config('vaulter.storage.default_disk')` is the canonical CAS disk used when a storage row does
+`config('vaulter-media.disk')` is the canonical CAS disk used when a storage row does
 not pin its own `disk`. The shipped `FlysystemStorageDriver` already does the right thing on S3:
 a conditional create (`If-None-Match: *`), short-lived signed URLs via `temporaryUrl`, and the
 scope-qualified key layout.
@@ -404,12 +404,11 @@ If you need behaviour the default driver doesn't cover, implement
 `Vaulter\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
 
 ```php
-// config/vaulter.php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \App\Vaulter\S3ChecksumDriver::class, // your driver
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
-],
+// config/vaulter-media.php
+'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \App\Vaulter\S3ChecksumDriver::class, // your driver
+'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
+
 ```
 
 The `StorageDriver` surface: `disk()`, `put($key, $stream, $disk, $ifNoneMatch, $options)`,
@@ -454,7 +453,7 @@ Register it via config or at runtime:
 ::: code-group
 
 ```php [config]
-// config/vaulter.php
+// config/vaulter-documents.php
 'exporters' => [
     'html'     => \Vaulter\Export\HtmlExporter::class,
     'markdown' => \Vaulter\Export\MarkdownExporter::class,
@@ -495,7 +494,7 @@ final class ShortTokenGenerator implements ShareTokenGenerator
 
 ```php
 // config/vaulter.php
-'share' => [
+'sharing' => [
     'token_generator' => \App\Vaulter\ShortTokenGenerator::class,
     'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),
     'prefix_length'   => 8,
@@ -531,7 +530,7 @@ Schedule::command('vaulter:blobs:reconcile')->dailyAt('03:00');
 Schedule::command('vaulter:sweep-uploads')->hourly();
 ```
 
-The grace window is `config('vaulter.gc.grace_hours')` (default 24, floored at 1h). It **must**
+The grace window is `config('vaulter-media.gc.grace_hours')` (default 24, floored at 1h). It **must**
 be ≥ your worst-case multipart-commit latency so an in-flight upload can resurrect a tombstoned
 blob first.
 
@@ -607,7 +606,7 @@ real role system:
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.
-config()->set('vaulter.drivers.permission', 'null'); // non-production only
+config()->set('vaulter.access.permission_driver', 'null'); // non-production only
 
 $drive = Vaulter::for($task);
 $node  = $drive->upload('hello', name: 'note.txt');

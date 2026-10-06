@@ -41,7 +41,7 @@ ContentStore::promote() ─► write staged bytes to "<scope>/ab/<sha256>" on th
 v_file_version_blobs    ─► the EDGE that pins the blob alive (liveness truth)
 ```
 
-Three contracts split the work, and all three are swappable through `config('vaulter.cas')`:
+Three contracts split the work, and all three are swappable through `config('vaulter-media')`:
 
 | Contract | Default | Responsibility |
 |---|---|---|
@@ -50,12 +50,11 @@ Three contracts split the work, and all three are swappable through `config('vau
 | `Vaulter\Contracts\Cas\StorageDriver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | Thin Flysystem abstraction: `put` / `get` / `exists` / `delete` / `temporaryUrl` / `disk`. |
 
 ```php
-// config/vaulter.php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
-],
+// config/vaulter-media.php
+'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
+
 ```
 
 All three are bound in the service provider and resolved through the container, so
@@ -126,14 +125,14 @@ The staged object (`Vaulter\Media\Cas\StagedTempObject`, implementing
 `readStream()` and an idempotent `discard()` that removes the temp file once the
 bytes are promoted (or the commit rolls back).
 
-## Deduplication & `dedup.scope`
+## Deduplication & `vaulter-media.dedup.scope`
 
 The dedup scope decides the boundary a content address is unique within:
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|storage
+    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|drive
 ],
 ```
 
@@ -159,7 +158,7 @@ The scope is stored in every blob's `scope_key` and `storage_key`. Pick
 it at install time. `tenant` is the safe default for multi-tenant apps because it
 prevents one tenant from learning another tenant holds a given file (an existence
 leak), at the cost of storing identical bytes once per tenant. See
-[Multi-tenancy](/guide/multi-tenancy) for how `dedup.scope = tenant` interacts with
+[Multi-tenancy](/guide/multi-tenancy) for how `vaulter-media.dedup.scope = tenant` interacts with
 host-owned tenancy.
 :::
 
@@ -312,7 +311,7 @@ lock so a slow-but-live commit is never stolen.
 ### Running the collector
 
 ```bash
-# Both phases (mark + sweep), grace from config('vaulter.gc.grace_hours'):
+# Both phases (mark + sweep), grace from config('vaulter-media.gc.grace_hours'):
 php artisan vaulter:blobs:gc
 
 # Override the grace window (floored at 1h):
@@ -325,7 +324,7 @@ php artisan vaulter:blobs:gc --pending
 The command prints a per-phase tally — `Tombstoned X, swept Y, skipped Z (grace Nh)`.
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'gc' => [
     'grace_hours'        => env('VAULTER_GC_GRACE_HOURS', 24),
     // The separate, generally more generous window for the orphan disk-walk
@@ -337,7 +336,7 @@ The command prints a per-phase tally — `Tombstoned X, swept Y, skipped Z (grac
 ::: warning The grace window must outlast your slowest upload
 A tombstoned blob can be resurrected by an in-flight upload of the same `sha256`. The
 grace must be **≥ the worst-case multipart-commit latency** so an upload can
-resurrect first. It is floored at 1h by `Config::gcGraceHours()` regardless of
+resurrect first. It is floored at 1h by `MediaConfig::gcGraceHours()` regardless of
 config — never set it to zero expecting an immediate purge.
 :::
 
@@ -453,8 +452,8 @@ row-side reconcile result still stands.
 :::
 
 ::: details The orphan grace is separate from the GC grace
-The orphan walk uses `config('vaulter.gc.orphan_grace_hours')`
-(env `VAULTER_ORPHAN_GRACE_HOURS`), which **defaults to `gc.grace_hours`** (24) and is
+The orphan walk uses `config('vaulter-media.gc.orphan_grace_hours')`
+(env `VAULTER_ORPHAN_GRACE_HOURS`), which **defaults to `vaulter-media.gc.grace_hours`** (24) and is
 floored at 1h. Keep it ≥ your worst-case multipart-commit latency for the same reason
 the GC grace must be generous: an in-flight resumable upload can promote its bytes long
 before its row commits, and a fresh object must never be mistaken for an orphan.
@@ -503,7 +502,7 @@ different, recommended backstop — see the `uploads` config.)
 - [Configuration](/guide/configuration) — every `cas` / `dedup` / `gc` / `storage`
   key in one place.
 - [Multi-tenancy](/guide/multi-tenancy) — how host-owned tenancy feeds `tenant_id`
-  into blobs and why `dedup.scope = tenant` matters.
+  into blobs and why `vaulter-media.dedup.scope = tenant` matters.
 - [Recipes › Custom storage driver](/guide/recipes) — swap the disk / drive
   a custom `ContentStore`.
 - [Recipes › Blob GC & reconcile cron](/guide/recipes) — production operations.

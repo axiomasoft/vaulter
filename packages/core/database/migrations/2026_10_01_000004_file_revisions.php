@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -15,8 +15,8 @@ return new class extends Migration
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
         foreach (['file_versions' => 'file_revisions', 'file_version_blobs' => 'file_revision_blobs'] as $from => $to) {
-            $this->renameTable(Config::table($from), Config::table($to));
-            if (!$schema->hasTable(Config::table($to))) {
+            $this->renameTable(app(DatabaseConfig::class)->table($from), app(DatabaseConfig::class)->table($to));
+            if (!$schema->hasTable(app(DatabaseConfig::class)->table($to))) {
                 (new SchemaBuilder)->createTable($to);
             }
         }
@@ -27,7 +27,7 @@ return new class extends Migration
             }
         }
 
-        $name = Config::table('file_revisions');
+        $name = app(DatabaseConfig::class)->table('file_revisions');
         foreach (['declared_mime_type', 'scan_status'] as $column) {
             if (!$schema->hasColumn($name, $column)) {
                 $schema->table($name, static function (Blueprint $table) use ($column): void {
@@ -37,7 +37,7 @@ return new class extends Migration
         }
 
         foreach (['result_node_id', 'result_revision_id'] as $column) {
-            $name = Config::table('upload_sessions');
+            $name = app(DatabaseConfig::class)->table('upload_sessions');
             if (!$schema->hasColumn($name, $column)) {
                 $schema->table($name, fn (Blueprint $table) => app(IdStrategyResolver::class)->resolve()->reference($table, $column, nullable: true));
             }
@@ -45,7 +45,7 @@ return new class extends Migration
 
         $this->dropColumns('files', ['deleted_at']);
         foreach (['file_revisions', 'file_revision_blobs', 'files', 'upload_sessions'] as $entity) {
-            $this->renameKeys($entity, ['file_version_blobs' => 'file_revision_blobs', 'file_versions' => 'file_revisions', 'file_version_id' => 'file_revision_id', 'content_sha256' => 'sha256', 'version_no' => 'number', 'current_version_id' => 'current_revision_id', Config::table('upload_sessions').'_node_id_index' => Config::table('upload_sessions').'_target_node_id_index']);
+            $this->renameKeys($entity, ['file_version_blobs' => 'file_revision_blobs', 'file_versions' => 'file_revisions', 'file_version_id' => 'file_revision_id', 'content_sha256' => 'sha256', 'version_no' => 'number', 'current_version_id' => 'current_revision_id', app(DatabaseConfig::class)->table('upload_sessions').'_node_id_index' => app(DatabaseConfig::class)->table('upload_sessions').'_target_node_id_index']);
         }
     }
 
@@ -60,8 +60,8 @@ return new class extends Migration
         $this->dropColumns('upload_sessions', ['result_node_id', 'result_revision_id']);
         $this->dropColumns('file_revisions', ['declared_mime_type', 'scan_status']);
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        if ($schema->hasTable(Config::table('files')) && !$schema->hasColumn(Config::table('files'), 'deleted_at')) {
-            $schema->table(Config::table('files'), fn (Blueprint $table) => $table->timestamp('deleted_at')->nullable());
+        if ($schema->hasTable(app(DatabaseConfig::class)->table('files')) && !$schema->hasColumn(app(DatabaseConfig::class)->table('files'), 'deleted_at')) {
+            $schema->table(app(DatabaseConfig::class)->table('files'), fn (Blueprint $table) => $table->timestamp('deleted_at')->nullable());
         }
 
         foreach (['file_revisions' => ['number' => 'version_no', 'sha256' => 'content_sha256'], 'file_revision_blobs' => ['file_revision_id' => 'file_version_id'], 'files' => ['current_revision_id' => 'current_version_id', 'revision_count' => 'version_count'], 'upload_sessions' => ['target_node_id' => 'node_id']] as $entity => $columns) {
@@ -71,11 +71,11 @@ return new class extends Migration
         }
 
         foreach (['file_revisions', 'file_revision_blobs', 'files', 'upload_sessions'] as $entity) {
-            $this->renameKeys($entity, ['file_revision_blobs' => 'file_version_blobs', 'file_revisions' => 'file_versions', 'file_revision_id' => 'file_version_id', 'sha256_index' => 'content_sha256_index', 'number' => 'version_no', 'current_revision_id' => 'current_version_id', Config::table('upload_sessions').'_target_node_id_index' => Config::table('upload_sessions').'_node_id_index']);
+            $this->renameKeys($entity, ['file_revision_blobs' => 'file_version_blobs', 'file_revisions' => 'file_versions', 'file_revision_id' => 'file_version_id', 'sha256_index' => 'content_sha256_index', 'number' => 'version_no', 'current_revision_id' => 'current_version_id', app(DatabaseConfig::class)->table('upload_sessions').'_target_node_id_index' => app(DatabaseConfig::class)->table('upload_sessions').'_node_id_index']);
         }
 
-        $this->renameTable(Config::table('file_revision_blobs'), Config::table('file_version_blobs'));
-        $this->renameTable(Config::table('file_revisions'), Config::table('file_versions'));
+        $this->renameTable(app(DatabaseConfig::class)->table('file_revision_blobs'), app(DatabaseConfig::class)->table('file_version_blobs'));
+        $this->renameTable(app(DatabaseConfig::class)->table('file_revisions'), app(DatabaseConfig::class)->table('file_versions'));
     }
 
     private function freshInstall(): bool
@@ -95,7 +95,7 @@ return new class extends Migration
     private function renameColumn(string $entity, string $from, string $to): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if ($schema->hasTable($name) && $schema->hasColumn($name, $from) && !$schema->hasColumn($name, $to)) {
             $schema->table($name, fn (Blueprint $table) => $table->renameColumn($from, $to));
         }
@@ -123,7 +123,7 @@ return new class extends Migration
     {
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }
@@ -156,7 +156,7 @@ return new class extends Migration
     private function dropColumns(string $entity, array $columns): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }

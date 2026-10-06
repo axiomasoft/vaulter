@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
-    expect(Config::featureEnabled('reliability'))->toBeTrue();
+    expect(app(VaulterConfig::class)->featureEnabled('webhooks'))->toBeTrue();
 });
 
 it('stages three distinct occurrences for rename A to B to A to B', function (): void {

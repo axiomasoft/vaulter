@@ -9,7 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 /**
  * Primary-key strategy. Drives column types in the published (and later
  * generated) migrations plus the matching model concern, so "ulid vs uuid7 vs
- * bigint" is decided from config('vaulter.ids.default') rather than hard-coded.
+ * bigint" is decided from configuration key vaulter.ids.strategy rather than hard-coded.
  *
  * Vaulter defaults to ulid (D9) so morph keys line up with the Corex/host authorization
  * ecosystem; uuid7 maps onto native Postgres uuid columns and bigint is the

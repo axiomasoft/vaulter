@@ -39,7 +39,7 @@ or set `vaulter.routes.middleware.authenticated` to your application's guard.
 Anonymous protected requests receive 401; public share links and signed hub callbacks
 use independent `public` and `hub` stacks and require no Sanctum token.
 Request metrics are added to all three stacks automatically. Published 0.2 configs
-with `vaulter.middleware` still override the authenticated stack; remove that legacy
+with `vaulter.routes.middleware.authenticated` still override the authenticated stack; remove that legacy
 key to adopt the new default. See [Configuration](/guide/configuration#routes).
 
 Then run the bundled install command, which publishes the config, publishes the migrations

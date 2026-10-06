@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Contracts\IdStrategy;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 
 /**
  * Drives the default Vaulter models' key handling from the resolved IdStrategy
@@ -25,7 +25,7 @@ trait HasVaulterKeys
             }
 
             // The seam lives on the concrete model (this trait), not Model.
-            $key = $model instanceof self ? $model->vaulterIdStrategyKey() : Config::idStrategy();
+            $key = $model instanceof self ? $model->vaulterIdStrategyKey() : app(IdsConfig::class)->strategy();
             $newId = app(IdStrategyResolver::class)->resolve($key)->newId();
 
             if ($newId === null) {
@@ -52,7 +52,7 @@ trait HasVaulterKeys
      */
     protected function vaulterIdStrategyKey(): string
     {
-        return Config::idStrategy();
+        return app(IdsConfig::class)->strategy();
     }
 
     private function vaulterIdStrategy(): IdStrategy

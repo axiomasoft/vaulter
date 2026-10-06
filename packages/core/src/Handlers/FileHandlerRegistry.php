@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Handlers;
 
 use Illuminate\Contracts\Container\Container;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry as FileHandlerRegistryContract;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**
@@ -18,7 +18,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  * Capability}, from three cache-safe sources merged once:
  *
  *   1. the tagged container binding 'vaulter.file_handlers' (FQCN-tagged, no closures);
- *   2. config('vaulter.handlers') — an FQCN list (config-cache safe);
+ *   2. configuration key vaulter.handlers — an FQCN list (config-cache safe);
  *   3. runtime registrations via Vaulter::handlers()->register()/register().
  *
  * Resolution order (§4.5): mime-first → extension-fallback → capability-filter →
@@ -63,6 +63,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
     private array $cache = [];
 
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private readonly Container $container,
     ) {}
 
@@ -244,7 +245,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
             $byClass[$handler::class] = $handler;
         }
 
-        foreach (Config::documentHandlers() as $class) {
+        foreach ($this->vaulterConfig->handlers() as $class) {
             if (!isset($byClass[$class])) {
                 $byClass[$class] = $this->checkedInstance($class);
             }

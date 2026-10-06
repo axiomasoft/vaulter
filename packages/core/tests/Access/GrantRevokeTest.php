@@ -18,7 +18,7 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 });
 
 it('grants access through the action and dispatches NodeGrantCreated', function (): void {

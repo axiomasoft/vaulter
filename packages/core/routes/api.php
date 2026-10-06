@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
+use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Http\Controllers\Access\GrantController;
 use Vaulter\Http\Controllers\Activity\ActivityController;
 use Vaulter\Http\Controllers\Sharing\PublicShareController;
@@ -11,7 +13,6 @@ use Vaulter\Http\Controllers\Sharing\ShareController as NodeShareController;
 use Vaulter\Http\Controllers\Webhooks\WebhookEndpointsController;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
-use Vaulter\Support\Config;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +21,8 @@ use Vaulter\Support\Config;
 | Mounted under the configured prefix (default: api/vaulter).
 */
 
-Route::prefix(Config::routePrefix())
-    ->middleware(Config::authenticatedMiddleware())
+Route::prefix(app(RoutesConfig::class)->prefix())
+    ->middleware(app(RoutesConfig::class)->authenticatedMiddleware())
     ->group(static function (): void {
         /*
         |----------------------------------------------------------------------
@@ -79,7 +80,7 @@ Route::prefix(Config::routePrefix())
         | exists. The {endpoint} id is a plain scalar (the model is swappable, not
         | route-model bound) — the controller resolves it via the read repository.
         */
-        if (Config::featureEnabled('reliability')) {
+        if (app(VaulterConfig::class)->featureEnabled('webhooks')) {
             Route::get('webhook-endpoints', [WebhookEndpointsController::class, 'index']);
             Route::post('webhook-endpoints', [WebhookEndpointsController::class, 'store']);
             Route::patch('webhook-endpoints/{endpoint}', [WebhookEndpointsController::class, 'update']);
@@ -89,8 +90,8 @@ Route::prefix(Config::routePrefix())
 
     });
 
-Route::prefix(Config::routePrefix())
-    ->middleware([...Config::publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])
+Route::prefix(app(RoutesConfig::class)->prefix())
+    ->middleware([...app(RoutesConfig::class)->publicMiddleware(), 'throttle:vaulter-public', ResolveShareToken::class])
     ->group(static function (): void {
         Route::get('share/{token}', [PublicShareController::class, 'show']);
         Route::get('share/{token}/nodes', [PublicShareController::class, 'nodes']);

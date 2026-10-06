@@ -69,7 +69,7 @@ services:
 | `VAULTER_BACKEND_URL` | `http://localhost` | Базовый URL вашего Laravel-приложения, к которому хаб обращается обратно. **Обязательно в production.** |
 | `VAULTER_API_PREFIX` | `api/vaulter` | Префикс маршрутов Vaulter. Вебхуки резолвятся в `{BACKEND}/{PREFIX}/collab/{authenticate,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(производное)* | Явная полная база вебхуков; переопределяет две предыдущие переменные (reverse proxy / раздельный хост). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задано)* | Общий секрет, передаваемый в `X-Vaulter-Collab-Secret`. Должен совпадать с `vaulter.collaboration.webhook_secret` в Laravel. Не задан ⇒ хаб аутентифицирует вебхуки только по пересланному room JWT (никогда не «нараспашку»). |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задано)* | Общий секрет, передаваемый в `X-Vaulter-Collab-Secret`. Должен совпадать с `vaulter-documents.collaboration.hub.webhook_secret` в Laravel. Не задан ⇒ хаб аутентифицирует вебхуки только по пересланному room JWT (никогда не «нараспашку»). |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Таймаут туда-обратно для вебхука. |
 
 ### Безопасность

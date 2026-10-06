@@ -8,12 +8,12 @@ use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
-use Vaulter\Support\Config;
 
 /**
  * Resolves the active {@see PermissionDriver} from config (H.2), keyed by the driver
@@ -44,6 +44,7 @@ final class PermissionDriverManager
     private array $resolved = [];
 
     public function __construct(
+        private readonly AccessConfig $accessConfig,
         private readonly Container $container,
         private readonly bool $isProduction,
     ) {}
@@ -55,7 +56,7 @@ final class PermissionDriverManager
      */
     public function driver(?string $key = null): PermissionDriver
     {
-        $key ??= Config::permissionDriver();
+        $key ??= $this->accessConfig->permissionDriver();
 
         if (isset($this->resolved[$key])) {
             return $this->resolved[$key];
@@ -117,9 +118,9 @@ final class PermissionDriverManager
      */
     private function classFor(string $key): string
     {
-        $drivers = Config::permissionDrivers();
+        $drivers = $this->accessConfig->permissionDrivers();
 
-        if (isset($drivers[$key])) {
+        if (isset($drivers[$key]) && is_a($drivers[$key], PermissionDriver::class, allow_string: true)) {
             return $drivers[$key];
         }
 

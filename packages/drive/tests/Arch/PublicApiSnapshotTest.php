@@ -243,6 +243,12 @@ test('vaulter-drive public API surface matches the frozen golden (VLT-REL P2.2)'
 
     $blocks = array_map('vaulterSnapshotInterface', $contracts);
 
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Configuration', 'Vaulter\Drive\Configuration') as $configuration) {
+        if (str_ends_with($configuration, 'Config')) {
+            $blocks[] = vaulterSnapshotInterface($configuration);
+        }
+    }
+
     foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Drive\Events') as $eventClass) {
         $reflection = new ReflectionClass($eventClass);
         $properties = [];

@@ -20,7 +20,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             // Core owns the schema (v_nodes/v_drives/v_files/... + v_upload_*),
-            // the Node/Storage models, Access/Sharing/Activity and Support\Config.
+            // the Node/Storage models, Access/Sharing/Activity and Configuration\VaulterConfig.
             VaulterServiceProvider::class,
             // Media binds the concrete CAS engine behind the Contracts\Cas seam —
             // Drive upload/download/versioning commit through it.
@@ -49,16 +49,16 @@ abstract class TestCase extends OrchestraTestCase
 
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
-        $app['config']->set('vaulter.middleware', []);
+        $app['config']->set('vaulter.routes.middleware.authenticated', []);
 
         // The Drive suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // file/folder/upload mechanics without an access-control lane.
-        $app['config']->set('vaulter.drivers.permission', 'null');
+        $app['config']->set('vaulter.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the Drive tests assert integer
         // keys on the Storage→Node→File→Version chain they build.
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

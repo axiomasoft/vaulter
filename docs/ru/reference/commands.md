@@ -49,7 +49,7 @@ php artisan migrate
 приложению, из stub-заготовки. Она **не** трогает опубликованный конфиг и **не**
 генерирует миграции — панель по умолчанию представляет собой конфиг-конверт без
 миграций поверх общей схемы `v_*`. Регистрация FQCN провайдера в
-`config('vaulter.panels')` — это осознанный следующий шаг, который команда выводит на экран.
+`config('vaulter.profiles.providers')` — это осознанный следующий шаг, который команда выводит на экран.
 
 ```
 vaulter:make:profile
@@ -71,7 +71,7 @@ php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 Двухфазная, устойчивая к гонкам сборка мусора блобов (без учёта ACL, в системном
 контексте). Помечает нессылаемые зафиксированные блобы как tombstoned с крайним сроком
 grace, затем сметает tombstoned-блобы, у которых grace истёк, в физическое удаление.
-Окно grace берётся из `config('vaulter.gc.grace_hours')` (с нижней границей в 1 час),
+Окно grace берётся из `config('vaulter-media.gc.grace_hours')` (с нижней границей в 1 час),
 если его не переопределяет `--grace`.
 
 ```
@@ -116,7 +116,7 @@ php artisan vaulter:blobs:reconcile
 
 ```
 vaulter:purge-trash
-    {--days=} Переопределить окно хранения (конфиг vaulter.trash.retention_days)
+    {--days=} Переопределить окно хранения (конфиг vaulter-drive.trash.retention_days)
 ```
 
 ```bash
@@ -129,7 +129,7 @@ php artisan vaulter:purge-trash --days=7  # своё окно хранения
 ## `vaulter:sweep-uploads`
 
 Прервать и подчистить протухшие сессии резюмируемой загрузки, у которых истёк TTL
-(`config('vaulter.uploads.session_ttl_hours')`). Временный staged-файл и любое состояние
+(`config('vaulter-drive.uploads.resumable.session_ttl_hours')`). Временный staged-файл и любое состояние
 S3 multipart высвобождаются, а статус сессии переключается на `expired`.
 
 ```
@@ -153,7 +153,7 @@ lifecycle-правило `AbortIncompleteMultipartUpload` как страхов�
 повторы. Каждая ожидающая строка `v_outbox` разворачивается в одну подписанную строку
 `v_webhook_deliveries` на каждый подписанный активный эндпоинт, и HTTP POST ставится в
 очередь. Гарантия at-least-once с экспоненциальным backoff + DLQ. Управляется флагом
-`features.reliability`.
+`features.webhooks`.
 
 ```
 vaulter:relay-outbox
@@ -169,7 +169,7 @@ php artisan vaulter:relay-outbox --limit=500
 ## `vaulter:retry-webhooks`
 
 Повторно отправить доставки вебхуков, у которых истекло окно backoff. Управляется флагом
-`features.reliability`.
+`features.webhooks`.
 
 ```
 vaulter:retry-webhooks
@@ -198,6 +198,6 @@ Schedule::command('vaulter:blobs:reconcile')->weekly();
 
 ## См. также
 
-- [Справочник по конфигурации](/ru/reference/configuration) — `gc.*`, `trash.*`, `uploads.*`, `webhooks.*`, `features.reliability`
+- [Справочник по конфигурации](/ru/reference/configuration) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
 - [Справочник по событиям](/ru/reference/events) — что разворачивает релей
 - [Фасад и Manager](/ru/reference/facade) — рантайм-API

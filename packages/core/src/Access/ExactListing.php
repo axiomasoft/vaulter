@@ -8,12 +8,12 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Access\ValueObjects\GrantSet;
+use Vaulter\Configuration\ListingConfig;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use WeakMap;
 
@@ -22,8 +22,10 @@ final readonly class ExactListing
     /** @var WeakMap<Node, GrantSet> */
     private WeakMap $grants;
 
-    public function __construct(private AccessResolver $access, private VaulterDatabase $database, private Encrypter $encrypter)
-    {
+    public function __construct(
+        private readonly ListingConfig $listingConfig,
+        private AccessResolver $access, private VaulterDatabase $database, private Encrypter $encrypter,
+    ) {
         $this->grants = new WeakMap;
     }
 
@@ -47,7 +49,7 @@ final readonly class ExactListing
         $last = $cursor === null ? null : $this->decode($cursor, $context, $order);
         $visible = [];
         $scanned = 0;
-        $budget = Config::listingScanBudget();
+        $budget = $this->listingConfig->scanBudget();
         while (count($visible) < $perPage && $scanned < $budget) {
             $query = (clone $candidates)->reorder();
             foreach ($order as $sort) {

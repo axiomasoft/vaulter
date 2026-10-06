@@ -19,7 +19,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -160,7 +160,7 @@ it('404s an unknown upload_id', function (): void {
 });
 
 it('refuses the tus surface when tus is disabled', function (): void {
-    config()->set('vaulter.uploads.tus.enabled', false);
+    config()->set('vaulter-drive.uploads.resumable.enabled', false);
     $storage = uploadStorage();
 
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -170,7 +170,7 @@ it('refuses the tus surface when tus is disabled', function (): void {
 });
 
 it('429s a resumable-upload session create past the vaulter-uploads rate limit (F-P1.8-01)', function (): void {
-    config()->set('vaulter.rate_limits.uploads.per_minute', 1);
+    config()->set('vaulter.routes.rate_limits.uploads', 1);
     $storage = uploadStorage();
 
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -190,7 +190,7 @@ it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function 
     // request (create + every PATCH) — the cap must cover the create call too, so
     // it is set BEFORE create: budget 2 (create + one PATCH), the second PATCH
     // is the 3rd hit and goes over.
-    config()->set('vaulter.rate_limits.uploads.per_minute', 2);
+    config()->set('vaulter.routes.rate_limits.uploads', 2);
     $storage = uploadStorage();
 
     $create = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -222,7 +222,7 @@ it('429s a tus PATCH past the vaulter-uploads rate limit (F-P1.8-01)', function 
 });
 
 it('refuses a new upload session past the active-session cap for the actor (F-P1.4-09)', function (): void {
-    config()->set('vaulter.uploads.max_active_sessions', 2);
+    config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 2);
     $storage = uploadStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey();
 
@@ -235,7 +235,7 @@ it('refuses a new upload session past the active-session cap for the actor (F-P1
 });
 
 it('does not cap a new session when max_active_sessions is 0 (unbounded, the default off-switch)', function (): void {
-    config()->set('vaulter.uploads.max_active_sessions', 0);
+    config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 0);
     $storage = uploadStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey();
 

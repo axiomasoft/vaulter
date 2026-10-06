@@ -71,7 +71,7 @@ it('round-trips the content through TipTapRenderer', function (): void {
 });
 
 it('UPDATES the head autosave version in place within the debounce window', function (): void {
-    config()->set('vaulter.versions.autosave_debounce_seconds', 300);
+    config()->set('vaulter-documents.revisions.autosave_debounce_seconds', 300);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Live');
@@ -98,7 +98,7 @@ it('UPDATES the head autosave version in place within the debounce window', func
 });
 
 it('APPENDS a fresh autosave version outside the debounce window', function (): void {
-    config()->set('vaulter.versions.autosave_debounce_seconds', 0);
+    config()->set('vaulter-documents.revisions.autosave_debounce_seconds', 0);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Churny');
@@ -165,7 +165,7 @@ it('restore repoints the head to a copy of a prior version (append-only)', funct
 });
 
 it('prunes past the max but NEVER a keep_forever version nor the head', function (): void {
-    config()->set('vaulter.versions.max', 3);
+    config()->set('vaulter-documents.revisions.limit', 3);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Pruned');
@@ -216,7 +216,7 @@ function oversizedContent(): TipTapContent
 // ─── F-P1.11-05 — max_document_size_kb enforced at save time ───────────────
 
 it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05', function (): void {
-    config()->set('vaulter.max_document_size_kb', 1);
+    config()->set('vaulter-documents.content.max_size_kb', 1);
 
     $drive = DocumentTestHelpers::drive();
 
@@ -232,7 +232,7 @@ it('UpdateDocumentContentAction rejects content over max_document_size_kb, F-P1.
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Grows too big');
 
-    config()->set('vaulter.max_document_size_kb', 1);
+    config()->set('vaulter-documents.content.max_size_kb', 1);
 
     app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
@@ -244,7 +244,7 @@ it('PersistCollaborationStateAction rejects a projection over max_document_size_
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Yjs too big');
 
-    config()->set('vaulter.max_document_size_kb', 1);
+    config()->set('vaulter-documents.content.max_size_kb', 1);
 
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
         node: $node->refresh(),

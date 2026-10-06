@@ -8,17 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * An immutable file version (master plan §2.4): a monotonic number per file
  * pointing at a content-addressed blob (or a chunk manifest). The version ↔ blob
  * edges in v_file_revision_blobs are the GC truth. Swappable via
- * config('vaulter.models.file_version').
+ * configuration key vaulter.models.file_revision.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id
@@ -64,7 +65,7 @@ class FileRevision extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('file_revisions');
+        return app(DatabaseConfig::class)->table('file_revisions');
     }
 
     /**
@@ -72,7 +73,7 @@ class FileRevision extends Model
      */
     public function file(): BelongsTo
     {
-        return $this->belongsTo(Config::fileModel(), 'file_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('file'), 'file_id');
     }
 
     /**
@@ -82,7 +83,7 @@ class FileRevision extends Model
      */
     public function blob(): BelongsTo
     {
-        return $this->belongsTo(Config::blobModel(), 'blob_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('blob'), 'blob_id');
     }
 
     /**
@@ -93,12 +94,12 @@ class FileRevision extends Model
     public function blobs(): BelongsToMany
     {
         return $this->belongsToMany(
-            related: Config::blobModel(),
-            table: Config::table('file_revision_blobs'),
+            related: app(VaulterConfig::class)->model('blob'),
+            table: app(DatabaseConfig::class)->table('file_revision_blobs'),
             foreignPivotKey: 'file_revision_id',
             relatedPivotKey: 'blob_id',
         )
-            ->using(Config::fileVersionBlobModel())
+            ->using(app(VaulterConfig::class)->model('file_revision_blob'))
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
     }
 

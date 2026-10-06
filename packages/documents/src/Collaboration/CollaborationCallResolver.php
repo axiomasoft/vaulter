@@ -8,14 +8,14 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
-use Vaulter\Support\Config;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * Authenticates a server-to-server collaboration webhook call (M4b) — the calls the
  * Node Hocuspocus hub's onAuthenticate / onStoreDocument make BACK into Vaulter. A
  * call's IDENTITY is accepted by EITHER:
- *   - the shared webhook secret (config(vaulter.collaboration.webhook_secret)),
+ *   - the shared webhook secret (config(vaulter-documents.collaboration.hub.webhook_secret)),
  *     compared timing-safely; or
  *   - a valid signed room JWT (HS256 with the hocuspocus secret), signature + exp
  *     verified by firebase/php-jwt.
@@ -49,6 +49,7 @@ final readonly class CollaborationCallResolver
     private const string NONCE_CACHE_PREFIX = 'vaulter:collaboration:webhook-nonce:';
 
     public function __construct(
+        private DocumentsConfig $documentsConfig,
         private WebhookSigner $signer = new WebhookSigner,
     ) {}
 
@@ -81,7 +82,7 @@ final readonly class CollaborationCallResolver
 
     private function resolveIdentity(?string $presentedSecret, ?string $bearerToken): ?CollaborationCall
     {
-        $sharedSecret = Config::collaborationWebhookSecret();
+        $sharedSecret = $this->documentsConfig->hubWebhookSecret();
 
         if ($sharedSecret !== null
             && is_string($presentedSecret)
@@ -103,7 +104,7 @@ final readonly class CollaborationCallResolver
      */
     private function verifySignature(?string $presentedTimestamp, ?string $presentedSignature, string $rawBody): bool
     {
-        $secret = Config::collaborationWebhookSecret();
+        $secret = $this->documentsConfig->hubWebhookSecret();
 
         if ($secret === null
             || !is_string($presentedTimestamp) || $presentedTimestamp === ''
@@ -113,7 +114,7 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        $tolerance = Config::collaborationWebhookTimestampTolerance();
+        $tolerance = $this->documentsConfig->hubTimestampTolerance();
         $timestamp = (int) $presentedTimestamp;
 
         if (abs(time() - $timestamp) > $tolerance) {
@@ -149,7 +150,7 @@ final readonly class CollaborationCallResolver
             return null;
         }
 
-        $secret = Config::collaborationJwtSecret();
+        $secret = $this->documentsConfig->hubJwtSecret();
 
         if ($secret === null) {
             return null;

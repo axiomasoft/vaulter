@@ -6,6 +6,19 @@ namespace Vaulter\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Configuration\AccessConfig;
+use Vaulter\Configuration\ConfigNormalizer;
+use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\DownloadsConfig;
+use Vaulter\Configuration\IdsConfig;
+use Vaulter\Configuration\ListingConfig;
+use Vaulter\Configuration\ObservabilityConfig;
+use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\SharingConfig;
+use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
@@ -13,6 +26,7 @@ use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\FileHandlerRegistry;
@@ -21,7 +35,6 @@ use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\VaulterManager;
 use Vaulter\Webhooks\SystemHostResolver;
@@ -30,6 +43,20 @@ final class BindingsRegistrar
 {
     public function register(Application $app): void
     {
+        $app->singleton(VaulterConfig::class);
+        $app->singleton(DatabaseConfig::class);
+        $app->singleton(IdsConfig::class);
+        $app->singleton(TenancyConfig::class);
+        $app->singleton(AccessConfig::class);
+        $app->singleton(RoutesConfig::class);
+        $app->singleton(ListingConfig::class);
+        $app->singleton(SharingConfig::class);
+        $app->singleton(DownloadsConfig::class);
+        $app->singleton(WebhooksConfig::class);
+        $app->singleton(ObservabilityConfig::class);
+        $app->singletonIf(ConfigNormalizer::class);
+        $app->singleton(ConfigValidator::class);
+
         $app->singleton(VaulterDatabase::class);
         $app->singleton(IdStrategyResolver::class);
 
@@ -53,9 +80,9 @@ final class BindingsRegistrar
 
         $app->singleton(
             ProfileRegistry::class,
-            static fn (): ProfileRegistry => ProfileRegistry::fromConfig(
-                providerClasses: Config::panels(),
-                defaultClass: Config::defaultPanel(),
+            static fn (Application $app): ProfileRegistry => ProfileRegistry::fromConfig(
+                providerClasses: $app->make(VaulterConfig::class)->profileProviders(),
+                defaultClass: $app->make(VaulterConfig::class)->defaultProfile(),
             ),
         );
 
@@ -67,18 +94,27 @@ final class BindingsRegistrar
         // Contracts\Drive\DriveHandleFactory seam that package binds; `Vaulter::for()`
         // fails loudly when the package is absent.
 
-        // The bearer share-link generator (M2c / §2.7). nodeShareTokenGeneratorClass
-        // reads config('vaulter.share.token_generator') and falls back to the legacy
-        // top-level key, so the one binding serves both the Drive bearer links and
-        // the legacy Documents shares (both default to RandomShareTokenGenerator).
-        $app->bind(ShareTokenGenerator::class, Config::nodeShareTokenGeneratorClass());
+        $app->bind(ShareTokenGenerator::class, static function (Application $app): ShareTokenGenerator {
+            $generator = $app->make($app->make(SharingConfig::class)->tokenGenerator());
+            if (!$generator instanceof ShareTokenGenerator) {
+                throw new InvalidConfigurationException('[Vaulter] Sharing token generator binding must return a ShareTokenGenerator.');
+            }
+
+            return $generator;
+        });
 
         // Outbound webhook SSRF guard (§2.11 / D5 / F-P1.7-01): the host resolver is
         // the injectable DNS seam (A + AAAA), and the guard is host-swappable via
-        // config('vaulter.webhooks.delivery.url_guard'). The barrier runs on the
         // delivery path (DeliverWebhook) and — as an early reject — at registration.
         $app->bind(HostResolver::class, SystemHostResolver::class);
-        $app->bind(OutboundUrlGuard::class, Config::webhookUrlGuardClass());
+        $app->bind(OutboundUrlGuard::class, static function (Application $app): OutboundUrlGuard {
+            $guard = $app->make($app->make(WebhooksConfig::class)->urlGuard());
+            if (!$guard instanceof OutboundUrlGuard) {
+                throw new InvalidConfigurationException('[Vaulter] Outbound URL guard binding must return an OutboundUrlGuard.');
+            }
+
+            return $guard;
+        });
 
         // CAS services (H.3) — the concrete ContentStore/StorageDriver/BlobStore
         // engine now lives in axioma-studio/vaulter-media (P2 #5, D2/D3); its
@@ -117,14 +153,14 @@ final class BindingsRegistrar
         $app->singleton(
             MetricsRecorder::class,
             static function (Application $app): MetricsRecorder {
-                /** @var array{enabled?: bool, recorder?: string|null} $settings */
-                $settings = $app->make('config')->get('vaulter.observability', []);
 
-                if (!($settings['enabled'] ?? false)) {
+                $settings = $app->make(ObservabilityConfig::class);
+
+                if (!$settings->enabled()) {
                     return new NullMetricsRecorder;
                 }
 
-                $class = $settings['recorder'] ?? null;
+                $class = $settings->recorder();
 
                 if (!is_string($class) || $class === '' || !class_exists($class)) {
                     self::logInvalidObservabilityRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);
@@ -153,15 +189,14 @@ final class BindingsRegistrar
         $app->singleton(
             TraceRecorder::class,
             static function (Application $app): TraceRecorder {
-                /** @var array{tracing?: array{enabled?: bool, recorder?: string|null}} $settings */
-                $settings = $app->make('config')->get('vaulter.observability', []);
-                $tracing = $settings['tracing'] ?? [];
 
-                if (!($tracing['enabled'] ?? false)) {
+                $settings = $app->make(ObservabilityConfig::class);
+
+                if (!$settings->tracingEnabled()) {
                     return new NullTraceRecorder;
                 }
 
-                $class = $tracing['recorder'] ?? null;
+                $class = $settings->tracingRecorder();
 
                 if (!is_string($class) || $class === '' || !class_exists($class)) {
                     self::logInvalidTraceRecorder(reason: 'missing_or_unknown_class', class: is_string($class) ? $class : null);

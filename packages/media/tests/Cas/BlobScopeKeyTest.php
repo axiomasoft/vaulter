@@ -13,8 +13,8 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 it('isolates real identifier strategies across dedup scopes and GC', function (string $strategy, string $dedup): void {
-    config()->set('vaulter.ids.default', $strategy);
-    config()->set('vaulter.dedup.scope', $dedup);
+    config()->set('vaulter.ids.strategy', $strategy);
+    config()->set('vaulter-media.dedup.scope', $dedup);
     $db = app(VaulterDatabase::class)->connection();
     expect($this->app->environment('testing'))->toBeTrue();
     expect($db->getDatabaseName() === ':memory:' || str_ends_with($db->getDatabaseName(), '_test'))->toBeTrue();

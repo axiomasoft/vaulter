@@ -1,0 +1,170 @@
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Tests\Support\ConfigurationArchitectureGuard;
+
+test('AST configuration guard rejects retired names even without autoloadable classes', function (string $code): void {
+    $violations = (new ConfigurationArchitectureGuard)->scanSource("<?php\n".$code, 'probe.php');
+
+    expect($violations)->not->toBeEmpty()
+        ->and($violations[0])->toStartWith('probe.php:2: retired configuration helper');
+})->with([
+    'unused import' => ['use Vaulter\\Support\\Config;'],
+    'unused alias' => ['use Vaulter\\Support\\GateConfig as LegacyGate;'],
+    'grouped aliases' => ['use Vaulter\\Support\\{Config as Legacy, SpatieConfig};'],
+    'mixed grouped import' => ['use Vaulter\\Support\\{function config, GateConfig as Legacy};'],
+    'namespace alias' => ['use Vaulter\\Support as Legacy; Legacy\\Config::models();'],
+    'direct fully qualified' => ['\\Vaulter\\Support\\SpatieConfig::roleModel();'],
+    'namespace relative' => ['namespace Vaulter\\Support; Config::models();'],
+    'upload resolver' => ['use Vaulter\\Drive\\Support\\Uploads\\UploadModels;'],
+    'former upload resolver name' => ['use Vaulter\\Drive\\Uploads\\UploadModels;'],
+    'document resolver' => ['use Vaulter\\Documents\\DocumentsModels;'],
+    'parameter type' => ['function configure(\\Vaulter\\Support\\Config $value): void {}'],
+    'attribute' => ['#[\\Vaulter\\Support\\Config] class Probe {}'],
+    'restored declaration' => ['namespace Vaulter\\Support; class Config {}'],
+    'plain Pest file' => ["test('probe', fn () => \\Vaulter\\Support\\Config::models());"],
+]);
+
+test('AST configuration guard rejects literal class strings at consuming calls', function (string $code): void {
+    $violations = (new ConfigurationArchitectureGuard)->scanSource("<?php\n".$code, 'consumer.php');
+
+    expect($violations)->not->toBeEmpty()
+        ->and($violations[0])->toStartWith('consumer.php:2: retired configuration helper');
+})->with([
+    'app' => ["app('Vaulter\\Support\\Config');"],
+    'resolve named argument' => ["resolve(abstract: 'Vaulter\\Support\\GateConfig');"],
+    'aliased helper' => ["use function app as container; container('Vaulter\\Support\\Config');"],
+    'container make' => ["\$container->make('Vaulter\\Support\\Config');"],
+    'container singleton implementation' => ["\$app->singleton('safe', 'Vaulter\\Support\\Config');"],
+    'named binding implementation' => ["\$app->bind(concrete: 'Vaulter\\Support\\Config', abstract: 'safe');"],
+    'reflection' => ["new \\ReflectionClass('Vaulter\\Support\\Config');"],
+    'aliased reflection' => ["use ReflectionMethod as Inspector; new Inspector('Vaulter\\Support\\Config', 'models');"],
+    'named reflection' => ["new \\ReflectionProperty(objectOrClass: 'Vaulter\\Support\\Config', property: 'model');"],
+    'class existence' => ["class_exists('Vaulter\\Support\\Config');"],
+    'subclass check' => ["is_subclass_of('Safe', 'Vaulter\\Support\\Config');"],
+    'literal concatenation' => ["app('Vaulter\\\\Support\\\\'.'Config');"],
+    'case insensitive name' => ["app('\\VAULTER\\support\\config');"],
+]);
+
+test('AST configuration guard permits comments and translation data without file exclusions', function (): void {
+    $source = <<<'PHP'
+<?php
+// use Vaulter\Support\Config; config('vaulter.models');
+/** @see \Vaulter\Support\GateConfig */
+$translations = ['Vaulter\Support\Config' => 'Vaulter\Configuration\VaulterConfig'];
+$description = 'app("Vaulter\\Support\\Config")';
+return ['Vaulter\Support\SpatieConfig', 'Vaulter\Documents\DocumentsModels'];
+PHP;
+
+    expect((new ConfigurationArchitectureGuard)->scanSource($source, 'src/Configuration/ConfigNormalizer.php'))->toBe([]);
+});
+
+test('AST configuration guard recognizes direct config helper aliases', function (string $code): void {
+    $violations = (new ConfigurationArchitectureGuard)->scanSource("<?php\n".$code, 'runtime.php');
+
+    expect($violations)->toHaveCount(1)
+        ->and($violations[0])->toStartWith('runtime.php:2: direct config()');
+})->with([
+    'global helper' => ["config('vaulter.models');"],
+    'fully qualified helper' => ["\\config('vaulter.models');"],
+    'namespace fallback' => ["namespace Vaulter\\Probe; config('vaulter.models');"],
+    'import alias' => ["use function config as settings; settings('vaulter.models');"],
+    'first class helper' => ['config(...);'],
+]);
+
+test('AST configuration guard fails closed on malformed PHP with its source line', function (): void {
+    $violations = (new ConfigurationArchitectureGuard)->scanSource("<?php\n\nfunction broken( {", 'malformed.php');
+
+    expect($violations)->toHaveCount(1)
+        ->and($violations[0])->toStartWith('malformed.php:3: cannot parse/resolve PHP:');
+});
+
+test('AST configuration guard fails closed on unresolved inventory', function (): void {
+    $path = sys_get_temp_dir().'/vaulter-missing-'.bin2hex(random_bytes(12));
+    $violations = (new ConfigurationArchitectureGuard)->scanPackages($path);
+
+    expect($violations)->toHaveCount(19)
+        ->and(implode("\n", $violations))->toContain($path.'/core/src:1: cannot inventory')
+        ->toContain($path.'/drive/tests:1: cannot inventory')
+        ->toContain($path.'/media/config:1: cannot inventory')
+        ->toContain($path.'/core/tests/Fixtures/config/vaulter-0.2.php:1: published v0.2 fixture');
+});
+
+test('AST inventory covers every package scope and applies only the owning source exception', function (): void {
+    $temporary = sys_get_temp_dir().'/vaulter-architecture-'.bin2hex(random_bytes(12));
+    $packages = ['core', 'drive', 'documents', 'media', 'filament', 'azgard'];
+    mkdir($temporary.'/core/tests/Fixtures/config', 0777, true);
+    copy(__DIR__.'/../Fixtures/config/vaulter-0.2.php', $temporary.'/core/tests/Fixtures/config/vaulter-0.2.php');
+
+    try {
+        foreach ($packages as $package) {
+            foreach (['src', 'tests', 'config', 'database', 'routes'] as $scope) {
+                $directory = $temporary.'/'.$package.'/'.$scope;
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0777, true);
+                }
+                file_put_contents($directory.'/unused-import.php', '<?php use Vaulter\\Support\\Config as Legacy;');
+            }
+        }
+        mkdir($temporary.'/core/src/Configuration');
+        mkdir($temporary.'/core/src/Other/Configuration', 0777, true);
+        file_put_contents($temporary.'/core/src/Configuration/Owned.php', "<?php config('vaulter.models');");
+        file_put_contents($temporary.'/core/src/Other/Configuration/Bypass.php', "<?php config('vaulter.models');");
+        file_put_contents($temporary.'/core/tests/configuration-read.php', "<?php config('vaulter.models');");
+        $violations = (new ConfigurationArchitectureGuard)->scanPackages($temporary);
+
+        expect($violations)->toHaveCount(31);
+        foreach ($packages as $package) {
+            foreach (['src', 'tests', 'config', 'database', 'routes'] as $scope) {
+                expect(implode("\n", $violations))->toContain($temporary.'/'.$package.'/'.$scope.'/unused-import.php:1: retired configuration helper');
+            }
+        }
+        expect(implode("\n", $violations))->toContain('/core/src/Other/Configuration/Bypass.php:1: direct config()')
+            ->not->toContain('/Owned.php:')->not->toContain('/configuration-read.php:');
+
+        // Broken file links reproduce read failure even when the suite runs as root.
+        symlink($temporary.'/missing.php', $temporary.'/core/tests/unreadable.php');
+        unlink($temporary.'/drive/src/unused-import.php');
+        unlink($temporary.'/media/config/unused-import.php');
+        rmdir($temporary.'/media/config');
+        $failures = implode("\n", (new ConfigurationArchitectureGuard)->scanPackages($temporary));
+        expect($failures)->toContain('/core/tests/unreadable.php:1: cannot read PHP file')
+            ->toContain('/drive/src:1: required package scope contains no PHP files')
+            ->toContain('/media/config:1: cannot inventory required package scope');
+    } finally {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($temporary, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($files as $file) {
+            $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
+        }
+        rmdir($temporary);
+    }
+});
+
+test('published v02 fixture is pinned and mutation is rejected before execution', function (): void {
+    $fixture = __DIR__.'/../Fixtures/config/vaulter-0.2.php';
+    ConfigurationArchitectureGuard::assertPublishedV02Fixture($fixture);
+    $temporary = tempnam(sys_get_temp_dir(), 'vaulter-v02-');
+    $executed = $temporary.'.executed';
+
+    try {
+        $payload = '<?php file_put_contents('.var_export($executed, true).", 'executed'); return [];";
+        file_put_contents($temporary, file_get_contents($fixture)."\n// changed historical artifact\n");
+        expect(fn () => ConfigurationArchitectureGuard::assertPublishedV02Fixture($temporary))
+            ->toThrow(RuntimeException::class, 'published v0.2 fixture must match pinned SHA-256');
+        file_put_contents($temporary, $payload);
+        expect(function () use ($temporary): void {
+            ConfigurationArchitectureGuard::assertPublishedV02Fixture($temporary);
+            require $temporary;
+        })->toThrow(RuntimeException::class, 'published v0.2 fixture must match pinned SHA-256');
+        expect(file_exists($executed))->toBeFalse();
+    } finally {
+        unlink($temporary);
+        if (file_exists($executed)) {
+            unlink($executed);
+        }
+    }
+});

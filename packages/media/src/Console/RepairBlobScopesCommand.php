@@ -10,15 +10,23 @@ use Illuminate\Support\Collection;
 use RuntimeException;
 use Throwable;
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 final class RepairBlobScopesCommand extends Command
 {
+    public function __construct(
+        private readonly DatabaseConfig $databaseConfig,
+        private readonly VaulterConfig $vaulterConfig,
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'vaulter:blobs:repair-scopes {--dry-run} {--execute}';
 
     protected $description = 'Copy legacy mixed-scope blobs to their lossless scopes and atomically redirect revision edges';
@@ -34,7 +42,7 @@ final class RepairBlobScopesCommand extends Command
         $repaired = 0;
         $skipped = 0;
         $failed = false;
-        $model = Config::blobModel();
+        $model = $this->vaulterConfig->model('blob');
         $model::query()->whereIn('scope_key', ['legacy:snull', 'legacy:tnull'])->chunkById(100, function (Collection $batch) use ($database, $content, $blobs, $lock, &$repaired, &$skipped, &$failed): void {
             $rows = [];
             foreach ($batch as $blob) {
@@ -94,11 +102,11 @@ final class RepairBlobScopesCommand extends Command
 
     private function references(VaulterDatabase $database, Blob $blob): Builder
     {
-        return $database->connection()->table(Config::table('file_revision_blobs').' as edges')
-            ->join(Config::table('file_revisions').' as versions', 'versions.id', '=', 'edges.file_revision_id')
-            ->join(Config::table('files').' as files', 'files.id', '=', 'versions.file_id')
-            ->join(Config::table('nodes').' as nodes', 'nodes.id', '=', 'files.node_id')
-            ->join(Config::table('drives').' as storages', 'storages.id', '=', 'nodes.drive_id')
+        return $database->connection()->table($this->databaseConfig->table('file_revision_blobs').' as edges')
+            ->join($this->databaseConfig->table('file_revisions').' as versions', 'versions.id', '=', 'edges.file_revision_id')
+            ->join($this->databaseConfig->table('files').' as files', 'files.id', '=', 'versions.file_id')
+            ->join($this->databaseConfig->table('nodes').' as nodes', 'nodes.id', '=', 'files.node_id')
+            ->join($this->databaseConfig->table('drives').' as storages', 'storages.id', '=', 'nodes.drive_id')
             ->where('edges.blob_id', $blob->getKey())
             ->select(['versions.id as version_id', 'storages.id as drive_id', 'storages.tenant_id']);
     }
@@ -125,7 +133,7 @@ final class RepairBlobScopesCommand extends Command
             if ($lock->usesRowLock()) {
                 // Match GC's primary-key scan before the repository locks either
                 // row individually. Force the index to avoid a filesort lock order.
-                $model = Config::blobModel();
+                $model = $this->vaulterConfig->model('blob');
                 $model::query()->where('sha256', $candidate->sha256)
                     ->whereIn('scope_key', [$candidate->scope_key, $scope->key()])
                     ->orderBy((new $model)->getKeyName())->forceIndex('PRIMARY')->lockForUpdate()->get();
@@ -162,14 +170,14 @@ final class RepairBlobScopesCommand extends Command
                 }
 
                 $db = $database->connection();
-                $edges = $db->table(Config::table('file_revision_blobs'));
+                $edges = $db->table($this->databaseConfig->table('file_revision_blobs'));
                 $count = $edges->whereIn('file_revision_id', $refs->pluck('version_id')->unique()->all())->where('blob_id', $old->getKey())->update(['blob_id' => $target->getKey()]);
-                $db->table(Config::table('file_revisions'))->whereIn('id', $refs->pluck('version_id')->unique()->all())
+                $db->table($this->databaseConfig->table('file_revisions'))->whereIn('id', $refs->pluck('version_id')->unique()->all())
                     ->where('blob_id', $old->getKey())->update(['blob_id' => $target->getKey()]);
                 // ref_count is a cache: repair from live edges rather than decrement
                 // a possibly stale cache below zero.
                 foreach ([$old, $target] as $blob) {
-                    $blobs->setRefCount($blob, $db->table(Config::table('file_revision_blobs'))->where('blob_id', $blob->getKey())->count());
+                    $blobs->setRefCount($blob, $db->table($this->databaseConfig->table('file_revision_blobs'))->where('blob_id', $blob->getKey())->count());
                 }
 
                 $entry = json_encode(['ts' => now()->toIso8601String(), 'blob_id' => $old->getKey(), 'target' => $scope->key(), 'action' => 'move', 'edges' => $count], JSON_THROW_ON_ERROR)."\n";

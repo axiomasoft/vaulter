@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
+use Illuminate\Contracts\Container\Container;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
 use Vaulter\Media\Console\RepairBlobScopesCommand;
-use Vaulter\Support\Config;
 
 /**
  * Vaulter Media — the content-addressed file/blob layer (CAS), extracted from
@@ -23,7 +26,7 @@ use Vaulter\Support\Config;
  * touches AccessResolver).
  *
  * Dependency direction is one-way: media requires core (for the Contracts\Cas\*
- * seam, the Blob/FileRevision models and Support\Config), core does NOT require
+ * seam, the Blob/FileRevision models and Configuration\VaulterConfig), core does NOT require
  * media at runtime — a host that wants the CAS file layer installs this package
  * and Laravel auto-discovers this provider, which binds the concrete engine.
  */
@@ -33,6 +36,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('vaulter-media')
+            ->hasConfigFile()
             ->hasCommand(GcBlobsCommand::class)
             ->hasCommand(ReconcileBlobsCommand::class)
             ->hasCommand(RepairBlobScopesCommand::class);
@@ -40,18 +44,44 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
-        // Own the CAS engine defaults WITHOUT changing the config path hosts use:
-        // merge the swappable-class defaults under the existing `vaulter.cas` key.
-        // Core no longer ships these three keys, so this merge is authoritative and
-        // resolves the class strings Support\Config reads below.
-        $this->mergeConfigFrom(__DIR__.'/../config/vaulter-cas.php', 'vaulter.cas');
+        $path = __DIR__.'/../config/vaulter-media.php';
+        $this->mergeConfigFrom(path: $path, key: 'vaulter-media');
+        $this->app->singleton(MediaConfig::class, fn (Container $app): MediaConfig => new MediaConfig($app->make('config')));
+        $this->app->singletonIf(ConfigNormalizer::class);
+        $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-media', path: $path);
+        $this->app->bind('vaulter.dedup_scope', fn (Container $app): string => $app->make(MediaConfig::class)->dedupScope());
 
-        // CAS services (H.3) — swappable via config('vaulter.cas.*'). StorageDriver
-        // and ContentStore are stateless wrappers (singletons); BlobStore is the
-        // race-free lifecycle orchestrator. These bindings moved out of core with
-        // the engine; core code resolves them through the Contracts\Cas\* seam.
-        $this->app->singleton(StorageDriver::class, Config::storageDriverClass());
-        $this->app->singleton(ContentStore::class, Config::contentStoreClass());
-        $this->app->bind(BlobStore::class, Config::blobStoreClass());
+        $this->app->singleton(StorageDriver::class, static function (Container $app): StorageDriver {
+            $service = $app->make($app->make(MediaConfig::class)->storageDriver());
+            if (!$service instanceof StorageDriver) {
+                throw new InvalidConfigurationException('[Vaulter] Configured storageDriver binding must implement StorageDriver.');
+            }
+
+            return $service;
+        });
+        $this->app->singleton(ContentStore::class, static function (Container $app): ContentStore {
+            $service = $app->make($app->make(MediaConfig::class)->contentStore());
+            if (!$service instanceof ContentStore) {
+                throw new InvalidConfigurationException('[Vaulter] Configured contentStore binding must implement ContentStore.');
+            }
+
+            return $service;
+        });
+        $this->app->bind(BlobStore::class, static function (Container $app): BlobStore {
+            $service = $app->make($app->make(MediaConfig::class)->blobStore());
+            if (!$service instanceof BlobStore) {
+                throw new InvalidConfigurationException('[Vaulter] Configured blobStore binding must implement BlobStore.');
+            }
+
+            return $service;
+        });
+    }
+
+    public function packageBooted(): void
+    {
+        $config = $this->app->make(MediaConfig::class);
+        $config->contentStore();
+        $config->storageDriver();
+        $config->blobStore();
     }
 }

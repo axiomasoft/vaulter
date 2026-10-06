@@ -14,25 +14,25 @@ signatures and the binding point you swap it through.
 
 | Domain | Contract | Swap via |
 |---|---|---|
-| Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
+| Access | `PermissionDriver` | `config('vaulter.access.permission_driver')` + `access.permission_drivers` map |
 | Access | `AzgardGuard` (azgard) | binding supplied by `vaulter-azgard` |
 | Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
-| Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
-| Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
+| Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
+| Cas | `ContentStore` | `config('vaulter-media.content_store')` |
 | Cas | `ListableContentStore` | opt-in capability a `ContentStore` implements |
 | Cas | `ListableStorageDriver` | opt-in capability a `StorageDriver` implements |
-| Cas | `StorageDriver` | `config('vaulter.cas.storage_driver')` |
+| Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | returned by `ContentStore::stage()` |
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (legacy) |
 | Collaboration | `CollaborationDriver` | container binding (node path) |
 | Collaboration | `HostUserResolver` | container binding |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
-| Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
+| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` |
 | Handlers | `FileHandlerRegistry` | `Vaulter::handlers()` / `Vaulter::handlers()->register()` |
 | Handlers | `NodePresenter` | container binding (core) |
-| Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
+| Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
 | Uploads | `UploadProtocolHandler` | bundled (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
 
@@ -47,7 +47,7 @@ The pluggable, per-panel **role lane** the Vaulter-owned (non-swappable)
 role system into Vaulter without leaking Vaulter's domain: it never receives a `Node`
 and never deals in magic-string actions — only an `Authorizable` actor and an
 `AccessScope` (panel + workspace coordinates + node owner). Swap it via
-`config('vaulter.drivers.permission')` against the `permission_drivers` map; the
+`config('vaulter.access.permission_driver')` against the `access.permission_drivers` map; the
 default is the standalone `DatabasePermissionDriver`.
 
 ```php
@@ -107,10 +107,10 @@ The contract ships in `axioma-studio/vaulter-azgard`, alongside the real
 `AzgardGuardAdapter` and `Vaulter\Azgard\Testing\FakeAzgardGuard` test double.
 Its provider registers the driver and adapter automatically.
 
-**Use when** `config('vaulter.drivers.permission') = 'azgard'`: install with
+**Use when** `config('vaulter.access.permission_driver') = 'azgard'`: install with
 `composer require axioma-studio/vaulter-azgard`, add
 `Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model and align ULID morphs
-(`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`).
+(`vaulter.ids.strategy=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`).
 Fake-based tests also require the bridge and its installed dependencies.
 See [Permission drivers](/guide/permission-drivers).
 
@@ -124,7 +124,7 @@ composed straight from AzGuard's own public contracts (`HasPermissions` +
 interface AzgardBackedUser extends HasPermissions, HasScopedRoles {}
 ```
 
-**Implement when** `config('vaulter.drivers.permission') = 'azgard'` — the host
+**Implement when** `config('vaulter.access.permission_driver') = 'azgard'` — the host
 `User` model satisfies it with no extra method bodies by composing
 `AzGuard\Concerns\HasAzGuard` + `AzGuard\Concerns\HasScopedRoles`.
 
@@ -157,7 +157,7 @@ The high-level, race-free CAS blob lifecycle. `commit()` is the single entry poi
 stage → hash → find-or-create the blob by its per-scope dedup key inside one locked
 transaction, resurrecting a tombstoned match and promoting bytes only when the row is
 newly created. Liveness truth is the edge in `v_file_version_blobs`, not a
-synchronous `ref_count`. Swap via `config('vaulter.cas.blob_store')`.
+synchronous `ref_count`. Swap via `config('vaulter-media.blob_store')`.
 
 ```php
 interface BlobStore
@@ -180,7 +180,7 @@ interface BlobStore
 The low-level byte side of the CAS: stage an incoming stream to a local seekable temp
 file (hashing those durable bytes server-side), then promote the staged bytes to
 their canonical scope-qualified key. Knows only bytes, hashes and keys — never the
-`v_blobs` row. Swap via `config('vaulter.cas.content_store')`.
+`v_blobs` row. Swap via `config('vaulter-media.content_store')`.
 
 ```php
 interface ContentStore
@@ -247,7 +247,7 @@ interface StagedObject
 
 A thin abstraction over a Flysystem disk — the byte plane under the CAS. Swap to add
 object-store specifics (`x-amz-checksum-sha256`, `If-None-Match: *`) while keeping
-the local/sqlite test disk working. Swap via `config('vaulter.cas.storage_driver')`.
+the local/sqlite test disk working. Swap via `config('vaulter-media.storage_driver')`.
 
 ```php
 interface StorageDriver
@@ -417,7 +417,7 @@ saves nothing beyond that one line. The built-in handlers do not extend it — t
 
 Renders a document's content (`DocumentContent`, the same opaque payload the write path
 stores) into an export format — the contract does not assume TipTap. Built-in HTML and
-Markdown exporters ship; register your own (PDF, DOCX, …) via `config('vaulter.exporters')`
+Markdown exporters ship; register your own (PDF, DOCX, …) via `config('vaulter-documents.exporters')`
 or `Vaulter::registerExporter()`. Binary formats should return an encoded string (e.g.
 base64) and advertise the matching mime type.
 
@@ -506,9 +506,7 @@ interface NodePresenter
 ### `Vaulter\Contracts\Sharing\ShareTokenGenerator`
 
 Generates the opaque token for a public share link. A token must be unique and fit the
-token column (≤ 64 chars). Swap the legacy document-share token via
-`config('vaulter.share_token_generator')`, and the bearer node-share token via
-`config('vaulter.share.token_generator')`.
+token column (≤ 64 chars). Configure the generator at `config('vaulter.sharing.token_generator')`.
 
 ```php
 interface ShareTokenGenerator
@@ -558,7 +556,7 @@ See [Usage → Uploads](/guide/uploads).
 ### `Vaulter\Contracts\IdStrategy`
 
 The primary-key strategy: drives column types in migrations plus the matching model
-concern, so "ulid vs uuid7 vs bigint" is decided from `config('vaulter.ids.default')`
+concern, so "ulid vs uuid7 vs bigint" is decided from `config('vaulter.ids.strategy')`
 rather than hard-coded. Implementations live in `Vaulter\Schema\*`
 (`AutoIncrementIds`, `UlidIds`, `Uuid7Ids`); a host may register its own under
 `config('vaulter.ids.strategies')`.

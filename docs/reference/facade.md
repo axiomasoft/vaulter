@@ -58,7 +58,7 @@ $drive = Vaulter::for($project, 'project_drive'); // a named panel
 
 Open a Drive handle bound to an already-resolved `Drive` row. This is the seam the
 HTTP layer uses: a route-model-bound `Drive` (resolved through the swappable
-`config('vaulter.models.storage')`) maps straight to a `DriveHandle` without
+`config('vaulter.models.drive')`) maps straight to a `DriveHandle` without
 re-deriving the owner. The handle's panel mirrors `$storage->profile`, so its Actions
 run inside the right panel scope.
 
@@ -110,7 +110,7 @@ Register a custom export format. The exporter is keyed by its own `format()`.
 ### `exporter(string $format): DocumentExporter`
 
 Resolve an exporter by format key. Looks first at runtime-registered exporters, then
-at `config('vaulter.exporters')` (resolving the FQCN through the container).
+at `config('vaulter-documents.exporters')` (resolving the FQCN through the container).
 Throws `Vaulter\Exceptions\Documents\UnknownExportFormatException` for an unknown
 format.
 

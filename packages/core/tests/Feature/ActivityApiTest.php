@@ -18,7 +18,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     // The feed endpoints authorise via the real grant resolver (View on the scope).
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 

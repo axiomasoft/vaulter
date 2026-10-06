@@ -29,7 +29,7 @@ use Vaulter\Enums\Access\GrantScope;
  * still vetoes through the AccessResolver, since the driver only RAISES access).
  */
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'azgard');
+    config()->set('vaulter.access.permission_driver', 'azgard');
 });
 
 /**

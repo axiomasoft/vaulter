@@ -10,7 +10,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 });
 
 it('lists the nodes a subject is granted access to', function (): void {

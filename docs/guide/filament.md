@@ -140,7 +140,7 @@ A **read-mostly** view of the ownable, polymorphic disk roots. Drives are provis
 `Vaulter\Drive\DriveProvisioner` (get-or-create on a host entity), never minted from the panel — so this resource
 **cannot create or edit** a row (`canCreate()` returns `false`); it lists and inspects.
 
-- **Model**: resolved via `Config::storageModel()` (`Vaulter\Models\Drive\Drive` by default).
+- **Model**: resolved via `app(\Vaulter\Configuration\VaulterConfig::class)->model('drive')` (`Vaulter\Models\Drive\Drive` by default).
 - **Table**: name, owner (`owner_type #owner_id`), disk, used bytes, quota (`∞` when unlimited),
   status, created-at. Default sort `created_at desc`.
 - **Infolist** (view page): Drive / Owner / Usage sections, with human-formatted byte sizes.
@@ -170,7 +170,7 @@ Vaulter::forStorage($record->storage)->rename(
 );
 ```
 
-- **Model**: `Config::nodeModel()` (`Vaulter\Models\Drive\Node`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
 - **Table**: a kind icon (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), name (root rows show `(root)`), kind badge, storage, parent, size,
   trashed-at, created-at.
@@ -209,7 +209,7 @@ app(GrantNodeAccessAction::class)->execute(
 );
 ```
 
-- **Model**: `Config::grantModel()` (`Vaulter\Models\Access\NodeGrant`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
 - **Table**: node, subject (`type #id`), level badge, effect badge (deny → danger), scope, raw bits
   (hidden by default), expires-at (`Never` when null), created-at. Filters: effect, level.
 - **Form fields**: node, subject type (a registered morph alias such as `user` / `role` / `team`),
@@ -251,10 +251,10 @@ $minted = app(CreateShareLinkAction::class)->execute(
 );
 
 // Shown exactly once — never recoverable from the row afterward:
-//   Config::shareUrlBase() . '/' . $minted->token
+//   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
-- **Model**: `Config::nodeShareModel()` (`Vaulter\Models\Sharing\NodeShare`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
 - **Table**: node, `token_prefix…` badge, level, scope, a computed status badge
   (`Live` / `Revoked` / `Expired` / `Exhausted`), require-login icon, use count (`n / max` when
   capped), expires-at, created-at. Filter: a `Revoked` ternary.
@@ -269,7 +269,7 @@ A **read-only** view of the append-only `v_activity` audit log — verb, actor, 
 model is append-only by construction, so the resource is non-creatable, non-editable and
 non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
 
-- **Model**: `Config::activityModel()` (`Vaulter\Models\Activity\Activity`).
+- **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
 - **Table**: verb badge, actor (`type #id`), target (`type #id`), storage, when. Filter: verb
   (`SelectFilter` over `EventType` cases).
 - **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
@@ -280,7 +280,7 @@ non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
 ### Legacy document-centric surface
 
 These remain for hosts still on the document-centric tables. Each resolves its model through a
-`Config::*Model()` helper so a swapped model is still governed.
+`VaulterConfig::model(string)` helper so a swapped model is still governed.
 
 | Resource | Default model | What it manages |
 |----------|---------------|-----------------|
@@ -292,7 +292,7 @@ Toggle them off with the `document`, `folder` and `legacy_share` config keys.
 
 ## Model swappability
 
-Every resource resolves its model through a `Vaulter\Support\Config::*Model()` helper
+Every resource resolves its model through a `Vaulter\Configuration\VaulterConfig::model(string)` helper
 (`storageModel()`, `nodeModel()`, `grantModel()`, `nodeShareModel()`, `activityModel()`, …). If your
 host app swaps a Vaulter model for a subclass, the Filament resources keep governing it without any
 change.

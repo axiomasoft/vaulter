@@ -53,8 +53,8 @@ interface PermissionDriver
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
 
@@ -63,18 +63,18 @@ interface PermissionDriver
 VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
-Карта ключ → FQCN лежит в `permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
+Карта ключ → FQCN лежит в `access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
 реализующий `PermissionDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
 
 ```php
 // config/vaulter.php
-'permission_drivers' => [
+'access' => ['permission_drivers' => [
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
     'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
-],
+]],
 ```
 
 `PermissionDriverManager` резолвит и мемоизирует драйвер по ключу; неизвестный ключ бросает
@@ -138,8 +138,8 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 ### Конфигурация
 
 ```php
-// config/vaulter.php — used only when drivers.permission = 'gate'
-'gate' => [
+// config/vaulter.php — used only when access.permission_driver = 'gate'
+'access' => ['gate' => [
     'abilities' => [
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
@@ -149,7 +149,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
     ],
     'super_ability'  => env('VAULTER_GATE_SUPER_ABILITY', 'vaulter.super'),
     'create_ability' => env('VAULTER_GATE_CREATE_ABILITY', 'vaulter.create'),
-],
+]],
 ```
 
 Карта `abilities` связывает `GrantLevel` из Vaulter со строкой хостового права Gate. Сопоставляйте
@@ -192,8 +192,8 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 ### Конфигурация
 
 ```php
-// config/vaulter.php — used only when drivers.permission = 'spatie'
-'spatie' => [
+// config/vaulter.php — used only when access.permission_driver = 'spatie'
+'access' => ['spatie' => [
     'permissions' => [
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
@@ -206,7 +206,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
     'teams'             => env('VAULTER_SPATIE_TEAMS', false),
     'role_subject_type' => 'role',
     'team_subject_type' => 'team',
-],
+]],
 ```
 
 `teams` откатывается на этот ключ **только** тогда, когда собственный `config('permission.teams')`
@@ -239,7 +239,7 @@ composer require axioma-studio/vaulter-azgard
 ```
 
 Обнаруживаемый Laravel provider сам регистрирует ключ `azgard` в
-`vaulter.permission_drivers`, сохраняя явное переопределение хоста, и привязывает
+`vaulter.access.permission_drivers`, сохраняя явное переопределение хоста, и привязывает
 `Vaulter\Azgard\Contracts\AzgardGuard` к реальному адаптеру. Затем выберите
 `VAULTER_PERMISSION_DRIVER=azgard`. Без установленного моста этот ключ неизвестен
 и вызывает `MissingPermissionDriverException`.
@@ -266,7 +266,7 @@ composer require axioma-studio/vaulter-azgard
 с ключами по `Ability`:
 
 ```php
-// config/vaulter-azgard.php — used only when drivers.permission = 'azgard'
+// config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
 return [
     'panel_id' => null, // null resolves the panel from the permission key
     'permissions' => [
@@ -344,7 +344,7 @@ $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
 ```
 
 **Согласование morph-типов (ответственность хоста):** morph-типы workspace/владельца должны быть
-зарегистрированными morph-алиасами Corex, согласованными с `vaulter.ids.default=ulid` +
+зарегистрированными morph-алиасами Corex, согласованными с `vaulter.ids.strategy=ulid` +
 `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`. Драйвер передаёт строку типа workspace
 насквозь без изменений — он никогда не резолвит алиас сам.
 :::

@@ -64,10 +64,10 @@ $drive->forceDelete($node);    // безвозвратно — диспатчи�
 ## Хранение
 
 Сколько узел в корзине живёт, прежде чем станет кандидатом на чистку, задаётся
-параметром `config('vaulter.trash.retention_days')`:
+параметром `config('vaulter-drive.trash.retention_days')`:
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'trash' => [
     'retention_days' => 30,   // по умолчанию 30; 0 = чистить сразу после отправки в корзину
 ],
@@ -76,7 +76,7 @@ $drive->forceDelete($node);    // безвозвратно — диспатчи�
 - **По умолчанию:** 30 дней.
 - **Нижняя граница:** 0. `0` означает, что узел в корзине становится кандидатом на чистку немедленно.
 
-Значение читается через `Vaulter\Support\Config::trashRetentionDays()`.
+Значение читается через `Vaulter\Drive\Configuration\DriveConfig::trashRetentionDays()`.
 
 ## Плановая чистка
 

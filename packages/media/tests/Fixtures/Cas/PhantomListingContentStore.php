@@ -27,11 +27,15 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 final readonly class PhantomListingContentStore implements ContentStore, ListableContentStore
 {
+    private ContentStore $inner;
+
     public function __construct(
         private string $phantomKey,
         private int $phantomMtime,
-        private ContentStore $inner = new Sha256ContentStore(new FlysystemStorageDriver),
-    ) {}
+        ?ContentStore $inner = null,
+    ) {
+        $this->inner = $inner ?? new Sha256ContentStore(app(FlysystemStorageDriver::class));
+    }
 
     /**
      * The phantom key is the only thing on this "disk".

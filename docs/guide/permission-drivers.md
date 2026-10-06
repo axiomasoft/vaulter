@@ -53,8 +53,8 @@ The active driver is a single config key (and env var):
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
 
@@ -63,18 +63,18 @@ The active driver is a single config key (and env var):
 VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 ```
 
-The key → FQCN map is `permission_drivers`. Register your own driver by adding an FQCN
+The key → FQCN map is `access.permission_drivers`. Register your own driver by adding an FQCN
 that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
 ```php
 // config/vaulter.php
-'permission_drivers' => [
+'access' => ['permission_drivers' => [
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
     'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
-],
+]],
 ```
 
 The `PermissionDriverManager` resolves and memoises the driver per key; an unknown key
@@ -138,8 +138,8 @@ resolver.
 ### Configuration
 
 ```php
-// config/vaulter.php — used only when drivers.permission = 'gate'
-'gate' => [
+// config/vaulter.php — used only when access.permission_driver = 'gate'
+'access' => ['gate' => [
     'abilities' => [
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
@@ -149,7 +149,7 @@ resolver.
     ],
     'super_ability'  => env('VAULTER_GATE_SUPER_ABILITY', 'vaulter.super'),
     'create_ability' => env('VAULTER_GATE_CREATE_ABILITY', 'vaulter.create'),
-],
+]],
 ```
 
 The `abilities` map couples a Vaulter `GrantLevel` to a host Gate ability string. Map
@@ -191,8 +191,8 @@ to a safe deny (`null`/`false`), never a fatal error.
 ### Configuration
 
 ```php
-// config/vaulter.php — used only when drivers.permission = 'spatie'
-'spatie' => [
+// config/vaulter.php — used only when access.permission_driver = 'spatie'
+'access' => ['spatie' => [
     'permissions' => [
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
@@ -205,7 +205,7 @@ to a safe deny (`null`/`false`), never a fatal error.
     'teams'             => env('VAULTER_SPATIE_TEAMS', false),
     'role_subject_type' => 'role',
     'team_subject_type' => 'team',
-],
+]],
 ```
 
 `teams` falls back to this key **only** when the host's own `config('permission.teams')`
@@ -237,7 +237,7 @@ This is a no-op when Spatie is not installed.
 composer require axioma-studio/vaulter-azgard
 ```
 
-Its Laravel-discovered provider registers `azgard` in `vaulter.permission_drivers`,
+Its Laravel-discovered provider registers `azgard` in `vaulter.access.permission_drivers`,
 preserving an explicit host override, and binds
 `Vaulter\Azgard\Contracts\AzgardGuard` to the real adapter. Then select
 `VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
@@ -265,7 +265,7 @@ Unlike Gate/Spatie (keyed by `GrantLevel`), the AzGuard map is **action-centric*
 keyed by `Ability`:
 
 ```php
-// config/vaulter-azgard.php — used only when drivers.permission = 'azgard'
+// config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
 return [
     'panel_id' => null, // null resolves the panel from the permission key
     'permissions' => [
@@ -343,7 +343,7 @@ $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
 ```
 
 **Morph alignment (host responsibility):** the workspace/owner morph types must be
-registered Corex morph aliases aligned with `vaulter.ids.default=ulid` +
+registered Corex morph aliases aligned with `vaulter.ids.strategy=ulid` +
 `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`. The driver passes the workspace
 type string through untouched — it never resolves the alias itself.
 :::

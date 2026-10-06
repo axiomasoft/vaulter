@@ -71,7 +71,7 @@ client was provided — install the plugin or call `provideVaulterClient()` in a
 
 | Option | Type | Default | Notes |
 |--------|------|---------|-------|
-| `baseUrl` | `string` | `/api/vaulter` | matches the backend `route_prefix` config. Trailing slashes are trimmed |
+| `baseUrl` | `string` | `/api/vaulter` | matches the backend `routes.prefix` config. Trailing slashes are trimmed |
 | `headers` | `Record<string, string>` or `() => Record<string, string>` | — | extra request headers, or a getter (e.g. a rotating bearer token) |
 | `csrfToken` | `string` | — | sent as `X-CSRF-TOKEN` |
 | `fetch` | `typeof fetch` | global `fetch` | a custom fetch implementation |

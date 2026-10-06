@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 
 beforeEach(function (): void {
     app(VaulterDatabase::class)->connection()->getSchemaBuilder()->dropAllTables();
@@ -26,16 +26,16 @@ it('migrates and rolls back a fresh installation with all module features disabl
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
     $entities = ['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'file_revision_blobs', 'node_grants', 'node_shares', 'node_comments', 'node_document_versions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'];
     foreach ($entities as $entity) {
-        expect($schema->hasTable(Config::table($entity)))->toBeTrue($entity);
+        expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeTrue($entity);
     }
 
-    expect($schema->hasColumn(Config::table('nodes'), 'extra_data'))->toBeFalse()
-        ->and($schema->hasColumn(Config::table('blobs'), 'extra_data'))->toBeTrue();
+    expect($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'extra_data'))->toBeFalse()
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('blobs'), 'extra_data'))->toBeTrue();
     $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
     foreach ($entities as $entity) {
-        expect($schema->hasTable(Config::table($entity)))->toBeFalse($entity);
+        expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeFalse($entity);
     }
 
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
-    expect($schema->hasTable(Config::table('blobs')))->toBeTrue();
+    expect($schema->hasTable(app(DatabaseConfig::class)->table('blobs')))->toBeTrue();
 });

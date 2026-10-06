@@ -1,0 +1,22 @@
+{
+  "command": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "packages/core/tests/Configuration",
+    "packages/core/tests/Arch"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T082853318840Z",
+  "candidate_before": "363f45fdbb78e0b95056b9aad61f6387a637371000f723d5d3238242feba8113",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false,
+  "exit_code": 0,
+  "seconds": 29.364,
+  "candidate_after": "363f45fdbb78e0b95056b9aad61f6387a637371000f723d5d3238242feba8113",
+  "candidate_stable": true
+}

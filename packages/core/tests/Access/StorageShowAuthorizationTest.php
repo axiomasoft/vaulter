@@ -31,7 +31,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -53,7 +53,7 @@ function actAsStorageGuest(): void
  */
 function useNullPermissionDriver(): void
 {
-    config()->set('vaulter.drivers.permission', 'null');
+    config()->set('vaulter.access.permission_driver', 'null');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(NodeReadRepository::class);
 }

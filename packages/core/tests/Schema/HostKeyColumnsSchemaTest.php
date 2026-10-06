@@ -5,22 +5,22 @@ declare(strict_types=1);
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Schema\VaulterSchema;
-use Vaulter\Support\Config;
 
 it('creates host keys independently of entity IDs on a fresh panel', function (string $type): void {
     config()->set('vaulter.ids.host_keys', $type);
-    config()->set('vaulter.table_prefix', 'hostkeys_');
-    config()->set('vaulter.features.comments', true);
-    config()->set('vaulter.features.document_versions', true);
+    config()->set('vaulter.database.table_prefix', 'hostkeys_');
+    config()->set('vaulter-documents.comments.enabled', true);
     config()->set('vaulter.features.share_links', true);
     $builder = new SchemaBuilder;
     $builder->createAll();
 
     try {
-        $columns = array_column(Schema::getColumns(Config::table('node_grants')), null, 'name');
+        $columns = array_column(Schema::getColumns(app(DatabaseConfig::class)->table('node_grants')), null, 'name');
         $driver = DB::connection()->getDriverName();
         $expected = match ($type) {
             'string' => 'varchar',
@@ -33,7 +33,7 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
             ->and($columns['node_id']['type_name'])->toBe($driver === 'sqlite' ? 'integer' : ($driver === 'pgsql' ? 'int8' : 'bigint'));
 
         $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
-        config()->set('vaulter.table_prefix', 'hostkeys_');
+        config()->set('vaulter.database.table_prefix', 'hostkeys_');
         $queries = [];
         DB::listen(function ($query) use (&$queries): void {
             $queries[] = $query->sql;
@@ -47,11 +47,11 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
 
 it('rejects unknown host key configuration', function ($value): void {
     config()->set('vaulter.ids.host_keys', $value);
-    expect(fn () => Config::hostKeyType())->toThrow(InvalidArgumentException::class);
+    expect(fn () => app(IdsConfig::class)->hostKeys())->toThrow(InvalidArgumentException::class);
 })->with(['unknown', 42, null, ['nested']]);
 
 it('preserves nullable and index conventions for migration helpers', function (): void {
-    config()->set('vaulter.tenant.enabled', true);
+    config()->set('vaulter.tenancy.enabled', true);
     $table = new Blueprint(DB::connection(), 'host_key_probe');
     VaulterSchema::hostKey($table, 'owner_id');
     VaulterSchema::actor($table, 'created_by');

@@ -41,7 +41,7 @@ class SpatieTestCase extends TestCase
         parent::defineEnvironment($app);
 
         // The Drive ACL runs the spatie lane in these tests.
-        $app['config']->set('vaulter.drivers.permission', 'spatie');
+        $app['config']->set('vaulter.access.permission_driver', 'spatie');
 
         // Enable spatie v8 teams: the migration adds team_foreign_key columns and the
         // driver runs the full setPermissionsTeamId team-switch.

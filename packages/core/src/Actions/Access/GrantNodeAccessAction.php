@@ -7,6 +7,7 @@ namespace Vaulter\Actions\Access;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -14,7 +15,6 @@ use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantStoreRepository;
-use Vaulter\Support\SpatieConfig;
 
 /**
  * Grant (or deny) a subject access to a node (§2.6 / H.2). Idempotent on the
@@ -28,6 +28,7 @@ use Vaulter\Support\SpatieConfig;
 final readonly class GrantNodeAccessAction
 {
     public function __construct(
+        private readonly AccessConfig $accessConfig,
         private GrantStoreRepository $grants,
         private PermissionDriverManager $drivers,
         private VaulterDatabase $database,
@@ -101,7 +102,7 @@ final readonly class GrantNodeAccessAction
     {
         return in_array(
             $subject->type,
-            [SpatieConfig::roleSubjectType(), SpatieConfig::teamSubjectType()],
+            [$this->accessConfig->spatieRoleSubjectType(), $this->accessConfig->spatieTeamSubjectType()],
             strict: true,
         );
     }

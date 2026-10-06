@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Access;
 
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_node_grants (§2.6). Idempotent upsert on the grant-
@@ -18,9 +18,13 @@ use Vaulter\Support\Config;
  */
 final class GrantStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     public function grant(Node $node, GrantNodeAccessInput $data): NodeGrant
     {
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         $match = [
             'node_id' => $node->getKey(),
@@ -60,7 +64,7 @@ final class GrantStoreRepository
      */
     public function revoke(Node $node, Subject $subject): int
     {
-        $model = Config::grantModel();
+        $model = $this->vaulterConfig->model('grant');
 
         $deleted = $model::query()
             ->where('node_id', $node->getKey())

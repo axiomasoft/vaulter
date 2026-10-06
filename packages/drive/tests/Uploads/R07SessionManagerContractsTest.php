@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -23,11 +24,10 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('initiate persists the full server-built session shape from UploadInitData', function (): void {
@@ -81,7 +81,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
         'expected_sha256' => str_repeat('a', 64),
         'total_size_bytes' => 128,
         'received_bytes' => 0,
-        'chunk_size' => Config::uploadChunkSize(),
+        'chunk_size' => app(DriveConfig::class)->chunkSize(),
         'mime_type' => 'application/octet-stream',
         'metadata' => ['filename' => 'shape.bin'],
         'created_by' => '42',
@@ -129,7 +129,7 @@ it('markAssembled refuses an illegal status transition', function (): void {
 });
 
 it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte over', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 10);
+    config()->set('vaulter-drive.uploads.max_file_size', 10);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
@@ -154,7 +154,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
 });
 
 it('active-session cap allows max minus one and rejects at the ceiling', function (): void {
-    config()->set('vaulter.uploads.max_active_sessions', 2);
+    config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 2);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);

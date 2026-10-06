@@ -15,13 +15,13 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('пересчитывает ref_count из числа рёбер', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     $v1 = CasTestHelpers::makeVersion(versionNo: 1, name: 'a');
     $v2 = CasTestHelpers::makeVersion(versionNo: 1, name: 'b');
@@ -42,7 +42,7 @@ it('пересчитывает ref_count из числа рёбер', function (
 it('сбрасывает ref_count к 0, когда все рёбра удалены', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('orphaned'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 
@@ -58,7 +58,7 @@ it('сбрасывает ref_count к 0, когда все рёбра удале
 it('помечает dangling-строку: committed-блоб без объекта на диске', function (): void {
     $store = app(BlobReconciler::class);
 
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('vanished'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('vanished'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     // Simulate a botched delete: the row stays committed but the object is gone.
     Storage::disk('local')->delete($blob->storage_key);

@@ -6,13 +6,13 @@ namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
 use InvalidArgumentException;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\IdsConfig;
 
 final class HostKeyColumns
 {
     public static function add(Blueprint $table, string $column, bool $nullable, bool $index): void
     {
-        $definition = match (Config::hostKeyType()) {
+        $definition = match (app(IdsConfig::class)->hostKeys()) {
             'string' => $table->string($column, 64),
             'bigint' => $table->unsignedBigInteger($column),
             'uuid' => $table->uuid($column),
@@ -32,7 +32,7 @@ final class HostKeyColumns
             throw new InvalidArgumentException('[Vaulter] Unsupported host-key SQL driver ['.$driver.'].');
         }
 
-        return match (Config::hostKeyType()) {
+        return match (app(IdsConfig::class)->hostKeys()) {
             'string' => 'varchar(64)',
             'bigint' => $driver === 'pgsql' ? 'bigint' : 'bigint unsigned',
             'uuid' => $driver === 'pgsql' ? 'uuid' : 'char(36)',

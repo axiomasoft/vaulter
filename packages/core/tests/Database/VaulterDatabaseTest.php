@@ -17,12 +17,12 @@ use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 uses(P83DocumentsTestCase::class);
 
 afterEach(function (): void {
-    config()->set('vaulter.connection', null);
+    config()->set('vaulter.database.connection', null);
 });
 
 it('resolves the same dedicated connection as Vaulter models', function (string $modelClass): void {
     config()->set('database.connections.vaulter', config('database.connections.testing'));
-    config()->set('vaulter.connection', 'vaulter');
+    config()->set('vaulter.database.connection', 'vaulter');
 
     $database = app(VaulterDatabase::class);
 
@@ -85,7 +85,7 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
         'protocol' => 'tus', 'status' => 'initiated', 'total_size_bytes' => 1,
     ]);
     config()->set('database.connections.vaulter', config('database.connections.testing'));
-    config()->set('vaulter.connection', 'vaulter');
+    config()->set('vaulter.database.connection', 'vaulter');
 
     $attributes = match ($modelClass) {
         UploadSession::class => [

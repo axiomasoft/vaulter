@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use League\Flysystem\UnableToRetrieveMetadata;
 use Vaulter\Contracts\Cas\ListableStorageDriver;
 use Vaulter\Contracts\Cas\StorageDriver;
-use Vaulter\Support\Config;
+use Vaulter\Media\Configuration\MediaConfig;
 
 /**
  * The default StorageDriver (H.3): a thin Flysystem-disk abstraction. The disk is
@@ -22,9 +22,13 @@ use Vaulter\Support\Config;
  */
 final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriver
 {
+    public function __construct(
+        private readonly MediaConfig $mediaConfig,
+    ) {}
+
     public function disk(?string $disk = null): Filesystem
     {
-        return Storage::disk($disk ?? Config::defaultDisk());
+        return Storage::disk($disk ?? $this->mediaConfig->disk());
     }
 
     /**

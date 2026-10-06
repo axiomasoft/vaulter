@@ -26,14 +26,14 @@ it('states the schema change policy for future releases (F-P2.3-04)', function (
 });
 
 /**
- * Doc-alignment guard for the new `vaulter.connection` key (F-P2.3-02) — the
+ * Doc-alignment guard for the new `vaulter.database.connection` key (F-P2.3-02) — the
  * embeddability doc must tell a host how to place the schema on its own
  * connection, not just leave it discoverable only by reading `config/vaulter.php`.
  */
-it('documents the vaulter.connection key for embedding the schema on its own connection (F-P2.3-02)', function (): void {
+it('documents the vaulter.database.connection key for embedding the schema on its own connection (F-P2.3-02)', function (): void {
     $docs = file_get_contents(__DIR__.'/../../../../docs/guide/database-compatibility.md');
 
     expect($docs)->not->toBeFalse()
-        ->and($docs)->toContain("config('vaulter.connection')")
+        ->and($docs)->toContain("config('vaulter.database.connection')")
         ->and($docs)->toContain('VAULTER_DB_CONNECTION');
 });

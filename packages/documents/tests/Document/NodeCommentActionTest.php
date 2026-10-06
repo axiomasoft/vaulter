@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Event;
 use Vaulter\Documents\Actions\Comments\AddCommentAction;
 use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -49,7 +49,7 @@ it('adds a comment and dispatches CommentAdded on the node channel', function ()
         $channels = $event->broadcastOn();
 
         return $channels[0] instanceof PrivateChannel
-            && $channels[0]->name === 'private-'.Config::channelPrefix().'.'.$node->getKey();
+            && $channels[0]->name === 'private-'.app(DocumentsConfig::class)->channelPrefix().'.'.$node->getKey();
     });
 });
 

@@ -49,7 +49,7 @@ it('идемпотентен: второе обращение возвращае
 // в конфиге ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4) — см. PanelTestCase.
 
 it('применяет дефолтный диск из конфига к новому storage', function (): void {
-    config()->set('vaulter.storage.default_disk', 'spaces');
+    config()->set('vaulter-media.disk', 'spaces');
 
     $storage = DriveTestHelpers::drive()->model();
 

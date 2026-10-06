@@ -152,7 +152,7 @@ A name is a single tree **segment** — it may not contain path separators
 (`/` or `\`). Build a path by creating folders level by level. Every write that takes a
 name (create, upload, rename, copy with `$name`) trims it, normalizes it to Unicode NFC
 (with ext-intl) and rejects an empty name, `.`/`..`, control characters or more than
-`vaulter.drive.name_rules.max_length` UTF-8 bytes with `InvalidNodeNameException`
+`vaulter-drive.names.max_length` UTF-8 bytes with `InvalidNodeNameException`
 (422 `validation_failed`, `errors.name`).
 
 ### `upload()`

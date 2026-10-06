@@ -26,6 +26,8 @@ use UnitEnum;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
+use Vaulter\Configuration\SharingConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
@@ -36,7 +38,6 @@ use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 
 /**
  * The bearer share-link admin surface (master plan §2.7 / §3): list, create and
@@ -49,7 +50,7 @@ use Vaulter\Support\Config;
  *   - create → {@see CreateShareLinkAction} (mints + hashes the token; raw shown once);
  *   - revoke → {@see RevokeShareLinkAction} (stamps revoked_at; idempotent).
  * Both require Ability::Share on the node, gated through the AccessResolver. The model
- * resolves through {@see Config::nodeShareModel()} for swappability.
+ * resolves through {@see app(VaulterConfig::class)->model('node_share')} for swappability.
  */
 final class NodeShareResource extends Resource
 {
@@ -64,7 +65,7 @@ final class NodeShareResource extends Resource
     #[Override]
     public static function getModel(): string
     {
-        return Config::nodeShareModel();
+        return app(VaulterConfig::class)->model('node_share');
     }
 
     /**
@@ -291,7 +292,7 @@ final class NodeShareResource extends Resource
         // recoverable from the row afterward.
         Notification::make()
             ->title('Share link created')
-            ->body('Copy it now — it is shown only once: '.Config::shareUrlBase().'/'.$minted->token)
+            ->body('Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/'.$minted->token)
             ->persistent()
             ->success()
             ->send();
@@ -354,7 +355,7 @@ final class NodeShareResource extends Resource
             return null;
         }
 
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         return $model::query()->find($id);
     }
@@ -364,7 +365,7 @@ final class NodeShareResource extends Resource
      */
     private static function nodeOptions(): array
     {
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
 
         /** @var array<int|string, string> $options */
         $options = $model::query()

@@ -23,7 +23,7 @@ final class UnknownExportFormatException extends VaulterException implements Pro
         return new self(
             sprintf('[Vaulter] Unknown export format [%s]. ', $format)
             .sprintf('Why: no exporter is registered for it (available: [%s]). ', $list)
-            .'Fix: register one via config(vaulter.exporters) or Vaulter::registerExporter(). '
+            .'Fix: register one via config(vaulter-documents.exporters) or Vaulter::registerExporter(). '
             .'Docs: '.self::docs('unknown-export-format'),
         );
     }

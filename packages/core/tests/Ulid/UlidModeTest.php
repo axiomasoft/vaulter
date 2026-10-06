@@ -3,17 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
-it('derives the ulid strategy from the legacy id_type (BC)', function (): void {
-    // ids.default is cleared in UlidTestCase; the strategy must fall back to the
-    // legacy id_type=ulid knob so existing installs keep their ulid keys.
-    expect(config('vaulter.ids.default'))->toBeNull()
-        ->and(config('vaulter.id_type'))->toBe('ulid')
-        ->and(Config::idStrategy())->toBe('ulid')
-        ->and(Config::usesUlids())->toBeTrue();
+it('reads the canonical ulid strategy', function (): void {
+    expect(config('vaulter.ids.strategy'))->toBe('ulid')
+        ->and(app(IdsConfig::class)->strategy())->toBe('ulid')
+        ->and(app(IdsConfig::class)->usesUlids())->toBeTrue();
 });
 
 it('uses ULID keys when configured', function (): void {

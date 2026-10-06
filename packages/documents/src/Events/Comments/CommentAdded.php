@@ -8,8 +8,8 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Support\Str;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -35,7 +35,7 @@ final readonly class CommentAdded implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel(Config::channelPrefix().'.'.Identity::stringify($this->comment->node_id)),
+            new PrivateChannel(app(DocumentsConfig::class)->channelPrefix().'.'.Identity::stringify($this->comment->node_id)),
         ];
     }
 

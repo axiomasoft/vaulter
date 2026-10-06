@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Schema\SchemaBuilder;
-use Vaulter\Support\Config;
 
 /** Every configured scope uses the same NULL-free scope_key index. */
 function dedupIndexColumns(): array
 {
-    $table = Config::table('blobs');
+    $table = app(DatabaseConfig::class)->table('blobs');
     $name = $table.'_scope_sha_uniq';
 
     $indexes = array_column(Schema::getIndexes($table), null, 'name');
@@ -20,7 +20,7 @@ function dedupIndexColumns(): array
 function rebuildBlobsTable(): void
 {
     $builder = new SchemaBuilder;
-    config()->set('vaulter.table_prefix', 'dedup_test_');
+    config()->set('vaulter.database.table_prefix', 'dedup_test_');
 
     $builder->dropTable(entity: 'blobs');
     $builder->createTable(entity: 'blobs');
@@ -28,7 +28,7 @@ function rebuildBlobsTable(): void
 
 function storageKeyIndexColumns(): array
 {
-    $table = Config::table('blobs');
+    $table = app(DatabaseConfig::class)->table('blobs');
     $name = $table.'_storage_key_uniq';
 
     $indexes = array_column(Schema::getIndexes($table), null, 'name');
@@ -37,21 +37,21 @@ function storageKeyIndexColumns(): array
 }
 
 it('global scope → UNIQUE (scope_key, sha256)', function (): void {
-    config()->set('vaulter.dedup.scope', 'global');
+    config()->set('vaulter-media.dedup.scope', 'global');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
 });
 
 it('tenant scope → UNIQUE (scope_key, sha256)', function (): void {
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
 });
 
 it('storage scope → UNIQUE (scope_key, sha256)', function (): void {
-    config()->set('vaulter.dedup.scope', 'storage');
+    config()->set('vaulter-media.dedup.scope', 'drive');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);
@@ -59,14 +59,14 @@ it('storage scope → UNIQUE (scope_key, sha256)', function (): void {
 
 // The physical object address remains independently unique across disks.
 it('storage_key_uniq stays single-column (the F-P1.5-03 NULL-tenant dedup backbone)', function (): void {
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     rebuildBlobsTable();
 
     expect(storageKeyIndexColumns())->toBe(['storage_key']);
 });
 
 afterEach(function (): void {
-    config()->set('vaulter.table_prefix', 'dedup_test_');
+    config()->set('vaulter.database.table_prefix', 'dedup_test_');
     (new SchemaBuilder)->dropTable('blobs');
-    config()->set('vaulter.table_prefix', 'v_');
+    config()->set('vaulter.database.table_prefix', 'v_');
 });

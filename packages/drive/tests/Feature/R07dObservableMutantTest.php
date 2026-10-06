@@ -133,7 +133,7 @@ final class R07dUnsizedStream
 
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 41]));
 
     if (!in_array('r07d', stream_get_wrappers(), true)) {
@@ -153,8 +153,8 @@ function r07dInstall(int $bits, bool $workspaceCreate, ?string $onlyOwnerId = nu
         workspaceCreate: $workspaceCreate,
         onlyOwnerId: $onlyOwnerId,
     ));
-    config()->set('vaulter.permission_drivers.r07d', R07dBitsDriver::class);
-    config()->set('vaulter.drivers.permission', 'r07d');
+    config()->set('vaulter.access.permission_drivers.r07d', R07dBitsDriver::class);
+    config()->set('vaulter.access.permission_driver', 'r07d');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 }
@@ -197,7 +197,7 @@ function r07dUnsized(string $bytes)
 }
 
 it('rejects a stat-able chunk when the ceiling is 1 byte', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());
 
     expect(fn () => app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('AB'), 0))
@@ -207,7 +207,7 @@ it('rejects a stat-able chunk when the ceiling is 1 byte', function (): void {
 });
 
 it('rejects an unstatable chunk when the ceiling is 1 byte and stages nothing', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());
 
     expect(fn () => app(StagedUpload::class)->append($session, r07dUnsized('AB'), 0))
@@ -217,7 +217,7 @@ it('rejects an unstatable chunk when the ceiling is 1 byte and stages nothing', 
 });
 
 it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storage = UploadTestHelpers::storage();
     $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
         storage: $storage,

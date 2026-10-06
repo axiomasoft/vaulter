@@ -6,6 +6,144 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Package-owned configuration and typed access (AD26, P2.5)
+
+Merge your published configuration into the new package files before removing the
+old keys. Keep host overrides; publishing with `--force` would replace them.
+The publication tags are `vaulter-config`, `vaulter-media-config`,
+`vaulter-drive-config`, `vaulter-documents-config`, `vaulter-azgard-config` and
+`vaulter-filament-config`. Rename the old Media file `config/vaulter-cas.php` to
+`config/vaulter-media.php`, then move the core-owned disk/dedup/GC values into it.
+Drive and Documents now merge under their own roots, rather than `vaulter.models`,
+`vaulter.handlers` and `vaulter.exporters`.
+
+Configuration compatibility applies to keys, not PHP imports. Replace the removed helpers:
+
+| Removed API | Replacement |
+|---|---|
+| `Vaulter\Support\Config` | `Vaulter\Configuration\VaulterConfig` plus section classes |
+| `Vaulter\Support\GateConfig`, `Vaulter\Support\SpatieConfig` | `Vaulter\Configuration\AccessConfig` |
+| `Vaulter\Drive\Support\Uploads\UploadModels` | `Vaulter\Drive\Configuration\DriveConfig::model(string)` |
+| `Vaulter\Documents\DocumentsModels` | `Vaulter\Documents\Configuration\DocumentsConfig::model(string)` |
+
+Inject the `final readonly` configuration singletons into services. In models,
+migrations and static contexts use `app(DatabaseConfig::class)`, etc. The classes
+read `Illuminate\Contracts\Config\Repository` on every call, so test-time
+`config()->set()` remains visible. `VaulterConfig` exposes `database()`, `ids()`,
+`tenancy()`, `access()`, `routes()`, `listing()`, `sharing()`, `downloads()`,
+`webhooks()` and `observability()`. Direct Vaulter-key reads outside `Configuration`
+are prohibited in package code by architecture tests. There are no PHP class aliases.
+
+The normalizer runs after installed package defaults merge and before provider boot.
+Each old key emits `E_USER_DEPRECATED` once. An explicitly customized canonical value
+that differs from the translated old value throws
+`Vaulter\Exceptions\Configuration\InvalidConfigurationException`; equal values only
+warn. Default canonical values can be replaced by old published values. Module keys
+are normalized only when their owning package is installed. Deprecated key support
+is removed in 1.0.
+
+| Deprecated key | Canonical key |
+|---|---|
+| `vaulter.connection` | `vaulter.database.connection` |
+| `vaulter.table_prefix` | `vaulter.database.table_prefix` |
+| `vaulter.id_type / vaulter.ids.default` | `vaulter.ids.strategy` |
+| `vaulter.tenant.enabled` | `vaulter.tenancy.enabled` |
+| `vaulter.panels / vaulter.default_panel` | `vaulter.profiles.providers / vaulter.profiles.default` |
+| `vaulter.features.reliability` | `vaulter.features.webhooks` |
+| `vaulter.drivers.permission` | `vaulter.access.permission_driver` |
+| `vaulter.permission_drivers` | `vaulter.access.permission_drivers` |
+| `vaulter.gate.* / vaulter.spatie.*` | `vaulter.access.gate.* / vaulter.access.spatie.*` |
+| `vaulter.azgard.*` | `vaulter-azgard.*` |
+| `vaulter.route_prefix` | `vaulter.routes.prefix` |
+| `vaulter.middleware` | `vaulter.routes.middleware.authenticated` |
+| `vaulter.rate_limits.{public,uploads}.per_minute` | `vaulter.routes.rate_limits.{public,uploads}` |
+| `vaulter.share_token_generator / vaulter.share.token_generator` | `vaulter.sharing.token_generator` |
+| `vaulter.share.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` | `vaulter.sharing.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` |
+| `vaulter.downloads.inline_mime_whitelist` | `vaulter.downloads.inline_mime_types` |
+| `vaulter.storage.default_disk` | `vaulter-media.disk` |
+| `vaulter.dedup.scope` | `vaulter-media.dedup.scope` |
+| `vaulter.gc.*` | `vaulter-media.gc.*` |
+| `vaulter.cas.{content_store,storage_driver,blob_store}` | `vaulter-media.{content_store,storage_driver,blob_store}` |
+| `vaulter.uploads.max_bytes / vaulter.drive.max_upload_kb` | `vaulter-drive.uploads.max_file_size` |
+| `vaulter.drive.allowed_mime` | `vaulter-drive.uploads.allowed_mime_types` |
+| `vaulter.uploads.chunk_size` | `vaulter-drive.uploads.resumable.chunk_size` |
+| `vaulter.uploads.max_chunk_bytes` | `vaulter-drive.uploads.resumable.max_chunk_size` |
+| `vaulter.uploads.session_ttl_hours` | `vaulter-drive.uploads.resumable.session_ttl_hours` |
+| `vaulter.uploads.max_active_sessions` | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` |
+| `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
+| `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
+| `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
+| `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
+| `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
+| `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
+| `vaulter.versions.autosave_debounce_seconds` | `vaulter-documents.revisions.autosave_debounce_seconds` |
+| `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
+| `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
+| `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
+| `vaulter.collaboration.channel_prefix` | `vaulter-documents.collaboration.broadcast.channel_prefix` |
+| `vaulter.collaboration.webhook_secret` | `vaulter-documents.collaboration.hub.webhook_secret` |
+| `vaulter.collaboration.webhook_timestamp_tolerance` | `vaulter-documents.collaboration.hub.timestamp_tolerance` |
+| `vaulter.collaboration.drivers.hocuspocus.secret` | `vaulter-documents.collaboration.hub.jwt_secret` |
+| `vaulter.collaboration.drivers.hocuspocus.{url,token_ttl}` | `vaulter-documents.collaboration.hub.{url,token_ttl}` |
+| `vaulter.tiptap.*` | `vaulter-documents.tiptap.*` |
+| `vaulter.exporters` | `vaulter-documents.exporters` |
+| `vaulter.models.storage` | `vaulter.models.drive` |
+| `vaulter.models.file_version / vaulter.models.file_version_blob` | `vaulter.models.file_revision / vaulter.models.file_revision_blob` |
+| `vaulter.models.upload_session / vaulter.models.upload_part` | `vaulter-drive.models.upload_session / vaulter-drive.models.upload_part` |
+| `vaulter.models.node_comment` | `vaulter-documents.models.node_comment` |
+| `vaulter.models.node_document_version` | `vaulter-documents.models.document_revision` |
+| `vaulter-filament.resources.storage` | `vaulter-filament.resources.drive` |
+
+Migration details:
+
+- `id_type = id` maps to `ids.strategy = bigint`; `ulid` maps to `ulid`.
+  When both old ID keys exist, `ids.default` retains its previous precedence over
+  `id_type`. Update `panels` classes to `ProfileProvider` if necessary; incompatible classes
+  fail with a `vaulter:make:profile` hint.
+- `dedup.scope = storage` maps to `drive`. The old `uploads.max_bytes` and
+  `drive.max_upload_kb` limits are compared in bytes (`max_upload_kb × 1024`);
+  different legacy limits log a warning and the smaller wins. A legacy `false`
+  for either `features.uploads` or `uploads.tus.enabled` disables resumable uploads.
+- If `share_token_generator` and `share.token_generator` both exist, a custom
+  value wins over the other shipped default. Two different custom values throw
+  `InvalidConfigurationException`; keep only `sharing.token_generator`.
+- `vaulter.middleware` now sets only the authenticated stack. Put middleware for
+  public links and signed hub callbacks in `routes.middleware.public` and `.hub`.
+- Documents and revisions are enabled by installing `vaulter-documents`; blobs
+  and file revisions are always enabled. `features.blobs`, `features.versions`
+  and `features.document_versions` are removed. Their old `false` values now warn
+  and are ignored; uninstall the Documents package if you do not want its surface.
+- Comments default to **true** in `vaulter-documents.comments.enabled`. Explicit
+  legacy `features.comments = false` is translated and stays false; configure the
+  canonical key to disable comments in a fresh installation. Collaboration stays
+  opt-in via `vaulter-documents.collaboration.enabled`.
+- `tenant.column`, `drive.name_rules.no_separators_pattern` and `migrations.path`
+  warn and are ignored. The tenant column is always `tenant_id`; separators are
+  rejected by fixed code. Keep `table_names` only for the physical-table upgrade;
+  `DatabaseConfig::legacyTable()` is its sole reader.
+- `vaulter.enabled_document_types` and `vaulter.features.spreadsheets` remain core
+  keys in this transition, read by `DocumentsConfig`. Exporters remain a
+  **format → FQCN map** under `vaulter-documents.exporters`, not a list.
+- Move TipTap allow-list overrides from core to `config/vaulter-documents.php`:
+  `vaulter.tiptap.extra_nodes` becomes `vaulter-documents.tiptap.extra_nodes`,
+  `extra_marks` becomes `vaulter-documents.tiptap.extra_marks`,
+  `extra_attributes` becomes `vaulter-documents.tiptap.extra_attributes`, and
+  `url_attributes` becomes `vaulter-documents.tiptap.url_attributes`. These settings
+  remain additive to the built-in allow-list and retain URL-scheme validation.
+- For old published keys, exact built-in FQCN strings shipped in 0.2 are translated
+  to canonical implementations. Custom FQCN strings remain unchanged; update their
+  PHP imports, base classes and contracts to canonical names yourself.
+
+Boot now validates the permission-driver selection and contracts, the outbound URL
+guard, token generator, model subclasses and profile providers. Profile keys must
+be unique and the default profile must be registered. Closures are rejected. The
+`null` permission driver is forbidden in production. When collaboration is enabled,
+both `hub.jwt_secret` and `hub.webhook_secret` must be present and distinct:
+production throws; other environments log a warning. Invalid observability recorder
+classes log a warning and use a null implementation.
+
+See the English and Russian configuration guides for the current package layouts.
+
 ### AzGuard bridge, media commands and Filament Drive resource (P2.4)
 
 Install the separate bridge before selecting `VAULTER_PERMISSION_DRIVER=azgard`:
@@ -14,11 +152,11 @@ Install the separate bridge before selecting `VAULTER_PERMISSION_DRIVER=azgard`:
 composer require axioma-studio/vaulter-azgard
 ```
 
-Its discovered provider registers `vaulter.permission_drivers.azgard` when the host
+Its discovered provider registers `vaulter.access.permission_drivers.azgard` when the host
 has not explicitly set that key, and binds the real guard adapter. Remove the former
 AzGuard driver entry from a published core config unless it is an intentional custom
-override. Without the bridge, `azgard` is an unknown driver and raises
-`MissingPermissionDriverException`.
+override. Without the bridge, `azgard` is an unknown driver and P2.5 boot validation raises
+`InvalidConfigurationException`.
 
 Replace the following FQNs; no aliases are provided:
 
@@ -34,8 +172,8 @@ settings to `vaulter-azgard.permissions` and `vaulter-azgard.create_permission` 
 `config/vaulter-azgard.php`. The optional panel context remains
 `vaulter-azgard.panel_id`; `null` lets AzGuard resolve it from the permission key.
 `Vaulter\Azgard\Configuration\AzgardConfig` reads these settings at each call, and
-`AzgardPermissionMap` receives it through its constructor. Old keys are not translated
-by this change. The driver registry remains `vaulter.permission_drivers`.
+`AzgardPermissionMap` receives it through its constructor. P2.5 now translates the
+old keys with deprecation notices. The driver registry is `vaulter.access.permission_drivers`.
 
 The user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser` and align
 workspace/owner morph types with AzGuard/Corex. Fake-based tests require the installed
@@ -51,7 +189,7 @@ Filament resource imports become `Vaulter\Filament\Resources\DriveResource`,
 `Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive`. Replace the former
 `StorageResource`, `ListStorages` and `ViewStorage` names and change
 `vaulter-filament.resources.storage` to `vaulter-filament.resources.drive`.
-The resource's navigation and view labels are Drive. The old toggle is not translated;
+The resource's navigation and view labels are Drive. P2.5 translates the old toggle;
 `PanelActor` and `PanelAccessScope` keep their names.
 
 ### Document names and collaboration (AD03, AD04)
@@ -198,8 +336,8 @@ The upgrade sequence includes the existing №3 host keys, №6 second-root repa
 | №8 `…000008_grants_shares_cleanup` | Hard-delete soft-deleted grants; preserve share revocation as `COALESCE(revoked_at, deleted_at)`; remove deleted/inherited columns and use an ordinary grant UNIQUE. |
 | №9 `…000009_events` | Convert activity/outbox/delivery events and endpoint subscription lists; add activity occurrence ID and nullable outbox aggregate columns. |
 
-`Config::table()` now always returns prefix + canonical entity name. Old
-`vaulter.table_names` is read only by `Config::legacyTable()` during upgrade.
+`DatabaseConfig::table()` now always returns prefix + canonical entity name. Old
+`vaulter.table_names` is read only by `DatabaseConfig::legacyTable()` during upgrade.
 Drive/File/NodeGrant/NodeShare models no longer use Eloquent `SoftDeletes`.
 `Profile::storageType()` and `storageTypeKey()` are removed. HTTP JSON keys such as
 `storage_id`, `version_no`, `content_sha256` and `panel` stay unchanged until P6.1;

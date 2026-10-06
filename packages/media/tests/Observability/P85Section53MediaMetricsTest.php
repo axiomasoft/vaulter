@@ -14,7 +14,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     config()->set('vaulter.observability.enabled', true);
     config()->set('vaulter.observability.recorder', FakeMetricsRecorder::class);
     $this->app->forgetInstance(MetricsRecorder::class);
@@ -22,7 +22,7 @@ beforeEach(function (): void {
 
 it('records gc mark and sweep metrics', function (): void {
     $store = app(BlobStore::class);
-    $blob = $store->commit(CasTestHelpers::streamFor('gc-metrics'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('gc-metrics'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
     $store->detach($version, $blob);
@@ -40,7 +40,7 @@ it('records gc mark and sweep metrics', function (): void {
 
 it('records reconcile metrics when ref counts are rebuilt', function (): void {
     $store = app(BlobStore::class);
-    $blob = $store->commit(CasTestHelpers::streamFor('reconcile-metrics'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('reconcile-metrics'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $blob->forceFill(['ref_count' => 99])->save();
 
     app(BlobReconciler::class)->reconcile();

@@ -20,7 +20,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('реальный конвейер: detach→reconcile→mark томбствляет осиротевший committed-блоб (без ручного стампинга)', function (): void {
@@ -29,7 +29,7 @@ it('реальный конвейер: detach→reconcile→mark томбств�
     $gc = app(BlobGarbageCollector::class);
 
     // Коммитим блоб и навешиваем настоящее ребро — блоб живой.
-    $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('orphan-me'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 
@@ -56,7 +56,7 @@ it('реальный конвейер: за время grace sweep не трог
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('full-pipeline'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
     $store->detach($version, $blob);
@@ -88,7 +88,7 @@ it('реальный конвейер: всё ещё ссылающийся бл
     $reconciler = app(BlobReconciler::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('still-referenced'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 

@@ -5,7 +5,8 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Webhooks\SigningSecretEncryptor;
 
 /**
@@ -22,12 +23,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Config::featureEnabled('reliability')) {
+        if (!app(VaulterConfig::class)->featureEnabled('webhooks')) {
             return;
         }
 
-        $schema = Schema::connection(Config::connection());
-        $table = Config::table('webhook_endpoints');
+        $schema = Schema::connection(app(DatabaseConfig::class)->connection());
+        $table = app(DatabaseConfig::class)->table('webhook_endpoints');
 
         if (!$schema->hasTable($table)) {
             return;
@@ -44,12 +45,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Config::featureEnabled('reliability')) {
+        if (!app(VaulterConfig::class)->featureEnabled('webhooks')) {
             return;
         }
 
-        $schema = Schema::connection(Config::connection());
-        $table = Config::table('webhook_endpoints');
+        $schema = Schema::connection(app(DatabaseConfig::class)->connection());
+        $table = app(DatabaseConfig::class)->table('webhook_endpoints');
 
         if (!$schema->hasTable($table)) {
             return;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Support;
 
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DownloadsConfig;
 
 /**
  * The ONE shared response-header builder for a file download (P1.1 / F-P1.3-04,
@@ -51,7 +51,7 @@ final class DownloadHeaders
 
         $normalized = strtolower(trim($declaredMime));
 
-        if (!in_array($normalized, Config::downloadInlineMimeWhitelist(), true)) {
+        if (!in_array($normalized, app(DownloadsConfig::class)->inlineMimeTypes(), true)) {
             return 'application/octet-stream';
         }
 

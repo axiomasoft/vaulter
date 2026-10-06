@@ -29,8 +29,8 @@ use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 function bindDriver(PermissionDriver $driver): AccessResolver
 {
     app()->instance($driver::class, $driver);
-    config()->set('vaulter.permission_drivers.contract', $driver::class);
-    config()->set('vaulter.drivers.permission', 'contract');
+    config()->set('vaulter.access.permission_drivers.contract', $driver::class);
+    config()->set('vaulter.access.permission_driver', 'contract');
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 
@@ -98,8 +98,8 @@ it('yields identical decisions across pass-through host-role drivers on a shared
  * byte identical to the database lane on the shared ACL fixture.
  */
 dataset('pass-through drivers', [
-    'gate' => fn (): PermissionDriver => new GatePermissionDriver,
-    'spatie' => fn (): PermissionDriver => new SpatiePermissionDriver,
+    'gate' => fn (): PermissionDriver => app(GatePermissionDriver::class),
+    'spatie' => fn (): PermissionDriver => app(SpatiePermissionDriver::class),
 
 ]);
 

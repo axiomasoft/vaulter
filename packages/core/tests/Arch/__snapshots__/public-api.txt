@@ -121,8 +121,123 @@ Vaulter\Contracts\Webhooks\OutboundUrlGuard
   isAllowed(string $url): void
   pin(string $url): \Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint
 
+Vaulter\Configuration\AccessConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  gateAbilityMap(): array
+  gateCreateAbility(): string
+  gateSuperAbility(): string
+  permissionDriver(): string
+  permissionDrivers(): array
+  spatieCreatePermission(): string
+  spatiePermissionMap(): array
+  spatieRoleSubjectType(): string
+  spatieSuperPermission(): string
+  spatieTeamSubjectType(): string
+  spatieTeamsEnabled(): bool
+
+Vaulter\Configuration\ConfigNormalizer
+  keyMap(): array
+  normalize(\Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
+  packageDefaults(): array
+  registerDefaults(string $root, string $path): void
+
+Vaulter\Configuration\ConfigValidator
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  assertCollaborationSecrets(bool $enabled, ?string $jwtSecret, ?string $webhookSecret, \Illuminate\Contracts\Foundation\Application $app): void
+  assertImplements(string $key, string $class, string $base): void
+  assertModel(string $key, string $class, string $base): void
+  validate(\Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Foundation\Application $app): void
+
+Vaulter\Configuration\DatabaseConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  connection(): ?string
+  legacyTable(string $legacyEntity): string
+  table(string $name): string
+  tablePrefix(): string
+
+Vaulter\Configuration\DownloadsConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  inlineMimeTypes(): array
+
+Vaulter\Configuration\IdsConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  hostKeys(): string
+  strategies(): array
+  strategy(): string
+  usesUlids(): bool
+
+Vaulter\Configuration\ListingConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  scanBudget(): int
+
+Vaulter\Configuration\ObservabilityConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  enabled(): bool
+  recorder(): ?string
+  tracingEnabled(): bool
+  tracingRecorder(): ?string
+
+Vaulter\Configuration\RoutesConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  authenticatedMiddleware(): array
+  hubMiddleware(): array
+  prefix(): string
+  publicMiddleware(): array
+  publicRateLimit(): int
+  uploadsRateLimit(): int
+
+Vaulter\Configuration\SharingConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  defaultTtlHours(): int
+  maxTtlHours(): int
+  prefixLength(): int
+  tokenGenerator(): string
+  urlBase(): string
+
+Vaulter\Configuration\TenancyConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  enabled(): bool
+
+Vaulter\Configuration\VaulterConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  access(): \Vaulter\Configuration\AccessConfig
+  database(): \Vaulter\Configuration\DatabaseConfig
+  defaultProfile(): string
+  downloads(): \Vaulter\Configuration\DownloadsConfig
+  extraDataEnabled(): bool
+  featureEnabled(string $feature, ?string $profile = null): bool
+  handlers(): array
+  ids(): \Vaulter\Configuration\IdsConfig
+  listing(): \Vaulter\Configuration\ListingConfig
+  model(string $key): string
+  observability(): \Vaulter\Configuration\ObservabilityConfig
+  profileProviders(): array
+  routes(): \Vaulter\Configuration\RoutesConfig
+  sharing(): \Vaulter\Configuration\SharingConfig
+  tenancy(): \Vaulter\Configuration\TenancyConfig
+  webhooks(): \Vaulter\Configuration\WebhooksConfig
+
+Vaulter\Configuration\WebhooksConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  allowedIpRanges(): array
+  allowedSchemes(): array
+  backoff(int $attempt): int
+  blockedIpRanges(): array
+  connectTimeout(): int
+  disableAfterFailures(): int
+  eventHeader(): string
+  manageAbility(): ?string
+  maxAttempts(): int
+  maxResponseBytes(): int
+  retentionDays(): int
+  retryClaimSeconds(): int
+  signatureHeader(): string
+  timeout(): int
+  timestampHeader(): string
+  urlGuard(): string
+
 Vaulter\Access\AccessResolver
-  __construct(\Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages)
+  __construct(\Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages)
   abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
   can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
   canCreateInWorkspace(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $storage): bool
@@ -137,7 +252,7 @@ Vaulter\Access\AclFolder
   foldChain(array $depths): \Vaulter\Access\ValueObjects\AclMask
 
 Vaulter\Access\ExactListing
-  __construct(\Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
+  __construct(\Vaulter\Configuration\ListingConfig $listingConfig, \Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
   grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
   page(?\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
 
@@ -149,7 +264,7 @@ Vaulter\Data\Drive\NodePage
   jsonSerialize(): array
 
 Vaulter\Database\VaulterDatabase
-  __construct(\Illuminate\Database\DatabaseManager $db)
+  __construct(\Vaulter\Configuration\DatabaseConfig $databaseConfig, \Illuminate\Database\DatabaseManager $db)
   advisoryLock(string $key): void
   afterCommit(\Closure $callback): void
   connection(): \Illuminate\Database\Connection
@@ -171,113 +286,6 @@ Vaulter\ValueObjects\Cas\BlobScope
   storageId(): ?string
   tenant(string $id): \self
   tenantId(): ?string
-
-Vaulter\Support\Config
-  activityModel(): string
-  allowedUploadMimes(): array
-  authenticatedMiddleware(): array
-  autosaveDebounceSeconds(): int
-  blobModel(): string
-  blobStoreClass(): string
-  channelPrefix(): string
-  collaborationDriverName(): string
-  collaborationEnabled(): bool
-  collaborationHubUrl(): ?string
-  collaborationJwtSecret(): ?string
-  collaborationRoom(mixed $nodeId): string
-  collaborationTokenTtl(): int
-  collaborationWebhookSecret(): ?string
-  collaborationWebhookTimestampTolerance(): int
-  connection(): ?string
-  contentStoreClass(): string
-  dedupScope(): string
-  defaultDisk(): string
-  defaultPanel(): string
-  documentHandlers(): array
-  downloadInlineMimeWhitelist(): array
-  driveNameMaxLength(): int
-  driveNameSeparatorsPattern(): string
-  driverConfig(string $name): array
-  enabledDocumentTypes(): array
-  exporters(): array
-  extraDataEnabled(): bool
-  featureEnabled(string $feature, ?string $panel = null): bool
-  fileModel(): string
-  fileVersionBlobModel(): string
-  fileVersionModel(): string
-  gcGraceHours(int $override = 0): int
-  grantModel(): string
-  hostKeyType(): string
-  hubMiddleware(): array
-  idStrategies(): array
-  idStrategy(): string
-  idType(): string
-  legacyTable(string $legacyEntity): string
-  listingScanBudget(): int
-  maxActiveUploadSessions(): int
-  maxDocumentSizeKb(): int
-  maxDocumentVersions(): int
-  maxUploadKb(): int
-  maxVersions(): int
-  nodeCommentModel(): string
-  nodeDocumentVersionModel(): string
-  nodeIdFromRoom(string $room): string
-  nodeModel(): string
-  nodeShareModel(): string
-  nodeShareTokenGeneratorClass(): string
-  orphanGraceHours(int $override = 0): int
-  outboxModel(): string
-  panels(): array
-  permissionDriver(): string
-  permissionDrivers(): array
-  publicMiddleware(): array
-  publicRateLimitPerMinute(): int
-  routePrefix(): string
-  shareDefaultTtlHours(): int
-  shareMaxTtlHours(): int
-  sharePrefixLength(): int
-  shareTokenGeneratorClass(): string
-  shareUrlBase(): string
-  storageDriverClass(): string
-  storageModel(): string
-  table(string $name): string
-  tablePrefix(): string
-  tenantColumn(): string
-  tenantEnabled(): bool
-  tiptapExtraAttributes(): array
-  tiptapExtraMarks(): array
-  tiptapExtraNodes(): array
-  tiptapUrlAttributes(): array
-  trashRetentionDays(): int
-  tusEnabled(): bool
-  uploadChunkSize(): int
-  uploadMaxBytes(): int
-  uploadMaxChunkBytes(): int
-  uploadMetadataAllowedKeys(): array
-  uploadMetadataMaxValueLength(): int
-  uploadPartModel(): string
-  uploadSessionModel(): string
-  uploadSessionTtlHours(): int
-  uploadsRateLimitPerMinute(): int
-  usesUlids(): bool
-  webhookAllowedIpRanges(): array
-  webhookAllowedSchemes(): array
-  webhookBackoff(int $attempt): int
-  webhookBlockedIpRanges(): array
-  webhookConnectTimeout(): int
-  webhookDeliveryModel(): string
-  webhookDisableAfterFailures(): int
-  webhookEndpointModel(): string
-  webhookEventHeader(): string
-  webhookManageAbility(): ?string
-  webhookMaxAttempts(): int
-  webhookMaxResponseBytes(): int
-  webhookRetentionDays(): int
-  webhookRetryClaimSeconds(): int
-  webhookSignatureHeader(): string
-  webhookTimeout(): int
-  webhookTimestampHeader(): string
-  webhookUrlGuardClass(): string
 
 Vaulter\Schema\HostKeyColumns
   add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void

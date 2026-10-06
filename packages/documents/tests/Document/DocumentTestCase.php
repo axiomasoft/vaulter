@@ -27,6 +27,5 @@ abstract class DocumentTestCase extends TestCase
         parent::defineEnvironment($app);
 
         // Opt INTO the node-attached document version schema + routes (default off).
-        $app['config']->set('vaulter.features.document_versions', true);
     }
 }

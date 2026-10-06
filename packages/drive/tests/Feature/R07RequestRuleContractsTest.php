@@ -15,8 +15,8 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
-    config()->set('vaulter.drive.allowed_mime', []);
+    config()->set('vaulter-media.dedup.scope', 'tenant');
+    config()->set('vaulter-drive.uploads.allowed_mime_types', []);
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));
 });
 
@@ -268,7 +268,7 @@ it('R07Request validates create-folder name and nullable parent_id', function ()
 });
 
 it('R07Request enforces the dedicated upload size ceiling on the file rule only', function (): void {
-    config()->set('vaulter.drive.max_upload_kb', 1);
+    config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024);
     $base = 'api/vaulter/storages/'.r07StorageId().'/uploads';
 
     $response = $this->postJson($base, [
@@ -280,7 +280,7 @@ it('R07Request enforces the dedicated upload size ceiling on the file rule only'
 });
 
 it('R07Request adds mimetypes to the file rule only when an allowlist is configured', function (): void {
-    config()->set('vaulter.drive.allowed_mime', ['application/pdf']);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf']);
     $base = 'api/vaulter/storages/'.r07StorageId().'/uploads';
 
     $response = $this->postJson($base, [

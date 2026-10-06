@@ -78,7 +78,7 @@ another drive as `cross_drive_operation`.
 
 `InvalidNodeNameException` — a node name must be non-empty after trimming, not `.` or
 `..`, free of `/`, `\` and control characters, and at most
-`vaulter.drive.name_rules.max_length` UTF-8 bytes (default 255). Names are stored in
+`vaulter-drive.names.max_length` UTF-8 bytes (default 255). Names are stored in
 Unicode NFC when ext-intl is installed. Rendered as 422 `validation_failed` with
 `errors.name`.
 
@@ -90,11 +90,11 @@ Unicode NFC when ext-intl is installed. Rendered as 422 `validation_failed` with
 ## content-too-large
 
 `InvalidDocumentContentException::tooLarge()` — the content exceeds
-`config('vaulter.max_document_size_kb')`. Split the document or raise the limit.
+`config('vaulter-documents.content.max_size_kb')`. Split the document or raise the limit.
 
 ## unknown-collaboration-driver
 
-`VaulterException` from `CollaborationDriverManager` — `config('vaulter.collaboration.driver')`
+`VaulterException` from `CollaborationDriverManager` — `config('vaulter-documents.collaboration.driver')`
 is not one of the registered `CollaborationDriverType` cases (`hocuspocus`). Set it
 to a valid transport name.
 
@@ -128,8 +128,8 @@ from it.
 ## missing-host-role-driver
 
 `MissingPermissionDriverException` — either the open `null` host-role driver was selected in
-production (forbidden — it grants every actor full access), or `config('vaulter.drivers.permission')`
-names a driver key not in the `permission_drivers` map. Set a real driver
+production (forbidden — it grants every actor full access), or `config('vaulter.access.permission_driver')`
+names a driver key not in the `access.permission_drivers` map. Set a real driver
 (`database`/`gate`/`spatie`/`azgard`) or bind your own `PermissionDriver`.
 
 ## missing-package
@@ -175,7 +175,7 @@ append the role/team `Subject`s.
 ## unknown-export-format
 
 `UnknownExportFormatException` — no exporter is registered for the requested format.
-Register one via `config('vaulter.exporters')` or `Vaulter::registerExporter()`.
+Register one via `config('vaulter-documents.exporters')` or `Vaulter::registerExporter()`.
 
 ## unsupported-document-content
 

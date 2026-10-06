@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
@@ -34,11 +35,12 @@ final readonly class CreateFolderAction
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function execute(CreateFolderInput $data): Node
     {
-        $name = NodeName::normalize($data->name);
+        $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         return $this->database->transaction(function () use ($data, $name, $parentId): Node {

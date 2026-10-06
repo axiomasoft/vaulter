@@ -13,8 +13,14 @@ editLink: false
 
 ```php
 // config/vaulter.php
-'route_prefix' => 'api/vaulter',   // Config::routePrefix()
-'middleware'   => ['api'],         // Config::middleware()
+'routes' => [
+    'prefix' => 'api/vaulter',
+    'middleware' => [
+        'authenticated' => ['api', 'auth:sanctum'],
+        'public' => ['api'],
+        'hub' => ['api'],
+    ],
+],
 ```
 
 Так что путь, показанный как `storages/{storage}`, разворачивается в
@@ -23,7 +29,7 @@ editLink: false
 ## Соглашения
 
 - **`{storage}` / `{node}`** привязаны через **route-model binding** к сменяемым
-  `config('vaulter.models.storage')` / `config('vaulter.models.node')`. Каждый маршрут Drive
+  `config('vaulter.models.drive')` / `config('vaulter.models.node')`. Каждый маршрут Drive
   вдобавок явно применяет `SubstituteBindings`, так что привязка работает, даже если хост
   подрезает свою группу `api`.
 - **`{upload_id}`, `{share}`, `{endpoint}`, `{token}`, `{version}`** — обычные
@@ -42,14 +48,15 @@ editLink: false
 
 ### Фиче-гейты
 
-Некоторые группы маршрутов монтируются, только если включён соответствующий фиче-флаг в
-`config('vaulter.features.*')` (`Config::featureEnabled()`):
+Документы доступны при установке Documents. Остальные настройки маршрутов:
 
-| Фиче-флаг | Что гейтит |
+| Ключ | Маршруты |
 |---|---|
-| `document_versions` | маршруты документных узлов + handshake совместного редактирования + collab-вебхуки |
-| `uploads` | маршруты резюмируемых загрузок (tus + S3-multipart) |
-| `reliability` | маршруты управления webhook-эндпоинтами |
+| `vaulter-documents.collaboration.enabled` | Collaboration token + signed hub callbacks |
+| `vaulter-documents.comments.enabled` | Node comments (default `true`) |
+| `vaulter-drive.uploads.resumable.enabled` | Resumable uploads |
+| `vaulter.features.webhooks` | Webhook endpoint management |
+| `vaulter.features.grants` | Shared-with-me feed |
 
 ---
 
@@ -162,7 +169,7 @@ editLink: false
 
 | Параметр | Правило |
 |---|---|
-| `file` | required, file, `max:` `config('vaulter.drive.max_upload_kb')`; если `config('vaulter.drive.allowed_mime')` непуст, ограничен этим набором `mimetypes` |
+| `file` | required, file, `max:` `config('vaulter-drive.uploads.max_file_size')`; если `config('vaulter-drive.uploads.allowed_mime_types')` непуст, ограничен этим набором `mimetypes` |
 | `parent_id` | nullable (опустить = корень) |
 | `node_id` | nullable — существующий файловый узел, на который коммитится **новая версия** |
 | `name` | nullable, max 255, без разделителей пути — переопределяет сохранённое имя |
@@ -267,8 +274,7 @@ editLink: false
 
 ## Документные узлы (Documents)
 
-Документные узлы rich-text/Yjs (`DocumentNodeController`). **Гейтится фичей
-`document_versions`.** См. [Редактирование](/ru/guide/documents) и
+Документные узлы rich-text/Yjs (`DocumentNodeController`). **Доступно при установленном Documents.** См. [Редактирование](/ru/guide/documents) и
 [Версии](/ru/guide/documents).
 
 #### `POST storages/{storage}/documents`
@@ -428,7 +434,7 @@ CAS-коммит (`TusProtocolController`, `S3MultipartProtocolController`). **�
 ```
 
 ::: warning tus можно отключить отдельно
-Если `config('vaulter.uploads.tus.enabled')` равно `false`, tus-маршруты всё равно
+Если `config('vaulter-drive.uploads.resumable.enabled')` равно `false`, tus-маршруты всё равно
 монтируются, но каждое tus-действие возвращает **403** — фиче-флаг `uploads` (схема) и
 переключатель tus разделены.
 :::
@@ -635,7 +641,7 @@ Append-only лента активности (`Activity\ActivityController`). П�
 ## Совместное редактирование в реальном времени
 
 Совместное редактирование TipTap/Yjs поверх документных узлов
-(`Drive\NodeCollaborationController`). **Гейтится фичей `document_versions`.**
+(`Drive\NodeCollaborationController`). **Включается через `vaulter-documents.collaboration.enabled`.**
 См. [Совместное редактирование](/ru/guide/collaboration).
 
 ### Клиентский handshake

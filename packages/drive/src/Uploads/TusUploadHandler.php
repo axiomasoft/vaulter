@@ -7,13 +7,13 @@ namespace Vaulter\Drive\Uploads;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -42,6 +42,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -209,7 +210,7 @@ final readonly class TusUploadHandler implements UploadProtocolHandler
 
     private function assertWithinMaxBytes(UploadSession $session, int $size): void
     {
-        $max = Config::uploadMaxBytes();
+        $max = $this->driveConfig->maxFileSize();
 
         if ($max === 0 || $size <= $max) {
             return;

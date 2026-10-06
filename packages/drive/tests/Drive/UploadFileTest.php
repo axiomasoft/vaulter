@@ -15,7 +15,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('загружает файл: node kind=file + File + FileRevision + ребро', function (): void {

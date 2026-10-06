@@ -6,8 +6,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
@@ -16,7 +16,7 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
  * FK constraints hold, and the tables are gated on the 'reliability' feature.
  */
 it('creates v_outbox with every §2.11 column', function (): void {
-    $table = Config::table('outbox');
+    $table = app(DatabaseConfig::class)->table('outbox');
 
     expect(Schema::hasColumns($table, [
         'id', 'event_id', 'profile', 'topic', 'event', 'payload',
@@ -26,7 +26,7 @@ it('creates v_outbox with every §2.11 column', function (): void {
 });
 
 it('creates v_webhook_endpoints with every §2.11 column', function (): void {
-    $table = Config::table('webhook_endpoints');
+    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
 
     expect(Schema::hasColumns($table, [
         'id', 'url', 'events', 'signing_secret', 'is_active',
@@ -35,7 +35,7 @@ it('creates v_webhook_endpoints with every §2.11 column', function (): void {
 });
 
 it('creates v_webhook_deliveries with every §2.11 column', function (): void {
-    $table = Config::table('webhook_deliveries');
+    $table = app(DatabaseConfig::class)->table('webhook_deliveries');
 
     expect(Schema::hasColumns($table, [
         'id', 'endpoint_id', 'event', 'payload', 'status', 'attempts',
@@ -68,7 +68,7 @@ it('declares the endpoint_id foreign key on v_webhook_deliveries', function (): 
     // The cascadeOnDelete is enforced on Postgres/MySQL (the golden-migration suite
     // runs there); on the sqlite base suite we assert the FK is DECLARED on the table
     // so the structural guarantee is pinned without depending on PRAGMA enforcement.
-    $foreignKeys = Schema::getForeignKeys(Config::table('webhook_deliveries'));
+    $foreignKeys = Schema::getForeignKeys(app(DatabaseConfig::class)->table('webhook_deliveries'));
 
     $columns = collect($foreignKeys)
         ->flatMap(static fn (array $fk): array => $fk['columns'])

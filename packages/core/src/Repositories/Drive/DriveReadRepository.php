@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -24,6 +24,10 @@ use Vaulter\Support\Identity;
  */
 final class DriveReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /** @var array<string, Drive|null> */
     private array $cache = [];
 
@@ -35,7 +39,7 @@ final class DriveReadRepository
             return $this->cache[$key];
         }
 
-        $model = Config::storageModel();
+        $model = $this->vaulterConfig->model('drive');
 
         return $this->cache[$key] = $model::query()->find($id);
     }
@@ -47,7 +51,7 @@ final class DriveReadRepository
      */
     public function forOwner(Model $owner, string $panel): ?Drive
     {
-        $model = Config::storageModel();
+        $model = $this->vaulterConfig->model('drive');
 
         return $model::query()
             ->where('owner_type', $owner->getMorphClass())

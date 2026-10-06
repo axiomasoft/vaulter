@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -23,7 +23,7 @@ it('backfills historical blob scopes without moving their objects', function (st
     }
     $this->loadV02Fixture($strategy);
     $db = app(VaulterDatabase::class)->connection();
-    $table = Config::table('blobs');
+    $table = app(DatabaseConfig::class)->table('blobs');
     $before = $db->table($table)->orderBy('id')->get()->keyBy('id');
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     foreach ($db->table($table)->get() as $blob) {

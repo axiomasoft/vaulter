@@ -61,7 +61,7 @@ Event::listen(function (FileUploaded $event): void {
 
 ::: info Путь, привязанный к узлу
 `DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` работают на
-**узловом** пути (`Node` + `DocumentRevision`, за фичей `document_versions`). События
+**узловом** пути (`Node` + `DocumentRevision`, при установленном Documents). События
 `NodeComment*` покрывают треды узловых комментариев (ADR-0014). У Vaulter больше нет
 других доменов документных событий — прежние события DocVault, привязанные к
 `document_id`, были полностью исключены (ADR-0014).
@@ -130,7 +130,7 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 ## Заметка о надёжности
 
-Когда включён `features.reliability`, after-commit-подписчик (`OutboxRecorder`) складывает
+Когда включён `features.webhooks`, after-commit-подписчик (`OutboxRecorder`) складывает
 доменные события в `v_outbox` в том же запросе, что и мутацию; затем команда
 `vaulter:relay-outbox` разворачивает каждую строку в подписанные webhook-доставки.
 Потребители обязаны **дедуплицировать по `event_id`** из payload — outbox идемпотентен по
@@ -140,5 +140,5 @@ Echo.private(`vaulter.documents.${nodeId}`)
 ## См. также
 
 - [Справочник команд](/ru/reference/commands) — планировщики relay/retry/GC
-- [Справочник конфигурации](/ru/reference/configuration) — `features.reliability`, `collaboration.channel_prefix`, `webhooks.*`
+- [Справочник конфигурации](/ru/reference/configuration) — `features.webhooks`, `vaulter-documents.collaboration.broadcast.channel_prefix`, `webhooks.*`
 - [Справочник контрактов](/ru/reference/contracts) — модели, которые несут эти payload

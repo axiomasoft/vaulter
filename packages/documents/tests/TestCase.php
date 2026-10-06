@@ -22,7 +22,7 @@ abstract class TestCase extends OrchestraTestCase
         return [
             // Core owns the schema (v_nodes/v_drives/... + v_node_comments/
             // v_node_document_versions), the Node/Storage models, Access/Sharing/
-            // Activity and Support\Config.
+            // Activity and Configuration\VaulterConfig.
             VaulterServiceProvider::class,
             // The document-node tests build their Storage fixtures through
             // Vaulter::for() (a Drive handle) — documents requires only core in
@@ -60,16 +60,16 @@ abstract class TestCase extends OrchestraTestCase
 
         // Drop the route middleware group so tests do not depend on the host's
         // 'api' group definition; authorization is exercised via the resolver.
-        $app['config']->set('vaulter.middleware', []);
+        $app['config']->set('vaulter.routes.middleware.authenticated', []);
 
         // The Documents suite runs OPEN under the env-gated NullPermissionDriver (non-prod
         // only, H.2 / D6″): every actor gets full access so the tests exercise pure
         // document mechanics without an access-control lane.
-        $app['config']->set('vaulter.drivers.permission', 'null');
+        $app['config']->set('vaulter.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the Documents tests assert
         // integer keys on the Storage→Node chain they build.
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

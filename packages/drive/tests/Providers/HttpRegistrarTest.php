@@ -21,7 +21,7 @@ use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
 it('registers each subscriber only when its own feature is enabled', function (bool $activity, bool $reliability): void {
     config()->set('vaulter.features.activity', $activity);
-    config()->set('vaulter.features.reliability', $reliability);
+    config()->set('vaulter.features.webhooks', $reliability);
     $original = Event::getFacadeRoot();
     $events = new Dispatcher($this->app);
     Event::swap($events);
@@ -54,9 +54,9 @@ it('registers each subscriber only when its own feature is enabled', function (b
 ]);
 
 it('declares the existing routes and commands and preserves route feature gates', function (bool $uploads, bool $grants): void {
-    config()->set('vaulter.route_prefix', 'host/drive');
-    config()->set('vaulter.middleware', ['host.auth']);
-    config()->set('vaulter.features.uploads', $uploads);
+    config()->set('vaulter.routes.prefix', 'host/drive');
+    config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);
+    config()->set('vaulter-drive.uploads.resumable.enabled', $uploads);
     config()->set('vaulter.features.grants', $grants);
     $package = new Package;
     (new HttpRegistrar)->configure($package);

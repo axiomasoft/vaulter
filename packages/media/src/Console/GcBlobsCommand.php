@@ -6,17 +6,23 @@ namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
 use Vaulter\Media\Cas\BlobGarbageCollector;
-use Vaulter\Support\Config;
+use Vaulter\Media\Configuration\MediaConfig;
 
 /**
  * Two-phase, race-safe blob garbage collection (H.3). ACL-blind, system context:
  * mark unreferenced committed blobs as tombstoned (with a grace deadline), then
  * sweep tombstoned blobs past grace to a physical delete. --pending also clears
- * crashed-staging PENDING rows. The grace window comes from config('vaulter.gc.
+ * crashed-staging PENDING rows. The grace window comes from the configuration key ('vaulter.gc.
  * grace_hours') (floored at 1h) unless --grace overrides it.
  */
 final class GcBlobsCommand extends Command
 {
+    public function __construct(
+        private readonly MediaConfig $mediaConfig,
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'vaulter:blobs:gc
         {--grace= : Override the GC grace window in hours (floored at 1h)}
         {--pending : Also sweep crashed-staging PENDING blobs}';
@@ -31,7 +37,7 @@ final class GcBlobsCommand extends Command
 
         $this->components->info(
             "Tombstoned {$result['tombstoned']}, swept {$result['swept']}, skipped {$result['skipped']} ".
-            '(grace '.Config::gcGraceHours($grace).'h).',
+            '(grace '.$this->mediaConfig->gcGraceHours($grace).'h).',
         );
 
         if ($this->option('pending')) {

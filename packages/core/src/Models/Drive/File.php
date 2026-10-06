@@ -8,15 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * The mutable 1:1 handle for a kind=file node (master plan §2.4): it owns the
  * version history and caches the head's mime/size. Swappable via
- * config('vaulter.models.file').
+ * configuration key vaulter.models.file.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id
@@ -60,7 +61,7 @@ class File extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('files');
+        return app(DatabaseConfig::class)->table('files');
     }
 
     /**
@@ -68,7 +69,7 @@ class File extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
     }
 
     /**
@@ -76,7 +77,7 @@ class File extends Model
      */
     public function versions(): HasMany
     {
-        return $this->hasMany(Config::fileVersionModel(), 'file_id');
+        return $this->hasMany(app(VaulterConfig::class)->model('file_revision'), 'file_id');
     }
 
     /**
@@ -84,7 +85,7 @@ class File extends Model
      */
     public function currentVersion(): BelongsTo
     {
-        return $this->belongsTo(Config::fileVersionModel(), 'current_revision_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('file_revision'), 'current_revision_id');
     }
 
     /**

@@ -6,7 +6,7 @@ namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Models\Drive\Node;
 
@@ -23,6 +23,10 @@ use Vaulter\Models\Drive\Node;
  */
 final class DocumentRevisionStoreRepository
 {
+    public function __construct(
+        private readonly DocumentsConfig $documentsConfig,
+    ) {}
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -30,7 +34,7 @@ final class DocumentRevisionStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from the document-node Actions, never raw request input.
-        $model = DocumentsModels::documentVersion();
+        $model = $this->documentsConfig->model('document_revision');
         $version = new $model;
         $version->forceFill($attributes);
         $version->save();
@@ -59,7 +63,7 @@ final class DocumentRevisionStoreRepository
      */
     public function nextVersionNo(Node $node): int
     {
-        $model = DocumentsModels::documentVersion();
+        $model = $this->documentsConfig->model('document_revision');
 
         $max = $model::query()
             ->where('node_id', $node->getKey())
@@ -79,7 +83,7 @@ final class DocumentRevisionStoreRepository
             return 0;
         }
 
-        $model = DocumentsModels::documentVersion();
+        $model = $this->documentsConfig->model('document_revision');
 
         // The prunable rows: NOT keep_forever, NOT the current head, newest first.
         /** @var Collection<int, DocumentRevision> $prunable */

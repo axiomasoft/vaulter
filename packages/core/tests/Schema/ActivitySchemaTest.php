@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Support\Config;
 
 /**
  * The v_activity schema (§2.9 / M2c-activity): every column exists and the table is
@@ -13,7 +13,7 @@ use Vaulter\Support\Config;
  * or delete path for an audit row.
  */
 it('creates the v_activity table with every §2.9 column', function (): void {
-    $table = Config::table('activity');
+    $table = app(DatabaseConfig::class)->table('activity');
 
     expect(Schema::hasColumns($table, [
         'id', 'tenant_id', 'drive_id', 'actor_type', 'actor_id', 'verb',
@@ -23,7 +23,7 @@ it('creates the v_activity table with every §2.9 column', function (): void {
 });
 
 it('is append-only: no updated_at and no soft-delete column', function (): void {
-    $table = Config::table('activity');
+    $table = app(DatabaseConfig::class)->table('activity');
 
     expect(Schema::hasColumn($table, 'created_at'))->toBeTrue()
         ->and(Schema::hasColumn($table, 'updated_at'))->toBeFalse()

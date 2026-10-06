@@ -1,0 +1,4 @@
+Vaulter\Filament\Configuration\FilamentConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  navigationGroup(): string
+  resourceEnabled(string $key): bool

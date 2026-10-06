@@ -9,6 +9,7 @@ use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
@@ -17,6 +18,7 @@ use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
@@ -26,7 +28,6 @@ use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
@@ -63,6 +64,8 @@ final readonly class IngestFileAction
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private MediaConfig $mediaConfig,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function execute(IngestFileInput $data): Node
@@ -79,7 +82,7 @@ final readonly class IngestFileAction
 
     private function executeUpload(IngestFileInput $data): Node
     {
-        $name = $data->isNewVersion() ? null : NodeName::normalize($data->resolvedName());
+        $name = $data->isNewVersion() ? null : NodeName::normalize(name: $data->resolvedName(), maxLength: $this->driveConfig->nameMaxLength());
         $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
         $staged = $this->content->stage($data->stream);
 
@@ -126,7 +129,7 @@ final readonly class IngestFileAction
                 $blob = $this->blobs->commitStaged(
                     staged: $staged,
                     scope: BlobScope::forUpload(
-                        Config::dedupScope(),
+                        $this->mediaConfig->dedupScope(),
                         $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
                         (string) $storageId,
                     ),

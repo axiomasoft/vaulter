@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\ValueObjects;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
-use Vaulter\Support\Config;
 
 /**
  * Immutable wrapper around a validated TipTap JSON document
@@ -224,7 +224,7 @@ final readonly class TipTapContent implements DocumentContent
      */
     public static function allowedNodeTypes(): array
     {
-        return array_values(array_unique([...self::CANONICAL_NODE_TYPES, ...Config::tiptapExtraNodes()]));
+        return array_values(array_unique([...self::CANONICAL_NODE_TYPES, ...app(DocumentsConfig::class)->tiptapExtraNodes()]));
     }
 
     /**
@@ -232,7 +232,7 @@ final readonly class TipTapContent implements DocumentContent
      */
     public static function allowedMarkTypes(): array
     {
-        return array_values(array_unique([...self::CANONICAL_MARK_TYPES, ...Config::tiptapExtraMarks()]));
+        return array_values(array_unique([...self::CANONICAL_MARK_TYPES, ...app(DocumentsConfig::class)->tiptapExtraMarks()]));
     }
 
     /**
@@ -245,7 +245,7 @@ final readonly class TipTapContent implements DocumentContent
     {
         return array_values(array_unique([
             ...(self::CANONICAL_ATTRIBUTES[$type] ?? []),
-            ...(Config::tiptapExtraAttributes()[$type] ?? []),
+            ...(app(DocumentsConfig::class)->tiptapExtraAttributes()[$type] ?? []),
         ]));
     }
 
@@ -263,7 +263,7 @@ final readonly class TipTapContent implements DocumentContent
      */
     public static function urlAttributes(string $type): array
     {
-        $declared = Config::tiptapUrlAttributes()[$type] ?? [];
+        $declared = app(DocumentsConfig::class)->tiptapUrlAttributes()[$type] ?? [];
 
         $inferred = array_intersect(self::allowedAttributes($type), self::INFERRED_URL_ATTRIBUTE_NAMES);
 

@@ -10,12 +10,13 @@ use Illuminate\Support\ServiceProvider;
 use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Configuration\ConfigNormalizer;
 
 /**
  * Wires the AzGuard/Corex permission bridge (master plan P1 #2). It binds the Vaulter
  * {@see AzgardGuard} seam to an {@see AzgardGuardAdapter} built from the CURRENT
  * request's AzGuard-backed user, so that once the host selects the `azgard` permission
- * driver (`config('vaulter.drivers.permission') = 'azgard'`) the driver resolves real
+ * driver (`vaulter.access.permission_driver = 'azgard'`) the driver resolves real
  * AzGuard checks with no further wiring.
  *
  * When the request has no AzGuard-backed user (a guest, or a User that does not
@@ -34,8 +35,12 @@ final class VaulterAzgardServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/vaulter-azgard.php', 'vaulter-azgard');
 
-        if (!$this->app->make('config')->has('vaulter.permission_drivers.azgard')) {
-            $this->app->make('config')->set('vaulter.permission_drivers.azgard', AzgardPermissionDriver::class);
+        $this->app->singleton(AzgardConfig::class, fn (Container $app): AzgardConfig => new AzgardConfig($app->make('config')));
+        $this->app->singletonIf(ConfigNormalizer::class);
+        $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-azgard', path: __DIR__.'/../config/vaulter-azgard.php');
+
+        if (!$this->app->make('config')->has('vaulter.access.permission_drivers.azgard')) {
+            $this->app->make('config')->set('vaulter.access.permission_drivers.azgard', AzgardPermissionDriver::class);
         }
 
         $this->app->bind(AzgardGuard::class, static function (Container $app): AzgardGuard {

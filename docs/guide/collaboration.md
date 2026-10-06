@@ -17,7 +17,7 @@ This is the **Drive** collaboration surface — `POST nodes/{node}/collab/token`
 [`CollaborationSession`](#the-session-descriptor) descriptor. The package also ships a
 legacy document-centric lane (`documents/{id}/collab/token`, `CollaborationDriver`) bound
 to the `v_documents` model; both coexist and a host picks the same transport for both via
-`config('vaulter.collaboration.driver')`. New integrations should use the node path
+`config('vaulter-documents.collaboration.driver')`. New integrations should use the node path
 documented here. See [ADR-0001](/adr/0001-collaboration-transport).
 :::
 
@@ -34,44 +34,37 @@ Laravel broadcast channels still carry comment events with their existing access
 
 ## Config
 
-All keys live under `config('vaulter.collaboration')`:
+All keys live under `config('vaulter-documents.collaboration')`:
 
 ```php
-// config/vaulter.php
+// config/vaulter-documents.php
 'collaboration' => [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus
-    'channel_prefix' => 'vaulter.documents',              // room namespace
-    'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-
-    'drivers' => [
-        'hocuspocus' => [
-            'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-            'secret' => env('VAULTER_COLLAB_SECRET'),      // HS256 room-JWT signing key
-            'token_ttl' => 3600,                           // seconds
-        ],
+    'enabled' => false,
+    'driver' => 'hocuspocus',
+    'hub' => [
+        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
+        'token_ttl' => 3600,
+        'timestamp_tolerance' => 300,
     ],
+    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 ],
 ```
 
 | Key | Env | Default | Purpose |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus`). |
-| `collaboration.channel_prefix` | — | `vaulter.documents` | Room namespace. A room is **always** `channel_prefix.nodeId`. |
-| `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret the Hocuspocus hub presents on the webhooks. When unset, the webhook surface accepts a valid signed room JWT only — it is **never open**. |
-| `collaboration.drivers.hocuspocus.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
-| `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints the room JWT with **and** verifies an incoming JWT against. Required for the Hocuspocus path. |
-| `collaboration.drivers.hocuspocus.token_ttl` | — | `3600` | Lifetime (seconds) of a minted room JWT. |
+| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus`). |
+| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `vaulter.documents` | Room namespace. A room is **always** `channel_prefix.nodeId`. |
+| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret the Hocuspocus hub presents on the webhooks. Required to sign webhook bodies when collaboration is enabled. |
+| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
+| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints the room JWT with **and** verifies an incoming JWT against. Required for the Hocuspocus path. |
+| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | Lifetime (seconds) of a minted room JWT. |
 
-::: warning Feature gate — TWO flags, both required
-The node-collaboration endpoints — `nodes/{node}/collab/token`, the
-`collab/authenticate` / `collab/store` webhooks, and the private broadcast channel — only
-mount when **both** `document_versions` (the `v_node_document_versions` schema base
-editing needs) **and** `collaboration` (VLT-REMED P3.1 — the SEPARATE opt-in for the
-realtime surface) are enabled. `document_versions` alone gives you non-realtime document
-editing (content GET/PATCH, named versions) with **no** collab attack surface at all — a
-host that wants "TipTap without realtime" enables only `document_versions`. If a collab
-call 404s, check `config('vaulter.features.document_versions')` **and**
-`config('vaulter.features.collaboration')` (both default `false`).
+::: warning Collaboration is opt-in
+Install Documents and enable `vaulter-documents.collaboration.enabled`.
+Document editing and revisions are enabled by installing the package.
+Both hub secrets must be present and distinct.
 :::
 
 ## The connect flow
@@ -159,7 +152,7 @@ The `collab/authenticate` and `collab/store` routes carry **no** Laravel auth mi
 only `ResolveCollaborationCall`, which authenticates the hub by **either** of:
 
 - the shared webhook secret in the **`X-Vaulter-Collab-Secret`** header (compared
-  timing-safely against `collaboration.webhook_secret`), **or**
+  timing-safely against `vaulter-documents.collaboration.hub.webhook_secret`), **or**
 - a valid signed room JWT in the **`Authorization: Bearer`** header (signature + `exp`
   verified by `firebase/php-jwt`).
 
@@ -208,7 +201,7 @@ services:
       VAULTER_COLLAB_HEALTH_PORT: 1235
       VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
       VAULTER_API_PREFIX: ${VAULTER_API_PREFIX:-api/vaulter}
-      # MUST equal the Laravel vaulter.collaboration.webhook_secret.
+      # MUST equal the Laravel vaulter-documents.collaboration.hub.webhook_secret.
       VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -247,11 +240,11 @@ compose/orchestrator healthcheck at it before letting dependents start.
 | `VAULTER_BACKEND_URL` | `http://localhost` | Laravel app base URL the hub calls back into (no trailing slash). In Docker, the app service name or `host.docker.internal`. |
 | `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter API route prefix. Webhooks resolve to `{VAULTER_BACKEND_URL}/{VAULTER_API_PREFIX}/collab/{authenticate,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Optional explicit full webhook base; overrides the two above (reverse proxy / split host). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. **Must equal** the Laravel `vaulter.collaboration.webhook_secret`. When unset, the hub authenticates the webhooks with the forwarded room JWT alone. |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. **Must equal** the Laravel `vaulter-documents.collaboration.hub.webhook_secret`. When unset, the hub authenticates the webhooks with the forwarded room JWT alone. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout in ms. |
 
 ::: danger Keep the secrets aligned
-`VAULTER_COLLAB_WEBHOOK_SECRET` on the **hub** must equal `vaulter.collaboration.webhook_secret`
+`VAULTER_COLLAB_WEBHOOK_SECRET` on the **hub** must equal `vaulter-documents.collaboration.hub.webhook_secret`
 on **Laravel** (same env name on both sides). The hub's JWT signing secret
 (`VAULTER_COLLAB_SECRET`) lives **only** on Laravel — the hub never sees it.
 :::

@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection(Config::connection());
+        $schema = Schema::connection(app(DatabaseConfig::class)->connection());
 
         foreach ($this->tables() as $table) {
             if (!$schema->hasTable($table)) {
@@ -36,7 +36,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $schema = Schema::connection(Config::connection());
+        $schema = Schema::connection(app(DatabaseConfig::class)->connection());
 
         foreach ($this->tables() as $table) {
             foreach (['claim_token', 'claim_until'] as $column) {
@@ -50,6 +50,6 @@ return new class extends Migration
     /** @return list<string> */
     private function tables(): array
     {
-        return [Config::table('webhook_deliveries')];
+        return [app(DatabaseConfig::class)->table('webhook_deliveries')];
     }
 };

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_drives (§2.1). Bare create + the byte-accounting
@@ -18,7 +18,10 @@ use Vaulter\Support\Config;
  */
 final class DriveStoreRepository
 {
-    public function __construct(private readonly VaulterDatabase $database) {}
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+        private readonly VaulterDatabase $database,
+    ) {}
 
     /** Reserve head bytes atomically inside the caller's transaction. */
     public function reserveBytes(Drive $storage, int $delta): void
@@ -57,7 +60,7 @@ final class DriveStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from StorageManager, never raw request input.
-        $model = Config::storageModel();
+        $model = $this->vaulterConfig->model('drive');
         $storage = new $model;
         $storage->forceFill($attributes);
         $storage->save();

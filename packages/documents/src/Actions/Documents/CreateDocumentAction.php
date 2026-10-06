@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Documents;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -16,7 +17,6 @@ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
@@ -45,6 +45,7 @@ final readonly class CreateDocumentAction
         private DocumentRevisionStoreRepository $versions,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     public function execute(CreateDocumentInput $data): Node
@@ -57,7 +58,7 @@ final readonly class CreateDocumentAction
         // is handler-agnostic (DocumentContent); the limit only applies to the
         // TipTap shape, not an opaque non-rich-text snapshot (e.g. a spreadsheet).
         if ($data->content instanceof TipTapContent) {
-            $data->content->ensureWithin(Config::maxDocumentSizeKb());
+            $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
         return $this->database->transaction(function () use ($data, $name, $parentId): Node {

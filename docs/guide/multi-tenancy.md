@@ -27,21 +27,19 @@ hard-coding one.
 
 ```php
 // config/vaulter.php
-'tenant' => [
+'tenancy' => [
     'enabled' => env('VAULTER_TENANT_ENABLED', false),
-    'column'  => 'tenant_id',
 ],
 ```
 
-- `tenant.enabled` — the global flag, read by `Config::tenantEnabled()`.
-- `tenant.column` — the column name, read by `Config::tenantColumn()` (defaults to
-  `tenant_id`).
+- `tenancy.enabled` — the global flag, read by `TenancyConfig::enabled()`.
+- The column is always `tenant_id` (`TenancyConfig::COLUMN`).
 
 ### A note on the `tenant_id` column
 
 The Drive tables (`v_storages`, `v_nodes`, `v_blobs`, `v_files`, …) **always** carry
-a nullable `tenant_id` column, regardless of `tenant.enabled`. This is intentional:
-the blob dedup-UNIQUE index keys on `tenant_id` under `dedup.scope = tenant`, so the
+a nullable `tenant_id` column, regardless of `tenancy.enabled`. This is intentional:
+the blob dedup-UNIQUE index keys on `tenant_id` under `vaulter-media.dedup.scope = tenant`, so the
 column must exist for the index to be defined. When tenancy is off, the index simply
 spans a `NULL` column.
 
@@ -59,7 +57,7 @@ The model property is declared on every Drive model
 `Vaulter\Models\Sharing\NodeShare`, …) as `int|string|null $tenant_id`.
 
 ::: tip
-The `tenant.enabled` flag is what *your* tenant-aware models and migrations should
+The `tenancy.enabled` flag is what *your* tenant-aware models and migrations should
 key on. Vaulter reads it only to decide whether to apply the optional column on the
 **legacy DocVault** tables (`Vaulter\Schema\VaulterSchema::tenant()` is conditional);
 the modern Drive tables emit the column unconditionally as explained above.
@@ -93,7 +91,7 @@ $storage = $this->store->create([
     'owner_type'   => $owner->getMorphClass(),
     'owner_id'     => $owner->getKey(),
     'name'         => $this->defaultName($owner),
-    'disk'         => Config::defaultDisk(),
+    'disk'         => app(\Vaulter\Media\Configuration\MediaConfig::class)->disk(),
     'storage_type' => $this->storageType($panel),
     'used_bytes'   => 0,
 ]);
@@ -126,7 +124,7 @@ resolves the model through that map everywhere:
 // config/vaulter.php
 'models' => [
     // …
-    'storage' => \App\Models\Vaulter\TenantStorage::class,
+    'drive' => \App\Models\Vaulter\TenantStorage::class,
     'node'    => \App\Models\Vaulter\TenantNode::class,
     'blob'    => \App\Models\Vaulter\TenantBlob::class,
     // …
@@ -174,26 +172,26 @@ of [the swappable-models design](/guide/configuration#models).
 ## Interplay with the dedup scope
 
 Tenancy and the [content-addressed store](/guide/storage-and-blobs) meet at one
-setting: `dedup.scope`.
+setting: `vaulter-media.dedup.scope`.
 
 ```php
-// config/vaulter.php
+// config/vaulter-media.php
 'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|storage
+    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|drive
 ],
 ```
 
-For a multi-tenant install the default `tenant` is almost always what you want:
+For a multi-tenant install the default `tenant` is almost always what you want.
+Uniqueness uses `(scope_key, hash)`; each blob retains its scope when the default changes:
 
-| `dedup.scope` | Behaviour in a multi-tenant app |
+| `vaulter-media.dedup.scope` | Behaviour in a multi-tenant app |
 |---|---|
-| `tenant` *(default)* | `UNIQUE (tenant_id, sha256)`. Identical bytes are stored **once per tenant**. No cross-tenant **existence leak** — tenant A can never learn that tenant B holds a given file. The `storage_key` is prefixed `t<id>/…`, so one tenant's GC can never touch another's bytes. |
-| `global` | `UNIQUE (sha256)`. Bytes are deduplicated **across tenants** — cheaper storage, but a tenant could infer another tenant holds identical bytes. Choose only when that is acceptable. |
-| `storage` | `UNIQUE (storage_id, sha256)`. Dedup is per storage container, a tighter boundary than per tenant. |
+| `tenant` *(default)* | Identical bytes are stored **once per tenant**. No cross-tenant **existence leak** — tenant A can never learn that tenant B holds a given file. The `storage_key` is prefixed `t<id>/…`, so one tenant's GC can never touch another's bytes. |
+| `global` | Bytes are deduplicated **across tenants** — cheaper storage, but a tenant could infer another tenant holds identical bytes. Choose only when that is acceptable. |
+| `drive` | Dedup is per storage container, a tighter boundary than per tenant. |
 
-::: warning Pick the scope at install time
-`dedup.scope` is baked into every blob's `storage_key` **and** the unique index. It
-is effectively a one-way door — changing it later means rewriting keys and the index.
+::: tip Changing the default scope
+Existing blobs retain their stored `scope_key`; new uploads use the configured scope.
 For tenant isolation with no existence leak, keep it at `tenant`.
 :::
 
@@ -252,7 +250,7 @@ AZ_GUARD_MORPH_TYPE=ulid
 ```php
 // Vaulter\Azgard\Contracts\AzgardGuard (docblock)
 // The $contextType / $entity morph types MUST be registered Corex morph aliases
-// aligned with vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
+// aligned with vaulter.ids.strategy=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
 ```
 
 ::: info Install the AzGuard bridge
@@ -267,13 +265,13 @@ Fake-based tests require the bridge's installed dependencies too. See
 
 A typical tenant-scoped Vaulter install:
 
-1. Set `tenant.enabled = true` and keep `tenant.column = 'tenant_id'`.
-2. Keep `dedup.scope = tenant` so blobs are isolated per tenant with no existence
+1. Set `tenancy.enabled = true`.
+2. Keep `vaulter-media.dedup.scope = tenant` so blobs are isolated per tenant with no existence
    leak.
 3. Subclass the Vaulter models you need to scope (at least `storage`; usually `node`,
    `file`, `blob`, `activity`) and point the `models` map at them. Each subclass
    stamps `tenant_id` on create and applies your global scope.
-4. If you use AzGuard for authorization, keep `ids.default = ulid` and align the
+4. If you use AzGuard for authorization, keep `ids.strategy = ulid` and align the
    Corex / AzGuard morph configuration as above.
 
 From there, every upload threads the tenant through to its blob automatically, and
@@ -282,7 +280,7 @@ your model layer — not Vaulter — enforces what each tenant can see.
 ## See also
 
 - [Storage & Blobs](/guide/storage-and-blobs) — the content-addressed store the
-  `tenant_id` and `dedup.scope` feed into.
+  `tenant_id` and `vaulter-media.dedup.scope` feed into.
 - [Configuration](/guide/configuration) — the full `tenant`, `dedup`, `ids` and
   `models` keys.
 - [Authorization › Host role driver](/guide/permission-drivers) — the AzGuard driver and

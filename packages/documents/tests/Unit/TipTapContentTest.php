@@ -185,9 +185,9 @@ it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты 
 
     expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
 
-    config()->set('vaulter.tiptap.extra_nodes', ['mention']);
-    config()->set('vaulter.tiptap.extra_marks', ['highlight']);
-    config()->set('vaulter.tiptap.extra_attributes', ['mention' => ['id']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
+    config()->set('vaulter-documents.tiptap.extra_marks', ['highlight']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['mention' => ['id']]);
 
     expect(TipTapContent::fromArray($doc))->toBeInstanceOf(TipTapContent::class);
 });
@@ -195,7 +195,7 @@ it('конфиг-шов ДОБАВЛЯЕТ узлы/марки/атрибуты 
 it('конфиг-шов АДДИТИВЕН: канон не вычёркивается конфигом, R-01', function (): void {
     // Хост «переопределил» список своим — канон обязан выжить, иначе он молча сломает
     // сохранение любого документа (D28).
-    config()->set('vaulter.tiptap.extra_nodes', ['mention']);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['mention']);
 
     expect(TipTapContent::allowedNodeTypes())->toContain('doc', 'text', 'paragraph', 'image', 'table', 'mention');
 });
@@ -210,8 +210,8 @@ it('конфиг-шов АДДИТИВЕН: канон не вычёркивае
 it('конфиг-шов: URL-несущий атрибут ХОСТА проверяется схемой на записи, R-11', function (string $url): void {
     // Хост объявил свой узел с атрибутом src и НЕ регистрировал его как URL-несущий.
     // Барьер обязан сработать сам: имя атрибута URL-несущее — значит, схема проверяется.
-    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
-    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src']]);
 
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
@@ -225,10 +225,10 @@ it('конфиг-шов: URL-несущий атрибут ХОСТА прове
 
 it('конфиг-шов: URL-атрибут под неочевидным именем проверяется, если хост его объявил, R-11', function (): void {
     // Имя `location` само по себе ни о чём не говорит — для таких случаев есть шов
-    // vaulter.tiptap.url_attributes: объявленный URL-атрибут проходит ту же проверку.
-    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
-    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['location']]);
-    config()->set('vaulter.tiptap.url_attributes', ['embed' => ['location']]);
+    // vaulter-documents.tiptap.url_attributes: объявленный URL-атрибут проходит ту же проверку.
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => ['location']]);
+    config()->set('vaulter-documents.tiptap.url_attributes', ['embed' => ['location']]);
 
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
@@ -238,8 +238,8 @@ it('конфиг-шов: URL-атрибут под неочевидным име
 
 it('конфиг-шов: URL-атрибут хоста с разрешённой схемой принимается, R-11', function (): void {
     // Барьер не должен превращаться в отказ в обслуживании: https проходит.
-    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
-    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src', 'title']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src', 'title']]);
 
     $content = TipTapContent::fromArray([
         'type' => 'doc',
@@ -253,8 +253,8 @@ it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут
     // Легаси-снимок (записан до барьера / при другом конфиге) декеится на чтении с
     // сохранением значений — и уходит в редактор через DocumentRevisionResource.
     // Скраб JSON-пути обязан покрывать и хостовые URL-атрибуты, а не только канон.
-    config()->set('vaulter.tiptap.extra_nodes', ['iframe']);
-    config()->set('vaulter.tiptap.extra_attributes', ['iframe' => ['src']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['iframe']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['iframe' => ['src']]);
 
     $scrubbed = TipTapContent::decayFrom([
         'type' => 'doc',
@@ -268,7 +268,7 @@ it('конфиг-шов: withSanitizedUrls() вычищает URL-атрибут
 it('конфиг-шов НЕ расширяет схемы URL-несущих атрибутов, R-01', function (): void {
     // Инвариант безопасности, а не вкус хоста: даже объявив href «своим» атрибутом,
     // хост не может протащить javascript: (D28).
-    config()->set('vaulter.tiptap.extra_attributes', ['link' => ['href']]);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['link' => ['href']]);
 
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
@@ -436,8 +436,8 @@ it('read→save: скраб роняет УЗЕЛ картинки без при
 it('fail-closed по значению: опасная схема в ЛЮБОМ атрибуте хоста отвергается на записи, P5.2', function (string $attribute, string $value): void {
     // Имя атрибута ни о чём не говорит — решает ЗНАЧЕНИЕ: браузер резолвит javascript:
     // независимо от того, как хост назвал атрибут в своём расширении.
-    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
-    config()->set('vaulter.tiptap.extra_attributes', ['embed' => [$attribute]]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => [$attribute]]);
 
     expect(fn () => TipTapContent::fromArray([
         'type' => 'doc',
@@ -451,8 +451,8 @@ it('fail-closed по значению: опасная схема в ЛЮБОМ �
 ]);
 
 it('fail-closed по значению: опасная схема в атрибуте хоста вычищается на чтении, P5.2', function (): void {
-    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
-    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['source']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => ['source']]);
 
     $readable = TipTapContent::decayFrom([
         'type' => 'doc',
@@ -463,8 +463,8 @@ it('fail-closed по значению: опасная схема в атрибу
 });
 
 it('fail-closed по значению: безобидные атрибуты хоста не трогаются, P5.2', function (): void {
-    config()->set('vaulter.tiptap.extra_nodes', ['embed']);
-    config()->set('vaulter.tiptap.extra_attributes', ['embed' => ['source', 'caption']]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['embed']);
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['embed' => ['source', 'caption']]);
 
     $content = TipTapContent::fromArray([
         'type' => 'doc',

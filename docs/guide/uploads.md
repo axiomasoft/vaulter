@@ -74,11 +74,9 @@ Initiated → Uploading → Assembled → Committed
 Only `initiated` and `uploading` are **open** (accept bytes, sweepable). Transitions are
 guarded by `UploadStatus::canTransitionTo` — a terminal state is never re-opened.
 
-::: warning Feature gate
-The resumable route group **and** the `v_upload_sessions` / `v_upload_parts` schema are gated
-by the `uploads` feature flag (`config('vaulter.features.uploads')`, default `true`). The tus
-endpoints are *additionally* gated by `config('vaulter.uploads.tus.enabled')` — a `403` when
-disabled.
+::: info Resumable uploads
+The routes are controlled by `vaulter-drive.uploads.resumable.enabled`
+(default `true`). Upload tables exist independently of this flag.
 :::
 
 ## Targets
@@ -279,37 +277,33 @@ mechanism (the CAS bucket itself stays unversioned, H.3).
 ## Configuration
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'uploads' => [
-    // The hard ceiling on a session's declared total size (0 = ∞). Rejected at
-    // initiate — an oversize upload never opens a session. env: VAULTER_UPLOAD_MAX_BYTES
-    'max_bytes' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 GiB
-
-    // The advertised default chunk size (a hint; the server still accepts any
-    // PATCH/part size up to the remaining bytes). env: VAULTER_UPLOAD_CHUNK_SIZE
-    'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608), // 8 MiB
-
-    // A session not committed within this window is swept (status → expired).
-    // env: VAULTER_UPLOAD_SESSION_TTL_HOURS
-    'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
-
-    // Gate the tus resumable endpoints (independent of the 'uploads' schema feature flag).
-    // env: VAULTER_UPLOAD_TUS_ENABLED
-    'tus' => [
-        'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
+    'max_file_size' => 5_368_709_120, // bytes; 0 = unlimited
+    'allowed_mime_types' => [],
+    'resumable' => [
+        'enabled' => true,
+        'chunk_size' => 8_388_608,
+        'max_chunk_size' => 67_108_864,
+        'session_ttl_hours' => 24,
+        'max_active_sessions_per_actor' => 20,
+        'metadata' => [
+            'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+            'max_value_length' => 512,
+        ],
     ],
+],
+'names' => ['max_length' => 255],
+'trash' => ['retention_days' => 30],
+'models' => [
+    'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
+    'upload_part' => \Vaulter\Drive\Models\Uploads\UploadPart::class,
 ],
 ```
 
-The `max_bytes` ceiling is enforced **twice**: up front at `initiate` (a declared total past
-the ceiling never opens a session, so no bytes are staged that must be rejected) and again
-mid-stream as the tus offset grows. The swappable models are bound via
-`config('vaulter.models.upload_session')` and `config('vaulter.models.upload_part')`.
-
-The one-shot binary Drive upload (`POST /storages/{storage}/uploads`) has a **separate**
-policy block, `config('vaulter.drive')` — `max_upload_kb` (a per-file size ceiling, enforced
-by `UploadFileRequest`) and `allowed_mime` (an optional mime allowlist; empty = permissive).
-The `uploads` block above governs only the *resumable* sessions.
+`max_file_size` is the shared byte limit for ordinary and resumable uploads.
+Models are configured under `vaulter-drive.models.*`; resumable routes are controlled
+by `vaulter-drive.uploads.resumable.enabled`.
 
 ## See also
 

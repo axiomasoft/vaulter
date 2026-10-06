@@ -32,3 +32,5 @@ uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 
 // Registrar checks use a booted application without mutating the database.
 uses(TestCase::class)->in('Providers');
+
+uses(TestCase::class)->in('Configuration');

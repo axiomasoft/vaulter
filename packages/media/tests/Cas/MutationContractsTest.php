@@ -18,8 +18,8 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.storage.default_disk', 'local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.disk', 'local');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     Carbon::setTestNow('2026-09-25 12:00:00');
 });
 
@@ -103,7 +103,7 @@ it('delegates object age and listing only to listable drivers', function (): voi
 });
 
 it('round-trips Flysystem bytes, metadata, listing and idempotent deletion', function (): void {
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
     $stream = CasTestHelpers::streamFor('flysystem bytes');
 
     expect($driver->put('aa/one.bin', $stream, 'local'))->toBeTrue()
@@ -127,7 +127,7 @@ it('round-trips Flysystem bytes, metadata, listing and idempotent deletion', fun
 
 it('preserves an existing object for a conditional Flysystem put', function (): void {
     Storage::disk('local')->put('same-key', 'winner bytes');
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
 
     $result = $driver->put(
         key: 'same-key',
@@ -142,10 +142,10 @@ it('preserves an existing object for a conditional Flysystem put', function (): 
 
 it('re-promotes a deduplicated blob when its canonical object disappeared', function (): void {
     $store = app(BlobStoreContract::class);
-    $first = $store->commit(CasTestHelpers::streamFor('restore missing bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 17, 'unused'));
+    $first = $store->commit(CasTestHelpers::streamFor('restore missing bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 17, 'unused'));
     Storage::disk('local')->delete($first->storage_key);
 
-    $second = $store->commit(CasTestHelpers::streamFor('restore missing bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 17, 'unused'));
+    $second = $store->commit(CasTestHelpers::streamFor('restore missing bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 17, 'unused'));
     $read = $store->read($second);
 
     expect($second->getKey())->toBe($first->getKey())
@@ -158,9 +158,9 @@ it('keeps exact mark, sweep and pending totals across multiple candidates', func
     $store = app(BlobStoreContract::class);
     $collector = app(BlobGarbageCollector::class);
 
-    $markOne = $store->commit(CasTestHelpers::streamFor('mark one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $markTwo = $store->commit(CasTestHelpers::streamFor('mark two'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $referenced = $store->commit(CasTestHelpers::streamFor('referenced mark'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $markOne = $store->commit(CasTestHelpers::streamFor('mark one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $markTwo = $store->commit(CasTestHelpers::streamFor('mark two'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $referenced = $store->commit(CasTestHelpers::streamFor('referenced mark'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $store->attach(CasTestHelpers::makeVersion(name: 'mark-reference'), $referenced);
 
     expect($collector->mark(graceHours: 24))->toBe(['tombstoned' => 2, 'skipped' => 1])
@@ -177,9 +177,9 @@ it('keeps exact mark, sweep and pending totals across multiple candidates', func
 
     expect($collector->sweep())->toBe(['swept' => 2, 'skipped' => 1]);
 
-    $pendingOne = $store->commit(CasTestHelpers::streamFor('pending one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $pendingTwo = $store->commit(CasTestHelpers::streamFor('pending two'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $pendingLive = $store->commit(CasTestHelpers::streamFor('pending live'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $pendingOne = $store->commit(CasTestHelpers::streamFor('pending one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $pendingTwo = $store->commit(CasTestHelpers::streamFor('pending two'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $pendingLive = $store->commit(CasTestHelpers::streamFor('pending live'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     foreach ([$pendingOne, $pendingTwo, $pendingLive] as $blob) {
         $blob->forceFill([
@@ -194,9 +194,9 @@ it('keeps exact mark, sweep and pending totals across multiple candidates', func
 
 it('reconciles every blob and preserves all dangling identities', function (): void {
     $store = app(BlobStoreContract::class);
-    $counted = $store->commit(CasTestHelpers::streamFor('reconcile counted'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $zeroed = $store->commit(CasTestHelpers::streamFor('reconcile zeroed'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $dangling = $store->commit(CasTestHelpers::streamFor('reconcile dangling'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $counted = $store->commit(CasTestHelpers::streamFor('reconcile counted'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $zeroed = $store->commit(CasTestHelpers::streamFor('reconcile zeroed'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $dangling = $store->commit(CasTestHelpers::streamFor('reconcile dangling'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     $store->attach(CasTestHelpers::makeVersion(name: 'reconcile-a'), $counted);
     $store->attach(CasTestHelpers::makeVersion(name: 'reconcile-b'), $counted);

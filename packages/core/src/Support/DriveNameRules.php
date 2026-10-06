@@ -11,23 +11,16 @@ namespace Vaulter\Support;
  * one place so create/rename/upload/copy enforce the exact same rule and surface
  * the same message.
  *
- * The length bound and separator pattern are a config seam (P4.5 / F-P3.1-01):
- * {@see Config::driveNameMaxLength()}/{@see Config::driveNameSeparatorsPattern()}
- * read `config('vaulter.drive.name_rules')` — a host with a different naming
- * policy points that config at its own values (published in `config/vaulter.php`)
- * instead of forking this file. The class stays `final` and the DEFAULT values
- * are unchanged (255 / no-slash-or-backslash) — only the source of truth moved
- * from a hardcoded constant to config, out-of-the-box behaviour is identical.
+ * The owning package passes its length bound. Separators remain a fixed tree invariant.
  */
 final class DriveNameRules
 {
     /**
      * @return list<string>
      */
-    public static function rules(): array
+    public static function rules(int $maxLength = 255): array
     {
-        $maxLength = Config::driveNameMaxLength();
-        $pattern = Config::driveNameSeparatorsPattern();
+        $pattern = '~^[^/\\\\]+$~u';
 
         return ['required', 'string', "max:{$maxLength}", "regex:{$pattern}"];
     }

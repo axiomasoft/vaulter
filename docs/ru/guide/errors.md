@@ -29,13 +29,12 @@
 ## content-too-large
 
 `InvalidDocumentContentException::tooLarge()` — контент превышает
-`config('vaulter.max_document_size_kb')`. Разбейте документ или поднимите лимит.
+`config('vaulter-documents.content.max_size_kb')`. Разбейте документ или поднимите лимит.
 
 ## unknown-collaboration-driver
 
-`VaulterException` из `Vaulter::driver()` — указанный драйвер не зарегистрирован в
-`config('vaulter.collaboration.drivers')`. Добавьте запись, чей `class` реализует
-`CollaborationDriver`.
+`VaulterException` из `CollaborationDriverManager`: выберите `hocuspocus` в
+`vaulter-documents.collaboration.driver`.
 
 ## missing-jwt
 

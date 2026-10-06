@@ -1,0 +1,8 @@
+{
+  "product_unchanged": true,
+  "normative_contract_unchanged": true,
+  "allowed_lifecycle_metadata_changes": [
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/P2.5.json"
+  ],
+  "item_status": "done"
+}

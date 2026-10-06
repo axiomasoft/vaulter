@@ -81,7 +81,7 @@ final class Profile
 
         return match ($name) {
             'grants' => $this->hasGrants,
-            'versions', 'blobs', 'tags', 'activity', 'uploads', 'extra_data', 'reliability' => true,
+            'versions', 'blobs', 'tags', 'activity', 'uploads', 'extra_data', 'webhooks' => true,
             'share_links', 'public_listing', 'document_versions' => false,
             default => false,
         };

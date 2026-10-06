@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Revisions;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -13,7 +14,6 @@ use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Restore a document node's head to a prior version (§2.5 / M4a). Append-only: a
@@ -33,6 +33,7 @@ final readonly class RestoreDocumentRevisionAction
         private DocumentRevisionStoreRepository $store,
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
+        private DocumentsConfig $documentsConfig,
     ) {}
 
     public function execute(Node $node, int|string $versionId, int|string|null $actorId = null): DocumentRevision
@@ -67,7 +68,7 @@ final readonly class RestoreDocumentRevisionAction
 
             $this->store->prune(
                 node: $node,
-                max: Config::maxDocumentVersions(),
+                max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
 

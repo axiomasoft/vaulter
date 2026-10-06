@@ -46,7 +46,7 @@ it('truncates an unacknowledged suffix before appending at the authoritative off
 });
 
 it('accepts the exact chunk ceiling for statable and non-statable streams', function (bool $socket): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());
     $staged = app(StagedUpload::class);
 

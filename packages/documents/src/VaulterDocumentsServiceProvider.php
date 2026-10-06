@@ -6,6 +6,8 @@ namespace Vaulter\Documents;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
 use Vaulter\Documents\Providers\HttpRegistrar;
@@ -19,7 +21,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-documents');
+        $package->name('vaulter-documents')->hasConfigFile();
 
         (new HttpRegistrar)->configure($package);
     }
@@ -32,6 +34,16 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        $config = $this->app->make(DocumentsConfig::class);
+        $config->model('document_revision');
+        $config->model('node_comment');
+        ConfigValidator::assertCollaborationSecrets(
+            enabled: $config->collaborationEnabled(),
+            jwtSecret: $config->hubJwtSecret(),
+            webhookSecret: $config->hubWebhookSecret(),
+            app: $this->app,
+        );
+
         (new CollaborationRegistrar($this->app))->boot();
     }
 }

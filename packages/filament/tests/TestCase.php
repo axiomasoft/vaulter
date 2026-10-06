@@ -78,14 +78,14 @@ abstract class TestCase extends OrchestraTestCase
 
         // Pin the bigint id strategy (the published default is ulid) so the test
         // fixtures use plain integer keys.
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
 
         // The resource tests exercise the REAL ACL: opt into the database host-role
         // driver so AccessResolver resolves grants from v_node_grants (the open
         // 'null' driver would grant everything and hide the authorization tests).
-        $app['config']->set('vaulter.drivers.permission', 'database');
+        $app['config']->set('vaulter.access.permission_driver', 'database');
 
-        $app['config']->set('vaulter.middleware', []);
+        $app['config']->set('vaulter.routes.middleware.authenticated', []);
     }
 
     protected function defineDatabaseMigrations(): void

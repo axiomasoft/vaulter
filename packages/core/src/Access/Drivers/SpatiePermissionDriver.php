@@ -10,11 +10,11 @@ use Spatie\Permission\PermissionRegistrar;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Support\SpatieConfig;
 
 /**
  * The spatie/laravel-permission host-role driver (master plan §6 / H.2 / D22). It
@@ -45,6 +45,10 @@ use Vaulter\Support\SpatieConfig;
  */
 final class SpatiePermissionDriver implements EnumeratesRoleSubjects, PermissionDriver
 {
+    public function __construct(
+        private readonly AccessConfig $accessConfig,
+    ) {}
+
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
         if (!$this->isAvailable() || !$actor instanceof Model) {
@@ -61,7 +65,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
         $granted = $this->withTeam($scope, function () use ($actor): ?GrantLevel {
             $level = null;
 
-            foreach (SpatieConfig::permissionMap() as $levelValue => $permission) {
+            foreach ($this->accessConfig->spatiePermissionMap() as $levelValue => $permission) {
                 $grantLevel = GrantLevel::tryFrom($levelValue);
 
                 if ($grantLevel === null || !$this->actorHasPermission($actor, $permission)) {
@@ -89,7 +93,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
 
         $isSuper = $this->withTeam(
             $scope,
-            fn (): bool => $this->actorHasPermission($actor, SpatieConfig::superPermission()),
+            fn (): bool => $this->actorHasPermission($actor, $this->accessConfig->spatieSuperPermission()),
         );
 
         return $isSuper ? Effect::Allow : null;
@@ -114,14 +118,14 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
         }
 
         foreach ($this->roleKeysOf($actor) as $roleKey) {
-            $subjects[] = new Subject(type: SpatieConfig::roleSubjectType(), id: $roleKey);
+            $subjects[] = new Subject(type: $this->accessConfig->spatieRoleSubjectType(), id: $roleKey);
         }
 
-        if (SpatieConfig::teamsEnabled()) {
+        if ($this->accessConfig->spatieTeamsEnabled()) {
             $teamId = $this->currentTeamId();
 
             if ($teamId !== null) {
-                $subjects[] = new Subject(type: SpatieConfig::teamSubjectType(), id: $teamId);
+                $subjects[] = new Subject(type: $this->accessConfig->spatieTeamSubjectType(), id: $teamId);
             }
         }
 
@@ -160,7 +164,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
 
         return $this->withTeam(
             $scope,
-            fn (): bool => $this->actorHasPermission($actor, SpatieConfig::createPermission()),
+            fn (): bool => $this->actorHasPermission($actor, $this->accessConfig->spatieCreatePermission()),
         );
     }
 
@@ -180,7 +184,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
      */
     private function withTeam(AccessScope $scope, callable $callback): mixed
     {
-        if (!SpatieConfig::teamsEnabled()) {
+        if (!$this->accessConfig->spatieTeamsEnabled()) {
             return $callback();
         }
 

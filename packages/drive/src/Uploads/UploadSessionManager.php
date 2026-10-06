@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -21,7 +22,6 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * The resumable-upload lifecycle coordinator (§2.8 / D16 / M3a). It owns:
@@ -46,6 +46,7 @@ final readonly class UploadSessionManager
         private UploadSessionReadRepository $sessionsRead,
         private StagedUpload $staged,
         private VaulterDatabase $database,
+        private DriveConfig $driveConfig,
     ) {}
 
     /**
@@ -72,10 +73,10 @@ final readonly class UploadSessionManager
             'expected_sha256' => $data->expectedSha256,
             'total_size_bytes' => $data->totalSizeBytes,
             'received_bytes' => 0,
-            'chunk_size' => Config::uploadChunkSize(),
+            'chunk_size' => $this->driveConfig->chunkSize(),
             'mime_type' => $data->mimeType,
             'metadata' => $data->metadata === [] ? null : $data->metadata,
-            'expires_at' => Carbon::now()->addHours(Config::uploadSessionTtlHours()),
+            'expires_at' => Carbon::now()->addHours($this->driveConfig->sessionTtlHours()),
             'created_by' => $data->actorId,
         ]);
 
@@ -258,7 +259,7 @@ final readonly class UploadSessionManager
      */
     private function assertWithinMaxBytes(?int $totalSizeBytes): void
     {
-        $max = Config::uploadMaxBytes();
+        $max = $this->driveConfig->maxFileSize();
 
         if ($max === 0 || $totalSizeBytes === null) {
             return;
@@ -279,7 +280,7 @@ final readonly class UploadSessionManager
      */
     private function assertWithinActiveSessionCap(int|string|null $actorId): void
     {
-        $max = Config::maxActiveUploadSessions();
+        $max = $this->driveConfig->maxActiveSessionsPerActor();
 
         if ($max === 0 || $actorId === null) {
             return;

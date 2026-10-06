@@ -31,7 +31,8 @@
         "laravel/pao": "^1.1",
         "league/flysystem-aws-s3-v3": "^3.0",
         "open-telemetry/sdk": "^1.2",
-        "open-telemetry/api": "^1.1"
+        "open-telemetry/api": "^1.1",
+        "nikic/php-parser": "^5.7"
     },
     "autoload-dev": {
         "psr-4": {

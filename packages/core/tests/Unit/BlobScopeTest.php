@@ -20,9 +20,30 @@ it('retains legacy paths while sharing their numeric scope keys', function (stri
 
 it('selects the host scope without coercing identifiers', function (): void {
     expect(BlobScope::forUpload('tenant', null, 'drive')->key())->toBe('global')
+        ->and(BlobScope::forUpload('drive', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('storage', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('tenant', '001', 'drive')->key())->toBe('tenant:001')
         ->and(BlobScope::forUpload('global', 'tenant', 'drive')->segment())->toBe('g');
+});
+
+it('accepts canonical and legacy drive scope inputs with the same canonical identity', function (string $input): void {
+    $scope = BlobScope::forUpload(dedupScope: $input, tenantId: 'tenant', storageId: '001');
+
+    expect($scope->dedupScope())->toBe('drive')
+        ->and($scope->key())->toBe('drive:001')
+        ->and($scope->segment())->toBe('d-001')
+        ->and($scope->storageId())->toBe('001')
+        ->and($scope->tenantId())->toBeNull();
+})->with(['drive', 'storage']);
+
+it('reports canonical drive scope while retaining historical storage paths', function (): void {
+    $scope = BlobScope::fromSegment('s001');
+
+    expect($scope->dedupScope())->toBe('drive')
+        ->and($scope->segment())->toBe('s001')
+        ->and($scope->key())->toBe('drive:001')
+        ->and($scope->storageId())->toBe('001')
+        ->and($scope->isLegacy())->toBeTrue();
 });
 
 it('rejects invalid and noncanonical scope segments', function (string $segment): void {

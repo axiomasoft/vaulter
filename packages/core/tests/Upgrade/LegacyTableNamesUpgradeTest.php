@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Symfony\Component\Process\ExecutableFinder;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -36,8 +36,8 @@ it('normalizes legacy overrides and their constraint names without losing rows',
     expect($db->getSchemaBuilder()->hasTable('v_nodes'))->toBeTrue()
         ->and($db->getSchemaBuilder()->hasTable('v_custom_nodes'))->toBeFalse()
         ->and($db->table('v_nodes')->count())->toBe(40)
-        ->and(Config::table('nodes'))->toBe('v_nodes')
-        ->and(Config::legacyTable('nodes'))->toBe('v_custom_nodes');
+        ->and(app(DatabaseConfig::class)->table('nodes'))->toBe('v_nodes')
+        ->and(app(DatabaseConfig::class)->legacyTable('nodes'))->toBe('v_custom_nodes');
     $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
     expect($db->getSchemaBuilder()->hasTable('v_custom_nodes'))->toBeTrue();
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
@@ -50,7 +50,7 @@ it('creates historical feature-disabled tables on upgrade', function (): void {
     $schema = $db->getSchemaBuilder();
     $schema->drop('v_node_comments');
 
-    config()->set('vaulter.features.comments', false);
+    config()->set('vaulter-documents.comments.enabled', false);
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     expect($schema->hasTable('v_node_comments'))->toBeTrue();
 });

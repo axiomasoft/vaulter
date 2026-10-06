@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeCopied;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
@@ -52,13 +53,14 @@ final readonly class CopyNodeAction
         private BlobStore $blobs,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function execute(CopyNodeInput $data): Node
     {
         $source = $data->node;
         // An explicit name is new input; the source name was validated when it was written.
-        $name = $data->name === null ? $source->name : NodeName::normalize($data->name);
+        $name = $data->name === null ? $source->name : NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
         $destParentId = $this->tree->destinationId(storage: $source->storage, into: $data->into);
 
         $this->tree->assertNotRoot(node: $source, operation: 'copy');

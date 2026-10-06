@@ -18,7 +18,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('возвращает РЕАЛЬНЫЙ id (регрессия на null-id из ON CONFLICT DO NOTHING)', function (): void {

@@ -24,7 +24,7 @@ final class SchemaProbe
      */
     public static function build(): void
     {
-        config()->set('vaulter.tenant.enabled', true);
+        config()->set('vaulter.tenancy.enabled', true);
 
         Schema::create(self::TABLE, function (Blueprint $table): void {
             VaulterSchema::key($table);

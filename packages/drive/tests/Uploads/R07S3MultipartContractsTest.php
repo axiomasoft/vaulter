@@ -17,7 +17,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 function r07InitiateS3(int $totalBytes, string $name = 'contract.bin'): UploadSession
@@ -140,7 +140,7 @@ it('rejects complete when copied bytes do not match the recorded part size', fun
 });
 
 it('rejects a part body one byte over max_chunk_bytes at the handler barrier', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $session = r07InitiateS3(totalBytes: 100);
     $handler = app(S3MultipartHandler::class);
 

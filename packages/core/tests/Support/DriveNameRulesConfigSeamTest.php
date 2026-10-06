@@ -34,11 +34,9 @@ it('accepts a name at the current default max length (255) unchanged, characteri
 });
 
 it('honours a host-configured max_length instead of the hardcoded 255, F-P3.1-01', function (): void {
-    config(['vaulter.drive.name_rules.max_length' => 10]);
-
     $validator = Validator::make(
         ['name' => str_repeat('a', 11)],
-        ['name' => DriveNameRules::rules()],
+        ['name' => DriveNameRules::rules(maxLength: 10)],
         DriveNameRules::messages(),
     );
 
@@ -47,35 +45,21 @@ it('honours a host-configured max_length instead of the hardcoded 255, F-P3.1-01
 
     $validatorWithinBound = Validator::make(
         ['name' => str_repeat('a', 10)],
-        ['name' => DriveNameRules::rules()],
+        ['name' => DriveNameRules::rules(maxLength: 10)],
         DriveNameRules::messages(),
     );
 
     expect($validatorWithinBound->fails())->toBeFalse();
 });
 
-it('honours a host-configured separator pattern instead of the hardcoded default, F-P3.1-01', function (): void {
-    // A host that (unusually) wants to forbid the letter "x" instead of slashes —
-    // proves the pattern is read from config, not the private constant.
-    config(['vaulter.drive.name_rules.no_separators_pattern' => '/^[^x]+$/']);
-
+it('keeps separators fixed independently of a host naming length', function (): void {
     $validator = Validator::make(
         ['name' => 'foo/bar'],
-        ['name' => DriveNameRules::rules()],
+        ['name' => DriveNameRules::rules(maxLength: 10)],
         DriveNameRules::messages(),
     );
 
-    // Under the reconfigured pattern, a forward slash is now ALLOWED (only "x" is
-    // rejected) — this only passes once rules() actually reads the config key.
-    expect($validator->fails())->toBeFalse();
-
-    $validatorRejectsX = Validator::make(
-        ['name' => 'xylophone'],
-        ['name' => DriveNameRules::rules()],
-        DriveNameRules::messages(),
-    );
-
-    expect($validatorRejectsX->fails())->toBeTrue();
+    expect($validator->fails())->toBeTrue();
 });
 
 it('still rejects a path-separator name under the unconfigured default pattern, characterisation guard', function (): void {

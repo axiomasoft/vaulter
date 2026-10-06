@@ -20,10 +20,10 @@ it('конфиг vaulter сериализуем (config:cache не сломае�
 });
 
 it('ключи panels и default_panel — это FQCN, а не замыкания', function (): void {
-    expect(config('vaulter.panels'))->toBeArray()
-        ->and(config('vaulter.default_panel'))->toBeString();
+    expect(config('vaulter.profiles.providers'))->toBeArray()
+        ->and(config('vaulter.profiles.default'))->toBeString();
 
-    foreach (config('vaulter.panels') as $class) {
+    foreach (config('vaulter.profiles.providers') as $class) {
         expect($class)->toBeString();
     }
 });

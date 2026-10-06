@@ -18,13 +18,13 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('коммитит блоб: одна строка, объект на диске, статус committed', function (): void {
     $store = app(BlobStore::class);
 
-    $blob = $store->commit(CasTestHelpers::streamFor('hello cas'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('hello cas'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     expect($blob->status)->toBe(BlobStatus::Committed)
         ->and($blob->sha256)->toBe(hash('sha256', 'hello cas'))
@@ -40,7 +40,7 @@ it('сервер пересчитывает sha256 — врущий клиент
     // The client could send any sha256 they like; commit() never takes it — the
     // hash is recomputed from the staged temp file. We prove it by checking the
     // stored hash matches the REAL bytes, not a lie.
-    $blob = $store->commit(CasTestHelpers::streamFor('real bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = $store->commit(CasTestHelpers::streamFor('real bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     expect($blob->sha256)->toBe(hash('sha256', 'real bytes'))
         ->and($blob->sha256)->not->toBe(hash('sha256', 'a lie'));
@@ -49,8 +49,8 @@ it('сервер пересчитывает sha256 — врущий клиент
 it('дедуп: одинаковые байты дважды → ОДНА строка, ОДИН объект, два ребра', function (): void {
     $store = app(BlobStore::class);
 
-    $first = $store->commit(CasTestHelpers::streamFor('same bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $second = $store->commit(CasTestHelpers::streamFor('same bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $first = $store->commit(CasTestHelpers::streamFor('same bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $second = $store->commit(CasTestHelpers::streamFor('same bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     expect($second->getKey())->toBe($first->getKey())
         ->and(Blob::query()->count())->toBe(1);
@@ -74,8 +74,8 @@ it('дедуп: одинаковые байты дважды → ОДНА стр
 it('повторный коммит идемпотентен и не пишет второй объект', function (): void {
     $store = app(BlobStore::class);
 
-    $store->commit(CasTestHelpers::streamFor('idem'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $store->commit(CasTestHelpers::streamFor('idem'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $store->commit(CasTestHelpers::streamFor('idem'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $store->commit(CasTestHelpers::streamFor('idem'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     expect(Storage::disk('local')->allFiles())->toHaveCount(1)
         ->and(Blob::query()->count())->toBe(1);

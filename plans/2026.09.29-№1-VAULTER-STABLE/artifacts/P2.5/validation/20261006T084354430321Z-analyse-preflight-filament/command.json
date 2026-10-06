@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/phpstan",
+    "analyse",
+    "--no-progress",
+    "--memory-limit=512M"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+  "started_at": "20261006T084354430321Z",
+  "candidate_before": "533c26ac1d0838658ef6125646bbc1dbbabf4b429d7c010d2ff07b11e5a62d27",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false
+}

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
+use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Http\Controllers\DownloadController;
 use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\NodeController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
-use Vaulter\Support\Config;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,14 +26,14 @@ use Vaulter\Support\Config;
 | kernel + documents routes, so cross-file registration order never shadows them.
 */
 
-Route::prefix(Config::routePrefix())
-    ->middleware(Config::authenticatedMiddleware())
+Route::prefix(app(RoutesConfig::class)->prefix())
+    ->middleware(app(RoutesConfig::class)->authenticatedMiddleware())
     ->group(static function (): void {
         Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
             // "Shared with me" (§2.6 / H.2) — CROSS-STORAGE: not storage-bound, so it
             // sits at the top level. Gated on the 'grants' feature; the fixed segment
             // sits before the catch-all /{node} routes so it never shadows them.
-            if (Config::featureEnabled('grants')) {
+            if (app(VaulterConfig::class)->featureEnabled('grants')) {
                 Route::get('shared', [NodeController::class, 'shared']);
             }
 
@@ -59,11 +61,11 @@ Route::prefix(Config::routePrefix())
             | for a new version.
             |
             | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-uploads`
-            | named limiter (config('vaulter.rate_limits.uploads'), keyed by actor id —
+            | named limiter (the configuration key ('vaulter.rate_limits.uploads'), keyed by actor id —
             | falling back to IP when unauthenticated) — a DoS lever distinct from the
             | max-active-sessions cap (F-P1.4-09, enforced in UploadSessionManager).
             */
-            if (Config::featureEnabled('uploads')) {
+            if (app(DriveConfig::class)->resumableEnabled()) {
                 Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
                     // tus.io CORE — create lives under the storage; the resumable ops
                     // address the session by its upload_id handle.

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Support\Config;
 
 /**
  * The read side of webhook-endpoint queries (master plan §2.11 / D14 / M3b) — the
@@ -15,6 +15,10 @@ use Vaulter\Support\Config;
  */
 final readonly class WebhookEndpointReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The newest-first listing of every registered endpoint. Returns a Builder so the
      * controller composes the cursor pagination (the house pattern).
@@ -42,7 +46,7 @@ final readonly class WebhookEndpointReadRepository
     private function query(): Builder
     {
         /** @var class-string<WebhookEndpoint> $model */
-        $model = Config::webhookEndpointModel();
+        $model = $this->vaulterConfig->model('webhook_endpoint');
 
         return $model::query();
     }

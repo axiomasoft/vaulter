@@ -7,6 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Cas\BlobStatus;
@@ -14,7 +15,6 @@ use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Support\Config;
 use Vaulter\Testing\FakeMetricsRecorder;
 
 beforeEach(function (): void {
@@ -184,7 +184,7 @@ it('retains completed checkpoints when a later optimized mark batch rolls back',
     $blobs = r21SeedCandidates(1005);
     $updates = 0;
     DB::listen(function (QueryExecuted $query) use (&$updates): void {
-        if (str_starts_with(strtolower($query->sql), 'update') && str_contains($query->sql, Config::table('blobs'))) {
+        if (str_starts_with(strtolower($query->sql), 'update') && str_contains($query->sql, app(DatabaseConfig::class)->table('blobs'))) {
             if (++$updates === 1002) {
                 throw new RuntimeException('Later batch failed');
             }
@@ -232,7 +232,7 @@ it('advances sparse string and native UUID keys with configured models', functio
         }
     };
     config()->set('vaulter.models.blob', $model::class);
-    config()->set('vaulter.models.file_version_blob', $edgeModel::class);
+    config()->set('vaulter.models.file_revision_blob', $edgeModel::class);
     $keyFor = static fn (int $index): string => $keyType === 'uuid'
         ? sprintf('00000000-0000-7000-8000-%012d', $index * 3)
         : sprintf('blob-%08d', $index * 3);
@@ -269,7 +269,7 @@ it('uses the same PostgreSQL lock namespace for every batched mark candidate bef
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24)['tombstoned'])->toBe(3);
     $lockIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, 'pg_advisory_xact_lock'));
-    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, Config::table('file_revision_blobs')));
+    $edgeIndex = array_find_key($queries, static fn (string $sql): bool => str_contains($sql, app(DatabaseConfig::class)->table('file_revision_blobs')));
     expect($lockIndex)->not->toBeNull()->and($lockIndex)->toBeLessThan($edgeIndex);
 
     config()->set('database.connections.r21_probe', config('database.connections.testing'));

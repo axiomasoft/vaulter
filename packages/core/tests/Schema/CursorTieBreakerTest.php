@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -11,7 +12,6 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Schema\ForceCreates;
@@ -65,7 +65,7 @@ it('search() cursor pagination does not skip a same-name row across the page bou
 it('trashed() cursor pagination does not skip a same-timestamp row across the page boundary (F-P4.2-05)', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
-    $table = Config::table('nodes');
+    $table = app(DatabaseConfig::class)->table('nodes');
 
     $file1 = ForceCreates::make(Node::class, [
         'drive_id' => $storage->id, 'parent_id' => $root->id,
@@ -97,7 +97,7 @@ it('trashed() cursor pagination does not skip a same-timestamp row across the pa
 it('GrantReadRepository::forNode() cursor pagination does not skip a same-timestamp grant across the page boundary (F-P4.2-05)', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
-    $table = Config::table('node_grants');
+    $table = app(DatabaseConfig::class)->table('node_grants');
     $subjectType = (new TestUser)->getMorphClass();
 
     $grant1 = ForceCreates::make(NodeGrant::class, [

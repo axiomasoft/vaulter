@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Vaulter\Actions\Sharing\RevokeShareLinkAction;
+use Vaulter\Configuration\SharingConfig;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
@@ -12,7 +13,6 @@ use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 
 it('resolves the configured node-share model (swappable)', function (): void {
@@ -85,7 +85,7 @@ it('preserves the validated share form contract and one-time token notification'
         ->and((string) $share->granted_by)->toBe('51');
 
     $notification = session('filament.notifications.0');
-    $prefix = 'Copy it now — it is shown only once: '.Config::shareUrlBase().'/';
+    $prefix = 'Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/';
 
     expect($notification)->toBeArray()
         ->and($notification['title'])->toBe('Share link created')
@@ -126,7 +126,7 @@ it('applies safe share defaults to omitted and blank optional values', function 
             ->and($share->password_hash)->toBeNull()
             ->and($share->require_login)->toBeFalse()
             ->and($share->allow_discovery)->toBeFalse()
-            ->and($share->expires_at?->equalTo(now()->addHours(Config::shareDefaultTtlHours())))->toBeTrue()
+            ->and($share->expires_at?->equalTo(now()->addHours(app(SharingConfig::class)->defaultTtlHours())))->toBeTrue()
             ->and($share->max_uses)->toBeNull()
             ->and((string) $share->granted_by)->toBe('52');
     } finally {

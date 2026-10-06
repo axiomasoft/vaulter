@@ -7,8 +7,8 @@ outline: deep
 # Профили Drive
 
 `Vaulter\Profiles\Profile` задаёт именованную политику Drive для сущности хоста.
-Все профили используют общую схему. Колонка `panel` и ключи конфигурации
-`vaulter.panels` / `default_panel` пока сохраняют свои имена.
+Все профили используют общую схему. Провайдеры задаются в `vaulter.profiles.providers`, профиль по умолчанию — в
+`vaulter.profiles.default`. Сохранённый дискриминатор — `profile_key`.
 `Vaulter::for($owner, 'project')` открывает Drive владельца в указанном профиле.
 
 ## Провайдер профиля
@@ -33,11 +33,11 @@ final class ProjectProfile extends ProfileProvider
 Зарегистрируйте FQCN в `config/vaulter.php`:
 
 ```php
-'panels' => [App\Vaulter\Profiles\ProjectProfile::class],
+'profiles' => ['providers' => [App\Vaulter\Profiles\ProjectProfile::class]],
 ```
 
 Профили разрешаются при загрузке приложения. Профиль по умолчанию регистрируется
-первым; провайдер с таким же ID может его переопределить. Неизвестный ID вызывает
+первым; дублирующиеся ID профилей отвергаются при boot. Неизвестный ID вызывает
 `Vaulter\Exceptions\Profiles\UnknownProfileException`.
 
 ## Реестр

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Concerns;
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 trait ExercisesWideNodeListing
@@ -19,7 +19,7 @@ trait ExercisesWideNodeListing
     protected function assertWideNodeListing(): void
     {
         Storage::fake('local');
-        config()->set('vaulter.drivers.permission', 'database');
+        config()->set('vaulter.access.permission_driver', 'database');
         $actor = AccessTestHelpers::user();
         $this->actingAs($actor);
 
@@ -86,7 +86,7 @@ trait ExercisesWideNodeListing
 
     private function wideNodeKey(int $offset): int|string
     {
-        return Config::usesUlids()
+        return app(IdsConfig::class)->usesUlids()
             ? '01ARZ3NDEK'.str_pad((string) $offset, 16, '0', STR_PAD_LEFT)
             : 9_007_199_254_740_992 + $offset;
     }

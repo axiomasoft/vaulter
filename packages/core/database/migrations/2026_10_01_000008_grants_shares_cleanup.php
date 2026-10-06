@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -14,8 +14,8 @@ return new class extends Migration
     {
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
-        $grants = Config::table('node_grants');
-        $shares = Config::table('node_shares');
+        $grants = app(DatabaseConfig::class)->table('node_grants');
+        $shares = app(DatabaseConfig::class)->table('node_shares');
         if ($schema->hasColumn($grants, 'deleted_at')) {
             $db->table($grants)->whereNotNull('deleted_at')->delete();
             if ($schema->hasIndex($grants, $grants.'_grant_uniq')) {
@@ -45,13 +45,13 @@ return new class extends Migration
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
         foreach (['node_grants', 'node_shares'] as $entity) {
-            $name = Config::table($entity);
+            $name = app(DatabaseConfig::class)->table($entity);
             if ($schema->hasTable($name) && !$schema->hasColumn($name, 'deleted_at')) {
                 $schema->table($name, fn (Blueprint $table) => $table->timestamp('deleted_at')->nullable());
             }
         }
 
-        $name = Config::table('node_grants');
+        $name = app(DatabaseConfig::class)->table('node_grants');
         if (!$schema->hasTable($name)) {
             return;
         }
@@ -98,7 +98,7 @@ return new class extends Migration
     private function dropColumns(string $entity, array $columns): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }

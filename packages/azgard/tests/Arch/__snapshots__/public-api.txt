@@ -16,3 +16,9 @@ Vaulter\Azgard\Contracts\AzgardGuard
   hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
   hasScopedPermission(string $permission, object $entity): bool
   isSuperAdmin(): bool
+
+Vaulter\Azgard\Configuration\AzgardConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  createPermission(): string
+  panelId(): ?string
+  permissions(): array

@@ -1,0 +1,9 @@
+Vaulter\Media\Configuration\MediaConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  blobStore(): string
+  contentStore(): string
+  dedupScope(): string
+  disk(): string
+  gcGraceHours(int $override = 0): int
+  orphanGraceHours(int $override = 0): int
+  storageDriver(): string

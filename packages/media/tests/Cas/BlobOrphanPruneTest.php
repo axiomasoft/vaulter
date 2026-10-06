@@ -29,7 +29,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     Carbon::setTestNow('2026-06-30 12:00:00');
 })->skip(
     fn (): bool => DB::connection()->getDriverName() !== 'pgsql',

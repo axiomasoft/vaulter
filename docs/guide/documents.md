@@ -18,21 +18,10 @@ This page covers creating document nodes, reading and autosaving their content, 
 opens in — see [Document Handlers](./document-handlers.md). For rendering content out to
 HTML/Markdown, see [Export](./export.md).
 
-::: warning Opt-in feature
-The document-node surface is gated on the **`document_versions`** feature flag, which is
-**off by default**. The `v_node_document_versions` table is only created and the Documents
-routes are only registered when it is on:
-
-```php
-// config/vaulter.php
-'features' => [
-    'document_versions' => true, // enables the node-attached document path
-],
-```
-
-With the flag off, `Vaulter\Documents\Models\Revisions\DocumentRevision` has no table and the
-`storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions`
-routes do not exist.
+::: info Documents are enabled by installing the package
+Install `axioma-studio/vaulter-documents`. Editing, revisions and document routes
+are available without a `document_versions` flag. Enable real-time collaboration
+separately with `vaulter-documents.collaboration.enabled`.
 :::
 
 ## The data model
@@ -47,8 +36,8 @@ serialise on.
 
 | Column | Type | Meaning |
 |---|---|---|
-| `id` | id-strategy | Primary key (bigint / ulid / uuid7 per `ids.default`). |
-| `tenant_id` | nullable | Present only when `tenant.enabled`. |
+| `id` | id-strategy | Primary key (bigint / ulid / uuid7 per `ids.strategy`). |
+| `tenant_id` | nullable | Present only when `tenancy.enabled`. |
 | `node_id` | FK → `v_nodes` | The owning `kind=document` node (cascade on delete). |
 | `version_no` | integer | Monotonic per node; `unique(node_id, version_no)`. |
 | `content` | json / jsonb | The TipTap/ProseMirror JSON projection. |
@@ -190,7 +179,7 @@ The history has two lanes, and the distinction is the heart of the version model
 `shouldOverwrite(head)`:
 
 - the head must be an **autosave** version (a committed/named head always forces a fresh row), and
-- it must be within `config('vaulter.versions.autosave_debounce_seconds')` of now
+- it must be within `config('vaulter-documents.revisions.autosave_debounce_seconds')` of now
   (a window of `0` means every autosave overwrites the head autosave).
 
 ::: code-group
@@ -367,14 +356,14 @@ with `restored = true`.
 
 ## Pruning & retention
 
-The history is bounded by `config('vaulter.versions.max')` — the number of most-recent
+The history is bounded by `config('vaulter-documents.revisions.limit')` — the number of most-recent
 versions kept (`0` = unlimited). Pruning runs **inside** each write transaction
 (`DocumentRevisionStoreRepository::prune`) after a create/named/restore.
 
 ```php
-// config/vaulter.php
-'versions' => [
-    'max' => 50,                       // stored versions per node before pruning (0 = ∞)
+// config/vaulter-documents.php
+'revisions' => [
+    'limit' => 50,                       // stored versions per node before pruning (0 = ∞)
     'autosave_debounce_seconds' => 30, // the server overwrite window described above
 ],
 ```

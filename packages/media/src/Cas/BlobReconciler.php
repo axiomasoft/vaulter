@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Vaulter\Media\Cas;
 
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\ListableContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
@@ -65,6 +66,8 @@ final readonly class BlobReconciler
         private BlobLock $lock,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private MediaConfig $mediaConfig,
+        private VaulterConfig $vaulterConfig,
     ) {}
 
     /**
@@ -158,8 +161,8 @@ final readonly class BlobReconciler
             return $this->unsupportedListing();
         }
 
-        $disk ??= Config::defaultDisk();
-        $grace = Config::orphanGraceHours($graceHours);
+        $disk ??= $this->mediaConfig->disk();
+        $grace = $this->mediaConfig->orphanGraceHours($graceHours);
 
         // The prune deletes bytes with NO row write, so it is only safe on a driver
         // whose lock serialises a write-less section. On SQLite we still DETECT and
@@ -332,6 +335,6 @@ final readonly class BlobReconciler
      */
     private function blobModel(): string
     {
-        return Config::blobModel();
+        return $this->vaulterConfig->model('blob');
     }
 }

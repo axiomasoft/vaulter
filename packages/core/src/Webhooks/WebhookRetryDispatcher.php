@@ -6,6 +6,8 @@ namespace Vaulter\Webhooks;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -13,7 +15,6 @@ use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -37,6 +38,8 @@ final class WebhookRetryDispatcher
     private const int MAX_CLAIM_ROWS = 1000;
 
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+        private readonly WebhooksConfig $webhooksConfig,
         private readonly MetricsRecorder $metrics,
         private readonly TraceRecorder $tracer,
         private readonly VaulterDatabase $database,
@@ -80,7 +83,7 @@ final class WebhookRetryDispatcher
     private function claimDue(): Collection
     {
         /** @var class-string<WebhookDelivery> $deliveryClass */
-        $deliveryClass = Config::webhookDeliveryModel();
+        $deliveryClass = $this->vaulterConfig->model('webhook_delivery');
 
         return $this->database->transaction(function () use ($deliveryClass): Collection {
             $query = $deliveryClass::query()->dueForRetry();
@@ -93,7 +96,7 @@ final class WebhookRetryDispatcher
                 ->lockForUpdate()
                 ->get();
 
-            $claimUntil = now()->addSeconds(Config::webhookRetryClaimSeconds());
+            $claimUntil = now()->addSeconds($this->webhooksConfig->retryClaimSeconds());
 
             $deliveries->each(static function (WebhookDelivery $delivery) use ($claimUntil): void {
                 $delivery->forceFill(['next_retry_at' => $claimUntil])->save();

@@ -19,7 +19,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             // Core provides the Contracts\Cas seam, the Blob model + v_blobs schema
-            // and Support\Config; this package binds the concrete CAS engine on top.
+            // and Configuration\VaulterConfig; this package binds the concrete CAS engine on top.
             VaulterServiceProvider::class,
             VaulterMediaServiceProvider::class,
         ];
@@ -35,11 +35,11 @@ abstract class TestCase extends OrchestraTestCase
 
         // The CAS slice is ACL-agnostic: run OPEN under the env-gated null driver so
         // the tests exercise pure blob mechanics without an access-control lane.
-        $app['config']->set('vaulter.drivers.permission', 'null');
+        $app['config']->set('vaulter.access.permission_driver', 'null');
 
         // Pin the auto-increment strategy to bigint — the CAS tests assert integer
         // keys on the Storage→Node→File→Version chain they build.
-        $app['config']->set('vaulter.ids.default', 'bigint');
+        $app['config']->set('vaulter.ids.strategy', 'bigint');
     }
 
     protected function defineDatabaseMigrations(): void

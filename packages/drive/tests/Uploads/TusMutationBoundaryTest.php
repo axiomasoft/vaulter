@@ -12,7 +12,7 @@ beforeEach(function (): void {
 });
 
 it('accepts bytes when max_bytes is zero and treats zero as unlimited', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 0);
+    config()->set('vaulter-drive.uploads.max_file_size', 0);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
 
     $result = app(TusUploadHandler::class)->patch($session, UploadTestHelpers::streamFor('abcd'), 0);
@@ -22,7 +22,7 @@ it('accepts bytes when max_bytes is zero and treats zero as unlimited', function
 });
 
 it('accepts a chunk exactly on the configured max_bytes boundary', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 4);
+    config()->set('vaulter-drive.uploads.max_file_size', 4);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
 
     $result = app(TusUploadHandler::class)->patch($session, UploadTestHelpers::streamFor('abcd'), 0);
@@ -32,7 +32,7 @@ it('accepts a chunk exactly on the configured max_bytes boundary', function (): 
 });
 
 it('rejects a chunk that exceeds max_bytes before recording its offset', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 3);
+    config()->set('vaulter-drive.uploads.max_file_size', 3);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
 
     try {

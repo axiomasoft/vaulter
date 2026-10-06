@@ -7,13 +7,13 @@ use Firebase\JWT\Key;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationDriverManager;
 use Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует readOnly из
@@ -34,10 +34,10 @@ function documentNode(): Node
 }
 
 it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function (): void {
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.url', 'ws://hub:1234');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.token_ttl', 900);
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-documents.collaboration.hub.url', 'ws://hub:1234');
+    config()->set('vaulter-documents.collaboration.hub.token_ttl', 900);
 
     $node = documentNode();
     $before = time();
@@ -51,7 +51,7 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
-    expect($claims->room)->toBe(Config::collaborationRoom($node->getKey()))
+    expect($claims->room)->toBe(app(DocumentsConfig::class)->collaborationRoom($node->getKey()))
         ->and($claims->sub)->toBe('42')
         ->and($claims->readOnly)->toBeFalse()
         ->and($claims->exp)->toBeGreaterThanOrEqual($before + 900)
@@ -59,7 +59,7 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
 });
 
 it('encodes readOnly=true into the hocuspocus JWT for a comment ability', function (): void {
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = documentNode();
     $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 1);
@@ -71,7 +71,7 @@ it('encodes readOnly=true into the hocuspocus JWT for a comment ability', functi
 });
 
 it('binds the hocuspocus room JWT to a single node', function (): void {
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $nodeA = documentNode();
     $nodeB = documentNode();
@@ -80,14 +80,14 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
     $claimsA = JWT::decode($sessionA->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     // The token for node A carries node A's room — never node B's.
-    expect($claimsA->room)->toBe(Config::collaborationRoom($nodeA->getKey()))
-        ->and($claimsA->room)->not->toBe(Config::collaborationRoom($nodeB->getKey()));
+    expect($claimsA->room)->toBe(app(DocumentsConfig::class)->collaborationRoom($nodeA->getKey()))
+        ->and($claimsA->room)->not->toBe(app(DocumentsConfig::class)->collaborationRoom($nodeB->getKey()));
 });
 
 it('resolves the node-collaboration driver from config', function (): void {
     $manager = app(CollaborationDriverManager::class);
 
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
     expect($manager->driver())->toBeInstanceOf(HocuspocusCollaborationDriver::class);
 });
 
@@ -97,6 +97,6 @@ it('rejects an unknown node-collaboration driver with an operator-facing remedy'
     expect(fn () => $manager->driver('unknown'))
         ->toThrow(
             VaulterException::class,
-            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter.collaboration.driver) to hocuspocus.',
+            '[Vaulter] Unknown collaboration driver [unknown]. Fix: set config(vaulter-documents.collaboration.driver) to hocuspocus.',
         );
 });

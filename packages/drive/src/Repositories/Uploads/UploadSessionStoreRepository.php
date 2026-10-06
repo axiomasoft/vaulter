@@ -6,10 +6,10 @@ namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Support\Uploads\UploadModels;
 
 /**
  * Write-side row work for v_upload_sessions (§2.8 / M3a). Bare create + the
@@ -20,7 +20,10 @@ use Vaulter\Drive\Support\Uploads\UploadModels;
  */
 final class UploadSessionStoreRepository
 {
-    public function __construct(private readonly VaulterDatabase $database) {}
+    public function __construct(
+        private readonly VaulterDatabase $database,
+        private readonly DriveConfig $driveConfig,
+    ) {}
 
     /**
      * @param array<string, mixed> $attributes
@@ -29,7 +32,7 @@ final class UploadSessionStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from UploadSessionManager::initiate, never raw request input.
-        $model = UploadModels::session();
+        $model = $this->driveConfig->model('upload_session');
         $session = new $model;
         $session->forceFill($attributes);
         $session->save();
@@ -121,7 +124,7 @@ final class UploadSessionStoreRepository
      */
     private function freshSession(UploadSession $session, ?string $lock): UploadSession
     {
-        $model = UploadModels::session();
+        $model = $this->driveConfig->model('upload_session');
         $query = $model::query()->whereKey($session->getKey());
 
         if ($lock !== null) {
@@ -173,7 +176,7 @@ final class UploadSessionStoreRepository
      */
     public function advanceReceived(UploadSession $session, int $receivedBytes): UploadSession
     {
-        $model = UploadModels::session();
+        $model = $this->driveConfig->model('upload_session');
 
         $affected = $model::query()
             ->whereKey($session->getKey())
@@ -208,7 +211,7 @@ final class UploadSessionStoreRepository
      */
     public function markCommitted(UploadSession $session, int|string $assembledBlobId): UploadSession
     {
-        $model = UploadModels::session();
+        $model = $this->driveConfig->model('upload_session');
 
         $affected = $model::query()
             ->whereKey($session->getKey())

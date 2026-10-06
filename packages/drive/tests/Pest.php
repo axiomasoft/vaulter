@@ -20,3 +20,5 @@ uses(PanelTestCase::class, RefreshDatabase::class)->in('Panels');
 // child on its own connection can see the session — RefreshDatabase's per-test
 // transaction would hide it. DatabaseMigrations migrates fresh and commits.
 uses(TestCase::class, DatabaseMigrations::class)->in('Concurrency');
+
+uses(TestCase::class)->in('Configuration');

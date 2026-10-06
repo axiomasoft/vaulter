@@ -58,10 +58,9 @@ Initiated → Uploading → Assembled → Committed
 **Открыты** (принимают байты, могут быть подметены) только `initiated` и `uploading`. Переходы
 защищены `UploadStatus::canTransitionTo` — терминальное состояние никогда не открывается заново.
 
-::: warning Feature-флаг
-Группа резюмируемых маршрутов **и** схема `v_upload_sessions` / `v_upload_parts` закрыты
-feature-флагом `uploads` (`config('vaulter.features.uploads')`, по умолчанию `true`). tus-эндпоинты
-закрыты *дополнительно* через `config('vaulter.uploads.tus.enabled')` — при выключении отдают `403`.
+::: info Резюмируемые загрузки
+Маршруты включаются через `vaulter-drive.uploads.resumable.enabled`
+(по умолчанию `true`). Таблицы загрузок существуют независимо от флага.
 :::
 
 ## Цели
@@ -265,37 +264,33 @@ Schedule::command('vaulter:sweep-uploads')->hourly();
 ## Конфигурация
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'uploads' => [
-    // The hard ceiling on a session's declared total size (0 = ∞). Rejected at
-    // initiate — an oversize upload never opens a session. env: VAULTER_UPLOAD_MAX_BYTES
-    'max_bytes' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 GiB
-
-    // The advertised default chunk size (a hint; the server still accepts any
-    // PATCH/part size up to the remaining bytes). env: VAULTER_UPLOAD_CHUNK_SIZE
-    'chunk_size' => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608), // 8 MiB
-
-    // A session not committed within this window is swept (status → expired).
-    // env: VAULTER_UPLOAD_SESSION_TTL_HOURS
-    'session_ttl_hours' => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
-
-    // Gate the tus resumable endpoints (independent of the 'uploads' schema feature flag).
-    // env: VAULTER_UPLOAD_TUS_ENABLED
-    'tus' => [
-        'enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true),
+    'max_file_size' => 5_368_709_120, // bytes; 0 = unlimited
+    'allowed_mime_types' => [],
+    'resumable' => [
+        'enabled' => true,
+        'chunk_size' => 8_388_608,
+        'max_chunk_size' => 67_108_864,
+        'session_ttl_hours' => 24,
+        'max_active_sessions_per_actor' => 20,
+        'metadata' => [
+            'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+            'max_value_length' => 512,
+        ],
     ],
+],
+'names' => ['max_length' => 255],
+'trash' => ['retention_days' => 30],
+'models' => [
+    'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
+    'upload_part' => \Vaulter\Drive\Models\Uploads\UploadPart::class,
 ],
 ```
 
-Потолок `max_bytes` проверяется **дважды**: сразу на `initiate` (объявленный total сверх потолка
-никогда не открывает сессию, так что не кладутся байты, которые пришлось бы отвергать) и снова
-по ходу потока, пока растёт tus-смещение. Сменяемые модели привязываются через
-`config('vaulter.models.upload_session')` и `config('vaulter.models.upload_part')`.
-
-У one-shot бинарной загрузки Drive (`POST /storages/{storage}/uploads`) — **отдельный** блок
-политики, `config('vaulter.drive')`: `max_upload_kb` (потолок размера на файл, проверяется
-`UploadFileRequest`) и `allowed_mime` (опциональный allowlist mime; пустой = разрешено всё).
-Блок `uploads` выше управляет только *резюмируемыми* сессиями.
+`max_file_size` — общий лимит в байтах для обычных и резюмируемых загрузок.
+Модели задаются в `vaulter-drive.models.*`; резюмируемые маршруты управляются
+`vaulter-drive.uploads.resumable.enabled`.
 
 ## Смотрите также
 

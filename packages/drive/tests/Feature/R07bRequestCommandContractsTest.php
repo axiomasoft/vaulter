@@ -20,7 +20,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.drive.allowed_mime', []);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', []);
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));
 });
 
@@ -240,7 +240,7 @@ it('R07b: purge-trash --days 0 uses zero retention (L131 max floor)', function (
 });
 
 it('R07b: purge-trash non-numeric --days falls back to the configured default (L130 BooleanAndToBooleanOr)', function (): void {
-    config()->set('vaulter.trash.retention_days', 14);
+    config()->set('vaulter-drive.trash.retention_days', 14);
     $this->travelTo(Carbon::parse('2026-09-22 11:00:00'));
 
     Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']);
@@ -328,7 +328,7 @@ it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L11
 // ── TusUploadController: max_chunk_bytes ceiling (L390 IncrementInteger on 0) ──
 
 it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 IncrementInteger)', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
     $uploadId = r07bReqUploadId(explode('/', $storageId)[3], ['total_size_bytes' => 16]);
 
@@ -346,7 +346,7 @@ it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 Increm
 });
 
 it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
     $uploadId = r07bReqUploadId(explode('/', $storageId)[3], ['total_size_bytes' => 16]);
 
@@ -361,7 +361,7 @@ it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', fun
 // ── TusUploadController: sanitizeMetadata ContinueToBreak (L433) ─────────────
 
 it('R07b: sanitizeMetadata continues after unknown key and still includes known keys that follow (L433 ContinueToBreak)', function (): void {
-    config()->set('vaulter.uploads.metadata.allowed_keys', ['filename']);
+    config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
     $storageId = explode('/', r07bReqStorageBase())[3];
 
     // JSON body metadata: 'unknown_first' key comes before 'filename'
@@ -381,7 +381,7 @@ it('R07b: sanitizeMetadata continues after unknown key and still includes known 
 // ── TusUploadController: decodeUploadMetadata empty key (L462 EmptyStringToNotEmpty) ──
 
 it('R07b: decodeUploadMetadata skips segments with an empty key (L462 EmptyStringToNotEmpty)', function (): void {
-    config()->set('vaulter.uploads.metadata.allowed_keys', ['filename']);
+    config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
     $storageId = explode('/', r07bReqStorageBase())[3];
 
     // Double-comma creates an empty segment: ', ,' splits into ' ' which trims to ''

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Query\Builder;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Schema\UpgradePreflightException;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -14,13 +14,13 @@ return new class extends Migration
     {
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
-        if (!$schema->hasTable(Config::legacyTable('storages')) || $schema->hasTable(Config::table('drives'))) {
+        if (!$schema->hasTable(app(DatabaseConfig::class)->legacyTable('storages')) || $schema->hasTable(app(DatabaseConfig::class)->table('drives'))) {
             return;
         }
 
         $problems = [];
         foreach (['nodes', 'storages', 'files'] as $entity) {
-            $table = Config::legacyTable($entity);
+            $table = app(DatabaseConfig::class)->legacyTable($entity);
             if ($schema->hasTable($table) && $schema->hasColumn($table, 'deleted_at')) {
                 $count = $db->table($table)->whereNotNull('deleted_at')->count();
                 if ($count > 0) {
@@ -30,10 +30,10 @@ return new class extends Migration
             }
         }
 
-        $nodes = Config::legacyTable('nodes');
+        $nodes = app(DatabaseConfig::class)->legacyTable('nodes');
         if ($schema->hasTable($nodes)) {
             $documents = $db->table($nodes.' as n')->where('n.kind', 'document');
-            $versions = Config::legacyTable('node_document_versions');
+            $versions = app(DatabaseConfig::class)->legacyTable('node_document_versions');
             if ($schema->hasTable($versions)) {
                 $documents->whereNotExists(fn (Builder $query) => $query->selectRaw('1')->from($versions.' as r')->whereColumn('r.node_id', 'n.id'));
             }
@@ -45,7 +45,7 @@ return new class extends Migration
         }
 
         foreach ($schema->getTables() as $table) {
-            if (str_ends_with($table['name'], 'storages') && $table['name'] !== Config::legacyTable('storages')) {
+            if (str_ends_with($table['name'], 'storages') && $table['name'] !== app(DatabaseConfig::class)->legacyTable('storages')) {
                 $problems[] = 'own-tables: '.$table['name'];
             }
         }

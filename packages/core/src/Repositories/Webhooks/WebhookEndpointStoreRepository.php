@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Webhooks;
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
-use Vaulter\Support\Config;
 
 /**
  * The write side of webhook-endpoint persistence (master plan §2.11 / D14 / M3b). It
@@ -15,6 +15,10 @@ use Vaulter\Support\Config;
  */
 final readonly class WebhookEndpointStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * Persist a new endpoint with its generated signing_secret.
      *
@@ -23,7 +27,7 @@ final readonly class WebhookEndpointStoreRepository
     public function create(string $url, array $events, string $signingSecret, bool $isActive): WebhookEndpoint
     {
         /** @var class-string<WebhookEndpoint> $model */
-        $model = Config::webhookEndpointModel();
+        $model = $this->vaulterConfig->model('webhook_endpoint');
 
         // forceFill (P1.4/F-P1.7-04): signing_secret is deliberately NOT
         // fillable on WebhookEndpoint — Model::create() would silently drop it.

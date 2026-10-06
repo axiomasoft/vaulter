@@ -1,0 +1,22 @@
+{
+  "command": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "UPDATE_SNAPSHOT=1",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "tests/Arch/PublicApiSnapshotTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+  "started_at": "20261006T082750900402Z",
+  "candidate_before": "77dc39da86554537c3e5f83711c904cad000e34b97cdd91f11c8e58a8f832b83",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true,
+  "exit_code": 0,
+  "seconds": 0.098,
+  "candidate_after": "613eef2c84b6ad4d74a601efdf1dcae8d903f519f974d189d62968f520628f4c",
+  "candidate_stable": false
+}

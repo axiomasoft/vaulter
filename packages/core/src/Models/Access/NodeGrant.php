@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -16,7 +18,6 @@ use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * A per-node ACL grant with inheritance (master plan §2.6). A grant addresses a
@@ -29,7 +30,7 @@ use Vaulter\Support\Config;
  * effective-grants read-model; the source of truth in M2a is the direct rows plus
  * the tree, so they stay false/null here.
  *
- * Swappable — point config('vaulter.models.grant') at a subclass for tenant scope.
+ * Swappable — point configuration key vaulter.models.grant at a subclass for tenant scope.
  *
  * @property int|string      $id
  * @property int|string|null $tenant_id
@@ -65,7 +66,7 @@ class NodeGrant extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('node_grants');
+        return app(DatabaseConfig::class)->table('node_grants');
     }
 
     /**
@@ -73,7 +74,7 @@ class NodeGrant extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
     }
 
     /**

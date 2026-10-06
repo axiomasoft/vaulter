@@ -16,7 +16,7 @@ use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
  */
 final class NodeName
 {
-    public static function normalize(string $name): string
+    public static function normalize(string $name, int $maxLength = 255): string
     {
         if (!mb_check_encoding($name, 'UTF-8')) {
             throw InvalidNodeNameException::forName($name, 'it is not valid UTF-8');
@@ -44,8 +44,6 @@ final class NodeName
         if (preg_match('/[\x{00}-\x{1F}\x{7F}-\x{9F}]/u', $name) === 1) {
             throw InvalidNodeNameException::forName($name, 'it contains a control character');
         }
-
-        $maxLength = Config::driveNameMaxLength();
 
         if (strlen($name) > $maxLength) {
             throw InvalidNodeNameException::forName($name, "it is longer than {$maxLength} bytes");

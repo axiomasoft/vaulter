@@ -12,7 +12,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('копия файла переиспользует ОДИН блоб через новое ребро', function (): void {

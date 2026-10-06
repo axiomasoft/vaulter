@@ -13,8 +13,14 @@ configured prefix and middleware:
 
 ```php
 // config/vaulter.php
-'route_prefix' => 'api/vaulter',   // Config::routePrefix()
-'middleware'   => ['api'],         // Config::middleware()
+'routes' => [
+    'prefix' => 'api/vaulter',
+    'middleware' => [
+        'authenticated' => ['api', 'auth:sanctum'],
+        'public' => ['api'],
+        'hub' => ['api'],
+    ],
+],
 ```
 
 So a path shown as `storages/{storage}` resolves to
@@ -23,7 +29,7 @@ So a path shown as `storages/{storage}` resolves to
 ## Conventions
 
 - **`{storage}` / `{node}`** are **route-model bound** to the swappable
-  `config('vaulter.models.storage')` / `config('vaulter.models.node')`. Every Drive
+  `config('vaulter.models.drive')` / `config('vaulter.models.node')`. Every Drive
   route also applies `SubstituteBindings` explicitly, so binding works even if the
   host trims its `api` group.
 - **`{upload_id}`, `{share}`, `{endpoint}`, `{token}`, `{version}`** are plain
@@ -42,16 +48,15 @@ So a path shown as `storages/{storage}` resolves to
 
 ### Feature gates
 
-Some route groups only mount when a feature flag is enabled in
-`config('vaulter.features.*')` (`Config::featureEnabled()`):
+Documents are enabled by installing Documents. Other route settings:
 
-| Feature flag | Gates |
+| Key | Routes |
 |---|---|
-| `document_versions` | document-node routes + collaboration handshake + collab webhooks |
-| `uploads` | resumable-upload routes (tus + S3-multipart) |
-| `reliability` | webhook-endpoint management routes |
-| `comments` | Drive-native node-comment routes (`nodes/{node}/comments*`) |
-| `grants` | `GET shared` ("shared with me" cross-storage feed) — the per-node ACL grant routes (`nodes/{node}/grants`) are NOT feature-gated |
+| `vaulter-documents.collaboration.enabled` | Collaboration token + signed hub callbacks |
+| `vaulter-documents.comments.enabled` | Node comments (default `true`) |
+| `vaulter-drive.uploads.resumable.enabled` | Resumable uploads |
+| `vaulter.features.webhooks` | Webhook endpoint management |
+| `vaulter.features.grants` | Shared-with-me feed |
 
 ---
 
@@ -192,7 +197,7 @@ node via `node_id`; otherwise a brand-new file is created under the parent.
 
 | Param | Rule |
 |---|---|
-| `file` | required, file, `max:` `config('vaulter.drive.max_upload_kb')`; if `config('vaulter.drive.allowed_mime')` is non-empty, restricted to that `mimetypes` set |
+| `file` | required, file, `max:` `config('vaulter-drive.uploads.max_file_size')`; if `config('vaulter-drive.uploads.allowed_mime_types')` is non-empty, restricted to that `mimetypes` set |
 | `parent_id` | nullable (omit = root) |
 | `node_id` | nullable — the existing file node to commit a **new version** onto |
 | `name` | nullable, max 255, no path separators — overrides the stored name |
@@ -316,8 +321,7 @@ comment's author or `Ability::Manage`.
 
 ## Document nodes (Documents)
 
-Rich-text/Yjs document nodes (`DocumentNodeController`). **Gated on the
-`document_versions` feature.** See [Editing](/guide/documents) and
+Rich-text/Yjs document nodes (`DocumentNodeController`). **Enabled with the Documents package.** See [Editing](/guide/documents) and
 [Versions](/guide/documents).
 
 #### `POST storages/{storage}/documents`
@@ -478,7 +482,7 @@ Poll the session status. → `status`
 ```
 
 ::: warning tus can be disabled independently
-If `config('vaulter.uploads.tus.enabled')` is `false`, the tus routes still mount
+If `config('vaulter-drive.uploads.resumable.enabled')` is `false`, the tus routes still mount
 but every tus action returns **403** — the `uploads` feature flag (the schema) and
 the tus toggle are separate.
 :::
@@ -685,7 +689,7 @@ Both return a paginated `ActivityResource` collection.
 ## Realtime collaboration
 
 TipTap/Yjs collaboration over the document nodes (`Drive\NodeCollaborationController`).
-**Gated on the `document_versions` feature.** See [Collaboration](/guide/collaboration).
+**Enabled with `vaulter-documents.collaboration.enabled`.** See [Collaboration](/guide/collaboration).
 
 ### Client handshake
 
@@ -827,7 +831,7 @@ See [Comments](/guide/comments).
 
 ## CORS
 
-All routes on this page mount under `config('vaulter.route_prefix')` (default
+All routes on this page mount under `config('vaulter.routes.prefix')` (default
 `api/vaulter`), which falls under Laravel's default `config/cors.php` matcher
 `paths => ['api/*']` — even though that file isn't published by default, the
 default `allowed_origins => ['*']` still applies to every route documented here,

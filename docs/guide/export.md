@@ -43,7 +43,7 @@ Binary formats return an encoded string (e.g. base64) and advertise the matching
 Two ship with the package, registered in config:
 
 ```php
-// config/vaulter.php
+// config/vaulter-documents.php
 'exporters' => [
     'html'     => Vaulter\Export\HtmlExporter::class,
     'markdown' => Vaulter\Export\MarkdownExporter::class,
@@ -69,7 +69,7 @@ When no `format` query is given, both export endpoints default to `html`.
 
 `GET {prefix}/nodes/{node}/export` renders a [document node's](./documents.md) head content.
 It requires the `View` ability on the node (and the node must be `kind=document`). This route
-is part of the Documents surface, gated on the **`document_versions`** feature.
+is part of the surface enabled by installing `vaulter-documents`.
 
 ::: code-group
 
@@ -191,7 +191,7 @@ real mime type. The client decodes it back to bytes for download.
 ::: code-group
 
 ```php [config — cache-safe FQCN map]
-// config/vaulter.php — add to the exporters map (format => FQCN)
+// config/vaulter-documents.php — add to the exporters map (format => FQCN)
 'exporters' => [
     'html'     => Vaulter\Export\HtmlExporter::class,
     'markdown' => Vaulter\Export\MarkdownExporter::class,
@@ -210,7 +210,7 @@ Vaulter::registerExporter(app(PdfExporter::class));
 :::
 
 ::: tip Config vs runtime
-`config('vaulter.exporters')` is an FQCN map (config-cache safe, resolved through the
+`config('vaulter-documents.exporters')` is an FQCN map (config-cache safe, resolved through the
 container on first use). `Vaulter::registerExporter()` takes an already-built instance — the
 runtime seam. A runtime-registered exporter wins over a config one with the same key.
 :::

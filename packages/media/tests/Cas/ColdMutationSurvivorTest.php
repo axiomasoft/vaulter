@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\BlobStore as BlobStoreContract;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StagedObject;
@@ -19,6 +20,7 @@ use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
 use Vaulter\Media\Cas\StagedTempObject;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
 use Vaulter\Models\Cas\Blob;
@@ -29,8 +31,8 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.storage.default_disk', 'local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.disk', 'local');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     Carbon::setTestNow('2026-09-25 12:00:00');
 });
 
@@ -43,6 +45,8 @@ function r18Collector(FakeMetricsRecorder $metrics): BlobGarbageCollector
         app(FileRevisionBlobStoreRepository::class),
         $metrics,
         app(VaulterDatabase::class),
+        mediaConfig: app(MediaConfig::class),
+        vaulterConfig: app(VaulterConfig::class),
     );
 }
 
@@ -55,6 +59,8 @@ function r18Reconciler(FakeMetricsRecorder $metrics): BlobReconciler
         app(BlobLock::class),
         $metrics,
         app(VaulterDatabase::class),
+        mediaConfig: app(MediaConfig::class),
+        vaulterConfig: app(VaulterConfig::class),
     );
 }
 
@@ -88,7 +94,7 @@ it('records exact mark metrics and suppresses zero-row batch metrics', function 
         ->and($emptyMetrics->emissions()[0]['name'])->toBe('vaulter_gc_duration_seconds')
         ->and($emptyMetrics->emissions()[0]['labels'])->toBe(['phase' => 'mark']);
 
-    $blob = app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('mark metric one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $metrics = new FakeMetricsRecorder;
 
     expect(r18Collector($metrics)->mark(graceHours: 24))->toBe([
@@ -159,10 +165,10 @@ it('records exact sweep metrics including the zero deletion counter', function (
 
 it('adds skipped candidates from both collect phases', function (): void {
     $store = app(BlobStoreContract::class);
-    $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $markSkipped = $store->commit(CasTestHelpers::streamFor('mark skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $store->attach(CasTestHelpers::makeVersion(name: 'mark skipped edge'), $markSkipped);
 
-    $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $sweepSkipped = $store->commit(CasTestHelpers::streamFor('sweep skipped'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $store->attach(CasTestHelpers::makeVersion(name: 'sweep skipped edge'), $sweepSkipped);
     $sweepSkipped->forceFill([
         'status' => BlobStatus::Tombstoned,
@@ -215,7 +221,7 @@ it('records the exact reconcile count and suppresses its zero-row counter', func
     ])->and($emptyMetrics->emissions())->toHaveCount(1)
         ->and($emptyMetrics->emissions()[0]['name'])->toBe('vaulter_reconcile_duration_seconds');
 
-    app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('reconcile metric one'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    app(BlobStoreContract::class)->commit(CasTestHelpers::streamFor('reconcile metric one'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
     $metrics = new FakeMetricsRecorder;
 
     expect(r18Reconciler($metrics)->reconcile()['reconciled'])->toBe(1)
@@ -230,7 +236,7 @@ it('records the exact reconcile count and suppresses its zero-row counter', func
 
 it('uses the configured disk for an orphan walk when no disk is supplied', function (): void {
     Storage::fake('archive');
-    config()->set('vaulter.storage.default_disk', 'archive');
+    config()->set('vaulter-media.disk', 'archive');
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'configured archive orphan',
         scope: 't1',
@@ -250,7 +256,7 @@ it('uses the configured disk for an orphan walk when no disk is supplied', funct
 
 it('preserves an explicitly supplied orphan disk', function (): void {
     Storage::fake('archive');
-    config()->set('vaulter.storage.default_disk', 'local');
+    config()->set('vaulter-media.disk', 'local');
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'explicit archive orphan',
         scope: 't1',
@@ -331,7 +337,7 @@ it('uses the explicit blob disk instead of the configured default', function ():
 
     $blob = app(BlobStoreContract::class)->commit(
         CasTestHelpers::streamFor('explicit archive disk'),
-        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+        disk: 'archive', scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     expect($blob->disk)->toBe('archive');
     Storage::disk('archive')->assertExists($blob->storage_key);
@@ -340,7 +346,7 @@ it('uses the explicit blob disk instead of the configured default', function ():
 
 it('takes the tenant advisory lock when committing on PostgreSQL', function (): void {
     $blob = app(BlobStoreContract::class)->commit(
-        CasTestHelpers::streamFor('commit advisory lock'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 314159, 'unused'));
+        CasTestHelpers::streamFor('commit advisory lock'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 314159, 'unused'));
 
     expect(r18PgAdvisoryLockIsHeld('tenant:314159', $blob->sha256))->toBeTrue();
 })->skip(
@@ -374,7 +380,7 @@ it('observes a successful local promotion result and an exact random temp suffix
     })->andReturn(true);
     Storage::set('local', $filesystem);
 
-    $result = (new FlysystemStorageDriver)->put(
+    $result = (app(FlysystemStorageDriver::class))->put(
         'scope/final',
         CasTestHelpers::streamFor('promote success'),
         'local',
@@ -397,7 +403,7 @@ it('returns false and reclaims the temp when the staged write fails', function (
     $filesystem->shouldNotReceive('move');
     Storage::set('local', $filesystem);
 
-    expect((new FlysystemStorageDriver)->put(
+    expect((app(FlysystemStorageDriver::class))->put(
         'scope/final',
         CasTestHelpers::streamFor('failed stage'),
         'local',
@@ -424,7 +430,7 @@ it('moves a completed temp for both conditional fallthrough cases', function (bo
     })->andReturn(true);
     Storage::set('local', $filesystem);
 
-    expect((new FlysystemStorageDriver)->put(
+    expect((app(FlysystemStorageDriver::class))->put(
         'scope/final',
         CasTestHelpers::streamFor('conditional fallthrough'),
         'local',
@@ -440,7 +446,7 @@ it('does not read or inspect metadata after an object is reported missing', func
     $filesystem->shouldReceive('exists')->twice()->andReturn(false);
     $filesystem->shouldNotReceive('readStream', 'lastModified');
     Storage::set('plain', $filesystem);
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
 
     expect($driver->get('missing', 'plain'))->toBeNull()
         ->and($driver->lastModified('missing', 'plain'))->toBeNull();
@@ -450,7 +456,7 @@ it('returns no listing or temporary URL for a non adapter filesystem', function 
     $filesystem = Mockery::mock(Filesystem::class);
     $filesystem->shouldNotReceive('getDriver', 'providesTemporaryUrls', 'temporaryUrl');
     Storage::set('plain', $filesystem);
-    $driver = new FlysystemStorageDriver;
+    $driver = app(FlysystemStorageDriver::class);
 
     expect(iterator_to_array($driver->listContents('plain')))->toBe([])
         ->and($driver->temporaryUrl('key', now()->addMinute(), 'plain'))->toBeNull();
@@ -462,7 +468,7 @@ it('does not ask an adapter for a URL when temporary URLs are unsupported', func
     $filesystem->shouldNotReceive('temporaryUrl');
     Storage::set('plain', $filesystem);
 
-    expect((new FlysystemStorageDriver)->temporaryUrl('key', now()->addMinute(), 'plain'))->toBeNull();
+    expect((app(FlysystemStorageDriver::class))->temporaryUrl('key', now()->addMinute(), 'plain'))->toBeNull();
 });
 
 it('returns the exact result of an atomic object-store write', function (bool $written): void {
@@ -472,7 +478,7 @@ it('returns the exact result of an atomic object-store write', function (bool $w
     $filesystem->shouldNotReceive('move', 'delete');
     Storage::set('object-store', $filesystem);
 
-    expect((new FlysystemStorageDriver)->put(
+    expect((app(FlysystemStorageDriver::class))->put(
         'scope/final',
         CasTestHelpers::streamFor('atomic object store'),
         'object-store',

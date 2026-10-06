@@ -25,10 +25,10 @@ use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     Carbon::setTestNow('2026-06-30 12:00:00');
     // Floor the orphan grace to 1h so a 48h-old seeded object is comfortably past it.
-    config()->set('vaulter.gc.orphan_grace_hours', 1);
+    config()->set('vaulter-media.gc.orphan_grace_hours', 1);
 });
 
 it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в выводе', function (): void {

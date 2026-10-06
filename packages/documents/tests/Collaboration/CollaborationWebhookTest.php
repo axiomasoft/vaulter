@@ -5,13 +5,13 @@ declare(strict_types=1);
 use Firebase\JWT\JWT;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
 use Vaulter\Webhooks\WebhookSigner;
@@ -29,11 +29,11 @@ const WEBHOOK_SECRET = 'webhook-shared-secret';
 const JWT_SECRET = 'jwt-signing-secret-that-is-at-least-32-bytes';
 
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.webhook_secret', WEBHOOK_SECRET);
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', JWT_SECRET);
-    config()->set('vaulter.collaboration.webhook_timestamp_tolerance', 300);
+    config()->set('vaulter.access.permission_driver', 'database');
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.hub.webhook_secret', WEBHOOK_SECRET);
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', JWT_SECRET);
+    config()->set('vaulter-documents.collaboration.hub.timestamp_tolerance', 300);
 
     // The webhook authenticate flow resolves the acting user by id — bind a fake
     // resolver so it works without a configured host user provider.
@@ -85,7 +85,7 @@ function roomJwt(Node $node, bool $readOnly, int $actorId = 1, ?int $exp = null)
 {
     return JWT::encode(
         payload: [
-            'room' => Config::collaborationRoom($node->getKey()),
+            'room' => app(DocumentsConfig::class)->collaborationRoom($node->getKey()),
             'sub' => (string) $actorId,
             'readOnly' => $readOnly,
             'iat' => time(),
@@ -231,7 +231,7 @@ it('rejects a store call with a tampered JWT', function (): void {
 
 it('resolves the node when the hub sends node_id EQUAL to the room name (regression)', function (): void {
     $node = webhookDocumentNode();
-    $room = Config::collaborationRoom($node->getKey());
+    $room = app(DocumentsConfig::class)->collaborationRoom($node->getKey());
     $yjs = 'hub-room-shaped-node-id';
 
     // Регрессия: Node-хаб (hocuspocus-server/src/webhook.js) шлёт node_id РАВНЫМ имени
@@ -355,7 +355,7 @@ it('authenticates a good room JWT and answers allowed + readOnly from the abilit
 
 it('authenticates when the hub sends node_id EQUAL to the room name (regression)', function (): void {
     $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 1);
-    $room = Config::collaborationRoom($node->getKey());
+    $room = app(DocumentsConfig::class)->collaborationRoom($node->getKey());
 
     // Тот же перекос node_id==room, что в collab/store — но на пути authenticate:
     // нерезолвленный узел дал бы allowed:false и хаб отказал бы writer'у в коннекте.

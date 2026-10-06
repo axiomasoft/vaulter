@@ -6,8 +6,8 @@ namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Support\Config;
 
 /**
  * The write side of transactional-outbox row work (master plan §2.11 / D14 / M3b).
@@ -19,6 +19,10 @@ use Vaulter\Support\Config;
  */
 final readonly class OutboxStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The settled-row predicate, applied identically by both the count and the
      * delete so a dry-run reports exactly what a real run would remove: only
@@ -83,7 +87,7 @@ final readonly class OutboxStoreRepository
 
     private function keyName(): string
     {
-        $model = Config::outboxModel();
+        $model = $this->vaulterConfig->model('outbox');
 
         return (new $model)->getKeyName();
     }
@@ -94,7 +98,7 @@ final readonly class OutboxStoreRepository
     private function newQuery(): Builder
     {
         /** @var class-string<Outbox> $model */
-        $model = Config::outboxModel();
+        $model = $this->vaulterConfig->model('outbox');
 
         return $model::query();
     }

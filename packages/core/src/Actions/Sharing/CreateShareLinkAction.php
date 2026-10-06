@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
+use Vaulter\Configuration\SharingConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
@@ -15,7 +16,6 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\ShareToken;
 
 /**
@@ -26,11 +26,11 @@ use Vaulter\Support\ShareToken;
  * transaction and emits NodeShareCreated.
  *
  * A link is never minted immortal by omission (P1.2 / F-P1.3-03, S4.1): when the
- * caller supplies no `expiresAt`, the Action stamps `now() + Config::shareDefaultTtlHours()`
+ * caller supplies no `expiresAt`, the Action stamps `now() + $this->sharingConfig->defaultTtlHours()`
  * at mint time (NOT a DB column default, so it stays host-config-overridable and
  * every direct repository write in a test still goes through the same rule when it
  * routes through this Action). An explicit `expiresAt` above
- * `Config::shareMaxTtlHours()` is rejected by request validation
+ * `$this->sharingConfig->maxTtlHours()` is rejected by request validation
  * (StoreShareLinkRequest) before it reaches here — the Action does not re-clamp it.
  *
  * Authorization (the actor may Share the node) is enforced by the caller
@@ -46,6 +46,7 @@ final readonly class CreateShareLinkAction
     private const int MAX_MINT_ATTEMPTS = 5;
 
     public function __construct(
+        private readonly SharingConfig $sharingConfig,
         private ShareTokenGenerator $tokens,
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
@@ -61,7 +62,7 @@ final readonly class CreateShareLinkAction
         // mint time (not a DB default) so it stays host-overridable.
         $expiresAt = $data->expiresAt instanceof Carbon
             ? $data->expiresAt
-            : Carbon::now()->addHours(Config::shareDefaultTtlHours());
+            : Carbon::now()->addHours($this->sharingConfig->defaultTtlHours());
 
         return $this->database->transaction(function () use ($node, $data, $passwordHash, $expiresAt): MintedShareLink {
             $minted = $this->mint(
@@ -84,7 +85,7 @@ final readonly class CreateShareLinkAction
      */
     private function mint(Node $node, ShareLinkInput $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
     {
-        $prefixLength = Config::sharePrefixLength();
+        $prefixLength = $this->sharingConfig->prefixLength();
 
         for ($attempt = 0; $attempt < self::MAX_MINT_ATTEMPTS; $attempt++) {
             $token = $this->tokens->generate();

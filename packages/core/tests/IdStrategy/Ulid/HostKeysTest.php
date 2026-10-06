@@ -18,7 +18,7 @@ use Vaulter\Tests\Fixtures\HostKeyUser;
 // hidden by the upgrade repairing an incorrectly emitted fresh column.
 beforeEach(function (): void {
     config()->set('vaulter.ids.host_keys', 'string');
-    config()->set('vaulter.table_prefix', 'hk_v23_');
+    config()->set('vaulter.database.table_prefix', 'hk_v23_');
     (new SchemaBuilder)->createAll((new Profile)->id('default'));
 });
 afterEach(function (): void {

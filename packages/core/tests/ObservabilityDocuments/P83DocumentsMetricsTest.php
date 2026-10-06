@@ -48,8 +48,8 @@ it('records vaulter_export_duration_seconds', function (): void {
 });
 
 it('records vaulter_collab_session_issued_total', function (): void {
-    config()->set('vaulter.collaboration.driver', 'hocuspocus');
-    config()->set('vaulter.collaboration.drivers.hocuspocus.secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
+    config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
+    config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = p83DocumentNode();
     $actor = new TestUser;
@@ -62,7 +62,7 @@ it('records vaulter_collab_session_issued_total', function (): void {
     app(MetricsRecorder::class)->assertCounter(
         name: 'vaulter_collab_session_issued_total',
         labels: [
-            'driver' => config('vaulter.collaboration.driver'),
+            'driver' => config('vaulter-documents.collaboration.driver'),
             'ability' => Ability::Edit->value,
         ],
     );

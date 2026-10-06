@@ -29,6 +29,6 @@ abstract class CollaborationEnabledTestCase extends DocumentTestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.features.collaboration', true);
+        $app['config']->set('vaulter-documents.collaboration.enabled', true);
     }
 }

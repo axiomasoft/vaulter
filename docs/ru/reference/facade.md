@@ -58,7 +58,7 @@ $drive = Vaulter::for($project, 'project_drive'); // именованная па
 
 Открыть Drive-хэндл, привязанный к уже разрешённой строке `Drive`. Это шов, который
 использует HTTP-слой: `Drive`, связанный через route-model binding (разрешённый
-через сменяемый `config('vaulter.models.storage')`), напрямую отображается в
+через сменяемый `config('vaulter.models.drive')`), напрямую отображается в
 `DriveHandle` без повторного вывода владельца. Панель хэндла отражает
 `$storage->profile`, поэтому его Action'ы выполняются в правильном scope панели.
 
@@ -111,7 +111,7 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 ### `exporter(string $format): DocumentExporter`
 
 Резолв экспортёра по ключу формата. Сначала смотрит на экспортёры, зарегистрированные
-в рантайме, затем на `config('vaulter.exporters')` (резолвя FQCN через контейнер).
+в рантайме, затем на `config('vaulter-documents.exporters')` (резолвя FQCN через контейнер).
 Бросает `Vaulter\Exceptions\Documents\UnknownExportFormatException` для неизвестного
 формата.
 
@@ -132,8 +132,8 @@ Vaulter::exporterFormats(); // ['html', 'markdown', 'pdf']
 ### `driver(?string $name = null): CollaborationDriver`
 
 Резолв драйвера совместного редактирования. По умолчанию имя —
-`config('vaulter.collaboration.driver')` (`hocuspocus`); класс драйвера
-читается из `config('vaulter.collaboration.drivers.{name}.class')` и резолвится через
+`config('vaulter-documents.collaboration.driver')` (`hocuspocus`); класс драйвера
+читается из `config('vaulter-documents.collaboration.driver')` и резолвится через
 контейнер. Неизвестный или несоответствующий драйвер бросает
 `Vaulter\Exceptions\VaulterException`.
 

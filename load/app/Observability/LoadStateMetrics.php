@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Load\Observability;
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Support\Config;
 
 /**
  * Host-side absolute gauges for load SUT state snapshots (P8.3).
@@ -16,12 +17,14 @@ use Vaulter\Support\Config;
 final class LoadStateMetrics
 {
     public function __construct(
+        private readonly DatabaseConfig $databaseConfig,
+        private readonly VaulterConfig $vaulterConfig,
         private readonly MetricsRecorder $metrics,
     ) {}
 
     public function observeUploadSessions(): void
     {
-        $table = Config::table('upload_sessions');
+        $table = $this->databaseConfig->table('upload_sessions');
         $openStatuses = [
             UploadStatus::Initiated->value,
             UploadStatus::Uploading->value,
@@ -62,13 +65,13 @@ final class LoadStateMetrics
 
     public function observeOutboxBacklog(): void
     {
-        if (!Config::featureEnabled('reliability')) {
+        if (!$this->vaulterConfig->featureEnabled('webhooks')) {
             $this->metrics->gauge(name: 'vaulter_outbox_backlog', value: 0);
 
             return;
         }
 
-        $table = Config::table('outbox');
+        $table = $this->databaseConfig->table('outbox');
         $pending = (int) DB::table($table)->where('status', 'pending')->count();
 
         $this->metrics->gauge(name: 'vaulter_outbox_backlog', value: $pending);

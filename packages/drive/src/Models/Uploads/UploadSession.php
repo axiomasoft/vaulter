@@ -9,15 +9,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
-use Vaulter\Drive\Support\Uploads\UploadModels;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 
 /**
  * A resumable-upload session (master plan §2.8 / D16 / M3a): the first-class row
@@ -28,7 +29,7 @@ use Vaulter\Support\Config;
  * BlobStore.commit (H.3 — server recomputes sha256, never the client/ETag hash) and
  * assembled_blob_id is set.
  *
- * Swappable via config('vaulter.models.upload_session').
+ * Swappable via the configuration key ('vaulter-drive.models.upload_session').
  *
  * @property int|string                $id
  * @property int|string|null           $tenant_id
@@ -79,7 +80,7 @@ class UploadSession extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('upload_sessions');
+        return app(DatabaseConfig::class)->table('upload_sessions');
     }
 
     /**
@@ -89,7 +90,7 @@ class UploadSession extends Model
      */
     public function storage(): BelongsTo
     {
-        return $this->belongsTo(Config::storageModel(), 'drive_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('drive'), 'drive_id');
     }
 
     /**
@@ -99,7 +100,7 @@ class UploadSession extends Model
      */
     public function parts(): HasMany
     {
-        return $this->hasMany(UploadModels::part(), 'upload_session_id');
+        return $this->hasMany(app(DriveConfig::class)->model('upload_part'), 'upload_session_id');
     }
 
     /**
@@ -109,7 +110,7 @@ class UploadSession extends Model
      */
     public function assembledBlob(): BelongsTo
     {
-        return $this->belongsTo(Config::blobModel(), 'assembled_blob_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('blob'), 'assembled_blob_id');
     }
 
     /**

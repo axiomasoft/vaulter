@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
@@ -13,7 +14,7 @@ use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 it('authorises purely from grants with no host roles (standalone database lane)', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     expect(app(PermissionDriver::class))->toBeInstanceOf(DatabasePermissionDriver::class);
 
@@ -30,7 +31,7 @@ it('authorises purely from grants with no host roles (standalone database lane)'
 });
 
 it('lets the database lane create in a workspace by default', function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     $storage = AccessTestHelpers::storage();
 
@@ -48,19 +49,19 @@ it('subjectsFor returns the actor itself in the pure-DB lane', function (): void
 });
 
 it('fails loud when the open null driver is selected in production', function (): void {
-    config()->set('vaulter.drivers.permission', 'null');
+    config()->set('vaulter.access.permission_driver', 'null');
 
     // Simulate production: the manager rejects the open null driver.
-    $manager = new PermissionDriverManager(container: app(), isProduction: true);
+    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: true);
 
     expect(fn (): mixed => $manager->driver())
         ->toThrow(MissingPermissionDriverException::class);
 });
 
 it('allows the open null driver outside production', function (): void {
-    config()->set('vaulter.drivers.permission', 'null');
+    config()->set('vaulter.access.permission_driver', 'null');
 
-    $manager = new PermissionDriverManager(container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: false);
 
     // Open in non-prod: every actor gets full access via the override.
     $storage = AccessTestHelpers::storage();
@@ -73,9 +74,9 @@ it('allows the open null driver outside production', function (): void {
 });
 
 it('throws on an unknown driver key', function (): void {
-    config()->set('vaulter.drivers.permission', 'does-not-exist');
+    config()->set('vaulter.access.permission_driver', 'does-not-exist');
 
-    $manager = new PermissionDriverManager(container: app(), isProduction: false);
+    $manager = new PermissionDriverManager(accessConfig: app(AccessConfig::class), container: app(), isProduction: false);
 
     expect(fn (): mixed => $manager->driver())
         ->toThrow(MissingPermissionDriverException::class);

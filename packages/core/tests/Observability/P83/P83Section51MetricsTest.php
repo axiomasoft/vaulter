@@ -66,7 +66,7 @@ it('records vaulter_tree_cte_anchors when grant filtering resolves subtree ancho
     LoadTier::set('S');
 
     config()->set('vaulter.features.grants', true);
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 
     app()->forgetInstance(NodeReadRepository::class);
 

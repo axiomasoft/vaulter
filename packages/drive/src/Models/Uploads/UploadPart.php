@@ -6,8 +6,8 @@ namespace Vaulter\Drive\Models\Uploads;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * A single resumable-upload part (master plan §2.8 / D16 / M3a): the normalised
@@ -16,7 +16,7 @@ use Vaulter\Support\Config;
  * of part N supersedes the prior etag/size. etag is the object-store part etag (kept
  * for the complete-multipart call, NEVER trusted as a content hash, H.3);
  * part_sha256 is the optional server-recomputed per-part digest. Swappable via
- * config('vaulter.models.upload_part').
+ * the configuration key ('vaulter-drive.models.upload_part').
  *
  * @property int|string      $upload_session_id
  * @property int             $part_no
@@ -48,7 +48,7 @@ class UploadPart extends Pivot
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('upload_parts');
+        return app(DatabaseConfig::class)->table('upload_parts');
     }
 
     /**

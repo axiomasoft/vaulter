@@ -17,7 +17,6 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -286,13 +285,16 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     expect($contracts)->not->toBe([]);
 
     $blocks = array_map(vaulterSnapshotInterface(...), $contracts);
+
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Configuration', 'Vaulter\Configuration') as $configuration) {
+        $blocks[] = vaulterSnapshotInterface($configuration);
+    }
     foreach ([AccessResolver::class, AclFolder::class, ExactListing::class, NodePage::class] as $class) {
         $blocks[] = vaulterSnapshotInterface($class);
     }
 
     $blocks[] = vaulterSnapshotInterface(VaulterDatabase::class);
     $blocks[] = vaulterSnapshotInterface(BlobScope::class);
-    $blocks[] = vaulterSnapshotInterface(Config::class);
     $blocks[] = vaulterSnapshotInterface(HostKeyColumns::class);
     $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
     $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);

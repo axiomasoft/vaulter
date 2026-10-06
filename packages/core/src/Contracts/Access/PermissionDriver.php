@@ -18,7 +18,7 @@ use Vaulter\Enums\Access\Effect;
  * + node owner). The Vaulter-owned, NON-swappable {@see AccessResolver}
  * combines this driver's answers with the v_node_grants ACL.
  *
- * Swap it via config('vaulter.drivers.permission' + permission_drivers map); the
+ * Swap it via configuration key vaulter.access.permission_driver + permission_drivers map); the
  * default is the standalone {@see DatabasePermissionDriver}.
  *
  * Implementations are a SemVer-frozen public API from M2a — M2b's Gate/Spatie/

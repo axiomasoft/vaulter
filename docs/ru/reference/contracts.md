@@ -16,19 +16,19 @@ outline: deep
 | Домен | Контракт | Подмена через |
 |---|---|---|
 | Access | `PermissionResolver` | `config('vaulter.permission_resolver')` / `Vaulter::resolvePermissionsWith()` |
-| Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + карта `permission_drivers` |
+| Access | `PermissionDriver` | `config('vaulter.access.permission_driver')` + карта `access.permission_drivers` |
 | Access | `AzgardGuard` (azgard) | привязка из `vaulter-azgard` |
-| Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
-| Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
-| Cas | `StorageDriver` | `config('vaulter.cas.storage_driver')` |
+| Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
+| Cas | `ContentStore` | `config('vaulter-media.content_store')` |
+| Cas | `StorageDriver` | `config('vaulter-media.storage_driver')` |
 | Cas | `StagedObject` | возвращается из `ContentStore::stage()` |
 | Cas | `StorageAdapter` | `config('vaulter.storage_adapter')` (легаси) |
-| Collaboration | `CollaborationDriver` | `config('vaulter.collaboration.drivers.*.class')` (легаси-путь документов) |
+| Collaboration | `CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` (легаси-путь документов) |
 | Collaboration | `CollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
-| Handlers | `DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` |
-| Sharing | `ShareTokenGenerator` | `config('vaulter.share_token_generator')` / `config('vaulter.share.token_generator')` |
+| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` |
+| Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
 | Uploads | `UploadProtocolHandler` | в комплекте (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
 
@@ -63,7 +63,7 @@ interface PermissionResolver
 идентичности и ролей в Vaulter, не протекая доменом Vaulter: она никогда не получает `Node`
 и никогда не оперирует действиями-магическими-строками — только актором `Authorizable` и
 `AccessScope` (координаты панели + workspace + владелец узла). Подмените её через
-`config('vaulter.drivers.permission')` по карте `permission_drivers`; по умолчанию — автономный
+`config('vaulter.access.permission_driver')` по карте `access.permission_drivers`; по умолчанию — автономный
 `DatabasePermissionDriver`.
 
 ```php
@@ -123,10 +123,10 @@ interface AzgardGuard
 `AzgardGuardAdapter` и тестовым `Vaulter\Azgard\Testing\FakeAzgardGuard`.
 Provider регистрирует драйвер и адаптер автоматически.
 
-**Используйте, когда** `config('vaulter.drivers.permission') = 'azgard'`:
+**Используйте, когда** `config('vaulter.access.permission_driver') = 'azgard'`:
 установите `composer require axioma-studio/vaulter-azgard`, добавьте
 `Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя и согласуйте
-ULID-morph (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` +
+ULID-morph (`vaulter.ids.strategy=ulid` + `corex.ids.strategy=Ulid` +
 `AZ_GUARD_MORPH_TYPE=ulid`). Фейк также требует установленного моста и его зависимостей.
 См. [Драйверы прав](/ru/guide/permission-drivers).
 
@@ -141,7 +141,7 @@ ULID-morph (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` +
 внутри одной залоченной транзакции, воскрешая «надгробленное» совпадение и продвигая байты
 только тогда, когда строка создаётся заново. Истина живости — это ребро в
 `v_file_version_blobs`, а не синхронный `ref_count`. Подмена через
-`config('vaulter.cas.blob_store')`.
+`config('vaulter-media.blob_store')`.
 
 ```php
 interface BlobStore
@@ -164,7 +164,7 @@ interface BlobStore
 Низкоуровневая байтовая сторона CAS: сложить входящий поток во временный локальный файл с
 произвольным доступом (хэшируя эти надёжные байты на стороне сервера), затем продвинуть
 сложенные байты к их каноническому, квалифицированному областью ключу. Знает только байты,
-хэши и ключи — никогда строку `v_blobs`. Подмена через `config('vaulter.cas.content_store')`.
+хэши и ключи — никогда строку `v_blobs`. Подмена через `config('vaulter-media.content_store')`.
 
 ```php
 interface ContentStore
@@ -214,7 +214,7 @@ interface StagedObject
 Тонкая абстракция над Flysystem-диском — байтовая плоскость под CAS. Подмените её, чтобы
 добавить специфику объектного хранилища (`x-amz-checksum-sha256`, `If-None-Match: *`),
 сохранив рабочим локальный/sqlite тестовый диск. Подмена через
-`config('vaulter.cas.storage_driver')`.
+`config('vaulter-media.storage_driver')`.
 
 ```php
 interface StorageDriver
@@ -294,8 +294,8 @@ interface CollaborationDriver
 **Легаси**-транспорт совместного редактирования для документов, привязанный к модели
 `Document`, прикреплённой через `document_id`. Сосуществует с `CollaborationDriver`;
 хост выбирает один и тот же транспорт для обоих через
-`config('vaulter.collaboration.driver')`. Класс драйвера берётся из
-`config('vaulter.collaboration.drivers.{name}.class')`.
+`config('vaulter-documents.collaboration.driver')`. Класс драйвера берётся из
+`config('vaulter-documents.collaboration.driver')`.
 
 ```php
 interface CollaborationDriver
@@ -380,7 +380,7 @@ interface FileHandler
 Рендерит содержимое документа (`DocumentContent` — тот же опаковый payload, что хранит
 write-путь) в формат экспорта — контракт не завязан на TipTap. В комплекте поставляются
 экспортёры HTML и Markdown; зарегистрируйте свой (PDF, DOCX, …) через
-`config('vaulter.exporters')` или `Vaulter::registerExporter()`. Бинарные форматы должны
+`config('vaulter-documents.exporters')` или `Vaulter::registerExporter()`. Бинарные форматы должны
 возвращать закодированную строку (например, base64) и объявлять соответствующий mime-тип.
 
 ```php
@@ -437,9 +437,7 @@ interface NodePresenter
 ### `Vaulter\Contracts\Sharing\ShareTokenGenerator`
 
 Генерирует непрозрачный токен для публичной ссылки (share). Токен должен быть уникальным и
-помещаться в колонку токена (≤ 64 символов). Подмените легаси-токен публичной ссылки на
-документ через `config('vaulter.share_token_generator')`, а bearer-токен публичной ссылки на
-узел — через `config('vaulter.share.token_generator')`.
+помещаться в колонку токена (≤ 64 символов). Генератор задаётся в `config('vaulter.sharing.token_generator')`.
 
 ```php
 interface ShareTokenGenerator
@@ -490,7 +488,7 @@ interface UploadProtocolHandler
 
 Стратегия первичного ключа: задаёт типы колонок в миграциях плюс соответствующий model
 concern, так что «ulid против uuid7 против bigint» решается из
-`config('vaulter.ids.default')`, а не зашивается в код. Реализации живут в
+`config('vaulter.ids.strategy')`, а не зашивается в код. Реализации живут в
 `Vaulter\Schema\*` (`AutoIncrementIds`, `UlidIds`, `Uuid7Ids`); хост может зарегистрировать
 свою под `config('vaulter.ids.strategies')`.
 

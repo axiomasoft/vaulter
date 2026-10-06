@@ -1,0 +1,16 @@
+{
+  "command": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+  "started_at": "20261006T090626457489Z",
+  "candidate_before": "3f56b8ea2f1d85eba50bfa339e9ab6dc72735df791af231fe83a1034a2dca1c6",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false
+}

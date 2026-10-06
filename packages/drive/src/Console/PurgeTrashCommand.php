@@ -9,9 +9,9 @@ use Illuminate\Support\Carbon;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 
 /**
@@ -39,8 +39,10 @@ use Vaulter\Support\Identity;
  */
 final class PurgeTrashCommand extends Command
 {
-    public function __construct(private readonly VaulterDatabase $database)
-    {
+    public function __construct(
+        private readonly VaulterDatabase $database,
+        private readonly DriveConfig $driveConfig,
+    ) {
         parent::__construct();
     }
 
@@ -138,6 +140,6 @@ final class PurgeTrashCommand extends Command
             return max((int) $override, 0);
         }
 
-        return Config::trashRetentionDays();
+        return $this->driveConfig->trashRetentionDays();
     }
 }

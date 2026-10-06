@@ -133,7 +133,7 @@ it('HEAD/PATCH с чужой версией Tus-Resumable → 412 (F-P1.4-06)', 
 });
 
 it('OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.4-07, red-before: нет роута)', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 1_000_000);
+    config()->set('vaulter-drive.uploads.max_file_size', 1_000_000);
 
     $this->call('OPTIONS', 'api/vaulter/resumable-uploads/any-literal-handle')
         ->assertNoContent()
@@ -168,7 +168,7 @@ it('метаданные с неизвестным ключом → отброш
 });
 
 it('значение метаданных сверх лимита длины — усекается, не отвергается (F-P1.4-08)', function (): void {
-    config()->set('vaulter.uploads.metadata.max_value_length', 8);
+    config()->set('vaulter-drive.uploads.resumable.metadata.max_value_length', 8);
     $storage = protocolStorage();
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [

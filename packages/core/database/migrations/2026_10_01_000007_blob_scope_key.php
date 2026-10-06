@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -13,7 +13,7 @@ return new class extends Migration
     {
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
-        $name = Config::table('blobs');
+        $name = app(DatabaseConfig::class)->table('blobs');
         if (!$schema->hasTable($name)) {
             return;
         }
@@ -60,14 +60,14 @@ return new class extends Migration
     public function down(): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table('blobs');
+        $name = app(DatabaseConfig::class)->table('blobs');
         if (!$schema->hasTable($name) || !$schema->hasColumn($name, 'scope_key')) {
             return;
         }
 
         if (!$schema->hasIndex($name, $name.'_dedup_uniq')) {
-            $columns = match (Config::dedupScope()) {
-                'storage' => ['drive_id', 'sha256'],
+            $columns = match (app()->bound('vaulter.dedup_scope') ? app('vaulter.dedup_scope') : 'tenant') {
+                'drive' => ['drive_id', 'sha256'],
                 'tenant' => ['tenant_id', 'sha256'],
                 default => ['sha256'],
             };

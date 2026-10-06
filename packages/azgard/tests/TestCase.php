@@ -35,6 +35,6 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        $app['config']->set('vaulter.drivers.permission', 'azgard');
+        $app['config']->set('vaulter.access.permission_driver', 'azgard');
     }
 }

@@ -1,0 +1,565 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.5",
+  "title": "Канонический конфиг и типизированный доступ",
+  "status": "done",
+  "summary": "Каждый пакет читает конфигурацию только через свои `final readonly` классы `Configuration\\*Config` поверх\n`Illuminate\\Contracts\\Config\\Repository`; файлы конфига разложены по пакетам-владельцам в канон 07; опубликованный конфиг\n0.2 продолжает работать через `ConfigNormalizer` с `E_USER_DEPRECATED`, конфликт старого и нового ключа — исключение;\n`ConfigValidator` проверяет ключи безопасности при boot; статический `Support\\Config` удалён, `config('vaulter…')` вне\n`Configuration` запрещён arch-тестом (V28).",
+  "why": "OPUS 13 P2.5, AD26, 07 §1–§7, 04 §1 п.6, N19, V28. Код `main` @ `938f0ea`: `Support/Config.php` — 1628 строк,\n108 методов, ключи всех пакетов; ~170 файлов-носителей; `config('vaulter…')` напрямую в 50 файлах `src`; модули мёржат\nсвои дефолты под ключи core (`drive` → `vaulter.models`, `media` → `vaulter.cas`, documents — `vaulter.models`/`handlers`/`exporters`).",
+  "scope": {
+    "include": [
+      "Классы (полная карта метод → ключ → accessor — `@plan/knowledge/artifacts-P2-design-P2.5-config-map.json` §А):\n   core `packages/core/src/Configuration/{VaulterConfig,DatabaseConfig,IdsConfig,TenancyConfig,AccessConfig,RoutesConfig,ListingConfig,SharingConfig,DownloadsConfig,WebhooksConfig,ObservabilityConfig}.php`;\n   `VaulterConfig` даёт секции (`database(): DatabaseConfig`, …) и `model(string)`, `featureEnabled(string)`,\n   `profileProviders()`, `defaultProfile()`, `handlers()`, `extraDataEnabled()`;\n   `packages/media/src/Configuration/MediaConfig.php`, `packages/drive/src/Configuration/DriveConfig.php`,\n   `packages/documents/src/Configuration/DocumentsConfig.php`, `packages/filament/src/Configuration/FilamentConfig.php`\n   (`AzgardConfig` — P2.4). Singleton-биндинг в provider пакета; потребители — конструкторная инъекция, в моделях/миграциях/\n   статических контекстах — `app(X::class)` (R15). Заменяются: `Support\\GateConfig`, `Support\\SpatieConfig` (→ `AccessConfig`),\n   `Drive\\Support\\Uploads\\UploadModels` (→ `DriveConfig`), `Documents\\DocumentsModels` (→ `DocumentsConfig`); удаляются\n   вместе с `Support\\Config`.",
+      "Файлы конфига по §Б досье: `vaulter.php` в секциях 07 §1 (существующие ключи, R24); `vaulter-cas.php` →\n   `vaulter-media.php` (merge под `vaulter-media`); `vaulter-drive.php`, `vaulter-documents.php` — merge под собственный\n   корень; publish-теги провайдеров (`vaulter-config`, `vaulter-media-config`, …) публикуют новые файлы. Пакет читает только\n   свои ключи и ключи core (исключение R11: `DocumentsConfig` читает `vaulter.enabled_document_types`/`features.spreadsheets`).",
+      "`packages/core/src/Configuration/ConfigNormalizer.php` (§В досье, R12, R13, R22): `normalize(Repository $config, array $packageDefaults): void`,\n   где `$packageDefaults` — массивы дефолтных файлов установленных пакетов (`require`), передаваемые providers через\n   `ConfigNormalizer::registerDefaults(string $root, string $path)` в `register()`; запуск — `app->booting()` callback core\n   provider (после всех merge); идемпотентен. Перевод значений: `dedup.scope 'storage' → 'drive'`, `id_type` → стратегия,\n   `exporters` карта → карта (R25), `drivers.hocuspocus.secret` → `hub.jwt_secret`, `webhook_secret` → `hub.webhook_secret`;\n   `panels`/`default_panel` с классом, не реализующим `ProfileProvider`, → `InvalidConfigurationException('[Vaulter] … run php artisan vaulter:make:profile')`.\n   `Vaulter\\Exceptions\\Configuration\\InvalidConfigurationException` (new, extends `VaulterException`, код `invalid_configuration`, HTTP 500 не отдаётся — только boot).",
+      "`packages/core/src/Configuration/ConfigValidator.php` (§Д досье): `validate(VaulterConfig $config, Application $app): void`\n   из `boot()` core provider; каждый модульный provider валидирует свои модели/классы в своём `boot()` через тот же класс\n   (`ConfigValidator::assertModel(string $key, string $class, string $base)`, `assertImplements(...)`).",
+      "Потребители: все вызовы `Support\\Config::*`, `GateConfig::*`, `SpatieConfig::*`, `AzgardConfig` (уже P2.4), `UploadModels::*`,\n   `DocumentsModels::*` и прямые `config('vaulter…')`/`config('vaulter-…')` в `src`, `database/migrations`, `routes`\n   переходят на accessor'ы §А. Модели: `getTable()` → `app(DatabaseConfig::class)->table('<entity>')`,\n   `getConnectionName()` → `DatabaseConfig::connection()`.",
+      "Arch (04 §1 п.6, 07 принцип 4): в core, drive, documents, media, filament, azgard —\n   `arch()->expect('Vaulter')->not->toUse(['config'])->ignoring('Vaulter\\Configuration')` (и аналог для модулей с их\n   namespace `…\\Configuration`); дополнительно текстовый тест «нет `config('vaulter` и `config(\"vaulter` вне\n   `*/Configuration/*` и `config/*.php`» по `src`, `database`, `routes` всех пакетов (ловит глобальную функцию, которую\n   `toUse` может не увидеть). Allow-list: `DatabaseConfig::legacyTable` (сырое чтение `vaulter.table_names`) — внутри\n   `Configuration`, исключение не требуется.",
+      "Тесты: `packages/core/tests/Configuration/{ConfigNormalizerTest,ConfigValidatorTest,VaulterConfigTest}.php`; V28 —\n   `packages/core/tests/Configuration/PublishedConfigV02Test.php`: фикстура `packages/core/tests/Fixtures/config/vaulter-0.2.php`\n   (дословно `git show v0.2.0:packages/core/config/vaulter.php`) подставляется как конфиг хоста (`$app['config']->set('vaulter', require …)`\n   до boot) с заданными `middleware`, `panels` (класс `ProfileProvider` из фикстур), `share_token_generator`,\n   `enabled_document_types` → приложение бутится, каждая устаревшая строка даёт ровно одно `E_USER_DEPRECATED`,\n   provisioning drive + создание папки + загрузка файла проходят (через существующие test-хелперы drive), значения\n   канонических accessor'ов равны значениям 0.2; конфликт `connection='a'` + `database.connection='b'` → `InvalidConfigurationException`.\n   Тесты модулей: `packages/{media,drive,documents,filament}/tests/Configuration/<Pkg>ConfigTest.php`.",
+      "Документация: `docs/guide/configuration.md` (новая структура, таблица 07 §6), `docs/ru/guide/configuration.md`, `UPGRADE.md`\n   (перенос ключей, изменения поведения: документы включены при установке, `comments.enabled` по умолчанию `true`,\n   `features.blobs/versions/document_versions` удалены, `vaulter-cas.php` → `vaulter-media.php`), `CHANGELOG.md [Unreleased]`;\n   golden `PublicApiSnapshotTest` (классы `Configuration\\*`, удаление `Support\\Config`)."
+    ],
+    "exclude": [
+      "ключи §Г досье (их items); перевод `enabled_document_types`/`features.spreadsheets` (P4.3, R11);\nexporters списком (P4.4, R25); doctor-проверки 07 §7 (P7.1); `tenancy.resolver` и проверка strict tenancy (P3.8); сужение\nфич профилем (P3.6); удаление устаревших ключей нормализатора (1.0, P8.3)."
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D24"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P2-design-P2.5-opus.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/artifacts-P2-design-P2.5-config-map.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/07-configuration.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Support/Config.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Providers/*Registrar.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/VaulterDocumentsServiceProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/VaulterDriveServiceProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/VaulterMediaServiceProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Configuration/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Configuration/InvalidConfigurationException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Support/{Config,GateConfig,SpatieConfig}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/database/migrations/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/routes/api.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/media/{src,config,tests}/**",
+      "change": "any"
+    },
+    {
+      "path": "vaulter-cas.php",
+      "change": "any"
+    },
+    {
+      "path": "vaulter-media.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/{src,config,routes,tests}/**",
+      "change": "any"
+    },
+    {
+      "path": "Support/Uploads/UploadModels.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/{src,config,routes,tests}/**",
+      "change": "any"
+    },
+    {
+      "path": "DocumentsModels.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/filament/{src,config,tests}/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/azgard/src/VaulterAzgardServiceProvider.php",
+      "change": "any"
+    },
+    {
+      "path": "access.permission_drivers",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Configuration/*",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/config/vaulter-0.2.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/*/tests/Arch/*",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/configuration.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/configuration.md",
+      "change": "any"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "any"
+    },
+    {
+      "path": "README.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/architecture.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/authorization.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/collaboration.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/comments.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/database-compatibility.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/documents.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/drive.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/errors.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/export.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/filament.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/hocuspocus-server.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/installation.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/multi-tenancy.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/permission-drivers.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/quick-start.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/recipes.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/sharing.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/storage-and-blobs.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/storage-panels.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/trash.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/troubleshooting.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/uploads.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/vue.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/commands.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/configuration.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/contracts.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/events.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/facade.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference/rest-api.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/concepts/storage-panels.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/architecture.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/collaboration.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/comments.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/documents.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/errors.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/export.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/filament.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/hocuspocus-server.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/multi-tenancy.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/permission-drivers.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/quick-start.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/recipes.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/sharing.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/storage-and-blobs.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/trash.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/troubleshooting.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/uploads.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/guide/vue.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/commands.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/configuration.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/contracts.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/events.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/facade.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/reference/rest-api.md",
+      "change": "any"
+    },
+    {
+      "path": "tests/Pest.php",
+      "change": "any"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py",
+      "change": "any"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/test_opus_coverage.py",
+      "change": "any"
+    },
+    {
+      "path": "load/app/Observability/LoadStateMetrics.php",
+      "change": "any"
+    },
+    {
+      "path": "load/app/Observability/DownloadStreamMetrics.php",
+      "change": "any"
+    },
+    {
+      "path": "load/app/Observability/QueryTraceRecorder.php",
+      "change": "any"
+    },
+    {
+      "path": "load/app/Http/Middleware/RecordRequestPeakMemory.php",
+      "change": "any"
+    },
+    {
+      "path": "composer.json",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/composer.json",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Support/ConfigurationArchitectureGuard.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/ConfigurationArchitectureGuardTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Accessor возвращает тот же тип и дефолт, что заменяемый метод (кроме изменений, перечисленных в §А и UPGRADE.md).",
+    "`config()->set()` в тестах продолжает работать: никакого кэширования значений в объектах конфига.",
+    "Нормализатор не трогает ключ, если пакет-владелец не установлен; повторный вызов не даёт повторных deprecation.",
+    "Каждая строка §В — свой кейс в dataset `ConfigNormalizerTest` (тест на каждый устаревший ключ, 13 P2.5)."
+  ],
+  "guidance": "Per accepted D24: executable retired helper references in PHP are checked by ConfigurationArchitectureGuard over all six affected packages src/tests/config/database/routes; independent pinned SHA-256 validates exact v0.2 fixture before require. PHP comments and ordinary translation data are not executable dependencies. Current docs retain the original textual retired-name/file-name residue check. Native architecture + original textual direct config source guards remain. Mandatory gates and both original negative controls unchanged; AST alias/group/literal/classless/fail-closed/hash controls added.",
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "- Code Guidance → пусто.\n- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Configuration packages/core/tests/Arch` → 0 failed; V28 зелёный.\n- Гейт всех пакетов → exit 0; сетка P1 на PG → 0 failed, 0 skipped.\n- Негативные контроли: (1) добавить `config('vaulter.connection')` в любой класс `packages/drive/src` вне `Configuration` → arch-тест\n  drive красный; (2) удалить строку `vaulter.middleware` из нормализатора → `PublishedConfigV02Test` красный; вернуть оба.",
+      "expect": "Source acceptance condition as written.",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "`Configuration\\*Config` всех пакетов; `ConfigNormalizer` с тестом на каждый устаревший ключ;\n`ConfigValidator`; файлы конфига по 07; удалённый `Support\\Config`; arch-запрет `config()`; V28; docs/UPGRADE/CHANGELOG/golden."
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-06T08:04:29Z",
+    "finished_at": "2026-10-06T10:15:33Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1103b-9cfb-7fb1-a1d7-96be1004d278"
+    },
+    "notes": "Implemented P2.5 typed package configuration and immutable v0.2 compatibility under owner D24. All 18 package gates, Configuration/Arch 365, OPUS 1438/254, PG 214 (0 failed/0 skipped), required negative controls and candidate/dependency/view freshness passed. review: grok/grok-4.7 GREEN (actual high, fresh session f38e4881-7f81-419e-9922-1aba5cb87c26; two completed rounds, one owning correction). Plan check 0 errors, one expected deleted-source read warning. Evidence @plan/artifacts/P2.5/completion.json; unrelated load CLI finding deferred separately.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T10:15:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T10:15:33Z",
+  "sections": [
+    {
+      "id": "Intent",
+      "title": "Intent",
+      "text": "Каждый пакет читает конфигурацию только через свои `final readonly` классы `Configuration\\*Config` поверх\n`Illuminate\\Contracts\\Config\\Repository`; файлы конфига разложены по пакетам-владельцам в канон 07; опубликованный конфиг\n0.2 продолжает работать через `ConfigNormalizer` с `E_USER_DEPRECATED`, конфликт старого и нового ключа — исключение;\n`ConfigValidator` проверяет ключи безопасности при boot; статический `Support\\Config` удалён, `config('vaulter…')` вне\n`Configuration` запрещён arch-тестом (V28)."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "OPUS 13 P2.5, AD26, 07 §1–§7, 04 §1 п.6, N19, V28. Код `main` @ `938f0ea`: `Support/Config.php` — 1628 строк,\n108 методов, ключи всех пакетов; ~170 файлов-носителей; `config('vaulter…')` напрямую в 50 файлах `src`; модули мёржат\nсвои дефолты под ключи core (`drive` → `vaulter.models`, `media` → `vaulter.cas`, documents — `vaulter.models`/`handlers`/`exporters`)."
+    },
+    {
+      "id": "Scope-Included",
+      "title": "Scope Included",
+      "text": "1. Классы (полная карта метод → ключ → accessor — `@plan/knowledge/artifacts-P2-design-P2.5-config-map.json` §А):\n   core `packages/core/src/Configuration/{VaulterConfig,DatabaseConfig,IdsConfig,TenancyConfig,AccessConfig,RoutesConfig,ListingConfig,SharingConfig,DownloadsConfig,WebhooksConfig,ObservabilityConfig}.php`;\n   `VaulterConfig` даёт секции (`database(): DatabaseConfig`, …) и `model(string)`, `featureEnabled(string)`,\n   `profileProviders()`, `defaultProfile()`, `handlers()`, `extraDataEnabled()`;\n   `packages/media/src/Configuration/MediaConfig.php`, `packages/drive/src/Configuration/DriveConfig.php`,\n   `packages/documents/src/Configuration/DocumentsConfig.php`, `packages/filament/src/Configuration/FilamentConfig.php`\n   (`AzgardConfig` — P2.4). Singleton-биндинг в provider пакета; потребители — конструкторная инъекция, в моделях/миграциях/\n   статических контекстах — `app(X::class)` (R15). Заменяются: `Support\\GateConfig`, `Support\\SpatieConfig` (→ `AccessConfig`),\n   `Drive\\Support\\Uploads\\UploadModels` (→ `DriveConfig`), `Documents\\DocumentsModels` (→ `DocumentsConfig`); удаляются\n   вместе с `Support\\Config`.\n2. Файлы конфига по §Б досье: `vaulter.php` в секциях 07 §1 (существующие ключи, R24); `vaulter-cas.php` →\n   `vaulter-media.php` (merge под `vaulter-media`); `vaulter-drive.php`, `vaulter-documents.php` — merge под собственный\n   корень; publish-теги провайдеров (`vaulter-config`, `vaulter-media-config`, …) публикуют новые файлы. Пакет читает только\n   свои ключи и ключи core (исключение R11: `DocumentsConfig` читает `vaulter.enabled_document_types`/`features.spreadsheets`).\n3. `packages/core/src/Configuration/ConfigNormalizer.php` (§В досье, R12, R13, R22): `normalize(Repository $config, array $packageDefaults): void`,\n   где `$packageDefaults` — массивы дефолтных файлов установленных пакетов (`require`), передаваемые providers через\n   `ConfigNormalizer::registerDefaults(string $root, string $path)` в `register()`; запуск — `app->booting()` callback core\n   provider (после всех merge); идемпотентен. Перевод значений: `dedup.scope 'storage' → 'drive'`, `id_type` → стратегия,\n   `exporters` карта → карта (R25), `drivers.hocuspocus.secret` → `hub.jwt_secret`, `webhook_secret` → `hub.webhook_secret`;\n   `panels`/`default_panel` с классом, не реализующим `ProfileProvider`, → `InvalidConfigurationException('[Vaulter] … run php artisan vaulter:make:profile')`.\n   `Vaulter\\Exceptions\\Configuration\\InvalidConfigurationException` (new, extends `VaulterException`, код `invalid_configuration`, HTTP 500 не отдаётся — только boot).\n4. `packages/core/src/Configuration/ConfigValidator.php` (§Д досье): `validate(VaulterConfig $config, Application $app): void`\n   из `boot()` core provider; каждый модульный provider валидирует свои модели/классы в своём `boot()` через тот же класс\n   (`ConfigValidator::assertModel(string $key, string $class, string $base)`, `assertImplements(...)`).\n5. Потребители: все вызовы `Support\\Config::*`, `GateConfig::*`, `SpatieConfig::*`, `AzgardConfig` (уже P2.4), `UploadModels::*`,\n   `DocumentsModels::*` и прямые `config('vaulter…')`/`config('vaulter-…')` в `src`, `database/migrations`, `routes`\n   переходят на accessor'ы §А. Модели: `getTable()` → `app(DatabaseConfig::class)->table('<entity>')`,\n   `getConnectionName()` → `DatabaseConfig::connection()`.\n6. Arch (04 §1 п.6, 07 принцип 4): в core, drive, documents, media, filament, azgard —\n   `arch()->expect('Vaulter')->not->toUse(['config'])->ignoring('Vaulter\\Configuration')` (и аналог для модулей с их\n   namespace `…\\Configuration`); дополнительно текстовый тест «нет `config('vaulter` и `config(\"vaulter` вне\n   `*/Configuration/*` и `config/*.php`» по `src`, `database`, `routes` всех пакетов (ловит глобальную функцию, которую\n   `toUse` может не увидеть). Allow-list: `DatabaseConfig::legacyTable` (сырое чтение `vaulter.table_names`) — внутри\n   `Configuration`, исключение не требуется.\n7. Тесты: `packages/core/tests/Configuration/{ConfigNormalizerTest,ConfigValidatorTest,VaulterConfigTest}.php`; V28 —\n   `packages/core/tests/Configuration/PublishedConfigV02Test.php`: фикстура `packages/core/tests/Fixtures/config/vaulter-0.2.php`\n   (дословно `git show v0.2.0:packages/core/config/vaulter.php`) подставляется как конфиг хоста (`$app['config']->set('vaulter', require …)`\n   до boot) с заданными `middleware`, `panels` (класс `ProfileProvider` из фикстур), `share_token_generator`,\n   `enabled_document_types` → приложение бутится, каждая устаревшая строка даёт ровно одно `E_USER_DEPRECATED`,\n   provisioning drive + создание папки + загрузка файла проходят (через существующие test-хелперы drive), значения\n   канонических accessor'ов равны значениям 0.2; конфликт `connection='a'` + `database.connection='b'` → `InvalidConfigurationException`.\n   Тесты модулей: `packages/{media,drive,documents,filament}/tests/Configuration/<Pkg>ConfigTest.php`.\n8. Документация: `docs/guide/configuration.md` (новая структура, таблица 07 §6), `docs/ru/guide/configuration.md`, `UPGRADE.md`\n   (перенос ключей, изменения поведения: документы включены при установке, `comments.enabled` по умолчанию `true`,\n   `features.blobs/versions/document_versions` удалены, `vaulter-cas.php` → `vaulter-media.php`), `CHANGELOG.md [Unreleased]`;\n   golden `PublicApiSnapshotTest` (классы `Configuration\\*`, удаление `Support\\Config`)."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "ключи §Г досье (их items); перевод `enabled_document_types`/`features.spreadsheets` (P4.3, R11);\nexporters списком (P4.4, R25); doctor-проверки 07 §7 (P7.1); `tenancy.resolver` и проверка strict tenancy (P3.8); сужение\nфич профилем (P3.6); удаление устаревших ключей нормализатора (1.0, P8.3)."
+    },
+    {
+      "id": "Inputs",
+      "title": "Inputs",
+      "text": "`@plan/knowledge/artifacts-P2-design-P2.5-opus.json`;\n`@plan/knowledge/artifacts-P2-design-P2.5-config-map.json`; `audits/2026-09-29-stable-audit/opus/07-configuration.md`;\n`packages/core/src/Support/Config.php`; `packages/core/config/vaulter.php`."
+    },
+    {
+      "id": "Files",
+      "title": "Files",
+      "text": "`packages/core/src/Configuration/*.php` (new), `packages/core/src/Exceptions/Configuration/InvalidConfigurationException.php` (new),\n`packages/core/src/Support/{Config,GateConfig,SpatieConfig}.php` (delete), `packages/core/src/**` (потребители), `packages/core/config/vaulter.php`,\n`packages/core/database/migrations/*.php`, `packages/core/routes/api.php`, `packages/media/{src,config,tests}/**` (`vaulter-cas.php` → `vaulter-media.php`),\n`packages/drive/{src,config,routes,tests}/**` (`Support/Uploads/UploadModels.php` delete), `packages/documents/{src,config,routes,tests}/**` (`DocumentsModels.php` delete),\n`packages/filament/{src,config,tests}/**`, `packages/azgard/src/VaulterAzgardServiceProvider.php` (ключ `access.permission_drivers`),\n`packages/core/tests/Configuration/*` (new), `packages/core/tests/Fixtures/config/vaulter-0.2.php` (new), `packages/*/tests/Arch/*`,\n`packages/core/tests/Arch/__snapshots__/*`, `docs/guide/configuration.md`, `docs/ru/guide/configuration.md`, `UPGRADE.md`, `CHANGELOG.md`.\nCurrent acceptance integration: root tests/Pest.php, README.md and existing guide/reference/RU documentation carrying renamed keys; OPUS coverage checker/test adapt canonical JSON carriers while retaining raw source/ownership/freshness invariants.\nFour existing load observability consumers reused by required core tests: LoadStateMetrics, DownloadStreamMetrics, QueryTraceRecorder, RecordRequestPeakMemory; only deleted Config API and canonical-key migration, no other load/future work.\nD24: root/core composer.json direct test-parser dependency; core tests/Support AST/code-guidance helpers and architecture controls; existing core consumer tests migrate removed static APIs."
+    },
+    {
+      "id": "Required-Reads",
+      "title": "Required Reads",
+      "text": "0) `@plan/knowledge/artifacts-P2-design-P2.5-opus.json` (дословные требования OPUS — исполнить все,\nкроме переданных по `note` ledger); 1) `@plan/knowledge/artifacts-P2-design-P2.5-config-map.json`;\n2) `packages/core/src/Support/Config.php`; 3) `packages/core/config/vaulter.php`; 4) `packages/core/src/VaulterServiceProvider.php`\n(+ `Providers/*Registrar.php` из P2.1); 5) `packages/documents/src/VaulterDocumentsServiceProvider.php` (строки 55–110, merge);\n6) `packages/drive/src/VaulterDriveServiceProvider.php`; 7) `packages/media/src/VaulterMediaServiceProvider.php`."
+    },
+    {
+      "id": "Authority",
+      "title": "Authority",
+      "text": "routine"
+    },
+    {
+      "id": "Implementation-Rules",
+      "title": "Implementation Rules",
+      "text": "- Accessor возвращает тот же тип и дефолт, что заменяемый метод (кроме изменений, перечисленных в §А и UPGRADE.md).\n- `config()->set()` в тестах продолжает работать: никакого кэширования значений в объектах конфига.\n- Нормализатор не трогает ключ, если пакет-владелец не установлен; повторный вызов не даёт повторных deprecation.\n- Каждая строка §В — свой кейс в dataset `ConfigNormalizerTest` (тест на каждый устаревший ключ, 13 P2.5)."
+    },
+    {
+      "id": "Code-Guidance",
+      "title": "Code Guidance",
+      "text": "остатки (ожидаемый вывод пуст):\n`grep -rnE \"Support\\\\\\\\Config\\b|GateConfig|SpatieConfig|UploadModels|DocumentsModels|vaulter-cas\" packages/*/src packages/*/tests packages/*/config packages/*/database packages/*/routes docs/guide docs/reference docs/ru`;\n`grep -rnE \"config\\(['\\\"]vaulter\" packages/*/src packages/*/database packages/*/routes | grep -v \"/Configuration/\"`.\n\nD24 (owner accepted): Per accepted D24: executable retired helper references in PHP are checked by ConfigurationArchitectureGuard over all six affected packages src/tests/config/database/routes; independent pinned SHA-256 validates exact v0.2 fixture before require. PHP comments and ordinary translation data are not executable dependencies. Current docs retain the original textual retired-name/file-name residue check. Native architecture + original textual direct config source guards remain. Mandatory gates and both original negative controls unchanged; AST alias/group/literal/classless/fail-closed/hash controls added."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "- Code Guidance → пусто.\n- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Configuration packages/core/tests/Arch` → 0 failed; V28 зелёный.\n- Гейт всех пакетов → exit 0; сетка P1 на PG → 0 failed, 0 skipped.\n- Негативные контроли: (1) добавить `config('vaulter.connection')` в любой класс `packages/drive/src` вне `Configuration` → arch-тест\n  drive красный; (2) удалить строку `vaulter.middleware` из нормализатора → `PublishedConfigV02Test` красный; вернуть оба.\nD24: AST/integrity controls also pass; original full gates, V28, PG and both negative controls retained."
+    },
+    {
+      "id": "Deliverables",
+      "title": "Deliverables",
+      "text": "`Configuration\\*Config` всех пакетов; `ConfigNormalizer` с тестом на каждый устаревший ключ;\n`ConfigValidator`; файлы конфига по 07; удалённый `Support\\Config`; arch-запрет `config()`; V28; docs/UPGRADE/CHANGELOG/golden."
+    }
+  ]
+}

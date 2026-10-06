@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Models\Drive\Node;
 
@@ -20,6 +20,10 @@ use Vaulter\Models\Drive\Node;
  */
 final class DocumentRevisionReadRepository
 {
+    public function __construct(
+        private readonly DocumentsConfig $documentsConfig,
+    ) {}
+
     /**
      * The current head a document node points at (its current_version_id), or null
      * when the node has no committed document version yet.
@@ -80,7 +84,7 @@ final class DocumentRevisionReadRepository
      */
     private function query(): Builder
     {
-        $model = DocumentsModels::documentVersion();
+        $model = $this->documentsConfig->model('document_revision');
 
         return $model::query();
     }

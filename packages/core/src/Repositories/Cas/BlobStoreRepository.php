@@ -7,9 +7,9 @@ namespace Vaulter\Repositories\Cas;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -22,6 +22,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 final readonly class BlobStoreRepository
 {
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private BlobLock $lock,
     ) {}
 
@@ -207,10 +208,10 @@ final readonly class BlobStoreRepository
         // forceFill (P1.4/F-P1.5-04): Blob is intentionally fully guarded (CAS
         // integrity: sha256/storage_key are content-addressed) — this is the
         // sole trusted commit seam, never raw request input.
-        $blob = new (Config::blobModel());
+        $blob = new ($this->vaulterConfig->model('blob'));
         $blob->forceFill([
-            'tenant_id' => $scope->dedupScope() === 'storage' ? null : $tenantId,
-            'drive_id' => $scope->dedupScope() === 'storage' ? $storageId : null,
+            'tenant_id' => $scope->dedupScope() === 'drive' ? null : $tenantId,
+            'drive_id' => $scope->dedupScope() === 'drive' ? $storageId : null,
             'hash_algo' => 'sha256',
             'sha256' => $sha256,
             'size_bytes' => $sizeBytes,
@@ -251,7 +252,7 @@ final readonly class BlobStoreRepository
      */
     private function query(): Builder
     {
-        $model = Config::blobModel();
+        $model = $this->vaulterConfig->model('blob');
 
         return $model::query();
     }

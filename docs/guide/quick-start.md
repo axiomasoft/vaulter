@@ -26,8 +26,8 @@ config key:
 
 ```php
 // config/vaulter.php
-'drivers' => [
-    'permission' => 'gate', // database (default) | gate | spatie | azgard | <your FQCN>
+'access' => [
+    'permission_driver' => 'gate', // database (default) | gate | spatie | azgard | <your FQCN>
 ],
 ```
 
@@ -83,7 +83,7 @@ node. You never deal with disks or paths directly. See [Concepts → Blobs](/gui
 
 ## 3. Expose it over the API (one route)
 
-The Drive REST routes are already mounted under `api/vaulter` (the `route_prefix`). Your app
+The Drive REST routes are already mounted under `api/vaulter` (the `routes.prefix`). Your app
 just needs a way to hand a storage id to the frontend — typically resolved from the host
 entity:
 

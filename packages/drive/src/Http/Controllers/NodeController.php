@@ -12,6 +12,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ExactListing;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Folders\CreateFolderRequest;
@@ -27,7 +28,6 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\VaulterManager;
 
 /**
@@ -55,6 +55,7 @@ final class NodeController extends Controller
         private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
         private readonly ExactListing $listing,
+        private readonly VaulterConfig $vaulterConfig,
     ) {}
 
     /** List visible direct children using a signed cursor. */
@@ -77,7 +78,7 @@ final class NodeController extends Controller
     public function shared(Request $request): AnonymousResourceCollection
     {
         $actor = $this->authorizable($request);
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $query = $model::query()->whereNull('trashed_at')->whereKey($actor === null ? [] : $this->access->sharedNodeIds($actor));
 
         return $this->listingResponse($request, $query,

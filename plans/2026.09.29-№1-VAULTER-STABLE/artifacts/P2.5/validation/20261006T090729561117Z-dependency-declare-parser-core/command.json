@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "composer",
+    "require",
+    "--dev",
+    "nikic/php-parser:^5.7",
+    "--no-update",
+    "--no-interaction"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/core",
+  "started_at": "20261006T090729561117Z",
+  "candidate_before": "e8aa8257257a074f93eec00c01c017fb7b59ccc4f337f4de9c53d26f09a0c21d",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true
+}

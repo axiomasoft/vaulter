@@ -10,7 +10,7 @@ use Vaulter\Exceptions\VaulterException;
 /**
  * Lives in CORE, next to {@see UnknownExportFormatException}: the contract it guards
  * ({@see DocumentExporter}) is a core seam, and a core-only
- * host registering its own exporter through config('vaulter.exporters') must be able to
+ * host registering its own exporter through configuration key vaulter-documents.exporters must be able to
  * throw it without pulling in vaulter-documents.
  */
 final class UnsupportedDocumentContentException extends VaulterException implements ProblemException
@@ -25,7 +25,7 @@ final class UnsupportedDocumentContentException extends VaulterException impleme
             sprintf('[Vaulter] The [%s] exporter cannot render this content. ', $exporterFormat)
             .sprintf('Why: it only understands [%s], but received [%s]. ', $expected, $actual)
             .'Fix: only route nodes whose resolved handler produces the expected content shape to '
-            .'this exporter (config(vaulter.exporters)). '
+            .'this exporter (config(vaulter-documents.exporters)). '
             .'Docs: '.self::docs('unsupported-document-content'),
         );
     }

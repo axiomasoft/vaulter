@@ -18,7 +18,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
-    config()->set('vaulter.ids.default', 'ulid');
+    config()->set('vaulter.ids.strategy', 'ulid');
     $this->artisan('migrate:fresh', ['--force' => true])->assertSuccessful();
     Storage::fake('local');
 });

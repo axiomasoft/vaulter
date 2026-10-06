@@ -27,7 +27,7 @@ use Vaulter\Models\Drive\Node;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ it('R07b: initiate non-empty metadata is stored as-is (L77 sanity)', function ()
 // ── assertWithinMaxBytes boundary (L263 BooleanOr and ±1) ───────────────────
 
 it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 BooleanOr)', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 0);
+    config()->set('vaulter-drive.uploads.max_file_size', 0);
     $storage = UploadTestHelpers::storage();
 
     // With BooleanOr: max===0 && totalSizeBytes===null = false → tries comparison → null > 0 = false → ok
@@ -184,7 +184,7 @@ it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 Boolea
 });
 
 it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 1);
+    config()->set('vaulter-drive.uploads.max_file_size', 1);
     $storage = UploadTestHelpers::storage();
 
     // With IncrementInteger on 0: max <= 1 → 1 <= 1 = true → returns early → no error
@@ -199,7 +199,7 @@ it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', fu
 });
 
 it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 1);
+    config()->set('vaulter-drive.uploads.max_file_size', 1);
     $storage = UploadTestHelpers::storage();
 
     $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
@@ -216,7 +216,7 @@ it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', fu
 // ── assertWithinActiveSessionCap (L269 RemoveArrayItem) ─────────────────────
 
 it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem actorId check)', function (): void {
-    config()->set('vaulter.uploads.max_active_sessions', 1);
+    config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 1);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
@@ -236,7 +236,7 @@ it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem act
 });
 
 it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArrayItem max===0 check)', function (): void {
-    config()->set('vaulter.uploads.max_active_sessions', 0);
+    config()->set('vaulter-drive.uploads.resumable.max_active_sessions_per_actor', 0);
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);

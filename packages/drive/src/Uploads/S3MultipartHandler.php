@@ -9,6 +9,7 @@ use RuntimeException;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
@@ -16,7 +17,6 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Support\AssembleSizeBucket;
-use Vaulter\Support\Config;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -48,6 +48,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
         private UploadSessionStoreRepository $sessions,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function protocol(): UploadProtocol
@@ -321,7 +322,7 @@ final readonly class S3MultipartHandler implements UploadProtocolHandler
      */
     private function readPartWithinLimit(mixed $chunk): string
     {
-        $max = Config::uploadMaxChunkBytes();
+        $max = $this->driveConfig->maxChunkSize();
 
         $bytes = $max > 0
             ? stream_get_contents($chunk, $max + 1)

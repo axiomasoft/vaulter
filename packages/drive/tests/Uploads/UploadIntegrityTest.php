@@ -22,7 +22,7 @@ use Vaulter\Models\Cas\Blob;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('S3 complete при сумме частей меньше total_size_bytes → отказ, блоб не создан, F-P1.4-03', function (): void {
@@ -46,7 +46,7 @@ it('S3 complete при сумме частей меньше total_size_bytes →
 });
 
 it('чанк больше max_chunk_bytes (hard cap) → отказ до записи staged-байт, F-P1.4-04', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 8); // 8-byte per-chunk hard ceiling
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8); // 8-byte per-chunk hard ceiling
 
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
@@ -67,8 +67,8 @@ it('PATCH крупнее chunk_size (это лишь HINT) НЕ отклоняе
     // 8-byte hint in one PATCH must be ACCEPTED (the shipped contract: "the server
     // accepts any PATCH/part size up to the remaining bytes"). The pre-fix code read
     // the cap from chunk_size and rejected this — this asserts the divergence is gone.
-    config()->set('vaulter.uploads.chunk_size', 8);   // tiny HINT
-    config()->set('vaulter.uploads.max_chunk_bytes', 0); // hard cap disabled (default)
+    config()->set('vaulter-drive.uploads.resumable.chunk_size', 8);   // tiny HINT
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 0); // hard cap disabled (default)
 
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);

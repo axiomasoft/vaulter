@@ -44,7 +44,7 @@ interface DocumentExporter
 Два поставляются вместе с пакетом и зарегистрированы в конфиге:
 
 ```php
-// config/vaulter.php
+// config/vaulter-documents.php
 'exporters' => [
     'html'     => Vaulter\Export\HtmlExporter::class,
     'markdown' => Vaulter\Export\MarkdownExporter::class,
@@ -70,7 +70,7 @@ link** — с экранированием HTML-вывода (`htmlspecialchars`
 
 `GET {prefix}/nodes/{node}/export` рендерит head-содержимое [документного узла](./documents.md).
 Требует право (ability) `View` на узле (и узел должен быть `kind=document`). Этот маршрут —
-часть поверхности Documents, за фичей **`document_versions`**.
+часть поверхности, доступной при установленном `vaulter-documents`.
 
 ::: code-group
 
@@ -193,7 +193,7 @@ final class PdfExporter implements DocumentExporter
 ::: code-group
 
 ```php [config — cache-safe FQCN map]
-// config/vaulter.php — add to the exporters map (format => FQCN)
+// config/vaulter-documents.php — add to the exporters map (format => FQCN)
 'exporters' => [
     'html'     => Vaulter\Export\HtmlExporter::class,
     'markdown' => Vaulter\Export\MarkdownExporter::class,
@@ -212,7 +212,7 @@ Vaulter::registerExporter(app(PdfExporter::class));
 :::
 
 ::: tip Конфиг против рантайма
-`config('vaulter.exporters')` — это карта FQCN (безопасная для config-cache, резолвится через
+`config('vaulter-documents.exporters')` — это карта FQCN (безопасная для config-cache, резолвится через
 контейнер при первом использовании). `Vaulter::registerExporter()` принимает уже собранный
 экземпляр — рантайм-шов. Экспортёр, зарегистрированный в рантайме, побеждает конфиговый с тем же
 ключом.

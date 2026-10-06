@@ -17,15 +17,15 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('sweep одного scope не трогает байты другого scope с теми же байтами', function (): void {
     $store = app(BlobStore::class);
     $gc = app(BlobGarbageCollector::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
-    $b = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 2, 'unused'));
+    $a = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
+    $b = $store->commit(CasTestHelpers::streamFor('cross-scope'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused'));
 
     // Two distinct physical objects despite identical bytes.
     expect($a->storage_key)->not->toBe($b->storage_key);

@@ -31,7 +31,7 @@ trait LoadsV02Fixture
             throw new RuntimeException('Missing committed fixture: '.$path);
         }
 
-        config()->set('vaulter.ids.default', $strategy);
+        config()->set('vaulter.ids.strategy', $strategy);
         config()->set('vaulter.ids.host_keys', 'string');
         $connection->statement('DROP SCHEMA public CASCADE');
         $connection->statement('CREATE SCHEMA public');

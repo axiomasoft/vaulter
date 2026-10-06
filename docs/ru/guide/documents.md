@@ -18,21 +18,10 @@ outline: deep
 открывается узел — см. [Document Handlers](./document-handlers.md). Про рендер контента в
 HTML/Markdown — см. [Экспорт](./export.md).
 
-::: warning Фича по подписке (opt-in)
-Поверхность узлов-документов включается флагом фичи **`document_versions`**, который **по
-умолчанию выключен**. Таблица `v_node_document_versions` создаётся, а маршруты Documents
-регистрируются, только когда он включён:
-
-```php
-// config/vaulter.php
-'features' => [
-    'document_versions' => true, // включает путь документов, привязанных к узлу
-],
-```
-
-С выключенным флагом у `Vaulter\Documents\Models\Revisions\DocumentRevision` нет таблицы, а маршрутов
-`storages/{storage}/documents`, `nodes/{node}/content`, `nodes/{node}/document-versions` не
-существует.
+::: info Документы доступны при установке пакета
+Установите `axioma-studio/vaulter-documents`. Редактирование, ревизии и маршруты
+документов доступны без флага `document_versions`. Коллаборация включается отдельно
+через `vaulter-documents.collaboration.enabled`.
 :::
 
 ## Модель данных
@@ -47,8 +36,8 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 | Колонка | Тип | Смысл |
 |---|---|---|
-| `id` | id-strategy | Первичный ключ (bigint / ulid / uuid7 согласно `ids.default`). |
-| `tenant_id` | nullable | Присутствует только при `tenant.enabled`. |
+| `id` | id-strategy | Первичный ключ (bigint / ulid / uuid7 согласно `ids.strategy`). |
+| `tenant_id` | nullable | Присутствует только при `tenancy.enabled`. |
 | `node_id` | FK → `v_nodes` | Узел-владелец с `kind=document` (каскад при удалении). |
 | `version_no` | integer | Монотонен в пределах узла; `unique(node_id, version_no)`. |
 | `content` | json / jsonb | Проекция TipTap/ProseMirror JSON. |
@@ -193,7 +182,7 @@ curl https://app.test/api/vaulter/nodes/77/content
 
 - голова должна быть версией **автосохранения** (зафиксированная/именованная голова всегда
   вынуждает свежую строку), и
-- она должна быть в пределах `config('vaulter.versions.autosave_debounce_seconds')` от текущего
+- она должна быть в пределах `config('vaulter-documents.revisions.autosave_debounce_seconds')` от текущего
   момента (окно `0` означает, что каждое автосохранение перезаписывает головное автосохранение).
 
 ::: code-group
@@ -371,14 +360,14 @@ app(RestoreDocumentRevisionAction::class)->execute(
 
 ## Прунинг и удержание
 
-История ограничена `config('vaulter.versions.max')` — числом самых свежих сохраняемых версий
+История ограничена `config('vaulter-documents.revisions.limit')` — числом самых свежих сохраняемых версий
 (`0` = без лимита). Прунинг выполняется **внутри** каждой транзакции записи
 (`DocumentRevisionStoreRepository::prune`) после создания/именования/восстановления.
 
 ```php
-// config/vaulter.php
-'versions' => [
-    'max' => 50,                       // stored versions per node before pruning (0 = ∞)
+// config/vaulter-documents.php
+'revisions' => [
+    'limit' => 50,                       // stored versions per node before pruning (0 = ∞)
     'autosave_debounce_seconds' => 30, // the server overwrite window described above
 ],
 ```

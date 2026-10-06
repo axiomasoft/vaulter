@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -52,7 +52,7 @@ it('creates a spreadsheet node handler-aware — the node is born on the Univer 
     $nodeId = $created->json('data.id');
 
     // The node was stamped with the xlsx mime so a fresh read re-resolves the same handler.
-    $node = Config::nodeModel()::query()->findOrFail($nodeId);
+    $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
     expect($node->mime_type)->toBe(XLSX_MIME);
 
     // Its v1 head content round-trips the workbook verbatim (the opaque path, not TipTap).

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "env",
+    "APP_ENV=testing",
+    "DB_CONNECTION=sqlite",
+    "DB_DATABASE=:memory:",
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pest",
+    "--ci",
+    "tests/Configuration/ModuleRegistrationOrderTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+  "started_at": "20261006T082653766380Z",
+  "candidate_before": "1c286d770a1dd53774760796d984e693e3059feeb6950441a562497bd72214c1",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false
+}

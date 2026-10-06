@@ -41,7 +41,7 @@ it('reports staged size zero when the tmp object is absent', function (): void {
 });
 
 it('rejects a stat-able chunk one byte over max_chunk_bytes before staging', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());
     $staged = app(StagedUpload::class);
     $stream = UploadTestHelpers::streamFor('abcde');
@@ -57,7 +57,7 @@ it('rejects a stat-able chunk one byte over max_chunk_bytes before staging', fun
 });
 
 it('includes the measured byte count in an oversize stat-able chunk error', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 3);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 3);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage());
     $staged = app(StagedUpload::class);
     $stream = UploadTestHelpers::streamFor('abcd');
@@ -98,7 +98,7 @@ it('HEAD offset uses the smaller of staged bytes and recorded received_bytes', f
 });
 
 it('rejects a PATCH that would grow past max_bytes after a partial upload', function (): void {
-    config()->set('vaulter.uploads.max_bytes', 6);
+    config()->set('vaulter-drive.uploads.max_file_size', 6);
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 20);
     $handler = app(TusUploadHandler::class);
 

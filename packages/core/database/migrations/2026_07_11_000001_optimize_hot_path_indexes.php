@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 
 /**
  * F-P4.1-01 / F-P4.1-02 (VLT-REMED P4.3, batch B16): the trashed_at scan index
@@ -30,22 +30,22 @@ return new class extends Migration
     public function up(): void
     {
         $this->addTrashedAtIndexIfMissing();
-        $this->dropIndexByColumnsIfPresent(table: Config::table('nodes'), columns: ['drive_id', 'parent_id']);
-        $this->dropIndexByColumnsIfPresent(table: Config::table('blobs'), columns: ['status']);
+        $this->dropIndexByColumnsIfPresent(table: app(DatabaseConfig::class)->table('nodes'), columns: ['drive_id', 'parent_id']);
+        $this->dropIndexByColumnsIfPresent(table: app(DatabaseConfig::class)->table('blobs'), columns: ['status']);
         $this->dropDuplicateActivityCreatedAtIndex();
     }
 
     public function down(): void
     {
-        $this->restoreIndexByColumnsIfMissing(table: Config::table('nodes'), columns: ['drive_id', 'parent_id']);
-        $this->restoreIndexByColumnsIfMissing(table: Config::table('blobs'), columns: ['status']);
+        $this->restoreIndexByColumnsIfMissing(table: app(DatabaseConfig::class)->table('nodes'), columns: ['drive_id', 'parent_id']);
+        $this->restoreIndexByColumnsIfMissing(table: app(DatabaseConfig::class)->table('blobs'), columns: ['status']);
         $this->restoreActivityCreatedAtIndexIfMissing();
         $this->dropTrashedAtIndexIfPresent();
     }
 
     private function addTrashedAtIndexIfMissing(): void
     {
-        $table = Config::table('nodes');
+        $table = app(DatabaseConfig::class)->table('nodes');
 
         if (!Schema::hasTable($table) || $this->hasIndexOnColumns($table, ['trashed_at'])) {
             return;
@@ -67,7 +67,7 @@ return new class extends Migration
 
     private function dropTrashedAtIndexIfPresent(): void
     {
-        $table = Config::table('nodes');
+        $table = app(DatabaseConfig::class)->table('nodes');
         $index = $this->findIndexByColumns($table, ['trashed_at']);
 
         if (!Schema::hasTable($table) || $index === null) {
@@ -122,7 +122,7 @@ return new class extends Migration
      */
     private function dropDuplicateActivityCreatedAtIndex(): void
     {
-        $table = Config::table('activity');
+        $table = app(DatabaseConfig::class)->table('activity');
 
         if (!Schema::hasTable($table)) {
             return;
@@ -143,7 +143,7 @@ return new class extends Migration
 
     private function restoreActivityCreatedAtIndexIfMissing(): void
     {
-        $table = Config::table('activity');
+        $table = app(DatabaseConfig::class)->table('activity');
 
         if (!Schema::hasTable($table) || count($this->indexesOnColumns($table, ['created_at'])) >= 2) {
             return;

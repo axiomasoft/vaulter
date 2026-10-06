@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Configuration now belongs to each package (`vaulter`, `vaulter-media`, `vaulter-drive`,
+  `vaulter-documents`, `vaulter-azgard`, `vaulter-filament`) and is read through typed
+  `final readonly` `Configuration\*Config` singletons (AD26, P2.5). Removed the static
+  configuration/model helpers; architecture checks prohibit direct Vaulter-key reads
+  outside configuration classes. Media publishes `vaulter-media.php` in place of
+  `vaulter-cas.php`.
+- Published 0.2 configuration keys normalize with one `E_USER_DEPRECATED` per old key;
+  conflicting custom old/new values fail boot. Security bindings, models and profiles
+  validate at boot. Exact legacy built-in FQCN values translate without PHP class aliases;
+  custom strings are preserved. See UPGRADE.md for the migration map.
+- Documents are enabled when their package is installed; blobs and file revisions are
+  always enabled. Removed `features.blobs`, `features.versions` and
+  `features.document_versions`; old `false` values warn and are ignored. Comments now
+  default to `true` at `vaulter-documents.comments.enabled`; explicit legacy `false`
+  remains false. Collaboration stays opt-in. Exporters remain a format-to-FQCN map;
+  `enabled_document_types` and `features.spreadsheets` remain core keys in this transition.
+
 - AzGuard's driver, guard contract, permission map and fake now live in
   `vaulter-azgard`, which automatically registers the `azgard` driver and real
   adapter. Its permission configuration uses `vaulter-azgard.*`; core no longer
@@ -38,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   webhook subscriptions exclude upload lifecycle events (AD03, AD04).
 - Core provider delegates to five registrars; own-tables profile API and hooks, including
   the previously invoked booted(), removed. Profile scaffolding is vaulter:make:profile
-  (AD05, AD11). Configuration key normalization follows in P2.5.
+  (AD05, AD11). Configuration keys normalize in P2.5 (see above).
 
 
 ### Added

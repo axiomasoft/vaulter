@@ -7,8 +7,8 @@ outline: deep
 # Drive Profiles
 
 A `Vaulter\Profiles\Profile` names a drive policy for a host entity. Profiles share
-one schema; the `panel` discriminator and the existing `vaulter.panels` / `default_panel`
-configuration keys remain unchanged until the configuration/schema transition.
+one schema. Register providers with `vaulter.profiles.providers`; the default provider
+is `vaulter.profiles.default`. The persisted discriminator is `profile_key`.
 `Vaulter::for($owner, 'project')` opens the drive for that owner and profile.
 
 ## Configure a provider
@@ -33,11 +33,11 @@ final class ProjectProfile extends ProfileProvider
 Register the FQCN in `config/vaulter.php`:
 
 ```php
-'panels' => [App\Vaulter\Profiles\ProjectProfile::class],
+'profiles' => ['providers' => [App\Vaulter\Profiles\ProjectProfile::class]],
 ```
 
 Profiles are hydrated during application boot. The default profile is registered
-first, so a provider using the same ID can override it. Unknown IDs throw
+first; duplicate profile IDs fail boot validation. Unknown IDs throw
 `Vaulter\Exceptions\Profiles\UnknownProfileException`.
 
 ## Registry

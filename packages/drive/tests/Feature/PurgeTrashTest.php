@@ -20,7 +20,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.trash.retention_days', 30);
+    config()->set('vaulter-drive.trash.retention_days', 30);
 });
 
 it('physically purges a node trashed past the retention window, F-P1.12-02', function (): void {

@@ -6,10 +6,11 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Reclaim the reliability channel's audit history past its retention window (master
@@ -22,7 +23,7 @@ use Vaulter\Support\Config;
  *    terminalisation time) is older than the window. A 'pending'/'failed' row is
  *    in-flight / retryable — the due-retry sweep still owns it — and is NEVER touched.
  *
- * The window comes from config('vaulter.webhooks.retention_days') (default 30, floored
+ * The window comes from configuration key vaulter.webhooks.retention_days (default 30, floored
  * at 0) unless --days overrides it. Because this deletes history, --dry-run reports the
  * exact counts it would remove without touching a row. Schedulable.
  *
@@ -43,7 +44,7 @@ final class PruneWebhooksCommand extends Command
         WebhookDeliveryStoreRepository $deliveries,
         MetricsRecorder $metrics,
     ): int {
-        if (!Config::featureEnabled('reliability')) {
+        if (!app(VaulterConfig::class)->featureEnabled('webhooks')) {
             $this->components->info('Reliability feature is off — nothing to prune.');
 
             return self::SUCCESS;
@@ -127,6 +128,6 @@ final class PruneWebhooksCommand extends Command
             return max((int) $override, 0);
         }
 
-        return Config::webhookRetentionDays();
+        return app(WebhooksConfig::class)->retentionDays();
     }
 }

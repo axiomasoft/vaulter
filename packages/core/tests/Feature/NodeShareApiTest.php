@@ -25,7 +25,7 @@ beforeEach(function (): void {
     config()->set('vaulter.features.share_links', true);
     // The owner endpoints authorise via the real grant resolver (a Share grant is
     // the only thing that opens the door).
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -243,7 +243,7 @@ it('lists a subtree share but 404s a listing on an item share', function (): voi
 });
 
 it('429s a public share resolve past the vaulter-public rate limit (F-P1.8-01)', function (): void {
-    config()->set('vaulter.rate_limits.public.per_minute', 1);
+    config()->set('vaulter.routes.rate_limits.public', 1);
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'throttled-doc');

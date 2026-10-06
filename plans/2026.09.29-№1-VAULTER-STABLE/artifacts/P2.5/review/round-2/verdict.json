@@ -1,0 +1,19 @@
+{
+  "verdict": "PASS",
+  "open_findings": 0,
+  "round": 2,
+  "completed_rounds": 2,
+  "owning_corrections": 1,
+  "session": "f38e4881-7f81-419e-9922-1aba5cb87c26",
+  "actual_model": "grok-4.7",
+  "actual_effort": "high",
+  "native_metadata_path": "/home/vostrikov/.grok/sessions/%2Ftmp%2Fvaulter-p25-review2-20261006T100243Z/f38e4881-7f81-419e-9922-1aba5cb87c26/summary.json",
+  "native_metadata_sha256": "a93748139300ba8ebec079fdd592b86e290437a397df3c2aef0484f456f5b5e1",
+  "created_at": "2026-10-06T10:03:02.922857823Z",
+  "tool_calls": {
+    "read_file": 68,
+    "list_dir": 7,
+    "grep": 55
+  },
+  "candidate": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1"
+}

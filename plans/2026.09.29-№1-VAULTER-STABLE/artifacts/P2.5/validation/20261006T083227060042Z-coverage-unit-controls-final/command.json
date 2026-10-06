@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/test_opus_coverage.py"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T083227060042Z",
+  "candidate_before": "26de2cafef96e1acbf08cfcce33bb73607469a1844e2b24c63190d2c5f90f901",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false
+}

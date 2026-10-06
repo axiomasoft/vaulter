@@ -6,7 +6,7 @@ namespace Vaulter\Policies;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\WebhooksConfig;
 
 /**
  * Authorizes the webhook-endpoint MANAGEMENT surface (master plan §2.11 / D14 / M3b)
@@ -14,7 +14,7 @@ use Vaulter\Support\Config;
  * node AccessResolver). Every management action (register/update/deactivate/delete/
  * list) requires the host's configured manage ability.
  *
- * When config('vaulter.webhooks.manage_ability') is set, the decision DELEGATES to the
+ * When configuration key vaulter.webhooks.manage_ability is set, the decision DELEGATES to the
  * host Laravel Gate for that ability — the host owns "who is an admin". When it is
  * null (no ability defined), any AUTHENTICATED user is allowed (the route still
  * requires auth); a host MUST define the ability in production. There is deliberately
@@ -22,6 +22,10 @@ use Vaulter\Support\Config;
  */
 final class WebhookEndpointPolicy
 {
+    public function __construct(
+        private readonly WebhooksConfig $webhooksConfig,
+    ) {}
+
     public function viewAny(Authenticatable $user): bool
     {
         return $this->canManage($user);
@@ -34,7 +38,7 @@ final class WebhookEndpointPolicy
 
     private function canManage(Authenticatable $user): bool
     {
-        $ability = Config::webhookManageAbility();
+        $ability = $this->webhooksConfig->manageAbility();
 
         if ($ability === null) {
             // No host ability defined: an authenticated user is allowed (the route

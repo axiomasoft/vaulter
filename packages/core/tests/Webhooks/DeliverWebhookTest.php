@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -30,7 +32,7 @@ use Vaulter\Webhooks\WebhookSigner;
 function runDeliver(WebhookDelivery $delivery): void
 {
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
 }
 
 // ─────────────── 2xx — delivered, signed, endpoint touched ───────────────
@@ -224,7 +226,7 @@ it('is a no-op when the delivery row no longer exists', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
     (new DeliverWebhook(deliveryId: '999999999'))
-        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class));
+        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
 
     Http::assertNothingSent();
 });
@@ -306,9 +308,9 @@ it('does not let an expired worker overwrite the replacement attempt', function 
 });
 
 it('delivers on the custom model connection without holding a transaction during HTTP', function (): void {
-    $previousConnection = config('vaulter.connection');
+    $previousConnection = config('vaulter.database.connection');
     config()->set('database.connections.delivery_other', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
-    config()->set('vaulter.connection', 'delivery_other');
+    config()->set('vaulter.database.connection', 'delivery_other');
 
     $builder = new SchemaBuilder;
     $panel = (new Profile)->id('default');
@@ -327,7 +329,7 @@ it('delivers on the custom model connection without holding a transaction during
         expect($delivery->refresh()->status)->toBe('delivered')->and($delivery->claim_token)->toBeNull();
         Http::assertSentCount(1);
     } finally {
-        config()->set('vaulter.connection', $previousConnection);
+        config()->set('vaulter.database.connection', $previousConnection);
         DB::purge('delivery_other');
     }
 });

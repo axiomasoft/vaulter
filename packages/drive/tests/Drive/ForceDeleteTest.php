@@ -10,7 +10,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('forceDelete отцепляет рёбра блоба → блоб становится GC-кандидатом', function (): void {

@@ -10,6 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Media\Cas\BlobStore;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
 use Vaulter\Media\Cas\Sha256ContentStore;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
@@ -23,7 +24,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('rollback не оставляет висящей строки blob', function (): void {
@@ -31,7 +32,12 @@ it('rollback не оставляет висящей строки blob', function
     // after the row INSERT — proving the INSERT is inside the tx and reverts.
     $exploding = new class implements ContentStore
     {
-        public function __construct(private readonly ContentStore $inner = new Sha256ContentStore(new FlysystemStorageDriver)) {}
+        private readonly ContentStore $inner;
+
+        public function __construct(?ContentStore $inner = null)
+        {
+            $this->inner = $inner ?? new Sha256ContentStore(app(FlysystemStorageDriver::class));
+        }
 
         public function stage(mixed $stream): StagedObject
         {
@@ -70,9 +76,10 @@ it('rollback не оставляет висящей строки blob', function
         blobs: app(BlobStoreRepository::class),
         edges: app(FileRevisionBlobStoreRepository::class),
         database: app(VaulterDatabase::class),
+        mediaConfig: app(MediaConfig::class),
     );
 
-    expect(fn () => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused')))
+    expect(fn () => $store->commit(stringStream('boom bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused')))
         ->toThrow(RuntimeException::class, 'promote boom');
 
     // The transaction rolled back: zero rows, zero objects.
@@ -83,7 +90,7 @@ it('rollback не оставляет висящей строки blob', function
 it('staged temp-файл удаляется после успешного коммита', function (): void {
     $before = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
-    app(BlobStore::class)->commit(stringStream('temp cleanup'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    app(BlobStore::class)->commit(stringStream('temp cleanup'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     $after = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 

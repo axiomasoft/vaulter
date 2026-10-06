@@ -7,6 +7,7 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Foundation\Application;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
+use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
@@ -15,29 +16,35 @@ use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 
-it('merges defaults in a fresh container while retaining host models, handlers and exporters', function (): void {
+it('normalizes module defaults in a fresh container while retaining host overrides', function (): void {
     $app = new Application;
     Container::setInstance($this->app);
-    $config = new Repository(['vaulter' => [
-        'models' => ['node_comment' => 'Host\\Comment'],
-        'handlers' => ['Host\\Handler'],
-        'exporters' => ['html' => 'Host\\Exporter'],
-    ]]);
+    $config = new Repository([
+        'vaulter' => ['handlers' => ['Host\\Handler']],
+        'vaulter-documents' => [
+            'models' => ['node_comment' => 'Host\\Comment'],
+            'exporters' => ['html' => 'Host\\Exporter'],
+        ],
+    ]);
     $app->instance('config', $config);
 
     (new BindingsRegistrar($app))->register();
 
-    expect($config->get('vaulter.models.node_comment'))->toBe('Host\\Comment')
-        ->and($config->get('vaulter.models.node_document_version'))->toBe(DocumentRevision::class)
-        ->and($config->get('vaulter.handlers'))->toContain(TipTapHandler::class, 'Host\\Handler')
-        ->and($config->get('vaulter.exporters.html'))->toBe('Host\\Exporter')
-        ->and($config->get('vaulter.exporters.markdown'))->toBe(MarkdownExporter::class);
+    $normalizer = $app->make(ConfigNormalizer::class);
+    $normalizer->normalize(config: $config, packageDefaults: $normalizer->packageDefaults());
+
+    expect($config->get('vaulter-documents.models.node_comment'))->toBe('Host\\Comment')
+        ->and($config->get('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
+        ->and($config->get('vaulter.handlers'))->toBe(['Host\\Handler'])
+        ->and($app->tagged('vaulter.file_handlers'))->toBeIterable()
+        ->and($config->get('vaulter-documents.exporters.html'))->toBe('Host\\Exporter')
+        ->and($config->get('vaulter-documents.exporters.markdown'))->toBe(MarkdownExporter::class);
 });
 
 it('preserves cached configuration without adding defaults', function (): void {
     $app = Mockery::mock(Application::class)->makePartial();
     $app->shouldReceive('configurationIsCached')->once()->andReturn(true);
-    $values = ['vaulter' => ['models' => ['node_comment' => 'Cached\\Comment']]];
+    $values = ['vaulter-documents' => ['models' => ['node_comment' => 'Cached\\Comment']]];
     $config = new Repository($values);
     $app->instance('config', $config);
     $app->alias('config', ConfigRepository::class);
@@ -55,9 +62,10 @@ it('tags the spreadsheet handler only for the enabled feature', function (mixed 
     (new BindingsRegistrar($app))->register();
 
     $handlers = iterator_to_array($app->tagged('vaulter.file_handlers'));
-    expect($handlers)->toHaveCount($tagged ? 1 : 0);
+    expect($handlers)->toHaveCount($tagged ? 2 : 1);
+    expect($handlers[0])->toBeInstanceOf(TipTapHandler::class);
     if ($tagged) {
-        expect($handlers[0])->toBeInstanceOf(UniverHandler::class);
+        expect($handlers[1])->toBeInstanceOf(UniverHandler::class);
     }
 })->with([[true, true], [false, false], ['true', false]]);
 

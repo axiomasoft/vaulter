@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Comments;
 
 use Illuminate\Database\Eloquent\Builder;
-use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Models\Drive\Node;
 
@@ -16,12 +16,16 @@ use Vaulter\Models\Drive\Node;
  */
 final class NodeCommentReadRepository
 {
+    public function __construct(
+        private readonly DocumentsConfig $documentsConfig,
+    ) {}
+
     /**
      * @return Builder<NodeComment>
      */
     public function forNode(Node $node): Builder
     {
-        $model = DocumentsModels::comment();
+        $model = $this->documentsConfig->model('node_comment');
 
         return $model::query()
             ->where('node_id', $node->getKey())
@@ -30,7 +34,7 @@ final class NodeCommentReadRepository
 
     public function find(int|string $id): ?NodeComment
     {
-        $model = DocumentsModels::comment();
+        $model = $this->documentsConfig->model('node_comment');
 
         return $model::query()->find($id);
     }

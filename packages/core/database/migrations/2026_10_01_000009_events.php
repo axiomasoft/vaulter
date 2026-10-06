@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\IdStrategyResolver;
-use Vaulter\Support\Config;
 
 return new class extends Migration
 {
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         $this->convertEvents(self::EVENTS);
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $activity = Config::table('activity');
+        $activity = app(DatabaseConfig::class)->table('activity');
         if (!$schema->hasColumn($activity, 'event_id')) {
             $schema->table($activity, fn (Blueprint $table) => $table->string('event_id', 26)->nullable());
         }
@@ -33,7 +33,7 @@ return new class extends Migration
             $schema->table($activity, fn (Blueprint $table) => $table->index('event_id'));
         }
 
-        $name = Config::table('outbox');
+        $name = app(DatabaseConfig::class)->table('outbox');
         foreach (['drive_id', 'aggregate_type', 'aggregate_id', 'sequence'] as $column) {
             if (!$schema->hasColumn($name, $column)) {
                 $schema->table($name, static function (Blueprint $table) use ($column): void {
@@ -81,7 +81,7 @@ return new class extends Migration
         $db = app(VaulterDatabase::class)->connection();
         $schema = $db->getSchemaBuilder();
         foreach (['activity' => 'verb', 'outbox' => 'event', 'webhook_deliveries' => 'event'] as $entity => $column) {
-            $table = Config::table($entity);
+            $table = app(DatabaseConfig::class)->table($entity);
             if (!$schema->hasTable($table)) {
                 continue;
             }
@@ -91,7 +91,7 @@ return new class extends Migration
             }
         }
 
-        $name = Config::table('webhook_endpoints');
+        $name = app(DatabaseConfig::class)->table('webhook_endpoints');
         if ($schema->hasTable($name)) {
             $db->table($name)->orderBy('id')->chunkById(500, static function ($rows) use ($db, $name, $map): void {
                 foreach ($rows as $row) {
@@ -123,7 +123,7 @@ return new class extends Migration
     private function dropColumns(string $entity, array $columns): void
     {
         $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-        $name = Config::table($entity);
+        $name = app(DatabaseConfig::class)->table($entity);
         if (!$schema->hasTable($name)) {
             return;
         }

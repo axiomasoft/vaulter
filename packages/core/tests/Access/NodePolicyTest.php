@@ -10,7 +10,7 @@ use Vaulter\Policies\NodePolicy;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 beforeEach(function (): void {
-    config()->set('vaulter.drivers.permission', 'database');
+    config()->set('vaulter.access.permission_driver', 'database');
 });
 
 it('registers NodePolicy against the node model and delegates to the resolver', function (): void {

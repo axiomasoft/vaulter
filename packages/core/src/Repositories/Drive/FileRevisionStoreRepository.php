@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for the immutable v_file_revisions (§2.4). Bare create +
@@ -15,6 +15,10 @@ use Vaulter\Support\Config;
  */
 final class FileRevisionStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -22,7 +26,7 @@ final class FileRevisionStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from UploadFileAction/CopyNodeAction, never raw request input.
-        $model = Config::fileVersionModel();
+        $model = $this->vaulterConfig->model('file_revision');
         $version = new $model;
         $version->forceFill($attributes);
         $version->save();

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * The dedicated binary-upload policy (drive.max_upload_kb + drive.allowed_mime):
+ * The dedicated binary-upload policy (uploads.max_file_size + uploads.allowed_mime_types):
  * UploadFileRequest must read its OWN size ceiling and an optional mime allowlist
  * instead of borrowing the TipTap document limit, while staying permissive by
  * default. Storage::fake keeps the slice off the real disk; a bare actor suffices
@@ -19,7 +19,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -28,30 +28,30 @@ function uploadConfigStorage(): string
     return (string) Vaulter::for(DriveTestHelpers::host())->model()->getKey();
 }
 
-it('maxUploadKb falls back to the document size limit when unset', function (): void {
-    config()->set('vaulter.drive.max_upload_kb', null);
-    config()->set('vaulter.max_document_size_kb', 1234);
+it('maxFileSize falls back to the drive default independently of document limits', function (): void {
+    config()->set('vaulter-drive.uploads.max_file_size', null);
+    config()->set('vaulter-documents.content.max_size_kb', 1234);
 
-    expect(Config::maxUploadKb())->toBe(1234);
+    expect(app(DriveConfig::class)->maxFileSize())->toBe(5_368_709_120);
 });
 
-it('maxUploadKb prefers its own configured value over the document limit', function (): void {
-    config()->set('vaulter.max_document_size_kb', 5120);
-    config()->set('vaulter.drive.max_upload_kb', 64);
+it('maxFileSize uses the configured byte ceiling independently of document limits', function (): void {
+    config()->set('vaulter-documents.content.max_size_kb', 5120);
+    config()->set('vaulter-drive.uploads.max_file_size', 64 * 1024);
 
-    expect(Config::maxUploadKb())->toBe(64);
+    expect(app(DriveConfig::class)->maxFileSize())->toBe(64 * 1024);
 });
 
 it('allowedUploadMimes is empty (permissive) by default and lists configured mimes', function (): void {
-    config()->set('vaulter.drive.allowed_mime', []);
-    expect(Config::allowedUploadMimes())->toBe([]);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', []);
+    expect(app(DriveConfig::class)->allowedMimeTypes())->toBe([]);
 
-    config()->set('vaulter.drive.allowed_mime', ['application/pdf', 'image/png']);
-    expect(Config::allowedUploadMimes())->toBe(['application/pdf', 'image/png']);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf', 'image/png']);
+    expect(app(DriveConfig::class)->allowedMimeTypes())->toBe(['application/pdf', 'image/png']);
 });
 
-it('rejects an upload above the dedicated drive.max_upload_kb ceiling', function (): void {
-    config()->set('vaulter.drive.max_upload_kb', 1); // 1 KB ceiling
+it('rejects an upload above the dedicated uploads.max_file_size ceiling', function (): void {
+    config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024); // 1 KB ceiling
 
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
@@ -65,8 +65,8 @@ it('rejects an upload above the dedicated drive.max_upload_kb ceiling', function
 });
 
 it('accepts an upload within the dedicated ceiling regardless of the document limit', function (): void {
-    config()->set('vaulter.max_document_size_kb', 1); // would reject under the OLD borrowed limit
-    config()->set('vaulter.drive.max_upload_kb', 5120);
+    config()->set('vaulter-documents.content.max_size_kb', 1); // would reject under the OLD borrowed limit
+    config()->set('vaulter-drive.uploads.max_file_size', 5120 * 1024);
 
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
@@ -78,7 +78,7 @@ it('accepts an upload within the dedicated ceiling regardless of the document li
 });
 
 it('rejects a mime outside a configured allowlist', function (): void {
-    config()->set('vaulter.drive.allowed_mime', ['application/pdf']);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf']);
 
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
@@ -92,7 +92,7 @@ it('rejects a mime outside a configured allowlist', function (): void {
 });
 
 it('accepts a mime inside a configured allowlist', function (): void {
-    config()->set('vaulter.drive.allowed_mime', ['application/pdf', 'text/plain']);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf', 'text/plain']);
 
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
@@ -104,7 +104,7 @@ it('accepts a mime inside a configured allowlist', function (): void {
 });
 
 it('stays permissive when no allowlist is configured', function (): void {
-    config()->set('vaulter.drive.allowed_mime', []);
+    config()->set('vaulter-drive.uploads.allowed_mime_types', []);
 
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 

@@ -18,7 +18,7 @@ it('создаёт файл провайдера панели и НЕ трога
         ? File::files(database_path('migrations'))
         : [];
 
-    $configBefore = config('vaulter.panels');
+    $configBefore = config('vaulter.profiles.providers');
 
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])
         ->assertSuccessful();
@@ -38,7 +38,7 @@ it('создаёт файл провайдера панели и НЕ трога
         ->not->toContain('->tablePrefix(');
 
     // Config untouched and no migrations written.
-    expect(config('vaulter.panels'))->toBe($configBefore);
+    expect(config('vaulter.profiles.providers'))->toBe($configBefore);
 
     $migrationsAfter = File::exists(database_path('migrations'))
         ? File::files(database_path('migrations'))

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -34,12 +34,12 @@ function chunkLimitStorage(): Drive
 it('ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк ограничен, RV-03', function (): void {
     // Config-honesty: до фикса дефолт был 0 = «кап отключён», то есть обещанная защита из
     // коробки не стояла вовсе.
-    expect(Config::uploadMaxChunkBytes())->toBeGreaterThan(0)
-        ->and(config('vaulter.uploads.max_chunk_bytes'))->toBeGreaterThan(0);
+    expect(app(DriveConfig::class)->maxChunkSize())->toBeGreaterThan(0)
+        ->and(config('vaulter-drive.uploads.resumable.max_chunk_size'))->toBeGreaterThan(0);
 });
 
 it('tus PATCH с Content-Length больше max_chunk_bytes отбивается ДО чтения тела, RV-03', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 8);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -67,7 +67,7 @@ it('tus PATCH с Content-Length больше max_chunk_bytes отбиваетс�
 });
 
 it('S3 part с Content-Length больше max_chunk_bytes отбивается ДО чтения тела, RV-03', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 8);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
@@ -90,7 +90,7 @@ it('S3 part с Content-Length больше max_chunk_bytes отбивается 
 });
 
 it('чанк без объявленной длины (нестатируемый поток, как php://input) всё равно ограничен, RV-03', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 8);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);

@@ -29,7 +29,7 @@ final class InvalidDocumentContentException extends VaulterException implements 
 
         return new self(
             sprintf('[Vaulter] Document content is too large (%s KB > %d KB). ', $size, $maxKb)
-            .'Why: it exceeds config(vaulter.max_document_size_kb). '
+            .'Why: it exceeds config(vaulter-documents.content.max_size_kb). '
             .'Fix: split the document or raise the limit. '
             .'Docs: '.self::docs('content-too-large'),
         );

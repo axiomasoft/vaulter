@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -29,12 +30,13 @@ final readonly class RenameNodeAction
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DriveConfig $driveConfig,
     ) {}
 
     public function execute(RenameNodeInput $data): Node
     {
         $node = $data->node;
-        $name = NodeName::normalize($data->name);
+        $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
 
         return $this->database->transaction(function () use ($node, $name, $data): Node {
             $this->database->lockTreeShared($node->drive_id);

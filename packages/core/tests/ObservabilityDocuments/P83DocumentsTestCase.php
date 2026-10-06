@@ -26,8 +26,7 @@ abstract class P83DocumentsTestCase extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('vaulter.features.document_versions', true);
-        $app['config']->set('vaulter.features.collaboration', true);
-        $app['config']->set('vaulter.collaboration.drivers.hocuspocus.secret', 'vlt-load-dev-collab-secret-not-for-production');
+        $app['config']->set('vaulter-documents.collaboration.enabled', true);
+        $app['config']->set('vaulter-documents.collaboration.hub.jwt_secret', 'vlt-load-dev-collab-secret-not-for-production');
     }
 }

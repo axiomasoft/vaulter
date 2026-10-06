@@ -17,7 +17,7 @@ interface StorageDriver
 {
     /**
      * The resolved Flysystem disk for the given disk name (null → the install
-     * default disk, config('vaulter.storage.default_disk')).
+     * default disk, configuration key vaulter-media.disk).
      */
     public function disk(?string $disk = null): Filesystem;
 

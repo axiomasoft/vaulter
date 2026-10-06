@@ -7,6 +7,7 @@ namespace Vaulter\Sharing;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -46,6 +47,7 @@ use Vaulter\Support\ShareToken;
 final class ShareResolver
 {
     public function __construct(
+        private readonly Repository $configuration,
         private readonly NodeShareReadRepository $shares,
         private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
@@ -185,13 +187,13 @@ final class ShareResolver
      */
     private function userProvider(): ?UserProvider
     {
-        $guard = config('auth.defaults.guard');
+        $guard = $this->configuration->get('auth.defaults.guard');
 
         if (!is_string($guard) || $guard === '') {
             return null;
         }
 
-        $provider = config('auth.guards.'.$guard.'.provider');
+        $provider = $this->configuration->get('auth.guards.'.$guard.'.provider');
 
         return is_string($provider) && $provider !== '' ? Auth::createUserProvider($provider) : null;
     }

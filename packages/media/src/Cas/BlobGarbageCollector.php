@@ -9,14 +9,15 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Throwable;
 use Vaulter\Cas\BlobLock;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
-use Vaulter\Support\Config;
 
 /**
  * Two-phase, race-safe blob GC (H.3). It is ACL-blind — liveness ≠ the viewer's
@@ -53,6 +54,8 @@ final readonly class BlobGarbageCollector
         private FileRevisionBlobStoreRepository $edges,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
+        private MediaConfig $mediaConfig,
+        private VaulterConfig $vaulterConfig,
     ) {}
 
     /**
@@ -62,7 +65,7 @@ final readonly class BlobGarbageCollector
      */
     public function collect(int $graceHours = 0): array
     {
-        $grace = Config::gcGraceHours($graceHours);
+        $grace = $this->mediaConfig->gcGraceHours($graceHours);
 
         $mark = $this->mark(graceHours: $grace);
         $sweep = $this->sweep();
@@ -177,7 +180,7 @@ final readonly class BlobGarbageCollector
      */
     public function sweepPending(int $graceHours = 0): array
     {
-        $grace = Config::gcGraceHours($graceHours);
+        $grace = $this->mediaConfig->gcGraceHours($graceHours);
         $cutoff = now()->subHours($grace);
         $swept = 0;
         $skipped = 0;
@@ -311,7 +314,7 @@ final readonly class BlobGarbageCollector
      */
     private function markBatch(Collection $batch, int $graceHours): int
     {
-        $model = Config::blobModel();
+        $model = $this->vaulterConfig->model('blob');
 
         // Custom models/observers may change another candidate while saving.
         // Preserve the per-row fresh liveness check for those extension points.
@@ -342,7 +345,7 @@ final readonly class BlobGarbageCollector
                 $this->lock->acquireMany($keys);
             }
 
-            $model = Config::blobModel();
+            $model = $this->vaulterConfig->model('blob');
             $query = $model::query()->whereKey($batch->modelKeys())->orderBy((new $model)->getKeyName());
 
             if ($this->lock->usesRowLock()) {
@@ -350,7 +353,7 @@ final readonly class BlobGarbageCollector
             }
 
             $fresh = $query->get();
-            $edgeModel = Config::fileVersionBlobModel();
+            $edgeModel = $this->vaulterConfig->model('file_revision_blob');
             /** @var \Illuminate\Support\Collection<int, int|string> $liveIds */
             $liveIds = $edgeModel::query()->whereIn('blob_id', $batch->modelKeys())->distinct()->pluck('blob_id');
             $live = array_fill_keys($liveIds->all(), true);
@@ -395,7 +398,7 @@ final readonly class BlobGarbageCollector
      */
     private function candidateBatches(\Closure $scope): iterable
     {
-        $model = Config::blobModel();
+        $model = $this->vaulterConfig->model('blob');
         $query = $scope($model::query());
         $key = $query->getModel()->getKeyName();
         $upper = (clone $query)->reorder($key, 'desc')->value($key);

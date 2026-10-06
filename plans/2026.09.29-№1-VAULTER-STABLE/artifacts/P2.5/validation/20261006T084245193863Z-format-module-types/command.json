@@ -1,0 +1,13 @@
+{
+  "command": [
+    "scripts/php84",
+    "vendor/bin/pint",
+    "packages/drive/src/Configuration/DriveConfig.php",
+    "packages/documents/src/Configuration/DocumentsConfig.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T084245193863Z",
+  "candidate_before": "943c5a91f1a915c34eed6dd9bb48ddcd8296fe13df55e645659ec1f337b065ba",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true
+}

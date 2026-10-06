@@ -6,9 +6,9 @@ namespace Vaulter\Load\Observability;
 
 use Illuminate\Support\Facades\Http;
 use Throwable;
+use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Http\Middleware\VaulterHttpOperationMap;
-use Vaulter\Support\Config;
 
 /**
  * Host collector for `vaulter_download_stream_active` via php-fpm status (P8.4 / §5.2).
@@ -18,6 +18,7 @@ final class DownloadStreamMetrics
     private const string STATUS_URL = 'http://127.0.0.1:8081/fpm-status?json&full';
 
     public function __construct(
+        private readonly RoutesConfig $routesConfig,
         private readonly MetricsRecorder $metrics,
     ) {}
 
@@ -101,7 +102,7 @@ final class DownloadStreamMetrics
             $normalized = substr($normalized, strlen('index.php/'));
         }
 
-        $prefix = trim(Config::routePrefix(), '/');
+        $prefix = trim($this->routesConfig->prefix(), '/');
 
         if ($prefix !== '' && str_starts_with($normalized, $prefix.'/')) {
             $normalized = substr($normalized, strlen($prefix) + 1);

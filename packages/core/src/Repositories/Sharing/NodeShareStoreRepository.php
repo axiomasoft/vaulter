@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Sharing;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_node_shares (§2.7 / M2c). It persists ONLY the token's
@@ -18,6 +18,10 @@ use Vaulter\Support\Config;
  */
 final class NodeShareStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * Persist a new bearer share on a node. The caller has already hashed the raw
      * token (only $tokenHash + $tokenPrefix reach the DB) and hashed any password.
@@ -36,7 +40,7 @@ final class NodeShareStoreRepository
         ?int $maxUses,
         int|string|null $grantedBy,
     ): NodeShare {
-        $model = Config::nodeShareModel();
+        $model = $this->vaulterConfig->model('node_share');
 
         // forceFill (P1.4/F-P1.8-02): every key here — including token_hash and
         // use_count, which NodeShare deliberately excludes from $fillable — is a
@@ -87,7 +91,7 @@ final class NodeShareStoreRepository
      */
     public function consumeUse(NodeShare $share): bool
     {
-        $model = Config::nodeShareModel();
+        $model = $this->vaulterConfig->model('node_share');
 
         $query = $model::query()
             ->whereKey($share->getKey())

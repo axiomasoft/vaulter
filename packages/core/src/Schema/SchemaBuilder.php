@@ -10,20 +10,21 @@ use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\IdStrategy;
-use Vaulter\Support\Config;
 
 /** The shared Vaulter schema. Runtime features never control table existence. */
 final class SchemaBuilder
 {
     /**
      * The Schema builder for the connection Vaulter's tables live on
-     * (`Config::connection()`, F-P2.3-02) — null defers to the host's default
+     * (`app(\Vaulter\Configuration\DatabaseConfig::class)->connection()`, F-P2.3-02) — null defers to the host's default
      * connection exactly as every call site did before this key existed.
      */
     private function schemaConnection(): Builder
     {
-        return Schema::connection(Config::connection());
+        return Schema::connection(app(DatabaseConfig::class)->connection());
     }
 
     /**
@@ -33,7 +34,7 @@ final class SchemaBuilder
      */
     private function dbConnection(): ConnectionInterface
     {
-        return DB::connection(Config::connection());
+        return DB::connection(app(DatabaseConfig::class)->connection());
     }
 
     /**
@@ -93,7 +94,7 @@ final class SchemaBuilder
     {
         $ids = $this->ids();
 
-        $this->schemaConnection()->create(Config::table($entity), function (Blueprint $table) use ($ids, $entity): void {
+        $this->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
             match ($entity) {
                 'drives' => $this->defineDrives(table: $table, ids: $ids),
                 'nodes' => $this->defineNodes(table: $table, ids: $ids),
@@ -124,7 +125,7 @@ final class SchemaBuilder
      */
     public function dropTable(string $entity): void
     {
-        $this->schemaConnection()->dropIfExists(Config::table($entity));
+        $this->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
     }
 
     /**
@@ -211,12 +212,12 @@ final class SchemaBuilder
 
         $table->foreign('drive_id')
             ->references('id')
-            ->on(Config::table('drives'))
+            ->on(app(DatabaseConfig::class)->table('drives'))
             ->cascadeOnDelete();
 
         $table->foreign('parent_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -290,7 +291,7 @@ final class SchemaBuilder
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -324,7 +325,7 @@ final class SchemaBuilder
 
         $table->foreign('file_id')
             ->references('id')
-            ->on(Config::table('files'))
+            ->on(app(DatabaseConfig::class)->table('files'))
             ->cascadeOnDelete();
     }
 
@@ -346,12 +347,12 @@ final class SchemaBuilder
 
         $table->foreign('file_revision_id')
             ->references('id')
-            ->on(Config::table('file_revisions'))
+            ->on(app(DatabaseConfig::class)->table('file_revisions'))
             ->cascadeOnDelete();
 
         $table->foreign('blob_id')
             ->references('id')
-            ->on(Config::table('blobs'))
+            ->on(app(DatabaseConfig::class)->table('blobs'))
             ->cascadeOnDelete();
     }
 
@@ -394,7 +395,7 @@ final class SchemaBuilder
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -453,7 +454,7 @@ final class SchemaBuilder
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -507,13 +508,13 @@ final class SchemaBuilder
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
 
         // Self-FK: deleting a parent comment cascades to its replies.
         $table->foreign('parent_id')
             ->references('id')
-            ->on(Config::table('node_comments'))
+            ->on(app(DatabaseConfig::class)->table('node_comments'))
             ->cascadeOnDelete();
     }
 
@@ -572,7 +573,7 @@ final class SchemaBuilder
 
         $table->foreign('node_id')
             ->references('id')
-            ->on(Config::table('nodes'))
+            ->on(app(DatabaseConfig::class)->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -651,7 +652,7 @@ final class SchemaBuilder
 
         $table->foreign('drive_id')
             ->references('id')
-            ->on(Config::table('drives'))
+            ->on(app(DatabaseConfig::class)->table('drives'))
             ->cascadeOnDelete();
     }
 
@@ -679,7 +680,7 @@ final class SchemaBuilder
 
         $table->foreign('upload_session_id')
             ->references('id')
-            ->on(Config::table('upload_sessions'))
+            ->on(app(DatabaseConfig::class)->table('upload_sessions'))
             ->cascadeOnDelete();
     }
 
@@ -841,7 +842,7 @@ final class SchemaBuilder
 
         $table->foreign('endpoint_id')
             ->references('id')
-            ->on(Config::table('webhook_endpoints'))
+            ->on(app(DatabaseConfig::class)->table('webhook_endpoints'))
             ->cascadeOnDelete();
     }
 
@@ -852,34 +853,34 @@ final class SchemaBuilder
     private function afterCreate(string $entity): void
     {
         if ($entity === 'drives') {
-            $this->addOwnerUniqueIndex(table: Config::table('drives'));
+            $this->addOwnerUniqueIndex(table: app(DatabaseConfig::class)->table('drives'));
         }
 
         if ($entity === 'nodes') {
-            $this->addSiblingUniqueIndex(table: Config::table('nodes'));
-            $this->addSingleRootIndex(table: Config::table('nodes'));
-            $this->addTrashedAtIndex(table: Config::table('nodes'));
+            $this->addSiblingUniqueIndex(table: app(DatabaseConfig::class)->table('nodes'));
+            $this->addSingleRootIndex(table: app(DatabaseConfig::class)->table('nodes'));
+            $this->addTrashedAtIndex(table: app(DatabaseConfig::class)->table('nodes'));
         }
 
         if ($entity === 'node_grants') {
-            $this->addGrantUniqueIndex(table: Config::table('node_grants'));
+            $this->addGrantUniqueIndex(table: app(DatabaseConfig::class)->table('node_grants'));
         }
 
         if ($entity === 'node_shares') {
-            $this->addShareExpiryIndex(table: Config::table('node_shares'));
+            $this->addShareExpiryIndex(table: app(DatabaseConfig::class)->table('node_shares'));
         }
 
         if ($entity === 'node_document_versions') {
-            $this->addDocumentContentGinIndex(table: Config::table('node_document_versions'));
+            $this->addDocumentContentGinIndex(table: app(DatabaseConfig::class)->table('node_document_versions'));
         }
 
         if ($entity === 'upload_sessions') {
-            $this->addUploadSweeperIndex(table: Config::table('upload_sessions'));
+            $this->addUploadSweeperIndex(table: app(DatabaseConfig::class)->table('upload_sessions'));
         }
 
         if ($entity === 'activity') {
-            $this->addActivityCreatedAtIndex(table: Config::table('activity'));
-            $this->addActivityContextGinIndex(table: Config::table('activity'));
+            $this->addActivityCreatedAtIndex(table: app(DatabaseConfig::class)->table('activity'));
+            $this->addActivityContextGinIndex(table: app(DatabaseConfig::class)->table('activity'));
         }
     }
 
@@ -1159,7 +1160,7 @@ final class SchemaBuilder
     private function extraData(Blueprint $table): void
     {
         // The node extra-data flag remains until P4.1; it never gates a table.
-        if ($table->getTable() === Config::table('nodes') && !Config::extraDataEnabled()) {
+        if ($table->getTable() === app(DatabaseConfig::class)->table('nodes') && !app(VaulterConfig::class)->extraDataEnabled()) {
             return;
         }
 

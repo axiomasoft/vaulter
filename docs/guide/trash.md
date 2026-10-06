@@ -72,10 +72,10 @@ Force-delete only purges from the trash: a live node raises `NodeNotTrashedExcep
 ## Retention
 
 How long a trashed node survives before it becomes purge-eligible is controlled by
-`config('vaulter.trash.retention_days')`:
+`config('vaulter-drive.trash.retention_days')`:
 
 ```php
-// config/vaulter.php
+// config/vaulter-drive.php
 'trash' => [
     'retention_days' => 30,   // default 30; 0 = purge as soon as trashed
 ],
@@ -84,7 +84,7 @@ How long a trashed node survives before it becomes purge-eligible is controlled 
 - **Default:** 30 days.
 - **Floor:** 0. `0` means a trashed node is eligible for purge immediately.
 
-The value is read through `Vaulter\Support\Config::trashRetentionDays()`.
+The value is read through `Vaulter\Drive\Configuration\DriveConfig::trashRetentionDays()`.
 
 ## Scheduled purge
 

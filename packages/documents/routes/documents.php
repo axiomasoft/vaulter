@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
+use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Http\Controllers\Collaboration\NodeCollaborationController;
 use Vaulter\Documents\Http\Controllers\Comments\NodeCommentController;
 use Vaulter\Documents\Http\Controllers\Documents\DocumentNodeController;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
-use Vaulter\Support\Config;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,8 +25,8 @@ use Vaulter\Support\Config;
 | /{node}, so cross-file registration order never shadows them.
 */
 
-Route::prefix(Config::routePrefix())
-    ->middleware(Config::authenticatedMiddleware())
+Route::prefix(app(RoutesConfig::class)->prefix())
+    ->middleware(app(RoutesConfig::class)->authenticatedMiddleware())
     ->group(static function (): void {
         Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
             /*
@@ -34,26 +35,23 @@ Route::prefix(Config::routePrefix())
             |------------------------------------------------------------------
             | Create a kind=document node, read/autosave its content, snapshot
             | named versions, restore a prior version, resolve its handler
-            | descriptor and export it. Gated on the 'document_versions' feature
-            | (the v_node_document_versions schema). Authorized via the
+            | descriptor and export it. Available whenever this package is installed. Authorized via the
             | AccessResolver (Create on the destination, View to read, Edit to
             | write).
             */
-            if (Config::featureEnabled('document_versions')) {
-                Route::post('storages/{storage}/documents', [DocumentNodeController::class, 'store']);
+            Route::post('storages/{storage}/documents', [DocumentNodeController::class, 'store']);
 
-                Route::get('nodes/{node}/content', [DocumentNodeController::class, 'content']);
-                Route::patch('nodes/{node}/content', [DocumentNodeController::class, 'update']);
-                Route::get('nodes/{node}/document-versions', [DocumentNodeController::class, 'versions']);
-                Route::post('nodes/{node}/document-versions', [DocumentNodeController::class, 'storeVersion']);
-                Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
-                // Release a keep_forever pin (F-P1.12-03) — the missing inverse of
-                // the pin `storeVersion` can set; the version re-enters the prune
-                // window on the node's next snapshot/restore.
-                Route::patch('nodes/{node}/document-versions/{version}/keep-forever', [DocumentNodeController::class, 'releaseVersion']);
-                Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
-                Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
-            }
+            Route::get('nodes/{node}/content', [DocumentNodeController::class, 'content']);
+            Route::patch('nodes/{node}/content', [DocumentNodeController::class, 'update']);
+            Route::get('nodes/{node}/document-versions', [DocumentNodeController::class, 'versions']);
+            Route::post('nodes/{node}/document-versions', [DocumentNodeController::class, 'storeVersion']);
+            Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
+            // Release a keep_forever pin (F-P1.12-03) — the missing inverse of
+            // the pin `storeVersion` can set; the version re-enters the prune
+            // window on the node's next snapshot/restore.
+            Route::patch('nodes/{node}/document-versions/{version}/keep-forever', [DocumentNodeController::class, 'releaseVersion']);
+            Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
+            Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
 
             // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
             // authorized via the AccessResolver (≥ View/Comment to connect, read-only
@@ -62,7 +60,7 @@ Route::prefix(Config::routePrefix())
             // reads/writes against) AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
             // D13/D20) — the realtime surface is a SEPARATE opt-in over base
             // (non-realtime) document editing, not implied by it.
-            if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
+            if (app(DocumentsConfig::class)->collaborationEnabled()) {
                 Route::post('nodes/{node}/collab/token', [NodeCollaborationController::class, 'token']);
             }
 
@@ -72,7 +70,7 @@ Route::prefix(Config::routePrefix())
             // delete = the AUTHOR or Manage. {comment} is a plain scalar (the model is
             // swappable, not route-model bound) — the controller resolves it and
             // asserts it belongs to the bound node.
-            if (Config::featureEnabled('comments')) {
+            if (app(DocumentsConfig::class)->commentsEnabled()) {
                 Route::get('nodes/{node}/comments', [NodeCommentController::class, 'index']);
                 Route::post('nodes/{node}/comments', [NodeCommentController::class, 'store']);
                 Route::post('nodes/{node}/comments/{comment}/resolve', [NodeCommentController::class, 'resolve']);
@@ -82,9 +80,9 @@ Route::prefix(Config::routePrefix())
 
     });
 
-if (Config::featureEnabled('document_versions') && Config::collaborationEnabled()) {
-    Route::prefix(Config::routePrefix())
-        ->middleware([...Config::hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
+if (app(DocumentsConfig::class)->collaborationEnabled()) {
+    Route::prefix(app(RoutesConfig::class)->prefix())
+        ->middleware([...app(RoutesConfig::class)->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
         ->group(static function (): void {
             Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
             Route::post('collab/store', [NodeCollaborationController::class, 'store']);

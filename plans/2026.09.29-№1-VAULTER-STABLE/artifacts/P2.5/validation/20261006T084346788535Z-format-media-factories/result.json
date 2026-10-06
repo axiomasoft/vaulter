@@ -1,0 +1,16 @@
+{
+  "command": [
+    "scripts/php84",
+    "vendor/bin/pint",
+    "packages/media/src/VaulterMediaServiceProvider.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T084346788535Z",
+  "candidate_before": "533c26ac1d0838658ef6125646bbc1dbbabf4b429d7c010d2ff07b11e5a62d27",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true,
+  "exit_code": 0,
+  "seconds": 0.309,
+  "candidate_after": "533c26ac1d0838658ef6125646bbc1dbbabf4b429d7c010d2ff07b11e5a62d27",
+  "candidate_stable": true
+}

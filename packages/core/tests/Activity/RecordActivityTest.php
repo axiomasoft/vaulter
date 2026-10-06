@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Log;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Activity\ActivityRecorder;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -212,7 +213,7 @@ it('writes exactly ONE row even when a folder has a deep subtree (no per-node fa
 
 it('does NOT break the originating action when the recorder throws', function (): void {
     // A store repository that always fails simulates a broken audit sink.
-    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class extends ActivityStoreRepository
+    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(VaulterConfig::class)) extends ActivityStoreRepository
     {
         #[Override]
         public function record(RecordActivityCommand $command): Activity

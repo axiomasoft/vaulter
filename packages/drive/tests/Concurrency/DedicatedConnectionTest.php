@@ -15,11 +15,11 @@ use Vaulter\Tests\Concurrency\ForkRace;
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);
     config()->set('database.connections.vaulter', config('database.connections.testing'));
-    config()->set('vaulter.connection', 'vaulter');
+    config()->set('vaulter.database.connection', 'vaulter');
 });
 
 afterEach(function (): void {
-    config()->set('vaulter.connection', null);
+    config()->set('vaulter.database.connection', null);
 });
 
 it('rolls back an Action insertion on the dedicated Vaulter connection', function (): void {

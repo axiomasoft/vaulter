@@ -7,26 +7,26 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Schema\SchemaBuilder;
 
 /**
- * F-P2.3-02 — `config('vaulter.connection')` parameterises WHERE Vaulter writes
+ * F-P2.3-02 — `config('vaulter.database.connection')` parameterises WHERE Vaulter writes
  * its schema and data, so a host can embed the package's tables on a dedicated
  * database/connection (sharding, data placement, isolating a heavy CAS/activity
  * workload) without forking the package.
  *
  * Red-before: on the pre-fix code this test fails — `SchemaBuilder` always
  * writes through the default `Schema`/`DB` facades and every model's
- * `getConnectionName()` stays null regardless of `vaulter.connection`
+ * `getConnectionName()` stays null regardless of `vaulter.database.connection`
  * (repro: `plans/AUDIT-VLT/artifacts/repro/P2.3/C6NoConnectionParamTest.php`).
  */
-it('creates a panel\'s tables on the connection named by vaulter.connection, not the default one [F-P2.3-02]', function (): void {
+it('creates a panel\'s tables on the connection named by vaulter.database.connection, not the default one [F-P2.3-02]', function (): void {
     config()->set('database.connections.vaulter_other', [
         'driver' => 'sqlite',
         'database' => ':memory:',
         'prefix' => '',
     ]);
-    config()->set('vaulter.connection', 'vaulter_other');
+    config()->set('vaulter.database.connection', 'vaulter_other');
 
     $builder = new SchemaBuilder;
-    config()->set('vaulter.table_prefix', 'conntest_');
+    config()->set('vaulter.database.table_prefix', 'conntest_');
 
     $builder->createTable(entity: 'drives');
 
@@ -35,28 +35,28 @@ it('creates a panel\'s tables on the connection named by vaulter.connection, not
             ->and(Schema::hasTable('conntest_drives'))->toBeFalse();
     } finally {
         $builder->dropTable(entity: 'drives');
-        config()->set('vaulter.connection', null);
-        config()->set('vaulter.table_prefix', 'v_');
+        config()->set('vaulter.database.connection', null);
+        config()->set('vaulter.database.table_prefix', 'v_');
     }
 });
 
-it('routes a default Vaulter model\'s connection through vaulter.connection [F-P2.3-02]', function (): void {
+it('routes a default Vaulter model\'s connection through vaulter.database.connection [F-P2.3-02]', function (): void {
     config()->set('database.connections.vaulter_other', [
         'driver' => 'sqlite',
         'database' => ':memory:',
         'prefix' => '',
     ]);
-    config()->set('vaulter.connection', 'vaulter_other');
+    config()->set('vaulter.database.connection', 'vaulter_other');
 
     expect((new Node)->getConnectionName())->toBe('vaulter_other');
-    config()->set('vaulter.connection', null);
+    config()->set('vaulter.database.connection', null);
 });
 
-it('control: vaulter.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
-    expect(config('vaulter.connection'))->toBeNull();
+it('control: vaulter.database.connection=null (the default) leaves every write on the host\'s default connection [F-P2.3-02]', function (): void {
+    expect(config('vaulter.database.connection'))->toBeNull();
 
     $builder = new SchemaBuilder;
-    config()->set('vaulter.table_prefix', 'conntestctrl_');
+    config()->set('vaulter.database.table_prefix', 'conntestctrl_');
 
     $builder->createTable(entity: 'drives');
 
@@ -65,7 +65,7 @@ it('control: vaulter.connection=null (the default) leaves every write on the hos
             ->and((new Node)->getConnectionName())->toBeNull();
     } finally {
         $builder->dropTable(entity: 'drives');
-        config()->set('vaulter.connection', null);
-        config()->set('vaulter.table_prefix', 'v_');
+        config()->set('vaulter.database.connection', null);
+        config()->set('vaulter.database.table_prefix', 'v_');
     }
 });

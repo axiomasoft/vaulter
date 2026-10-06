@@ -7,6 +7,8 @@ namespace Vaulter\Documents\Models\Revisions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
@@ -14,7 +16,6 @@ use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * An append-only snapshot of a DOCUMENT NODE's content (master plan §2.5 / M4a) —
@@ -73,7 +74,7 @@ class DocumentRevision extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('node_document_versions');
+        return app(DatabaseConfig::class)->table('node_document_versions');
     }
 
     /**
@@ -81,7 +82,7 @@ class DocumentRevision extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
     }
 
     /**

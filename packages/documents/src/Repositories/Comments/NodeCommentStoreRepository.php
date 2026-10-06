@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Repositories\Comments;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Documents\DocumentsModels;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
 /**
@@ -15,6 +15,10 @@ use Vaulter\Documents\Models\Comments\NodeComment;
  */
 final class NodeCommentStoreRepository
 {
+    public function __construct(
+        private readonly DocumentsConfig $documentsConfig,
+    ) {}
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -22,7 +26,7 @@ final class NodeCommentStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from AddCommentAction, never raw request input.
-        $model = DocumentsModels::comment();
+        $model = $this->documentsConfig->model('node_comment');
         $comment = new $model;
         $comment->forceFill($attributes);
         $comment->save();

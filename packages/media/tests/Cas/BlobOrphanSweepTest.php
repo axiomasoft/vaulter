@@ -33,7 +33,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     Carbon::setTestNow('2026-06-30 12:00:00');
 });
 
@@ -42,7 +42,7 @@ beforeEach(function (): void {
 // ─────────────────────────────────────────────────────────────────────────────
 it('обнаруживает настоящий orphan и пропускает закоммиченный объект (report-only)', function (): void {
     // A real committed blob (row + bytes) — must be SKIPPED as owned.
-    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
+    $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     // A genuine orphan: valid canonical key, no row, aged past grace.
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'orphan bytes', scope: 't1', ageHours: 48);
@@ -99,7 +99,7 @@ it('round-trip guard: НЕ канонический путь пропускае�
 it('tnull-scope: orphan с null-tenant (tenancy off) обнаруживается', function (): void {
     // The producer path: commit with NULL tenant under tenant scope emits a "tnull"
     // key segment — assert that's what BlobStore lays down, then orphan-detect it.
-    $produced = app(BlobStore::class)->commit(CasTestHelpers::streamFor('producer'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), null, 'unused'));
+    $produced = app(BlobStore::class)->commit(CasTestHelpers::streamFor('producer'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, 'unused'));
     expect($produced->storage_key)->toStartWith('g/');
 
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'tnull orphan', scope: 'tnull', ageHours: 48);
@@ -111,7 +111,7 @@ it('tnull-scope: orphan с null-tenant (tenancy off) обнаруживаетс�
 });
 
 it('snull-scope: orphan с null-storage (storage scope, tenancy off) обнаруживается', function (): void {
-    config()->set('vaulter.dedup.scope', 'storage');
+    config()->set('vaulter-media.dedup.scope', 'drive');
 
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'snull orphan', scope: 'snull', ageHours: 48);
 

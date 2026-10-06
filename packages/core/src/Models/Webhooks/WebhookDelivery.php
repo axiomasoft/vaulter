@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * A single delivery attempt of an event to a webhook endpoint, with retry
@@ -19,7 +20,7 @@ use Vaulter\Support\Config;
  * the relay's due-retry sweep re-queues it; past the attempt budget it terminalises
  * 'dead' (DLQ) for inspection.
  *
- * Swappable — point config('vaulter.models.webhook_delivery') at a subclass.
+ * Swappable — point configuration key vaulter.models.webhook_delivery at a subclass.
  *
  * @property int|string           $id
  * @property int|string           $endpoint_id
@@ -53,7 +54,7 @@ class WebhookDelivery extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('webhook_deliveries');
+        return app(DatabaseConfig::class)->table('webhook_deliveries');
     }
 
     /**
@@ -62,7 +63,7 @@ class WebhookDelivery extends Model
     public function endpoint(): BelongsTo
     {
         /** @var class-string<WebhookEndpoint> $related */
-        $related = Config::webhookEndpointModel();
+        $related = app(VaulterConfig::class)->model('webhook_endpoint');
 
         return $this->belongsTo(related: $related, foreignKey: 'endpoint_id');
     }

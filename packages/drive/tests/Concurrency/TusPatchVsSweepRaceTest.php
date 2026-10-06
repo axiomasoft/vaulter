@@ -41,8 +41,8 @@ it('PATCH и sweep одной сессии: победитель ровно од
         $this->markTestSkipped('Тесту конкурентности нужны расширения pcntl + posix.');
     }
 
-    config()->set('vaulter.uploads.chunk_size', 256 * 1024 * 1024);
-    config()->set('vaulter.uploads.max_bytes', 0);
+    config()->set('vaulter-drive.uploads.resumable.chunk_size', 256 * 1024 * 1024);
+    config()->set('vaulter-drive.uploads.max_file_size', 0);
     Storage::fake('local');
 
     // Чанк намеренно ТОЛСТЫЙ: append стримит prefix+chunk несколько сот миллисекунд, тогда

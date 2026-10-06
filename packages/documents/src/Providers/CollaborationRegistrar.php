@@ -9,11 +9,12 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 final class CollaborationRegistrar extends ServiceProvider
 {
@@ -44,9 +45,8 @@ final class CollaborationRegistrar extends ServiceProvider
     private function registerBroadcastChannel(): void
     {
         Broadcast::channel(
-            Config::channelPrefix().'.{roomId}',
-            static fn (Authenticatable $user, int|string $roomId): bool => Config::featureEnabled('document_versions')
-                && Config::collaborationEnabled()
+            app(DocumentsConfig::class)->channelPrefix().'.{roomId}',
+            static fn (Authenticatable $user, int|string $roomId): bool => app(DocumentsConfig::class)->collaborationEnabled()
                 && self::authorizeNodeRoom($user, $roomId),
         );
     }
@@ -61,7 +61,7 @@ final class CollaborationRegistrar extends ServiceProvider
             return false;
         }
 
-        $model = Config::nodeModel();
+        $model = app(VaulterConfig::class)->model('node');
         $node = $model::query()->find($roomId);
 
         if (!$node instanceof Node || !$node->kind->isDocument()) {

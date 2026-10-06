@@ -34,7 +34,7 @@ it('records sweep upload metrics for stale sessions', function (): void {
 });
 
 it('records purge trash metrics when a subtree is purged', function (): void {
-    config()->set('vaulter.trash.retention_days', 30);
+    config()->set('vaulter-drive.trash.retention_days', 30);
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'old');

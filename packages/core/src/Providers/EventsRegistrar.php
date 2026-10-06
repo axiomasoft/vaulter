@@ -7,7 +7,7 @@ namespace Vaulter\Providers;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Activity\RecordsActivity;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Webhooks\RecordsOutbox;
 
 final class EventsRegistrar
@@ -20,7 +20,7 @@ final class EventsRegistrar
 
     private function registerActivitySubscriber(): void
     {
-        if (!Config::featureEnabled('activity')) {
+        if (!app(VaulterConfig::class)->featureEnabled('activity')) {
             return;
         }
 
@@ -29,7 +29,7 @@ final class EventsRegistrar
 
     private function registerOutboxSubscriber(): void
     {
-        if (!Config::featureEnabled('reliability')) {
+        if (!app(VaulterConfig::class)->featureEnabled('webhooks')) {
             return;
         }
 

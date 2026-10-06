@@ -23,9 +23,12 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  */
 final readonly class NonListableContentStore implements ContentStore
 {
-    public function __construct(
-        private ContentStore $inner = new Sha256ContentStore(new FlysystemStorageDriver),
-    ) {}
+    private ContentStore $inner;
+
+    public function __construct(?ContentStore $inner = null)
+    {
+        $this->inner = $inner ?? new Sha256ContentStore(app(FlysystemStorageDriver::class));
+    }
 
     public function stage(mixed $stream): StagedObject
     {

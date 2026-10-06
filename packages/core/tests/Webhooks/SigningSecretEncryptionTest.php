@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\SigningSecretEncryptor;
 
@@ -17,7 +17,7 @@ use Vaulter\Webhooks\SigningSecretEncryptor;
 it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1.7-02', function (): void {
     $endpoint = WebhookTestHelpers::endpoint(['signing_secret' => 'super-secret-key']);
 
-    $raw = DB::table(Config::table('webhook_endpoints'))
+    $raw = DB::table(app(DatabaseConfig::class)->table('webhook_endpoints'))
         ->where('id', $endpoint->getKey())
         ->value('signing_secret');
 
@@ -31,7 +31,7 @@ it('stores the signing_secret as ciphertext and reads it back as plaintext, F-P1
 });
 
 it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', function (): void {
-    $table = Config::table('webhook_endpoints');
+    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
 
     // Seed a legacy plaintext row through the query builder (bypassing the cast).
     DB::table($table)->insert([

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "python3",
+    "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py",
+    "render",
+    "2026.09.29-№1-VAULTER-STABLE",
+    "--check"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started_at": "20261006T101444280751Z",
+  "candidate_before": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": false,
+  "exit_code": 0,
+  "seconds": 0.233,
+  "candidate_after": "811448d00bb0883f05d980b6f165d9a779f896fdb735d8d07b2778fe880892a1",
+  "candidate_stable": true
+}

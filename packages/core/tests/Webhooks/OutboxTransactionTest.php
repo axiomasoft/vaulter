@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
@@ -67,7 +68,7 @@ it('confines a staging failure to a savepoint so the mutation still commits, F-P
     {
         public function __construct(MetricsRecorder $metrics)
         {
-            parent::__construct($metrics);
+            parent::__construct(vaulterConfig: app(VaulterConfig::class), metrics: $metrics);
         }
 
         #[Override]

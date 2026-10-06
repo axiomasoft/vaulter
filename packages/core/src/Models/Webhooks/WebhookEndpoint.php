@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * A subscriber endpoint receiving signed webhook deliveries for the events it is
@@ -19,7 +20,7 @@ use Vaulter\Support\Config;
  * signed with it. failure_count drives the circuit breaker (auto-disable past the
  * threshold).
  *
- * Swappable — point config('vaulter.models.webhook_endpoint') at a subclass.
+ * Swappable — point configuration key vaulter.models.webhook_endpoint at a subclass.
  *
  * @property int|string         $id
  * @property string             $url
@@ -55,7 +56,7 @@ class WebhookEndpoint extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('webhook_endpoints');
+        return app(DatabaseConfig::class)->table('webhook_endpoints');
     }
 
     /**
@@ -66,7 +67,7 @@ class WebhookEndpoint extends Model
     public function deliveries(): HasMany
     {
         /** @var class-string<WebhookDelivery> $related */
-        $related = Config::webhookDeliveryModel();
+        $related = app(VaulterConfig::class)->model('webhook_delivery');
 
         return $this->hasMany(related: $related, foreignKey: 'endpoint_id');
     }

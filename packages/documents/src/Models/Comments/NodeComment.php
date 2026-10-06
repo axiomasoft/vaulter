@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
-use Vaulter\Documents\DocumentsModels;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * A comment on a NODE (ADR-0014 шаг 1) — the additive parity twin of the legacy
@@ -24,7 +25,7 @@ use Vaulter\Support\Config;
  * The author is a morph to a REGISTERED alias (user|…) — the Data layer writes
  * $user->getMorphClass() (honours the host's enforceMorphMap), never a raw FQCN.
  *
- * Swappable — point config('vaulter.models.node_comment') at a subclass for tenant
+ * Swappable — point the configuration key ('vaulter-documents.models.node_comment') at a subclass for tenant
  * scope.
  *
  * @property int|string                $id
@@ -64,7 +65,7 @@ class NodeComment extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('node_comments');
+        return app(DatabaseConfig::class)->table('node_comments');
     }
 
     /**
@@ -72,7 +73,7 @@ class NodeComment extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
     }
 
     /**
@@ -80,7 +81,7 @@ class NodeComment extends Model
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(DocumentsModels::comment(), 'parent_id');
+        return $this->belongsTo(app(DocumentsConfig::class)->model('node_comment'), 'parent_id');
     }
 
     /**
@@ -88,7 +89,7 @@ class NodeComment extends Model
      */
     public function replies(): HasMany
     {
-        return $this->hasMany(DocumentsModels::comment(), 'parent_id');
+        return $this->hasMany(app(DocumentsConfig::class)->model('node_comment'), 'parent_id');
     }
 
     /**

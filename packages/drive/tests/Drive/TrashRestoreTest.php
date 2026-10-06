@@ -8,7 +8,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
 it('trash помечает узел и всё поддерево, used_bytes не меняется', function (): void {

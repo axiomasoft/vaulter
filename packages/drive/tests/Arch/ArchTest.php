@@ -85,7 +85,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
  * VLT-CANON P2.3 further split the `Uploads/` domain-service folder by role:
  * `*Handler`/`*Manager` orchestrators (`TusUploadHandler`, `S3MultipartHandler`,
  * `UploadSessionManager`) stayed; the pure helpers (`MagicByteSniffer`,
- * `StagedUpload`, `UploadModels`) moved to `Support/Uploads` — still outside the
+ * `StagedUpload`) moved to `Support/Uploads` — still outside the
  * `$layers` list below, so this test is unaffected.
  */
 test('technical layers are never nested under a domain module (ADR-0017 Law 1)', function (): void {

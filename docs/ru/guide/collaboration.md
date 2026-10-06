@@ -22,37 +22,35 @@ Vaulter редактирует **узлы-документы** (`kind = document
 
 Yjs остаётся источником истины. Драйвер `hocuspocus` подключает внешний Node-хаб
 (`hocuspocus-server/`) через подписанный room-JWT и вебхуки сервер-к-серверу.
-Настройте URL хаба и секрет JWT в `config('vaulter.collaboration')`.
+Настройте URL хаба и секрет JWT в `config('vaulter-documents.collaboration')`.
 
 Reverb для совместного редактирования Yjs удалён; используйте Hocuspocus.
 Broadcast-каналы комментариев и проверки доступа сохраняются.
 
 ## Конфигурация
 
-Все ключи находятся под `config('vaulter.collaboration')`:
+Все ключи находятся под `config('vaulter-documents.collaboration')`:
 
 ```php
-// config/vaulter.php
+// config/vaulter-documents.php
 'collaboration' => [
-    'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'),   // hocuspocus
-    'channel_prefix' => 'vaulter.documents',              // пространство имён комнаты
-    'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-
-    'drivers' => [
-        'hocuspocus' => [
-            'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-            'secret' => env('VAULTER_COLLAB_SECRET'),      // ключ подписи room-JWT (HS256)
-            'token_ttl' => 3600,                           // секунды
-        ],
+    'enabled' => false,
+    'driver' => 'hocuspocus',
+    'hub' => [
+        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
+        'token_ttl' => 3600,
+        'timestamp_tolerance' => 300,
     ],
+    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 ],
 ```
 
-::: warning Фича-флаг
-Эндпоинты совместного редактирования (`nodes/{node}/collab/token`, а также вебхуки
-`collab/authenticate` / `collab/store`) монтируются только при включённой фиче
-**`document_versions`** (схема `v_node_document_versions`). Если запрос отдаёт 404 —
-проверьте `config('vaulter.features.document_versions')`.
+::: warning Коллаборация включается отдельно
+Установите Documents и включите `vaulter-documents.collaboration.enabled`.
+Редактирование документов и ревизии доступны при установке пакета без дополнительного флага.
+Оба секрета хаба должны быть заданы и различаться.
 :::
 
 ## Hocuspocus (внешний Node-хаб)
@@ -109,7 +107,7 @@ services:
       VAULTER_COLLAB_HEALTH_PORT: 1235
       VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
       VAULTER_API_PREFIX: ${VAULTER_API_PREFIX:-api/vaulter}
-      # ДОЛЖЕН совпадать с vaulter.collaboration.webhook_secret на стороне Laravel.
+      # ДОЛЖЕН совпадать с vaulter-documents.collaboration.hub.webhook_secret на стороне Laravel.
       VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -134,12 +132,12 @@ healthcheck в compose/оркестраторе, прежде чем запус�
 | `VAULTER_BACKEND_URL` | `http://localhost` | Базовый URL приложения Laravel, куда хаб шлёт вебхуки (без завершающего слэша). В Docker — имя сервиса приложения или `host.docker.internal`. |
 | `VAULTER_API_PREFIX` | `api/vaulter` | Префикс API-маршрутов Vaulter. Вебхуки разрешаются в `{VAULTER_BACKEND_URL}/{VAULTER_API_PREFIX}/collab/{authenticate,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(производная)* | Явное переопределение полного базового URL вебхуков; перекрывает две переменные выше (reverse proxy / разделённый хост). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Общий секрет в заголовке `X-Vaulter-Collab-Secret`. **Должен совпадать** с `vaulter.collaboration.webhook_secret` на стороне Laravel. Если не задан — хаб аутентифицирует вебхуки только пересланным room-JWT. |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Общий секрет в заголовке `X-Vaulter-Collab-Secret`. **Должен совпадать** с `vaulter-documents.collaboration.hub.webhook_secret` на стороне Laravel. Если не задан — хаб аутентифицирует вебхуки только пересланным room-JWT. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Таймаут round-trip вебхука в мс. |
 
 ::: danger Согласуйте секреты
 `VAULTER_COLLAB_WEBHOOK_SECRET` на **хабе** должен совпадать с
-`vaulter.collaboration.webhook_secret` на **Laravel** (одно и то же имя переменной с обеих
+`vaulter-documents.collaboration.hub.webhook_secret` на **Laravel** (одно и то же имя переменной с обеих
 сторон). Ключ подписи JWT (`VAULTER_COLLAB_SECRET`) живёт **только** на стороне Laravel —
 хаб его никогда не видит.
 :::

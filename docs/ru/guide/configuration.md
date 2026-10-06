@@ -1,352 +1,344 @@
 ---
 title: Конфигурация
-description: Разбор config/vaulter.php по секциям — модели, имена таблиц, стратегия идентификаторов, панели, фичи, драйверы прав, CAS, шеринг, загрузки, вебхуки и совместное редактирование.
+description: Конфиги по пакетам-владельцам, типизированный доступ и переход с опубликованных ключей 0.2.
 outline: deep
 ---
 
 # Конфигурация
 
-Опубликуйте конфиг:
+Каждый установленный пакет владеет своим файлом и типизированным API конфигурации (AD26).
+Опубликуйте нужные файлы, например:
 
 ```bash
 php artisan vendor:publish --tag=vaulter-config
+php artisan vendor:publish --tag=vaulter-documents-config
 ```
 
-Он ложится в `config/vaulter.php`. Эта страница проходит по каждой секции. Конфиг **безопасен
-для кеширования** — каждая сменная привязка задаётся строкой FQCN, а не замыканием, — поэтому
-`php artisan config:cache` работает.
+| Пакет | Файл | Тег публикации | Класс конфигурации |
+|---|---|---|---|
+| Core | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
+| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
+| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
+| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
+| AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
+| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
-## Модели
+Привязки задаются строками FQCN. Замыкания отклоняются при boot, поэтому
+`php artisan config:cache` безопасен. Значения по умолчанию — в [справочнике ключей](/ru/reference/configuration).
 
-Каждая сущность Vaulter резолвится через эту карту, поэтому любую можно указать на свой
-наследник (ULID-ключи, скоуп тенанта, аудит и т.д.):
+## Core: база данных, ID, профили и доступ
+
+Только core владеет настройками схемы: `database.connection`, `database.table_prefix`,
+`ids.strategy`, `ids.host_keys` и `tenancy.enabled`. Соединение `null` использует соединение
+Laravel по умолчанию. Имя таблицы состоит из префикса и канонического имени сущности:
+`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`. Карта `table_names`
+нужна только для обновления: `DatabaseConfig::legacyTable()` ищет по ней старые физические таблицы.
 
 ```php
-'models' => [
-    // Сущности Vaulter Drive
-    'storage'    => \Vaulter\Models\Drive\Drive::class,
-    'node'       => \Vaulter\Models\Drive\Node::class,
-    'file'       => \Vaulter\Models\Drive\File::class,
-    'blob'       => \Vaulter\Models\Cas\Blob::class,
-    'grant'      => \Vaulter\Models\Access\NodeGrant::class,
-    'node_share' => \Vaulter\Models\Sharing\NodeShare::class,
-    // …а также file_version, file_version_blob, activity, outbox,
-    //    webhook_endpoint, webhook_delivery
+// config/vaulter.php
+'database' => [
+    'connection' => env('VAULTER_DB_CONNECTION'),
+    'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
 ],
-```
-
-::: info Модели, которыми владеют Drive/Documents
-`upload_session` / `upload_part` принадлежат `axioma-studio/vaulter-drive`; модели
-`node_comment` / `node_document_version`, привязанные к узлу, принадлежат
-`axioma-studio/vaulter-documents`. Ни одна из них не поставляет значение по умолчанию
-здесь — каждый пакет мержит свою запись через собственный
-`config/vaulter-drive.php` / `config/vaulter-documents.php` и бросает исключение при
-резолве без установленного пакета. Легаси-модели, привязанные к `document_id`
-(`document`, `version`, `folder`, `permission`, `comment`, `share`), были полностью
-исключены — см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
-:::
-
-Vaulter route-биндит `{storage}` и `{node}` к тому, что здесь указано, поэтому наследник хоста
-продолжает резолвиться.
-
-## Имена таблиц и префикс
-
-Каждая таблица именуется `{table_prefix}{base}`. Меняйте префикс глобально или переименуйте
-таблицу одной сущности в `table_names`:
-
-```php
-'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'), // → v_storages, v_nodes, …
-'table_names' => [
-    'storages' => 'storages',
-    'nodes'    => 'nodes',
-    'blobs'    => 'blobs',
-    // …по одному базовому имени на сущность
-],
-```
-
-## Стратегия первичного ключа (`ids`)
-
-Стратегия определяет тип колонки каждого первичного/morph-ключа. **По умолчанию `ulid`**,
-чтобы morph-ключи совпадали с экосистемой Corex/AzGuard.
-
-```php
 'ids' => [
-    'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid | uuid7 | bigint
+    'strategy' => env('VAULTER_ID_STRATEGY', 'ulid'), // bigint | ulid | uuid7
+    'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string | bigint | uuid | ulid
     'strategies' => [
         'bigint' => \Vaulter\Schema\AutoIncrementIds::class,
-        'ulid'   => \Vaulter\Schema\UlidIds::class,
-        'uuid7'  => \Vaulter\Schema\Uuid7Ids::class,
+        'ulid' => \Vaulter\Schema\UlidIds::class,
+        'uuid7' => \Vaulter\Schema\Uuid7Ids::class,
     ],
 ],
-```
-
-| Стратегия | Колонка | Когда |
-|---|---|---|
-| `ulid` | строка ULID 26 симв. | **По умолчанию.** Сортируемые, согласованные morph-ключи. |
-| `uuid7` | нативный `uuid` (Postgres) | Нужны нативные uuid-колонки. |
-| `bigint` | автоинкремент big integer | Легаси / целочисленные ключи. |
-
-::: warning Легаси `id_type`
-Старый бинарный ключ `id_type` (`'id'` / `'ulid'`) сохранён для обратной совместимости. Когда
-задан `ids.default`, **он побеждает**; иначе стратегия выводится из `id_type` (`id → bigint`,
-`ulid → ulid`). Новым установкам стоит использовать `ids.default`. См.
-[ADR-0011](/adr/0011-id-strategy).
-:::
-
-## Storage Panels
-
-Панель — именованный конфиг-конверт, привязанный к сущности поверх общей схемы `v_*`, по
-умолчанию **без миграций**. Перечислите FQCN своих провайдеров:
-
-```php
-'panels' => [
-    \App\Vaulter\Profiles\ProjectDriveProfile::class,
+'profiles' => [
+    'default' => \Vaulter\Profiles\DefaultProfile::class,
+    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
 ],
-'default_panel' => \Vaulter\Profiles\DefaultProfile::class,
-
-'migrations' => [
-    'path' => null, // legacy-ключ; создание профиля его больше не использует
-],
-```
-
-Сгенерировать панель: `php artisan vaulter:make:profile <name>`. Подробно —
-[Storage Panels](/ru/concepts/storage-panels).
-
-## Фичи
-
-Флаги фич уровня установки (панель может переопределить любой из них для себя):
-
-```php
 'features' => [
-    'blobs'             => true,
-    'versions'          => true,
-    'grants'            => true,
-    'activity'          => true,
-    'uploads'           => true,
-    'share_links'       => false,
-    'document_versions' => false, // включает v_node_document_versions + API документ-узлов
-    'spreadsheets'      => false, // включает xlsx-обработчик UniverHandler
-    'public_listing'    => false,
-    'reliability'       => true,  // включает схему и маршруты outbox + вебхуков
+    'grants' => true,
+    'activity' => true,
+    'webhooks' => true,
+    'share_links' => false,
+    'public_listing' => false,
+    'spreadsheets' => false,
 ],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+    'permission_drivers' => [
+        'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+        'gate' => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+        'spatie' => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+        'null' => \Vaulter\Testing\NullPermissionDriver::class,
+    ],
+    // Здесь сохраняются карты abilities/permissions в gate.* и spatie.*.
+],
+'handlers' => [],
 ```
 
-Флаг гейтит **и** схему, **и** маршруты/подписчики, поэтому выключение оставляет миграцию и
-эндпоинты полностью вне приложения.
+`ids.host_keys = string` создаёт `varchar(64)` независимо от ID сущностей Vaulter.
+Выбирайте bigint/uuid/ulid только если все ключи хоста соответствуют этому типу.
+Изменение настроек схемы после миграций требует обновления схемы; см. UPGRADE.md.
 
-## Обработчики документов
+`tenancy.enabled` включает интеграцию с тенантностью хоста. Колонка всегда называется
+`tenant_id`; скоуп тенанта реализуйте в своих подклассах моделей.
+См. [Мультитенантность](/ru/guide/multi-tenancy).
 
-Реестр, маршрутизирующий узел к нужному обработчику формата (mime → расширение → возможности →
-приоритет), с откатом на «только-скачать». Новый формат — один класс плюс строка:
+В `profiles.providers` и `profiles.default` укажите FQCN `ProfileProvider`.
+Сгенерируйте провайдер командой `php artisan vaulter:make:profile project`.
+Ключи профилей должны быть уникальны, а профиль по умолчанию — зарегистрирован.
+См. [Профили Drive](/ru/concepts/storage-panels).
 
-```php
-'handlers' => [
-    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
-    \Vaulter\Handlers\Builtin\PreviewHandler::class,
-    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
-],
-```
+### Модели {#models}
 
-## Драйверы авторизации
+Подмены моделей core: `models.drive`, `node`, `file`, `file_revision`,
+`file_revision_blob`, `blob`, `grant`, `node_share`, `activity`, `outbox`,
+`webhook_endpoint` и `webhook_delivery`. Каждая модель наследует соответствующую базовую.
+Модели Drive и Documents находятся в собственных корнях конфигурации.
 
-Drive ACL комбинирует собственный `AccessResolver` со **сменным** драйвером ролей хоста.
-Драйвер по умолчанию `database` полностью автономен (без зависимости от хоста):
+Драйвер по умолчанию — автономный `database`. Карты Gate и Spatie находятся в
+`access.gate.*` и `access.spatie.*`. Установленный мост AzGuard регистрирует
+`access.permission_drivers.azgard`; настройки моста остаются в `vaulter-azgard.*`.
+Открытый драйвер `null` запрещён в production. См. [Драйверы прав](/ru/guide/permission-drivers).
 
-```php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
-],
+`handlers` содержит дополнительные FQCN `FileHandler`. Провайдеры регистрируют встроенные
+обработчики через тег контейнера `vaulter.file_handlers`: пустой список сохраняет
+preview/download и обработчики установленного Documents.
 
-'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // только не-прод
-],
-```
-
-У каждого не-`database`-драйвера своя подсекция, сопоставляющая уровень/способность Vaulter
-имени права хоста (`vaulter.gate.*`, `vaulter.spatie.*`, `vaulter-azgard.*`). Полный разбор — в
-[Драйвере ролей хоста](/ru/concepts/authorization).
-
-Ключ `azgard` регистрируется provider пакета `axioma-studio/vaulter-azgard`.
-Установите его командой `composer require axioma-studio/vaulter-azgard`; карта прав,
-`panel_id` и `create_permission` находятся в `config/vaulter-azgard.php`.
-
-::: danger Драйвер null
-`null` — открытый драйвер, доступный **только** вне прода. Валидация конфига отвергает панель
-на нём в проде — привяжите реальный драйвер перед деплоем.
-:::
-
-Также есть отдельный **легаси**-резолвер на документном пути:
+## Маршруты и публичные ссылки
 
 ```php
-'permission_resolver' => null, // FQCN реализации Contracts\Access\PermissionResolver или null
-```
-
-## Контент-адресуемое хранилище (CAS)
-
-Сменный конвейер блобов, область дедупликации, окно отсрочки GC и диск по умолчанию:
-
-```php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
+// config/vaulter.php
+'routes' => [
+    'prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
+    'middleware' => [
+        'authenticated' => ['api', 'auth:sanctum'],
+        'public' => ['api'],
+        'hub' => ['api'],
+    ],
+    'rate_limits' => ['public' => 60, 'uploads' => 120],
 ],
-
-'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global | tenant | storage
-],
-
-'gc' => [
-    'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24), // минимум 1 час
-],
-
-'storage' => [
-    'default_disk' => env('VAULTER_DISK', 'local'),
-],
-```
-
-::: warning Бакет без версионирования
-CAS-бакет должен быть **без версионирования** — не используйте lifecycle/versioning S3 как
-механизм удаления блобов; это конфликтует с двухфазным GC.
-:::
-
-## Шеринг
-
-Bearer-ссылки — отдельный публичный канал; хранится только `sha256`-хеш токена:
-
-```php
-'share_token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
-
-'share' => [
+'sharing' => [
     'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
-    'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),
-    'prefix_length'   => 8,
+    'url_base' => '/share',
+    'prefix_length' => 8,
 ],
 ```
 
-Двухканальный дизайн — [ADR-0013](/adr/0013-two-sharing-channels).
+Стек `authenticated` защищает маршруты акторов; публичные ссылки используют `public`,
+подписанные callback-запросы коллаборации — `hub`. Метрики запросов добавляются автоматически.
+Старый `middleware` влияет только на `authenticated`; публичный стек настройте отдельно.
+Установите Sanctum или замените `auth:sanctum` аутентификацией хоста.
 
-## Корзина
+`features.webhooks` управляет поведением вебхуков. Настройки доставки сохраняются в
+`webhooks.*`: URL guard, таймауты, повторы и сроки хранения. `listing.scan_budget`,
+`downloads.inline_mime_types` и `observability.*` также принадлежат core.
 
-Окно до безвозвратной очистки поддерева удалённого узла командой
-`php artisan vaulter:purge-trash`:
+## Media: контент-адресуемое хранилище
 
 ```php
-'trash' => [
-    'retention_days' => env('VAULTER_TRASH_RETENTION_DAYS', 30),
-],
+// config/vaulter-media.php
+'disk' => env('VAULTER_DISK', 'local'),
+'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // global | tenant | drive
+'gc' => ['grace_hours' => 24, 'orphan_grace_hours' => 24],
+'content_store' => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+'blob_store' => \Vaulter\Media\Cas\BlobStore::class,
 ```
 
-## Резюмируемые загрузки
+CAS-бакет должен быть без версионирования: удалением управляет двухфазный GC.
+Минимальное окно GC — один час. Каноническая область дедупликации — `drive`
+(раньше `storage`). Дедупликация использует сохранённый `scope_key`; смена области
+сохраняет старые блобы и влияет на новые загрузки.
+См. [Хранилище и блобы](/ru/guide/storage-and-blobs).
 
-Большие файлы грузятся резюмируемо (tus на любом диске; S3-multipart на объектных хранилищах),
-затем собираются через тот же гонко-безопасный `BlobStore.commit`:
+## Drive: загрузки, имена и корзина
 
 ```php
+// config/vaulter-drive.php
 'uploads' => [
-    'max_bytes'          => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 ГиБ
-    'chunk_size'         => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608),    // 8 МиБ
-    'session_ttl_hours'  => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
-    'tus' => ['enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true)],
-],
-```
-
-Флаг фичи `uploads` гейтит и схему, и группу маршрутов.
-
-## Надёжность — outbox и вебхуки
-
-Транзакционный outbox стейджит каждое доменное событие, затем relay разворачивает его в
-подписанные доставки вебхуков (at-least-once с backoff + DLQ):
-
-```php
-'webhooks' => [
-    'timeout'                => 5,
-    'max_attempts'           => 5,
-    'backoff'                => [10, 30, 60, 300, 1800],
-    'disable_after_failures' => 10,
-    'signature_header'       => 'X-Vaulter-Signature',
-    'timestamp_header'       => 'X-Vaulter-Timestamp',
-    'event_header'           => 'X-Vaulter-Event',
-    'retention_days'         => 30,
-    'manage_ability'         => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
-],
-```
-
-Гейтится флагом фичи `reliability`.
-
-## Документы и версии
-
-```php
-'max_versions'           => 50, // легаси-лимит версий документа (0 = без лимита)
-'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
-'max_document_size_kb'   => 5120,
-
-'versions' => [ // версии документ-узлов (M4a)
-    'max'                       => 50,
-    'autosave_debounce_seconds' => 30,
-],
-
-'drive' => [ // политика загрузки бинарных файлов (отдельно от лимита документов)
-    'max_upload_kb' => null,  // null = откат к max_document_size_kb
-    'allowed_mime'  => [],    // пусто = разрешено всё
-],
-```
-
-## Экспорт
-
-Сопоставление формата с `DocumentExporter` (добавьте PDF/DOCX/свой):
-
-```php
-'exporters' => [
-    'html'     => \Vaulter\Export\HtmlExporter::class,
-    'markdown' => \Vaulter\Export\MarkdownExporter::class,
-],
-```
-
-## Маршруты
-
-```php
-'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
-'middleware'   => ['api'],
-```
-
-## Совместное редактирование
-
-Источник истины — Yjs; транспорт сменяем за ключом `driver`:
-
-```php
-'collaboration' => [
-    'driver'         => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'), // hocuspocus
-    'channel_prefix' => 'vaulter.documents',
-    'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-    'drivers' => [
-        'hocuspocus' => [
-            'class'     => \Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver::class,
-            'url'       => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-            'app_id'    => env('VAULTER_COLLAB_APP_ID'),
-            'secret'    => env('VAULTER_COLLAB_SECRET'),
-            'token_ttl' => 3600,
+    'max_file_size' => 5_368_709_120, // байты; 0 = без ограничения
+    'allowed_mime_types' => [],
+    'resumable' => [
+        'enabled' => true,
+        'chunk_size' => 8_388_608,
+        'max_chunk_size' => 67_108_864,
+        'session_ttl_hours' => 24,
+        'max_active_sessions_per_actor' => 20,
+        'metadata' => [
+            'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+            'max_value_length' => 512,
         ],
     ],
 ],
-```
-
-- **`hocuspocus`** — внешний Node-хаб; клиент подключается с подписанным room-JWT, а хаб зовёт
-  обратно в collab-вебхуки.
-
-Решение — [ADR-0001](/adr/0001-collaboration-transport).
-
-## Тенантность
-
-Когда включено, миграции добавляют колонку тенанта. Vaulter **не** скоупит по ней за вас —
-предоставьте tenant-aware-модель:
-
-```php
-'tenant' => [
-    'enabled' => env('VAULTER_TENANT_ENABLED', false),
-    'column'  => 'tenant_id',
+'names' => ['max_length' => 255],
+'trash' => ['retention_days' => 30],
+'models' => [
+    'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
+    'upload_part' => \Vaulter\Drive\Models\Uploads\UploadPart::class,
 ],
 ```
+
+`max_file_size` — общий лимит в байтах для обычных и резюмируемых загрузок.
+Нулевой лимит чанка или активных сессий отключает это ограничение.
+`resumable.enabled` управляет резюмируемыми маршрутами; таблицы загрузок существуют
+независимо от флага. Правила разделителей имён зафиксированы в коде.
+См. [Загрузки](/ru/guide/uploads) и [Корзина](/ru/guide/trash).
+
+## Documents: содержимое, ревизии, комментарии и коллаборация
+
+```php
+// config/vaulter-documents.php
+'content' => ['max_size_kb' => 5120],
+'revisions' => ['limit' => 50, 'autosave_debounce_seconds' => 30],
+'comments' => ['enabled' => true],
+'exporters' => [
+    'html' => \Vaulter\Documents\Export\HtmlExporter::class,
+    'markdown' => \Vaulter\Documents\Export\MarkdownExporter::class,
+],
+'collaboration' => [
+    'enabled' => false,
+    'driver' => 'hocuspocus',
+    'hub' => [
+        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
+        'token_ttl' => 3600,
+        'timestamp_tolerance' => 300,
+    ],
+    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
+],
+'models' => [
+    'document_revision' => \Vaulter\Documents\Models\Revisions\DocumentRevision::class,
+    'node_comment' => \Vaulter\Documents\Models\Comments\NodeComment::class,
+],
+```
+
+Установка `vaulter-documents` включает редактирование документов и ревизии.
+Блобы и ревизии файлов включены всегда; `features.blobs`, `features.versions` и
+`features.document_versions` удалены. Старые `false` игнорируются с предупреждением.
+Комментарии теперь по умолчанию **включены**. Для отключения задайте
+`vaulter-documents.comments.enabled = false`. Опубликованный старый
+`features.comments = false` переносится и сохраняет отключение.
+Коллаборация остаётся опциональной. При её включении оба секрета хаба должны быть заданы
+и различаться: иначе production boot завершается исключением, а другие окружения пишут warning.
+
+`exporters` остаётся **картой формат → FQCN**. Расширения allow-list TipTap переезжают в
+`vaulter-documents.tiptap.*`. В этой итерации `vaulter.enabled_document_types` и
+`vaulter.features.spreadsheets` остаются в core; их читают
+`DocumentsConfig::enabledDocumentTypes()` и `spreadsheetsEnabled()`.
+См. [Совместное редактирование](/ru/guide/collaboration) и [Экспорт](/ru/guide/export).
+
+## Типизированный доступ
+
+Классы конфигурации — `final readonly` singleton поверх
+`Illuminate\Contracts\Config\Repository`. В сервисах используйте конструкторную
+инъекцию; в моделях, миграциях и статических контекстах — `app(...)`.
+
+```php
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Documents\Configuration\DocumentsConfig;
+
+final readonly class ExportPolicy
+{
+    public function __construct(
+        private VaulterConfig $config,
+        private DocumentsConfig $documents,
+    ) {}
+
+    public function revisionLimit(): int
+    {
+        return $this->documents->revisionLimit();
+    }
+}
+
+$database = app(VaulterConfig::class)->database();
+$table = $database->table('drives');
+$connection = $database->connection();
+```
+
+`VaulterConfig` даёт секции `database()`, `ids()`, `tenancy()`, `access()`, `routes()`,
+`listing()`, `sharing()`, `downloads()`, `webhooks()`, `observability()` и методы
+`model(string)`, `featureEnabled(string)`, `profileProviders()`, `defaultProfile()`,
+`handlers()`, `extraDataEnabled()`. Классы модулей дают собственные модели и настройки.
+Каждый вызов заново читает репозиторий: `config()->set()` в тестах сразу меняет результат.
+Код пакетов читает ключи Vaulter только в `Configuration`; границу проверяют arch-тесты.
+
+## Переход с опубликованной конфигурации 0.2
+
+Перед boot провайдеров `ConfigNormalizer` переносит старые ключи установленных пакетов.
+Каждый устаревший ключ даёт один `E_USER_DEPRECATED`; повторная нормализация не повторяет
+предупреждения. Если явно изменённый канонический ключ отличается от переведённого
+старого значения, возникает `Vaulter\Exceptions\Configuration\InvalidConfigurationException`.
+Равные значения дают только deprecation. Ключи отсутствующих модулей не затрагиваются.
+Поддержка устаревших ключей заканчивается в 1.0.
+
+| Устаревший ключ | Канонический ключ |
+|---|---|
+| `vaulter.connection` | `vaulter.database.connection` |
+| `vaulter.table_prefix` | `vaulter.database.table_prefix` |
+| `vaulter.id_type / vaulter.ids.default` | `vaulter.ids.strategy` |
+| `vaulter.tenant.enabled` | `vaulter.tenancy.enabled` |
+| `vaulter.panels / vaulter.default_panel` | `vaulter.profiles.providers / vaulter.profiles.default` |
+| `vaulter.features.reliability` | `vaulter.features.webhooks` |
+| `vaulter.drivers.permission` | `vaulter.access.permission_driver` |
+| `vaulter.permission_drivers` | `vaulter.access.permission_drivers` |
+| `vaulter.gate.* / vaulter.spatie.*` | `vaulter.access.gate.* / vaulter.access.spatie.*` |
+| `vaulter.azgard.*` | `vaulter-azgard.*` |
+| `vaulter.route_prefix` | `vaulter.routes.prefix` |
+| `vaulter.middleware` | `vaulter.routes.middleware.authenticated` |
+| `vaulter.rate_limits.{public,uploads}.per_minute` | `vaulter.routes.rate_limits.{public,uploads}` |
+| `vaulter.share_token_generator / vaulter.share.token_generator` | `vaulter.sharing.token_generator` |
+| `vaulter.share.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` | `vaulter.sharing.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` |
+| `vaulter.downloads.inline_mime_whitelist` | `vaulter.downloads.inline_mime_types` |
+| `vaulter.storage.default_disk` | `vaulter-media.disk` |
+| `vaulter.dedup.scope` | `vaulter-media.dedup.scope` |
+| `vaulter.gc.*` | `vaulter-media.gc.*` |
+| `vaulter.cas.{content_store,storage_driver,blob_store}` | `vaulter-media.{content_store,storage_driver,blob_store}` |
+| `vaulter.uploads.max_bytes / vaulter.drive.max_upload_kb` | `vaulter-drive.uploads.max_file_size` |
+| `vaulter.drive.allowed_mime` | `vaulter-drive.uploads.allowed_mime_types` |
+| `vaulter.uploads.chunk_size` | `vaulter-drive.uploads.resumable.chunk_size` |
+| `vaulter.uploads.max_chunk_bytes` | `vaulter-drive.uploads.resumable.max_chunk_size` |
+| `vaulter.uploads.session_ttl_hours` | `vaulter-drive.uploads.resumable.session_ttl_hours` |
+| `vaulter.uploads.max_active_sessions` | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` |
+| `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
+| `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
+| `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
+| `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
+| `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
+| `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
+| `vaulter.versions.autosave_debounce_seconds` | `vaulter-documents.revisions.autosave_debounce_seconds` |
+| `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
+| `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
+| `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
+| `vaulter.collaboration.channel_prefix` | `vaulter-documents.collaboration.broadcast.channel_prefix` |
+| `vaulter.collaboration.webhook_secret` | `vaulter-documents.collaboration.hub.webhook_secret` |
+| `vaulter.collaboration.webhook_timestamp_tolerance` | `vaulter-documents.collaboration.hub.timestamp_tolerance` |
+| `vaulter.collaboration.drivers.hocuspocus.secret` | `vaulter-documents.collaboration.hub.jwt_secret` |
+| `vaulter.collaboration.drivers.hocuspocus.{url,token_ttl}` | `vaulter-documents.collaboration.hub.{url,token_ttl}` |
+| `vaulter.tiptap.*` | `vaulter-documents.tiptap.*` |
+| `vaulter.exporters` | `vaulter-documents.exporters` |
+| `vaulter.models.storage` | `vaulter.models.drive` |
+| `vaulter.models.file_version / vaulter.models.file_version_blob` | `vaulter.models.file_revision / vaulter.models.file_revision_blob` |
+| `vaulter.models.upload_session / vaulter.models.upload_part` | `vaulter-drive.models.upload_session / vaulter-drive.models.upload_part` |
+| `vaulter.models.node_comment` | `vaulter-documents.models.node_comment` |
+| `vaulter.models.node_document_version` | `vaulter-documents.models.document_revision` |
+| `vaulter-filament.resources.storage` | `vaulter-filament.resources.drive` |
+
+`id_type = id` превращается в `ids.strategy = bigint`; `ulid` остаётся `ulid`.
+Старые классы панелей нужно переписать как `ProfileProvider`; исключение подскажет
+`vaulter:make:profile`. Лимиты загрузок сравниваются в байтах (`max_upload_kb × 1024`):
+различающиеся старые лимиты дают warning и используется меньший.
+Старый `false` для uploads или tus отключает `resumable.enabled`.
+
+Когда заданы оба старых ID-ключа, `ids.default` сохраняет приоритет над `id_type`.
+Для старых алиасов share-токена пользовательское значение побеждает поставляемый дефолт;
+два разных пользовательских значения вызывают `InvalidConfigurationException`.
+Оставьте один `sharing.token_generator`.
+
+`tenant.column`, `drive.name_rules.no_separators_pattern` и `migrations.path` игнорируются
+с deprecation: имя колонки тенанта и правила разделителей теперь фиксированы.
+Оставьте `table_names` только на время обновления физических таблиц.
+
+Старую публикацию Media перенесите в `config/vaulter-media.php`. Нормализатор переводит
+точные строки FQCN встроенных классов на старых ключах и сохраняет пользовательские FQCN.
+PHP-импорты и объявления собственных классов требуют канонических имён; PHP-алиасов нет.
+См. [UPGRADE.md](https://github.com/axioma-studio/vaulter/blob/main/UPGRADE.md).

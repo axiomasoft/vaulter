@@ -1,407 +1,343 @@
 ---
 title: Configuration
-description: A section-by-section walkthrough of config/vaulter.php — models, table names, id strategy, panels, features, permission drivers, CAS, sharing, uploads, webhooks and collaboration.
+description: Package-owned configuration, typed accessors and migration from published 0.2 keys.
 outline: deep
 ---
 
 # Configuration
 
-Publish the config with:
+Each installed package owns one config file and one typed configuration API (AD26).
+Publish only the files you need; for example:
 
 ```bash
 php artisan vendor:publish --tag=vaulter-config
+php artisan vendor:publish --tag=vaulter-documents-config
 ```
 
-It lands at `config/vaulter.php`. This page walks every section. The config is **cache-safe**
-— every swappable binding is a fully-qualified class name (FQCN) string, never a closure — so
-`php artisan config:cache` works.
+| Package | Published file | Publish tag | Configuration class |
+|---|---|---|---|
+| Core | `config/vaulter.php` | `vaulter-config` | `Vaulter\Configuration\VaulterConfig` |
+| Media | `config/vaulter-media.php` | `vaulter-media-config` | `Vaulter\Media\Configuration\MediaConfig` |
+| Drive | `config/vaulter-drive.php` | `vaulter-drive-config` | `Vaulter\Drive\Configuration\DriveConfig` |
+| Documents | `config/vaulter-documents.php` | `vaulter-documents-config` | `Vaulter\Documents\Configuration\DocumentsConfig` |
+| AzGuard | `config/vaulter-azgard.php` | `vaulter-azgard-config` | `Vaulter\Azgard\Configuration\AzgardConfig` |
+| Filament | `config/vaulter-filament.php` | `vaulter-filament-config` | `Vaulter\Filament\Configuration\FilamentConfig` |
 
-::: tip Looking for a single key?
-This page is the narrative walkthrough. For an exhaustive, alphabetical lookup table see the
-[config-key reference](/reference/configuration).
-:::
+All bindings use FQCN strings. Closures are rejected at boot, so the files remain safe
+for `php artisan config:cache`. See the [key reference](/reference/configuration) for defaults.
 
-## Models
+## Core: database, IDs, profiles and access
 
-Every Vaulter entity is resolved through this map, so you can point any of them at your own
-subclass (to add ULID keys, tenant scoping, audit behaviour, …):
+Only core owns schema settings: `database.connection`, `database.table_prefix`,
+`ids.strategy`, `ids.host_keys` and `tenancy.enabled`. A null connection uses Laravel's
+default connection. Tables use the prefix plus their canonical entity name:
+`DatabaseConfig::table('drives')` returns `v_drives` by default. `table_names` is an
+upgrade input only, read by `DatabaseConfig::legacyTable()` to locate old physical tables.
 
 ```php
-'models' => [
-    // Vaulter Drive entities
-    'storage'    => \Vaulter\Models\Drive\Drive::class,
-    'node'       => \Vaulter\Models\Drive\Node::class,
-    'file'       => \Vaulter\Models\Drive\File::class,
-    'blob'       => \Vaulter\Models\Cas\Blob::class,
-    'grant'      => \Vaulter\Models\Access\NodeGrant::class,
-    'node_share' => \Vaulter\Models\Sharing\NodeShare::class,
-    // …and file_version, file_version_blob, activity, outbox, webhook_endpoint,
-    //    webhook_delivery
+// config/vaulter.php
+'database' => [
+    'connection' => env('VAULTER_DB_CONNECTION'),
+    'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
 ],
-```
-
-::: info Drive/Documents-owned models
-`upload_session` / `upload_part` are owned by `axioma-studio/vaulter-drive`; the
-node-attached `node_comment` / `node_document_version` models are owned by
-`axioma-studio/vaulter-documents`. Neither ships a default here — each package merges
-its own entry via its own `config/vaulter-drive.php` / `config/vaulter-documents.php`
-and throws if you resolve it without the package installed. The legacy
-document-id-attached models (`document`, `version`, `folder`, `permission`, `comment`,
-`share`) were fully excised — see [ADR-0014](/adr/0014-legacy-docvault-strangler).
-:::
-
-Vaulter route-binds `{storage}` and `{node}` against whatever you put here, so a host subclass
-keeps resolving. See [Multi-tenancy](/guide/multi-tenancy) for the tenant-aware-model pattern.
-
-## Table names & prefix
-
-Every table is named `{table_prefix}{canonical_entity}`. Configure a global prefix:
-
-```php
-'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'), // v_drives, v_nodes, …
-```
-
-`Config::table('drives')` returns `v_drives`. Per-entity `table_names` overrides
-are legacy upgrade inputs only: `Config::legacyTable()` reads them while migrations
-normalize old physical names. Fresh installs ignore them. All core tables exist
-regardless of feature flags; runtime routes and behavior still honor those flags.
-Back up before upgrading; see [UPGRADE.md](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
-
-## Primary key strategy (`ids`)
-
-The id strategy decides the column type of Vaulter primary keys and references.
-**Default is `ulid`**. Keys owned by the host use the separate `ids.host_keys` setting (AD25).
-
-```php
 'ids' => [
-    'default' => env('VAULTER_ID_STRATEGY', 'ulid'), // ulid | uuid7 | bigint
+    'strategy' => env('VAULTER_ID_STRATEGY', 'ulid'), // bigint | ulid | uuid7
     'host_keys' => env('VAULTER_HOST_KEYS', 'string'), // string | bigint | uuid | ulid
     'strategies' => [
         'bigint' => \Vaulter\Schema\AutoIncrementIds::class,
-        'ulid'   => \Vaulter\Schema\UlidIds::class,
-        'uuid7'  => \Vaulter\Schema\Uuid7Ids::class,
+        'ulid' => \Vaulter\Schema\UlidIds::class,
+        'uuid7' => \Vaulter\Schema\Uuid7Ids::class,
     ],
 ],
-```
-
-| Strategy | Column | Use when |
-|---|---|---|
-| `ulid` | 26-char ULID string | **Default.** Sortable, ecosystem-aligned morphs. |
-| `uuid7` | native Postgres `uuid` | You want native uuid columns. |
-| `bigint` | auto-increment big integer | Legacy / integer-key installs. |
-
-::: warning Legacy `id_type`
-The old binary `id_type` (`'id'` / `'ulid'`) key still exists for backward compatibility.
-When `ids.default` is set, **it wins**; otherwise the strategy is derived from `id_type`
-(`id → bigint`, `ulid → ulid`) so existing installs keep working. New installs should use
-`ids.default`. See [ADR-0011](/adr/0011-id-strategy).
-:::
-
-### Host keys (`ids.host_keys`)
-
-`string` is the default and emits `varchar(64)`. It accepts UUID users, bigint projects,
-ULID actors and bigint Spatie roles together, independently of Vaulter's own ID strategy.
-The setting applies to storage owners, grant subjects, comment authors, every `tenant_id`
-and actor columns such as `created_by`, `granted_by` and `activity.actor_id`.
-
-| Host-key setting | PostgreSQL | MySQL / MariaDB |
-|---|---|---|
-| `string` | `varchar(64)` | `varchar(64)` |
-| `bigint` | `bigint` | `bigint unsigned` |
-| `uuid` | `uuid` | `char(36)` |
-| `ulid` | `char(26)` | `char(26)` |
-
-Choose a narrower type only when every host key fits it. Unknown settings throw
-`InvalidArgumentException`. Host migrations can use `VaulterSchema::hostKey($table, 'owner_id')`;
-`actor()` and `tenant()` also use this setting. `key()`, `reference()` and `morphs()`
-continue to use Vaulter's entity-ID strategy. Existing installations run upgrade migration
-`2026_10_01_000003_host_key_columns`; see `UPGRADE.md`.
-
-## Storage Panels
-
-A panel is a named config-envelope bound to a host entity over the shared `v_*` schema, with
-**zero migrations** by default. List your provider FQCNs here:
-
-```php
-'panels' => [
-    \App\Vaulter\Profiles\ProjectDriveProfile::class,
+'profiles' => [
+    'default' => \Vaulter\Profiles\DefaultProfile::class,
+    'providers' => [\App\Vaulter\Profiles\ProjectProfile::class],
 ],
-'default_panel' => \Vaulter\Profiles\DefaultProfile::class,
-
-'migrations' => [
-    'path' => null, // legacy key; no longer used by profile scaffolding
-],
-```
-
-Scaffold one with `php artisan vaulter:make:profile <name>`. Deep dive:
-[Storage Panels](/guide/storage-panels).
-
-## Features
-
-Install-wide feature flags (a panel may override any of them per-panel):
-
-```php
 'features' => [
-    'blobs'             => true,
-    'versions'          => true,
-    'grants'            => true,
-    'activity'          => true,
-    'uploads'           => true,
-    'share_links'       => false,
-    'document_versions' => false, // gates v_node_document_versions + document-node API
-    'spreadsheets'      => false, // gates the xlsx UniverHandler
-    'public_listing'    => false,
-    'reliability'       => true,  // gates the outbox + webhook schema and routes
+    'grants' => true,
+    'activity' => true,
+    'webhooks' => true,
+    'share_links' => false,
+    'public_listing' => false,
+    'spreadsheets' => false,
 ],
+'access' => [
+    'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
+    'permission_drivers' => [
+        'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
+        'gate' => \Vaulter\Access\Drivers\GatePermissionDriver::class,
+        'spatie' => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
+        'null' => \Vaulter\Testing\NullPermissionDriver::class,
+    ],
+    // gate.* and spatie.* retain their ability/permission maps here.
+],
+'handlers' => [],
 ```
 
-A flag gates **both** the relevant schema and the routes/subscribers, so turning one off keeps
-the migration and the endpoints out of the app entirely.
+### Host keys (`ids.host_keys`) {#host-keys-ids-host-keys}
 
-## Document handlers
+`ids.host_keys = string` emits `varchar(64)` independently of Vaulter's entity IDs.
+Narrow it to bigint/uuid/ulid only when all host-owned keys fit that type. Changing schema
+settings after migration requires a schema upgrade; see UPGRADE.md.
 
-The registry that routes a node to the right format handler (mime → extension → capability →
-priority), falling back to download-only. Add a format with one class + one line here:
+Set `tenancy.enabled` to opt into your host's tenancy setup. The column name is always
+`tenant_id`; supply tenant-aware model subclasses to apply your host's scope.
+See [Multi-tenancy](/guide/multi-tenancy).
 
-```php
-'handlers' => [
-    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
-    \Vaulter\Handlers\Builtin\PreviewHandler::class,
-    \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
-],
-```
+`profiles.providers` and `profiles.default` contain `ProfileProvider` FQCNs. Scaffold one
+with `php artisan vaulter:make:profile project`. Profile keys must be unique and the
+default must be registered. See [Drive Profiles](/guide/storage-panels).
 
-See [Document types](/guide/document-handlers) and the [custom-handler recipe](/guide/recipes).
+### Models {#models}
 
-## Authorization drivers
+Core model overrides are `models.drive`, `node`, `file`, `file_revision`,
+`file_revision_blob`, `blob`, `grant`, `node_share`, `activity`, `outbox`,
+`webhook_endpoint` and `webhook_delivery`; each must extend the matching built-in model.
+Drive and Documents models live under their own config roots.
 
-The Drive ACL combines the Vaulter-owned `AccessResolver` with a **swappable** host-role
-driver. The default `database` driver is fully standalone (zero host dependency):
+The standalone `database` permission driver is the default. Gate and Spatie maps now
+live at `access.gate.*` and `access.spatie.*`. The installed AzGuard bridge registers
+`access.permission_drivers.azgard`; its own settings remain in `vaulter-azgard.*`.
+The open `null` driver is rejected in production. See [Permission drivers](/guide/permission-drivers).
 
-```php
-'drivers' => [
-    'permission' => env('VAULTER_PERMISSION_DRIVER', 'database'),
-],
+`handlers` contains additional `FileHandler` FQCNs. Providers register built-in handlers
+through the `vaulter.file_handlers` container tag, so an empty list retains preview/download
+and the installed Documents handlers.
 
-'permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
-],
-```
-
-Each non-database driver has its own sub-block mapping a Vaulter grant level / ability to a
-host permission name (`vaulter.gate.*`, `vaulter.spatie.*`, `vaulter-azgard.*`). The full per-driver config is in
-[Host-role driver](/guide/permission-drivers).
-
-The `axioma-studio/vaulter-azgard` provider registers the `azgard` key. Install it with
-`composer require axioma-studio/vaulter-azgard`; its permission map, `panel_id` and
-`create_permission` live in `config/vaulter-azgard.php`.
-
-::: danger Null driver
-`null` is an open driver selectable **only** outside production. Config validation rejects a
-panel bound to it in production — bind a real driver before deploying. If you just need a
-working smoke-test default, the standalone `database` driver above is the intended path —
-note it is fail-closed (an empty `v_node_grants` means no access, not open access), so seed
-grants or pick a driver whose host roles broaden access before assuming "it's not working".
-:::
-
-## Content-addressed storage (CAS)
-
-The swappable blob pipeline, the deduplication scope, the GC grace window and the default
-disk:
+## Routes and sharing {#routes}
 
 ```php
-'cas' => [
-    'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
-    'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
-    'blob_store'     => \Vaulter\Media\Cas\BlobStore::class,
-],
-
-'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global | tenant | storage
-],
-
-'gc' => [
-    'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24), // floored at 1h
-],
-
-'storage' => [
-    'default_disk' => env('VAULTER_DISK', 'local'),
-],
-```
-
-::: warning Unversioned bucket
-The CAS bucket must be **unversioned** — never use S3 lifecycle/versioning as a blob-deletion
-mechanism; that fights the two-phase GC. See [Concepts → Blobs](/guide/storage-and-blobs) and the
-[blob-GC recipe](/guide/recipes).
-:::
-
-## Sharing
-
-Bearer share-links are a separate public channel; only the `sha256` hash of a token is stored:
-
-```php
-'share_token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
-
-'share' => [
-    'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
-    'url_base'        => env('VAULTER_SHARE_URL_BASE', '/share'),
-    'prefix_length'   => 8,
-],
-```
-
-Both channels (bearer node links and legacy document shares) are covered in
-[Sharing](/guide/sharing); the two-channel design is [ADR-0013](/adr/0013-two-sharing-channels).
-
-## Trash retention
-
-The window before a trashed node's subtree is permanently purged by
-`php artisan vaulter:purge-trash`:
-
-```php
-'trash' => [
-    'retention_days' => env('VAULTER_TRASH_RETENTION_DAYS', 30),
-],
-```
-
-## Resumable uploads
-
-Large files upload resumably (tus on any disk; S3-multipart on object stores), then assemble
-through the same race-free `BlobStore.commit`:
-
-```php
-'uploads' => [
-    'max_bytes'          => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120), // 5 GiB
-    'chunk_size'         => env('VAULTER_UPLOAD_CHUNK_SIZE', 8_388_608),    // 8 MiB
-    'session_ttl_hours'  => env('VAULTER_UPLOAD_SESSION_TTL_HOURS', 24),
-    'tus' => ['enabled' => env('VAULTER_UPLOAD_TUS_ENABLED', true)],
-],
-```
-
-The `uploads` feature flag gates the route group; upload tables always exist. Details in
-[Uploads](/guide/uploads).
-
-## Reliability — outbox & webhooks
-
-A transactional outbox stages each domain event, then a relay fans it out to signed webhook
-deliveries (at-least-once with backoff + DLQ):
-
-```php
-'webhooks' => [
-    'timeout'                => 5,
-    'max_attempts'           => 5,
-    'backoff'                => [10, 30, 60, 300, 1800],
-    'disable_after_failures' => 10,
-    'signature_header'       => 'X-Vaulter-Signature',
-    'timestamp_header'       => 'X-Vaulter-Timestamp',
-    'event_header'           => 'X-Vaulter-Event',
-    'retention_days'         => 30,  // age past which vaulter:prune-webhooks reclaims SETTLED audit rows
-    'manage_ability'         => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
-],
-```
-
-Gated by the `reliability` feature flag. `retention_days` (floored at 0) is the window
-`vaulter:prune-webhooks` uses to delete *settled* history — dispatched outbox rows and
-terminal (`delivered`/`dead`) deliveries — while never touching in-flight rows. See the
-[reliability & webhooks recipe](/guide/recipes).
-
-## Documents & versions
-
-```php
-'max_versions'           => 50, // legacy document version cap (0 = unlimited)
-'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
-'max_document_size_kb'   => 5120,
-
-'versions' => [ // node-attached document versions (M4a)
-    'max'                       => 50,
-    'autosave_debounce_seconds' => 30,
-],
-
-'drive' => [ // binary Drive upload policy (kept apart from the document limit)
-    'max_upload_kb' => null,  // null = falls back to max_document_size_kb
-    'allowed_mime'  => [],    // empty = permissive
-],
-```
-
-## Export
-
-Map a format to a `DocumentExporter` (add PDF/DOCX/your own):
-
-```php
-'exporters' => [
-    'html'     => \Vaulter\Export\HtmlExporter::class,
-    'markdown' => \Vaulter\Export\MarkdownExporter::class,
-],
-```
-
-See [Export](/guide/export) and the [custom-export recipe](/guide/recipes).
-
-## Routes
-
-```php
-'route_prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
+// config/vaulter.php
 'routes' => [
+    'prefix' => env('VAULTER_ROUTE_PREFIX', 'api/vaulter'),
     'middleware' => [
         'authenticated' => ['api', 'auth:sanctum'],
         'public' => ['api'],
         'hub' => ['api'],
     ],
+    'rate_limits' => ['public' => 60, 'uploads' => 120],
+],
+'sharing' => [
+    'token_generator' => \Vaulter\Support\RandomShareTokenGenerator::class,
+    'url_base' => '/share',
+    'prefix_length' => 8,
 ],
 ```
 
-Protected routes use the `authenticated` stack. Public `share/{token}*` routes use
-`public` plus the token resolver; signed `collab/authenticate` and `collab/store`
-callbacks use `hub`. Both public surfaces retain `throttle:vaulter-public`, and
-resumable uploads retain `throttle:vaulter-uploads`. Request metrics are appended
-once to every stack automatically.
+The authenticated stack protects actor routes; public share links use `public`, and signed
+collaboration callbacks use `hub`. Request metrics are appended automatically. The old
+`middleware` setting affects only the authenticated stack; configure public middleware
+explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
 
-Install Laravel Sanctum for the default `auth:sanctum` guard, or replace that entry
-with your application's authentication middleware. The legacy `vaulter.middleware`
-key overrides only `authenticated` when non-null, including an explicit empty list;
-remove it to enable the new default. `Config::middleware()` is replaced by
-`authenticatedMiddleware()`, `publicMiddleware()` and `hubMiddleware()` (AD31).
-Resource resolution applies only to Vaulter routes; host `{node}` and `{storage}`
-parameters keep their own bindings.
+`features.webhooks` controls webhook runtime behavior. Existing delivery settings remain
+under `webhooks.*`, including the URL guard, timeout, retry/backoff and retention controls.
+`listing.scan_budget`, `downloads.inline_mime_types` and `observability.*` remain core-owned.
 
-## Collaboration
-
-Yjs is the source of truth; the transport is swappable behind `driver`:
+## Media: content-addressed storage
 
 ```php
-'collaboration' => [
-    'driver'         => env('VAULTER_COLLAB_DRIVER', 'hocuspocus'), // hocuspocus
-    'channel_prefix' => 'vaulter.documents',
-    'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
-    'drivers' => [
-        'hocuspocus' => [
-            'class'     => \Vaulter\Documents\Collaboration\HocuspocusCollaborationDriver::class,
-            'url'       => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
-            'app_id'    => env('VAULTER_COLLAB_APP_ID'),
-            'secret'    => env('VAULTER_COLLAB_SECRET'),
-            'token_ttl' => 3600,
+// config/vaulter-media.php
+'disk' => env('VAULTER_DISK', 'local'),
+'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // global | tenant | drive
+'gc' => ['grace_hours' => 24, 'orphan_grace_hours' => 24],
+'content_store' => \Vaulter\Media\Cas\Sha256ContentStore::class,
+'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
+'blob_store' => \Vaulter\Media\Cas\BlobStore::class,
+```
+
+Use an unversioned CAS bucket; blob deletion is managed by two-phase GC. Grace windows
+are floored at one hour. The canonical dedup scope is `drive` (formerly `storage`).
+Deduplication uses the stored `scope_key`; changing the scope leaves existing blobs valid
+and affects new uploads. See [Storage & blobs](/guide/storage-and-blobs).
+
+## Drive: uploads, names and trash
+
+```php
+// config/vaulter-drive.php
+'uploads' => [
+    'max_file_size' => 5_368_709_120, // bytes; 0 = unlimited
+    'allowed_mime_types' => [],
+    'resumable' => [
+        'enabled' => true,
+        'chunk_size' => 8_388_608,
+        'max_chunk_size' => 67_108_864,
+        'session_ttl_hours' => 24,
+        'max_active_sessions_per_actor' => 20,
+        'metadata' => [
+            'allowed_keys' => ['filename', 'filetype', 'name', 'mime_type'],
+            'max_value_length' => 512,
         ],
     ],
 ],
-```
-
-- **`hocuspocus`** — an external Node hub; the client connects with a signed room JWT and the
-  hub calls back into the collab webhooks.
-
-Full setup in [Collaboration → overview](/guide/collaboration) and
-[server](/guide/collaboration). The decision is [ADR-0001](/adr/0001-collaboration-transport).
-
-## Tenancy
-
-When enabled, migrations add a tenant column. Vaulter does **not** scope by it for you —
-supply a tenant-aware model:
-
-```php
-'tenant' => [
-    'enabled' => env('VAULTER_TENANT_ENABLED', false),
-    'column'  => 'tenant_id',
+'names' => ['max_length' => 255],
+'trash' => ['retention_days' => 30],
+'models' => [
+    'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
+    'upload_part' => \Vaulter\Drive\Models\Uploads\UploadPart::class,
 ],
 ```
 
-See [Multi-tenancy](/guide/multi-tenancy).
+`max_file_size` is a byte limit shared by ordinary and resumable uploads. A zero chunk cap
+or active-session cap disables that cap. `resumable.enabled` controls resumable endpoints;
+upload tables exist independently of this setting. Name separator rules are fixed in code.
+See [Uploads](/guide/uploads) and [Trash](/guide/trash).
+
+## Documents: content, revisions, comments and collaboration
+
+```php
+// config/vaulter-documents.php
+'content' => ['max_size_kb' => 5120],
+'revisions' => ['limit' => 50, 'autosave_debounce_seconds' => 30],
+'comments' => ['enabled' => true],
+'exporters' => [
+    'html' => \Vaulter\Documents\Export\HtmlExporter::class,
+    'markdown' => \Vaulter\Documents\Export\MarkdownExporter::class,
+],
+'collaboration' => [
+    'enabled' => false,
+    'driver' => 'hocuspocus',
+    'hub' => [
+        'url' => env('VAULTER_COLLAB_URL', 'ws://localhost:1234'),
+        'jwt_secret' => env('VAULTER_COLLAB_SECRET'),
+        'webhook_secret' => env('VAULTER_COLLAB_WEBHOOK_SECRET'),
+        'token_ttl' => 3600,
+        'timestamp_tolerance' => 300,
+    ],
+    'broadcast' => ['channel_prefix' => 'vaulter.documents'],
+],
+'models' => [
+    'document_revision' => \Vaulter\Documents\Models\Revisions\DocumentRevision::class,
+    'node_comment' => \Vaulter\Documents\Models\Comments\NodeComment::class,
+],
+```
+
+Installing `vaulter-documents` enables document editing and revisions. Blobs and file
+revisions are always enabled; `features.blobs`, `features.versions` and
+`features.document_versions` are removed. Old `false` values warn and are ignored.
+Comments now default to **true**; set `vaulter-documents.comments.enabled = false`
+to disable them. A published old `features.comments = false` is migrated and stays false.
+Collaboration remains opt-in. When enabled, both hub secrets must be present and distinct:
+production boot fails otherwise; development and testing log a warning.
+
+`exporters` remains a **format → FQCN map**. Custom TipTap allow-lists move to
+`vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` and
+`vaulter.features.spreadsheets` remain in core for this transition; they are read through
+`DocumentsConfig::enabledDocumentTypes()` and `spreadsheetsEnabled()`.
+See [Collaboration](/guide/collaboration) and [Export](/guide/export).
+
+## Typed access
+
+Configuration classes are `final readonly` singletons over
+`Illuminate\Contracts\Config\Repository`. Inject them into services. In models,
+migrations and static contexts, resolve them with `app(...)`.
+
+```php
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Documents\Configuration\DocumentsConfig;
+
+final readonly class ExportPolicy
+{
+    public function __construct(
+        private VaulterConfig $config,
+        private DocumentsConfig $documents,
+    ) {}
+
+    public function revisionLimit(): int
+    {
+        return $this->documents->revisionLimit();
+    }
+}
+
+$database = app(VaulterConfig::class)->database();
+$table = $database->table('drives');
+$connection = $database->connection();
+```
+
+`VaulterConfig` exposes `database()`, `ids()`, `tenancy()`, `access()`, `routes()`,
+`listing()`, `sharing()`, `downloads()`, `webhooks()` and `observability()`, plus
+`model(string)`, `featureEnabled(string)`, `profileProviders()`, `defaultProfile()`,
+`handlers()` and `extraDataEnabled()`. Module classes expose their own models and settings.
+Values are read on every call: changing the repository with `config()->set()` in tests is
+visible immediately. Package code reads Vaulter keys only within `Configuration` classes;
+architecture checks enforce this boundary.
+
+## Migrating published 0.2 configuration
+
+Before providers boot, `ConfigNormalizer` translates old keys for installed packages.
+Each deprecated key emits one `E_USER_DEPRECATED`; repeated normalization does not
+repeat warnings. If an explicitly customized canonical value differs from the translated
+legacy value, boot throws `Vaulter\Exceptions\Configuration\InvalidConfigurationException`.
+Equal values emit only the deprecation. Legacy keys for absent modules are left untouched.
+Support for deprecated keys ends at 1.0.
+
+| Deprecated key | Canonical key |
+|---|---|
+| `vaulter.connection` | `vaulter.database.connection` |
+| `vaulter.table_prefix` | `vaulter.database.table_prefix` |
+| `vaulter.id_type / vaulter.ids.default` | `vaulter.ids.strategy` |
+| `vaulter.tenant.enabled` | `vaulter.tenancy.enabled` |
+| `vaulter.panels / vaulter.default_panel` | `vaulter.profiles.providers / vaulter.profiles.default` |
+| `vaulter.features.reliability` | `vaulter.features.webhooks` |
+| `vaulter.drivers.permission` | `vaulter.access.permission_driver` |
+| `vaulter.permission_drivers` | `vaulter.access.permission_drivers` |
+| `vaulter.gate.* / vaulter.spatie.*` | `vaulter.access.gate.* / vaulter.access.spatie.*` |
+| `vaulter.azgard.*` | `vaulter-azgard.*` |
+| `vaulter.route_prefix` | `vaulter.routes.prefix` |
+| `vaulter.middleware` | `vaulter.routes.middleware.authenticated` |
+| `vaulter.rate_limits.{public,uploads}.per_minute` | `vaulter.routes.rate_limits.{public,uploads}` |
+| `vaulter.share_token_generator / vaulter.share.token_generator` | `vaulter.sharing.token_generator` |
+| `vaulter.share.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` | `vaulter.sharing.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` |
+| `vaulter.downloads.inline_mime_whitelist` | `vaulter.downloads.inline_mime_types` |
+| `vaulter.storage.default_disk` | `vaulter-media.disk` |
+| `vaulter.dedup.scope` | `vaulter-media.dedup.scope` |
+| `vaulter.gc.*` | `vaulter-media.gc.*` |
+| `vaulter.cas.{content_store,storage_driver,blob_store}` | `vaulter-media.{content_store,storage_driver,blob_store}` |
+| `vaulter.uploads.max_bytes / vaulter.drive.max_upload_kb` | `vaulter-drive.uploads.max_file_size` |
+| `vaulter.drive.allowed_mime` | `vaulter-drive.uploads.allowed_mime_types` |
+| `vaulter.uploads.chunk_size` | `vaulter-drive.uploads.resumable.chunk_size` |
+| `vaulter.uploads.max_chunk_bytes` | `vaulter-drive.uploads.resumable.max_chunk_size` |
+| `vaulter.uploads.session_ttl_hours` | `vaulter-drive.uploads.resumable.session_ttl_hours` |
+| `vaulter.uploads.max_active_sessions` | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` |
+| `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
+| `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
+| `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
+| `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
+| `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
+| `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
+| `vaulter.versions.autosave_debounce_seconds` | `vaulter-documents.revisions.autosave_debounce_seconds` |
+| `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
+| `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
+| `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
+| `vaulter.collaboration.channel_prefix` | `vaulter-documents.collaboration.broadcast.channel_prefix` |
+| `vaulter.collaboration.webhook_secret` | `vaulter-documents.collaboration.hub.webhook_secret` |
+| `vaulter.collaboration.webhook_timestamp_tolerance` | `vaulter-documents.collaboration.hub.timestamp_tolerance` |
+| `vaulter.collaboration.drivers.hocuspocus.secret` | `vaulter-documents.collaboration.hub.jwt_secret` |
+| `vaulter.collaboration.drivers.hocuspocus.{url,token_ttl}` | `vaulter-documents.collaboration.hub.{url,token_ttl}` |
+| `vaulter.tiptap.*` | `vaulter-documents.tiptap.*` |
+| `vaulter.exporters` | `vaulter-documents.exporters` |
+| `vaulter.models.storage` | `vaulter.models.drive` |
+| `vaulter.models.file_version / vaulter.models.file_version_blob` | `vaulter.models.file_revision / vaulter.models.file_revision_blob` |
+| `vaulter.models.upload_session / vaulter.models.upload_part` | `vaulter-drive.models.upload_session / vaulter-drive.models.upload_part` |
+| `vaulter.models.node_comment` | `vaulter-documents.models.node_comment` |
+| `vaulter.models.node_document_version` | `vaulter-documents.models.document_revision` |
+| `vaulter-filament.resources.storage` | `vaulter-filament.resources.drive` |
+
+`id_type = id` becomes `ids.strategy = bigint`; `ulid` stays `ulid`. An obsolete panel class
+must be rewritten as a `ProfileProvider`; the error points to `vaulter:make:profile`.
+The two upload limits are compared in bytes (`max_upload_kb × 1024`); different legacy
+limits warn and use the smaller. A legacy `false` for either uploads or tus disables
+`resumable.enabled`.
+
+When both old ID keys are present, `ids.default` retains precedence over `id_type`.
+For the old share-token aliases, a custom value wins over the other shipped default;
+two different custom values throw `InvalidConfigurationException`. Keep one
+`sharing.token_generator`.
+
+`tenant.column`, `drive.name_rules.no_separators_pattern` and `migrations.path` are ignored
+with deprecation notices; tenant columns and separator checks now have fixed definitions.
+Keep `table_names` only while upgrading physical tables.
+
+Migrate the old Media publication to `config/vaulter-media.php`. Normalization translates
+exact shipped built-in class-name strings on legacy keys, and preserves custom FQCNs.
+PHP imports and custom class declarations must use canonical names; there are no PHP aliases.
+See [UPGRADE.md](https://github.com/axioma-studio/vaulter/blob/main/UPGRADE.md).

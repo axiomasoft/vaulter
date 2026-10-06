@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -19,7 +20,6 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Access\GrantReadRepository;
-use Vaulter\Support\Config;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 
@@ -51,6 +51,7 @@ final class NodeReadRepository
     private const int WHERE_IN_BIND_LIMIT = 900;
 
     public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
         private readonly AccessResolver $access,
         private readonly PermissionDriverManager $drivers,
         private readonly GrantReadRepository $grants,
@@ -118,7 +119,7 @@ final class NodeReadRepository
      */
     public function descendants(Node $node, ?int $maxDepth = null): Collection
     {
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         /** @var Collection<int, Node> $result */
         $result = $model::withMaxDepth(
@@ -140,7 +141,7 @@ final class NodeReadRepository
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
             operation: function () use ($node, $maxDepth): Collection {
-                $model = Config::nodeModel();
+                $model = $this->vaulterConfig->model('node');
 
                 /** @var Collection<int, Node> $result */
                 $result = $model::withMaxDepth(
@@ -211,7 +212,7 @@ final class NodeReadRepository
      */
     public function ancestors(Node $node): Collection
     {
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         /** @var Collection<int, Node> $result */
         $result = $model::withMaxDepth(
@@ -234,7 +235,7 @@ final class NodeReadRepository
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
             operation: function () use ($node): Collection {
-                $model = Config::nodeModel();
+                $model = $this->vaulterConfig->model('node');
 
                 /** @var Collection<int, Node> $crumbs */
                 $crumbs = $model::withMaxDepth(
@@ -322,7 +323,7 @@ final class NodeReadRepository
      */
     public function trashedBefore(Carbon $threshold): Builder
     {
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $table = (new $model)->getTable();
 
         return $this->query()
@@ -506,7 +507,7 @@ final class NodeReadRepository
     {
         $driver = $this->drivers->driver();
 
-        return Config::featureEnabled('grants')
+        return $this->vaulterConfig->featureEnabled('grants')
             && $driver instanceof GrantAuthoritativeDriver
             && $driver->isGrantAuthoritative();
     }
@@ -578,7 +579,7 @@ final class NodeReadRepository
             return [];
         }
 
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
         $keyName = (new $model)->getKeyName();
 
         /** @var Collection<int, Node> $anchors */
@@ -638,7 +639,7 @@ final class NodeReadRepository
      */
     private function query(): Builder
     {
-        $model = Config::nodeModel();
+        $model = $this->vaulterConfig->model('node');
 
         return $model::query();
     }

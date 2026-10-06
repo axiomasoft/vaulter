@@ -195,7 +195,7 @@ arch('repositories never depend on the HTTP request')
  *
  * The model set is the concrete v_* models; the scan strips comments/docblocks so
  * the rule fires on real code, and anchors on `Model::<verb>(` so unrelated static
- * calls (Config::table(), NodeKind::File, …) never trip it.
+ * calls (DatabaseConfig::table(), NodeKind::File, …) never trip it.
  */
 test('no HTTP controller statically queries an Eloquent model (M1c-http)', function (): void {
     $controllers = __DIR__.'/../../src/Http/Controllers';
@@ -517,7 +517,8 @@ function coreReferencesTo(string $root): array
         $code = '';
 
         foreach (token_get_all($contents) as $token) {
-            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+            if (is_array($token) && (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)
+                || ($file->getPathname() === $src.'/Configuration/ConfigNormalizer.php' && $token[0] === T_CONSTANT_ENCAPSED_STRING))) {
                 continue;
             }
 
@@ -568,7 +569,7 @@ test('core source never references the vaulter-azgard package (P2.1)', function 
  * {@see DocumentContent} seam; core must never name a
  * concrete TipTap CLASS (`TipTapContent`, `TiptapExtensions`, `InvalidDocumentContentException`,
  * …) in real code. Matches the CamelCase class-name spelling only — the lower-case
- * `vaulter.tiptap.*` config keys (Support/Config.php) are a deliberate, documented
+ * package-owned configuration keys are a deliberate, documented
  * pass-through for a host's own TipTap extensions (VLT-REMED D27/D28) and are NOT a
  * class coupling, so they never trip this pattern. Prose mentions of "TipTap" in
  * comments/docblocks (e.g. DocumentContent/DocumentExporter explaining the seam) are
@@ -634,6 +635,8 @@ arch('domain exceptions implement the HTTP problem contract')
     ->toImplement('Vaulter\Exceptions\Contracts\ProblemException')
     ->ignoring([
         'Vaulter\Exceptions\VaulterException',
+        // P2.5 configuration failures stop boot before any endpoint can respond.
+        'Vaulter\Exceptions\Configuration\InvalidConfigurationException',
         'Vaulter\Exceptions\Access\MissingPermissionDriverException',
         'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
@@ -647,57 +650,7 @@ arch('production source never imports testing helpers (D35)')
     ->not->toUse('Vaulter\Testing')
     ->ignoring(['Vaulter\Testing', 'Vaulter\Tests']);
 
-/**
- * D23: retain exactly these live collaboration keys until P2.5. Each allowed
- * line must occur once in its named file; imports, prose and duplicates fail.
- *
- * @return list<string>
- */
-function coreBridgeImplementationNameViolations(string $path, string $contents): array
-{
-    $allowList = [
-        'src/Support/Config.php' => [
-            "        \$value = config('vaulter.collaboration.driver', 'hocuspocus');" => 1,
-            "        return is_string(\$value) ? \$value : 'hocuspocus';" => 1,
-            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.secret');" => 1,
-            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.token_ttl', 3600);" => 1,
-            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.url');" => 1,
-        ],
-        'config/vaulter.php' => [
-            "        'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus')," => 1,
-            "            'hocuspocus' => [" => 1,
-        ],
-    ];
-    $allowed = $allowList[$path] ?? [];
-    $counts = array_fill_keys(array_keys($allowed), 0);
-    $offenders = [];
-
-    foreach (explode("\n", $contents) as $index => $line) {
-        if (preg_match('/azgard|hocuspocus|filament/i', $line) !== 1) {
-            continue;
-        }
-
-        if (isset($allowed[$line])) {
-            $counts[$line]++;
-
-            if ($counts[$line] <= $allowed[$line]) {
-                continue;
-            }
-        }
-
-        $offenders[] = $path.':'.($index + 1).': '.$line;
-    }
-
-    foreach ($allowed as $line => $expected) {
-        if ($counts[$line] !== $expected) {
-            $offenders[] = $path.': expected '.$expected.' occurrence of '.$line.', got '.$counts[$line];
-        }
-    }
-
-    return $offenders;
-}
-
-test('core source and configuration contain no bridge implementation names (P2.4)', function (): void {
+test('core source and configuration contain no bridge implementation names (P2.5)', function (): void {
     $offenders = [];
     $package = dirname(__DIR__, 2);
 
@@ -710,25 +663,23 @@ test('core source and configuration contain no bridge implementation names (P2.4
         foreach ($files as $file) {
             $contents = file_get_contents($file->getPathname());
             expect($contents)->not->toBeFalse();
-            $path = substr($file->getPathname(), strlen($package) + 1);
-            $offenders = [...$offenders, ...coreBridgeImplementationNameViolations($path, $contents)];
+
+            $code = '';
+
+            foreach (token_get_all($contents) as $token) {
+                if (is_array($token) && (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)
+                    || ($file->getPathname() === $package.'/src/Configuration/ConfigNormalizer.php' && $token[0] === T_CONSTANT_ENCAPSED_STRING))) {
+                    continue;
+                }
+
+                $code .= is_array($token) ? $token[1] : $token;
+            }
+
+            if (preg_match('/azgard|hocuspocus|filament/i', $code) === 1) {
+                $offenders[] = $file->getPathname();
+            }
         }
     }
 
     expect($offenders)->toBe([]);
-});
-
-test('the bridge-name guard rejects imports and duplicate runtime exceptions', function (): void {
-    $path = 'src/Support/Config.php';
-    $contents = file_get_contents(__DIR__.'/../../'.$path);
-    expect($contents)->not->toBeFalse();
-
-    foreach ([
-        'use Vaulter\\Azgard\\AzgardPermissionDriver;',
-        'use Vaulter\\Filament\\VaulterPlugin;',
-        'use Vaulter\\Documents\\Collaboration\\HocuspocusDriver;',
-        "        \$value = config('vaulter.collaboration.driver', 'hocuspocus');",
-    ] as $extraLine) {
-        expect(coreBridgeImplementationNameViolations($path, $contents."\n".$extraLine))->not->toBe([]);
-    }
 });

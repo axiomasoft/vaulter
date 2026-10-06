@@ -138,7 +138,7 @@ async function mint() {
 :::
 
 Ответ на создание несёт сырой `token` и полный `url` (собранный из
-`config('vaulter.share.url_base')` + токен). **Каждый ответ list/show их опускает** — токен не
+`config('vaulter.sharing.url_base')` + токен). **Каждый ответ list/show их опускает** — токен не
 восстановить из сохранённой строки, так что зафиксируйте его прямо сейчас.
 
 ```json
@@ -294,7 +294,7 @@ Share выдаёт свои биты на ограниченном **набор�
 
 ```php
 // config/vaulter.php
-'share' => [
+'sharing' => [
     // \Vaulter\Contracts\Sharing\ShareTokenGenerator, которым выпускается сырой токен.
     // Хранится только его хеш sha256. По умолчанию: RandomShareTokenGenerator (48 символов).
     'token_generator' => RandomShareTokenGenerator::class,

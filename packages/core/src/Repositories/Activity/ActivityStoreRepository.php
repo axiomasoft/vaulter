@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Activity;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Models\Activity\Activity;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_activity (§2.9 / M2c-activity). It inserts EXACTLY ONE
@@ -21,13 +21,17 @@ use Vaulter\Support\Config;
  */
 class ActivityStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * Persist one activity row. created_at is stamped here (now) so the feed's
      * (created_at desc) order is monotonic with the write.
      */
     public function record(RecordActivityCommand $command): Activity
     {
-        $model = Config::activityModel();
+        $model = $this->vaulterConfig->model('activity');
 
         /** @var Activity $activity */
         $activity = new $model;

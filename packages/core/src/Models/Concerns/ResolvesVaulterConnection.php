@@ -8,19 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 
 use function Illuminate\Support\enum_value;
 
-use Vaulter\Support\Config;
+use Vaulter\Configuration\DatabaseConfig;
 
 /**
  * Every default Vaulter model reads its database connection from
- * `config('vaulter.connection')` (F-P2.3-02) instead of always resolving to the
- * host's default connection. `Config::connection()` returns null when the key is
+ * `configuration key vaulter.database.connection` (F-P2.3-02) instead of always resolving to the
+ * host's default connection. `app(\Vaulter\Configuration\DatabaseConfig::class)->connection()` returns null when the key is
  * unset, and `null` is exactly what `Model::getConnectionName()` already returned
  * before this trait existed — a host that never sets the key sees no change in
  * behaviour, only a host that DOES set it gets every Vaulter-owned table's model
  * routed to that named connection, matching where {@see
  * \Vaulter\Schema\SchemaBuilder} created the table.
  *
- * Host apps that swap in their own model (config('vaulter.models.*')) simply omit
+ * Host apps that swap in their own model (configuration key vaulter.models.*) simply omit
  * this trait if they want a different connection resolution strategy.
  *
  * @mixin Model
@@ -35,6 +35,6 @@ trait ResolvesVaulterConnection
         // the package-wide config key, so an explicit per-model override still wins.
         $name = enum_value($this->connection);
 
-        return is_string($name) ? $name : Config::connection();
+        return is_string($name) ? $name : app(DatabaseConfig::class)->connection();
     }
 }

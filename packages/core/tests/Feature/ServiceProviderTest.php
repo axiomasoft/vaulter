@@ -7,7 +7,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\VaulterManager;
 
 it('merges the vaulter config', function (): void {
-    expect(config('vaulter.route_prefix'))->toBe('api/vaulter')
+    expect(config('vaulter.routes.prefix'))->toBe('api/vaulter')
         ->and(config('vaulter.enabled_document_types'))->toContain('richtext');
 });
 

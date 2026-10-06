@@ -9,15 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Support\Config;
 
 /**
  * An ownable, polymorphic disk container (master plan §2.1): one storage row is a
  * disk root mounted on ANY host entity through the owner_type/owner_id morph
- * (D11). Swappable — point config('vaulter.models.storage') at a subclass to add
+ * (D11). Swappable — point configuration key vaulter.models.drive at a subclass to add
  * tenant scoping or extra behaviour.
  *
  * @property int|string      $id
@@ -56,7 +57,7 @@ class Drive extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('drives');
+        return app(DatabaseConfig::class)->table('drives');
     }
 
     /**
@@ -74,7 +75,7 @@ class Drive extends Model
      */
     public function nodes(): HasMany
     {
-        return $this->hasMany(Config::nodeModel(), 'drive_id');
+        return $this->hasMany(app(VaulterConfig::class)->model('node'), 'drive_id');
     }
 
     /**
@@ -84,7 +85,7 @@ class Drive extends Model
      */
     public function rootNode(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'root_node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'root_node_id');
     }
 
     /**

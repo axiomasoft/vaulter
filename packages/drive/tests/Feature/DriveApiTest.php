@@ -6,12 +6,12 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -23,7 +23,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 beforeEach(function (): void {
     StorageFacade::fake('local');
-    config()->set('vaulter.dedup.scope', 'tenant');
+    config()->set('vaulter-media.dedup.scope', 'tenant');
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 });
 
@@ -271,7 +271,7 @@ it('shows storage meta with root node id and quota accounting', function (): voi
 
 it('resolves the swapped Node/Storage models through route-model binding', function (): void {
     config()->set('vaulter.models.node', SwappedNode::class);
-    config()->set('vaulter.models.storage', SwappedStorage::class);
+    config()->set('vaulter.models.drive', SwappedStorage::class);
 
     $storage = driveStorage();
 
@@ -319,7 +319,7 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
         $this->postJson($base.'/folders', ['name' => 'Sib'.$i])->assertCreated();
     }
 
-    $storageTable = Config::table('drives');
+    $storageTable = app(DatabaseConfig::class)->table('drives');
     $storageQueries = 0;
 
     DB::listen(function (object $query) use (&$storageQueries, $storageTable): void {

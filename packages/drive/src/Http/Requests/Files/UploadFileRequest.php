@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Requests\Files;
 
 use Illuminate\Http\UploadedFile;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Support\Config;
 
 /**
  * Validates a multipart upload (§2.4): the binary file plus an optional
@@ -24,13 +24,18 @@ final class UploadFileRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(): array
+    public function rules(DriveConfig $driveConfig): array
     {
-        $fileRules = ['required', 'file', 'max:'.Config::maxUploadKb()];
+        $fileRules = ['required', 'file'];
+        $maxFileSize = $driveConfig->maxFileSize();
+
+        if ($maxFileSize > 0) {
+            $fileRules[] = 'max:'.($maxFileSize / 1024);
+        }
 
         // An empty allowlist stays permissive (the default); a configured list
         // restricts the upload to that mime set via Laravel's `mimetypes` rule.
-        $allowedMimes = Config::allowedUploadMimes();
+        $allowedMimes = $driveConfig->allowedMimeTypes();
 
         if ($allowedMimes !== []) {
             $fileRules[] = 'mimetypes:'.implode(',', $allowedMimes);

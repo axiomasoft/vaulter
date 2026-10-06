@@ -51,7 +51,7 @@ it('omits Upload-Length when the upload size is deferred', function (): void {
 });
 
 it('omits Tus-Max-Size for unlimited uploads and advertises a one-byte ceiling', function (int $max): void {
-    config()->set('vaulter.uploads.max_bytes', $max);
+    config()->set('vaulter-drive.uploads.max_file_size', $max);
     $response = $this->call('OPTIONS', 'api/vaulter/resumable-uploads/discovery')->assertNoContent();
 
     if ($max === 0) {
@@ -62,7 +62,7 @@ it('omits Tus-Max-Size for unlimited uploads and advertises a one-byte ceiling',
 })->with(['unlimited' => [0], 'one byte' => [1]]);
 
 it('accepts Content-Length exactly at the chunk ceiling', function (): void {
-    config()->set('vaulter.uploads.max_chunk_bytes', 4);
+    config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $storage = Vaulter::for(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'boundary.bin',

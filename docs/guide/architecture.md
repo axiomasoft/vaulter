@@ -63,12 +63,12 @@ The ergonomic entry point `Vaulter::for($entity)` returns a
 ### HTTP edge — Controllers, FormRequests, Resources
 
 The thin edge. Routes live in `packages/core/routes/api.php`, mounted under
-`config('vaulter.route_prefix')` (default `api/vaulter`). Controllers authorize, hand a DTO to
+`config('vaulter.routes.prefix')` (default `api/vaulter`). Controllers authorize, hand a DTO to
 an Action, and serialize the result through a Resource that embeds a computed `abilities`
 object so the Vue client renders only allowed actions.
 
 `{storage}` and `{node}` route parameters bind to the **swappable** models
-(`config('vaulter.models.storage|node')`) via `Route::bind` registered in the service
+(`config('vaulter.models.drive|node')`) via `Route::bind` registered in the service
 provider — so a host can point the config at a subclass and binding keeps working.
 
 ### Actions — `Vaulter\Drive\Actions\*` / `Vaulter\Documents\Actions\*` / `Vaulter\Actions\*`
@@ -97,7 +97,7 @@ transactions or dispatch events — the Action owns that. The tree-descent reads
 ### Models — swappable, resolved through `Config`
 
 Vaulter never references a concrete model class directly in domain code; it resolves through
-`Vaulter\Support\Config` against `config('vaulter.models.*')`. A host subclasses a model to add
+`Vaulter\Configuration\VaulterConfig` against `config('vaulter.models.*')`. A host subclasses a model to add
 ULID behaviour, tenant scoping, or audit. Models are the one part of the package that is **not**
 `final` (they must be extendable); everything else is.
 
@@ -198,21 +198,20 @@ final class ProjectDriveProfile extends ProfileProvider
         return $panel
             ->id('project_drive')
             ->host(\App\Models\Project::class)
-            ->storageType('team')
-            ->feature('document_versions', true);
+            ->storageType('team');
     }
 }
 ```
 
-Register the provider in `config('vaulter.panels')`. `ProfileRegistry` hydrates profiles
+Register the provider in `config('vaulter.profiles.providers')`. `ProfileRegistry` hydrates profiles
 during application boot. Scaffold a provider with `php artisan vaulter:make:profile <name>`.
 Profiles share one schema; own tables, model maps, pipelines and resource hooks are removed.
 See [Drive profiles](/guide/storage-panels).
 
 ## Data model
 
-Everything lives in the prefixed `v_*` schema (`config('vaulter.table_prefix')`, default `v_`),
-with one id strategy per install (`config('vaulter.ids.default')`, default `ulid`).
+Everything lives in the prefixed `v_*` schema (`config('vaulter.database.table_prefix')`, default `v_`),
+with one id strategy per install (`config('vaulter.ids.strategy')`, default `ulid`).
 
 | Table | Holds |
 |---|---|
@@ -222,7 +221,7 @@ with one id strategy per install (`config('vaulter.ids.default')`, default `ulid
 | `v_blobs` | The CAS: one row per `(scope, sha256)` with a `BlobStatus` lifecycle ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | The per-node ACL with inheritance + deny-veto. |
 | `v_node_shares` | Bearer share links — hash-only token storage ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | Documents: node-attached document version history (gated by `document_versions`). |
+| `v_node_document_versions` | Documents: node-attached document version history (enabled with the Documents package). |
 | `v_upload_sessions` / `v_upload_parts` | Resumable upload sessions. |
 | `v_activity` | The append-only activity feed. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | The transactional-outbox + webhook reliability layer. |
@@ -241,7 +240,7 @@ Two lanes, evaluated by the Vaulter-owned `AccessResolver` ([ADR-0007](/adr/0007
   `override(...)` (super-admin / `Gate::before`), `subjectsFor(Authorizable)` (actor → users +
   roles + teams) and `canCreateInWorkspace(...)`. Shipped lanes: `database` (default,
   standalone), `gate`, `spatie`, `azgard`, and the non-prod `null`. Swap via
-  `config('vaulter.drivers.permission')`.
+  `config('vaulter.access.permission_driver')`.
 - **`AccessResolver`** — Vaulter-owned, `final`, **not** swappable. It runs the canonical
   algorithm over `v_node_grants` combined with the driver.
 
@@ -274,7 +273,7 @@ grants, and an identity grant cannot leak through a link.
 
 The binary plane is a content-addressed store, not `spatie/laravel-medialibrary`
 ([ADR-0008](/adr/0008-media-library-decision)). Three swappable services
-(`config('vaulter.cas.*')`):
+(`config('vaulter-media.*')`):
 
 - **`ContentStore`** (`Sha256ContentStore`) — stages bytes to a seekable temp file and computes
   the `sha256` content address from the staged file (never from a live stream or a client-sent
@@ -287,7 +286,7 @@ The binary plane is a content-addressed store, not `spatie/laravel-medialibrary`
   concurrent upload re-references.
 
 The physical key is **scope-qualified** `<scope>/ab/cd/<sha256>` where `<scope>` follows
-`config('vaulter.dedup.scope')` (`tenant` by default), so one scope's GC can never delete
+`config('vaulter-media.dedup.scope')` (`tenant` by default), so one scope's GC can never delete
 another scope's bytes ([ADR-0012](/adr/0012-dedup-scope)). See the
 [blob GC recipe](/guide/recipes#blob-gc) and the
 [custom storage driver recipe](/guide/recipes#s3-disk).
@@ -306,14 +305,14 @@ Every seam a host plugs into, and where it is documented:
 
 | Contract | Bind via | Documented in |
 |---|---|---|
-| `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Recipes — custom permission driver](/guide/recipes#permission-driver) |
+| `Contracts\Access\PermissionDriver` | `config('vaulter.access.permission_driver')` | [Recipes — custom permission driver](/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (legacy) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
 | `Vaulter\Azgard\Contracts\AzgardGuard` | binding supplied by `vaulter-azgard` | [Troubleshooting — Azgard morphs](/guide/troubleshooting#azgard-morphs) |
-| `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
-| `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
+| `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
+| `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
-| `Contracts\Handlers\DocumentExporter` | `config('vaulter.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
-| `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.share.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
+| `Contracts\Handlers\DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
+| `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
 | `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |
 | `config('vaulter.models.*')` | config | [ADR-0003](/adr/0003-embeddability-data-model) |

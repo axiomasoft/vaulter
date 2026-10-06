@@ -33,7 +33,7 @@ it('два конкурентных PATCH с одинаковым offset — р�
     }
 
     // Allow large chunks so each PATCH's write is wide enough to genuinely overlap.
-    config()->set('vaulter.uploads.chunk_size', 64 * 1024 * 1024);
+    config()->set('vaulter-drive.uploads.resumable.chunk_size', 64 * 1024 * 1024);
     Storage::fake('local');
 
     $chunkLen = 16 * 1024 * 1024;

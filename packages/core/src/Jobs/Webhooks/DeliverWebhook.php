@@ -15,6 +15,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
@@ -22,7 +24,6 @@ use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
-use Vaulter\Support\Config;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
 use Vaulter\Webhooks\ResponseSizeLimit;
 use Vaulter\Webhooks\WebhookSigner;
@@ -57,12 +58,18 @@ final class DeliverWebhook implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    private VaulterConfig $vaulterConfig;
+
+    private WebhooksConfig $webhooksConfig;
+
     public function __construct(
         private readonly string $deliveryId,
     ) {}
 
-    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard): void
+    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig): void
     {
+        $this->vaulterConfig = $vaulterConfig;
+        $this->webhooksConfig = $webhooksConfig;
         $metrics = app(MetricsRecorder::class);
         $tracer = app(TraceRecorder::class);
 
@@ -179,16 +186,16 @@ final class DeliverWebhook implements ShouldQueue
         $body = (string) json_encode($delivery->payload);
         $timestamp = now()->getTimestamp();
 
-        $request = Http::timeout(Config::webhookTimeout())
-            ->connectTimeout(Config::webhookConnectTimeout())
+        $request = Http::timeout($this->webhooksConfig->timeout())
+            ->connectTimeout($this->webhooksConfig->connectTimeout())
             // Unconditional (D30) — see the docblock: a redirect hop escapes the pin.
             ->withoutRedirecting()
             ->withOptions($this->transportOptions(pinned: $pinned))
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                Config::webhookEventHeader() => $delivery->event,
-                Config::webhookTimestampHeader() => (string) $timestamp,
-                Config::webhookSignatureHeader() => $signer->sign(
+                $this->webhooksConfig->eventHeader() => $delivery->event,
+                $this->webhooksConfig->timestampHeader() => (string) $timestamp,
+                $this->webhooksConfig->signatureHeader() => $signer->sign(
                     body: $body,
                     secret: $endpoint->signing_secret,
                     timestamp: $timestamp,
@@ -221,7 +228,7 @@ final class DeliverWebhook implements ShouldQueue
             ],
         ];
 
-        $maxResponseBytes = Config::webhookMaxResponseBytes();
+        $maxResponseBytes = $this->webhooksConfig->maxResponseBytes();
 
         if ($maxResponseBytes > 0) {
             $sink = fopen('php://temp/maxmemory:'.$maxResponseBytes, 'w+b');
@@ -269,8 +276,8 @@ final class DeliverWebhook implements ShouldQueue
     {
         $attempts = $delivery->attempts + 1;
 
-        if ($attempts < Config::webhookMaxAttempts()) {
-            $backoff = Config::webhookBackoff(attempt: $attempts);
+        if ($attempts < $this->webhooksConfig->maxAttempts()) {
+            $backoff = $this->webhooksConfig->backoff(attempt: $attempts);
 
             $delivery->forceFill([
                 'status' => 'failed',
@@ -298,7 +305,7 @@ final class DeliverWebhook implements ShouldQueue
 
         $endpoint->forceFill([
             'failure_count' => $failures,
-            'is_active' => $failures < Config::webhookDisableAfterFailures(),
+            'is_active' => $failures < $this->webhooksConfig->disableAfterFailures(),
         ])->save();
     }
 
@@ -311,7 +318,7 @@ final class DeliverWebhook implements ShouldQueue
     {
         $token = bin2hex(random_bytes(16));
         // Leave room for DNS/transport setup and settlement beyond the HTTP limit.
-        $until = now()->addSeconds(max(Config::webhookRetryClaimSeconds(), Config::webhookTimeout() + 30));
+        $until = now()->addSeconds(max($this->webhooksConfig->retryClaimSeconds(), $this->webhooksConfig->timeout() + 30));
 
         $claimed = $delivery->newQuery()
             ->whereKey($delivery->getKey())
@@ -355,7 +362,7 @@ final class DeliverWebhook implements ShouldQueue
     private function resolveDelivery(): ?WebhookDelivery
     {
         /** @var class-string<WebhookDelivery> $deliveryClass */
-        $deliveryClass = Config::webhookDeliveryModel();
+        $deliveryClass = $this->vaulterConfig->model('webhook_delivery');
 
         return $deliveryClass::query()->find($this->deliveryId);
     }

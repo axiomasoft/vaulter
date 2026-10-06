@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "/home/vostrikov/.config/herd-lite/bin/composer",
+    "dump-autoload",
+    "--no-scripts",
+    "--no-interaction"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+  "started_at": "20261006T082027214063Z",
+  "candidate_before": "f5c39ed7cd0c4f1cbb2d2c06d6c83ebe4ade8e48d75510b27988443ace04b489",
+  "base_commit": "a33273a30dcc24ca8849c911f6bba0f9b7a271d6",
+  "mutates_product": true,
+  "exit_code": 0,
+  "seconds": 0.438,
+  "candidate_after": "f5c39ed7cd0c4f1cbb2d2c06d6c83ebe4ade8e48d75510b27988443ace04b489",
+  "candidate_stable": true
+}

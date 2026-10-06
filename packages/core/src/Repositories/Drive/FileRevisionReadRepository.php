@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * Read-side lookups over the immutable v_file_revisions (§2.4) for the HTTP layer:
@@ -21,6 +21,10 @@ use Vaulter\Support\Config;
  */
 final class FileRevisionReadRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /**
      * The current head version a file node points at (its current_revision_id), or
      * null when the node is not a committed file.
@@ -66,7 +70,7 @@ final class FileRevisionReadRepository
      */
     private function query(): Builder
     {
-        $model = Config::fileVersionModel();
+        $model = $this->vaulterConfig->model('file_revision');
 
         return $model::query();
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Drive;
 
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\File;
-use Vaulter\Support\Config;
 
 /**
  * Write-side row work for v_files — the mutable 1:1 handle for a kind=file node
@@ -14,10 +14,14 @@ use Vaulter\Support\Config;
  */
 final class FileStoreRepository
 {
+    public function __construct(
+        private readonly VaulterConfig $vaulterConfig,
+    ) {}
+
     /** Read the aggregate and its revision counter under the caller's row lock. */
     public function lockForUpdate(File $file): File
     {
-        $model = Config::fileModel();
+        $model = $this->vaulterConfig->model('file');
 
         return $model::query()->whereKey($file->getKey())->lockForUpdate()->firstOrFail();
     }
@@ -29,7 +33,7 @@ final class FileStoreRepository
     {
         // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
         // from UploadFileAction/CopyNodeAction, never raw request input.
-        $model = Config::fileModel();
+        $model = $this->vaulterConfig->model('file');
         $file = new $model;
         $file->forceFill($attributes);
         $file->save();

@@ -12,7 +12,7 @@ outline: deep
 php artisan vendor:publish --tag=vaulter-config
 ```
 
-Колонки каждой таблицы: путь до конфиг-ключа (относительно `vaulter.`), ENV-переопределение (если оно есть), поставляемое значение по умолчанию и то, чем ключ управляет. Значения читаются через хелпер `Vaulter\Support\Config`, который пакет использует повсеместно вместо прямых вызовов `config()`.
+Колонки каждой таблицы: путь до конфиг-ключа (относительно `vaulter.`, если явно не указан корень модуля), ENV-переопределение (если оно есть), поставляемое значение по умолчанию и то, чем ключ управляет. Значения читаются через собственные `Configuration\*Config` классы пакетов, внедряемые в сервисы вместо прямых вызовов `config()`.
 
 ::: warning Безопасно для кеша конфига
 Каждая привязка — это FQCN или обычный скаляр, никаких замыканий. Конфиг безопасно прогонять через `php artisan config:cache`.
@@ -24,104 +24,69 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | По умолчанию | Владелец |
 |---|---|---|
-| `models.storage` | `Vaulter\Models\Drive\Drive` | core |
+| `models.drive` | `Vaulter\Models\Drive\Drive` | core |
 | `models.node` | `Vaulter\Models\Drive\Node` | core |
 | `models.file` | `Vaulter\Models\Drive\File` | core |
-| `models.file_version` | `Vaulter\Models\Drive\FileRevision` | core |
+| `models.file_revision` | `Vaulter\Models\Drive\FileRevision` | core |
 | `models.blob` | `Vaulter\Models\Cas\Blob` | core |
-| `models.file_version_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
+| `models.file_revision_blob` | `Vaulter\Models\Drive\FileRevisionBlob` | core |
 | `models.grant` | `Vaulter\Models\Access\NodeGrant` | core |
 | `models.node_share` | `Vaulter\Models\Sharing\NodeShare` | core |
-| `models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
-| `models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
-| `models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
-| `models.node_document_version` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
+| `vaulter-drive.models.upload_session` | `Vaulter\Drive\Models\Uploads\UploadSession` | `axioma-studio/vaulter-drive` |
+| `vaulter-drive.models.upload_part` | `Vaulter\Drive\Models\Uploads\UploadPart` | `axioma-studio/vaulter-drive` |
+| `vaulter-documents.models.node_comment` | `Vaulter\Documents\Models\Comments\NodeComment` | `axioma-studio/vaulter-documents` |
+| `vaulter-documents.models.document_revision` | `Vaulter\Documents\Models\Revisions\DocumentRevision` | `axioma-studio/vaulter-documents` |
 | `models.activity` | `Vaulter\Models\Activity\Activity` | core |
 | `models.outbox` | `Vaulter\Models\Webhooks\Outbox` | core |
 | `models.webhook_endpoint` | `Vaulter\Models\Webhooks\WebhookEndpoint` | core |
 | `models.webhook_delivery` | `Vaulter\Models\Webhooks\WebhookDelivery` | core |
 
-::: info Модели, принадлежащие пакетам, резолвятся только когда пакет установлен
-`upload_session` / `upload_part` мержатся в `vaulter.models` пакетом
-`axioma-studio/vaulter-drive`; `node_comment` / `node_document_version` мержатся
-пакетом `axioma-studio/vaulter-documents`. Core **не** поставляет значение по
-умолчанию для этих четырёх ключей — резолв без установленного пакета-владельца
-бросает исключение. Легаси-модели, привязанные к `document_id` (`document`,
-`version`, `folder`, `permission`, `comment`, `share`), были полностью исключены —
-см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
-:::
+Модели модулей находятся в `vaulter-drive.models.*` и `vaulter-documents.models.*`; они не мержатся в карту моделей core.
 
-## Имена таблиц — `table_names.*`
+## Database — `database.*`
 
-Базовое имя таблицы для каждой сущности, вычисляется как `{table_prefix}{base}`. Позволяет переименовать таблицу отдельной сущности, не меняя глобальный префикс.
+Таблицы используют канонические имена с префиксом `database.table_prefix` (по умолчанию `v_`).
+`database.connection` (`VAULTER_DB_CONNECTION`, по умолчанию `null`) выбирает соединение.
+`table_names` читается только upgrade-миграциями через `DatabaseConfig::legacyTable()`.
 
-| Ключ | Базовое имя по умолчанию |
-|---|---|
-| `table_names.storages` | `storages` |
-| `table_names.nodes` | `nodes` |
-| `table_names.blobs` | `blobs` |
-| `table_names.files` | `files` |
-| `table_names.file_versions` | `file_versions` |
-| `table_names.file_version_blobs` | `file_version_blobs` |
-| `table_names.node_grants` | `node_grants` |
-| `table_names.node_shares` | `node_shares` |
-| `table_names.node_comments` | `node_comments` |
-| `table_names.node_document_versions` | `node_document_versions` |
-| `table_names.upload_sessions` | `upload_sessions` |
-| `table_names.upload_parts` | `upload_parts` |
-| `table_names.activity` | `activity` |
-| `table_names.outbox` | `outbox` |
-| `table_names.webhook_endpoints` | `webhook_endpoints` |
-| `table_names.webhook_deliveries` | `webhook_deliveries` |
-
-Легаси-таблицы, привязанные к `document_id` (`documents`, `document_folders`,
-`document_versions`, `document_permissions`, `document_comments`, `document_shares`),
-были удалены — см. [ADR-0014](/adr/0014-legacy-docvault-strangler).
-
-## Первичные ключи — `id_type`, `ids.*`
+## Первичные ключи — `ids.*`
 
 | Ключ | Env | По умолчанию | Принимает |
 |---|---|---|---|
-| `id_type` | `VAULTER_ID_TYPE` | `id` | `id` \| `ulid` — **легаси**, вытеснен `ids.default` |
-| `ids.default` | `VAULTER_ID_STRATEGY` | `ulid` | `ulid` \| `uuid7` \| `bigint` |
+| `ids.strategy` | `VAULTER_ID_STRATEGY` | `ulid` | `ulid` \| `uuid7` \| `bigint` |
 | `ids.strategies.bigint` | — | `Vaulter\Schema\AutoIncrementIds` | FQCN, реализующий `IdStrategy` |
 | `ids.strategies.ulid` | — | `Vaulter\Schema\UlidIds` | FQCN, реализующий `IdStrategy` |
 | `ids.strategies.uuid7` | — | `Vaulter\Schema\Uuid7Ids` | FQCN, реализующий `IdStrategy` |
 
-Когда `ids.default` задан, побеждает он; иначе стратегия выводится из `id_type` (`id` → bigint, `ulid` → ulid). Зарегистрируйте свою стратегию, добавив ключ под `ids.strategies` с указанием на реализацию [`IdStrategy`](/ru/reference/contracts#identity).
+Выбирайте `ids.strategy` напрямую. Старый `id_type` нормализуется (`id` → `bigint`, `ulid` → `ulid`); конфликт с изменённым каноническим значением вызывает исключение.
 
-## Storage Panels — `panels`, `default_panel`, `migrations.*`
+## Profiles — `profiles.*`
 
-| Ключ | По умолчанию | Управляет |
-|---|---|---|
-| `panels` | `[]` | Список FQCN `ProfileProvider`, которые переопределяют панель по умолчанию по её id |
-| `default_panel` | `Vaulter\Profiles\DefaultProfile` | FQCN резервной панели |
-| `migrations.path` | `null` | Legacy key retained for the configuration transition; unused by profile scaffolding. |
+| Ключ | По умолчанию |
+|---|---|
+| `profiles.providers` | `[]` |
+| `profiles.default` | `Vaulter\Profiles\DefaultProfile` |
 
-Сгенерируйте заготовку панели командой `php artisan vaulter:make:profile <name>`. См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
+Оба ключа принимают FQCN `ProfileProvider`. Ключи профилей уникальны; профиль по умолчанию зарегистрирован.
 
 ## Фичи — `features.*`
 
-Глобальные переключатели фич, читаются через `Config::featureEnabled()`; панель может переопределить любую из них для себя.
+Глобальные переключатели фич, читаются через `VaulterConfig::featureEnabled()`; панель может переопределить любую из них для себя.
 
 | Ключ | По умолчанию | Отвечает за |
 |---|---|---|
-| `features.blobs` | `true` | CAS-хранилище блобов |
-| `features.versions` | `true` | Историю версий файлов |
 | `features.grants` | `true` | Гранты на узлы (ACL) |
 | `features.activity` | `true` | Журнал активности |
-| `features.uploads` | `true` | Схему `v_upload_sessions`/`v_upload_parts` + резюмируемые маршруты |
 | `features.share_links` | `false` | Bearer-ссылки на узлы (share) |
-| `features.document_versions` | `false` | Схему `v_node_document_versions` + Actions/HTTP для документов-узлов (opt-in) |
 | `features.spreadsheets` | `false` | `UniverHandler` за фича-флагом (редактирование xlsx) |
 | `features.public_listing` | `false` | Публичный листинг |
-| `features.reliability` | `true` | Схему `v_outbox`/`v_webhook_*` + подписчик outbox + маршруты эндпойнтов |
+| `features.webhooks` | `true` | Подписчик outbox + маршруты эндпойнтов |
 
 ## Обработчики документов — `handlers`
 
-Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Handlers\FileHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` ДОБАВЛЯЕТ `TipTapHandler` своим слиянием конфига.
+Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Handlers\FileHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` регистрирует `TipTapHandler` через `vaulter.file_handlers`.
 
-| Записи по умолчанию | Владелец |
+| Встроенные обработчики через тег | Владелец |
 |---|---|
 | `Vaulter\Handlers\Builtin\PreviewHandler` | core |
 | `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
@@ -129,78 +94,71 @@ php artisan vendor:publish --tag=vaulter-config
 
 `UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::handlers()->register()`).
 
-## Тенантность — `tenant.*`
+## Тенантность — `tenancy.*`
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `tenant.enabled` | `VAULTER_TENANT_ENABLED` | `false` | Когда включено, миграции добавляют колонку тенанта. Vaulter **не** изолирует по ней сам — предоставьте модель, знающую о тенанте |
-| `tenant.column` | — | `tenant_id` | Имя колонки тенанта |
+| `tenancy.enabled` | `VAULTER_TENANT_ENABLED` | `false` | Интеграция тенантности хоста; колонка всегда `tenant_id`. Изоляцию задаёт модель хоста |
 
 См. [Auth → Мультитенантность](/ru/guide/multi-tenancy).
 
-## Префикс таблиц — `table_prefix`
+## Префикс таблиц — `database.table_prefix`
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `table_prefix` | `VAULTER_TABLE_PREFIX` | `v_` |
+| `database.table_prefix` | `VAULTER_TABLE_PREFIX` | `v_` |
 
 Префикс для каждой таблицы Vaulter (его читают и миграции, и модели), чтобы пакет сосуществовал с таблицами хоста.
 
 ## Авторизация
 
-### Легаси-резолвер — `permission_resolver`
-
-| Ключ | По умолчанию | Управляет |
-|---|---|---|
-| `permission_resolver` | `null` | FQCN `PermissionResolver` или `null`, чтобы зарегистрировать его в рантайме через `Vaulter::resolvePermissionsWith()`. **Легаси**-путь документов |
-
-### Drive ACL — `drivers.permission`, `permission_drivers.*`
+### Drive ACL — `access.permission_driver`, `access.permission_drivers.*`
 
 | Ключ | Env | По умолчанию | Принимает |
 |---|---|---|---|
-| `drivers.permission` | `VAULTER_PERMISSION_DRIVER` | `database` | ключ из `permission_drivers` |
-| `permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
-| `permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
-| `permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
-| `permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | регистрируется provider установленного `vaulter-azgard` |
-| `permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
+| `access.permission_driver` | `VAULTER_PERMISSION_DRIVER` | `database` | ключ из `access.permission_drivers` |
+| `access.permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
+| `access.permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
+| `access.permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
+| `access.permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | регистрируется provider установленного `vaulter-azgard` |
+| `access.permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
 
 ::: danger Null-драйвер в продакшене
 Драйвер `null` открыт и завязан на окружение. Валидация продакшен-конфига отвергает панель, привязанную к нему, — привяжите реальный драйвер до деплоя.
 :::
 
-### Карта драйвера Gate — `gate.*`
+### Карта драйвера Gate — `access.gate.*`
 
-Используется только когда `drivers.permission = 'gate'`. Маппит `GrantLevel` на право (ability) хостового Gate; наивысший разрешённый уровень становится ролевым грантом актора.
-
-| Ключ | Env | По умолчанию |
-|---|---|---|
-| `gate.abilities.reader` | — | `vaulter.view` |
-| `gate.abilities.commenter` | — | `vaulter.comment` |
-| `gate.abilities.writer` | — | `vaulter.edit` |
-| `gate.abilities.organizer` | — | `vaulter.organize` |
-| `gate.abilities.owner` | — | `vaulter.manage` |
-| `gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `vaulter.super` |
-| `gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `vaulter.create` |
-
-### Карта драйвера Spatie — `spatie.*`
-
-Используется только когда `drivers.permission = 'spatie'` **и** установлен spatie/laravel-permission.
+Используется только когда `access.permission_driver = 'gate'`. Маппит `GrantLevel` на право (ability) хостового Gate; наивысший разрешённый уровень становится ролевым грантом актора.
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `spatie.permissions.reader` | — | `vaulter.view` |
-| `spatie.permissions.commenter` | — | `vaulter.comment` |
-| `spatie.permissions.writer` | — | `vaulter.edit` |
-| `spatie.permissions.organizer` | — | `vaulter.organize` |
-| `spatie.permissions.owner` | — | `vaulter.manage` |
-| `spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `vaulter.super` |
-| `spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `vaulter.create` |
-| `spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` |
-| `spatie.role_subject_type` | — | `role` |
-| `spatie.team_subject_type` | — | `team` |
+| `access.gate.abilities.reader` | — | `vaulter.view` |
+| `access.gate.abilities.commenter` | — | `vaulter.comment` |
+| `access.gate.abilities.writer` | — | `vaulter.edit` |
+| `access.gate.abilities.organizer` | — | `vaulter.organize` |
+| `access.gate.abilities.owner` | — | `vaulter.manage` |
+| `access.gate.super_ability` | `VAULTER_GATE_SUPER_ABILITY` | `vaulter.super` |
+| `access.gate.create_ability` | `VAULTER_GATE_CREATE_ABILITY` | `vaulter.create` |
 
-`spatie.teams` используется как запасной вариант только тогда, когда собственный `config('permission.teams')` хоста не задан. `role_subject_type`/`team_subject_type` — это morph-алиасы, на которые адресуются строки грантов роли/команды.
+### Карта драйвера Spatie — `access.spatie.*`
+
+Используется только когда `access.permission_driver = 'spatie'` **и** установлен spatie/laravel-permission.
+
+| Ключ | Env | По умолчанию |
+|---|---|---|
+| `access.spatie.permissions.reader` | — | `vaulter.view` |
+| `access.spatie.permissions.commenter` | — | `vaulter.comment` |
+| `access.spatie.permissions.writer` | — | `vaulter.edit` |
+| `access.spatie.permissions.organizer` | — | `vaulter.organize` |
+| `access.spatie.permissions.owner` | — | `vaulter.manage` |
+| `access.spatie.super_permission` | `VAULTER_SPATIE_SUPER_PERMISSION` | `vaulter.super` |
+| `access.spatie.create_permission` | `VAULTER_SPATIE_CREATE_PERMISSION` | `vaulter.create` |
+| `access.spatie.teams` | `VAULTER_SPATIE_TEAMS` | `false` |
+| `access.spatie.role_subject_type` | — | `role` |
+| `access.spatie.team_subject_type` | — | `team` |
+
+`access.spatie.teams` используется как запасной вариант только тогда, когда собственный `config('permission.teams')` хоста не задан. `role_subject_type`/`team_subject_type` — это morph-алиасы, на которые адресуются строки грантов роли/команды.
 
 ### Карта драйвера AzGuard — `vaulter-azgard.*`
 
@@ -211,7 +169,7 @@ php artisan vendor:publish --tag=vaulter-config
 |---|---|
 | `vaulter-azgard.panel_id` | `null` (панель определяется из ключа разрешения) |
 
-Используется только когда `drivers.permission = 'azgard'`. Ориентирована на действия — маппит право (ability) Vaulter на ключ разрешения AzGuard.
+Используется только когда `access.permission_driver = 'azgard'`. Ориентирована на действия — маппит право (ability) Vaulter на ключ разрешения AzGuard.
 
 | Ключ | По умолчанию |
 |---|---|
@@ -235,45 +193,37 @@ php artisan vendor:publish --tag=vaulter-config
 Мост поставляет реальный адаптер guard. Хост должен реализовать `AzgardBackedUser`
 и согласовать ULID-morph — см. [Драйверы прав](/ru/guide/permission-drivers).
 
-## Адаптер хранилища (легаси) — `storage_adapter`
-
-| Ключ | По умолчанию |
-|---|---|
-| `storage_adapter` | `Vaulter\Support\DefaultStorageAdapter` |
-
-Хранилище для легаси-вложений в бинарном виде — см. [`StorageAdapter`](/ru/reference/contracts#cas-content-addressed-storage).
-
-## Контент-адресуемое хранилище блобов — `cas.*`
+## Контент-адресуемое хранилище блобов — `vaulter-media.*`
 
 Сменяемые CAS-сервисы, все привязаны в провайдере и резолвятся через контейнер.
 
 | Ключ | По умолчанию | Контракт |
 |---|---|---|
-| `cas.content_store` | `Vaulter\Media\Cas\Sha256ContentStore` | `ContentStore` |
-| `cas.storage_driver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | `StorageDriver` |
-| `cas.blob_store` | `Vaulter\Media\Cas\BlobStore` | `BlobStore` |
+| `vaulter-media.content_store` | `Vaulter\Media\Cas\Sha256ContentStore` | `ContentStore` |
+| `vaulter-media.storage_driver` | `Vaulter\Media\Cas\FlysystemStorageDriver` | `StorageDriver` |
+| `vaulter-media.blob_store` | `Vaulter\Media\Cas\BlobStore` | `BlobStore` |
 
-## Дедупликация — `dedup.scope`
+## Дедупликация — `vaulter-media.dedup.scope`
 
 | Ключ | Env | По умолчанию | Принимает |
 |---|---|---|---|
-| `dedup.scope` | `VAULTER_DEDUP_SCOPE` | `tenant` | `global` \| `tenant` \| `storage` |
+| `vaulter-media.dedup.scope` | `VAULTER_DEDUP_SCOPE` | `tenant` | `global` \| `tenant` \| `drive` |
 
-Граница, внутри которой контент-адрес (sha256) уникален. Определяет и UNIQUE-индекс дедупликации, и квалифицированный по области ключ хранилища `"<scope>/ab/cd/<sha256>"`. `global` = один физический объект на sha256 в пределах всей установки; `tenant` = уникальность на `(tenant_id, sha256)`; `storage` = уникальность на `(storage_id, sha256)`.
+Граница дедупликации. Уникальность задаётся сохранёнными `scope_key` и хешем. `global` разделяет байты на всю установку, `tenant` — на тенанта, `drive` — внутри одного диска. Смена области влияет на новые загрузки; старые блобы сохраняют свою область.
 
-## Сборка мусора блобов — `gc.grace_hours`
+## Сборка мусора блобов — `vaulter-media.gc.grace_hours`
 
 | Ключ | Env | По умолчанию | Примечания |
 |---|---|---|---|
-| `gc.grace_hours` | `VAULTER_GC_GRACE_HOURS` | `24` | Grace-окно двухфазной сборки мусора; нижняя граница 1ч |
+| `vaulter-media.gc.grace_hours` | `VAULTER_GC_GRACE_HOURS` | `24` | Grace-окно двухфазной сборки мусора; нижняя граница 1ч |
 
 Блоб, у которого кеш счётчика ссылок достигает нуля, помечается tombstone с `delete_after_at = now + grace`; его байты выметаются только после того, как grace-окно прошло. См. [Рецепты → Сборка мусора блобов](/ru/guide/recipes).
 
-## CAS-диск хранилища — `storage.default_disk`
+## CAS-диск хранилища — `vaulter-media.disk`
 
 | Ключ | Env | По умолчанию | Примечания |
 |---|---|---|---|
-| `storage.default_disk` | `VAULTER_DISK` | `local` | Flysystem-диск по умолчанию для канонических CAS-объектов, когда `v_storages.disk` блоба не закрепляет собственный |
+| `vaulter-media.disk` | `VAULTER_DISK` | `local` | Flysystem-диск по умолчанию для канонических CAS-объектов, когда `v_storages.disk` блоба не закрепляет собственный |
 
 ::: warning Держите CAS-бакет без версионирования
 Никогда не используйте S3 lifecycle/versioning как механизм удаления блобов.
@@ -281,40 +231,38 @@ php artisan vendor:publish --tag=vaulter-config
 
 ## Публичные ссылки (share)
 
-### Легаси-генератор токенов — `share_token_generator`
-
-| Ключ | По умолчанию |
-|---|---|
-| `share_token_generator` | `Vaulter\Support\RandomShareTokenGenerator` |
-
-### Bearer-ссылки на узлы (share) — `share.*`
+### Bearer-ссылки на узлы (share) — `sharing.*`
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `share.token_generator` | — | `Vaulter\Support\RandomShareTokenGenerator` | `ShareTokenGenerator`, чеканящий сырой bearer-токен (хранится только его sha256-хеш) |
-| `share.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | Публичная база, из которой собирается URL публичной ссылки |
-| `share.prefix_length` | — | `8` | Сколько ведущих символов сырого токена хранится как несекретный `token_prefix` |
+| `sharing.token_generator` | — | `Vaulter\Support\RandomShareTokenGenerator` | `ShareTokenGenerator`, чеканящий сырой bearer-токен (хранится только его sha256-хеш) |
+| `sharing.url_base` | `VAULTER_SHARE_URL_BASE` | `/share` | Публичная база, из которой собирается URL публичной ссылки |
+| `sharing.prefix_length` | — | `8` | Сколько ведущих символов сырого токена хранится как несекретный `token_prefix` |
 
 См. [Использование → Публичные ссылки](/ru/guide/sharing).
 
-## Корзина — `trash.retention_days`
+## Корзина — `vaulter-drive.trash.retention_days`
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `trash.retention_days` | `VAULTER_TRASH_RETENTION_DAYS` | `30` |
+| `vaulter-drive.trash.retention_days` | `VAULTER_TRASH_RETENTION_DAYS` | `30` |
 
 Окно хранения, по истечении которого поддерево узла из корзины окончательно принудительно удаляется командой `php artisan vaulter:purge-trash`.
 
-## Резюмируемые загрузки — `uploads.*`
+## Загрузки — `vaulter-drive.uploads.*`
 
-| Ключ | Env | По умолчанию | Управляет |
-|---|---|---|---|
-| `uploads.max_bytes` | `VAULTER_UPLOAD_MAX_BYTES` | `5368709120` (5 ГиБ) | Жёсткий потолок на заявленный общий размер сессии; `0` = ∞ |
-| `uploads.chunk_size` | `VAULTER_UPLOAD_CHUNK_SIZE` | `8388608` (8 МиБ) | Анонсируемый размер чанка по умолчанию (подсказка) |
-| `uploads.session_ttl_hours` | `VAULTER_UPLOAD_SESSION_TTL_HOURS` | `24` | Сессия, не закоммиченная в этом окне, выметается командой `vaulter:sweep-uploads` |
-| `uploads.tus.enabled` | `VAULTER_UPLOAD_TUS_ENABLED` | `true` | Включает резюмируемые tus-эндпойнты (независимо от флага схемы `uploads`) |
-
-Флаг `features.uploads` включает и схему, и группу маршрутов. См. [Использование → Загрузки](/ru/guide/uploads).
+| Ключ | По умолчанию | Env |
+|---|---|---|
+| `vaulter-drive.uploads.max_file_size` | `5368709120` байт | `VAULTER_UPLOAD_MAX_BYTES` |
+| `vaulter-drive.uploads.allowed_mime_types` | `[]` | — |
+| `vaulter-drive.uploads.resumable.enabled` | `true` | `VAULTER_UPLOAD_TUS_ENABLED` |
+| `vaulter-drive.uploads.resumable.chunk_size` | `8388608` байт | `VAULTER_UPLOAD_CHUNK_SIZE` |
+| `vaulter-drive.uploads.resumable.max_chunk_size` | `67108864` байт | `VAULTER_UPLOAD_MAX_CHUNK_BYTES` |
+| `vaulter-drive.uploads.resumable.session_ttl_hours` | `24` | `VAULTER_UPLOAD_SESSION_TTL_HOURS` |
+| `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` | `20` | `VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS` |
+| `vaulter-drive.uploads.resumable.metadata.allowed_keys` | `['filename', 'filetype', 'name', 'mime_type']` | — |
+| `vaulter-drive.uploads.resumable.metadata.max_value_length` | `512` | — |
+| `vaulter-drive.names.max_length` | `255` | — |
 
 ## Надёжность — вебхуки — `webhooks.*`
 
@@ -332,68 +280,53 @@ php artisan vendor:publish --tag=vaulter-config
 | `webhooks.retention_days` | — | `30` | Возраст, после которого отправленные строки outbox + терминальные доставки можно вычищать |
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | Право (ability) Gate, охраняющее поверхность управления эндпойнтами; `null` разрешает любому аутентифицированному пользователю |
 
-Флаг `features.reliability` включает схему, подписчик outbox и маршруты эндпойнтов. См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).
+Флаг `features.webhooks` включает подписчик outbox и маршруты эндпойнтов; таблицы существуют всегда. См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).
 
-## API-маршруты — `route_prefix`, `middleware`
+## API-маршруты — `routes.*`
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `route_prefix` | `VAULTER_ROUTE_PREFIX` | `api/vaulter` |
-| `middleware` | — | `['api']` |
+| `routes.prefix` | `VAULTER_ROUTE_PREFIX` | `api/vaulter` |
 
-## Версионирование (легаси) — `max_versions`
-
-| Ключ | По умолчанию | Примечания |
-|---|---|---|
-| `max_versions` | `50` | Максимум хранимых версий на **легаси**-документ (`0` = без ограничений); самые старые обрезаются |
-
-## Версии документов-узлов — `versions.*`
+## Версии документов-узлов — `vaulter-documents.revisions.*`
 
 | Ключ | По умолчанию | Управляет |
 |---|---|---|
-| `versions.max` | `50` | Хранимых версий на узел до обрезки (`0` = без ограничений); откатывается к `max_versions` |
-| `versions.autosave_debounce_seconds` | `30` | Автосохранение в пределах этого окна от головной автосейв-версии обновляет её на месте (без новой строки) |
+| `vaulter-documents.revisions.limit` | `50` | Хранимых версий на узел до обрезки (`0` = без ограничений) |
+| `vaulter-documents.revisions.autosave_debounce_seconds` | `30` | Автосохранение в пределах этого окна от головной автосейв-версии обновляет её на месте (без новой строки) |
 
 См. [Использование → Версии](/ru/guide/documents).
 
-## Документы — `enabled_document_types`, `max_document_size_kb`
+## Документы — `enabled_document_types`, `vaulter-documents.content.max_size_kb`
 
 | Ключ | По умолчанию |
 |---|---|
 | `enabled_document_types` | `['richtext', 'table', 'markdown', 'template']` |
-| `max_document_size_kb` | `5120` |
+| `vaulter-documents.content.max_size_kb` | `5120` |
 
-## Drive-загрузки (бинарные) — `drive.*`
-
-| Ключ | По умолчанию | Управляет |
-|---|---|---|
-| `drive.max_upload_kb` | `null` | Жёсткий потолок размера (КБ) для загружаемого файла, проверяется `UploadFileRequest`. `null` → откатывается к `max_document_size_kb` |
-| `drive.allowed_mime` | `[]` | Опциональный allowlist mime. Пусто = разрешено всё (любой mime). Перечисление mime (например, `application/pdf`, `image/*`) ограничивает загрузки через правило `mimetypes` Laravel |
-
-## Форматы экспорта — `exporters`
+## Форматы экспорта — `vaulter-documents.exporters`
 
 Карта ключ формата → FQCN `DocumentExporter`.
 
 | Ключ | По умолчанию |
 |---|---|
-| `exporters.html` | `Vaulter\Export\HtmlExporter` |
-| `exporters.markdown` | `Vaulter\Export\MarkdownExporter` |
+| `vaulter-documents.exporters.html` | `Vaulter\Documents\Export\HtmlExporter` |
+| `vaulter-documents.exporters.markdown` | `Vaulter\Documents\Export\MarkdownExporter` |
 
 Добавьте свой (PDF, DOCX, …) здесь или через `Vaulter::registerExporter()`. См. [Рецепты → Свой экспорт](/ru/guide/recipes).
 
-## Совместное редактирование — `collaboration.*`
+## Совместное редактирование — `vaulter-documents.collaboration.*`
 
 Yjs — источник истины; TipTap JSON — производная проекция. Транспорт сменяем за драйвером.
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | `hocuspocus` |
-| `collaboration.channel_prefix` | — | `vaulter.documents` | Пространство имён комнаты; комната всегда `prefix.nodeId` |
-| `collaboration.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Общий секрет, который Node-хаб предъявляет на S2S webhook-эндпойнтах. Когда null/пусто, webhook-поверхность принимает только валидный подписанный JWT |
-| `collaboration.drivers.hocuspocus.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба |
-| `collaboration.drivers.hocuspocus.app_id` | `VAULTER_COLLAB_APP_ID` | `null` | App id хаба |
-| `collaboration.drivers.hocuspocus.secret` | `VAULTER_COLLAB_SECRET` | `null` | Ключ подписи room-JWT **и** ключ, по которому вебхуки проверяют JWT |
-| `collaboration.drivers.hocuspocus.token_ttl` | — | `3600` | TTL room-JWT (секунды) |
+| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | `hocuspocus` |
+| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `vaulter.documents` | Пространство имён комнаты; комната всегда `prefix.nodeId` |
+| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | `null` | Общий секрет, который Node-хаб предъявляет на S2S webhook-эндпойнтах. Нужен для подписи тела вебхука при включённой коллаборации |
+| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба |
+| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | `null` | Ключ подписи room-JWT **и** ключ, по которому вебхуки проверяют JWT |
+| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | TTL room-JWT (секунды) |
 
 См. [Совместное редактирование → Обзор](/ru/guide/collaboration) и [Совместное редактирование → Сервер](/ru/guide/collaboration).
 
@@ -402,3 +335,43 @@ Yjs — источник истины; TipTap JSON — производная п
 - [Фасад и Manager](/ru/reference/facade) — точки входа в рантайме
 - [Справочник контрактов](/ru/reference/contracts) — интерфейсы, которые реализуют эти FQCN
 - [Справочник команд](/ru/reference/commands) — планируемые команды обслуживания
+
+## Дополнительные настройки
+
+| Ключ | По умолчанию |
+|---|---|
+| `vaulter-documents.comments.enabled` | `true` |
+| `vaulter-documents.collaboration.enabled` | `false` |
+| `vaulter-documents.collaboration.hub.timestamp_tolerance` | `300` секунд |
+| `vaulter-documents.tiptap.extra_nodes` | `[]` |
+| `vaulter-documents.tiptap.extra_marks` | `[]` |
+| `vaulter-documents.tiptap.extra_attributes` | `[]` |
+| `vaulter-documents.tiptap.url_attributes` | `[]` |
+| `vaulter-media.gc.orphan_grace_hours` | `24` (`VAULTER_ORPHAN_GRACE_HOURS`, откат к `VAULTER_GC_GRACE_HOURS`) |
+| `ids.host_keys` | `string` (`VAULTER_HOST_KEYS`) |
+| `extra_data.enabled` | `true` |
+| `listing.scan_budget` | `1000` |
+| `routes.middleware.authenticated` | `['api', 'auth:sanctum']` |
+| `routes.middleware.public` | `['api']` |
+| `routes.middleware.hub` | `['api']` |
+| `routes.rate_limits.public` | `60` (`VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE`) |
+| `routes.rate_limits.uploads` | `120` (`VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE`) |
+| `sharing.default_ttl_hours` | `72` (`VAULTER_SHARE_DEFAULT_TTL_HOURS`) |
+| `sharing.max_ttl_hours` | `720` (`VAULTER_SHARE_MAX_TTL_HOURS`) |
+| `downloads.inline_mime_types` | `['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain']` |
+| `observability.enabled` | `false` (`VAULTER_OBSERVABILITY_ENABLED`) |
+| `observability.recorder` | `null` (`VAULTER_OBSERVABILITY_RECORDER`) |
+| `observability.tracing.enabled` | `false` (`VAULTER_TRACING_ENABLED`) |
+| `observability.tracing.recorder` | `null` (`VAULTER_TRACING_RECORDER`) |
+| `webhooks.retry_claim_seconds` | `60` |
+| `webhooks.delivery.url_guard` | `Vaulter\Webhooks\DefaultOutboundUrlGuard` |
+| `webhooks.delivery.allowed_schemes` | `['http', 'https']` |
+| `webhooks.delivery.blocked_ip_ranges` | `null` (закрытые встроенные диапазоны) |
+| `webhooks.delivery.allowed_ip_ranges` | `[]` |
+| `webhooks.delivery.connect_timeout` | `2` секунд |
+| `webhooks.delivery.max_response_bytes` | `65536` байт |
+
+Документы включены при установке пакета; блобы и ревизии файлов включены всегда.
+Комментарии теперь включены по умолчанию; старый `features.comments = false` переносится.
+Карта экспортёров сохраняет формат → FQCN. `enabled_document_types` и `features.spreadsheets`
+пока остаются в core. См. [карту миграции](/ru/guide/configuration#переход-с-опубликованной-конфигурации-0-2).

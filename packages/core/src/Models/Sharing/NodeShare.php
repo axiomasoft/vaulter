@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Config;
 
 /**
  * A bearer share-link on a node (master plan §2.7) — the SEPARATE public sharing
@@ -28,7 +29,7 @@ use Vaulter\Support\Config;
  * raw token is returned to the creator exactly once at mint time and is never
  * re-derivable from this row.
  *
- * Swappable — point config('vaulter.models.node_share') at a subclass for tenant
+ * Swappable — point configuration key vaulter.models.node_share at a subclass for tenant
  * scoping or extra behaviour.
  *
  * @property int|string      $id
@@ -80,7 +81,7 @@ class NodeShare extends Model
     #[\Override]
     public function getTable(): string
     {
-        return Config::table('node_shares');
+        return app(DatabaseConfig::class)->table('node_shares');
     }
 
     /**
@@ -88,7 +89,7 @@ class NodeShare extends Model
      */
     public function node(): BelongsTo
     {
-        return $this->belongsTo(Config::nodeModel(), 'node_id');
+        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
     }
 
     /**

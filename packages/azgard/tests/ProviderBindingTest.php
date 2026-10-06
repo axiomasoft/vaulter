@@ -42,19 +42,19 @@ it('binds the deny-all null guard for a user that is not AzGuard-backed', functi
 });
 
 it('registers its permission driver and keeps a host driver override', function (): void {
-    expect(config('vaulter.permission_drivers.azgard'))->toBe(AzgardPermissionDriver::class);
+    expect(config('vaulter.access.permission_drivers.azgard'))->toBe(AzgardPermissionDriver::class);
 
-    config()->set('vaulter.permission_drivers.azgard', DatabasePermissionDriver::class);
+    config()->set('vaulter.access.permission_drivers.azgard', DatabasePermissionDriver::class);
     (new VaulterAzgardServiceProvider(app()))->register();
 
-    expect(config('vaulter.permission_drivers.azgard'))->toBe(DatabasePermissionDriver::class);
+    expect(config('vaulter.access.permission_drivers.azgard'))->toBe(DatabasePermissionDriver::class);
 });
 
 it('preserves an explicitly configured null driver key', function (): void {
-    config()->set('vaulter.permission_drivers.azgard', null);
+    config()->set('vaulter.access.permission_drivers.azgard', null);
     (new VaulterAzgardServiceProvider(app()))->register();
 
-    expect(config('vaulter.permission_drivers.azgard'))->toBeNull();
+    expect(config('vaulter.access.permission_drivers.azgard'))->toBeNull();
 });
 
 it('keeps its actor-only driver non-enumerating through the core manager', function (): void {
