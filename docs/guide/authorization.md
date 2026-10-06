@@ -376,6 +376,10 @@ and exercise Vaulter without wiring a real role system. A missing or `null` driv
 **never** silently open a production install — it fails loud at resolve time.
 :::
 
+The `azgard` key requires `composer require axioma-studio/vaulter-azgard`.
+Its provider registers the driver and real guard adapter; bridge settings live under
+`vaulter-azgard.*`, and the user model must implement `AzgardBackedUser`.
+
 An **unknown** driver key fails the same way, via
 `MissingPermissionDriverException::unknownDriver($key, $known)`, listing the registered
 keys.

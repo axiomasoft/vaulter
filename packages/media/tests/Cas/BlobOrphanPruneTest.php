@@ -49,10 +49,10 @@ it('prune на pgsql реально удаляет байты осиротевш
 });
 
 // 11b. Command-level: a prune that cleaned everything exits SUCCESS.
-it('vaulter:reconcile-blobs --orphans --prune на pgsql очищает orphan и выходит SUCCESS', function (): void {
+it('vaulter:blobs:reconcile --orphans --prune на pgsql очищает orphan и выходит SUCCESS', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg cmd prune', scope: 't1', ageHours: 48);
 
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])
         ->expectsOutputToContain('Orphan walk (pruned)')
         ->assertExitCode(Command::SUCCESS);
 

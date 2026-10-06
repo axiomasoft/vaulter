@@ -12,7 +12,7 @@ namespace Vaulter\Contracts\Access;
  *
  * This marker is the EXPLICIT capability signal, but not the only one: the built-in
  * base lanes that inherit `subjectsFor()` unchanged (the standalone `database` base,
- * `gate`, `azgard`, the `null` lane) contribute only the actor itself, so a grant
+ * `gate`, `bridge`, the `null` lane) contribute only the actor itself, so a grant
  * addressed to a role/team under them is silently inert. Vaulter makes that silence
  * LOUD — {@see GrantNodeAccessAction} warns (and, outside production, throws) — but ONLY
  * when the driver PROVABLY cannot enumerate: neither this marker NOR an overridden

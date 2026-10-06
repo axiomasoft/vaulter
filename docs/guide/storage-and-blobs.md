@@ -313,13 +313,13 @@ lock so a slow-but-live commit is never stolen.
 
 ```bash
 # Both phases (mark + sweep), grace from config('vaulter.gc.grace_hours'):
-php artisan vaulter:gc-blobs
+php artisan vaulter:blobs:gc
 
 # Override the grace window (floored at 1h):
-php artisan vaulter:gc-blobs --grace=48
+php artisan vaulter:blobs:gc --grace=48
 
 # Also clear crashed-staging PENDING rows:
-php artisan vaulter:gc-blobs --pending
+php artisan vaulter:blobs:gc --pending
 ```
 
 The command prints a per-phase tally — `Tombstoned X, swept Y, skipped Z (grace Nh)`.
@@ -342,15 +342,15 @@ config — never set it to zero expecting an immediate purge.
 :::
 
 ::: details Schedule it yourself
-`vaulter:gc-blobs` and `vaulter:reconcile-blobs` are registered by the package but
+`vaulter:blobs:gc` and `vaulter:blobs:reconcile` are registered by the package but
 **not** auto-scheduled — Vaulter does not touch your scheduler. Add them where you
 schedule maintenance, e.g. in `routes/console.php`:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:reconcile-blobs')->daily();
-Schedule::command('vaulter:gc-blobs --pending')->dailyAt('03:00');
+Schedule::command('vaulter:blobs:reconcile')->daily();
+Schedule::command('vaulter:blobs:gc --pending')->dailyAt('03:00');
 ```
 
 Run reconcile *before* GC so `ref_count` reflects reality when the mark scan reads it.
@@ -361,13 +361,13 @@ recipe.
 
 ## Reconciliation: rebuilding the `ref_count` cache
 
-`ref_count` is a cache, not the truth, so it drifts. `vaulter:reconcile-blobs`
+`ref_count` is a cache, not the truth, so it drifts. `vaulter:blobs:reconcile`
 (backed by `Vaulter\Media\Cas\BlobReconciler`) rebuilds it from the
 `v_file_version_blobs` edge counts — the real liveness source — and reports
 integrity hazards. It **never deletes anything**.
 
 ```bash
-php artisan vaulter:reconcile-blobs
+php artisan vaulter:blobs:reconcile
 ```
 
 It walks every blob, rewrites any stale `ref_count`, and flags **dangling rows** — a
@@ -390,13 +390,13 @@ reconcile above. The `--orphans` flag adds that disk-walk to the same command:
 
 ```bash
 # Detect orphan objects (report-only) in addition to the row-side reconcile:
-php artisan vaulter:reconcile-blobs --orphans
+php artisan vaulter:blobs:reconcile --orphans
 
 # Scan a specific disk and override the orphan grace window (hours, floored at 1h):
-php artisan vaulter:reconcile-blobs --orphans --disk=s3 --orphan-grace=48
+php artisan vaulter:blobs:reconcile --orphans --disk=s3 --orphan-grace=48
 
 # DELETE the orphans found — PostgreSQL/MySQL only (refused on SQLite; see below):
-php artisan vaulter:reconcile-blobs --orphans --prune
+php artisan vaulter:blobs:reconcile --orphans --prune
 ```
 
 It prints its own line next to the reconcile tally:

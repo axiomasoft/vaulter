@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Drivers\AzgardPermissionDriver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -101,10 +100,7 @@ it('yields identical decisions across pass-through host-role drivers on a shared
 dataset('pass-through drivers', [
     'gate' => fn (): PermissionDriver => new GatePermissionDriver,
     'spatie' => fn (): PermissionDriver => new SpatiePermissionDriver,
-    // AzGuard with no AzgardGuard bound (and an actor that does not implement the
-    // seam) is a pure pass-through: resolve/override yield null, so the decision is
-    // byte-for-byte identical to the database lane on the shared ACL fixture.
-    'azgard' => fn (): PermissionDriver => app(AzgardPermissionDriver::class),
+
 ]);
 
 it('yields the shared-fixture truth for each real driver in pass-through', function (PermissionDriver $driver): void {

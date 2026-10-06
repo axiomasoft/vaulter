@@ -116,8 +116,8 @@ it('records vaulter_failed_jobs_total on job failed event', function (): void {
 it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', function (): void {
     $commands = [
         'vaulter:sweep-uploads',
-        'vaulter:gc-blobs',
-        'vaulter:reconcile-blobs',
+        'vaulter:blobs:gc',
+        'vaulter:blobs:reconcile',
         'vaulter:purge-trash',
         'vaulter:prune-webhooks',
         'vaulter:retry-webhooks',

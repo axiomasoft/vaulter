@@ -23,7 +23,7 @@ beforeEach(function (): void {
 });
 
 it('reports the exact GC phase totals and effective grace', function (): void {
-    Artisan::call('vaulter:gc-blobs', ['--grace' => '7']);
+    Artisan::call('vaulter:blobs:gc', ['--grace' => '7']);
 
     expect(Artisan::output())->toContain(
         'Tombstoned 0, swept 0, skipped 0 (grace 7h).',
@@ -31,7 +31,7 @@ it('reports the exact GC phase totals and effective grace', function (): void {
 });
 
 it('reports the configured GC grace when no override is supplied', function (): void {
-    Artisan::call('vaulter:gc-blobs');
+    Artisan::call('vaulter:blobs:gc');
 
     expect(Artisan::output())->toContain(
         'Tombstoned 0, swept 0, skipped 0 (grace 2h).',
@@ -45,7 +45,7 @@ it('reports the exact pending sweep totals', function (): void {
         'first_seen_at' => now()->subHours(8),
     ])->save();
 
-    Artisan::call('vaulter:gc-blobs', ['--grace' => '7', '--pending' => true]);
+    Artisan::call('vaulter:blobs:gc', ['--grace' => '7', '--pending' => true]);
 
     expect(Artisan::output())
         ->toContain('Tombstoned 0, swept 0, skipped 0 (grace 7h).')
@@ -53,7 +53,7 @@ it('reports the exact pending sweep totals', function (): void {
 });
 
 it('reports exact reconcile totals and the clean-row verdict', function (): void {
-    Artisan::call('vaulter:reconcile-blobs');
+    Artisan::call('vaulter:blobs:reconcile');
 
     expect(Artisan::output())
         ->toContain('Reconciled 0 blobs, corrected 0 ref_count caches.')
@@ -65,7 +65,7 @@ it('reports every dangling row identity', function (): void {
     $second = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling second'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     Storage::disk('local')->delete([$first->storage_key, $second->storage_key]);
 
-    $exit = Artisan::call('vaulter:reconcile-blobs');
+    $exit = Artisan::call('vaulter:blobs:reconcile');
 
     expect($exit)->toBe(Command::FAILURE)
         ->and(Artisan::output())->toContain(
@@ -79,7 +79,7 @@ it('reports exact orphan walk totals, disk and grace', function (): void {
     $second = CasTestHelpers::seedOrphan(bytes: 'command orphan two', scope: 't1', ageHours: 48);
     Storage::disk('local')->put('foreign/readme.txt', 'not CAS');
 
-    $exit = Artisan::call('vaulter:reconcile-blobs', [
+    $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
         '--disk' => 'local',
         '--orphan-grace' => '24',
@@ -100,7 +100,7 @@ it('reports the explicit orphan disk and the configured grace', function (): voi
         disk: 'archive',
     );
 
-    $exit = Artisan::call('vaulter:reconcile-blobs', [
+    $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
         '--disk' => 'archive',
     ]);
@@ -112,7 +112,7 @@ it('reports the explicit orphan disk and the configured grace', function (): voi
 });
 
 it('treats an empty disk option as the configured disk', function (): void {
-    $exit = Artisan::call('vaulter:reconcile-blobs', [
+    $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
         '--disk' => '',
     ]);
@@ -126,7 +126,7 @@ it('treats an empty disk option as the configured disk', function (): void {
 it('reports the exact SQLite prune refusal', function (): void {
     $orphan = CasTestHelpers::seedOrphan(bytes: 'refused command prune', scope: 't1', ageHours: 48);
 
-    $exit = Artisan::call('vaulter:reconcile-blobs', [
+    $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
         '--prune' => true,
     ]);
@@ -147,7 +147,7 @@ it('reports the exact SQLite prune refusal', function (): void {
 it('stops after reporting that orphan listing is unsupported', function (): void {
     app()->instance(ContentStore::class, new NonListableContentStore);
 
-    $exit = Artisan::call('vaulter:reconcile-blobs', [
+    $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,
         '--prune' => true,
     ]);
@@ -160,7 +160,7 @@ it('stops after reporting that orphan listing is unsupported', function (): void
 });
 
 it('warns when prune is requested without an orphan walk', function (): void {
-    $exit = Artisan::call('vaulter:reconcile-blobs', ['--prune' => true]);
+    $exit = Artisan::call('vaulter:blobs:reconcile', ['--prune' => true]);
 
     expect($exit)->toBe(Command::SUCCESS)
         ->and(Artisan::output())->toContain('--prune has no effect without --orphans; nothing pruned.');

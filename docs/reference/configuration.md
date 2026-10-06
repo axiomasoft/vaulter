@@ -179,7 +179,7 @@ coexists with host tables.
 | `permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | standalone — authorises purely from grant rows |
 | `permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | the Laravel Gate driver |
 | `permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | the spatie/laravel-permission driver |
-| `permission_drivers.azgard` | — | `Vaulter\Access\Drivers\AzgardPermissionDriver` | the AzGuard driver |
+| `permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | registered by the installed `vaulter-azgard` provider |
 | `permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | open, **non-production only** |
 
 ::: danger Null driver in production
@@ -224,32 +224,39 @@ installed.
 is unset. `role_subject_type`/`team_subject_type` are the morph aliases role/team
 grant rows are addressed to.
 
-### AzGuard driver map — `azgard.*`
+### AzGuard driver map — `vaulter-azgard.*`
+
+Separate package: `composer require axioma-studio/vaulter-azgard`. The settings below
+come from `config/vaulter-azgard.php`, rather than core configuration.
+
+| Key | Default |
+|---|---|
+| `vaulter-azgard.panel_id` | `null` (resolve the panel from the permission key) |
 
 Used only when `drivers.permission = 'azgard'`. Action-centric — maps a Vaulter
 `Ability` to an AzGuard permission key.
 
 | Key | Default |
 |---|---|
-| `azgard.permissions.view` | `documents.view` |
-| `azgard.permissions.download` | `documents.download` |
-| `azgard.permissions.comment` | `documents.comment` |
-| `azgard.permissions.edit` | `documents.update` |
-| `azgard.permissions.create` | `documents.create` |
-| `azgard.permissions.move` | `documents.update` |
-| `azgard.permissions.copy` | `documents.update` |
-| `azgard.permissions.trash` | `documents.delete` |
-| `azgard.permissions.delete` | `documents.delete` |
-| `azgard.permissions.restore` | `documents.delete` |
-| `azgard.permissions.share` | `documents.manage` |
-| `azgard.permissions.manage` | `documents.manage` |
+| `vaulter-azgard.permissions.view` | `documents.view` |
+| `vaulter-azgard.permissions.download` | `documents.download` |
+| `vaulter-azgard.permissions.comment` | `documents.comment` |
+| `vaulter-azgard.permissions.edit` | `documents.update` |
+| `vaulter-azgard.permissions.create` | `documents.create` |
+| `vaulter-azgard.permissions.move` | `documents.update` |
+| `vaulter-azgard.permissions.copy` | `documents.update` |
+| `vaulter-azgard.permissions.trash` | `documents.delete` |
+| `vaulter-azgard.permissions.delete` | `documents.delete` |
+| `vaulter-azgard.permissions.restore` | `documents.delete` |
+| `vaulter-azgard.permissions.share` | `documents.manage` |
+| `vaulter-azgard.permissions.manage` | `documents.manage` |
 
 | Key | Env | Default |
 |---|---|---|
-| `azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `documents.create` |
+| `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `documents.create` |
 
-A production host must bind `AzgardGuard` to a real adapter and align ULID morphs —
-see [Auth → Host role driver](/guide/permission-drivers).
+The bridge supplies the real guard adapter. The host must implement `AzgardBackedUser`
+and align ULID morphs — see [Permission drivers](/guide/permission-drivers).
 
 ## Storage adapter (legacy) — `storage_adapter`
 

@@ -556,10 +556,8 @@ test('core source never references the extracted vaulter-documents package (P2 #
 });
 
 /**
- * VLT-CANON P2.1 — the AzGuard bridge (`Vaulter\Azgard\*`, formerly `Vaulter\Permissions\Azgard\*`)
- * is a satellite package like drive/documents/media: core only knows the narrow
- * `Vaulter\Contracts\Access\AzgardGuard` seam, never the concrete adapter. Same file-scan
- * form as the drive (D1) and documents (D2) guards above.
+ * The optional permission bridge owns its complete guard seam and driver.
+ * Core source has no dependency on the bridge package.
  */
 test('core source never references the vaulter-azgard package (P2.1)', function (): void {
     expect(coreReferencesTo('Azgard'))->toBe([]);
@@ -643,3 +641,94 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
         'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',
     ]);
+
+arch('production source never imports testing helpers (D35)')
+    ->expect('Vaulter')
+    ->not->toUse('Vaulter\Testing')
+    ->ignoring(['Vaulter\Testing', 'Vaulter\Tests']);
+
+/**
+ * D23: retain exactly these live collaboration keys until P2.5. Each allowed
+ * line must occur once in its named file; imports, prose and duplicates fail.
+ *
+ * @return list<string>
+ */
+function coreBridgeImplementationNameViolations(string $path, string $contents): array
+{
+    $allowList = [
+        'src/Support/Config.php' => [
+            "        \$value = config('vaulter.collaboration.driver', 'hocuspocus');" => 1,
+            "        return is_string(\$value) ? \$value : 'hocuspocus';" => 1,
+            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.secret');" => 1,
+            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.token_ttl', 3600);" => 1,
+            "        \$value = config('vaulter.collaboration.drivers.hocuspocus.url');" => 1,
+        ],
+        'config/vaulter.php' => [
+            "        'driver' => env('VAULTER_COLLAB_DRIVER', 'hocuspocus')," => 1,
+            "            'hocuspocus' => [" => 1,
+        ],
+    ];
+    $allowed = $allowList[$path] ?? [];
+    $counts = array_fill_keys(array_keys($allowed), 0);
+    $offenders = [];
+
+    foreach (explode("\n", $contents) as $index => $line) {
+        if (preg_match('/azgard|hocuspocus|filament/i', $line) !== 1) {
+            continue;
+        }
+
+        if (isset($allowed[$line])) {
+            $counts[$line]++;
+
+            if ($counts[$line] <= $allowed[$line]) {
+                continue;
+            }
+        }
+
+        $offenders[] = $path.':'.($index + 1).': '.$line;
+    }
+
+    foreach ($allowed as $line => $expected) {
+        if ($counts[$line] !== $expected) {
+            $offenders[] = $path.': expected '.$expected.' occurrence of '.$line.', got '.$counts[$line];
+        }
+    }
+
+    return $offenders;
+}
+
+test('core source and configuration contain no bridge implementation names (P2.4)', function (): void {
+    $offenders = [];
+    $package = dirname(__DIR__, 2);
+
+    foreach ([$package.'/src', $package.'/config'] as $directory) {
+        $files = new RegexIterator(
+            new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory)),
+            '/\.php$/',
+        );
+
+        foreach ($files as $file) {
+            $contents = file_get_contents($file->getPathname());
+            expect($contents)->not->toBeFalse();
+            $path = substr($file->getPathname(), strlen($package) + 1);
+            $offenders = [...$offenders, ...coreBridgeImplementationNameViolations($path, $contents)];
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+test('the bridge-name guard rejects imports and duplicate runtime exceptions', function (): void {
+    $path = 'src/Support/Config.php';
+    $contents = file_get_contents(__DIR__.'/../../'.$path);
+    expect($contents)->not->toBeFalse();
+
+    foreach ([
+        'use Vaulter\\Azgard\\AzgardPermissionDriver;',
+        'use Vaulter\\Filament\\VaulterPlugin;',
+        'use Vaulter\\Documents\\Collaboration\\HocuspocusDriver;',
+        "        \$value = config('vaulter.collaboration.driver', 'hocuspocus');",
+    ] as $extraLine) {
+        expect(coreBridgeImplementationNameViolations($path, $contents."\n".$extraLine))->not->toBe([]);
+    }
+});

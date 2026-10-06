@@ -262,7 +262,6 @@ Register it as a named driver and select it:
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
 ],
 ```
@@ -270,9 +269,10 @@ Register it as a named driver and select it:
 ::: tip Use a shipped lane first
 For Laravel Gate, Spatie Permission v8, or AzGuard you do **not** need a custom class — set
 `drivers.permission` to `gate` / `spatie` / `azgard` and fill the matching config block
-(`gate.*` / `spatie.*` / `azgard.*`). The AzGuard lane needs a host adapter for
-`Contracts\Access\AzgardGuard` — see
-[Troubleshooting](/guide/troubleshooting#azgard-morphs).
+(`vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`). For AzGuard install
+`composer require axioma-studio/vaulter-azgard`: its provider registers the driver
+and adapter automatically. The user model must implement `AzgardBackedUser` — see
+[Permission drivers](/guide/permission-drivers).
 :::
 
 ## Write a custom format handler {#format-handler}
@@ -521,11 +521,11 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('vaulter:purge-trash')->daily();
 
 // Two-phase blob GC: tombstone unreferenced blobs, sweep tombstoned past grace.
-Schedule::command('vaulter:gc-blobs')->hourly();
+Schedule::command('vaulter:blobs:gc')->hourly();
 
 // Repair ref_count drift + flag dangling rows (run less often, off-peak).
 // Add --orphans to ALSO disk-walk for orphan objects (report-only; see Storage & Blobs).
-Schedule::command('vaulter:reconcile-blobs')->dailyAt('03:00');
+Schedule::command('vaulter:blobs:reconcile')->dailyAt('03:00');
 
 // Reclaim resumable-upload sessions older than uploads.session_ttl_hours.
 Schedule::command('vaulter:sweep-uploads')->hourly();
@@ -537,7 +537,7 @@ blob first.
 
 ```bash
 # Override the grace window ad hoc, and also clear crashed-staging PENDING rows.
-php artisan vaulter:gc-blobs --grace=48 --pending
+php artisan vaulter:blobs:gc --grace=48 --pending
 ```
 
 ::: danger --pending sweeps crashed uploads
@@ -602,8 +602,8 @@ real role system:
 
 - **`NullPermissionDriver`** — an open driver (every actor is a super-admin) for tests / local dev.
   It is rejected in production, so it can never silently open a prod install.
-- **`FakeAzgardGuard`** — a `Contracts\Access\AzgardGuard` double for testing the `azgard` lane
-  without AzGuard installed.
+- **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — a guard double for the `azgard` lane;
+  the bridge and its Composer dependencies must be installed.
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.

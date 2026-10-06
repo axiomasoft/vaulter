@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Access\Drivers;
+namespace Vaulter\Azgard;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Support\AzgardConfig;
 
 /**
  * The AzGuard host-role driver (master plan §6 / H.2 / D6 / ADR-0007). It bridges a
@@ -66,10 +66,11 @@ use Vaulter\Support\AzgardConfig;
  * (vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid) and
  * register workspace/owner types as Corex morph aliases.
  */
-final class AzgardPermissionDriver implements PermissionDriver
+final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, PermissionDriver
 {
     public function __construct(
         private readonly Container $container,
+        private readonly AzgardPermissionMap $permissions,
     ) {}
 
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
@@ -152,7 +153,7 @@ final class AzgardPermissionDriver implements PermissionDriver
         return $guard->hasPermissionIn(
             contextType: $workspaceType,
             contextId: $workspaceId,
-            permission: AzgardConfig::createPermission(),
+            permission: $this->permissions->createPermission(),
         );
     }
 
@@ -169,7 +170,7 @@ final class AzgardPermissionDriver implements PermissionDriver
 
         foreach ($this->levelProbes() as $levelValue => $ability) {
             $level = GrantLevel::tryFrom($levelValue);
-            $permission = AzgardConfig::permissionFor($ability);
+            $permission = $this->permissions->permissionFor($ability);
 
             if ($level === null || $permission === null) {
                 continue;

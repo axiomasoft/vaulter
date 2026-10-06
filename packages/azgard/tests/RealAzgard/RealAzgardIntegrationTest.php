@@ -5,14 +5,14 @@ declare(strict_types=1);
 use AzGuard\Facades\AzGuard;
 use AzGuard\Models\Role;
 use AzGuard\Testing\FakeGrantSource;
-use Vaulter\Access\Drivers\AzgardPermissionDriver;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\AzgardPermissionDriver;
+use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles\DocsViewerRole;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
-use Vaulter\Contracts\Access\AzgardGuard;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 

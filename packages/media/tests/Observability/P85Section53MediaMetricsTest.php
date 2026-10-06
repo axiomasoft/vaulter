@@ -50,14 +50,14 @@ it('records reconcile metrics when ref counts are rebuilt', function (): void {
     $recorder->assertCounter(name: 'vaulter_reconcile_objects_total');
 });
 
-it('records gc metrics via vaulter:gc-blobs command', function (): void {
-    Artisan::call('vaulter:gc-blobs');
+it('records gc metrics via vaulter:blobs:gc command', function (): void {
+    Artisan::call('vaulter:blobs:gc');
 
     app(MetricsRecorder::class)->assertHistogram(name: 'vaulter_gc_duration_seconds', labels: ['phase' => 'mark']);
 });
 
-it('records reconcile metrics via vaulter:reconcile-blobs command', function (): void {
-    Artisan::call('vaulter:reconcile-blobs');
+it('records reconcile metrics via vaulter:blobs:reconcile command', function (): void {
+    Artisan::call('vaulter:blobs:reconcile');
 
     app(MetricsRecorder::class)->assertHistogram(name: 'vaulter_reconcile_duration_seconds');
 });

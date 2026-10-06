@@ -119,7 +119,7 @@ Drive and Documents each ship as their own package:
 | Directory (core) | Responsibility |
 |---|---|
 | `Access/` | `AccessResolver` (the effective-permission engine), `PermissionDriverManager`, `HostUserResolver`. |
-| `Drivers/Permission/` | The shipped `PermissionDriver` lanes: `database`, `gate`, `spatie`, `azgard`. |
+| `Drivers/Permission/` | The shipped `PermissionDriver` lanes: `database`, `gate`, `spatie`; `azgard` lives in `vaulter-azgard`. |
 | `Cas/` | `BlobLock` — the last CAS class left in core; the store engine itself moved to `vaulter-media`. |
 | `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
 | `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
@@ -132,7 +132,7 @@ Drive and Documents each ship as their own package:
 | `ValueObjects/Handlers/` | The kind-neutral handler-seam value objects both Drive and Documents depend on: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |
 | `Contracts/` | Every host-facing seam, including `Contracts/Drive/*` and `Contracts/Handlers/*` (the interfaces the split packages implement). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — the shared/read-side pieces; Drive and Documents ship their own write-side models too. |
-| `Testing/` | Ship-with-package doubles: `NullPermissionDriver`, `FakeAzgardGuard`. |
+| `Testing/` | Ship-with-package doubles: `NullPermissionDriver`; `FakeAzgardGuard` lives in `vaulter-azgard`. |
 
 | Package | Namespace | Adds |
 |---|---|---|
@@ -140,6 +140,7 @@ Drive and Documents each ship as their own package:
 | `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the TipTap/Univer format drivers (added to core's registry — the engine itself is core-owned since P0.4), node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
+| `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
 | `@vaulter/vue` | — | The Drive UI + composables (npm). |
 
 All are siblings that build on `vaulter-core`; Drive and document-editing features require
@@ -307,7 +308,7 @@ Every seam a host plugs into, and where it is documented:
 |---|---|---|
 | `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Recipes — custom permission driver](/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (legacy) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
-| `Contracts\Access\AzgardGuard` | container binding (host adapter) | [Troubleshooting — Azgard morphs](/guide/troubleshooting#azgard-morphs) |
+| `Vaulter\Azgard\Contracts\AzgardGuard` | binding supplied by `vaulter-azgard` | [Troubleshooting — Azgard morphs](/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guide/recipes#format-handler) |

@@ -17,7 +17,7 @@ outline: deep
 |---|---|---|
 | Access | `PermissionResolver` | `config('vaulter.permission_resolver')` / `Vaulter::resolvePermissionsWith()` |
 | Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + карта `permission_drivers` |
-| Access | `AzgardGuard` | привязка в контейнере (адаптер хоста) |
+| Access | `AzgardGuard` (azgard) | привязка из `vaulter-azgard` |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
 | Cas | `ContentStore` | `config('vaulter.cas.content_store')` |
 | Cas | `StorageDriver` | `config('vaulter.cas.storage_driver')` |
@@ -102,7 +102,7 @@ interface PermissionDriver
 **Реализуйте, когда** у вас система ролей, которую драйверы из комплекта не покрывают. См.
 [Рецепты → Свой резолвер](/ru/guide/recipes).
 
-### `Vaulter\Contracts\Access\AzgardGuard`
+### `Vaulter\Azgard\Contracts\AzgardGuard`
 
 Узкий принадлежащий Vaulter шов, который удовлетворяет актор хоста на базе AzGuard, так что
 `vaulter-core` не несёт **никакой** жёсткой зависимости от `azguard`/`corex`. Драйвер прав
@@ -119,13 +119,16 @@ interface AzgardGuard
 }
 ```
 
-Формы методов зеркалят AzGuard один-в-один, так что адаптер хоста — тонкий проброс к
-`hasScopedPermission` / `hasPermissionIn` / SuperAdmin-вайлдкарду. По умолчанию реальной
-привязки не поставляется — тесты привязывают `Vaulter\Testing\FakeAzgardGuard`.
+Контракт поставляется `axioma-studio/vaulter-azgard`, вместе с реальным
+`AzgardGuardAdapter` и тестовым `Vaulter\Azgard\Testing\FakeAzgardGuard`.
+Provider регистрирует драйвер и адаптер автоматически.
 
-**Реализуйте, когда** `config('vaulter.drivers.permission') = 'azgard'` — привяжите реальный
-адаптер и выровняйте ULID-морфы (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid`
-+ `AZ_GUARD_MORPH_TYPE=ulid`). См. [Авторизация → Драйвер ролей хоста](/ru/guide/permission-drivers).
+**Используйте, когда** `config('vaulter.drivers.permission') = 'azgard'`:
+установите `composer require axioma-studio/vaulter-azgard`, добавьте
+`Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя и согласуйте
+ULID-morph (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` +
+`AZ_GUARD_MORPH_TYPE=ulid`). Фейк также требует установленного моста и его зависимостей.
+См. [Драйверы прав](/ru/guide/permission-drivers).
 
 ---
 

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- AzGuard's driver, guard contract, permission map and fake now live in
+  `vaulter-azgard`, which automatically registers the `azgard` driver and real
+  adapter. Its permission configuration uses `vaulter-azgard.*`; core no longer
+  contains the integration (P2.4; see UPGRADE.md).
+- Media GC and reconcile commands are `vaulter:blobs:gc` and
+  `vaulter:blobs:reconcile`; previous signatures have no aliases.
+- Filament exposes `DriveResource`, `ListDrives` and `ViewDrive`, with Drive labels
+  and the `vaulter-filament.resources.drive` toggle.
+
 - Document classes now use revisions, canonical Action/Input names and domain controller namespaces (AD03, AD04). Documents registration is split into independently tested bindings, HTTP and collaboration registrars.
 
 - Drive classes use canonical names and domain namespaces; DriveHandle exposes

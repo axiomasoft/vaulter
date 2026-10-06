@@ -7,8 +7,9 @@ namespace Vaulter\Azgard;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
  * Wires the AzGuard/Corex permission bridge (master plan P1 #2). It binds the Vaulter
@@ -33,6 +34,10 @@ final class VaulterAzgardServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/vaulter-azgard.php', 'vaulter-azgard');
 
+        if (!$this->app->make('config')->has('vaulter.permission_drivers.azgard')) {
+            $this->app->make('config')->set('vaulter.permission_drivers.azgard', AzgardPermissionDriver::class);
+        }
+
         $this->app->bind(AzgardGuard::class, static function (Container $app): AzgardGuard {
             $user = $app->make(AuthFactory::class)->guard()->user();
 
@@ -40,11 +45,9 @@ final class VaulterAzgardServiceProvider extends ServiceProvider
                 return new NullAzgardGuard;
             }
 
-            $panelId = $app->make('config')->get('vaulter-azgard.panel_id');
-
             return new AzgardGuardAdapter(
                 user: $user,
-                panelId: is_string($panelId) && $panelId !== '' ? $panelId : null,
+                panelId: $app->make(AzgardConfig::class)->panelId(),
             );
         });
     }

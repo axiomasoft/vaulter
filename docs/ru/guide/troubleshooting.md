@@ -46,7 +46,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — автономный дефолт. Авторизует чисто из строк `v_node_grants`, без зависимости
   от хоста. Берите его, если нужны только гранты на узлы.
 - **`gate` / `spatie` / `azgard`** — мост к вашей существующей системе ролей; заполните
-  соответствующий блок конфига `gate.*` / `spatie.*` / `azgard.*`.
+  соответствующий блок конфига `vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`.
 - **Свой** драйвер — см. [рецепт](/ru/guide/recipes#permission-driver).
 
 ::: warning Кэш конфига прячет env, который вы забыли
@@ -61,25 +61,22 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 которые явно держат роль, либо всплывает ошибка вида `Class "AzGuard\…" not found`, либо гранты,
 адресованные workspace, никогда не совпадают.
 
-**Почему.** Полоса `azgard` общается только со швом `Contracts\Access\AzgardGuard`, принадлежащим
-Vaulter, поэтому ядро **не** несёт зависимости от `azguard`/`corex`. Прод-хост обязан
-(1) **привязать** реальный адаптер к этому шву и (2) **согласовать morph-типы**, чтобы
-идентификаторы workspace/владельца, которые прокидывает Vaulter, совпадали с алиасами,
-зарегистрированными AzGuard/Corex. Реальный адаптер по умолчанию не поставляется — тесты привязывают
-`Vaulter\Testing\FakeAzgardGuard`.
+**Почему.** Драйвер и контракт `Vaulter\Azgard\Contracts\AzgardGuard`
+находятся в `vaulter-azgard`, а не в core. Мост сам привязывает реальный адаптер,
+но хост должен добавить `Vaulter\Azgard\Contracts\AzgardBackedUser` на модель
+пользователя и согласовать morph-типы workspace/владельца с AzGuard/Corex.
 
 **Решение.**
 
-1. Привяжите реальный адаптер `AzgardGuard`, который делегирует в
-   `hasScopedPermission` / `hasPermissionIn` AzGuard / wildcard SuperAdmin:
+1. Установите мост и его зависимости; provider зарегистрирует драйвер `azgard`
+   и реальный адаптер без ручной привязки:
 
-   ```php
-   // A service provider's register()
-   $this->app->bind(
-       \Vaulter\Contracts\Access\AzgardGuard::class,
-       \App\Vaulter\AzGuardAdapter::class,
-   );
+   ```bash
+   composer require axioma-studio/vaulter-azgard
    ```
+
+   Добавьте `AzgardBackedUser` на модель пользователя, реализующую контракты AzGuard
+   через traits `HasAzGuard` и `HasScopedRoles`. Настройки моста — `vaulter-azgard.*`.
 
 2. Согласуйте ULID morph-стратегию во всех трёх системах, чтобы morph-типы совпали:
 
@@ -250,7 +247,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   загрузка в полёте успела воскресить блоб с меткой tombstone. См.
   [рецепт GC блобов](/ru/guide/recipes#blob-gc).
 - **Дрейф.** Если `ref_count` выглядит неправильным — это кэш; запустите
-  `php artisan vaulter:reconcile-blobs`, чтобы перестроить его из edge-таблицы (источника истины).
+  `php artisan vaulter:blobs:reconcile`, чтобы перестроить его из edge-таблицы (источника истины).
 
 ## Ошибки валидации панелей при загрузке {#panel-validation}
 

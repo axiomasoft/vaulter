@@ -33,7 +33,7 @@ reserves all copied head bytes together or rolls back the whole copy.
 
 The transaction retries serialization failures/deadlocks up to three attempts,
 reusing the staged object, then discards it in `finally`. If SQL fails after physical
-promotion, the bytes form an orphan collected by `vaulter:reconcile-blobs --orphans
+promotion, the bytes form an orphan collected by `vaulter:blobs:reconcile --orphans
 --prune` after grace. Reconciliation keeps committed winners' bytes.
 
 ## Transports

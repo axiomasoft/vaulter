@@ -11,7 +11,7 @@ use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Media\Tests\Fixtures\Cas\NonListableContentStore;
 
 /**
- * The vaulter:reconcile-blobs --orphans console wiring (master plan P4 #11 / H.3):
+ * The vaulter:blobs:reconcile --orphans console wiring (master plan P4 #11 / H.3):
  * the command surfaces the orphan disk-walk and maps its result to an exit code so
  * cron/CI sees the hazard. The contract pinned here:
  *
@@ -31,10 +31,10 @@ beforeEach(function (): void {
     config()->set('vaulter.gc.orphan_grace_hours', 1);
 });
 
-it('vaulter:reconcile-blobs --orphans с orphan → FAILURE и объект в выводе', function (): void {
+it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в выводе', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd orphan', scope: 't1', ageHours: 48);
 
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true])
         ->expectsOutputToContain('Orphan walk (report-only)')
         ->expectsOutputToContain($orphanKey)
         ->assertExitCode(Command::FAILURE);
@@ -43,10 +43,10 @@ it('vaulter:reconcile-blobs --orphans с orphan → FAILURE и объект в �
     Storage::disk('local')->assertExists($orphanKey);
 });
 
-it('vaulter:reconcile-blobs --orphans --prune на sqlite: отказ, байты живы, FAILURE', function (): void {
+it('vaulter:blobs:reconcile --orphans --prune на sqlite: отказ, байты живы, FAILURE', function (): void {
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd prune refused', scope: 't1', ageHours: 48);
 
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true, '--prune' => true])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true])
         ->expectsOutputToContain('Orphan pruning needs PostgreSQL/MySQL')
         ->assertExitCode(Command::FAILURE);
 
@@ -57,29 +57,29 @@ it('vaulter:reconcile-blobs --orphans --prune на sqlite: отказ, байт�
     'the FAILURE exit is the SQLite prune-refusal premise; PG/MySQL prune succeeds.',
 );
 
-it('vaulter:reconcile-blobs --orphans на чистом диске → SUCCESS', function (): void {
+it('vaulter:blobs:reconcile --orphans на чистом диске → SUCCESS', function (): void {
     // No orphan seeded — a clean disk reconciles cleanly.
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true])
         ->expectsOutputToContain('Orphan walk (report-only)')
         ->assertExitCode(Command::SUCCESS);
 });
 
-it('vaulter:reconcile-blobs --orphans: не-listable драйвер сообщает "listing unsupported", не падает на этом', function (): void {
+it('vaulter:blobs:reconcile --orphans: не-listable драйвер сообщает "listing unsupported", не падает на этом', function (): void {
     // A genuine aged orphan is present, but the active store cannot enumerate — the
     // walk is skipped cleanly; with no dangling row the command still SUCCEEDs.
     CasTestHelpers::seedOrphan(bytes: 'unwalkable cmd', scope: 't1', ageHours: 48);
     app()->instance(ContentStore::class, new NonListableContentStore);
 
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true, '--prune' => true])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true])
         ->expectsOutputToContain('does not support listing')
         ->assertExitCode(Command::SUCCESS);
 });
 
-it('vaulter:reconcile-blobs --orphan-grace переопределяет окно (свежий объект не orphan)', function (): void {
+it('vaulter:blobs:reconcile --orphan-grace переопределяет окно (свежий объект не orphan)', function (): void {
     // A 2h-old object: past the 1h floor, but a 24h --orphan-grace keeps it fresh.
     CasTestHelpers::seedOrphan(bytes: 'within override grace', scope: 't1', ageHours: 2);
 
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true, '--orphan-grace' => 24])
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--orphan-grace' => 24])
         ->expectsOutputToContain('grace 24h')
         ->assertExitCode(Command::SUCCESS);
 });

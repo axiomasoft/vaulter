@@ -162,7 +162,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `permission_drivers.database` | — | `Vaulter\Access\Drivers\DatabasePermissionDriver` | автономный — авторизует чисто по строкам грантов |
 | `permission_drivers.gate` | — | `Vaulter\Access\Drivers\GatePermissionDriver` | драйвер Laravel Gate |
 | `permission_drivers.spatie` | — | `Vaulter\Access\Drivers\SpatiePermissionDriver` | драйвер spatie/laravel-permission |
-| `permission_drivers.azgard` | — | `Vaulter\Access\Drivers\AzgardPermissionDriver` | драйвер AzGuard |
+| `permission_drivers.azgard` | — | `Vaulter\Azgard\AzgardPermissionDriver` | регистрируется provider установленного `vaulter-azgard` |
 | `permission_drivers.null` | — | `Vaulter\Testing\NullPermissionDriver` | открытый, **только не для продакшена** |
 
 ::: danger Null-драйвер в продакшене
@@ -202,30 +202,38 @@ php artisan vendor:publish --tag=vaulter-config
 
 `spatie.teams` используется как запасной вариант только тогда, когда собственный `config('permission.teams')` хоста не задан. `role_subject_type`/`team_subject_type` — это morph-алиасы, на которые адресуются строки грантов роли/команды.
 
-### Карта драйвера AzGuard — `azgard.*`
+### Карта драйвера AzGuard — `vaulter-azgard.*`
+
+Отдельный пакет: `composer require axioma-studio/vaulter-azgard`. Настройки ниже
+читаются из `config/vaulter-azgard.php`, не из конфига ядра.
+
+| Ключ | По умолчанию |
+|---|---|
+| `vaulter-azgard.panel_id` | `null` (панель определяется из ключа разрешения) |
 
 Используется только когда `drivers.permission = 'azgard'`. Ориентирована на действия — маппит право (ability) Vaulter на ключ разрешения AzGuard.
 
 | Ключ | По умолчанию |
 |---|---|
-| `azgard.permissions.view` | `documents.view` |
-| `azgard.permissions.download` | `documents.download` |
-| `azgard.permissions.comment` | `documents.comment` |
-| `azgard.permissions.edit` | `documents.update` |
-| `azgard.permissions.create` | `documents.create` |
-| `azgard.permissions.move` | `documents.update` |
-| `azgard.permissions.copy` | `documents.update` |
-| `azgard.permissions.trash` | `documents.delete` |
-| `azgard.permissions.delete` | `documents.delete` |
-| `azgard.permissions.restore` | `documents.delete` |
-| `azgard.permissions.share` | `documents.manage` |
-| `azgard.permissions.manage` | `documents.manage` |
+| `vaulter-azgard.permissions.view` | `documents.view` |
+| `vaulter-azgard.permissions.download` | `documents.download` |
+| `vaulter-azgard.permissions.comment` | `documents.comment` |
+| `vaulter-azgard.permissions.edit` | `documents.update` |
+| `vaulter-azgard.permissions.create` | `documents.create` |
+| `vaulter-azgard.permissions.move` | `documents.update` |
+| `vaulter-azgard.permissions.copy` | `documents.update` |
+| `vaulter-azgard.permissions.trash` | `documents.delete` |
+| `vaulter-azgard.permissions.delete` | `documents.delete` |
+| `vaulter-azgard.permissions.restore` | `documents.delete` |
+| `vaulter-azgard.permissions.share` | `documents.manage` |
+| `vaulter-azgard.permissions.manage` | `documents.manage` |
 
 | Ключ | Env | По умолчанию |
 |---|---|---|
-| `azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `documents.create` |
+| `vaulter-azgard.create_permission` | `VAULTER_AZGARD_CREATE_PERMISSION` | `documents.create` |
 
-Продакшен-хост обязан привязать `AzgardGuard` к реальному адаптеру и согласовать ULID-morph'ы — см. [Auth → Драйвер ролей хоста](/ru/guide/permission-drivers).
+Мост поставляет реальный адаптер guard. Хост должен реализовать `AzgardBackedUser`
+и согласовать ULID-morph — см. [Драйверы прав](/ru/guide/permission-drivers).
 
 ## Адаптер хранилища (легаси) — `storage_adapter`
 

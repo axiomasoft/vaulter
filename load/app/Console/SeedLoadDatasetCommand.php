@@ -35,7 +35,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  * statements) — never one Eloquent model per row (Implementation Rules P2.3): a
  * million-row v_activity insert through the ORM does not finish in this decade.
  * `BlobStore::commit()` (real CAS engine, one call per HOT-SET object only — see
- * `seedBlobsAndVersions()`) and `vaulter:reconcile-blobs` (existing package command)
+ * `seedBlobsAndVersions()`) and `vaulter:blobs:reconcile` (existing package command)
  * are the two deliberate exceptions, both bounded by the hot-set/blob-count profile
  * knob, not by total row volume.
  *
@@ -120,7 +120,7 @@ final class SeedLoadDatasetCommand extends Command
         // — a plain rebuild never fails; dangling rows are reported, not fatal). Cold
         // committed/orphan-gc blobs are EXPECTED to surface as dangling (§2.2 — their
         // bytes are synthetic-only), not a defect this run introduced.
-        $this->call('vaulter:reconcile-blobs');
+        $this->call('vaulter:blobs:reconcile');
 
         $elapsed = microtime(true) - $start;
 
@@ -616,7 +616,7 @@ final class SeedLoadDatasetCommand extends Command
             'size_bytes' => $sizeBytes,
             // The DB DEFAULT for this column is the literal string 'default' (schema
             // default, PanelTablesBuilder::defineBlobs) — NOT a configured Flysystem
-            // disk name. Omitting this column made vaulter:reconcile-blobs crash on
+            // disk name. Omitting this column made vaulter:blobs:reconcile crash on
             // its dangling-object check (Storage::disk('default') has no driver) the
             // first time it walked a cold row — set it explicitly to the real disk.
             'disk' => Config::defaultDisk(),

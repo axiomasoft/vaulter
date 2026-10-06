@@ -161,14 +161,17 @@ Drive ACL комбинирует собственный `AccessResolver` со **
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'null'     => \Vaulter\Testing\NullPermissionDriver::class, // только не-прод
 ],
 ```
 
 У каждого не-`database`-драйвера своя подсекция, сопоставляющая уровень/способность Vaulter
-имени права хоста (`gate.*`, `spatie.*`, `azgard.*`). Полный разбор — в
+имени права хоста (`vaulter.gate.*`, `vaulter.spatie.*`, `vaulter-azgard.*`). Полный разбор — в
 [Драйвере ролей хоста](/ru/concepts/authorization).
+
+Ключ `azgard` регистрируется provider пакета `axioma-studio/vaulter-azgard`.
+Установите его командой `composer require axioma-studio/vaulter-azgard`; карта прав,
+`panel_id` и `create_permission` находятся в `config/vaulter-azgard.php`.
 
 ::: danger Драйвер null
 `null` — открытый драйвер, доступный **только** вне прода. Валидация конфига отвергает панель

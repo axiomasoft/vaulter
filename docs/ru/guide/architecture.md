@@ -121,7 +121,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | Директория (core) | Ответственность |
 |---|---|
 | `Access/` | `AccessResolver` (движок эффективных прав), `PermissionDriverManager`, `HostUserResolver`. |
-| `Drivers/Permission/` | Поставляемые полосы `PermissionDriver`: `database`, `gate`, `spatie`, `azgard`. |
+| `Drivers/Permission/` | Поставляемые полосы `PermissionDriver`: `database`, `gate`, `spatie`; `azgard` находится в `vaulter-azgard`. |
 | `Cas/` | `BlobLock` — единственный CAS-класс, оставшийся в core; сам движок хранилища переехал в `vaulter-media`. |
 | `Profiles/` | `Profile`, `ProfileProvider`, `ProfileRegistry`. |
 | `Schema/` | `SchemaBuilder`, `VaulterSchema`. |
@@ -134,7 +134,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | `ValueObjects/Handlers/` | Kind-нейтральные value-объекты шва обработчиков, от которых зависят и Drive, и Documents: `FileDescriptor`, `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`. |
 | `Contracts/` | Каждый шов, обращённый к хосту, включая `Contracts/Drive/*` и `Contracts/Handlers/*` (интерфейсы, которые реализуют вынесенные пакеты). |
 | `Models/` · `Repositories/` | Access, Activity, Cas, Drive, Sharing, Webhooks — общие/read-часть; свои write-модели поставляют и Drive, и Documents. |
-| `Testing/` | Заглушки, поставляемые с пакетом: `NullPermissionDriver`, `FakeAzgardGuard`. |
+| `Testing/` | Заглушки, поставляемые с пакетом: `NullPermissionDriver`; `FakeAzgardGuard` находится в `vaulter-azgard`. |
 
 | Пакет | Namespace | Добавляет |
 |---|---|---|
@@ -142,6 +142,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, драйверы форматов TipTap/Univer (добавляются в реестр core — сам движок принадлежит core с P0.4), экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
+| `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | Драйвер прав, контракт guard, карта разрешений, реальный адаптер и тестовый фейк AzGuard. |
 | `@vaulter/vue` | — | Drive UI + composable-функции (npm). |
 
 Все они — соседние пакеты, строящиеся поверх `vaulter-core`; для функций Drive и
@@ -314,7 +315,7 @@ Yjs — источник истины; TipTap JSON — производная п
 |---|---|---|
 | `Contracts\Access\PermissionDriver` | `config('vaulter.drivers.permission')` | [Рецепты — кастомный драйвер прав](/ru/guide/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (легаси) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
-| `Contracts\Access\AzgardGuard` | привязка в контейнере (адаптер хоста) | [Устранение неполадок — морфы Azgard](/ru/guide/troubleshooting#azgard-morphs) |
+| `Vaulter\Azgard\Contracts\AzgardGuard` | привязка из `vaulter-azgard` | [Устранение неполадок — морфы Azgard](/ru/guide/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter.cas.*')` | [Рецепты — переход на S3](/ru/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter.collaboration.drivers')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guide/recipes#format-handler) |

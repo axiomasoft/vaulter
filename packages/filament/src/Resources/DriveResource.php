@@ -15,23 +15,23 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Override;
 use UnitEnum;
-use Vaulter\Filament\Resources\StorageResource\Pages\ListStorages;
-use Vaulter\Filament\Resources\StorageResource\Pages\ViewStorage;
+use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
+use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
 use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Config;
 
 /**
- * The storage-container admin surface (master plan §2.1 / §3): a read-mostly view of
+ * The drive admin surface (master plan §2.1 / §3): a read-mostly view of
  * the ownable, polymorphic disk roots — owner, disk, used/quota accounting and
- * status. Storages are provisioned by the core StorageManager (get-or-create on a
+ * status. Drives are provisioned by the DriveProvisioner (get-or-create on a
  * host entity), never minted from the panel, so this resource never creates/edits a
  * row; it lists and inspects.
  *
  * The model resolves through {@see Config::storageModel()} so a host that swaps the
- * Storage model still gets governed here.
+ * Drive model still gets governed here.
  */
-final class StorageResource extends Resource
+final class DriveResource extends Resource
 {
     protected static ?string $model = Drive::class;
 
@@ -48,11 +48,11 @@ final class StorageResource extends Resource
     }
 
     /**
-     * Access-aware listing (F-P1.10-01): narrow to storages whose root node is in
+     * Access-aware listing (F-P1.10-01): narrow to drives whose root node is in
      * the acting admin's grant-reachable candidate set — mirrors
-     * {@see NodeResource::getEloquentQuery()}. A storage
+     * {@see NodeResource::getEloquentQuery()}. A drive
      * has no other grant anchor of its own (a grant addresses a NODE), so "may see
-     * this storage" reduces to "may reach its root". Empty candidate set (no actor,
+     * this drive" reduces to "may reach its root". Empty candidate set (no actor,
      * or an actor with zero grants) ⇒ empty table, never an open listing.
      */
     #[Override]
@@ -79,7 +79,7 @@ final class StorageResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Storage')->schema([
+            Section::make('Drive')->schema([
                 TextEntry::make('name'),
                 TextEntry::make('profile')->badge(),
                 TextEntry::make('disk'),
@@ -148,7 +148,7 @@ final class StorageResource extends Resource
     #[Override]
     public static function canCreate(): bool
     {
-        // Storages are provisioned by the core StorageManager, never from the panel.
+        // Drives are provisioned by the DriveProvisioner, never from the panel.
         return false;
     }
 
@@ -159,8 +159,8 @@ final class StorageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListStorages::route('/'),
-            'view' => ViewStorage::route('/{record}'),
+            'index' => ListDrives::route('/'),
+            'view' => ViewDrive::route('/{record}'),
         ];
     }
 

@@ -17,7 +17,7 @@ final class MissingPermissionDriverException extends VaulterException
         return new self(
             sprintf('[Vaulter] The open null host-role driver [%s] is forbidden in production. ', $key)
             .'Why: it grants every actor full access; running it in prod would expose every node. '
-            .'Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie|azgard) '
+            .'Fix: set config(vaulter.drivers.permission) to a real driver (database|gate|spatie or an installed bridge) '
             .'or bind your own \Vaulter\Contracts\Access\PermissionDriver. '
             .'Docs: '.self::docs('missing-host-role-driver'),
         );

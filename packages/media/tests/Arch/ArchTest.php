@@ -94,3 +94,41 @@ test('the package exposes no public contract surface (VLT-REL P2.2)', function (
 arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Media')
     ->not->toUse('Illuminate\Support\Facades\DB');
+
+// D35: production code cannot import fixtures or other Testing namespace classes.
+test('production src never imports a Testing namespace', function (): void {
+    $src = __DIR__.'/../../src';
+    $offenders = [];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        // A shipped Testing helper is allowed to depend on other testing helpers.
+        if (str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'Testing'.DIRECTORY_SEPARATOR)) {
+            continue;
+        }
+
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        foreach (token_get_all($contents) as $token) {
+            if (!is_array($token) || !in_array($token[0], [T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE], true)) {
+                continue;
+            }
+
+            if (in_array('Testing', explode('\\', $token[1]), true)) {
+                $offenders[] = $file->getPathname();
+                break;
+            }
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});

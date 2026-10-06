@@ -36,7 +36,7 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     $blob = Blob::query()->sole();
     // Age the actual disk object, not Carbon: orphan grace uses filesystem mtime.
     touch(Storage::disk('local')->path($blob->storage_key), time() - 48 * 3600);
-    $this->artisan('vaulter:reconcile-blobs', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])->assertSuccessful();
+    $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])->assertSuccessful();
     Storage::disk('local')->assertExists($blob->storage_key);
     expect(hash_file('sha256', Storage::disk('local')->path($blob->storage_key)))->toBe($blob->sha256);
 });

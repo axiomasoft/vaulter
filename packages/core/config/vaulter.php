@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\Drivers\AzgardPermissionDriver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -125,7 +124,7 @@ return [
     | Primary key strategy (D9)
     |--------------------------------------------------------------------------
     | The per-strategy class layer that replaces the binary id_type. Default is
-    | ulid so morph keys line up with the Corex/Azgard ecosystem; uuid7 maps onto
+    | ulid so morph keys line up with the host authorization ecosystem; uuid7 maps onto
     | native Postgres uuid columns; bigint is the legacy auto-increment path.
     | Strategy classes are resolved from these FQCNs (config-cache safe — no
     | closures), so a host may register its own strategy (e.g. Snowflake).
@@ -315,7 +314,7 @@ return [
     | The pluggable, per-panel \Vaulter\Contracts\Access\PermissionDriver lane the
     | (Vaulter-owned, NON-swappable) AccessResolver combines with v_node_grants.
     | The default 'database' driver is fully standalone — it authorises purely from
-    | the grant rows with zero host dependency. Swap to 'gate'/'spatie'/'azgard'
+    | the grant rows with zero host dependency. Swap to 'gate'/'spatie' or a bridge-provided driver
     | (M2b) or register your own FQCN here (config-cache safe — no closures).
     |
     | Null-driver fail-loud (H.2 / D6″): a 'null' driver (open, env-gated) is
@@ -330,12 +329,6 @@ return [
         'database' => DatabasePermissionDriver::class,
         'gate' => GatePermissionDriver::class,
         'spatie' => SpatiePermissionDriver::class,
-        // AzGuard lane (H.2 / ADR-0007): the driver talks ONLY to the Vaulter-owned
-        // AzgardGuard seam, so core has no azguard/corex dependency. A production host
-        // binds a real AzgardGuard adapter (delegating to AzGuard hasScopedPermission /
-        // Corex ContextGuard hasPermissionIn) AND aligns ulid morphs — see the azgard
-        // sub-config below.
-        'azgard' => AzgardPermissionDriver::class,
         'null' => NullPermissionDriver::class, // non-prod only
     ],
 
@@ -392,43 +385,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | AzGuard driver — Ability→permission map (H.2 / ADR-0007)
-    |--------------------------------------------------------------------------
-    | Used only when drivers.permission = 'azgard'. The AzgardPermissionDriver talks
-    | exclusively to the Vaulter-owned AzgardGuard seam (no azguard/corex dependency in
-    | core). Unlike the Gate/Spatie maps (keyed by GrantLevel) AzGuard is action-centric,
-    | so 'permissions' maps a Vaulter Ability to an AzGuard permission key — the resolver
-    | asks hasPermissionIn(workspaceType, workspaceId, permission) (the workspace-scoped
-    | role lane of the composite order node-ACL → workspace-role → global). The SuperAdmin
-    | wildcard surfaces as the absolute allow override; 'create_permission' gates workspace
-    | creation. Plain strings — cache-safe.
-    |
-    | A production host MUST bind \Vaulter\Contracts\Access\AzgardGuard to a real adapter
-    | (delegating to AzGuard hasScopedPermission / Corex ContextGuard hasPermissionIn) and
-    | align ulid morphs (vaulter.ids.default=ulid + corex.ids.strategy=Ulid +
-    | AZ_GUARD_MORPH_TYPE=ulid), registering workspace/owner types as Corex morph aliases.
-    | No real binding ships by default — tests bind \Vaulter\Testing\FakeAzgardGuard.
-    */
-    'azgard' => [
-        'permissions' => [
-            'view' => 'documents.view',
-            'download' => 'documents.download',
-            'comment' => 'documents.comment',
-            'edit' => 'documents.update',
-            'create' => 'documents.create',
-            'move' => 'documents.update',
-            'copy' => 'documents.update',
-            'trash' => 'documents.delete',
-            'delete' => 'documents.delete',
-            'restore' => 'documents.delete',
-            'share' => 'documents.manage',
-            'manage' => 'documents.manage',
-        ],
-        'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Content-addressed blob store (CAS, M1b / H.3)
     |--------------------------------------------------------------------------
     | The swappable CAS engine (content_store / storage_driver / blob_store) is
@@ -467,7 +423,7 @@ return [
     | latency so an in-flight upload can resurrect the blob first. Floored at 1h.
     |
     | orphan_grace_hours is the separate, generally MORE generous window the
-    | `vaulter:reconcile-blobs --orphans` disk-walk applies before it treats an
+    | `vaulter:blobs:reconcile --orphans` disk-walk applies before it treats an
     | object that has NO blob row as a deletable orphan. A commit promotes its bytes
     | BEFORE its row is durable, and a resumable upload may promote then commit much
     | later, so a fresh row-less object is likely a commit-in-progress, NOT garbage.
@@ -830,8 +786,7 @@ return [
     | node's version); TipTap JSON is the derived projection. The transport is
     | swappable behind the driver:
     |
-    |   'hocuspocus' — the RECOMMENDED collaborative-editing transport (default).
-    |                  An external Node Hocuspocus hub (see hocuspocus-server/) —
+    |   The default collaborative-editing transport uses an external Node hub —
     |                  the Yjs collaboration backend TipTap documents and maintains.
     |                  The client connects to the hub URL with a signed room JWT;
     |                  the hub's onAuthenticate/onStoreDocument call BACK into the
@@ -843,7 +798,7 @@ return [
     | token is bound to exactly one node (no cross-node access).
     |
     | webhook_secret is the shared secret the Node hub presents on the server-to-
-    | server webhook endpoints. The driver-level hocuspocus.secret is both the
+    | server webhook endpoints. The driver-level signing secret is both the
     | room-JWT signing key AND the key the webhooks verify a JWT against — a
     | SEPARATE key from webhook_secret by design (C1.2: never reuse a JWT-signing
     | key as a body-integrity key).

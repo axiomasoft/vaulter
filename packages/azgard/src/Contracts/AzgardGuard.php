@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Contracts\Access;
+namespace Vaulter\Azgard\Contracts;
 
 /**
  * The NARROW Vaulter-owned seam the host's AzGuard-backed actor satisfies (master

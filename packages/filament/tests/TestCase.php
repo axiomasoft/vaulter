@@ -50,13 +50,8 @@ abstract class TestCase extends OrchestraTestCase
             WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
 
-            // Vaulter core + this package, then the test panel that mounts the plugin.
-            // Filament stays core-only in production (T-invariant, verified by 0 refs to
-            // Drive/Documents classes) — but the resource-test FIXTURES build nodes via
-            // Vaulter::for(), which needs the drive package's DriveHandleFactory bound
-            // (P2 #5 / ADR-0015, D1). Media is a transitive need: DriveContext eagerly
-            // constructs every Drive Action, including UploadFileAction, which needs
-            // Contracts\Cas\BlobStore even though these tests never actually upload.
+            // Core + drive are production dependencies; media binds the CAS
+            // seam that the drive actions also need in these package fixtures.
             VaulterServiceProvider::class,
             VaulterMediaServiceProvider::class,
             VaulterDriveServiceProvider::class,

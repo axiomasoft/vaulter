@@ -163,11 +163,11 @@ run_triggers() {
     record_trigger vaulter_sweep_skipped_total "vaulter:sweep-uploads" true
     record_trigger vaulter_command_peak_memory_bytes "vaulter:sweep-uploads" true
 
-    app_artisan vaulter:gc-blobs || true
-    record_trigger vaulter_gc_duration_seconds "vaulter:gc-blobs" true
-    record_trigger vaulter_gc_batch_rows "vaulter:gc-blobs" true
-    record_trigger vaulter_gc_rows_scanned_total "vaulter:gc-blobs" true
-    record_trigger vaulter_gc_objects_deleted_total "vaulter:gc-blobs" true
+    app_artisan vaulter:blobs:gc || true
+    record_trigger vaulter_gc_duration_seconds "vaulter:blobs:gc" true
+    record_trigger vaulter_gc_batch_rows "vaulter:blobs:gc" true
+    record_trigger vaulter_gc_rows_scanned_total "vaulter:blobs:gc" true
+    record_trigger vaulter_gc_objects_deleted_total "vaulter:blobs:gc" true
 
     app_artisan vaulter:purge-trash || true
     record_trigger vaulter_purge_duration_seconds "vaulter:purge-trash" true
@@ -178,9 +178,9 @@ run_triggers() {
     record_trigger vaulter_prune_duration_seconds "vaulter:prune-webhooks" true
     record_trigger vaulter_prune_rows_total "vaulter:prune-webhooks" true
 
-    app_artisan vaulter:reconcile-blobs || true
-    record_trigger vaulter_reconcile_duration_seconds "vaulter:reconcile-blobs" true
-    record_trigger vaulter_reconcile_objects_total "vaulter:reconcile-blobs" true
+    app_artisan vaulter:blobs:reconcile || true
+    record_trigger vaulter_reconcile_duration_seconds "vaulter:blobs:reconcile" true
+    record_trigger vaulter_reconcile_objects_total "vaulter:blobs:reconcile" true
 
     "${COMPOSE[@]}" exec -T postgres sh -c 'apk add --no-cache postgresql-client >/dev/null 2>&1 || true; PGPASSWORD=secret psql -U vaulter -d vaulter_load -c "SELECT 1"' >/dev/null 2>&1 || true
     record_trigger vaulter_pg_lock_wait_seconds "collect-postgres-lock-waits.sh" true

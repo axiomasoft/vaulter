@@ -11,7 +11,7 @@ use Vaulter\Contracts\IdStrategy;
 
 /**
  * Lexicographically sortable ULID keys (26-char Crockford base32). The default
- * strategy (D9) — its morph keys line up with the Corex/Azgard ecosystem.
+ * strategy (D9) — its morph keys line up with the Corex/host authorization ecosystem.
  */
 final class UlidIds implements IdStrategy
 {

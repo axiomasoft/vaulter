@@ -6,6 +6,54 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### AzGuard bridge, media commands and Filament Drive resource (P2.4)
+
+Install the separate bridge before selecting `VAULTER_PERMISSION_DRIVER=azgard`:
+
+```bash
+composer require axioma-studio/vaulter-azgard
+```
+
+Its discovered provider registers `vaulter.permission_drivers.azgard` when the host
+has not explicitly set that key, and binds the real guard adapter. Remove the former
+AzGuard driver entry from a published core config unless it is an intentional custom
+override. Without the bridge, `azgard` is an unknown driver and raises
+`MissingPermissionDriverException`.
+
+Replace the following FQNs; no aliases are provided:
+
+| Before | After |
+|---|---|
+| `Vaulter\Access\Drivers\AzgardPermissionDriver` | `Vaulter\Azgard\AzgardPermissionDriver` |
+| `Vaulter\Contracts\Access\AzgardGuard` | `Vaulter\Azgard\Contracts\AzgardGuard` |
+| `Vaulter\Support\AzgardConfig` | `Vaulter\Azgard\AzgardPermissionMap` |
+| `Vaulter\Testing\FakeAzgardGuard` | `Vaulter\Azgard\Testing\FakeAzgardGuard` |
+
+Move the former `vaulter.azgard.permissions` and `vaulter.azgard.create_permission`
+settings to `vaulter-azgard.permissions` and `vaulter-azgard.create_permission` in
+`config/vaulter-azgard.php`. The optional panel context remains
+`vaulter-azgard.panel_id`; `null` lets AzGuard resolve it from the permission key.
+`Vaulter\Azgard\Configuration\AzgardConfig` reads these settings at each call, and
+`AzgardPermissionMap` receives it through its constructor. Old keys are not translated
+by this change. The driver registry remains `vaulter.permission_drivers`.
+
+The user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser` and align
+workspace/owner morph types with AzGuard/Corex. Fake-based tests require the installed
+bridge and all its Composer dependencies, even when no live AzGuard checks run.
+
+Update schedules and CLI invocations from `vaulter:gc-blobs` to `vaulter:blobs:gc`
+and from `vaulter:reconcile-blobs` to `vaulter:blobs:reconcile`. Options and the
+`GcBlobsCommand` / `ReconcileBlobsCommand` class names stay the same; old signatures
+have no aliases.
+
+Filament resource imports become `Vaulter\Filament\Resources\DriveResource`,
+`Vaulter\Filament\Resources\DriveResource\Pages\ListDrives` and
+`Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive`. Replace the former
+`StorageResource`, `ListStorages` and `ViewStorage` names and change
+`vaulter-filament.resources.storage` to `vaulter-filament.resources.drive`.
+The resource's navigation and view labels are Drive. The old toggle is not translated;
+`PanelActor` and `PanelAccessScope` keep their names.
+
 ### Document names and collaboration (AD03, AD04)
 
 Replace these document FQNs. The former names have no aliases. Controller
@@ -490,9 +538,9 @@ not a role). Pre-1.0, so the rename ships without an alias/deprecation phase.
 | `Vaulter\Permissions\Azgard\NullAzgardGuard` | `Vaulter\Azgard\NullAzgardGuard` |
 | `Vaulter\Permissions\Azgard\Contracts\AzgardBackedUser` | `Vaulter\Azgard\Contracts\AzgardBackedUser` |
 
-**Not renamed — the core-owned contract seam is untouched:** `Vaulter\Contracts\Access\AzgardGuard`
-(the narrow interface `AzgardPermissionResolver` calls through) stays in `vaulter-core` under its
-existing FQCN. Only the bridge/adapter package that implements it moved.
+**At that migration step**, the contract remained in core. In the current Unreleased
+version it moves to `Vaulter\Azgard\Contracts\AzgardGuard`; follow the P2.4 bridge
+migration above as well.
 
 **Who breaks — and who does not.** The bridge has **never been published**: this repo carries no
 tag, and the split-to-Packagist pipeline (`monorepo-split.yml`) is tag-triggered, so

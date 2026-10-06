@@ -46,7 +46,7 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 - **`database`** — the standalone default. Authorizes purely from `v_node_grants` rows, zero
   host dependency. Use it if you only need per-node grants.
 - **`gate` / `spatie` / `azgard`** — bridge your existing role system; fill the matching
-  `gate.*` / `spatie.*` / `azgard.*` config block.
+  `vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*` config block.
 - A **custom** driver — see the [recipe](/guide/recipes#permission-driver).
 
 ::: warning Config cache hides the env you forgot
@@ -61,24 +61,22 @@ changing `.env`.
 who clearly hold the role, or a `Class "AzGuard\…" not found` style error surfaces, or grants
 addressed to a workspace never match.
 
-**Why.** The `azgard` lane talks only to the Vaulter-owned `Contracts\Access\AzgardGuard` seam,
-so core carries **no** dependency on `azguard`/`corex`. A production host must (1) **bind** a
-real adapter for that seam, and (2) **align the morph types** so the workspace/owner identifiers
-Vaulter passes through match the aliases AzGuard/Corex registered. No real adapter ships by
-default — tests bind `Vaulter\Testing\FakeAzgardGuard`.
+**Why.** The driver and `Vaulter\Azgard\Contracts\AzgardGuard` contract live
+in `vaulter-azgard`, rather than core. The bridge supplies a real adapter, but the host
+must add `Vaulter\Azgard\Contracts\AzgardBackedUser` to its user model and align
+workspace/owner morph types with AzGuard/Corex.
 
 **Fix.**
 
-1. Bind a real `AzgardGuard` adapter that delegates to AzGuard's
-   `hasScopedPermission` / `hasPermissionIn` / the SuperAdmin wildcard:
+1. Install the bridge and its dependencies; its provider registers the `azgard` driver
+   and the real adapter automatically:
 
-   ```php
-   // A service provider's register()
-   $this->app->bind(
-       \Vaulter\Contracts\Access\AzgardGuard::class,
-       \App\Vaulter\AzGuardAdapter::class,
-   );
+   ```bash
+   composer require axioma-studio/vaulter-azgard
    ```
+
+   Add `AzgardBackedUser` to the user model implementing the AzGuard contracts through
+   the `HasAzGuard` and `HasScopedRoles` traits. Bridge settings use `vaulter-azgard.*`.
 
 2. Align the ULID morph strategy across all three systems so the morph types line up:
 
@@ -241,7 +239,7 @@ still referenced.
 - **GC grace too short.** If GC seems to delete live bytes, raise `config('vaulter.gc.grace_hours')`
   to ≥ your worst-case multipart-commit latency, so an in-flight upload can resurrect a tombstoned
   blob first. See the [blob GC recipe](/guide/recipes#blob-gc).
-- **Drift.** If `ref_count` looks wrong, it's a cache — run `php artisan vaulter:reconcile-blobs`
+- **Drift.** If `ref_count` looks wrong, it's a cache — run `php artisan vaulter:blobs:reconcile`
   to rebuild it from the edge table (the source of truth).
 
 ## Panel validation errors at boot {#panel-validation}

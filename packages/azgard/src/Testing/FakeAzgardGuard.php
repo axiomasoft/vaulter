@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Testing;
+namespace Vaulter\Azgard\Testing;
 
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
  * A configurable in-memory {@see AzgardGuard} so consumers (and this package's own

@@ -8,7 +8,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
+use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Enums\Access\Effect;
 
 /**
@@ -21,7 +22,7 @@ use Vaulter\Enums\Access\Effect;
  * silently open a production install. It lives in src/Testing/ (not tests/) so
  * consumers can reference it from their own test suites.
  */
-final class NullPermissionDriver implements PermissionDriver
+final class NullPermissionDriver implements NonEnumeratingPermissionDriver, NonProductionPermissionDriver
 {
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {

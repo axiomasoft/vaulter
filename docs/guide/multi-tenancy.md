@@ -224,8 +224,8 @@ line up with the Corex / AzGuard ecosystem:
 
 This matters when you run the **AzGuard host-role driver** for authorization in a
 tenant-scoped app. That driver
-(`Vaulter\Access\Drivers\AzgardPermissionDriver`) talks only to the
-Vaulter-owned `Vaulter\Contracts\Access\AzgardGuard` seam — so vaulter-core carries
+(`Vaulter\Azgard\AzgardPermissionDriver`) talks only to the
+Vaulter-owned `Vaulter\Azgard\Contracts\AzgardGuard` seam — so vaulter-core carries
 **no** hard dependency on `azguard` / `corex` — and routes its workspace-scoped role
 checks through `hasPermissionIn($contextType, $contextId, $permission)`, which is
 the Corex `TenantContextGuard` contextual check (the tenant/workspace lane).
@@ -250,17 +250,17 @@ AZ_GUARD_MORPH_TYPE=ulid
 (`EntityRegistry` / Corex ADR-003), as documented on the `AzgardGuard` contract:
 
 ```php
-// Vaulter\Contracts\Access\AzgardGuard (docblock)
+// Vaulter\Azgard\Contracts\AzgardGuard (docblock)
 // The $contextType / $entity morph types MUST be registered Corex morph aliases
 // aligned with vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
 ```
 
-::: info You must bind a real `AzgardGuard`
-No real `AzgardGuard` binding ships by default — tests bind
-`Vaulter\Testing\FakeAzgardGuard`. A production host binds a real adapter delegating
-to AzGuard `hasScopedPermission` / Corex `ContextGuard` `hasPermissionIn`. See
-[Authorization › Host role driver](/guide/permission-drivers) for the full driver
-wiring and the `azgard` config block.
+::: info Install the AzGuard bridge
+`composer require axioma-studio/vaulter-azgard` installs the driver, real adapter and
+`Vaulter\Azgard\Testing\FakeAzgardGuard`. Its provider registers the driver and binds
+the guard; the user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser`.
+Fake-based tests require the bridge's installed dependencies too. See
+[Permission drivers](/guide/permission-drivers) and the `vaulter-azgard.*` configuration.
 :::
 
 ## Putting it together
@@ -286,4 +286,4 @@ your model layer — not Vaulter — enforces what each tenant can see.
 - [Configuration](/guide/configuration) — the full `tenant`, `dedup`, `ids` and
   `models` keys.
 - [Authorization › Host role driver](/guide/permission-drivers) — the AzGuard driver and
-  the `azgard` config block.
+  the `vaulter-azgard.*` configuration.

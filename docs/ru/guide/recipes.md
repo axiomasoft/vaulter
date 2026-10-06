@@ -266,7 +266,6 @@ final class AppRoleDriver implements PermissionDriver
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'app'      => \App\Vaulter\AppRoleDriver::class, // your driver
 ],
 ```
@@ -274,9 +273,10 @@ final class AppRoleDriver implements PermissionDriver
 ::: tip Сначала возьмите готовую полосу
 Для Laravel Gate, Spatie Permission v8 или AzGuard свой класс **не** нужен — выставьте
 `drivers.permission` в `gate` / `spatie` / `azgard` и заполните соответствующий блок конфига
-(`gate.*` / `spatie.*` / `azgard.*`). Полосе AzGuard нужен адаптер хоста для
-`Contracts\Access\AzgardGuard` — см.
-[Устранение неполадок](/ru/guide/troubleshooting#azgard-morphs).
+(`vaulter.gate.*` / `vaulter.spatie.*` / `vaulter-azgard.*`). Для AzGuard установите
+`composer require axioma-studio/vaulter-azgard`: provider сам регистрирует драйвер
+и адаптер. Модель пользователя должна реализовать `AzgardBackedUser` — см.
+[Драйверы прав](/ru/guide/permission-drivers).
 :::
 
 ## Написать свой обработчик формата {#format-handler}
@@ -527,11 +527,11 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('vaulter:purge-trash')->daily();
 
 // Two-phase blob GC: tombstone unreferenced blobs, sweep tombstoned past grace.
-Schedule::command('vaulter:gc-blobs')->hourly();
+Schedule::command('vaulter:blobs:gc')->hourly();
 
 // Repair ref_count drift + flag dangling rows (run less often, off-peak).
 // Add --orphans to ALSO disk-walk for orphan objects (report-only; see Storage & Blobs).
-Schedule::command('vaulter:reconcile-blobs')->dailyAt('03:00');
+Schedule::command('vaulter:blobs:reconcile')->dailyAt('03:00');
 
 // Reclaim resumable-upload sessions older than uploads.session_ttl_hours.
 Schedule::command('vaulter:sweep-uploads')->hourly();
@@ -543,7 +543,7 @@ Schedule::command('vaulter:sweep-uploads')->hourly();
 
 ```bash
 # Override the grace window ad hoc, and also clear crashed-staging PENDING rows.
-php artisan vaulter:gc-blobs --grace=48 --pending
+php artisan vaulter:blobs:gc --grace=48 --pending
 ```
 
 ::: danger --pending сметает упавшие загрузки
@@ -610,8 +610,8 @@ Vaulter поставляет тестовые дубли под `Vaulter\Testing
 
 - **`NullPermissionDriver`** — открытый драйвер (каждый актор — супер-админ) для тестов / локальной
   разработки. В production он отклоняется, так что не может тихо открыть боевую установку.
-- **`FakeAzgardGuard`** — дубль `Contracts\Access\AzgardGuard` для тестирования полосы `azgard`
-  без установленного AzGuard.
+- **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — дубль guard для тестирования `azgard`;
+  нужны установленный `vaulter-azgard` и его Composer-зависимости.
 
 ```php
 // In a Pest test, force the open driver for the duration of the test.

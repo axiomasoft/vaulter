@@ -5,15 +5,16 @@ scoped-permission system (and, through it, the CoreX tenant context) into Vaulte
 composite ACL — so a host running AzGuard authorizes Vaulter documents/folders with its
 existing roles and permissions.
 
-Vaulter core carries **no** dependency on AzGuard: its `AzgardPermissionResolver` talks
-only to the narrow `Vaulter\Contracts\Access\AzgardGuard` seam. This package provides the
-real adapter behind that seam, keeping core installable (and PHPStan-green) with AzGuard
-absent.
+Vaulter core carries **no** dependency on AzGuard. This package owns the
+`Vaulter\Azgard\AzgardPermissionDriver`, the narrow
+`Vaulter\Azgard\Contracts\AzgardGuard` seam and its real adapter. The core
+`AccessResolver` reaches the bridge through the shared `PermissionDriver` contract;
+core remains installable with this package absent.
 
 ## How it works
 
 ```
-Vaulter AccessResolver ─▶ AzgardPermissionResolver ─▶ AzgardGuard (seam)
+Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
                                                           │
                                     AzgardGuardAdapter ◀──┘  (this package)
                                                           │
@@ -24,7 +25,10 @@ Vaulter AccessResolver ─▶ AzgardPermissionResolver ─▶ AzgardGuard (seam)
   AzGuard-backed user, translating the three checks: `hasScopedPermission` (narrowing the
   entity to an Eloquent model), `hasPermissionIn` (the workspace/tenant context lane), and
   `isSuperAdmin` (the AzGuard `*` wildcard).
-- **`VaulterAzgardServiceProvider`** binds the seam from the current request's user. A
+- **`AzgardPermissionMap`** maps abilities to permission keys through the live
+  `Configuration\AzgardConfig` repository.
+- **`VaulterAzgardServiceProvider`** registers the `azgard` driver key while preserving
+  host overrides and binds the seam from the current request's user. A
   request with no AzGuard-backed user gets the deny-all `NullAzgardGuard` — a safe
   pass-through, never a fatal.
 
@@ -71,7 +75,7 @@ Select the driver in `config/vaulter.php`:
    register your workspace/owner types as CoreX morph aliases (`EntityRegistry::register`).
 
 4. **Map abilities → permissions** if your keys differ from the defaults
-   (`documents.view`, `documents.update`, `documents.create`, …) via `config('vaulter.azgard.permissions')`.
+   (`documents.view`, `documents.update`, `documents.create`, …) via `config('vaulter-azgard.permissions')`.
 
 ## Config
 
@@ -80,16 +84,20 @@ Select the driver in `config/vaulter.php`:
 | Key | Default | Meaning |
 |---|---|---|
 | `panel_id` | `null` | AzGuard panel threaded through checks; `null` lets AzGuard resolve it per permission key. |
+| `permissions` | `documents.*` ability map | Ability value → permission key, read live by `AzgardPermissionMap`. |
+| `create_permission` | `documents.create` | Workspace creation permission; override through `VAULTER_AZGARD_CREATE_PERMISSION`. |
 
 Super-admin is AzGuard's own first-class `isSuperAdmin()` (0.2+) — the adapter forwards to
 it, so the wildcard convention lives in AzGuard, not here.
 
 ## Tests
 
-Two tiers:
+Three tiers:
 
+- **Driver / shared ACL contract** — the moved driver tests use `Testing\FakeAzgardGuard`
+  and retain the parent Writer subtree allow / child deny fixture and its resolver decisions.
 - **Adapter / provider / Vaulter-resolver** — the adapter's translation and its integration
-  with the **real** Vaulter `AzgardPermissionResolver` across every lane (super-admin
+  with the **real** Vaulter `AzgardPermissionDriver` across every lane (super-admin
   override, workspace-role → grant-level, create gate), plus the provider binding, driven by
   a controllable user double.
 - **`tests/RealAzgard/` — full real-ecosystem e2e** — a real Eloquent AzGuard user with real

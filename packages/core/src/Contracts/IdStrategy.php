@@ -11,7 +11,7 @@ use Illuminate\Database\Schema\Blueprint;
  * generated) migrations plus the matching model concern, so "ulid vs uuid7 vs
  * bigint" is decided from config('vaulter.ids.default') rather than hard-coded.
  *
- * Vaulter defaults to ulid (D9) so morph keys line up with the Corex/Azgard
+ * Vaulter defaults to ulid (D9) so morph keys line up with the Corex/host authorization
  * ecosystem; uuid7 maps onto native Postgres uuid columns and bigint is the
  * legacy auto-increment path. Implementations live in the Schema namespace.
  */

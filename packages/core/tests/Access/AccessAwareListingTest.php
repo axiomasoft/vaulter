@@ -287,7 +287,7 @@ it('refuses the action on a deny-vetoed node that still appears in the candidate
     $this->getJson('api/vaulter/nodes/'.$parent->getKey())->assertOk();
 });
 
-// ── 10. StorageResource.abilities mirror the resolver (view-only, create gate, null actor).
+// ── 10. DriveResource.abilities mirror the resolver (view-only, create gate, null actor).
 it('exposes view-only storage abilities for a reader on the root', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = $storage->rootNode()->first();
@@ -320,7 +320,7 @@ it('refuses the storage show for an unauthenticated request on a rooted storage'
 });
 
 // ── 10b. The all-false-abilities CONTRACT for a NULL actor, re-expressed at the layer
-// that still reaches it: StorageResource resolves every flag false when the request has
+// that still reaches it: DriveResource resolves every flag false when the request has
 // no acting user, regardless of an Owner grant on the root. (The controller guard now
 // 403s a guest on a rooted storage BEFORE the Resource renders — see the test above —
 // so this contract lives at the Resource seam, not behind the controller.)

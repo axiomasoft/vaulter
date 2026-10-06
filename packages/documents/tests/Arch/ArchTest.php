@@ -137,3 +137,8 @@ arch('domain exceptions implement the HTTP problem contract')
     ->ignoring([
         'Vaulter\Documents\Exceptions\CollaborationConfigException',
     ]);
+
+arch('production source never imports testing helpers (D35)')
+    ->expect('Vaulter\Documents')
+    ->not->toUse('Vaulter\Documents\Testing')
+    ->ignoring(['Vaulter\Documents\Testing', 'Vaulter\Documents\Tests']);

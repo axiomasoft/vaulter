@@ -128,3 +128,8 @@ arch('domain exceptions implement the HTTP problem contract')
     ->expect('Vaulter\Drive\Exceptions')
     ->classes()
     ->toImplement('Vaulter\Exceptions\Contracts\ProblemException');
+
+arch('production source never imports testing helpers (D35)')
+    ->expect('Vaulter\Drive')
+    ->not->toUse('Vaulter\Drive\Testing')
+    ->ignoring(['Vaulter\Drive\Testing', 'Vaulter\Drive\Tests']);

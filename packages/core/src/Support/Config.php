@@ -1094,7 +1094,7 @@ final class Config
     /**
      * The collaboration room name for a node (M4b) — channel_prefix.nodeId. This is
      * the single source of the room handle: the private broadcast channel, the
-     * Hocuspocus JWT `room` claim and the webhook `room` body all derive from it, so a
+     * collaboration JWT `room` claim and the webhook `room` body all derive from it, so a
      * token is bound to EXACTLY one node (no cross-node access, H-hardening). Accepts
      * the raw Eloquent key (typed mixed) and stringifies it.
      */
@@ -1121,7 +1121,7 @@ final class Config
     }
 
     /**
-     * The shared secret the Node Hocuspocus hub presents on the server-to-server
+     * The shared secret the Node collaboration hub presents on the server-to-server
      * webhook endpoints (collab/authenticate, collab/store). Set via
      * VAULTER_COLLAB_WEBHOOK_SECRET. As of VLT-REMED P3.2 (F-P1.6-02) this key is ALSO
      * the HMAC key every webhook call's body-signature is verified against — null/empty
@@ -1153,9 +1153,9 @@ final class Config
     }
 
     /**
-     * The HS256 signing secret the Hocuspocus driver mints room JWTs with, also the
+     * The HS256 signing secret the collaboration driver mints room JWTs with, also the
      * key the webhook endpoints verify an incoming JWT against
-     * (config('vaulter.collaboration.drivers.hocuspocus.secret')). Null/empty ⇒ no JWT
+     * from the configured collaboration transport. Null/empty ⇒ no JWT
      * path is available.
      */
     public static function collaborationJwtSecret(): ?string
@@ -1167,7 +1167,7 @@ final class Config
 
     /**
      * The TTL (seconds) a minted room JWT is valid for
-     * (config('vaulter.collaboration.drivers.hocuspocus.token_ttl'), default 3600).
+     * from the configured collaboration transport (default 3600).
      */
     public static function collaborationTokenTtl(): int
     {
@@ -1177,8 +1177,8 @@ final class Config
     }
 
     /**
-     * The Hocuspocus hub websocket URL the Vue client connects to
-     * (config('vaulter.collaboration.drivers.hocuspocus.url')). Null when unset.
+     * The collaboration hub websocket URL the Vue client connects to
+     * from the configured collaboration transport. Null when unset.
      */
     public static function collaborationHubUrl(): ?string
     {

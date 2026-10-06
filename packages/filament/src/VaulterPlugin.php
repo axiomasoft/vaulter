@@ -8,10 +8,10 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Override;
 use Vaulter\Filament\Resources\ActivityResource;
+use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
-use Vaulter\Filament\Resources\StorageResource;
 use Vaulter\Support\Config;
 
 /**
@@ -21,12 +21,9 @@ use Vaulter\Support\Config;
  *
  *   $panel->plugins([ VaulterPlugin::make() ]);
  *
- * It registers two families of resources, each toggleable through
- * config('vaulter-filament.resources.*'):
- *   - the NEW Drive/permissions domain (Storage, Node, NodeGrant, NodeShare,
- *     Activity) built on the headless core (M1–M4);
- *   - the LEGACY document-centric resources (Document, Folder, Share), kept
- *     working for hosts still on that surface.
+ * It registers the Drive/permissions resources (Drive, Node, NodeGrant,
+ * NodeShare, Activity), each toggleable through
+ * config('vaulter-filament.resources.*').
  *
  * Resources resolve their model through Vaulter\Support\Config::*Model(), so a host
  * that swaps a model keeps being governed by these resources.
@@ -75,8 +72,8 @@ final class VaulterPlugin implements Plugin
      * (default on — the Drive/permissions domain over the unified v_nodes tree) AND,
      * where the resource's schema is behind a core SUBSYSTEM feature flag (one that a
      * host may disable independently of its own resource toggle), that flag too
-     * (VLT-REMED P3.1 / F-P1.10-03, D13). Only `activity` qualifies today: `storage`/
-     * `node` have no corresponding feature (storages/nodes are the unconditional
+     * (VLT-REMED P3.1 / F-P1.10-03, D13). Only `activity` qualifies today: `drive`/
+     * `node` have no corresponding feature (drives/nodes are the unconditional
      * schema roots), and `grant`/`share` map to `grants`/`share_links` — both
      * consulted by `SchemaBuilder::entityEnabled()` for DYNAMICALLY-built
      * per-panel schemas, but the package's OWN static migrations always create
@@ -91,7 +88,7 @@ final class VaulterPlugin implements Plugin
     {
         $candidates = [
             // key => [resource class, core feature flag the schema needs (null = none)]
-            'storage' => [StorageResource::class, null],
+            'drive' => [DriveResource::class, null],
             'node' => [NodeResource::class, null],
             'grant' => [NodeGrantResource::class, null],
             'share' => [NodeShareResource::class, null],

@@ -17,7 +17,7 @@ use Vaulter\Support\Config;
  */
 final class GcBlobsCommand extends Command
 {
-    protected $signature = 'vaulter:gc-blobs
+    protected $signature = 'vaulter:blobs:gc
         {--grace= : Override the GC grace window in hours (floored at 1h)}
         {--pending : Also sweep crashed-staging PENDING blobs}';
 

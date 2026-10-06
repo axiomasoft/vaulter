@@ -1,6 +1,6 @@
 ---
 title: Permission Drivers
-description: The four PermissionDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the AzgardGuard adapter a host binds.
+description: The four PermissionDriver lanes — Database (default), Gate, Spatie v8 teams, and the AzGuard seam — how to select and configure each, and the separate bridge’s AzgardGuard adapter.
 outline: deep
 ---
 
@@ -8,7 +8,7 @@ outline: deep
 
 The [`AccessResolver`](./authorization) owns the per-node ACL and the final decision.
 The **role lane** it folds in is swappable: it is the `PermissionDriver` contract, and
-Vaulter ships four implementations. This is where you bridge your application's identity
+Core ships `database`, `gate` and `spatie`; the separate bridge supplies `azgard`. This is where you bridge your application's identity
 and role system into Vaulter.
 
 ::: info The contract is node-blind
@@ -72,7 +72,6 @@ that implements `PermissionDriver` (config-cache safe — FQCNs only, no closure
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
 ],
@@ -231,11 +230,18 @@ This is a no-op when Spatie is not installed.
 
 ## AzGuard — the per-resource seam
 
-`Vaulter\Access\Drivers\AzgardPermissionDriver` bridges a host running AzGuard's
-per-resource, scoped permission model **without vaulter-core depending on
-azguard/corex**. Every AzGuard touch goes through the narrow Vaulter-owned `AzgardGuard`
-seam, so PHPStan stays green with the package absent and the driver references no
-concrete `AzGuard\*` / `CoreX\*` class.
+`Vaulter\Azgard\AzgardPermissionDriver` lives in the separate
+`axioma-studio/vaulter-azgard` package; core does not depend on AzGuard/Corex.
+
+```bash
+composer require axioma-studio/vaulter-azgard
+```
+
+Its Laravel-discovered provider registers `azgard` in `vaulter.permission_drivers`,
+preserving an explicit host override, and binds
+`Vaulter\Azgard\Contracts\AzgardGuard` to the real adapter. Then select
+`VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
+and throws `MissingPermissionDriverException`.
 
 The composite resolution order is node-ACL → workspace-scoped role → global. This driver
 owns the **workspace-scoped role** lane:
@@ -259,8 +265,9 @@ Unlike Gate/Spatie (keyed by `GrantLevel`), the AzGuard map is **action-centric*
 keyed by `Ability`:
 
 ```php
-// config/vaulter.php — used only when drivers.permission = 'azgard'
-'azgard' => [
+// config/vaulter-azgard.php — used only when drivers.permission = 'azgard'
+return [
+    'panel_id' => null, // null resolves the panel from the permission key
     'permissions' => [
         'view'     => 'documents.view',
         'download' => 'documents.download',
@@ -276,12 +283,12 @@ keyed by `Ability`:
         'manage'   => 'documents.manage',
     ],
     'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
-],
+];
 ```
 
 ### The AzgardGuard adapter
 
-`Vaulter\Contracts\Access\AzgardGuard` is the narrow seam the driver talks to. It
+`Vaulter\Azgard\Contracts\AzgardGuard` is the narrow seam the driver talks to. It
 exposes exactly the three checks the driver needs — and nothing of AzGuard's own API:
 
 ```php
@@ -298,24 +305,23 @@ interface AzgardGuard
 }
 ```
 
-The driver obtains the actor's guard leniently: if the **actor itself** implements
-`AzgardGuard` (the cleaner path — AzGuard's methods live naturally on the user), it is
-used as-is; otherwise a host-bound `AzgardGuard` is resolved from the container. When
-neither is available the lane is a safe pass-through (`null`/`false`), never a fatal —
-so selecting `azgard` without a real binding degrades gracefully, exactly like the
-optional Spatie lane.
+If the actor itself implements `AzgardGuard`, the driver uses it directly.
+Otherwise the bridge provider supplies `AzgardGuardAdapter` for the current user
+implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`. For guests or other users,
+it returns `NullAzgardGuard`, which grants no permissions. The host must add
+`AzgardBackedUser` to its user model and align the morph types.
 
-::: details Binding a real adapter in production
-A production host binds a real `AzgardGuard` adapter delegating to AzGuard's
+::: details Optionally overriding the supplied adapter
+The bridge already binds a real adapter. A host can override `AzgardGuard`, delegating to AzGuard's
 `hasScopedPermission` / Corex `ContextGuard` `hasPermissionIn` and the SuperAdmin
 wildcard. The method shapes mirror AzGuard 1:1, so the adapter is a thin pass-through:
 
 ```php
 // In a host service provider
-$this->app->bind(\Vaulter\Contracts\Access\AzgardGuard::class, function ($app) {
+$this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
     $actor = $app['auth']->user();
 
-    return new class ($actor) implements \Vaulter\Contracts\Access\AzgardGuard {
+    return new class ($actor) implements \Vaulter\Azgard\Contracts\AzgardGuard {
         public function __construct(private object $actor) {}
 
         public function hasScopedPermission(string $permission, object $entity): bool
@@ -344,18 +350,19 @@ type string through untouched — it never resolves the alias itself.
 
 ### Testing the AzGuard lane
 
-`Vaulter\Testing\FakeAzgardGuard` is a configurable in-memory `AzgardGuard` so you (and
-this package's own tests) can exercise the lane **without** installing azguard/corex:
+`Vaulter\Azgard\Testing\FakeAzgardGuard` is an in-memory guard supplied by
+`vaulter-azgard`. Install the bridge and its Composer dependencies even for fake-based
+tests; the fake replaces live AzGuard checks, not the package's installation requirements.
 
 ```php
-use Vaulter\Testing\FakeAzgardGuard;
+use Vaulter\Azgard\Testing\FakeAzgardGuard;
 
 // grant one workspace permission
-app()->bind(\Vaulter\Contracts\Access\AzgardGuard::class,
+app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
     fn () => FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
 
 // or a super-admin
-app()->bind(\Vaulter\Contracts\Access\AzgardGuard::class,
+app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
     fn () => FakeAzgardGuard::superAdmin());
 ```
 
@@ -363,12 +370,12 @@ app()->bind(\Vaulter\Contracts\Access\AzgardGuard::class,
 
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
-| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | optional `AzgardGuard` adapter |
+| Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + its dependencies |
 | Map keyed by | — | `GrantLevel` | `GrantLevel` | `Ability` |
 | Enumerates role/team subjects | subclass | no | yes | no |
 | Super-admin override | no | `vaulter.super` ability | super permission | SuperAdmin wildcard |
 | Workspace-scoped | per-node grants | node-blind context | team-scoped | `hasPermissionIn` |
-| Safe when not configured | n/a | yes | yes (deny) | yes (pass-through) |
+| Safe when not configured | n/a | yes | yes (deny) | only with the bridge installed |
 
 ## See also
 

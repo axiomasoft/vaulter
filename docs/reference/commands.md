@@ -15,8 +15,8 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 |---|---|
 | `vaulter:install` | Publish config + migrations, run them, offer to star the repo |
 | `vaulter:make:profile` | Scaffold a storage-panel provider class |
-| `vaulter:gc-blobs` | Two-phase, race-safe blob garbage collection |
-| `vaulter:reconcile-blobs` | Rebuild blob `ref_count` and report dangling rows |
+| `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
+| `vaulter:blobs:reconcile` | Rebuild blob `ref_count` and report dangling rows |
 | `vaulter:purge-trash` | Permanently delete trashed nodes past retention |
 | `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
@@ -67,7 +67,7 @@ php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 See [Concepts → Storage panels](/guide/storage-panels).
 
 
-## `vaulter:gc-blobs`
+## `vaulter:blobs:gc`
 
 Two-phase, race-safe blob garbage collection (ACL-blind, system context). Marks
 unreferenced committed blobs as tombstoned with a grace deadline, then sweeps
@@ -75,15 +75,15 @@ tombstoned blobs past grace to a physical delete. The grace window comes from
 `config('vaulter.gc.grace_hours')` (floored at 1h) unless `--grace` overrides it.
 
 ```
-vaulter:gc-blobs
+vaulter:blobs:gc
     {--grace=}  Override the GC grace window in hours (floored at 1h)
     {--pending} Also sweep crashed-staging PENDING blobs
 ```
 
 ```bash
-php artisan vaulter:gc-blobs            # tombstone + sweep past grace
-php artisan vaulter:gc-blobs --grace=48 # custom grace window
-php artisan vaulter:gc-blobs --pending  # also clear crashed-staging rows
+php artisan vaulter:blobs:gc            # tombstone + sweep past grace
+php artisan vaulter:blobs:gc --grace=48 # custom grace window
+php artisan vaulter:blobs:gc --pending  # also clear crashed-staging rows
 ```
 
 ::: danger Sweeping deletes bytes
@@ -93,18 +93,18 @@ multipart-commit latency so an in-flight upload can resurrect a tombstoned blob 
 
 See [Recipes → Blob GC](/guide/recipes).
 
-## `vaulter:reconcile-blobs`
+## `vaulter:blobs:reconcile`
 
 Rebuild blob `ref_count` from the edge counts in `v_file_version_blobs` and report
 dangling rows. The edge — not `ref_count` — is the liveness truth; this command
 repairs the reconciled cache.
 
 ```
-vaulter:reconcile-blobs
+vaulter:blobs:reconcile
 ```
 
 ```bash
-php artisan vaulter:reconcile-blobs
+php artisan vaulter:blobs:reconcile
 ```
 
 ## `vaulter:purge-trash`
@@ -215,9 +215,9 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('vaulter:relay-outbox')->everyMinute();
 Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes();
 Schedule::command('vaulter:sweep-uploads')->hourly();
-Schedule::command('vaulter:gc-blobs')->daily();
+Schedule::command('vaulter:blobs:gc')->daily();
 Schedule::command('vaulter:purge-trash')->daily();
-Schedule::command('vaulter:reconcile-blobs')->weekly();
+Schedule::command('vaulter:blobs:reconcile')->weekly();
 Schedule::command('vaulter:prune-webhooks')->weekly();
 ```
 

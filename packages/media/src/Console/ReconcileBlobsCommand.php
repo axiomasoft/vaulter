@@ -30,7 +30,7 @@ use Vaulter\Support\Config;
  */
 final class ReconcileBlobsCommand extends Command
 {
-    protected $signature = 'vaulter:reconcile-blobs
+    protected $signature = 'vaulter:blobs:reconcile
         {--orphans : Also walk the disk for orphan objects (bytes with no blob row)}
         {--disk= : The disk to scan for orphans (defaults to the configured CAS disk)}
         {--orphan-grace= : Override the orphan grace window in hours (floored at 1h)}

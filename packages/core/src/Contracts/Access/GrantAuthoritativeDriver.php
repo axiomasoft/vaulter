@@ -12,7 +12,7 @@ namespace Vaulter\Contracts\Access;
  * actor can reach, so narrowing a listing to that set never wrongly hides a row.
  *
  * Only the standalone {@see DatabasePermissionDriver} declares it true out of the box.
- * For the gate/spatie/azgard drivers the host's roles govern (an actor can see nodes with
+ * For the gate/spatie/bridge drivers the host's roles govern (an actor can see nodes with
  * NO grant anchor), so they do NOT implement this interface at all ⇒ the listing stays
  * OPEN (the safe default, never wrongly hiding).
  *

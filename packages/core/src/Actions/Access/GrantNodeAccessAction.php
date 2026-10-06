@@ -60,7 +60,7 @@ final readonly class GrantNodeAccessAction
      * {@see EnumeratesRoleSubjects} marker OR an overridden `subjectsFor()` (the
      * documented subclass-and-append extension path counts, marker or not). We fail loud
      * ONLY when the driver PROVABLY cannot enumerate role subjects — the standalone
-     * `database` base, `gate`, `azgard`, or the `null` lane with `subjectsFor()`
+     * `database` base, `gate`, `bridge`, or the `null` lane with `subjectsFor()`
      * inherited unchanged. We always warn, and outside production we throw so a developer
      * notices immediately. The direction is safe (an inert grant grants nothing), so
      * production degrades to a log line rather than a broken write path.

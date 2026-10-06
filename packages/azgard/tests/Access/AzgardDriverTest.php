@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Access\Drivers\AzgardPermissionDriver;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\AzgardPermissionDriver;
+use Vaulter\Azgard\AzgardPermissionMap;
+use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Azgard\Testing\FakeAzgardGuard;
+use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Support\AzgardConfig;
-use Vaulter\Testing\FakeAzgardGuard;
-use Vaulter\Tests\Access\AccessTestHelpers;
 
 /**
  * The AzGuard host-role driver (§6 / H.2 / ADR-0007). It talks ONLY to the Vaulter-
@@ -42,23 +42,23 @@ function bindAzgardGuard(AzgardGuard $guard): void
 }
 
 it('maps abilities to AzGuard permissions with the master-plan defaults', function (): void {
-    expect(AzgardConfig::permissionFor(Ability::View))->toBe('documents.view')
-        ->and(AzgardConfig::permissionFor(Ability::Download))->toBe('documents.download')
-        ->and(AzgardConfig::permissionFor(Ability::Comment))->toBe('documents.comment')
-        ->and(AzgardConfig::permissionFor(Ability::Edit))->toBe('documents.update')
-        ->and(AzgardConfig::permissionFor(Ability::Create))->toBe('documents.create')
-        ->and(AzgardConfig::permissionFor(Ability::Move))->toBe('documents.update')
-        ->and(AzgardConfig::permissionFor(Ability::Copy))->toBe('documents.update')
-        ->and(AzgardConfig::permissionFor(Ability::Trash))->toBe('documents.delete')
-        ->and(AzgardConfig::permissionFor(Ability::Delete))->toBe('documents.delete')
-        ->and(AzgardConfig::permissionFor(Ability::Share))->toBe('documents.manage')
-        ->and(AzgardConfig::permissionFor(Ability::Manage))->toBe('documents.manage');
+    expect(app(AzgardPermissionMap::class)->permissionFor(Ability::View))->toBe('documents.view')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Download))->toBe('documents.download')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Comment))->toBe('documents.comment')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Edit))->toBe('documents.update')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Create))->toBe('documents.create')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Move))->toBe('documents.update')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Copy))->toBe('documents.update')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Trash))->toBe('documents.delete')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Delete))->toBe('documents.delete')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Share))->toBe('documents.manage')
+        ->and(app(AzgardPermissionMap::class)->permissionFor(Ability::Manage))->toBe('documents.manage');
 });
 
 it('honours a host override of the ability map', function (): void {
-    config()->set('vaulter.azgard.permissions', ['edit' => 'host.docs.write']);
+    config()->set('vaulter-azgard.permissions', ['edit' => 'host.docs.write']);
 
-    expect(AzgardConfig::permissionFor(Ability::Edit))->toBe('host.docs.write');
+    expect(app(AzgardPermissionMap::class)->permissionFor(Ability::Edit))->toBe('host.docs.write');
 });
 
 it('grants an absolute override from an AzGuard super-admin', function (): void {
@@ -167,6 +167,7 @@ it('returns no role decision when the workspace grants nothing (pass-through wit
 });
 
 it('is a safe pass-through (no fatal) when no AzgardGuard is bound', function (): void {
+    app()->offsetUnset(AzgardGuard::class);
     $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
     $scope = new AccessScope(panel: 'default', workspaceType: 'project', workspaceId: 1);

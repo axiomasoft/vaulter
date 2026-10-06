@@ -9,7 +9,7 @@ outline: deep
 `axioma-studio/vaulter-filament` is an optional **Filament 5** plugin that adds Vaulter management
 to an existing Filament panel. It registers two families of resources:
 
-- the **Drive / permissions** domain — `Storage`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
+- the **Drive / permissions** domain — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
 - the **legacy document-centric** surface — `Document`, `Folder`, `Share`.
 
 Every write the panel makes flows through a **core Action** (never a raw Eloquent write), and every
@@ -79,7 +79,7 @@ return [
     // Toggle which resources the plugin registers. Each defaults to true.
     'resources' => [
         // Drive / permissions domain (M1–M4 core).
-        'storage'  => true,
+        'drive'    => true,
         'node'     => true,
         'grant'    => true,
         'share'    => true,
@@ -134,17 +134,18 @@ operation the admin cannot perform.
 
 ### Drive / permissions domain
 
-#### StorageResource
+#### DriveResource
 
-A **read-mostly** view of the ownable, polymorphic disk roots. Storages are provisioned by the core
-`DriveProvisioner` (get-or-create on a host entity), never minted from the panel — so this resource
+A **read-mostly** view of the ownable, polymorphic disk roots. Drives are provisioned by
+`Vaulter\Drive\DriveProvisioner` (get-or-create on a host entity), never minted from the panel — so this resource
 **cannot create or edit** a row (`canCreate()` returns `false`); it lists and inspects.
 
 - **Model**: resolved via `Config::storageModel()` (`Vaulter\Models\Drive\Drive` by default).
 - **Table**: name, owner (`owner_type #owner_id`), disk, used bytes, quota (`∞` when unlimited),
   status, created-at. Default sort `created_at desc`.
-- **Infolist** (view page): Storage / Owner / Usage sections, with human-formatted byte sizes.
-- **Pages**: `index` (list) and `view` (`/{record}`).
+- **Infolist** (view page): Drive / Owner / Usage sections, with human-formatted byte sizes.
+- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListDrives` and `ViewDrive`
+  under `Vaulter\Filament\Resources\DriveResource\Pages`.
 
 #### NodeResource
 
@@ -273,7 +274,8 @@ non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
   (`SelectFilter` over `EventType` cases).
 - **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
   `KeyValueEntry` for `context` plus ip / user-agent / request-id).
-- **Pages**: `index` (list) and `view` (`/{record}`).
+- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListDrives` and `ViewDrive`
+  under `Vaulter\Filament\Resources\DriveResource\Pages`.
 
 ### Legacy document-centric surface
 

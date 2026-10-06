@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Filament\Facades\Filament;
 use Filament\Panel;
 use Vaulter\Filament\Resources\ActivityResource;
+use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
-use Vaulter\Filament\Resources\StorageResource;
 use Vaulter\Filament\VaulterPlugin;
 
 it('identifies the plugin', function (): void {
@@ -16,7 +16,9 @@ it('identifies the plugin', function (): void {
 });
 
 it('loads the package config', function (): void {
-    expect(config('vaulter-filament.navigation_group'))->toBe('Vaulter');
+    expect(config('vaulter-filament.navigation_group'))->toBe('Vaulter')
+        ->and(config('vaulter-filament.resources.drive'))->toBeTrue()
+        ->and(config('vaulter-filament.resources'))->not->toHaveKey('storage');
 });
 
 it('registers the Drive/permissions resources on the panel', function (): void {
@@ -24,7 +26,7 @@ it('registers the Drive/permissions resources on the panel', function (): void {
 
     $resources = $panel->getResources();
 
-    expect($resources)->toContain(StorageResource::class)
+    expect($resources)->toContain(DriveResource::class)
         ->toContain(NodeResource::class)
         ->toContain(NodeGrantResource::class)
         ->toContain(NodeShareResource::class)
@@ -83,7 +85,7 @@ it('drops ActivityResource when the core activity feature is off, even with its 
 
     expect($panel->getResources())->not->toContain(ActivityResource::class)
         ->and($panel->getResources())->toContain(NodeResource::class)
-        ->and($panel->getResources())->toContain(StorageResource::class);
+        ->and($panel->getResources())->toContain(DriveResource::class);
 });
 
 it('control: ActivityResource registers when the core activity feature is on (default), F-P1.10-03', function (): void {
@@ -93,4 +95,14 @@ it('control: ActivityResource registers when the core activity feature is on (de
     VaulterPlugin::make()->register($panel);
 
     expect($panel->getResources())->toContain(ActivityResource::class);
+});
+
+it('respects the canonical drive resource toggle', function (): void {
+    config()->set('vaulter-filament.resources.drive', false);
+
+    $panel = Panel::make()->id('probe-drive-off');
+    VaulterPlugin::make()->register($panel);
+
+    expect($panel->getResources())->not->toContain(DriveResource::class)
+        ->and($panel->getResources())->toContain(NodeResource::class);
 });

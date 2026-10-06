@@ -11,7 +11,7 @@ use Vaulter\VaulterServiceProvider;
 
 /**
  * The base case for the bridge suite. It boots vaulter-core (the real
- * AzgardPermissionDriver + AccessResolver live here) and this package's provider
+ * AccessResolver lives there) and this package's driver and provider
  * (the AzgardGuard binding), with the AzGuard permission driver selected — so a test
  * exercises the REAL Vaulter authorization path against the REAL adapter, with only the
  * host's User standing in as a controllable {@see AzgardBackedUser}.

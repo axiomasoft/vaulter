@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard;
 
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
  * The deny-all {@see AzgardGuard} the provider binds when the current request has no

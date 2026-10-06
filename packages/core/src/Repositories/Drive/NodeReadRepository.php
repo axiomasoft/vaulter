@@ -32,7 +32,7 @@ use Vaulter\Support\LoadTier;
  *
  * queryForUser()/constrainToAccessible() narrow grant-authoritative drivers to
  * candidate IDs. Candidates require exact AccessResolver evaluation before display;
- * the REST listings and Filament table apply that after fetching each page.
+ * the REST listings and admin table apply that after fetching each page.
  */
 final class NodeReadRepository
 {
@@ -366,10 +366,10 @@ final class NodeReadRepository
 
     /**
      * The STANDALONE public seam (master plan P1 #3): the live (non-trashed) nodes an
-     * actor may reach, as a Builder for pagination / Filament. It is the named entry
+     * actor may reach, as a Builder for pagination / admin. It is the named entry
      * for "give me this actor's nodes" = the live-nodes base + constrainToAccessible.
      * A caller that needs its own trashed-state control (the children cursor below, or
-     * the Filament table whose Trashed filter flips trashed_at) composes
+     * the admin table whose Trashed filter flips trashed_at) composes
      * {@see constrainToAccessible()} on its own base instead.
      *
      * When grant-filtering applies (see {@see grantFilteringApplies()}) the base is
@@ -396,7 +396,7 @@ final class NodeReadRepository
     /**
      * Constrain an ALREADY-BUILT node query to the actor's grant-reachable candidate
      * set (P1 #3), WITHOUT imposing the live/trashed filter — so a caller that owns
-     * its own trashed-state handling (the children cursor; the Filament table, whose
+     * its own trashed-state handling (the children cursor; the admin table, whose
      * Trashed filter flips trashed_at) composes the access narrowing on top of its own
      * query. A no-op when grant-filtering does not apply (open drivers); forces an
      * empty result when it applies and the actor reaches no candidate.
@@ -405,7 +405,7 @@ final class NodeReadRepository
      * AccessResolver evaluation before display.
      *
      * Generic over the concrete model so a Node-typed base (the core listing paths) and
-     * a Filament resource's `Builder<Model>` both compose without a variance clash — the
+     * a admin resource's `Builder<Model>` both compose without a variance clash — the
      * narrowing is key-based, never model-specific.
      *
      * @template TModel of Model
@@ -493,13 +493,13 @@ final class NodeReadRepository
      * role/team lane or a super-admin override() confers access on nodes with NO grant
      * anchor — so it overrides isGrantAuthoritative() to return false (the interface is
      * inherited and cannot be un-declared), and the listing stays OPEN. For the
-     * gate/spatie/azgard/null drivers the host's roles govern and v_node_grants is not
+     * gate/spatie/bridge/null drivers the host's roles govern and v_node_grants is not
      * the source of truth, so a grant-id constraint would WRONGLY hide nodes the host
      * role lane allows; they don't implement the capability either ⇒ listing stays OPEN
      * (the safe default that never wrongly hides).
      *
      * Public so a caller listing a page through a NON-queryForUser path (the children
-     * cursor, the Filament table) can decide whether to narrow the query to the
+     * cursor, the admin table) can decide whether to narrow the query to the
      * candidate set up front.
      */
     public function grantFilteringApplies(): bool
@@ -518,7 +518,7 @@ final class NodeReadRepository
      *
      * PUBLIC (F-P1.10-01): {@see constrainToAccessible()} narrows a query by the
      * NODE model's own primary key, which only fits a Node-shaped listing. The
-     * Filament panel's non-Node resources (grant/share/activity/storage) key off a
+     * admin panel's non-Node resources (grant/share/activity/storage) key off a
      * DIFFERENT column (node_id / target_id / root_node_id), so they call this
      * directly to build their own `whereIn` — same candidate set, same
      * grantFilteringApplies() gate, no duplicated grant-resolution logic.

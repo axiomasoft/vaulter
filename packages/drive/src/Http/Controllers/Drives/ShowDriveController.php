@@ -26,7 +26,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  * returning the meta (mirroring NodeController's per-ACTION guarding); a denial 403s
  * via PermissionDeniedException. The root is resolved READ-ONLY (the BelongsTo on
  * root_node_id, never the provisioning StorageManager — a read endpoint must never
- * write), exactly as StorageResource resolves it for its ability flags.
+ * write), exactly as the admin drive resource resolves it for its ability flags.
  */
 final class ShowDriveController extends Controller
 {
@@ -72,7 +72,7 @@ final class ShowDriveController extends Controller
      * The storage root node, resolved READ-ONLY through the read repository (never the
      * provisioning StorageManager — a read endpoint must not write). Null when the
      * storage has no root_node_id yet, or the row is missing — matching how
-     * StorageResource resolves the root for its ability flags.
+     * the admin drive resource resolves the root for its ability flags.
      */
     private function root(Drive $storage): ?Node
     {

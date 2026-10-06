@@ -15,8 +15,8 @@ final class RecordCommandPeakMemory
     /** @var list<string> Closed §9 vocabulary; unknown artisan names are dropped. */
     private const array COMMANDS = [
         'vaulter:sweep-uploads',
-        'vaulter:gc-blobs',
-        'vaulter:reconcile-blobs',
+        'vaulter:blobs:gc',
+        'vaulter:blobs:reconcile',
         'vaulter:purge-trash',
         'vaulter:prune-webhooks',
         'vaulter:retry-webhooks',

@@ -16,4 +16,21 @@ return [
     |
     */
     'panel_id' => env('VAULTER_AZGARD_PANEL'),
+
+    'permissions' => [
+        'view' => 'documents.view',
+        'download' => 'documents.download',
+        'comment' => 'documents.comment',
+        'edit' => 'documents.update',
+        'create' => 'documents.create',
+        'move' => 'documents.update',
+        'copy' => 'documents.update',
+        'trash' => 'documents.delete',
+        'delete' => 'documents.delete',
+        'restore' => 'documents.delete',
+        'share' => 'documents.manage',
+        'manage' => 'documents.manage',
+    ],
+
+    'create_permission' => env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create'),
 ];

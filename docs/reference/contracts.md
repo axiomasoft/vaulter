@@ -15,7 +15,7 @@ signatures and the binding point you swap it through.
 | Domain | Contract | Swap via |
 |---|---|---|
 | Access | `PermissionDriver` | `config('vaulter.drivers.permission')` + `permission_drivers` map |
-| Access | `AzgardGuard` | container binding (host adapter) |
+| Access | `AzgardGuard` (azgard) | binding supplied by `vaulter-azgard` |
 | Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
 | Cas | `BlobStore` | `config('vaulter.cas.blob_store')` |
@@ -86,7 +86,7 @@ exactly this surface, and a contract test asserts they all yield identical
 **Implement when** you have a role system the bundled drivers don't cover. See
 [Recipes → Custom resolver](/guide/recipes).
 
-### `Vaulter\Contracts\Access\AzgardGuard`
+### `Vaulter\Azgard\Contracts\AzgardGuard`
 
 The narrow Vaulter-owned seam the host's AzGuard-backed actor satisfies, so
 `vaulter-core` carries **no** hard dependency on `azguard`/`corex`. The
@@ -103,13 +103,16 @@ interface AzgardGuard
 }
 ```
 
-Method shapes mirror AzGuard 1:1, so a host adapter is a thin pass-through to
-`hasScopedPermission` / `hasPermissionIn` / the SuperAdmin wildcard. No real binding
-ships by default — tests bind `Vaulter\Testing\FakeAzgardGuard`.
+The contract ships in `axioma-studio/vaulter-azgard`, alongside the real
+`AzgardGuardAdapter` and `Vaulter\Azgard\Testing\FakeAzgardGuard` test double.
+Its provider registers the driver and adapter automatically.
 
-**Implement when** `config('vaulter.drivers.permission') = 'azgard'` — bind a real
-adapter and align ULID morphs (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid`
-+ `AZ_GUARD_MORPH_TYPE=ulid`). See [Auth → Host role driver](/guide/permission-drivers).
+**Use when** `config('vaulter.drivers.permission') = 'azgard'`: install with
+`composer require axioma-studio/vaulter-azgard`, add
+`Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model and align ULID morphs
+(`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`).
+Fake-based tests also require the bridge and its installed dependencies.
+See [Permission drivers](/guide/permission-drivers).
 
 ### `Vaulter\Azgard\Contracts\AzgardBackedUser` (azgard)
 

@@ -17,12 +17,10 @@ arch('no debug helpers leak into the package')
     ->expect(['dd', 'dump', 'ray', 'var_dump'])
     ->not->toBeUsed();
 
-// T6 — filament requires ONLY core in production; it never depends on drive,
-// documents or media (require-dev pulls drive/media for TEST fixtures only,
-// see tests/TestCase.php).
-arch('filament never depends on drive, documents or media (T6 — filament requires only core)')
-    ->expect('Vaulter\Filament')
-    ->not->toUse(['Vaulter\Drive', 'Vaulter\Documents', 'Vaulter\Media']);
+// Filament uses the public core/drive API; it never reaches into sibling engines.
+arch('filament never depends on documents or media')
+    ->expect('Vaulter\\Filament')
+    ->not->toUse(['Vaulter\\Documents', 'Vaulter\\Media']);
 
 // E5.1 / F-P4.3-01 — declarative form kept for discoverability/grep (`toUse('App')`);
 // see the file-scan test below (and core's ArchTest.php) for why this namespace-graph
@@ -111,3 +109,41 @@ test('the package exposes no public contract surface (VLT-REL P2.2)', function (
 arch('DB facade is routed through VaulterDatabase (AD25)')
     ->expect('Vaulter\Filament')
     ->not->toUse('Illuminate\Support\Facades\DB');
+
+// D35: production code cannot import fixtures or other Testing namespace classes.
+test('production src never imports a Testing namespace', function (): void {
+    $src = __DIR__.'/../../src';
+    $offenders = [];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        // A shipped Testing helper is allowed to depend on other testing helpers.
+        if (str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'Testing'.DIRECTORY_SEPARATOR)) {
+            continue;
+        }
+
+        $contents = file_get_contents($file->getPathname());
+
+        if ($contents === false) {
+            continue;
+        }
+
+        foreach (token_get_all($contents) as $token) {
+            if (!is_array($token) || !in_array($token[0], [T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE], true)) {
+                continue;
+            }
+
+            if (in_array('Testing', explode('\\', $token[1]), true)) {
+                $offenders[] = $file->getPathname();
+                break;
+            }
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});

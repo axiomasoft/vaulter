@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Azgard\AzgardGuardAdapter;
+use Vaulter\Azgard\AzgardPermissionDriver;
+use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\NullAzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
-use Vaulter\Contracts\Access\AzgardGuard;
+use Vaulter\Azgard\VaulterAzgardServiceProvider;
 
 /**
  * The provider resolves the AzgardGuard seam from the CURRENT request's user: an
@@ -35,4 +39,26 @@ it('binds the deny-all null guard for a user that is not AzGuard-backed', functi
     });
 
     expect(app(AzgardGuard::class))->toBeInstanceOf(NullAzgardGuard::class);
+});
+
+it('registers its permission driver and keeps a host driver override', function (): void {
+    expect(config('vaulter.permission_drivers.azgard'))->toBe(AzgardPermissionDriver::class);
+
+    config()->set('vaulter.permission_drivers.azgard', DatabasePermissionDriver::class);
+    (new VaulterAzgardServiceProvider(app()))->register();
+
+    expect(config('vaulter.permission_drivers.azgard'))->toBe(DatabasePermissionDriver::class);
+});
+
+it('preserves an explicitly configured null driver key', function (): void {
+    config()->set('vaulter.permission_drivers.azgard', null);
+    (new VaulterAzgardServiceProvider(app()))->register();
+
+    expect(config('vaulter.permission_drivers.azgard'))->toBeNull();
+});
+
+it('keeps its actor-only driver non-enumerating through the core manager', function (): void {
+    $manager = app(PermissionDriverManager::class);
+
+    expect($manager->enumeratesRoleSubjects(app(AzgardPermissionDriver::class)))->toBeFalse();
 });

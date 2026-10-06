@@ -289,13 +289,13 @@ advisory-блокировка — no-op.
 
 ```bash
 # Обе фазы (mark + sweep), grace из config('vaulter.gc.grace_hours'):
-php artisan vaulter:gc-blobs
+php artisan vaulter:blobs:gc
 
 # Переопределить grace-окно (нижняя граница 1h):
-php artisan vaulter:gc-blobs --grace=48
+php artisan vaulter:blobs:gc --grace=48
 
 # Ещё и вычистить PENDING-строки от упавшего стейджинга:
-php artisan vaulter:gc-blobs --pending
+php artisan vaulter:blobs:gc --pending
 ```
 
 Команда печатает подсчёт по фазам — `Tombstoned X, swept Y, skipped Z (grace Nh)`.
@@ -318,15 +318,15 @@ Tombstone-блоб может быть воскрешён идущей загр�
 :::
 
 ::: details Запланируйте это сами
-`vaulter:gc-blobs` и `vaulter:reconcile-blobs` регистрируются пакетом, но **не** ставятся в
+`vaulter:blobs:gc` и `vaulter:blobs:reconcile` регистрируются пакетом, но **не** ставятся в
 планировщик автоматически — Vaulter не трогает ваш scheduler. Добавьте их туда, где вы
 планируете обслуживание, например в `routes/console.php`:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:reconcile-blobs')->daily();
-Schedule::command('vaulter:gc-blobs --pending')->dailyAt('03:00');
+Schedule::command('vaulter:blobs:reconcile')->daily();
+Schedule::command('vaulter:blobs:gc --pending')->dailyAt('03:00');
 ```
 
 Запускайте reconcile *до* GC, чтобы `ref_count` отражал реальность, когда mark-скан его читает.
@@ -336,13 +336,13 @@ Schedule::command('vaulter:gc-blobs --pending')->dailyAt('03:00');
 
 ## Согласование: пересборка кэша `ref_count`
 
-`ref_count` — кэш, а не истина, поэтому он дрейфует. `vaulter:reconcile-blobs` (за которым стоит
+`ref_count` — кэш, а не истина, поэтому он дрейфует. `vaulter:blobs:reconcile` (за которым стоит
 `Vaulter\Media\Cas\BlobReconciler`) пересобирает его из счётчиков рёбер `v_file_version_blobs` —
 реального источника живучести — и сообщает об угрозах целостности. Он **никогда ничего не
 удаляет**.
 
 ```bash
-php artisan vaulter:reconcile-blobs
+php artisan vaulter:blobs:reconcile
 ```
 
 Он обходит каждый блоб, переписывает любой устаревший `ref_count` и помечает **висячие строки**
@@ -365,13 +365,13 @@ Dangling rows (committed blob, missing object): 01J…ABC, 01J…XYZ
 
 ```bash
 # Обнаружить orphan-объекты (только отчёт) в дополнение к row-side reconcile:
-php artisan vaulter:reconcile-blobs --orphans
+php artisan vaulter:blobs:reconcile --orphans
 
 # Сканировать конкретный диск и переопределить orphan-grace-окно (часы, нижняя граница 1h):
-php artisan vaulter:reconcile-blobs --orphans --disk=s3 --orphan-grace=48
+php artisan vaulter:blobs:reconcile --orphans --disk=s3 --orphan-grace=48
 
 # УДАЛИТЬ найденные orphan-объекты — только PostgreSQL/MySQL (на SQLite отклоняется; см. ниже):
-php artisan vaulter:reconcile-blobs --orphans --prune
+php artisan vaulter:blobs:reconcile --orphans --prune
 ```
 
 Он печатает свою строку рядом с подсчётом reconcile:

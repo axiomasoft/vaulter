@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Filament\Resources\ActivityResource;
+use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeShareResource;
-use Vaulter\Filament\Resources\StorageResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 
 /*
@@ -19,7 +19,7 @@ use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
  * exactly this — a zero-grant actor saw every row of every owner).
  */
 
-it('StorageResource lists a storage the acting admin can reach and hides one it cannot (F-P1.10-01)', function (): void {
+it('DriveResource lists a storage the acting admin can reach and hides one it cannot (F-P1.10-01)', function (): void {
     $owner = DriveBuilder::user(1);
     $reachable = DriveBuilder::storage();
     $unreachable = DriveBuilder::storage();
@@ -27,7 +27,7 @@ it('StorageResource lists a storage the acting admin can reach and hides one it 
     $this->actingAs($owner);
     DriveBuilder::grant($reachable->rootNode()->first(), $owner, level: GrantLevel::Owner);
 
-    $ids = StorageResource::getEloquentQuery()->pluck('id')->all();
+    $ids = DriveResource::getEloquentQuery()->pluck('id')->all();
 
     expect($ids)->toContain($reachable->getKey())
         ->and($ids)->not->toContain($unreachable->getKey());
@@ -36,7 +36,7 @@ it('StorageResource lists a storage the acting admin can reach and hides one it 
     $stranger = DriveBuilder::user(99);
     $this->actingAs($stranger);
 
-    $strangerIds = StorageResource::getEloquentQuery()->pluck('id')->all();
+    $strangerIds = DriveResource::getEloquentQuery()->pluck('id')->all();
 
     expect($strangerIds)->toBe([]);
 });

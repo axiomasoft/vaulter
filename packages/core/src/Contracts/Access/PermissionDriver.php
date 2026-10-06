@@ -22,7 +22,7 @@ use Vaulter\Enums\Access\Effect;
  * default is the standalone {@see DatabasePermissionDriver}.
  *
  * Implementations are a SemVer-frozen public API from M2a — M2b's Gate/Spatie/
- * Azgard drivers implement exactly this surface, and a contract test asserts every
+ * host authorization drivers implement exactly this surface, and a contract test asserts every
  * driver yields identical AccessResolver decisions on a shared fixture.
  */
 interface PermissionDriver

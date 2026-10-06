@@ -9,7 +9,7 @@ outline: deep
 `axioma-studio/vaulter-filament` — это опциональный плагин для **Filament 5**, который добавляет
 управление Vaulter в существующую панель Filament. Он регистрирует два семейства ресурсов:
 
-- домен **Drive / права** — `Storage`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
+- домен **Drive / права** — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
 - **легаси-поверхность вокруг документов** — `Document`, `Folder`, `Share`.
 
 Каждая запись, которую делает панель, проходит через **ядровый Action** (никогда напрямую через
@@ -79,7 +79,7 @@ return [
     // Переключатели ресурсов, которые регистрирует плагин. Каждый по умолчанию true.
     'resources' => [
         // Домен Drive / права (ядро M1–M4).
-        'storage'  => true,
+        'drive'    => true,
         'node'     => true,
         'grant'    => true,
         'share'    => true,
@@ -134,18 +134,18 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 
 ### Домен Drive / права
 
-#### StorageResource
+#### DriveResource
 
-**Преимущественно на чтение** — вид на владеемые полиморфные корни дисков. Хранилища провизионируются
-ядровым `DriveProvisioner` (get-or-create на хост-сущности), а не создаются из панели — поэтому этот
+**Преимущественно на чтение** — вид на владеемые полиморфные корни дисков. Drive провизионируются `Vaulter\Drive\DriveProvisioner` (get-or-create на хост-сущности), а не создаются из панели — поэтому этот
 ресурс **не может создавать и редактировать** строку (`canCreate()` возвращает `false`); он лишь
 перечисляет и инспектирует.
 
 - **Модель**: определяется через `Config::storageModel()` (по умолчанию `Vaulter\Models\Drive\Drive`).
 - **Таблица**: имя, владелец (`owner_type #owner_id`), диск, использованные байты, квота (`∞`, когда
   безлимит), статус, дата создания. Сортировка по умолчанию — `created_at desc`.
-- **Infolist** (страница просмотра): секции Storage / Owner / Usage, с человекочитаемым форматом байтов.
-- **Страницы**: `index` (список) и `view` (`/{record}`).
+- **Infolist** (страница просмотра): секции Drive / Owner / Usage, с человекочитаемым форматом байтов.
+- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListDrives` и `ViewDrive` в
+  `Vaulter\Filament\Resources\DriveResource\Pages`.
 
 #### NodeResource
 
@@ -278,7 +278,8 @@ $minted = app(CreateShareLinkAction::class)->execute(
   (`SelectFilter` по кейсам `EventType`).
 - **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
   `KeyValueEntry` для `context` плюс ip / user-agent / request-id).
-- **Страницы**: `index` (список) и `view` (`/{record}`).
+- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListDrives` и `ViewDrive` в
+  `Vaulter\Filament\Resources\DriveResource\Pages`.
 
 ### Легаси-поверхность вокруг документов
 

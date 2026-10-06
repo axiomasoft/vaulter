@@ -68,7 +68,7 @@ final class RedisMetricsRegistry
     ];
 
     private const array COMMANDS = [
-        'vaulter:sweep-uploads', 'vaulter:gc-blobs', 'vaulter:reconcile-blobs',
+        'vaulter:sweep-uploads', 'vaulter:blobs:gc', 'vaulter:blobs:reconcile',
         'vaulter:purge-trash', 'vaulter:prune-webhooks', 'vaulter:retry-webhooks',
         'vaulter:relay-outbox',
     ];

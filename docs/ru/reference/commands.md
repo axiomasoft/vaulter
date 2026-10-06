@@ -15,8 +15,8 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 |---|---|
 | `vaulter:install` | Опубликовать конфиг + миграции, выполнить их, предложить поставить репозиторию звезду |
 | `vaulter:make:profile` | Сгенерировать класс-провайдер Storage Panel |
-| `vaulter:gc-blobs` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
-| `vaulter:reconcile-blobs` | Пересчитать `ref_count` блобов и сообщить о висячих строках |
+| `vaulter:blobs:gc` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
+| `vaulter:blobs:reconcile` | Пересчитать `ref_count` блобов и сообщить о висячих строках |
 | `vaulter:purge-trash` | Окончательно удалить узлы из корзины по истечении срока хранения |
 | `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
 | `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
@@ -66,7 +66,7 @@ php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
 
 
-## `vaulter:gc-blobs`
+## `vaulter:blobs:gc`
 
 Двухфазная, устойчивая к гонкам сборка мусора блобов (без учёта ACL, в системном
 контексте). Помечает нессылаемые зафиксированные блобы как tombstoned с крайним сроком
@@ -75,15 +75,15 @@ grace, затем сметает tombstoned-блобы, у которых grace 
 если его не переопределяет `--grace`.
 
 ```
-vaulter:gc-blobs
+vaulter:blobs:gc
     {--grace=}  Переопределить окно grace для GC в часах (нижняя граница — 1 час)
     {--pending} Также вымести PENDING-блобы, зависшие на этапе staging после сбоя
 ```
 
 ```bash
-php artisan vaulter:gc-blobs            # tombstone + sweep по истечении grace
-php artisan vaulter:gc-blobs --grace=48 # своё окно grace
-php artisan vaulter:gc-blobs --pending  # также очистить зависшие staging-строки
+php artisan vaulter:blobs:gc            # tombstone + sweep по истечении grace
+php artisan vaulter:blobs:gc --grace=48 # своё окно grace
+php artisan vaulter:blobs:gc --pending  # также очистить зависшие staging-строки
 ```
 
 ::: danger Sweep удаляет байты
@@ -93,18 +93,18 @@ php artisan vaulter:gc-blobs --pending  # также очистить завис
 
 См. [Рецепты → Сборка мусора блобов](/ru/guide/recipes).
 
-## `vaulter:reconcile-blobs`
+## `vaulter:blobs:reconcile`
 
 Пересчитать `ref_count` блобов из счётчиков рёбер в `v_file_version_blobs` и сообщить о
 висячих строках. Именно ребро — а не `ref_count` — является истиной о живости; эта
 команда чинит согласованный кэш.
 
 ```
-vaulter:reconcile-blobs
+vaulter:blobs:reconcile
 ```
 
 ```bash
-php artisan vaulter:reconcile-blobs
+php artisan vaulter:blobs:reconcile
 ```
 
 ## `vaulter:purge-trash`
@@ -191,9 +191,9 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('vaulter:relay-outbox')->everyMinute();
 Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes();
 Schedule::command('vaulter:sweep-uploads')->hourly();
-Schedule::command('vaulter:gc-blobs')->daily();
+Schedule::command('vaulter:blobs:gc')->daily();
 Schedule::command('vaulter:purge-trash')->daily();
-Schedule::command('vaulter:reconcile-blobs')->weekly();
+Schedule::command('vaulter:blobs:reconcile')->weekly();
 ```
 
 ## См. также

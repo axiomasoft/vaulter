@@ -6,14 +6,14 @@ namespace Vaulter\Access;
 
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
-use Vaulter\Access\Drivers\AzgardPermissionDriver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
+use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
+use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Support\Config;
-use Vaulter\Testing\NullPermissionDriver;
 
 /**
  * Resolves the active {@see PermissionDriver} from config (H.2), keyed by the driver
@@ -36,8 +36,6 @@ final class PermissionDriverManager
     private const array NON_ENUMERATING_BASE_LANES = [
         DatabasePermissionDriver::class,
         GatePermissionDriver::class,
-        AzgardPermissionDriver::class,
-        NullPermissionDriver::class,
     ];
 
     /**
@@ -65,7 +63,7 @@ final class PermissionDriverManager
 
         $class = $this->classFor($key);
 
-        if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isProduction) {
+        if (is_a($class, NonProductionPermissionDriver::class, allow_string: true) && $this->isProduction) {
             throw MissingPermissionDriverException::nullDriverInProduction($key);
         }
 
@@ -100,11 +98,18 @@ final class PermissionDriverManager
             return true;
         }
 
-        $declaringClass = (new ReflectionMethod($driver, 'subjectsFor'))
-            ->getDeclaringClass()
-            ->getName();
+        $declaration = (new ReflectionMethod($driver, 'subjectsFor'))->getDeclaringClass();
 
-        return !in_array($declaringClass, self::NON_ENUMERATING_BASE_LANES, true);
+        if (in_array($declaration->getName(), self::NON_ENUMERATING_BASE_LANES, true)) {
+            return false;
+        }
+
+        // Only the marked base implementation is actor-only. A subclass that
+        // overrides subjectsFor() inherits its interfaces but may add role subjects.
+        $parent = $declaration->getParentClass();
+
+        return !$declaration->implementsInterface(NonEnumeratingPermissionDriver::class)
+            || ($parent !== false && $parent->implementsInterface(NonEnumeratingPermissionDriver::class));
     }
 
     /**

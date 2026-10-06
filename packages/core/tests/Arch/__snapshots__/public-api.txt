@@ -1,8 +1,3 @@
-Vaulter\Contracts\Access\AzgardGuard
-  hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
-  hasScopedPermission(string $permission, object $entity): bool
-  isSuperAdmin(): bool
-
 Vaulter\Contracts\Access\EnumeratesRoleSubjects
 
 

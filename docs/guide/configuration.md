@@ -187,14 +187,17 @@ driver. The default `database` driver is fully standalone (zero host dependency)
     'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
     'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
     'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'azgard'   => \Vaulter\Access\Drivers\AzgardPermissionDriver::class,
     'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
 ],
 ```
 
 Each non-database driver has its own sub-block mapping a Vaulter grant level / ability to a
-host permission name (`gate.*`, `spatie.*`, `azgard.*`). The full per-driver config is in
+host permission name (`vaulter.gate.*`, `vaulter.spatie.*`, `vaulter-azgard.*`). The full per-driver config is in
 [Host-role driver](/guide/permission-drivers).
+
+The `axioma-studio/vaulter-azgard` provider registers the `azgard` key. Install it with
+`composer require axioma-studio/vaulter-azgard`; its permission map, `panel_id` and
+`create_permission` live in `config/vaulter-azgard.php`.
 
 ::: danger Null driver
 `null` is an open driver selectable **only** outside production. Config validation rejects a

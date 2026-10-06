@@ -18,50 +18,50 @@ beforeEach(function (): void {
     config()->set('vaulter.gc.grace_hours', 1);
 });
 
-it('vaulter:gc-blobs прогоняет обе фазы', function (): void {
+it('vaulter:blobs:gc прогоняет обе фазы', function (): void {
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('via command'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     // Already tombstoned past grace → the sweep phase removes it.
     $blob->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subDay()])->save();
 
-    $this->artisan('vaulter:gc-blobs')
+    $this->artisan('vaulter:blobs:gc')
         ->assertSuccessful();
 
     expect($blob->fresh()->status)->toBe(BlobStatus::Deleted);
 });
 
-it('vaulter:gc-blobs --pending подметает упавший staging', function (): void {
+it('vaulter:blobs:gc --pending подметает упавший staging', function (): void {
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('half upload'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     // A crashed staging: pending, old, no edge.
     $blob->forceFill(['status' => BlobStatus::Pending, 'first_seen_at' => now()->subDay()])->save();
 
-    $this->artisan('vaulter:gc-blobs', ['--pending' => true])
+    $this->artisan('vaulter:blobs:gc', ['--pending' => true])
         ->assertSuccessful();
 
     expect($blob->fresh()->status)->toBe(BlobStatus::Deleted);
 });
 
-it('vaulter:reconcile-blobs корректирует ref_count и сообщает', function (): void {
+it('vaulter:blobs:reconcile корректирует ref_count и сообщает', function (): void {
     $store = app(BlobStore::class);
 
     $blob = $store->commit(CasTestHelpers::streamFor('reconcile cmd'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $blob);
 
-    $this->artisan('vaulter:reconcile-blobs')
+    $this->artisan('vaulter:blobs:reconcile')
         ->assertSuccessful();
 
     expect($blob->fresh()->ref_count)->toBe(1);
 });
 
-it('vaulter:reconcile-blobs падает, когда есть dangling-строка', function (): void {
+it('vaulter:blobs:reconcile падает, когда есть dangling-строка', function (): void {
     $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('dangling cmd'), scope: BlobScope::forUpload((string) config('vaulter.dedup.scope'), (string) 1, 'unused'));
 
     Storage::disk('local')->delete($blob->storage_key);
 
-    $this->artisan('vaulter:reconcile-blobs')
+    $this->artisan('vaulter:blobs:reconcile')
         ->assertFailed();
 });

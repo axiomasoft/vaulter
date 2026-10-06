@@ -223,8 +223,8 @@ Vaulter по умолчанию выбирает стратегию первич
 
 Это важно, когда вы гоняете **драйвер ролей хоста AzGuard** для авторизации в приложении со
 скоупом по тенантам. Этот драйвер
-(`Vaulter\Access\Drivers\AzgardPermissionDriver`) общается только со швом
-`Vaulter\Contracts\Access\AzgardGuard`, которым владеет Vaulter — так что vaulter-core не несёт
+(`Vaulter\Azgard\AzgardPermissionDriver`) общается только со швом
+`Vaulter\Azgard\Contracts\AzgardGuard`, которым владеет Vaulter — так что vaulter-core не несёт
 **никакой** жёсткой зависимости от `azguard` / `corex` — и маршрутизирует свои проверки ролей
 со скоупом по workspace через `hasPermissionIn($contextType, $contextId, $permission)`, что
 является контекстной проверкой Corex `TenantContextGuard` (полоса тенанта/workspace).
@@ -249,17 +249,17 @@ AZ_GUARD_MORPH_TYPE=ulid
 (`EntityRegistry` / Corex ADR-003), как задокументировано на контракте `AzgardGuard`:
 
 ```php
-// Vaulter\Contracts\Access\AzgardGuard (docblock)
+// Vaulter\Azgard\Contracts\AzgardGuard (docblock)
 // The $contextType / $entity morph types MUST be registered Corex morph aliases
 // aligned with vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
 ```
 
-::: info Вы обязаны привязать реальный `AzgardGuard`
-По умолчанию реальная привязка `AzgardGuard` не поставляется — тесты привязывают
-`Vaulter\Testing\FakeAzgardGuard`. Продакшн-хост привязывает реальный адаптер, делегирующий
-в AzGuard `hasScopedPermission` / Corex `ContextGuard` `hasPermissionIn`. См.
-[Авторизация › Драйвер ролей хоста](/ru/guide/permission-drivers) — там полная разводка
-драйвера и конфиг-блок `azgard`.
+::: info Установите мост AzGuard
+`composer require axioma-studio/vaulter-azgard` устанавливает драйвер, реальный
+адаптер и `Vaulter\Azgard\Testing\FakeAzgardGuard`. Provider сам регистрирует
+драйвер и привязывает guard; модель пользователя должна реализовать
+`Vaulter\Azgard\Contracts\AzgardBackedUser`. Для тестов с фейком нужны установленные
+зависимости моста. См. [Драйверы прав](/ru/guide/permission-drivers) и конфиг `vaulter-azgard.*`.
 :::
 
 ## Собираем всё вместе
@@ -284,4 +284,4 @@ AZ_GUARD_MORPH_TYPE=ulid
   впадают `tenant_id` и `dedup.scope`.
 - [Конфигурация](/ru/guide/configuration) — полные ключи `tenant`, `dedup`, `ids` и `models`.
 - [Авторизация › Драйвер ролей хоста](/ru/guide/permission-drivers) — драйвер AzGuard и
-  конфиг-блок `azgard`.
+  конфиг `vaulter-azgard.*`.

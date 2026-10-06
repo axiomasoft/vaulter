@@ -11,3 +11,8 @@ Vaulter\Azgard\Contracts\AzgardBackedUser
   permissionSet(\BackedEnum|null|string $panelId = null): \AzGuard\Registry\Values\PermissionSet
   permissions(\BackedEnum|null|string $panelId = null): \Illuminate\Support\Collection
   removeScopedRole(\AzGuard\Models\Role|\BackedEnum|string $role, \Illuminate\Database\Eloquent\Model $entity, \BackedEnum|null|string $panelId = null): \static
+
+Vaulter\Azgard\Contracts\AzgardGuard
+  hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+  hasScopedPermission(string $permission, object $entity): bool
+  isSuperAdmin(): bool

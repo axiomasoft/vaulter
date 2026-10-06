@@ -24,7 +24,7 @@ use Vaulter\Support\GateConfig;
  *   - subjectsFor(actor) = [Subject(actor)] — the Gate exposes no role/team subjects
  *     (abilities are evaluated against the user, not enumerated), so only the actor's
  *     own identity joins the subject-set; v_node_grants addressed to a role/team are
- *     simply not matched by this lane (use the Spatie/Azgard lane for that).
+ *     simply not matched by this lane (use the Spatie/host authorization lane for that).
  *   - override(actor, scope) = a configurable super-admin ability (default
  *     'vaulter.super'); when the Gate allows it the actor short-circuits to full
  *     access, else this lane defers (null) — never a hard deny.
