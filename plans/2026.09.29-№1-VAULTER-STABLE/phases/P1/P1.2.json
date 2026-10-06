@@ -1,0 +1,332 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.2",
+  "title": "Инварианты дерева",
+  "status": "done",
+  "summary": "Дерево каждого storage остаётся корректным при любых вызовах PHP API и HTTP и при параллельных операциях:\nродитель/назначение — активная папка того же storage, корень неприкосновенен, у storage ровно один узел без родителя,\nциклы невозможны даже при гонке `A→B` ‖ `B→A`, имена нормализованы (N04, N05, AD13, I1–I4; V18, V19).",
+  "why": "OPUS 13 P1.2, 02 D13, 08 §1/§5, 09 §4. Сегодня ни одно Action не проверяет тип и состояние назначения\n(`packages/drive/src/Actions/MoveNodeAction.php:37–66` проверяет только storage, цикл и имя — **до** транзакции и без\nблокировок); `CreateDocumentNodeAction` пишет `parent_id = NULL` при `parent = null`\n(`packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php:45,62`) — «второй корень», невидимый в листинге\nкорня; `RestoreNodeAction`/`MoveNodeAction` с `into = null` тоже пишут `parent_id = NULL`.",
+  "scope": {
+    "include": [
+      "Исключения (контракт P1.8, `ProblemException`):\n   - `packages/core/src/Exceptions/Nodes/InvalidDestinationException.php` — код `invalid_destination`, 409; фабрики\n     `notAFolder(Node $destination)`, `trashed(Node $node)`, `rootIsImmutable(Node $root, string $operation)`;\n   - `packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php` — `node_not_trashed`, 409, `forNode(Node $node)`;\n   - `packages/core/src/Exceptions/Nodes/InvalidNodeNameException.php` — `validation_failed`, 422,\n     `renderExtras()` = `['errors' => ['name' => [$this->getMessage()]]]`, фабрика `forName(string $name, string $reason)`.\n   Межстораджевые операции бросают существующий `CrossStorageMoveException` (`cross_drive_operation`, 409).",
+      "`packages/core/src/Support/NodeName.php` — `final class NodeName { public static function normalize(string $name): string }`:\n   trim пробелов по краям; NFC через `\\Normalizer::normalize($name, \\Normalizer::FORM_C)`; отказ (`InvalidNodeNameException`)\n   при пустом результате, `/`, `\\`, NUL, символах C0 (`\\x00-\\x1F`), DEL и C1 (`\\x{7F}-\\x{9F}`), именах `.` и `..`, длине\n   `strlen($name) > Config::driveNameMaxLength()` (байты UTF-8, по умолчанию 255). Все Actions п.4 нормализуют имя до проверок.",
+      "`packages/core/src/Repositories/Drive/NodeStoreRepository.php`: `lockForUpdate(array $ids): Collection` — `SELECT … FOR UPDATE`\n   строк узлов по возрастанию `id` (уровень 2 порядка D21; SQLite — без `FOR UPDATE`); `packages/core/src/Repositories/Drive/NodeReadRepository.php`:\n   `isRoot(Node $node): bool` (`Identity::stringify($node->getKey()) === Identity::stringify($node->storage->root_node_id)`).",
+      "Проверки в Actions (внутри `VaulterDatabase::transaction()`, после блокировок; `null` назначение = корень storage\n   `$storage->root_node_id`, ни одно Action больше не пишет `parent_id = NULL`):\n\n   | Action (текущее имя) | Блокировки | Проверки |\n   |:--|:--|:--|\n   | `drive/src/Actions/CreateFolderAction.php`, `documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `drive/src/Actions/UploadFileAction.php` (новый файл) | `lockForUpdate([parent])` | родитель: тот же storage (`CrossStorageMoveException`), `kind=folder` (`notAFolder`), `trashed_at IS NULL` (`trashed`); `NodeName::normalize`; конфликт имени (`NodeNameConflictException`) |\n   | `drive/src/Actions/RenameNodeAction.php` | `lockForUpdate([node])` | не корень (`rootIsImmutable`); `normalize`; конфликт с соседями |\n   | `drive/src/Actions/MoveNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, into])` | не корень; назначение — активная папка того же storage; назначение ≠ узел и не потомок (CTE `subtree()` **после** `lockTree`); конфликт имени |\n   | `drive/src/Actions/CopyNodeAction.php` | `lockForUpdate([into])` | источник не корень; назначение — активная папка того же storage; копия поддерева без узлов в корзине (как сейчас) |\n   | `drive/src/Actions/TrashNodeAction.php` | `lockForUpdate([node])` | не корень; не уже в корзине (`trashed`); поддерево — одним UPDATE по CTE (как сейчас) |\n   | `drive/src/Actions/RestoreNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, parent])` | узел в корзине (иначе `NodeNotTrashedException`); исходный родитель активен → туда, иначе корень (как сейчас, `resolveDestinationParent`); конфликт имени — `NodeNameConflictException` (как сейчас) |\n   | `drive/src/Actions/ForceDeleteNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node])` | не корень; узел в корзине (`NodeNotTrashedException`); освобождение квоты — как сейчас |\n\n   Проверки «до транзакции» в `MoveNodeAction`/`CreateFolderAction`/`RenameNodeAction`/`CopyNodeAction`/`RestoreNodeAction`/\n   `CreateDocumentNodeAction` переносятся внутрь транзакции после блокировок (быстрый отказ до транзакции можно оставить\n   только как дубль). `CycleException` (`node_move_cycle`) остаётся исключением цикла.",
+      "Схема и миграция (R3):\n   - `core/src/Schema/PanelTablesBuilder.php` `afterCreate()` для `nodes`: новый `addSingleRootIndex($table)` — PG/SQLite\n     `CREATE UNIQUE INDEX {t}_root_uniq ON {t} (storage_id) WHERE parent_id IS NULL`; MySQL/MariaDB — сгенерированная колонка\n     `root_storage` `VARCHAR(64) GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN storage_id ELSE NULL END) STORED` +\n     `UNIQUE INDEX {t}_root_uniq (root_storage)` (как `addSiblingUniqueIndex`, строки 1123–1156).\n   - `core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (только эти шаги №6; остальные — P4.1):\n     для каждого storage — узлы с `parent_id IS NULL` и `id <> storages.root_node_id` переносятся под корень;\n     конфликт имени с активным соседом корня (без учёта регистра) → имя `\"<base> (legacy N)<.ext>\"`, N = 1, 2, … до\n     свободного; на каждый перенос — строка `Config::table('activity')`: `verb = 'node.moved'`, `actor_type = 'vaulter:system'`,\n     `actor_id = NULL`, `target_type` = morph-класс модели узла (`(new (Config::nodeModel()))->getMorphClass()`),\n     `target_id` = id узла, `storage_id`, `context = {\"from_parent_id\": null, \"to_parent_id\": <root>, \"reason\": \"n04_repair\", \"renamed_from\": <старое имя|null>}`,\n     `created_at = now()`; затем индекс корня (п.5, если его нет). Идемпотентна: повтор — 0 переносов, индекс уже есть.\n     `down()` удаляет индекс корня; перенос необратим — `UPGRADE.md` (08 §3 «Откат»).",
+      "Тесты:\n   - V18 — `packages/drive/tests/Feature/TreeInvariantsTest.php` (SQLite): для create folder / upload (`DriveContext::upload`) /\n     move / copy / restore с назначением: файл, документ (узел `kind=document`), папка в корзине → `InvalidDestinationException`\n     (HTTP-вариант каждого — 409 `code = invalid_destination`); назначение — папка другого storage → 409 `cross_drive_operation`;\n     корень: rename / move / trash / forceDelete → `invalid_destination`; forceDelete живого узла → 409 `node_not_trashed`;\n     `CreateDocumentNodeAction` с `parent = null` → `parent_id = root_node_id` и документ виден в `GET storages/{id}/nodes`.\n   - V19 — `packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (PG, `ForkRace`, `DatabaseMigrations`): две папки A, B под\n     корнем; задачи `move(A→B)` ‖ `move(B→A)` → ровно одна `RaceOutcome` успешна, другая `failedWith(CycleException::class)`;\n     в БД нет цикла (рекурсивный подъём от A и от B достигает корня). Повтор 5 раз подряд. Негативный контроль: временно\n     убрать `lockTree` из `MoveNodeAction` → хотя бы в одном из 5 прогонов обе задачи успешны (цикл) — тест красный.\n   - `NodeName` — `packages/core/tests/Unit/NodeNameTest.php`: dataset из всех правил п.2 (вкл. `\"e\\u{0301}\"` → `\"é\"` NFC,\n     256-байтное имя, `\"a\\u{0085}b\"`).\n   - Миграция — `packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (хелпер `LoadsV02Fixture` из P1.7): на\n     `pgsql-bigint.sql` до миграции `count(parent_id IS NULL) > count(storages)` (P0.3); после — по одному узлу без родителя\n     на storage; документ с конфликтующим именем получил суффикс ` (legacy 1)`; число новых строк activity\n     `reason = n04_repair` = числу перенесённых узлов; повторный `migrate` → 0 изменений; вставка второго корня → ошибка\n     уникальности.",
+      "`UPGRADE.md` (ремонт N04 необратим; forceDelete только из корзины; коды ошибок), `CHANGELOG.md [Unreleased]`\n   (Fixed: N04, N05; AD13), `docs/guide/{drive,trash}.md` (правила назначения, корень), golden `PublicApiSnapshotTest`."
+    ],
+    "exclude": [
+      "`OnNameConflict` (`Rename`/`AddRevision`) и `RestoreOptions::destination` (P3.2/P3.3);\n`NodeContentLifecycle` для copy/purge документов (P4.2); квота копии одним условным UPDATE (P1.6); переименование\n`owner_id` → `owned_by`, `sequence`, удаление `current_version_id/file_id/deleted_at` (P4.1, P4.7); индекс sibling-unique\nбез `deleted_at` (P4.1); `IngestFileAction`/`CreateDocumentAction` (канонические имена — P3)."
+    ]
+  },
+  "depends_on": [
+    "P1.1",
+    "P1.8",
+    "P1.7"
+  ],
+  "decisions": [
+    "D21"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P1-design-P1.2-opus.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/drive/src/Actions/Nodes/MoveNodeAction.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Trash/RestoreNodeAction.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Database/VaulterDatabase.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/tests/Upgrade/LoadsV02Fixture.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Concurrency/ForkRace.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Activity/RecordsDriveActivity.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Exceptions/Nodes/{InvalidDestinationException,NodeNotTrashedException,InvalidNodeNameException}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Support/NodeName.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/{NodeStoreRepository,NodeReadRepository}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Actions/{CreateFolderAction,UploadFileAction,RenameNodeAction,MoveNodeAction,CopyNodeAction,TrashNodeAction,RestoreNodeAction,ForceDeleteNodeAction}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Schema/PanelTablesBuilder.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_01_000006_nodes_cleanup.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/tests/Feature/TreeInvariantsTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/MoveCycleRaceTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Unit/NodeNameTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Upgrade/NodesCleanupMigrationTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/{drive,trash}.md",
+      "change": "any"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Порядок блокировок D21: `lockTree` → узлы по возрастанию id → (агрегат/квота/CAS — P1.6). Ни одно Action не берёт\n  `lockTree` после блокировки строки узла.",
+    "Проверки, зависящие от состояния (тип/корзина назначения, цикл, имя), выполняются после блокировок в той же транзакции.",
+    "Тест, ожидавший `parent_id = NULL` у не-корня, forceDelete живого узла или прежний статус конфликта, переписывается под\n  контракт п.4; иное падение — стоп и описание.",
+    "Если в фикстуре встречается storage с `root_node_id IS NULL` — стоп и эскалация (ремонт не угадывает корень)."
+  ],
+  "guidance": "контроль «нет записи NULL-родителя»: `grep -nE \"'parent_id' => (null|\\\\\\$parentId)\" packages/drive/src/Actions packages/documents/src/Actions -r`\n→ каждое оставшееся вхождение получает `$parentId` от разрешённого назначения (не `null`); проверка — V18.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "procedure": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "procedure": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "procedure": "- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "procedure": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "procedure": "- Гейт core и гейты drive, documents, filament → exit 0.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19."
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-03T21:13:18Z",
+    "finished_at": "2026-10-04T07:12:04Z",
+    "executor": {
+      "provider": "legacy",
+      "model": "claude-code/claude-opus-5-5/high",
+      "effort": "high"
+    },
+    "notes": "P1.2 green under a global lock matrix; review grok-4.7 not GREEN: 11 findings fixed, 2 quota findings deferred to PLAN2.P1.6. See artifacts/P1.2/completion.md.\nwrite-site: pre_mutation: allow · pre_final: allow",
+    "deviations": [
+      "P1.2 green under a global lock matrix; review grok-4.7 not GREEN: 11 findings fixed, 2 quota findings deferred to PLAN2.P1.6. See artifacts/P1.2/completion.md.\nwrite-site: pre_mutation: allow · pre_final: allow"
+    ],
+    "pending": [],
+    "checks": [
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-04T07:12:04Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-04T07:12:04Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-04T07:12:04Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-04T07:12:04Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-04T07:12:04Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      }
+    ]
+  },
+  "updated_at": "2026-10-04T07:12:04Z",
+  "sections": [
+    {
+      "id": "Intent",
+      "title": "Intent",
+      "text": "Дерево каждого storage остаётся корректным при любых вызовах PHP API и HTTP и при параллельных операциях:\nродитель/назначение — активная папка того же storage, корень неприкосновенен, у storage ровно один узел без родителя,\nциклы невозможны даже при гонке `A→B` ‖ `B→A`, имена нормализованы (N04, N05, AD13, I1–I4; V18, V19)."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "OPUS 13 P1.2, 02 D13, 08 §1/§5, 09 §4. Сегодня ни одно Action не проверяет тип и состояние назначения\n(`packages/drive/src/Actions/MoveNodeAction.php:37–66` проверяет только storage, цикл и имя — **до** транзакции и без\nблокировок); `CreateDocumentNodeAction` пишет `parent_id = NULL` при `parent = null`\n(`packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php:45,62`) — «второй корень», невидимый в листинге\nкорня; `RestoreNodeAction`/`MoveNodeAction` с `into = null` тоже пишут `parent_id = NULL`."
+    },
+    {
+      "id": "Scope-Included",
+      "title": "Scope Included",
+      "text": "1. Исключения (контракт P1.8, `ProblemException`):\n   - `packages/core/src/Exceptions/Nodes/InvalidDestinationException.php` — код `invalid_destination`, 409; фабрики\n     `notAFolder(Node $destination)`, `trashed(Node $node)`, `rootIsImmutable(Node $root, string $operation)`;\n   - `packages/core/src/Exceptions/Nodes/NodeNotTrashedException.php` — `node_not_trashed`, 409, `forNode(Node $node)`;\n   - `packages/core/src/Exceptions/Nodes/InvalidNodeNameException.php` — `validation_failed`, 422,\n     `renderExtras()` = `['errors' => ['name' => [$this->getMessage()]]]`, фабрика `forName(string $name, string $reason)`.\n   Межстораджевые операции бросают существующий `CrossStorageMoveException` (`cross_drive_operation`, 409).\n2. `packages/core/src/Support/NodeName.php` — `final class NodeName { public static function normalize(string $name): string }`:\n   trim пробелов по краям; NFC через `\\Normalizer::normalize($name, \\Normalizer::FORM_C)`; отказ (`InvalidNodeNameException`)\n   при пустом результате, `/`, `\\`, NUL, символах C0 (`\\x00-\\x1F`), DEL и C1 (`\\x{7F}-\\x{9F}`), именах `.` и `..`, длине\n   `strlen($name) > Config::driveNameMaxLength()` (байты UTF-8, по умолчанию 255). Все Actions п.4 нормализуют имя до проверок.\n3. `packages/core/src/Repositories/Drive/NodeStoreRepository.php`: `lockForUpdate(array $ids): Collection` — `SELECT … FOR UPDATE`\n   строк узлов по возрастанию `id` (уровень 2 порядка D21; SQLite — без `FOR UPDATE`); `packages/core/src/Repositories/Drive/NodeReadRepository.php`:\n   `isRoot(Node $node): bool` (`Identity::stringify($node->getKey()) === Identity::stringify($node->storage->root_node_id)`).\n4. Проверки в Actions (внутри `VaulterDatabase::transaction()`, после блокировок; `null` назначение = корень storage\n   `$storage->root_node_id`, ни одно Action больше не пишет `parent_id = NULL`):\n\n   | Action (текущее имя) | Блокировки | Проверки |\n   |:--|:--|:--|\n   | `drive/src/Actions/CreateFolderAction.php`, `documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `drive/src/Actions/UploadFileAction.php` (новый файл) | `lockForUpdate([parent])` | родитель: тот же storage (`CrossStorageMoveException`), `kind=folder` (`notAFolder`), `trashed_at IS NULL` (`trashed`); `NodeName::normalize`; конфликт имени (`NodeNameConflictException`) |\n   | `drive/src/Actions/RenameNodeAction.php` | `lockForUpdate([node])` | не корень (`rootIsImmutable`); `normalize`; конфликт с соседями |\n   | `drive/src/Actions/MoveNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, into])` | не корень; назначение — активная папка того же storage; назначение ≠ узел и не потомок (CTE `subtree()` **после** `lockTree`); конфликт имени |\n   | `drive/src/Actions/CopyNodeAction.php` | `lockForUpdate([into])` | источник не корень; назначение — активная папка того же storage; копия поддерева без узлов в корзине (как сейчас) |\n   | `drive/src/Actions/TrashNodeAction.php` | `lockForUpdate([node])` | не корень; не уже в корзине (`trashed`); поддерево — одним UPDATE по CTE (как сейчас) |\n   | `drive/src/Actions/RestoreNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node, parent])` | узел в корзине (иначе `NodeNotTrashedException`); исходный родитель активен → туда, иначе корень (как сейчас, `resolveDestinationParent`); конфликт имени — `NodeNameConflictException` (как сейчас) |\n   | `drive/src/Actions/ForceDeleteNodeAction.php` | `lockTree(storage)` → `lockForUpdate([node])` | не корень; узел в корзине (`NodeNotTrashedException`); освобождение квоты — как сейчас |\n\n   Проверки «до транзакции» в `MoveNodeAction`/`CreateFolderAction`/`RenameNodeAction`/`CopyNodeAction`/`RestoreNodeAction`/\n   `CreateDocumentNodeAction` переносятся внутрь транзакции после блокировок (быстрый отказ до транзакции можно оставить\n   только как дубль). `CycleException` (`node_move_cycle`) остаётся исключением цикла.\n5. Схема и миграция (R3):\n   - `core/src/Schema/PanelTablesBuilder.php` `afterCreate()` для `nodes`: новый `addSingleRootIndex($table)` — PG/SQLite\n     `CREATE UNIQUE INDEX {t}_root_uniq ON {t} (storage_id) WHERE parent_id IS NULL`; MySQL/MariaDB — сгенерированная колонка\n     `root_storage` `VARCHAR(64) GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN storage_id ELSE NULL END) STORED` +\n     `UNIQUE INDEX {t}_root_uniq (root_storage)` (как `addSiblingUniqueIndex`, строки 1123–1156).\n   - `core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (только эти шаги №6; остальные — P4.1):\n     для каждого storage — узлы с `parent_id IS NULL` и `id <> storages.root_node_id` переносятся под корень;\n     конфликт имени с активным соседом корня (без учёта регистра) → имя `\"<base> (legacy N)<.ext>\"`, N = 1, 2, … до\n     свободного; на каждый перенос — строка `Config::table('activity')`: `verb = 'node.moved'`, `actor_type = 'vaulter:system'`,\n     `actor_id = NULL`, `target_type` = morph-класс модели узла (`(new (Config::nodeModel()))->getMorphClass()`),\n     `target_id` = id узла, `storage_id`, `context = {\"from_parent_id\": null, \"to_parent_id\": <root>, \"reason\": \"n04_repair\", \"renamed_from\": <старое имя|null>}`,\n     `created_at = now()`; затем индекс корня (п.5, если его нет). Идемпотентна: повтор — 0 переносов, индекс уже есть.\n     `down()` удаляет индекс корня; перенос необратим — `UPGRADE.md` (08 §3 «Откат»).\n6. Тесты:\n   - V18 — `packages/drive/tests/Feature/TreeInvariantsTest.php` (SQLite): для create folder / upload (`DriveContext::upload`) /\n     move / copy / restore с назначением: файл, документ (узел `kind=document`), папка в корзине → `InvalidDestinationException`\n     (HTTP-вариант каждого — 409 `code = invalid_destination`); назначение — папка другого storage → 409 `cross_drive_operation`;\n     корень: rename / move / trash / forceDelete → `invalid_destination`; forceDelete живого узла → 409 `node_not_trashed`;\n     `CreateDocumentNodeAction` с `parent = null` → `parent_id = root_node_id` и документ виден в `GET storages/{id}/nodes`.\n   - V19 — `packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (PG, `ForkRace`, `DatabaseMigrations`): две папки A, B под\n     корнем; задачи `move(A→B)` ‖ `move(B→A)` → ровно одна `RaceOutcome` успешна, другая `failedWith(CycleException::class)`;\n     в БД нет цикла (рекурсивный подъём от A и от B достигает корня). Повтор 5 раз подряд. Негативный контроль: временно\n     убрать `lockTree` из `MoveNodeAction` → хотя бы в одном из 5 прогонов обе задачи успешны (цикл) — тест красный.\n   - `NodeName` — `packages/core/tests/Unit/NodeNameTest.php`: dataset из всех правил п.2 (вкл. `\"e\\u{0301}\"` → `\"é\"` NFC,\n     256-байтное имя, `\"a\\u{0085}b\"`).\n   - Миграция — `packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (хелпер `LoadsV02Fixture` из P1.7): на\n     `pgsql-bigint.sql` до миграции `count(parent_id IS NULL) > count(storages)` (P0.3); после — по одному узлу без родителя\n     на storage; документ с конфликтующим именем получил суффикс ` (legacy 1)`; число новых строк activity\n     `reason = n04_repair` = числу перенесённых узлов; повторный `migrate` → 0 изменений; вставка второго корня → ошибка\n     уникальности.\n7. `UPGRADE.md` (ремонт N04 необратим; forceDelete только из корзины; коды ошибок), `CHANGELOG.md [Unreleased]`\n   (Fixed: N04, N05; AD13), `docs/guide/{drive,trash}.md` (правила назначения, корень), golden `PublicApiSnapshotTest`."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "`OnNameConflict` (`Rename`/`AddRevision`) и `RestoreOptions::destination` (P3.2/P3.3);\n`NodeContentLifecycle` для copy/purge документов (P4.2); квота копии одним условным UPDATE (P1.6); переименование\n`owner_id` → `owned_by`, `sequence`, удаление `current_version_id/file_id/deleted_at` (P4.1, P4.7); индекс sibling-unique\nбез `deleted_at` (P4.1); `IngestFileAction`/`CreateDocumentAction` (канонические имена — P3)."
+    },
+    {
+      "id": "Inputs",
+      "title": "Inputs",
+      "text": "`@plan/knowledge/artifacts-P1-design-P1.2-opus.json`;\n`audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` (§4); `audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` (§1, §3 №6, §5);\n`packages/drive/src/Actions/MoveNodeAction.php`; `packages/drive/src/Actions/RestoreNodeAction.php`;\n`packages/core/src/Schema/PanelTablesBuilder.php` (1123–1156); `packages/core/src/Database/VaulterDatabase.php` (producer: P1.1);\n`packages/core/src/Exceptions/Contracts/ProblemException.php` (producer: P1.8); `packages/core/tests/Upgrade/LoadsV02Fixture.php` (producer: P1.7)"
+    },
+    {
+      "id": "Files",
+      "title": "Files",
+      "text": "`packages/core/src/Exceptions/Nodes/{InvalidDestinationException,NodeNotTrashedException,InvalidNodeNameException}.php` (new),\n`packages/core/src/Support/NodeName.php` (new), `packages/core/src/Repositories/Drive/{NodeStoreRepository,NodeReadRepository}.php`,\n`packages/drive/src/Actions/{CreateFolderAction,UploadFileAction,RenameNodeAction,MoveNodeAction,CopyNodeAction,TrashNodeAction,RestoreNodeAction,ForceDeleteNodeAction}.php`,\n`packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php`, `packages/core/src/Schema/PanelTablesBuilder.php`,\n`packages/core/database/migrations/2026_10_01_000006_nodes_cleanup.php` (new), `packages/drive/tests/Feature/TreeInvariantsTest.php` (new),\n`packages/drive/tests/Concurrency/MoveCycleRaceTest.php` (new), `packages/core/tests/Unit/NodeNameTest.php` (new),\n`packages/core/tests/Upgrade/NodesCleanupMigrationTest.php` (new), тесты пакетов, закреплявшие `parent_id = NULL` у\nне-корня или forceDelete живого узла, `packages/core/tests/Arch/__snapshots__/*`, `docs/guide/{drive,trash}.md`, `UPGRADE.md`, `CHANGELOG.md`."
+    },
+    {
+      "id": "Required-Reads",
+      "title": "Required Reads",
+      "text": "0) `@plan/knowledge/artifacts-P1-design-P1.2-opus.json` (дословные требования OPUS — исполнить все);\n1) `audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md` §4; 2) `packages/drive/src/Actions/MoveNodeAction.php`;\n3) `packages/drive/src/Actions/RestoreNodeAction.php`; 4) `packages/documents/src/Actions/Documents/CreateDocumentNodeAction.php`;\n5) `packages/core/src/Schema/PanelTablesBuilder.php` (896–930, 1123–1156); 6) `packages/core/tests/Concurrency/ForkRace.php`;\n7) `packages/drive/src/Activity/RecordsDriveActivity.php` (форма строки activity для `NodeMoved`)."
+    },
+    {
+      "id": "Authority",
+      "title": "Authority",
+      "text": "routine"
+    },
+    {
+      "id": "Implementation-Rules",
+      "title": "Implementation Rules",
+      "text": "- Порядок блокировок D21: `lockTree` → узлы по возрастанию id → (агрегат/квота/CAS — P1.6). Ни одно Action не берёт\n  `lockTree` после блокировки строки узла.\n- Проверки, зависящие от состояния (тип/корзина назначения, цикл, имя), выполняются после блокировок в той же транзакции.\n- Тест, ожидавший `parent_id = NULL` у не-корня, forceDelete живого узла или прежний статус конфликта, переписывается под\n  контракт п.4; иное падение — стоп и описание.\n- Если в фикстуре встречается storage с `root_node_id IS NULL` — стоп и эскалация (ремонт не угадывает корень)."
+    },
+    {
+      "id": "Code-Guidance",
+      "title": "Code Guidance",
+      "text": "контроль «нет записи NULL-родителя»: `grep -nE \"'parent_id' => (null|\\\\\\$parentId)\" packages/drive/src/Actions packages/documents/src/Actions -r`\n→ каждое оставшееся вхождение получает `$parentId` от разрешённого назначения (не `null`); проверка — V18."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "- `(cd packages/drive && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci tests/Feature/TreeInvariantsTest.php)` → 0 failed.\n- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/MoveCycleRaceTest.php)` 5 раз подряд → каждый раз passed, 0 skipped.\n- Негативный контроль V19 (Scope п.6) → красный; после возврата — зелёный (в Completion Notes).\n- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/NodesCleanupMigrationTest.php packages/core/tests/Unit/NodeNameTest.php` → 0 failed, 0 skipped.\n- Гейт core и гейты drive, documents, filament → exit 0."
+    },
+    {
+      "id": "Deliverables",
+      "title": "Deliverables",
+      "text": "проверки назначения/корня/цикла под блокировками, `NodeName`, исключения, индекс корня, ремонт N04, V18, V19."
+    }
+  ]
+}

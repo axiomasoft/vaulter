@@ -1,0 +1,63 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P8",
+  "title": "Готовность 1.0",
+  "design": "skeleton",
+  "goal": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P8`\n\nПрогон всех release-гейтов OPUS 12 §7 на одном коммите с отчётом; upgrade на реальных данных владельца (если есть) или на фикстуре P0.3 с vaulter:doctor --production; 1.0.0-rc.1, две недели без изменений публичного API (Roave BC пуст), затем 1.0.0.\n\n> **Контракт фазы (предварительный).** Потребляет: AD36, AD37; OPUS 12 §6–§7; V15. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: live/irreversible (публикация) — owner gate; фазовый аудит (D03).",
+  "context": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P8`\n\nПрогон всех release-гейтов OPUS 12 §7 на одном коммите с отчётом; upgrade на реальных данных владельца (если есть) или на фикстуре P0.3 с vaulter:doctor --production; 1.0.0-rc.1, две недели без изменений публичного API (Roave BC пуст), затем 1.0.0.\n\n> **Контракт фазы (предварительный).** Потребляет: AD36, AD37; OPUS 12 §6–§7; V15. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: live/irreversible (публикация) — owner gate; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.",
+  "depends_on": [
+    "P7"
+  ],
+  "items": [],
+  "batches": [],
+  "orchestration": {
+    "strategy": "sequential"
+  },
+  "sections": [
+    {
+      "id": "P8-1.0",
+      "title": "P8 — Готовность 1.0",
+      "text": "> **Статус дизайна:** skeleton (D03); items детализируются `task:plan-design 2026.09.29-№1-VAULTER-STABLE P8` после закрытия предыдущей фазы, по фактическому коду."
+    },
+    {
+      "id": "Phase-Context",
+      "title": "Phase Context",
+      "text": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P8`\n\nПрогон всех release-гейтов OPUS 12 §7 на одном коммите с отчётом; upgrade на реальных данных владельца (если есть) или на фикстуре P0.3 с vaulter:doctor --production; 1.0.0-rc.1, две недели без изменений публичного API (Roave BC пуст), затем 1.0.0.\n\n> **Контракт фазы (предварительный).** Потребляет: AD36, AD37; OPUS 12 §6–§7; V15. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: live/irreversible (публикация) — owner gate; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    },
+    {
+      "id": "Scope-Included-planned",
+      "title": "Scope Included (planned)",
+      "text": "findings/release-gates.md с логами; upgrade-прогон; release notes, CHANGELOG, теги."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "Изменения продукта (только исправления по гейтам через owning items)."
+    },
+    {
+      "id": "Dependencies",
+      "title": "Dependencies",
+      "text": "P7 закрыта. Owner gates: публикация (Packagist, npm, split-репозитории, теги, ghcr-образ хаба); данные 0.2 владельца (Q2)."
+    },
+    {
+      "id": "Planned-Items-OPUS-13-D01-.3",
+      "title": "Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)",
+      "text": "- P8.1 — Прогон всех гейтов 12 §7 (implementation/medium)\n- P8.2 — Upgrade на реальных данных (implementation/high)\n- P8.3 — Заморозка: 1.0.0-rc.1 → 1.0.0 (vaulter-release-conductor + решение владельца)"
+    },
+    {
+      "id": "Items",
+      "title": "Items",
+      "text": "| ID | Title | Status | Updated |\n|:--|:--|:--|:--|"
+    },
+    {
+      "id": "Phase-Handoff",
+      "title": "Phase Handoff",
+      "text": "—"
+    },
+    {
+      "id": "Validation-Execution-Policy",
+      "title": "Mandatory validation/execution policy (D25)",
+      "text": "**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    }
+  ]
+}

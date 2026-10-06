@@ -1,0 +1,47 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D22",
+  "title": "владелец отменил дальнейшие review P2.2 + P2.3",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "decision": "Никакие новые reviewer sessions, review-run или повторные review не запускаются.\nУказание владельца отменяет только обязательство дальнейшего независимого\nreview и ожидание нового reviewer GREEN из D21. Ранее выполненные review\nсохраняют свой настоящий результат: completed attempt-0001 — FINDINGS;\nattempt-0002 — INCOMPLETE. Эти результаты не переименовываются в GREEN.\n\nD22 переносит вперёд все остальные решения D21 без изменения: полная исходная\nреализация P2.2 + P2.3 принадлежит ещё открытому объединённому P2.2;\nпоследовательная зависимость P2.2 → P2.3, исходные Scope/исключения, оба дословных\nархива исходных норм, все продуктовые обязательства, dry-run/apply,\nгенерация, Code Guidance, проверки всех четырёх пакетов, точные матрицы P1\nна изолированном PostgreSQL с 0 failed / 0 skipped, freshness и native closure\nchecks остаются обязательными. Future work и push/publication не разрешаются.\n\nТекущие P2.2 attempt 5 / run `08750714b29a6d5a7792f308c7e281d3832ed1f76f0f1b29319a02f60f1c124b`, исходный root invocation/route,\nподлинная reviewer history и бюджет сохраняются. Активный durable\n`artifacts/P2.2/owner-review/request.json` не удаляется, не архивируется вместо\nактивного файла, не редактируется и не отключается вручную. Новый reviewer\nrequest P2.3 не создаётся.\n\nИсполняемые Validation P2.2 — четыре исходных поведенческих qualification\ncarriers: `code-guidance`, `packages-pg`, `drive-arch`, `documents-arch`.\nReview-зависимый `combined-review` исключён прямым указанием владельца.\nP2.3 сохраняет три поведенческих verification carriers: `code-guidance`,\n`packages-pg`, `documents-arch`; фактический producer и native freshness/closure\nостаются условиями его законного старта и завершения. Review-зависимые\n`producer-delivery` / `freshness`, которые требуют authentic reviewer GREEN,\nне выдаются за пройденную приёмку и не исполняются с поддельным доказательством.",
+  "rationale": "Последнее указание владельца имеет приоритет над прежним reviewer selection\nи над автоматизацией review. Оно не отменяет реализацию или поведенческие\nпроверки; все доступные продуктовые проверки завершаются в текущей работе.",
+  "applies_to": [
+    "P2.2",
+    "P2.3"
+  ],
+  "supersedes": [
+    "D21"
+  ],
+  "actor": {
+    "provider": "legacy",
+    "model": "владелец репозитория, текущая root Codex-сессия."
+  },
+  "sections": [
+    {
+      "id": "Preamble",
+      "title": "Preamble",
+      "text": "---\nid: D22\ndate: 2026-10-05\nstatus: accepted\nitem: P2.2\nitems: [P2.2, P2.3]\nsupersedes: [D21]\nsuperseded_by: null\n---"
+    },
+    {
+      "id": "D22-review-P2.2-P2.3",
+      "title": "D22 — владелец отменил дальнейшие review P2.2 + P2.3",
+      "text": "**Actor:** владелец репозитория, текущая root Codex-сессия.\n**Evidence:** последнее прямое указание владельца:\n> больше никаких ревью\n\nSHA-256 дословного сообщения UTF-8 без завершающего LF: `09ed2f9e05e29e01150f600663b13ae6f2e8f965d2d600064cad39f1b6a08f7a`."
+    },
+    {
+      "id": "Solution",
+      "title": "Solution",
+      "text": "Никакие новые reviewer sessions, review-run или повторные review не запускаются.\nУказание владельца отменяет только обязательство дальнейшего независимого\nreview и ожидание нового reviewer GREEN из D21. Ранее выполненные review\nсохраняют свой настоящий результат: completed attempt-0001 — FINDINGS;\nattempt-0002 — INCOMPLETE. Эти результаты не переименовываются в GREEN.\n\nD22 переносит вперёд все остальные решения D21 без изменения: полная исходная\nреализация P2.2 + P2.3 принадлежит ещё открытому объединённому P2.2;\nпоследовательная зависимость P2.2 → P2.3, исходные Scope/исключения, оба дословных\nархива исходных норм, все продуктовые обязательства, dry-run/apply,\nгенерация, Code Guidance, проверки всех четырёх пакетов, точные матрицы P1\nна изолированном PostgreSQL с 0 failed / 0 skipped, freshness и native closure\nchecks остаются обязательными. Future work и push/publication не разрешаются.\n\nТекущие P2.2 attempt 5 / run `08750714b29a6d5a7792f308c7e281d3832ed1f76f0f1b29319a02f60f1c124b`, исходный root invocation/route,\nподлинная reviewer history и бюджет сохраняются. Активный durable\n`artifacts/P2.2/owner-review/request.json` не удаляется, не архивируется вместо\nактивного файла, не редактируется и не отключается вручную. Новый reviewer\nrequest P2.3 не создаётся.\n\nИсполняемые Validation P2.2 — четыре исходных поведенческих qualification\ncarriers: `code-guidance`, `packages-pg`, `drive-arch`, `documents-arch`.\nReview-зависимый `combined-review` исключён прямым указанием владельца.\nP2.3 сохраняет три поведенческих verification carriers: `code-guidance`,\n`packages-pg`, `documents-arch`; фактический producer и native freshness/closure\nостаются условиями его законного старта и завершения. Review-зависимые\n`producer-delivery` / `freshness`, которые требуют authentic reviewer GREEN,\nне выдаются за пройденную приёмку и не исполняются с поддельным доказательством."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "Последнее указание владельца имеет приоритет над прежним reviewer selection\nи над автоматизацией review. Оно не отменяет реализацию или поведенческие\nпроверки; все доступные продуктовые проверки завершаются в текущей работе."
+    },
+    {
+      "id": "Consequences",
+      "title": "Consequences",
+      "text": "Native decision metadata supersession атомарен, поэтому D21 архивируется целиком,\nа все его не связанные с review положения явно повторно приняты выше.\n\nТекущий Task runtime пока не предоставляет execution-review request withdrawal\nили owner-waiver API. `review-cancel` отменяет только транспорт. Terminal policy\nпродолжает читать сохранённый request и требовать настоящий current GREEN;\nс текущим completed FINDINGS это блокирует closed-green кодом\n`OWNER_REVIEW_NOT_GREEN`. D22 не является таким GREEN и не исправляет этот\nruntime gap ложным terminal entry. После реальных финальных проверок допустима\nтолько read-only проверка terminal policy и честная фиксация её фактического\nрезультата; facade close с автоматической подготовкой review не вызывается.\n\nДо появления поддержанного native withdrawal/waiver capability нельзя объявлять\nP2.2/P2.3 native closed-green или lifecycle scope-complete. Неподдержанная отмена\nreview — точный оставшийся closure blocker, а не новый запрос review/разрешения."
+    }
+  ]
+}

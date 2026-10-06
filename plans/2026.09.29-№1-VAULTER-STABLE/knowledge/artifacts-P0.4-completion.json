@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P0.4-completion",
+  "title": "Completion Notes",
+  "sections": [
+    {
+      "id": "P0.4-Completion-Notes",
+      "title": "P0.4 — Completion Notes",
+      "text": "**Result:** ADR 0019–0024 created in status `proposed`; ADR-0009 and ADR-0018 carry\n`> Amended by ADR-0021 (proposed).` / `> Amended by ADR-0022 (proposed).`; `docs/adr/index.md` has six new rows;\n40 AD records stored in mAInd `project:vaulter`."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "| Carrier | Result | Evidence |\n|:--|:--|:--|\n| `ls docs/adr/00{19..24}-*.md \\| wc -l` | `6` | this session |\n| `grep -l '^\\*\\*Status:\\*\\* proposed' …` | `6` | this session |\n| `grep -c 'ADR-00(19..24)' docs/adr/index.md` | `6` | this session |\n| `grep -c 'Amended by ADR-0021' 0009` / `'Amended by ADR-0022' 0018` | `1` / `1` | this session |\n| Docs build (`docs.yml:build`, `npm run docs:build`) | exit 0, baseline green → not worse | `docs-build.log` |\n| `maind memory recall` AD07, AD01, AD20, AD40 | all four returned from `project:vaulter` | `maind-recall.txt` |\n| Self-check unit → ADR § | 78/78 units mapped | `unit-map.md` |\n\n`maind health --cwd` → `connected` before storing. Records stored via `maind memory remember --scope project:vaulter\n--type decision` (the CLI has no `store` subcommand; `remember` is its write verb); 40 ok, 0 failed. Source lines:\n`ad-memory.tsv`."
+    },
+    {
+      "id": "Notes-on-transfer-not-in-ADRs",
+      "title": "Notes on transfer (not in ADRs)",
+      "text": "- Index row count: annotating the existing 0009/0018 rows with \"amended by ADR-0021/0022\" would make the index grep\n  return 8 instead of 6; the amendment is therefore stated in the new rows (\"amends ADR-0009/0018\") and in the\n  amended ADR bodies only.\n- The VitePress sidebar (`docs/.vitepress/config.*`) lists ADRs only up to 0014 (0016–0018 are already absent); it is\n  outside this item's Files and was not changed.\n- OPUS D02 \"Почему\" cites \"отмена ADR-0015\"; `docs/adr/` has no ADR-0015 file. ADR-0019 phrases it as a reversal of\n  the earlier core/drive split without linking a missing record.\n- ADR-0022/0023/0024 have no \"Отвергнуто\" in their source decisions; their \"Alternatives rejected\" section says so\n  explicitly rather than inventing alternatives.\n- References use code spans for `audits/…` paths: docs build runs with `ignoreDeadLinks: false`, and `audits/` is\n  outside the docs tree."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P0.4/completion.md",
+    "sha256": "ec1371258e6ba3829072e1a5972ccbb2853e541f052924fdba4a1629c19663c0"
+  }
+}

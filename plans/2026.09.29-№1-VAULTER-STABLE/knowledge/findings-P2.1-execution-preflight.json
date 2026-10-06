@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "findings-P2.1-execution-preflight",
+  "title": "расхождение контракта с вызываемыми методами профиля",
+  "sections": [
+    {
+      "id": "P2.1",
+      "title": "P2.1 — расхождение контракта с вызываемыми методами профиля",
+      "text": "Дата: 2026-10-04. Проверка перед исполнением P2.1; не design audit, не GREEN/RED verdict.\nВладелец отменил design-аудит и явно выбрал исполнение P2.1 без него.\nПродуктовые изменения и переименования не начаты."
+    },
+    {
+      "id": "section",
+      "title": "Подтверждённое расхождение",
+      "text": "`@plan/phases/P2/P2.1.json`, Scope Included п.3, требует удалить `ProfileProvider::booted()`\nи методы `Profile::{idStrategyValue,hasOwnTables,modelMap,pipesList,resourceClass}`,\nно сохранить `ProfileRegistry` целиком. Последнее Implementation Rule требует:\n«Если удаляемый метод `Profile`/`ProfileProvider` вызывается в `src` — стоп и\nэскалация (OPUS утверждает, что не вызывается)».\n\nВ текущем коде `packages/core/src/Panels/PanelRegistry.php`:\n\n- `registerProvider()` вызывает `$provider->booted($panel)` (строка 42).\n- `validate()` вызывает `idStrategyValue()` и `hasOwnTables()` (строка 97),\n  `modelMap()` (101), `pipesList()` (105), `resourceClass()` (109).\n- `packages/core/tests/Panels/PanelRegistryTest.php` содержит отдельную проверку\n  вызова `booted` после регистрации; это наблюдаемое поведение, а не только\n  неиспользуемое объявление. Fixture `ProjectStoragePanel` реализует этот хук.\n\nНормативная единица `01:1b193463`, дословно перенесённая в\n`@plan/knowledge/artifacts-P2-design-P2.1-opus.json`, утверждает, что `booted()` не вызывается нигде\nв `src`. Это утверждение расходится с исходным кодом. Применение удаления без\nадаптации реестра даст вызов отсутствующего метода при регистрации профиля."
+    },
+    {
+      "id": "section-2",
+      "title": "Конкретная предлагаемая поправка для решения владельца",
+      "text": "Сохранить объявленное в P2.1 удаление own-tables и hooks, уточнив границу поведения:\n\n1. В Scope Included п.3 заменить «`ProfileRegistry` целиком» на сохранение публичных\n   методов `register`, `registerProvider`, `fromConfig`, `get`, `has`, `all`, `default`.\n   Удалить вызов `booted()` из `registerProvider()`, а также private validation\n   удаляемых own-tables/models/pipes/resource настроек и её вспомогательные методы.\n   Порядок регистрации, override default и ошибка неизвестного профиля сохраняются.\n2. В Implementation Rules уточнить: перечисленные выше вызовы в реестре удаляются\n   вместе с соответствующим API по принятому решению; любой иной caller удаляемого\n   API за пределами объявленного own-tables/schema-перехода остаётся причиной стопа.\n3. Удалить тест и fixture-состояние вызова `booted()` как проверку удаляемого API.\n   Удалить проверки удаляемых настроек реестра вместе с own-tables. Сохранить\n   проверки config hydration, порядка регистрации, override и unknown profile;\n   перенести их на новые FQN в `tests/Profiles/`.\n4. В UPGRADE/CHANGELOG явно указать, что `booted()` ранее вызывался после регистрации,\n   а теперь удалён вместе с остальными hooks. Не описывать его как всегда мёртвый.\n5. Зафиксировать принятое решение D# с owner provenance и ограниченным scope P2.1,\n   затем возобновить переименования и заявленные Validation. Пропуск design-аудита\n   не подменяется вымышленным GREEN evidence.\n\nПоправка принята владельцем последующим указанием «делай задачу!!!» и зафиксирована\nв D17; исполнение продолжено без нового запроса разрешения. Исходные нормативные\nартефакты OPUS не редактировались. На момент проверки тесты не запускались;\nвывод основан на чтении реализации и существующих тестов."
+    }
+  ],
+  "applies_to": [
+    "P2.1"
+  ],
+  "provenance": {
+    "path": "findings/P2.1-execution-preflight.md",
+    "sha256": "3c4c35e7a87500c416fd7434380f4543ca4d1c829440f6a6d8b322d6af3cefea"
+  }
+}

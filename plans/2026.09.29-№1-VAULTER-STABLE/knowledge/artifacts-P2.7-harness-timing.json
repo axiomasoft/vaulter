@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P2.7-harness-timing",
+  "title": "harness-timing",
+  "sections": [
+    {
+      "id": "Content",
+      "title": "Content",
+      "text": "A trial of registering only migration paths for ordinary RefreshDatabase tests preserved full core/drive/media counts, but did not improve measured duration. The trial was removed byte-exactly from core/Spatie and selectively from already-changed Drive/Media TestCases. FixtureTestCase keeps its required fixture-owned schema lifecycle. P1 selects its actual PostgreSQL behavior checks; full package suites are separate. Interrupted broad P1 attempts have no verdict and are not counted."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P2.7/harness-timing.md",
+    "sha256": "c0ddbe57e8320d6e14e19cd34b3b8c0093d11fa2d1305c65b4cefcf863d6ae55"
+  }
+}

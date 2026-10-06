@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1.2-lock-matrix",
+  "title": "Lock matrix (tree operations × drivers)",
+  "sections": [
+    {
+      "id": "P1.2-Lock-matrix-tree-operations-drivers",
+      "title": "P1.2 — Lock matrix (tree operations × drivers)",
+      "text": "Status: final design after review rounds 1–3 and the final matrix review (findings 1–2 and the lock part of 3 fixed here). It replaces the per-action lock table of the item\nspec (Scope п.4), which did not guarantee freedom from cycles (see «Why the spec table was not enough»)."
+    },
+    {
+      "id": "Primitives",
+      "title": "Primitives",
+      "text": "| Symbol | Meaning | PostgreSQL | MySQL/MariaDB | SQLite |\n|:--|:--|:--|:--|:--|\n| `TX` | `VaulterDatabase::lockTree($storage)` — exclusive tree lock | `pg_advisory_xact_lock(hashtext('vaulter:tree:{id}'))` | `SELECT … FOR UPDATE` on the `v_storages` row | storage row select (database-level writer lock serialises) |\n| `TS` | `VaulterDatabase::lockTreeShared($storage)` — shared tree lock | `pg_advisory_xact_lock_shared(…)` on the same key | = `TX` (the row is updated/referenced anyway) | = `TX` |\n| `N(ids)` | `NodeStoreRepository::lockForUpdate` — node rows, ascending id | `FOR UPDATE` | `FOR UPDATE` | no-op |\n| `N↑` | lock of the node's current parent after the node (upward only) | `FOR UPDATE` | `FOR UPDATE` | no-op |\n| `SUB` | bulk subtree `UPDATE` (trash / restore / soft-delete) — many node rows, unordered | row X | row X | — |\n| `INS` | node/file/version `INSERT`; FK check on `storage_id`, `parent_id` | `FOR KEY SHARE` on referenced rows | S on referenced rows | — |\n| `Q` | `UPDATE v_storages SET used_bytes` | `FOR NO KEY UPDATE` on the storage row | X on the storage row | — |\n| `CAS` | `BlobLock` per (scope, sha256) | advisory xact | row lock (MySQL path in `BlobLock`) | — |\n\nD21 order: tree lock → node rows → aggregates → `Q` → `CAS`. Pre-existing exception owned by\nPLAN2.P1.6: Upload takes `CAS` before `Q`."
+    },
+    {
+      "id": "Acquisition-order-per-operation-first-statement-first",
+      "title": "Acquisition order per operation (first statement first)",
+      "text": "| Operation | Tree lock | Node locks | Then |\n|:--|:--|:--|:--|\n| Create folder | `TS` | `N(parent)` | `INS` |\n| Create document | `TS` | `N(parent)` | `INS` (node, version) |\n| Upload — new file | `TS` | `N(parent)` | `CAS` → `INS` → `Q` |\n| Upload — new version | `TS` | `N(target)` (delta from the locked row; deleted target → not found) | `CAS` → `INS` → `Q` |\n| Copy | `TS` | `N(destination)` | `INS` (copies; parents are the new rows) → `Q` |\n| Rename | `TS` | `N(node)` → `N↑(parent)` | `UPDATE name` |\n| Move | `TX` | `N(node, into)` | `UPDATE parent_id` |\n| Restore | `TX` | `N(node, root)` → `N(original parent)` | `UPDATE parent_id` → `SUB` |\n| Trash | `TX` | `N(node)` | `SUB` |\n| ForceDelete | `TX` | `N(node)` | blob-edge deletes → `SUB` → `Q` |\n| Purge (`vaulter:purge-trash`) | `TX` | `N(trashed root)` → ForceDelete (re-entrant `TX`) | hard delete of the subtree |"
+    },
+    {
+      "id": "Pairwise-argument-no-wait-for-cycle-within-one-storage",
+      "title": "Pairwise argument (no wait-for cycle within one storage)",
+      "text": "1. **`TX` holder vs anything in the same storage.** `TX` conflicts with `TS` and `TX`; every tree\n   operation takes one of them as its first statement. A `TX` holder therefore never overlaps\n   another tree operation of its storage, so the unordered `SUB` and the second `N` of Restore\n   cannot meet a competing node lock. (Before the fix, Trash had no tree lock: Trash P ‖ Restore C\n   and Trash P ‖ Move N→P deadlocked on PG/MySQL — recheck 2.)\n2. **`TS` holders among themselves (PostgreSQL).** Each holds at most one node row before its\n   writes (Rename: the node, then only upward to its parent). Their later waits are on `CAS`, `Q`\n   and FK `KEY SHARE` — none of which is held while waiting for a node row: `Q` is the last\n   statement of every holder, `KEY SHARE` conflicts only with `FOR UPDATE`/key updates of\n   `v_storages`, which no `TS` holder takes on PG, and `CAS` holders do not wait for node rows.\n   Rename's upward wait follows parent links, which are acyclic and cannot change while `TS` is\n   held. Hence the wait-for graph is acyclic.\n3. **`TS` holders on MySQL/MariaDB and SQLite.** `TS` = `TX` = the storage row X, so all tree\n   writes of one storage are serialised; the later `Q` and FK S lock hit a row already held\n   (recheck 1: before, Create's FK S lock and Upload's `Q` took the row after a node lock).\n4. **Across storages.** Locks of different storages are disjoint, except a node of another\n   storage passed as a destination: it is locked (ascending, after the own tree lock) and the\n   operation then throws `CrossStorageMoveException`/`InvalidDestinationException`; the foreign\n   storage's operations never wait for a row of this storage, so no cycle closes.\n5. **Copy reads, never locks, the source subtree** (`TS` excludes concurrent structural changes;\n   rename of a source row can still happen and only changes the copied name).\n\n6. **`CAS` is taken after the writer's single node row** (new file: parent; new version: target), and\n   no `CAS` holder waits for a node row afterwards. Before the final review a new-version upload took\n   `CAS` first and the target row later: Rename(N→P) ‖ new file in P (P→CAS) ‖ new version of N\n   (CAS→N) closed a cycle on PostgreSQL."
+    },
+    {
+      "id": "Lost-update-invariant-races-closed-by-the-same-rule",
+      "title": "Lost-update / invariant races closed by the same rule",
+      "text": "- Move cycle A→B1 ‖ B→A1 (V19): `TX` serialises the cycle checks.\n- Trash ancestor ‖ create under a descendant: without `TS` a child committed after Trash read the\n  subtree stays live under a trashed folder — reproduced 2/10 on PG without `TS`\n  (`TreeLockRaceTest`), 0/5 with it.\n- Rename ‖ create of the same name in the parent: the parent row lock makes the sibling check and\n  the write atomic (the sibling-unique index remains the backstop)."
+    },
+    {
+      "id": "Cost",
+      "title": "Cost",
+      "text": "- PostgreSQL: tree writes under one parent stay concurrent with each other; a structural operation\n  (`TX`) waits for in-flight creates/uploads of its storage, including an upload's blob commit, and\n  new tree writes queue behind a waiting `TX`.\n- MySQL/MariaDB/SQLite: all tree writes of one storage are serialised (they already serialised on\n  the `Q` UPDATE of the same row)."
+    },
+    {
+      "id": "Why-the-spec-table-was-not-enough",
+      "title": "Why the spec table was not enough",
+      "text": "The spec listed locks per action without a global order: Trash, Create, Upload, Copy and Rename had\nno tree lock; it did not account for MySQL's `lockTree` being the very row that `Q` updates and that\nnode `INSERT`s FK-check; and the V19 two-node shape is already serialised by row locks, so its\nnegative control could not fail. Review found one cycle per round because each fix was local."
+    },
+    {
+      "id": "Deferred-to-PLAN2.P1.6-quota-and-revision-under-D21",
+      "title": "Deferred to PLAN2.P1.6 (quota and revision under D21)",
+      "text": "Final-review findings that concern quota/size accounting, not tree invariants or lock cycles:\n\n- New-version quota check runs before the transaction on the caller's `used_bytes`; two concurrent\n  versions can each pass the eager check (the delta itself is now taken from the locked row).\n- Copy reads the source subtree without locking it; a version committed between loading the source\n  and copying it is copied with the old `size_bytes` (quota of copy is explicitly P1.6 — item Scope\n  Excluded «квота копии одним условным UPDATE»)."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P1.2/lock-matrix.md",
+    "sha256": "7bad2da9deaee36e171cb786423d94e435197942d722e2ccc82d46bd1f933fd5"
+  }
+}

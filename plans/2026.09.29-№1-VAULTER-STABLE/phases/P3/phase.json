@@ -1,0 +1,63 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Прикладной слой: авторизованный публичный API",
+  "design": "skeleton",
+  "goal": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).",
+  "context": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.",
+  "depends_on": [
+    "P2"
+  ],
+  "items": [],
+  "batches": [],
+  "orchestration": {
+    "strategy": "sequential"
+  },
+  "sections": [
+    {
+      "id": "P3-API",
+      "title": "P3 — Прикладной слой: авторизованный публичный API",
+      "text": "> **Статус дизайна:** skeleton (D03); items детализируются `task:plan-design 2026.09.29-№1-VAULTER-STABLE P3` после закрытия предыдущей фазы, по фактическому коду."
+    },
+    {
+      "id": "Phase-Context",
+      "title": "Phase Context",
+      "text": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    },
+    {
+      "id": "Scope-Included-planned",
+      "title": "Scope Included (planned)",
+      "text": "Контракты handle и типы данных; реализации Operations; PermissionDriver по профилю; ProfileRegistry/UploadPolicy; StagedUpload/UploadFacts/MimeSniffer/IngestFileAction/ContentScanner; TenantResolver и RestoreTenantContext; golden API = OPUS 05."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "REST v1 (P6); агрегат Document (P4)."
+    },
+    {
+      "id": "Dependencies",
+      "title": "Dependencies",
+      "text": "P2 закрыта."
+    },
+    {
+      "id": "Planned-Items-OPUS-13-D01-.3",
+      "title": "Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)",
+      "text": "- P3.1 — Actor, контекст, guard (frontier/high)\n- P3.2 — Контракты handle и типы данных (frontier/high)\n- P3.3 — Реализации drive Operations и новые сигнатуры Actions (implementation/high; ревью frontier)\n- P3.4 — Core Operations: доступ, шаринг, activity (implementation/medium)\n- P3.5 — Модель прав: бит Comment, драйвер по профилю (implementation/medium)\n- P3.6 — Профили как runtime-политика (implementation/high)\n- P3.7 — Единый ingest загрузок (frontier/high → implementation)\n- P3.8 — Strict tenancy (implementation/high; security-ревью)"
+    },
+    {
+      "id": "Items",
+      "title": "Items",
+      "text": "| ID | Title | Status | Updated |\n|:--|:--|:--|:--|"
+    },
+    {
+      "id": "Phase-Handoff",
+      "title": "Phase Handoff",
+      "text": "—"
+    },
+    {
+      "id": "Validation-Execution-Policy",
+      "title": "Mandatory validation/execution policy (D25)",
+      "text": "**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    }
+  ]
+}

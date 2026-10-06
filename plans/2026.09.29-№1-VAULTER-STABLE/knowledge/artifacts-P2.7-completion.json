@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P2.7-completion",
+  "title": "Canonical 0.3 schema and historical upgrade",
+  "sections": [
+    {
+      "id": "P2.7-Canonical-0.3-schema-and-historical-upgrade",
+      "title": "P2.7 — Canonical 0.3 schema and historical upgrade",
+      "text": "Fresh canonical tables are created independently of module flags. All five affected\npackages use drives, file_revisions and file_revision_blobs and the canonical persisted\nattributes. The node head/document fields explicitly reserved for P4.1 stay historical.\nConfig::table is prefix + canonical name; legacyTable resolves only upgrade names.\n\nFive new guarded migrations implement preflight, table/attribute/index/FK normalization,\nrevision changes, grants/shares cleanup and event/subscription conversion. P1 №3/№6/№7\nuse the actual ordered schema. D18 records owner-approved 72 historical + 2 root repair\nactivity entries and full upgrade-batch rollback rather than the invalid step=5.\nBoth bigint/ULID fixtures preserve expected data, owner IDs, revision numbers and scan\ndefaults, convert every historical event, replay each new up, rollback and re-upgrade.\nCustomized nodes/revision table names and historically disabled comments are checked.\nSchema parity is exact, including PostgreSQL expressions/predicates and serial names;\nthe measured P2.1 baseline has zero differences for both strategies.\n\nREST keys remain old until P6.1 while resources read new attributes. Removed storage\nmetadata returns null. UPGRADE explains backup, irreversible dropped metadata/grants,\nshare revocation, historical event maps, rollback and deferred node/document work.\nAPI golden records EventType values, UpgradePreflightException and legacyTable."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "PostgreSQL: 477 passed across 10 completed checks, zero failures and\nzero skipped PostgreSQL acceptance cases. The supplemental full Media CAS command\nreports four explicitly SQLite-only premise checks skipped on PostgreSQL; all four\nexecute in the green full SQLite Media gate. postgresql-applicability.json identifies\neach test. The literal frozen '0 skipped' is not presented as the raw aggregate. Upgrade+Schema alone: 100 passed, 611 assertions. The remaining grid covers\nP1 listing/outbox/host keys, three ID strategies, prefix, disabled activity, Spatie,\nDrive races and upload contracts, and Media CAS. All six packages' Pint/PHPStan/Pest\ncommands exit 0. SQLite test counts: core 653 passed/38 skipped/17 risky; Drive 506/18/2;\nDocuments 256/1/0; Media 138/16/4; Filament 80/1/0; Azgard 21/0/0. Conditional skips/risky\ncases remain visible and are not claimed executed. Azgard uses the unchanged qualified\nP0 dependency recorded by P2.1; its package is not modified.\n\nBoth negative controls fail for the intended missing subscription UPDATE/node preflight\ncheck, then pass after byte-exact restoration. They use an isolated temporary *_test\ndatabase; it was empty after cleanup and removed. No source mutation remains.\nA general test-harness performance trial did not improve timings and was removed;\nonly FixtureTestCase's required fixture-owned migration lifecycle is retained."
+    },
+    {
+      "id": "Known-deviation-owner-P8.1",
+      "title": "Known deviation, owner P8.1",
+      "text": "Real MySQL fresh installation exits 2 at error 1215: sibling_active STORED conflicts\nwith the cascading parent_id FK. Archived unchanged P2.1 product reproduces the exact\nsame SQL/error on MySQL 8.0.46. This is P2.7's explicitly permitted baseline exception.\nThe raw failing command is retained; E11 accepts its documented conditional classifier.\nNo successful full MySQL installation or MySQL 0.2 upgrade is claimed."
+    },
+    {
+      "id": "Review-and-closure",
+      "title": "Review and closure",
+      "text": "review: grok/grok-4.7 FINDINGS. The completed independent 500k review found one major\nlocal omission: the base blobs migration still had a runtime feature gate. That gate\nis removed; a fresh migrate, full rollback and repeated migrate with every module flag\ndisabled are checked on SQLite and PostgreSQL. The regression failed before the fix\n(missing blobs on SQLite; missing referenced relation on PostgreSQL) and passes after.\nPost-fix PostgreSQL Upgrade+Schema and scoped Pint/PHPStan pass; their exact results and\nhashes are recorded in review-fix-validation.json. Existing six package gates and P1\ngrid are reused because normal enabled-feature execution is unchanged by this fix.\nD19 records the owner's explicit cancellation of further audits. No second reviewer\nwas launched and no external GREEN is claimed for the corrected candidate.\nThe original active reviewer had completed naturally and was not interrupted.\nTwo earlier incomplete transport attempts remain preserved without verdict claims.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nP2.7 closes with deviations solely for the declared MySQL installation baseline owned\nby P8.1. P2 remains open. One scoped local commit contains implementation, docs, tests\nand task-owned evidence. No push or release. The successor B2-A (P2.2 P2.3) is a\nrecommendation outside this invocation's admitted scope."
+    },
+    {
+      "id": "Bookkeeping-validation",
+      "title": "Bookkeeping validation",
+      "text": "Post-fix PostgreSQL Upgrade+Schema: 101 passed, 649 assertions, no failures/skips;\nnew SQLite feature-off lifecycle: 1 passed, 38 assertions. Scoped Pint and core\nPHPStan exit 0. git diff --check passes. Plan lint exits 1: a pre-existing P2.1\ncompletion diagnostic and two unresolved bare read-budget filenames in untouched\nP2.6 (AutoIncrementIds.php, Uuid7Ids.php). It reports no P2.7 diagnostic. Those\nout-of-scope carriers are not edited or represented as a successful whole-plan lint."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P2.7/completion.md",
+    "sha256": "3a5a0458384986a50f47d6fb7dd6c63e34a331db48918f3da033f33017e6f779"
+  }
+}

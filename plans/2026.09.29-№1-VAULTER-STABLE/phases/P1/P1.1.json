@@ -1,0 +1,312 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Соединение Vaulter для транзакций и блокировок",
+  "status": "done",
+  "summary": "Все транзакции, блокировки и after-commit колбэки Vaulter идут через одно соединение\n`Vaulter\\Database\\VaulterDatabase`, совпадающее с соединением моделей и схемы, так что настроенный\n`vaulter.connection ≠ default` не лишает операции атомарности (N01, D25).",
+  "why": "OPUS 13 P1.1, 08 §4, AD25; V17. Сегодня модели и схема читают `vaulter.connection`\n(`core/src/Models/Concerns/ResolvesVaulterConnection.php`, `core/src/Schema/PanelTablesBuilder.php:43–56`), а ~45 файлов\n`src` вызывают `DB::transaction`/`DB::connection()`/`DB::statement` на соединении по умолчанию\n(`core/src/Cas/BlobLock.php:92` берёт advisory lock на чужой сессии). P1.2, P1.5, P1.6 строятся на этом классе.",
+  "scope": {
+    "include": [
+      "`packages/core/src/Database/VaulterDatabase.php` — `final class VaulterDatabase` (singleton в\n   `VaulterServiceProvider::register()`), конструктор `(Illuminate\\Database\\DatabaseManager $db)`:\n   - `connection(): Illuminate\\Database\\Connection` → `$this->db->connection(Config::connection())` (R1: ключ\n     `vaulter.connection`, null = соединение по умолчанию);\n   - `driver(): string` → `$this->connection()->getDriverName()` (`pgsql|mysql|mariadb|sqlite`);\n   - `transaction(Closure $callback, int $attempts = 3): mixed` → `$this->connection()->transaction($callback, $attempts)` (R4);\n   - `lockTree(int|string $storageId): void` — требует открытую транзакцию на этом соединении (`transactionLevel() > 0`,\n     иначе `LogicException('[Vaulter] lockTree() must run inside VaulterDatabase::transaction().')`); PG:\n     `SELECT pg_advisory_xact_lock(hashtext(?))` с ключом `'vaulter:tree:'.$storageId`; mysql/mariadb/sqlite:\n     `SELECT id FROM <Config::table('storages')> WHERE id = ? FOR UPDATE` (SQLite — тот же запрос без `FOR UPDATE`,\n     писатель и так единственный). Имя параметра — `$storageId` (текущее имя; канон `driveId` — P2.1);\n   - `advisoryLock(string $key): void` — то же требование транзакции; PG: `SELECT pg_advisory_xact_lock(hashtext(?))`\n     с `$key`; иначе no-op (MySQL — `FOR UPDATE` строки в вызывающем, SQLite — единственный писатель; поведение\n     `BlobLock` сохраняется);\n   - `afterCommit(Closure $callback): void` → `$this->connection()->afterCommit($callback)`.",
+      "`core/src/Cas/BlobLock.php`: зависимость `VaulterDatabase`; `acquire()` → `advisoryLock($scope.'|'.$sha256)`\n   (формат ключа не меняется до P1.5); `driver()` → `VaulterDatabase::driver()`.",
+      "Замена фасада `DB` во всех файлах `src` кроме `core/src/Database/` и `core/src/Schema/`: `DB::transaction(` →\n   `$this->database->transaction(`; `DB::connection()`/`DB::table()`/`DB::statement()`/`DB::select()`/`DB::raw()` →\n   `$this->database->connection()->…`; `DB::afterCommit(` → `$this->database->afterCommit(`. `VaulterDatabase` внедряется\n   конструктором (readonly-классы — новым promoted-параметром `private VaulterDatabase $database`). Ожидаемый инвентарь —\n   команда Code Guidance п.1 печатает ровно эти 44 файла (без `PanelTablesBuilder.php`, он в `Schema\\`):\n   core — `Webhooks/{SigningSecretEncryptor,RecordsOutbox,WebhookRetryDispatcher,OutboxRelay}.php`,\n   `Cas/BlobLock.php`, `Activity/RecordsActivity.php`, `Actions/Webhooks/{Update,Register,Delete,Deactivate}WebhookEndpointAction.php`,\n   `Actions/Sharing/{Revoke,Create}ShareLinkAction.php`, `Actions/Access/{Revoke,Grant}NodeAccessAction.php`,\n   `Repositories/Drive/NodeStoreRepository.php`; drive — `Repositories/Uploads/{UploadPartStoreRepository,UploadSessionStoreRepository}.php`,\n   `Uploads/{UploadSessionManager,TusUploadHandler,S3MultipartHandler}.php`, `StorageManager.php`, `Console/PurgeTrashCommand.php`,\n   `Actions/Uploads/CommitUploadAction.php`, `Actions/{UploadFileAction,TrashNodeAction,RestoreNodeAction,RenameNodeAction,MoveNodeAction,ForceDeleteNodeAction,CreateFolderAction,CopyNodeAction}.php`,\n   `Models/Uploads/UploadPart.php`; documents —\n   `Actions/Versions/{RestoreDocumentVersionAction,CreateNamedVersionAction}.php`, `Actions/Documents/{UpdateDocumentContentAction,CreateDocumentNodeAction}.php`,\n   `Actions/Comments/{ResolveNodeCommentAction,DeleteNodeCommentAction,AddNodeCommentAction}.php`, `Actions/Collaboration/PersistYjsSnapshotAction.php`,\n   `Repositories/Versions/NodeDocumentVersionStoreRepository.php`; media — `Cas/{BlobGarbageCollector,BlobStore,BlobReconciler}.php`.\n   В моделях (`UploadPart.php`) без конструкторного DI — `app(VaulterDatabase::class)`.",
+      "Arch-тест в `packages/core/tests/Arch/ArchTest.php` и в `packages/{drive,documents,media,filament}/tests/Arch/ArchTest.php`:\n   `arch('DB facade only in Database and Schema (AD25)')->expect('Illuminate\\Support\\Facades\\DB')->toOnlyBeUsedIn(['Vaulter\\Database', 'Vaulter\\Schema'])`\n   — в core; в остальных пакетах — `->expect('<Пакетный namespace>')->not->toUse('Illuminate\\Support\\Facades\\DB')`\n   (`Vaulter\\Drive`, `Vaulter\\Documents`, `Vaulter\\Media`, `Vaulter\\Filament`).",
+      "Тесты: `packages/core/tests/Database/VaulterDatabaseTest.php` (любая БД: `connection()` = соединение моделей при\n   `vaulter.connection='vaulter'`; `lockTree`/`advisoryLock` вне транзакции → `LogicException`; `transaction()` повторяет\n   замыкание при `QueryException` с кодом `40001` ровно до 3 попыток — подменённым замыканием-счётчиком на SQLite);\n   `packages/drive/tests/Concurrency/DedicatedConnectionTest.php` — V17 на PG.",
+      "Документация: `docs/guide/database-compatibility.md` раздел «Dedicated database connection» — транзакции, блокировки и\n   after-commit идут на этом соединении; `CHANGELOG.md [Unreleased]` (Fixed: N01, AD25); `PublicApiSnapshotTest` golden\n   (новый класс `Vaulter\\Database\\VaulterDatabase`)."
+    ],
+    "exclude": [
+      "канонический ключ `vaulter.database.connection` и нормализатор (P2.5); `config()` вне `Configuration\\`\n(P2.5); порядок блокировок D21 и условная квота (P1.6); перенос ключа CAS-lock на `scope_key` (P1.5); запись outbox в\nтранзакции Action (P5.1)."
+    ]
+  },
+  "depends_on": [
+    "P0.2"
+  ],
+  "decisions": [],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P1-design-P1.1-opus.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/14-verification.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Support/Config.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Cas/BlobLock.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Concurrency/ForkRace.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/BlobStore.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Models/Concerns/ResolvesVaulterConnection.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Database/VaulterDatabase.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Database/VaulterDatabaseTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/DedicatedConnectionTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/{core,drive,documents,media,filament}/tests/Arch/ArchTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/database-compatibility.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Семантика операций не меняется: только соединение. Порядок и границы существующих транзакций сохраняются.",
+    "`transaction()` вкладывается так же, как `DB::transaction` (Laravel savepoints); ретраи — только внешней транзакции.",
+    "После замены ни один файл `src` вне `core/src/Database/` и `core/src/Schema/` не содержит `Illuminate\\Support\\Facades\\DB`\n  (проверка — Code Guidance п.1 печатает пусто).",
+    "`RecordsOutbox::safely()` и `RecordsDriveOutbox::safely()` сохраняют поведение «ошибка outbox логируется, мутация не\n  откатывается» (изменение — P5.1, Q8).",
+    "Если инвентарь Code Guidance п.1 до правки печатает файл вне списка Scope п.3 — стоп и описание расхождения."
+  ],
+  "guidance": "1. Инвентарь: `grep -rlE 'Facades\\\\DB\\b|\\bDB::' packages/*/src --include=*.php | grep -v -e '^packages/core/src/Database/' -e '^packages/core/src/Schema/' | sort`\n   до правки → ровно 44 файла Scope п.3; после → пусто.\n2. V17 (`DedicatedConnectionTest`, PG, `ForkRace::skipUnlessSupported($this)`): в `getEnvironmentSetUp` добавить\n   соединение `vaulter` = копия `database.connections.pgsql`, `vaulter.connection = 'vaulter'`; (а) действие\n   `CreateFolderAction` с подменённым `NodeStoreRepository`, бросающим после `create()`, → строк в `Config::table('nodes')`\n   через соединение `vaulter` не прибавилось; (б) внутри `VaulterDatabase::transaction()` вызвать `BlobLock::acquire('s1', str_repeat('a', 64))`\n   и в том же замыкании выполнить на соединении `vaulter`\n   `SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid()` → `1`, а на соединении `pgsql`\n   тот же запрос → `0`. Негативный контроль: временно вернуть в `BlobLock::acquire()` вызов `DB::statement(...)` — тест (б) красный.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/DedicatedConnectionTest.php)",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Uploads tests/Concurrency)",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "(cd packages/media && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Cas)",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "procedure": "- Code Guidance п.1 после правки → пустой вывод.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "procedure": "- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Database` → passed, 0 failed.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "procedure": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/DedicatedConnectionTest.php)` → `2 passed`, 0 skipped.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "procedure": "- Негативный контроль Code Guidance п.2 → тест (б) failed; восстановление → passed (результаты в Completion Notes).",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "procedure": "- Гейт core и гейты drive, documents, media, filament (`phases/P1/P1.md` «Окружение») → exit 0.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "procedure": "- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Uploads tests/Concurrency)` и\n  `(cd packages/media && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Cas)` → 0 failed.",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V10",
+      "procedure": "Independent full review grok/grok-4.7/high",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "`VaulterDatabase`, замена фасада во всех `src`, arch-тесты, V17, документация и golden."
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "requested"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-03T16:37:18Z",
+    "finished_at": "2026-10-03T17:19:06Z",
+    "executor": {
+      "provider": "legacy",
+      "model": "codex/gpt-6.1-sol/high",
+      "effort": "high"
+    },
+    "notes": "Database/model routing, package gates, V17 and negative controls GREEN. See artifacts/P1.1/completion.md. review: grok/grok-4.7 GREEN\nwrite-site: pre_mutation: allow · pre_final: allow",
+    "deviations": [],
+    "pending": [],
+    "checks": [
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-03T17:19:06Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      }
+    ]
+  },
+  "updated_at": "2026-10-03T17:19:06Z",
+  "sections": [
+    {
+      "id": "Intent",
+      "title": "Intent",
+      "text": "Все транзакции, блокировки и after-commit колбэки Vaulter идут через одно соединение\n`Vaulter\\Database\\VaulterDatabase`, совпадающее с соединением моделей и схемы, так что настроенный\n`vaulter.connection ≠ default` не лишает операции атомарности (N01, D25)."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "OPUS 13 P1.1, 08 §4, AD25; V17. Сегодня модели и схема читают `vaulter.connection`\n(`core/src/Models/Concerns/ResolvesVaulterConnection.php`, `core/src/Schema/PanelTablesBuilder.php:43–56`), а ~45 файлов\n`src` вызывают `DB::transaction`/`DB::connection()`/`DB::statement` на соединении по умолчанию\n(`core/src/Cas/BlobLock.php:92` берёт advisory lock на чужой сессии). P1.2, P1.5, P1.6 строятся на этом классе."
+    },
+    {
+      "id": "Scope-Included",
+      "title": "Scope Included",
+      "text": "1. `packages/core/src/Database/VaulterDatabase.php` — `final class VaulterDatabase` (singleton в\n   `VaulterServiceProvider::register()`), конструктор `(Illuminate\\Database\\DatabaseManager $db)`:\n   - `connection(): Illuminate\\Database\\Connection` → `$this->db->connection(Config::connection())` (R1: ключ\n     `vaulter.connection`, null = соединение по умолчанию);\n   - `driver(): string` → `$this->connection()->getDriverName()` (`pgsql|mysql|mariadb|sqlite`);\n   - `transaction(Closure $callback, int $attempts = 3): mixed` → `$this->connection()->transaction($callback, $attempts)` (R4);\n   - `lockTree(int|string $storageId): void` — требует открытую транзакцию на этом соединении (`transactionLevel() > 0`,\n     иначе `LogicException('[Vaulter] lockTree() must run inside VaulterDatabase::transaction().')`); PG:\n     `SELECT pg_advisory_xact_lock(hashtext(?))` с ключом `'vaulter:tree:'.$storageId`; mysql/mariadb/sqlite:\n     `SELECT id FROM <Config::table('storages')> WHERE id = ? FOR UPDATE` (SQLite — тот же запрос без `FOR UPDATE`,\n     писатель и так единственный). Имя параметра — `$storageId` (текущее имя; канон `driveId` — P2.1);\n   - `advisoryLock(string $key): void` — то же требование транзакции; PG: `SELECT pg_advisory_xact_lock(hashtext(?))`\n     с `$key`; иначе no-op (MySQL — `FOR UPDATE` строки в вызывающем, SQLite — единственный писатель; поведение\n     `BlobLock` сохраняется);\n   - `afterCommit(Closure $callback): void` → `$this->connection()->afterCommit($callback)`.\n2. `core/src/Cas/BlobLock.php`: зависимость `VaulterDatabase`; `acquire()` → `advisoryLock($scope.'|'.$sha256)`\n   (формат ключа не меняется до P1.5); `driver()` → `VaulterDatabase::driver()`.\n3. Замена фасада `DB` во всех файлах `src` кроме `core/src/Database/` и `core/src/Schema/`: `DB::transaction(` →\n   `$this->database->transaction(`; `DB::connection()`/`DB::table()`/`DB::statement()`/`DB::select()`/`DB::raw()` →\n   `$this->database->connection()->…`; `DB::afterCommit(` → `$this->database->afterCommit(`. `VaulterDatabase` внедряется\n   конструктором (readonly-классы — новым promoted-параметром `private VaulterDatabase $database`). Ожидаемый инвентарь —\n   команда Code Guidance п.1 печатает ровно эти 44 файла (без `PanelTablesBuilder.php`, он в `Schema\\`):\n   core — `Webhooks/{SigningSecretEncryptor,RecordsOutbox,WebhookRetryDispatcher,OutboxRelay}.php`,\n   `Cas/BlobLock.php`, `Activity/RecordsActivity.php`, `Actions/Webhooks/{Update,Register,Delete,Deactivate}WebhookEndpointAction.php`,\n   `Actions/Sharing/{Revoke,Create}ShareLinkAction.php`, `Actions/Access/{Revoke,Grant}NodeAccessAction.php`,\n   `Repositories/Drive/NodeStoreRepository.php`; drive — `Repositories/Uploads/{UploadPartStoreRepository,UploadSessionStoreRepository}.php`,\n   `Uploads/{UploadSessionManager,TusUploadHandler,S3MultipartHandler}.php`, `StorageManager.php`, `Console/PurgeTrashCommand.php`,\n   `Actions/Uploads/CommitUploadAction.php`, `Actions/{UploadFileAction,TrashNodeAction,RestoreNodeAction,RenameNodeAction,MoveNodeAction,ForceDeleteNodeAction,CreateFolderAction,CopyNodeAction}.php`,\n   `Models/Uploads/UploadPart.php`; documents —\n   `Actions/Versions/{RestoreDocumentVersionAction,CreateNamedVersionAction}.php`, `Actions/Documents/{UpdateDocumentContentAction,CreateDocumentNodeAction}.php`,\n   `Actions/Comments/{ResolveNodeCommentAction,DeleteNodeCommentAction,AddNodeCommentAction}.php`, `Actions/Collaboration/PersistYjsSnapshotAction.php`,\n   `Repositories/Versions/NodeDocumentVersionStoreRepository.php`; media — `Cas/{BlobGarbageCollector,BlobStore,BlobReconciler}.php`.\n   В моделях (`UploadPart.php`) без конструкторного DI — `app(VaulterDatabase::class)`.\n4. Arch-тест в `packages/core/tests/Arch/ArchTest.php` и в `packages/{drive,documents,media,filament}/tests/Arch/ArchTest.php`:\n   `arch('DB facade only in Database and Schema (AD25)')->expect('Illuminate\\Support\\Facades\\DB')->toOnlyBeUsedIn(['Vaulter\\Database', 'Vaulter\\Schema'])`\n   — в core; в остальных пакетах — `->expect('<Пакетный namespace>')->not->toUse('Illuminate\\Support\\Facades\\DB')`\n   (`Vaulter\\Drive`, `Vaulter\\Documents`, `Vaulter\\Media`, `Vaulter\\Filament`).\n5. Тесты: `packages/core/tests/Database/VaulterDatabaseTest.php` (любая БД: `connection()` = соединение моделей при\n   `vaulter.connection='vaulter'`; `lockTree`/`advisoryLock` вне транзакции → `LogicException`; `transaction()` повторяет\n   замыкание при `QueryException` с кодом `40001` ровно до 3 попыток — подменённым замыканием-счётчиком на SQLite);\n   `packages/drive/tests/Concurrency/DedicatedConnectionTest.php` — V17 на PG.\n6. Документация: `docs/guide/database-compatibility.md` раздел «Dedicated database connection» — транзакции, блокировки и\n   after-commit идут на этом соединении; `CHANGELOG.md [Unreleased]` (Fixed: N01, AD25); `PublicApiSnapshotTest` golden\n   (новый класс `Vaulter\\Database\\VaulterDatabase`)."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "канонический ключ `vaulter.database.connection` и нормализатор (P2.5); `config()` вне `Configuration\\`\n(P2.5); порядок блокировок D21 и условная квота (P1.6); перенос ключа CAS-lock на `scope_key` (P1.5); запись outbox в\nтранзакции Action (P5.1)."
+    },
+    {
+      "id": "Inputs",
+      "title": "Inputs",
+      "text": "`@plan/knowledge/artifacts-P1-design-P1.1-opus.json` ·\n`audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` (§4) · `audits/2026-09-29-stable-audit/opus/14-verification.md` (V17) ·\n`packages/core/src/Support/Config.php` (`connection()`, строка 850) · `packages/core/src/Cas/BlobLock.php` ·\n`packages/core/tests/Concurrency/ForkRace.php` (producer: P0.2)"
+    },
+    {
+      "id": "Files",
+      "title": "Files",
+      "text": "`packages/core/src/Database/VaulterDatabase.php` (new), `packages/core/src/VaulterServiceProvider.php`,\n44 файла инвентаря Scope п.3, `packages/core/tests/Database/VaulterDatabaseTest.php` (new),\n`packages/drive/tests/Concurrency/DedicatedConnectionTest.php` (new), `packages/{core,drive,documents,media,filament}/tests/Arch/ArchTest.php`,\n`packages/core/tests/Arch/PublicApiSnapshotTest.php` + `packages/core/tests/Arch/__snapshots__/*`,\n`docs/guide/database-compatibility.md`, `CHANGELOG.md`."
+    },
+    {
+      "id": "Required-Reads",
+      "title": "Required Reads",
+      "text": "0) `@plan/knowledge/artifacts-P1-design-P1.1-opus.json` (дословные требования OPUS — исполнить все);\n1) `audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md` §4; 2) `packages/core/src/Cas/BlobLock.php`;\n3) `packages/media/src/Cas/BlobStore.php`; 4) `packages/core/tests/Concurrency/ForkRace.php` (API `run`, `skipUnlessSupported`);\n5) `packages/core/src/Models/Concerns/ResolvesVaulterConnection.php`."
+    },
+    {
+      "id": "Authority",
+      "title": "Authority",
+      "text": "routine"
+    },
+    {
+      "id": "Implementation-Rules",
+      "title": "Implementation Rules",
+      "text": "- Семантика операций не меняется: только соединение. Порядок и границы существующих транзакций сохраняются.\n- `transaction()` вкладывается так же, как `DB::transaction` (Laravel savepoints); ретраи — только внешней транзакции.\n- После замены ни один файл `src` вне `core/src/Database/` и `core/src/Schema/` не содержит `Illuminate\\Support\\Facades\\DB`\n  (проверка — Code Guidance п.1 печатает пусто).\n- `RecordsOutbox::safely()` и `RecordsDriveOutbox::safely()` сохраняют поведение «ошибка outbox логируется, мутация не\n  откатывается» (изменение — P5.1, Q8).\n- Если инвентарь Code Guidance п.1 до правки печатает файл вне списка Scope п.3 — стоп и описание расхождения."
+    },
+    {
+      "id": "Code-Guidance",
+      "title": "Code Guidance",
+      "text": "1. Инвентарь: `grep -rlE 'Facades\\\\DB\\b|\\bDB::' packages/*/src --include=*.php | grep -v -e '^packages/core/src/Database/' -e '^packages/core/src/Schema/' | sort`\n   до правки → ровно 44 файла Scope п.3; после → пусто.\n2. V17 (`DedicatedConnectionTest`, PG, `ForkRace::skipUnlessSupported($this)`): в `getEnvironmentSetUp` добавить\n   соединение `vaulter` = копия `database.connections.pgsql`, `vaulter.connection = 'vaulter'`; (а) действие\n   `CreateFolderAction` с подменённым `NodeStoreRepository`, бросающим после `create()`, → строк в `Config::table('nodes')`\n   через соединение `vaulter` не прибавилось; (б) внутри `VaulterDatabase::transaction()` вызвать `BlobLock::acquire('s1', str_repeat('a', 64))`\n   и в том же замыкании выполнить на соединении `vaulter`\n   `SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid()` → `1`, а на соединении `pgsql`\n   тот же запрос → `0`. Негативный контроль: временно вернуть в `BlobLock::acquire()` вызов `DB::statement(...)` — тест (б) красный."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "- Code Guidance п.1 после правки → пустой вывод.\n- `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Database` → passed, 0 failed.\n- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency/DedicatedConnectionTest.php)` → `2 passed`, 0 skipped.\n- Негативный контроль Code Guidance п.2 → тест (б) failed; восстановление → passed (результаты в Completion Notes).\n- Гейт core и гейты drive, documents, media, filament (`@plan/phases/P1/phase.json` «Окружение») → exit 0.\n- `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Uploads tests/Concurrency)` и\n  `(cd packages/media && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Cas)` → 0 failed."
+    },
+    {
+      "id": "Deliverables",
+      "title": "Deliverables",
+      "text": "`VaulterDatabase`, замена фасада во всех `src`, arch-тесты, V17, документация и golden."
+    }
+  ]
+}

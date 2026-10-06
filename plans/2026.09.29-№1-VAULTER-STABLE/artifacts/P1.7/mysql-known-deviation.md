@@ -1,3 +1,0 @@
-# MySQL installation baseline — owner PLAN2.P8.1
-
-MySQL 8.0.46 rejects sibling_active STORED over parent_id with its cascading foreign key (error 1215). The exact baseline builder at HEAD reproduces the same error with the test harness selecting real MySQL. The declared MySQL fresh-install command returns exit 2, 14 errors; it is not claimed successful. The independent host-key DDL suite on real MySQL passes 6 tests and 248 assertions: all 27 columns, both legacy strategies, all four fresh host types, values, nullability, indexes, repeated upgrade and rollback. The P1.7 contract explicitly assigns this pre-existing installation defect to P8.1.

@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.11-opus",
+  "title": "OPUS — дословные требования для P1.11 (6 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.11-6",
+      "title": "OPUS — дословные требования для P1.11 (6 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:b362eeda`\n\n| Вывод Codex | Позиция |\n\n- `01:aed5c055` — _P1.11 — только metadata/URL; README — P7.6 (D02 п.2)_\n\n| E6 README/metadata | Согласен, шире (N20) |"
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.11-README-metadata",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.11 — Срочная правка README и metadata",
+      "text": "- `13:6c43dffe`\n\n- Находки: N20, audit P0.\n\n- `13:27682f9f` — _P1.11 — URL metadata; README — P7.6 (D02 п.2)_\n\n- Сделать: README — корректный quick start **текущего** 0.2 API (`Vaulter::for`, `HostRoleDriver`); URLs `axiomasoft` в\n  composer/npm/`VaulterException::docs()`/install command.\n\n- `13:c8280ef4` — _P1.11 — ссылки; recipe README — P7.6 (D02 п.2)_\n\n- Готово: все ссылки открываются; пример README исполняется как recipe-тест.\n\n- `13:7b2a4bc5`\n\n- Исполнитель: haiku/low."
+    }
+  ],
+  "applies_to": [
+    "P1.11"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.11-opus.md",
+    "sha256": "cd02a3dcfb1a4c22a86d29d8ef3b941b97e486bdcf42d4ddbef3ab3091175008"
+  }
+}

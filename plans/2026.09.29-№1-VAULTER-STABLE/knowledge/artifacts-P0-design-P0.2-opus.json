@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P0-design-P0.2-opus",
+  "title": "OPUS — дословные требования для P0.2 (3 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P0.2-3",
+      "title": "OPUS — дословные требования для P0.2 (3 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "13-workstreams.md-F0-P0.2-PostgreSQL",
+      "title": "13-workstreams.md — F0 — Основа / P0.2 — Стенд конкурентности PostgreSQL",
+      "text": "- `13:150b7bc0`\n\n- Сделать: `packages/core/tests/Concurrency/` — помощник, запускающий две операции на **двух разных соединениях**\n  с барьером (advisory lock или `pcntl_fork` + файл-барьер), сервис PostgreSQL в CI; пример-тест «два UPDATE одной строки».\n\n- `13:36b68bcd`\n\n- Готово: пример проходит в CI; документировано в `CONTRIBUTING.md`.\n\n- `13:c4ac7897` — _маршрут sonnet/medium → implementation/medium (D05)_\n\n- Исполнитель: sonnet/medium. Нужен для V02, V03, V13, V20, V21."
+    }
+  ],
+  "applies_to": [
+    "P0.2"
+  ],
+  "provenance": {
+    "path": "artifacts/P0-design/P0.2-opus.md",
+    "sha256": "127481eb76e8bbed8ca6f783da7c49051f2b4b2d9d558a038d85478b996ff7f7"
+  }
+}

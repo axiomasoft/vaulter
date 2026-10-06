@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.8-opus",
+  "title": "OPUS — дословные требования для P1.8 (42 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.8-42",
+      "title": "OPUS — дословные требования для P1.8 (42 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N11-S2-.-HTTP-500",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N11 (S2). Доменные ошибки превращаются в HTTP 500",
+      "text": "- `01:993ced70`\n\n`render()` есть только у 7 из 26 исключений. `CycleException`, `CrossStorageMoveException`,\n`NotADocumentNodeException`, `InvalidTipTapContentException`, `NodeDocumentVersionNotFoundException`,\n`UnknownExportFormatException`, `BlockedOutboundUrlException` отдают 500; тесты это закрепляют\n(`packages/documents/tests/Document/DocumentNodeApiTest.php:98`). Конверт — `{\"message\": \"[Vaulter] ... Why ... Fix ... Docs\"}`\nбез машинного кода."
+    },
+    {
+      "id": "02-decisions.md-D29-RFC-9457-T0-T1",
+      "title": "02-decisions.md — D29 — Ошибки: RFC 9457 и стабильные коды · T0 (маппинг) / T1 (формат)",
+      "text": "- `02:547ff77e` — _P1.8 — ProblemException с problemCode()/httpStatus() и временный рендер; problemDetails() и ProblemRenderer RFC 9457 — P6.2_\n\nВсе исключения Vaulter реализуют `Vaulter\\Exceptions\\Contracts\\ProblemException`\n(`problemCode(): string`, `httpStatus(): int`, `problemDetails(): array`); один\n`ProblemRenderer` регистрируется для запросов маршрутов Vaulter и отдаёт\n`application/problem+json`. Сообщение «Why/Fix/Docs» остаётся в тексте исключения для логов,\nно не уходит клиенту как `detail`. Таблица кодов — [10-http-api-v1.md](10-http-api-v1.md) §6."
+    },
+    {
+      "id": "05-php-api.md-11.-API",
+      "title": "05-php-api.md — 11. Исключения публичного API",
+      "text": "- `05:35a6e390`\n\nВсе наследуют `Vaulter\\Exceptions\\VaulterException` и реализуют `ProblemException` (D29).\n\n- `05:88666c7f`\n\n| Исключение | Пакет | Код | Когда |\n\n- `05:333de855` — _класс и код создаёт P1.8; использует P1.9 (HttpResourceResolver)_\n\n| `NodeNotFoundException` | core | `node_not_found` | нет узла, другой drive/tenant, нет `View` |\n\n- `05:538b23d8`\n\n| `PermissionDeniedException` | core | `permission_denied` | есть `View`, нет способности |\n\n- `05:89a8a240`\n\n| `NodeNameConflictException` | core | `node_name_conflict` | конфликт имени при `Fail` |\n\n- `05:26a9f74e` — _на текущем имени CycleException; переименование — P2.2_\n\n| `NodeCycleException` | drive | `node_move_cycle` | |\n\n- `05:dfdd72e7` — _на текущем имени CrossStorageMoveException; переименование — P2.2_\n\n| `CrossDriveOperationException` | drive | `cross_drive_operation` | |\n\n- `05:a9b0fafe`\n\n| `QuotaExceededException` | drive | `quota_exceeded` | |\n\n- `05:13bc836c` — _на текущем имени NotADocumentNodeException; переименование — P2.3_\n\n| `NotADocumentException` | documents | `not_a_document` | |\n\n- `05:1725ec77`\n\n| `UnknownDocumentTypeException` | documents | `unknown_document_type` | |\n\n- `05:0cc45108` — _на текущем имени InvalidTipTapContentException; переименование — P2.3_\n\n| `InvalidDocumentContentException` | documents | `invalid_document_content` (+ `reason`) | |\n\n- `05:fe9da997` — _на текущем имени NodeDocumentVersionNotFoundException; переименование — P2.3_\n\n| `DocumentRevisionNotFoundException` | documents | `document_revision_not_found` | |\n\n- `05:41ef5a34`\n\n| `UnknownExportFormatException` | documents | `unknown_export_format` | |"
+    },
+    {
+      "id": "10-http-api-v1.md-6.-RFC-9457",
+      "title": "10-http-api-v1.md — 6. Ошибки (RFC 9457)",
+      "text": "- `10:5ef9ebac`\n\n| Код | HTTP | Исключение |\n\n- `10:7d684c04`\n\n| `actor_required` | 401 | `MissingActorException` |\n\n- `10:c4353973`\n\n| `permission_denied` | 403 | `PermissionDeniedException` |\n\n- `10:fbac14ba`\n\n| `profile_restriction` | 403 | `ProfileRestrictionException` |\n\n- `10:716d5bb4`\n\n| `node_not_found`, `drive_not_found`, `revision_not_found`, `document_revision_not_found`, `grant_not_found`, `share_not_found`, `comment_not_found`, `upload_not_found` | 404 | `*NotFoundException` |\n\n- `10:99922a57`\n\n| `node_name_conflict` | 409 | `NodeNameConflictException` |\n\n- `10:c6ebe0fb`\n\n| `node_move_cycle` | 409 | `NodeCycleException` |\n\n- `10:79c30369`\n\n| `invalid_destination` | 409 | `InvalidDestinationException` |\n\n- `10:9c22a2c5`\n\n| `cross_drive_operation` | 409 | `CrossDriveOperationException` |\n\n- `10:bb65b697`\n\n| `node_not_trashed` | 409 | `NodeNotTrashedException` |\n\n- `10:25d285b5`\n\n| `not_a_file`, `not_a_document`, `unsupported_node_kind` | 409 | … |\n\n- `10:6fbf8177`\n\n| `document_type_unavailable` | 409 | `DocumentTypeUnavailableException` |\n\n- `10:c6d35d30`\n\n| `collaboration_epoch_mismatch` | 409 | `CollaborationEpochMismatchException` |\n\n- `10:a6053b5a`\n\n| `upload_conflict`, `upload_offset_mismatch` | 409 | `Uploads\\*` |\n\n- `10:172426db`\n\n| `node_sequence_mismatch` | 412 | `StaleNodeException` |\n\n- `10:9aea30b1`\n\n| `quota_exceeded` | 413 | `QuotaExceededException` |\n\n- `10:0035a5b1`\n\n| `upload_rejected` (`meta.reason`) | 422 | `UploadRejectedException` |\n\n- `10:4b1ba869`\n\n| `invalid_document_content` (`meta.reason`) | 422 | `InvalidDocumentContentException` |\n\n- `10:0838a984`\n\n| `unknown_document_type`, `unknown_export_format` | 422 | … |\n\n- `10:7a11c9a8`\n\n| `content_unavailable` | 423 | `ContentUnavailableException` |\n\n- `10:0a87815a`\n\n| `internal_error` | 500 | любое неожиданное (детали — только в логе) |"
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.8-HTTP-500",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.8 — Нет HTTP 500 для доменных ошибок",
+      "text": "- `13:299a9c6f`\n\n- Решения: D29 (часть) · Находки: N11 · Сценарии: V24.\n\n- `13:a8f8a5f7`\n\n- Сделать: у каждого исключения Vaulter — `httpStatus()` и `problemCode()`; временный рендер в текущем конверте + поле `code`;\n  тесты, ожидавшие 500, переписать на корректные статусы.\n\n- `13:ae8d3944`\n\n- Готово: V24 — ни одно доменное исключение не даёт 500.\n\n- `13:c3781787`\n\n- Исполнитель: sonnet/low."
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:3bfe5969`\n\n| V24 | Каждое доменное исключение через HTTP | Статус из таблицы 10 §6, ни одного 500; `code` присутствует | любая | P1.8, P6.2 |"
+    }
+  ],
+  "applies_to": [
+    "P1.8"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.8-opus.md",
+    "sha256": "9a9d60e56761f04cd80f98f18abe3e45f1ffc2fcac9ab2c2a07659749955c82c"
+  }
+}

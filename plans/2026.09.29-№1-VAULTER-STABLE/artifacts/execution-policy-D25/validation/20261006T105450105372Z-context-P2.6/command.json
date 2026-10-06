@@ -1,0 +1,59 @@
+{
+  "command": [
+    "python3",
+    "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py",
+    "context",
+    "2026.09.29-№1-VAULTER-STABLE",
+    "P2.6",
+    "--stdout"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "candidate": "42bda3fc2134c1c48773c3d8852674e8578f934cb3c0219ab41b6af27eaaf50f",
+  "input_manifest": [
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/plan.json",
+      "sha256": "649eeff0d1588df4506715f87036a51ae1fd7f22bc7d69e6c7210d51ef8243cd"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/decisions/D25.json",
+      "sha256": "50e9460d76373df8b61dff8fe1bfa6924472a9a35d1dc11221237dfd6ba1ecc4"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/knowledge/validation-and-execution-policy.json",
+      "sha256": "096d519ac2e26d310bc5b4e3b60c841ed5b9da5d2193fe68b70b9ffcd4d52395"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/P2.6.json",
+      "sha256": "98571217f1fd4ae1925be9f6d558fdf5ac0c9915a34cd8be69664a38aa057008"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/phase.json",
+      "sha256": "89fb165b017c48e4f5294c3dd1202e8cc1bc8473fb5399e6973970c1f97a3af0"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P3/phase.json",
+      "sha256": "8eda5a1c92c86788ae3c34921e7e9050670ad4b9d5f6fbb2198baa97821d16fa"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P4/phase.json",
+      "sha256": "16405d242b4a61ce21b4b949949e6c6f525620bb9c1d0ecc06faf83f493e6f26"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P5/phase.json",
+      "sha256": "9dca5f741c8c4eaf52a55f49cc320899395b7c25d15bc250fdac25794c66dc79"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P6/phase.json",
+      "sha256": "55f58fd89336caf9235fe74745bb5ae248b1535d6bca3586c61cc14ff91797e7"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P7/phase.json",
+      "sha256": "d68e7ea3cf02c7611a06fabc69606699e4e243c299d43897b2e6cbabb8c92410"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/phases/P8/phase.json",
+      "sha256": "1be2794ac603e4cb2d98bbfdee341c01c20e157add74dfe86f18fb6fb80503a9"
+    }
+  ],
+  "started_at": "2026-10-06T10:54:50.516440+00:00"
+}

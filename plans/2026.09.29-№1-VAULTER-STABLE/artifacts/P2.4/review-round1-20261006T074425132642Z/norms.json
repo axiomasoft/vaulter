@@ -1,0 +1,293 @@
+{
+  "item": {
+    "id": "P2.4",
+    "title": "AzGuard из core в vaulter-azgard; media и filament",
+    "summary": "Всё AzGuard-специфичное (контракт guard, драйвер прав, карта прав, фейк, ключи `azgard.*`) живёт только в\n`vaulter-azgard`, который сам регистрирует драйвер `azgard`; core не содержит слов `Azgard`, `Hocuspocus`, `Filament`\nв `src` (arch-тест); media-команды получают канонические сигнатуры; Filament-ресурс drive называется `DriveResource`.",
+    "why": "OPUS 13 P2.4, AD02 п.5, N21; 04 §1 правила 1, 2, 5; 04 §6; 07 §5. Код `main` @ `938f0ea`:\n`packages/core/src/{Contracts/Access/AzgardGuard.php, Drivers/Permission/AzgardPermissionResolver.php (после P2.1 — Access/Drivers/AzgardPermissionDriver.php),\nSupport/AzgardConfig.php, Testing/FakeAzgardGuard.php}`; `packages/core/config/vaulter.php:412–455` (`azgard.*`) и\n`permission_drivers.azgard` (строка 5 `use … AzgardPermissionResolver`); `packages/azgard/src/` — только адаптер и provider.",
+    "scope": {
+      "include": [
+        "Перенос (Rector-карта `artifacts/P2.4/rename-map.php` + `git mv`):\n   `Vaulter\\Access\\Drivers\\AzgardPermissionDriver`→`Vaulter\\Azgard\\AzgardPermissionDriver`;\n   `Vaulter\\Contracts\\Access\\AzgardGuard`→`Vaulter\\Azgard\\Contracts\\AzgardGuard`;\n   `Vaulter\\Support\\AzgardConfig`→`Vaulter\\Azgard\\AzgardPermissionMap`;\n   `Vaulter\\Testing\\FakeAzgardGuard`→`Vaulter\\Azgard\\Testing\\FakeAzgardGuard`.\n   Тесты core, проверяющие azgard-драйвер, переезжают в `packages/azgard/tests/` без ослабления.",
+        "Конфиг (07 §5): `packages/azgard/config/vaulter-azgard.php` — `panel_id` (как сейчас), `permissions` (карта ability →\n   permission, значения из `vaulter.azgard.permissions`), `create_permission` (`env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create')`);\n   блок `azgard` и запись `'azgard' => …` в `permission_drivers` удаляются из `packages/core/config/vaulter.php`.\n   `Vaulter\\Azgard\\Configuration\\AzgardConfig` (new, `final readonly`, конструктор `Illuminate\\Contracts\\Config\\Repository`):\n   `panelId(): ?string`, `permissions(): array<string,string>`, `createPermission(): string` — читает `vaulter-azgard.*`\n   на каждом вызове; `AzgardPermissionMap` получает его через конструктор. Перевод устаревших `vaulter.azgard.*` — P2.5 (R22).",
+        "Регистрация драйвера: `VaulterAzgardServiceProvider::register()` добавляет `'azgard' => AzgardPermissionDriver::class` в\n   карту драйверов (`config()->set('vaulter.permission_drivers.azgard', …)`, если ключ не задан хостом; канонический\n   `vaulter.access.permission_drivers` — P2.5) и биндинг `Contracts\\AzgardGuard` → `AzgardGuardAdapter` (как сейчас в\n   core/azgard). Без установленного vaulter-azgard `vaulter.drivers.permission = 'azgard'` даёт существующую ошибку\n   «неизвестный драйвер» (`MissingPermissionDriverException`).",
+        "Arch (04 §1): `packages/core/tests/Arch/ArchTest.php` — тест «core src не содержит `Azgard`, `Hocuspocus`, `Filament`»\n   (регистронезависимый поиск по файлам `packages/core/src/**/*.php`, allow-list пуст; `TipTap`/`Univer` — P4.3);\n   существующие вхождения в комментариях/docblock core переписываются нейтрально. Тест «src не импортирует `Testing\\*`»\n   (04 §1 п.5) — в core, drive, documents, media, azgard (`arch()->expect('Vaulter\\…')->not->toUse('Vaulter\\…\\Testing')`,\n   исключая сам namespace `Testing`). `packages/azgard/tests/ArchTest.php` (new): azgard использует только `Vaulter\\` core и\n   `Vaulter\\Azgard\\` (04 §1 п.1).",
+        "media (R5): сигнатуры `vaulter:gc-blobs` → `vaulter:blobs:gc`, `vaulter:reconcile-blobs` → `vaulter:blobs:reconcile`\n   (классы `GcBlobsCommand`, `ReconcileBlobsCommand` без изменений); все вызовы/расписание/документация (включая\n   `packages/core/config/vaulter.php:470` комментарий) — новые сигнатуры; без алиасов.",
+        "filament (04 §6): `Resources\\StorageResource`→`Resources\\DriveResource`, `Pages\\ListStorages`→`Pages\\ListDrives`,\n   `Pages\\ViewStorage`→`Pages\\ViewDrive` (каталог `Resources/DriveResource/Pages/`); ключ `vaulter-filament.resources.storage`\n   → `resources.drive` (перевод старого ключа — P2.5, R22); метки навигации «Storage» → «Drive». `PanelActor`,\n   `PanelAccessScope` и всё «Panel» Filament не переименовываются (04 §6).",
+        "Документация: все файлы `docs/{guide,reference,ru}` с совпадениями Code Guidance и `docs/guide/{permission-drivers,authorization,configuration,filament}.md` (новый путь установки\n   AzGuard: `composer require axioma-studio/vaulter-azgard`, ключи `vaulter-azgard.*`), `UPGRADE.md`, `CHANGELOG.md [Unreleased]`;\n   golden `PublicApiSnapshotTest`."
+      ],
+      "exclude": [
+        "нормализатор `vaulter.azgard.*` и `permission_drivers` → `access.*` (P2.5); удаление\n`PanelAccessScope` и видимость через handle (P6.6); тег AzGuard и `dev-main` (O-4, P7.5); `TipTap`/`Univer` в core (P4.3);\nсигнатуры остальных команд (P7.2)."
+      ]
+    },
+    "depends_on": [
+      "P2.1"
+    ],
+    "decisions": [
+      "D01",
+      "D23"
+    ],
+    "task_files": [
+      {
+        "path": "packages/core/src/**",
+        "change": "any"
+      },
+      {
+        "path": "packages/core/config/vaulter.php",
+        "change": "any"
+      },
+      {
+        "path": "packages/core/tests/**",
+        "change": "any"
+      },
+      {
+        "path": "packages/azgard/{src,tests,config}/**",
+        "change": "any"
+      },
+      {
+        "path": "packages/azgard/src/Configuration/AzgardConfig.php",
+        "change": "any"
+      },
+      {
+        "path": "packages/media/src/Console/{GcBlobsCommand,ReconcileBlobsCommand}.php",
+        "change": "any"
+      },
+      {
+        "path": "packages/media/src/VaulterMediaServiceProvider.php",
+        "change": "any"
+      },
+      {
+        "path": "packages/media/tests/**",
+        "change": "any"
+      },
+      {
+        "path": "packages/filament/{src,tests,config}/**",
+        "change": "any"
+      },
+      {
+        "path": "packages/{drive,documents}/tests/Arch/*",
+        "change": "any"
+      },
+      {
+        "path": "packages/core/tests/Arch/__snapshots__/*",
+        "change": "any"
+      },
+      {
+        "path": "docs/guide/*.md",
+        "change": "any"
+      },
+      {
+        "path": "UPGRADE.md",
+        "change": "any"
+      },
+      {
+        "path": "CHANGELOG.md",
+        "change": "any"
+      },
+      {
+        "path": "load/app/Listeners/RecordCommandPeakMemory.php",
+        "change": "modify"
+      },
+      {
+        "path": "load/app/Observability/RedisMetricsRegistry.php",
+        "change": "modify"
+      },
+      {
+        "path": "load/app/Console/SeedLoadDatasetCommand.php",
+        "change": "modify"
+      },
+      {
+        "path": "load/scripts/p8-live-gate.sh",
+        "change": "modify"
+      },
+      {
+        "path": "load/scripts/p3-capture-workload.sh",
+        "change": "modify"
+      }
+    ],
+    "rules": [
+      "Решения azgard-драйвера на общем фикстуре `AccessResolver` (существующий контрактный тест драйверов) одинаковы до и после\n  переноса; тест запускается в пакете azgard.",
+      "Если `packages/azgard` не устанавливается (`axioma-studio/azguard-core: dev-main` недоступен) — стоп и эскалация (O-4),\n  тест не пропускается.",
+      "Без алиасов классов и сигнатур (AD01).",
+      "Owner D23: exact counted allow-list of existing Hocuspocus runtime config defaults/lookups only until P2.5; no imports/additional occurrences/prose exemptions. Guidance requires zero unexpected matches."
+    ],
+    "guidance": "`grep -rniE \"azgard|hocuspocus|filament\" packages/core/src packages/core/config` → пусто;\n`grep -rnE \"vaulter:(gc-blobs|reconcile-blobs)|StorageResource|ListStorages|ViewStorage\" packages docs/guide docs/reference docs/ru --include=*.php --include=*.md` → пусто.",
+    "validation": [
+      {
+        "id": "V1",
+        "cmd": "pest",
+        "expect": "Source acceptance condition preserved in Validation section.",
+        "kind": "acceptance"
+      }
+    ],
+    "deliverables": [
+      "core без AzGuard; `vaulter-azgard` с драйвером, картой, фейком, `AzgardConfig` и самостоятельной\nрегистрацией; arch-тесты 04 §1 п.1/п.2/п.5; канонические сигнатуры media; `DriveResource`; UPGRADE/CHANGELOG/golden."
+    ],
+    "sections": [
+      {
+        "id": "Intent",
+        "title": "Intent",
+        "text": "Всё AzGuard-специфичное (контракт guard, драйвер прав, карта прав, фейк, ключи `azgard.*`) живёт только в\n`vaulter-azgard`, который сам регистрирует драйвер `azgard`; core не содержит слов `Azgard`, `Hocuspocus`, `Filament`\nв `src` (arch-тест); media-команды получают канонические сигнатуры; Filament-ресурс drive называется `DriveResource`."
+      },
+      {
+        "id": "Why",
+        "title": "Why",
+        "text": "OPUS 13 P2.4, AD02 п.5, N21; 04 §1 правила 1, 2, 5; 04 §6; 07 §5. Код `main` @ `938f0ea`:\n`packages/core/src/{Contracts/Access/AzgardGuard.php, Drivers/Permission/AzgardPermissionResolver.php (после P2.1 — Access/Drivers/AzgardPermissionDriver.php),\nSupport/AzgardConfig.php, Testing/FakeAzgardGuard.php}`; `packages/core/config/vaulter.php:412–455` (`azgard.*`) и\n`permission_drivers.azgard` (строка 5 `use … AzgardPermissionResolver`); `packages/azgard/src/` — только адаптер и provider."
+      },
+      {
+        "id": "Scope-Included",
+        "title": "Scope Included",
+        "text": "1. Перенос (Rector-карта `artifacts/P2.4/rename-map.php` + `git mv`):\n   `Vaulter\\Access\\Drivers\\AzgardPermissionDriver`→`Vaulter\\Azgard\\AzgardPermissionDriver`;\n   `Vaulter\\Contracts\\Access\\AzgardGuard`→`Vaulter\\Azgard\\Contracts\\AzgardGuard`;\n   `Vaulter\\Support\\AzgardConfig`→`Vaulter\\Azgard\\AzgardPermissionMap`;\n   `Vaulter\\Testing\\FakeAzgardGuard`→`Vaulter\\Azgard\\Testing\\FakeAzgardGuard`.\n   Тесты core, проверяющие azgard-драйвер, переезжают в `packages/azgard/tests/` без ослабления.\n2. Конфиг (07 §5): `packages/azgard/config/vaulter-azgard.php` — `panel_id` (как сейчас), `permissions` (карта ability →\n   permission, значения из `vaulter.azgard.permissions`), `create_permission` (`env('VAULTER_AZGARD_CREATE_PERMISSION', 'documents.create')`);\n   блок `azgard` и запись `'azgard' => …` в `permission_drivers` удаляются из `packages/core/config/vaulter.php`.\n   `Vaulter\\Azgard\\Configuration\\AzgardConfig` (new, `final readonly`, конструктор `Illuminate\\Contracts\\Config\\Repository`):\n   `panelId(): ?string`, `permissions(): array<string,string>`, `createPermission(): string` — читает `vaulter-azgard.*`\n   на каждом вызове; `AzgardPermissionMap` получает его через конструктор. Перевод устаревших `vaulter.azgard.*` — P2.5 (R22).\n3. Регистрация драйвера: `VaulterAzgardServiceProvider::register()` добавляет `'azgard' => AzgardPermissionDriver::class` в\n   карту драйверов (`config()->set('vaulter.permission_drivers.azgard', …)`, если ключ не задан хостом; канонический\n   `vaulter.access.permission_drivers` — P2.5) и биндинг `Contracts\\AzgardGuard` → `AzgardGuardAdapter` (как сейчас в\n   core/azgard). Без установленного vaulter-azgard `vaulter.drivers.permission = 'azgard'` даёт существующую ошибку\n   «неизвестный драйвер» (`MissingPermissionDriverException`).\n4. Arch (04 §1): `packages/core/tests/Arch/ArchTest.php` — тест «core src не содержит `Azgard`, `Hocuspocus`, `Filament`»\n   (регистронезависимый поиск по файлам `packages/core/src/**/*.php`, allow-list пуст; `TipTap`/`Univer` — P4.3);\n   существующие вхождения в комментариях/docblock core переписываются нейтрально. Тест «src не импортирует `Testing\\*`»\n   (04 §1 п.5) — в core, drive, documents, media, azgard (`arch()->expect('Vaulter\\…')->not->toUse('Vaulter\\…\\Testing')`,\n   исключая сам namespace `Testing`). `packages/azgard/tests/ArchTest.php` (new): azgard использует только `Vaulter\\` core и\n   `Vaulter\\Azgard\\` (04 §1 п.1).\n5. media (R5): сигнатуры `vaulter:gc-blobs` → `vaulter:blobs:gc`, `vaulter:reconcile-blobs` → `vaulter:blobs:reconcile`\n   (классы `GcBlobsCommand`, `ReconcileBlobsCommand` без изменений); все вызовы/расписание/документация (включая\n   `packages/core/config/vaulter.php:470` комментарий) — новые сигнатуры; без алиасов.\n6. filament (04 §6): `Resources\\StorageResource`→`Resources\\DriveResource`, `Pages\\ListStorages`→`Pages\\ListDrives`,\n   `Pages\\ViewStorage`→`Pages\\ViewDrive` (каталог `Resources/DriveResource/Pages/`); ключ `vaulter-filament.resources.storage`\n   → `resources.drive` (перевод старого ключа — P2.5, R22); метки навигации «Storage» → «Drive». `PanelActor`,\n   `PanelAccessScope` и всё «Panel» Filament не переименовываются (04 §6).\n7. Документация: все файлы `docs/{guide,reference,ru}` с совпадениями Code Guidance и `docs/guide/{permission-drivers,authorization,configuration,filament}.md` (новый путь установки\n   AzGuard: `composer require axioma-studio/vaulter-azgard`, ключи `vaulter-azgard.*`), `UPGRADE.md`, `CHANGELOG.md [Unreleased]`;\n   golden `PublicApiSnapshotTest`."
+      },
+      {
+        "id": "Scope-Excluded",
+        "title": "Scope Excluded",
+        "text": "нормализатор `vaulter.azgard.*` и `permission_drivers` → `access.*` (P2.5); удаление\n`PanelAccessScope` и видимость через handle (P6.6); тег AzGuard и `dev-main` (O-4, P7.5); `TipTap`/`Univer` в core (P4.3);\nсигнатуры остальных команд (P7.2)."
+      },
+      {
+        "id": "Inputs",
+        "title": "Inputs",
+        "text": "`@plan/knowledge/artifacts-P2-design-P2.4-opus.json`;\n`audits/2026-09-29-stable-audit/opus/04-packages-and-layout.md` (§1, §6); `audits/2026-09-29-stable-audit/opus/07-configuration.md` (§5);\n`packages/azgard/src/VaulterAzgardServiceProvider.php`; `packages/core/config/vaulter.php`."
+      },
+      {
+        "id": "Files",
+        "title": "Files",
+        "text": "`packages/core/src/{Access/Drivers/AzgardPermissionDriver.php, Contracts/Access/AzgardGuard.php, Support/AzgardConfig.php, Testing/FakeAzgardGuard.php}` (перенос),\n`packages/core/src/**` (нейтральные комментарии), `packages/core/config/vaulter.php`, `packages/core/tests/**` (перенос azgard-тестов, ArchTest),\n`packages/azgard/{src,tests,config}/**`, `packages/azgard/src/Configuration/AzgardConfig.php` (new), `packages/media/src/Console/{GcBlobsCommand,ReconcileBlobsCommand}.php`,\n`packages/media/src/VaulterMediaServiceProvider.php`, `packages/media/tests/**`, `packages/filament/{src,tests,config}/**`,\n`packages/{drive,documents}/tests/Arch/*`, `packages/core/tests/Arch/__snapshots__/*`, `docs/guide/*.md`, `UPGRADE.md`, `CHANGELOG.md`."
+      },
+      {
+        "id": "Required-Reads",
+        "title": "Required Reads",
+        "text": "0) `@plan/knowledge/artifacts-P2-design-P2.4-opus.json` (дословные требования OPUS — исполнить все,\nкроме переданных по `note` ledger); 1) `packages/azgard/src/VaulterAzgardServiceProvider.php`; 2) `packages/core/src/Support/AzgardConfig.php`;\n3) `packages/core/src/Access/Drivers/AzgardPermissionDriver.php` (producer: P2.1); 4) `packages/core/config/vaulter.php` (300–460);\n5) `packages/filament/src/Resources/StorageResource.php`; 6) `packages/core/tests/Arch/ArchTest.php`."
+      },
+      {
+        "id": "Authority",
+        "title": "Authority",
+        "text": "routine"
+      },
+      {
+        "id": "Implementation-Rules",
+        "title": "Implementation Rules",
+        "text": "- Решения azgard-драйвера на общем фикстуре `AccessResolver` (существующий контрактный тест драйверов) одинаковы до и после\n  переноса; тест запускается в пакете azgard.\n- Если `packages/azgard` не устанавливается (`axioma-studio/azguard-core: dev-main` недоступен) — стоп и эскалация (O-4),\n  тест не пропускается.\n- Без алиасов классов и сигнатур (AD01)."
+      },
+      {
+        "id": "Code-Guidance",
+        "title": "Code Guidance",
+        "text": "`grep -rniE \"azgard|hocuspocus|filament\" packages/core/src packages/core/config` → пусто;\n`grep -rnE \"vaulter:(gc-blobs|reconcile-blobs)|StorageResource|ListStorages|ViewStorage\" packages docs/guide docs/reference docs/ru --include=*.php --include=*.md` → пусто."
+      },
+      {
+        "id": "Validation",
+        "title": "Validation",
+        "text": "- Code Guidance → пусто.\n- Гейт azgard, media, filament и гейт core → exit 0 (`packages/azgard` — `pest` без пропусков).\n- Негативный контроль: временно вернуть `use Vaulter\\Azgard\\…` в файл `packages/core/src` → новый arch-тест core красный; вернуть.\n- Сетка P1 на PG → 0 failed, 0 skipped."
+      },
+      {
+        "id": "Deliverables",
+        "title": "Deliverables",
+        "text": "core без AzGuard; `vaulter-azgard` с драйвером, картой, фейком, `AzgardConfig` и самостоятельной\nрегистрацией; arch-тесты 04 §1 п.1/п.2/п.5; канонические сигнатуры media; `DriveResource`; UPGRADE/CHANGELOG/golden."
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "D01",
+      "title": "Аудит opus — норматив целевой архитектуры (accepted)",
+      "status": "accepted",
+      "decision": "1. Каталог `audits/2026-09-29-stable-audit/opus/` (далее **OPUS**) — норматив плана: решения `02-decisions.md`\n   D01–D40, находки `01-review.md` N01–N28 и Codex E1–E10, сценарии `14-verification.md` V01–V37, спецификации\n   03–12. Тексты не копируются в план — только ссылки с §-якорем.\n2. Чтобы не путать с решениями плана, решения аудита в плане пишутся **`AD01…AD40`** (= OPUS `02-decisions.md#dNN`).\n   Находки `Nxx`/`Exx` и сценарии `Vxx` — как в аудите.\n3. Нумерация сохраняется: фаза аудита `Fn` = фаза плана `Pn`; пункты `P0.1…P8.3` — без перенумерации (на них\n   ссылаются сценарии V).\n4. Решение аудита меняется только новым `D##` этого плана со ссылкой на заменяемый `AD##`. Расхождение кода с\n   досье в ходе item — стоп и описание расхождения (OPUS 13, правило 5), не импровизация.\n5. Исходный аудит Perplexity и пакет Codex (`audits/2026-09-29-stable-audit/0*.md`, `research/`) — провенанс, не норматив.",
+      "rationale": "OPUS уже содержит проверенную по коду архитектуру (имена, сигнатуры, схему, алгоритмы, порядок работ); повторная\nпроработка удвоила бы стоимость без новой информации.",
+      "applies_to": [
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "P8"
+      ]
+    },
+    {
+      "id": "D23",
+      "title": "P2.4: exact temporary Hocuspocus runtime key allowance until P2.5",
+      "status": "accepted",
+      "decision": "Owner: «Оставить действующие ключи до P2.5 и разрешить только их в P2.4; запрет импортов/прочих упоминаний сохранить». P2.4 permits only the existing exact Hocuspocus driver default and config lookup/key lines in packages/core/src/Support/Config.php and packages/core/config/vaulter.php. Exact counted allow-list; no blanket file exemption, imports, additional occurrences or prose exemptions. Existing runtime behavior remains until P2.5; no normalization is implemented in P2.4. Azgard and Filament names remain forbidden without exceptions. Code Guidance is zero unexpected matches under this exact allow-list.",
+      "rationale": "P2.4 empty allow-list conflicts with live collaboration configuration and tested fallback; moving it now would execute future P2.5 scope. Owner resolved the specific acceptance conflict.",
+      "applies_to": [
+        "P2.4"
+      ]
+    }
+  ],
+  "required_carrier": {
+    "$schema": "urn:swissknifeman:task:plan:document:v1",
+    "id": "artifacts-P2-design-P2.4-opus",
+    "title": "OPUS — дословные требования для P2.4 (39 единиц)",
+    "sections": [
+      {
+        "id": "OPUS-P2.4-39",
+        "title": "OPUS — дословные требования для P2.4 (39 единиц)",
+        "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+      },
+      {
+        "id": "01-review.md-4.-Codex-N21-S3-.-AzGuard--core-dev-main",
+        "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N21 (S3). AzGuard-специфика живёт в core, а мост требует `dev-main`",
+        "text": "- `01:1c3d640e`\n\n`Contracts\\Access\\AzgardGuard`, `Drivers\\Permission\\AzgardPermissionResolver`, `Support\\AzgardConfig` и ключи\n`azgard.*` — в core; `vaulter-azgard` содержит только адаптер и требует `axioma-studio/azguard-core: dev-main` —\nс таким требованием стабильный релиз невозможен."
+      },
+      {
+        "id": "02-decisions.md-D02-T1",
+        "title": "02-decisions.md — D02 — Пакеты: сохранить набор, сделать зависимости честными · T1",
+        "text": "- `02:435d86ab`\n\n**Решение.**\n\n- `02:8a0023cd`\n\n1. Composer-пакеты остаются: `vaulter-core`, `vaulter-media`, `vaulter-drive`,\n   `vaulter-documents`, `vaulter-filament`, `vaulter-azgard`; npm — `@vaulter/vue`;\n   плюс `hocuspocus-server`.\n\n- `02:7557780a` — _правило владения соблюдается раскладкой P2.1–P2.4; ADR-0019 — P0.4_\n\n4. Правило владения (фиксируется ADR-0019 «Kernel ownership»):\n\n- `02:51375102`\n\n   - **media** — движок CAS (content store, storage driver, GC, reconcile, repair);\n\n- `02:7bf67b19`\n\n   - **мосты** (azgard, filament) не содержат доменной логики.\n\n- `02:e15b4066`\n\n5. Всё AzGuard-специфичное (`AzgardGuard`, драйвер, карта прав, ключи `azgard.*`)\n   переносится из core в `vaulter-azgard` (N21).\n\n- `02:f9aa9d1e`\n\n**Почему.** Установки «core без drive» не существует: без `DriveProvisioner` нельзя создать drive.\nЧестные `require` дешевле, чем обратное слияние core+drive (отмена ADR-0015) или новые пакеты.\n\n- `02:91f6585f`\n\n**Отвергнуто.** Слияние drive в core (огромный перенос namespace); пакеты\n`contracts/kernel/sharing/webhooks/collaboration` (нет независимой установки)."
+      },
+      {
+        "id": "03-glossary-and-renames.md-preamble",
+        "title": "03-glossary-and-renames.md — (preamble)",
+        "text": "- `03:0a946809`\n\nЭтот файл — нормативный для исполнителей: новое имя берётся **только** отсюда. Если\nсимвола нет в таблицах, его имя не меняется (кроме перемещения в domain-подпапку по\nADR-0017, см. [04-packages-and-layout.md](04-packages-and-layout.md))."
+      },
+      {
+        "id": "03-glossary-and-renames.md-3.-core-Vaulter",
+        "title": "03-glossary-and-renames.md — 3. Классы: core (`Vaulter\\`)",
+        "text": "- `03:792772ee`\n\n| Было | Стало | Примечание |\n\n- `03:0065c62f`\n\n| `Drivers\\Permission\\AzgardPermissionResolver` | → `Vaulter\\Azgard\\AzgardPermissionDriver` | в пакет azgard |\n\n- `03:15134404`\n\n| `Contracts\\Access\\AzgardGuard` | → `Vaulter\\Azgard\\Contracts\\AzgardGuard` | в пакет azgard |\n\n- `03:5c0723c5`\n\n| `Support\\AzgardConfig` | → `Vaulter\\Azgard\\AzgardPermissionMap` | в пакет azgard |\n\n- `03:8378be94`\n\n| `Testing\\FakeAzgardGuard` | → `Vaulter\\Azgard\\Testing\\FakeAzgardGuard` | в пакет azgard |"
+      },
+      {
+        "id": "04-packages-and-layout.md-preamble",
+        "title": "04-packages-and-layout.md — (preamble)",
+        "text": "- `04:bc522d5e`\n\nОснование — [D02](02-decisions.md#d02), [D05](02-decisions.md#d05), [D08](02-decisions.md#d08),\nADR-0017 (layer-first + domain sub-namespace остаётся каноном)."
+      },
+      {
+        "id": "04-packages-and-layout.md-1.",
+        "title": "04-packages-and-layout.md — 1. Пакеты и зависимости",
+        "text": "- `04:4cf1b89d`\n\n| Пакет | Composer / npm | Namespace | `require` (Vaulter) | Назначение |\n\n- `04:2cf5c88c`\n\n| core | `axioma-studio/vaulter-core` | `Vaulter\\` | — | Kernel: схема, общие модели, доступ, шаринг, activity, события/webhooks, профили, файловые обработчики, контракты, конфиг ядра |\n\n- `04:b1839a2e`\n\n| media | `axioma-studio/vaulter-media` | `Vaulter\\Media\\` | core | CAS: staging, sha256, promote, GC, reconcile, repair scopes |\n\n- `04:6b19960a`\n\n| drive | `axioma-studio/vaulter-drive` | `Vaulter\\Drive\\` | core, media | Drive handle, операции дерева и файлов, загрузки (single/tus/S3), скачивание, корзина, HTTP Drive |\n\n- `04:cd9c5512` — _require drive — P1.10; переименования filament — P2.4_\n\n| filament | `axioma-studio/vaulter-filament` | `Vaulter\\Filament\\` | core, **drive** | Админ-панель поверх публичного API |\n\n- `04:5bbb932e`\n\n| azgard | `axioma-studio/vaulter-azgard` | `Vaulter\\Azgard\\` | core | Драйвер прав AzGuard + адаптер guard |\n\n- `04:45967c6d`\n\nГраф (разрешённые направления, проверяется Deptrac/Pest arch):\n\n- `04:61265661`\n\n```\n            ┌────────────┐\n            │    core    │◄─────────────┬──────────────┐\n            └─────▲──────┘              │              │\n                  │                     │              │\n            ┌─────┴──────┐        ┌─────┴─────┐  ┌─────┴─────┐\n            │   media    │        │  azgard   │  │ (host app)│\n            └─────▲──────┘        └───────────┘  └───────────┘\n                  │\n            ┌─────┴──────┐\n            │   drive    │◄──────────┐\n            └─────▲──────┘           │\n                  │                  │\n            ┌─────┴──────┐     ┌─────┴─────┐\n            │ documents  │     │ filament  │\n            └────────────┘     └───────────┘\n```\n\n- `04:409f3e4e`\n\nПравила (arch-тесты в каждом пакете):\n\n- `04:147f3b2f`\n\n1. Пакет импортирует только namespace пакетов, от которых зависит в `composer.json`.\n\n- `04:66bfddc4` — _arch-правило: Azgard/Hocuspocus/Filament — P2.4; TipTap/Univer (richText, NodeKind-доки) — P4.3_\n\n2. core не содержит слов `Azgard`, `TipTap`, `Univer`, `Hocuspocus`, `Filament` в `src` (кроме\n   строковых ключей типов событий/конфигов, перечисленных в allow-list теста).\n\n- `04:6021542f`\n\n5. `src` никогда не импортирует `Testing\\*` (D35)."
+      },
+      {
+        "id": "04-packages-and-layout.md-6.-media-azgard-filament",
+        "title": "04-packages-and-layout.md — 6. Раскладка: media, azgard, filament",
+        "text": "- `04:f9df15a0` — _media/azgard/filament — P2.4; MediaConfig — P2.5; ScopeRepairer/ObjectKey — выполнено P1.5; Doctor — P7.1_\n\n```text\npackages/media/src/\n├── VaulterMediaServiceProvider.php\n├── Configuration/MediaConfig.php\n├── Cas/{BlobStore,BlobGarbageCollector,BlobReconciler,FlysystemStorageDriver,Sha256ContentStore,StagedTempObject,ScopeRepairer,ObjectKey}.php\n├── Console/{GcBlobsCommand,ReconcileBlobsCommand,RepairBlobScopesCommand}.php\n└── Doctor/Checks/{ContentDiskProbeCheck,DedupScopeCheck}.php\n\npackages/azgard/src/\n├── VaulterAzgardServiceProvider.php\n├── AzgardPermissionDriver.php\n├── AzgardPermissionMap.php\n├── AzgardGuardAdapter.php\n├── NullAzgardGuard.php\n├── Contracts/{AzgardGuard,AzgardBackedUser}.php\n└── Testing/FakeAzgardGuard.php\n\npackages/filament/src/                  # конвенция Filament (исключение ADR-0017 сохраняется)\n├── VaulterPlugin.php\n├── VaulterFilamentServiceProvider.php\n├── Resources/{Drive,Node,NodeGrant,NodeShare,Activity}Resource/…\n└── Support/{PanelActor,DriveHandleFor}.php   # все действия через DriveHandle::actingAs(PanelActor::current())\n```\n\n- `04:51228a40` — _StorageResource → DriveResource — P2.4; удаление PanelAccessScope и видимость через handle — P6.6_\n\nВ `filament`: `StorageResource` → `DriveResource`; `PanelAccessScope` удаляется — таблицы берут\nвидимость из `Queries` через handle (точная видимость D12). «Panel» внутри filament означает\nFilament panel и не переименовывается."
+      },
+      {
+        "id": "04-packages-and-layout.md-7.-Service-providers",
+        "title": "04-packages-and-layout.md — 7. Service providers",
+        "text": "- `04:e5aa842c` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\nКаждый provider — тонкий: `configurePackage()` + вызовы registrar-классов (`Providers/*Registrar`),\nкаждый из которых тестируется отдельно. Порядок фаз:\n\n- `04:3c7a3675` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| Фаза | Что делает | Где |\n\n- `04:fff0cc96` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| `register` | merge конфига пакета, bind контрактов, singleton реестров, регистрация `DoctorCheck`, `NodeContentLifecycle` через tag | все |\n\n- `04:30a9881f` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\nТеги контейнера (единая схема):\n\n- `04:3ece3f1d` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| Тег | Что | Кто добавляет |"
+      },
+      {
+        "id": "06-extension-points.md-5.-Permission-driver-core",
+        "title": "06-extension-points.md — 5. Permission driver (core)",
+        "text": "- `06:53200da4` — _встроенные ключи core — P2.1; ключ azgard регистрирует vaulter-azgard — P2.4_\n\n- Встроенные ключи: `database`, `gate`, `spatie` (core), `azgard` (vaulter-azgard регистрирует ключ сам),\n  `null` (только тесты; в production — исключение boot)."
+      },
+      {
+        "id": "13-workstreams.md-F2-T1-0.3-P2.4-AzGuard-core-vaulter-azgard-media-filament",
+        "title": "13-workstreams.md — F2 — Канон имён и конфигурации (T1, начало 0.3) / P2.4 — AzGuard из core в vaulter-azgard; media/filament",
+        "text": "- `13:bf492cbc`\n\n- Решения: D02 п.5 · Находки: N21. Сделать: перенос контракта/драйвера/карты/фейка; регистрация ключа `azgard`;\n  переименования media-команд; Filament `StorageResource`→`DriveResource`.\n\n- `13:5ff92789`\n\n- Готово: arch-тест «core не содержит Azgard»; тесты azgard зелёные.\n\n- `13:9343903e`\n\n- Исполнитель: sonnet/medium."
+      }
+    ],
+    "applies_to": [
+      "P2.4"
+    ],
+    "provenance": {
+      "path": "artifacts/P2-design/P2.4-opus.md",
+      "sha256": "5b6994c9c8ca61ced19788fad96952041031db320333f8fdcbacd8c4576d7ba7"
+    }
+  },
+  "phase_environment": [
+    {
+      "id": "Phase-Context",
+      "title": "Phase Context",
+      "text": "P2 приводит имена, раскладку, схему и конфигурацию к канону OPUS 03/04/07/08 одним механическим проходом (AD04) до\nприкладного слоя P3: Storage→Drive, FileVersion→FileRevision, Panels→Profiles (без own-tables и мёртвых хуков),\nHostRoleDriver→PermissionDriver, Engines→Handlers, WebhookEvent+ActivityVerb→EventType; таблицы `v_drives`,\n`v_file_revisions`, `v_file_revision_blobs`, колонки `drive_id`/`profile`/`number`/`target_node_id` и upgrade-миграции\n№1, №2, №4, №8, №9; domain-подпапки drive/documents; AzGuard из core в `vaulter-azgard`; файл конфига на пакет,\n`ConfigNormalizer`, `*Config`-классы, `ConfigValidator`, удаление `Support\\Config`. Сценарии P1 (V01–V03, V06, V09,\nV13, V14, V17–V27) — страховочная сетка: они остаются зелёными после каждого item.\n\n> **Контракт фазы.** Потребляет: OPUS `13-workstreams.md` F2, `03` §1–§5, §7, §8, `04` §1–§7, `06` §1/§2/§5, `07`,\n> `08` §2/§3/§6, `14` V15 (частично), V28; AD01–AD05, AD11 (PermissionLevel), AD14, AD26; результаты P1 (`VaulterDatabase`,\n> `HostKeyColumns`, миграции №3/№6/№7, `ProblemException`, стеки middleware); фикстура `tests/fixtures/v0.2.0/` (P0.3);\n> D06, D15, D16.\n> Производит: канонические FQN core/drive/documents/media/azgard/filament по 03 §3–§5 (в части P2);\n> `Vaulter\\Enums\\Events\\EventType` с каноническими значениями; `Vaulter\\Schema\\SchemaBuilder` (целевая схема без\n> feature-гейтов); upgrade-миграции `2026_10_01_000001`, `…000002`, `…000004`, `…000008`, `…000009`;\n> `Vaulter\\Configuration\\*`, `Vaulter\\{Media,Drive,Documents,Azgard}\\Configuration\\*Config`, `ConfigNormalizer`,\n> `ConfigValidator`, файлы `vaulter-media.php`/`vaulter-drive.php`/`vaulter-documents.php`/`vaulter-azgard.php` в\n> каноне 07; `Vaulter\\Schema\\KeyColumnInspector`; Rector-карты переименований (`artifacts/P2.m/rename-map.php`).\n\n> **Phase Assurance | v1.**\n> Impact: public-contract\n> Integration Seams: class-renames · schema-upgrade-migrations · event-type-values · config-normalizer · azgard-extraction\n> Live or Irreversible: no\n> Audit Intent: auto\n> Rationale: жёсткая смена публичной поверхности всех PHP-пакетов (FQN, контракты, фасад, конфиг) и upgrade схемы\n> 0.2 → 0.3 с сохранением данных (переименование таблиц/колонок, hard-delete soft-deleted grants — необратимо по\n> данным, UPGRADE.md); владелец требует фазовый аудит каждой фазы (D03).\n\n> **Окружение:** D04 — `scripts/php84`; PG 16 `127.0.0.1:5432` `vaulter_test`; MySQL 8 `127.0.0.1:3306` `vaulter_test`\n> (O-2) — для upgrade-миграций P2.7. Сокращения в Validation всех items:\n> `R=\"$(git rev-parse --show-toplevel)\"`; `PG=\"DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret\"`;\n> `MY=\"DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret\"`;\n> `SQ=\"DB_CONNECTION=sqlite DB_DATABASE=:memory:\"`. Гейт пакета `<pkg>` ∈ {drive, documents, media, filament, azgard}:\n> `(cd packages/<pkg> && env $SQ \"$R/scripts/php84\" vendor/bin/pint --test)`,\n> `(cd packages/<pkg> && env $SQ \"$R/scripts/php84\" vendor/bin/phpstan analyse --no-progress --memory-limit=512M)`,\n> `(cd packages/<pkg> && env $SQ \"$R/scripts/php84\" vendor/bin/pest --ci)` — каждая exit 0. Гейт core (из корня):\n> `scripts/php84 vendor/bin/pint --test packages/core`, `scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress`,\n> `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests` — exit 0. **Гейт всех пакетов** = гейт core + гейты\n> drive, documents, media, filament, azgard. Сетка P1 на PG (каждый item P2.1–P2.7):\n> `env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency packages/core/tests/Database packages/core/tests/Upgrade`\n> и `(cd packages/drive && env $PG \"$R/scripts/php84\" vendor/bin/pest --ci tests/Concurrency tests/Uploads)` → 0 failed,\n> 0 skipped. Базовые падения — только классифицированные в `@plan/knowledge/findings-baseline.json`; новое падение = красный item.\n\n> **Порядок (зависимости, D16).** P2.1 → P2.7 → P2.2 → P2.3 → P2.4 → P2.5 → P2.6.\n> **D21:** P2.2 владеет полной реализацией и единым итоговым review workset P2.2 + P2.3; P2.3 после закрытия producer проверяет поставку исходного результата documents. Все исходные нормы и Validation обоих пунктов сохранены.\n> P2.1 переименовывает классы core, которые импортируют все пакеты. P2.7 переводит схему и строковые имена таблиц и\n> колонок во всех пакетах на канон (после P2.1, чтобы карта колонок шла по уже каноническим моделям). P2.2/P2.3\n> переименовывают модули на итоговой схеме. P2.4 выносит AzGuard после переименований доступа (P2.1). P2.5 заменяет\n> `Support\\Config` последним среди переименований: его ~170 файлов-носителей к этому моменту имеют канонические имена.\n> P2.6 проверяет типы колонок итоговой схемы и использует канонический `ids.host_keys`."
+    }
+  ]
+}

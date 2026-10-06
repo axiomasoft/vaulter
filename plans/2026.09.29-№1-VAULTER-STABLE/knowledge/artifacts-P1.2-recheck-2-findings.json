@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1.2-recheck-2-findings",
+  "title": "recheck-2-findings",
+  "sections": [
+    {
+      "id": "Content",
+      "title": "Content",
+      "text": "I'll recheck the two lock-order and migration findings against the inlined actions, then confirm subtree locking and quota updates in the current code.The action entry points match the inlined text. Next I’ll read the lock, subtree, and quota implementations those actions actually call.review: grok/grok-4.7 findings:1\n\n1. **high** — `packages/drive/src/Actions/RestoreNodeAction.php:59` (Trash locks the other row at `packages/drive/src/Actions/TrashNodeAction.php:41` and `packages/core/src/Repositories/Drive/NodeStoreRepository.php:91`; the same Trash order cycles with `packages/drive/src/Actions/MoveNodeAction.php:55`)\n   - **Defect:** Restore locks the trashed node and the root, then locks the original parent in a second `lockForUpdate`. Trash locks that parent first and the subtree `UPDATE` then locks every descendant, including rows that already have `trashed_at` (`descendantsAndSelf()` returns them). Trash never calls `lockTree`, so Restore's tree lock does not separate the two transactions. The parent and the descendant are locked in opposite orders. Move locks its node and destination in ascending id order after `lockTree`, which meets Trash's parent-then-descendant order whenever the moved id sorts first.\n   - **Failure scenario:** Folder P contains file C, C is already in the trash, and `trashed_from_parent_id` is P. T1 trashes P and locks P. T2 restores C, locks C, and waits for P. T1's subtree `UPDATE` waits for C. PostgreSQL aborts one transaction with `40P01`; MySQL/MariaDB abort one with `1213`. The same abort happens when T1 trashes P and T2 moves an older descendant N (`N.id` sorts before `P.id`) into P: Move holds N and waits for P, Trash holds P and waits for N. `VaulterDatabase::transaction()` retries the callback up to 3 times, then the request fails. SQLite has no row locks, so this cycle is PostgreSQL and MySQL/MariaDB.\n   - **Fix:** Call `lockTree` as the first statement inside Trash's transaction, before the node lock, so Trash, Restore, and Move all take the tree lock before any node row lock."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P1.2/recheck-2-findings.md",
+    "sha256": "342f06f3e814ba0de9e4a38ef34c1a02e511876e86f3540438b8a7a106452030"
+  }
+}

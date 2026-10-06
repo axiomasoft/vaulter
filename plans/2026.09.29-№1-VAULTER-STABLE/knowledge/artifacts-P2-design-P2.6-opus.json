@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P2-design-P2.6-opus",
+  "title": "OPUS — дословные требования для P2.6 (4 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P2.6-4",
+      "title": "OPUS — дословные требования для P2.6 (4 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "03-glossary-and-renames.md-7.",
+      "title": "03-glossary-and-renames.md — 7. Таблицы и колонки",
+      "text": "- `03:7ec3b07f` — _типы HK/REF новых колонок — P2.6; миграции — P2.7_\n\nТипы колонок-ключей хоста — D25. Полная upgrade-миграция — [08-data-model-and-migration.md](08-data-model-and-migration.md)."
+    },
+    {
+      "id": "08-data-model-and-migration.md-2.",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / Прочие",
+      "text": "- `08:72421d54` — _HK-типы выполнены P1.7; KeyColumnInspector P2.6 проверяет их_\n\n| `v_node_comments` | actor-колонки → HK |"
+    },
+    {
+      "id": "13-workstreams.md-F2-T1-0.3-P2.6",
+      "title": "13-workstreams.md — F2 — Канон имён и конфигурации (T1, начало 0.3) / P2.6 — Типы колонок, связанные с переименованием",
+      "text": "- `13:24c16f1f`\n\n- Сделать: убедиться, что все новые/переименованные колонки HK/REF соответствуют 08 §2; doctor-заглушка проверки типов.\n\n- `13:43eba11b`\n\n- Исполнитель: sonnet/low."
+    }
+  ],
+  "applies_to": [
+    "P2.6"
+  ],
+  "provenance": {
+    "path": "artifacts/P2-design/P2.6-opus.md",
+    "sha256": "d717673f2d5672a3d76da4ef2fdba4bf96086e26cd58c929f61053fec6d4098c"
+  }
+}

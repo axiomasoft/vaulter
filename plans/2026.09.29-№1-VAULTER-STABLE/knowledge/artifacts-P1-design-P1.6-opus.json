@@ -1,0 +1,64 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.6-opus",
+  "title": "OPUS — дословные требования для P1.6 (25 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.6-25",
+      "title": "OPUS — дословные требования для P1.6 (25 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:b362eeda`\n\n| Вывод Codex | Позиция |\n\n- `01:35b15a04`\n\n| E2 quota без атомарного лимита | Согласен. Семантика head-bytes сохраняется |"
+    },
+    {
+      "id": "02-decisions.md-D21-T0",
+      "title": "02-decisions.md — D21 — Конкурентность: атомарные инварианты и порядок блокировок · T0",
+      "text": "- `02:823f7930`\n\n**Решение.**\n\n- `02:bab642e5`\n\n- Квота: внутри транзакции\n  `UPDATE v_drives SET used_bytes = used_bytes + :d WHERE id = :id AND (quota_bytes IS NULL OR used_bytes + :d <= quota_bytes)`;\n  0 строк → `QuotaExceededException` и откат. Предпроверка остаётся только ради быстрого отказа.\n  Семантика — байты головных ревизий (как сейчас).\n\n- `02:20cf0d50` — _P1.6 — v_files.version_count; v_documents.revision_count — P4.1_\n\n- Номер ревизии: `SELECT ... FOR UPDATE` строки `v_files`/`v_documents`, номер =\n  `revision_count + 1`, delta квоты — от **перечитанной** головы.\n\n- `02:dbbbb7c4`\n\n- Канонический порядок блокировок: drive (tree lock) → узлы по возрастанию id → агрегат\n  (file/document) → CAS advisory lock `(scope_key, sha256)`. Любое Action, берущее больше\n  одной блокировки, следует порядку (arch-ревью + тест deadlock-сценария на PG).\n\n- `02:add00ef0`\n\n- `VaulterDatabase::transaction()` повторяет транзакцию на `40001`/`40P01` (PG) и deadlock\n  MySQL до 3 раз.\n\n- `02:dbd5319b`\n\n- Promote объекта в хранилище не входит в SQL-транзакцию: документированная сага\n  «stage → promote → metadata commit → при откате объект-сирота → reconciler после grace»."
+    },
+    {
+      "id": "08-data-model-and-migration.md-1.",
+      "title": "08-data-model-and-migration.md — 1. Агрегаты",
+      "text": "- `08:62762aa8`\n\nИнварианты (проверяются в Actions и, где возможно, индексами):\n\n- `08:3a0362e2`\n\n| # | Инвариант | Где |\n\n- `08:ac660fbe` — _P1.6 — условный UPDATE; vaulter:drives:recount — P7.2_\n\n| I7 | `used_bytes` = сумма `size_bytes` голов **всех** файлов drive, включая корзину (как сейчас: освобождает только purge; копия добавляет байты) | условный UPDATE + `vaulter:drives:recount` |"
+    },
+    {
+      "id": "08-data-model-and-migration.md-2.-v_files",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_files`",
+      "text": "- `08:57f3f618` — _P1.6 использует version_count (текущее имя); переименование — P2.1_\n\n`current_version_id` → `current_revision_id`; `version_count` → `revision_count`; удалить `deleted_at`;\n`node_id` остаётся `UNIQUE`."
+    },
+    {
+      "id": "08-data-model-and-migration.md-5.-D21",
+      "title": "08-data-model-and-migration.md — 5. Порядок блокировок (D21)",
+      "text": "- `08:bd2319dc`\n\n```\n1. VaulterDatabase::lockTree(drive)            — только операции, меняющие структуру (move, restore, purge поддерева, delete drive)\n2. SELECT … FOR UPDATE узлов по возрастанию id  — узел операции и назначение\n3. SELECT … FOR UPDATE агрегата                 — v_files / v_documents (ревизии, голова)\n4. UPDATE v_drives … used_bytes (условный)      — квота\n5. VaulterDatabase::advisoryLock(\"cas:{scope_key}:{sha256}\") — commit blob\n```\n\n- `08:e141b7f4`\n\nОперация не берёт блокировку уровня N после блокировки уровня M > N. Тест на PG: два параллельных сценария с\nпересекающимися ресурсами завершаются без deadlock или с одним ретраем."
+    },
+    {
+      "id": "09-integrity-and-security.md-4.-Actions-D13",
+      "title": "09-integrity-and-security.md — 4. Инварианты дерева в Actions (D13)",
+      "text": "- `09:7d6ee90e` — _P1.2 — назначение и поддерево без корзины; P1.6 — квота одним условным UPDATE; байты через lifecycle — P4.2_\n\n| `CopyNodeAction` | назначение — активная папка того же drive; копия поддерева без узлов в корзине; байты через lifecycle; квота одним условным UPDATE на сумму |"
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.6",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.6 — Атомарная квота и счётчик ревизий",
+      "text": "- `13:ddf11397`\n\n- Решения: D21 · Находки: E2 · Сценарии: V02, V03, V20.\n\n- `13:c4fab799`\n\n- Сделать: условный UPDATE `used_bytes` внутри транзакции; `FOR UPDATE` строки файла; номер ревизии = `version_count + 1`;\n  delta от перечитанной головы; ретраи в `VaulterDatabase::transaction`.\n\n- `13:35f243fe`\n\n- Готово: V02, V03, V20 зелёные на PG.\n\n- `13:bb84ecd9`\n\n- Исполнитель: sonnet/high (по спецификации 08 §5)."
+    },
+    {
+      "id": "14-verification.md-Codex",
+      "title": "14-verification.md — Принятые от Codex (с уточнениями)",
+      "text": "- `14:b891e4d6`\n\n| ID | Сценарий | Ожидание после решений | БД | Пункт |\n\n- `14:3a220ea7`\n\n| V02 | Две транзакции на разных соединениях, свободно 10 МБ, два разных файла по 8 МБ | Ровно одна успешна; вторая — `quota_exceeded`; `used_bytes` = сумма голов; blob проигравшей — сирота, удаляемый reconcile | PG | P1.6 |\n\n- `14:7b7e9eec`\n\n| V03 | Две новые ревизии одного файла параллельно | Номера 2 и 3 (без дублей и дыр); голова — последняя закоммиченная; квота учла дельты от реальных предыдущих голов | PG | P1.6 |"
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:29cb0097` — _P1.6 — гонка одинаковых имён без дубля и без 500 (второй — node_name_conflict); Rename «x (2).pdf» — P3.3_\n\n| V20 | Параллельные upload в одну папку с одинаковым именем, `OnNameConflict::Rename` | Оба успешны: `x.pdf`, `x (2).pdf` | PG | P1.6/P3.3 |\n\n- `14:83ac5b85`\n\n| V21 | Move и upload под пересекающимися блокировками (drive → node → aggregate → CAS) | Без deadlock или ≤ 1 ретрай; инварианты сохранены | PG | P1.6 |"
+    }
+  ],
+  "applies_to": [
+    "P1.6"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.6-opus.md",
+    "sha256": "7cc687e4797b4820d6e2a60564b5be0cb2052170a1521d0293e791d72d2d69e0"
+  }
+}

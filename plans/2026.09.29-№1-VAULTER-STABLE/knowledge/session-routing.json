@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "session-routing",
+  "title": "Session routing — pool, native launch и review runbook",
+  "sections": [
+    {
+      "id": "Session-routing-pool-native-launch-review-runbook",
+      "title": "Session routing — pool, native launch и review runbook",
+      "text": "Единственное конкретное расписание — [`@plan/plan.json`](@plan/plan.json) `execution-sheet/v1`. Этот файл — pool, mapping и\nrunbooks (по образцу `corex:PLAN3` `@plan/knowledge/session-routing.json`; D05)."
+    },
+    {
+      "id": "section",
+      "title": "Пул и роли",
+      "text": "Источник ролей — Task `packages/task/docs/reference/provider-model-roles.md`.\n\n| Provider | Model | Role в PLAN2 | Effort |\n|:--|:--|:--|:--|\n| claude-code | `opus` (claude-opus-5-5) | автор плана: дизайн фаз, finish, закрытие; frontier-items (контракты, ADR) | `medium`/`high` |\n| codex | `gpt-6-sol` | implementation, owning auto-fix, design/phase audit (не автор дизайна и не исполнитель по сессии) | из sheet |\n| cursor | `grok-4.7` | независимое `full`-ревью: доступ, конкурентность, миграции, API | `high` |\n| cursor | `grok-4.6` | ревью механических переносов (P2) | `high` |\n\n`auto` и модели вне пула запрещены. Reviewer model всегда ≠ executor model. Проектные агенты (`vaulter-reviewer`,\n`vaulter-security-review`, `vaulter-api-surface`, `vaulter-test-verifier`) — вспомогательные инструменты внутри сессии\nисполнителя/ревьюера, не замена независимого `full`-ревью."
+    },
+    {
+      "id": "Native-launch",
+      "title": "Native launch",
+      "text": "Codex:\n\n```bash\ncodex -C \"$(git rev-parse --show-toplevel)\" -m gpt-6-sol -c 'model_reasoning_effort=\"<effort>\"' -a never -s danger-full-access '$ task:plan-run 2026.09.29-№1-VAULTER-STABLE <exact-items-from-sheet>'\n```\n\nCursor (effort — нативным селектором до запуска):\n\n```bash\nagent --workspace \"$(git rev-parse --show-toplevel)\" --model grok-4.7 --force --sandbox disabled --trust --approve-mcps 'read-only full review for <admission>; do not repair or finalize'\n```\n\nClaude Code: `claude --model opus`, затем `/task:plan-run 2026.09.29-№1-VAULTER-STABLE <items>`."
+    },
+    {
+      "id": "Full-review-runbook",
+      "title": "Full review runbook",
+      "text": "1. После зелёной Validation, до finalize — свежий actor/context на reviewer model/effort из той же строки sheet.\n2. Вход: item-spec, diff (или артефакты), вывод Validation. Reviewer read-only, не чинит.\n3. Findings → owning executor чинит в текущем Scope → затронутые проверки → reviewer перепроверяет. ≤2 раунда, затем эскалация.\n4. Строка `review: <provider>/<model> <GREEN|findings:N>` в Completion Notes."
+    },
+    {
+      "id": "section-2",
+      "title": "Эстафета",
+      "text": "Любой агент завершает команду переписанным `@plan/plan.json` с одним semantic Next и launch-block из строки execution-sheet.\nСледующий агент стартует только по этому Next."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "session-routing.md",
+    "sha256": "8a92fa65b4a02f5f11af9a93e8d9d0df4398f8c4a4bc5dc1381978de7096efdb"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.3-opus",
+  "title": "OPUS — дословные требования для P1.3 (30 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.3-30",
+      "title": "OPUS — дословные требования для P1.3 (30 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:b362eeda`\n\n| Вывод Codex | Позиция |\n\n- `01:59e0fce6`\n\n| E10 cursor/unique частично есть | Согласен. Но утечка метаданных в листинге шире, чем описано (N08) |\n\n- `01:7960d51f`\n\n| ACL listing: exact SQL или projection | Выбираю третий путь: **пакетная точная оценка соседей** по общей цепочке предков (новая идея, [D12](02-decisions.md#d12)) — без materialized read-model |"
+    },
+    {
+      "id": "01-review.md-4.-Codex-N08-S1-.",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N08 (S1). Листинг раскрывает запрещённых детей",
+      "text": "- `01:2c803f0d`\n\n`NodeController::index` проверяет `View` только у родителя, затем `narrowToAccessible()`. Для драйверов\n`gate`/`spatie`/`azgard` (не grant-authoritative) сужение **не применяется вообще**\n(`NodeReadRepository::grantFilteringApplies`, строка 471): любой, кто видит папку, видит имена, размеры и MIME\nвсех детей, включая узлы с явным `deny`. Для `database` — сознательный superset (docblock «LISTING SEMANTIC»,\nстрока 356). Имена файлов — это данные; для DMS это утечка."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N24-S3-.-NodeResource-N-ACL",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N24 (S3). `NodeResource` — N обходов ACL на страницу и внутренние указатели наружу",
+      "text": "- `01:8f64c1d4` — _P1.3 — abilities из evaluateMany; file_id/current_version_id в JSON — P6.1_\n\nДля каждого узла страницы вызывается `effectiveGrants()` с обходом предков. В JSON уходят `file_id` и\n`current_version_id` — внутренняя схема становится REST-контрактом."
+    },
+    {
+      "id": "02-decisions.md-D12-T0",
+      "title": "02-decisions.md — D12 — Точная видимость в листинге и поиске через пакетную оценку · T0",
+      "text": "- `02:a8870662`\n\n**Решение.** Листинг детей, поиск, корзина и «shared with me» возвращают только узлы с\nэффективным `View`, для **любого** драйвера. Алгоритм:\n\n- `02:22cec884`\n\n1. SQL выбирает кандидатов страницы по курсору (сортировка + tie-breaker `id`), с переизбытком\n   `k × per_page` (k = 2, максимум `vaulter.listing.scan_budget` = 1000 строк за запрос).\n\n- `02:c7fac8d7`\n\n2. `AccessResolver::evaluateMany(Authorizable, iterable<Node>)` группирует кандидатов по\n   родителю: эффективный набор родителя считается **один раз** (обход предков + роль-лейн\n   драйвера), затем для каждого ребёнка сворачиваются только его собственные grants\n   (один запрос `WHERE node_id IN (...)`) и `inherit_grants`.\n\n- `02:a96762c1`\n\n3. Отфильтрованные элементы идут в страницу; курсор = ключ **последнего просмотренного**\n   кандидата, не последнего выданного. Недобор страницы допустим; `nextCursor` не null, пока\n   кандидаты не кончились.\n\n- `02:7b7717f0`\n\n4. Счётчики `total` не выдаются там, где они раскрывали бы скрытые узлы.\n\n- `02:d7baadf4`\n\nТот же `evaluateMany` заполняет `abilities` в `NodeResource` (D33). Materialized read-model\n(ROADMAP H.4) остаётся в T2 как оптимизация, не условие корректности."
+    },
+    {
+      "id": "09-integrity-and-security.md-2.-AccessResolver-evaluateMany",
+      "title": "09-integrity-and-security.md — 2. Пакетная оценка доступа (`AccessResolver::evaluateMany`)",
+      "text": "- `09:2a2d76a2`\n\n```php\n/**\n * @param iterable<Node> $nodes\n * @return array<string, GrantSet> ключ — (string) node id\n */\npublic function evaluateMany(Authorizable $actor, iterable $nodes): array;\n```\n\n- `09:68ded052`\n\n1. `override()` драйвера — один раз на (actor, drive). Allow/Deny → одинаковый результат для всех.\n\n- `09:cc750651`\n\n2. `subjectsFor(actor)` — один раз.\n\n- `09:249d3ac3`\n\n3. Сгруппировать узлы по `parent_id`. Для каждого уникального родителя вычислить **наследуемую** маску\n   для его детей (allow/deny, level): только `subtree`-grants самого родителя и его предков с учётом\n   `inherit_grants`-обрывов; `item`-grants родителя детям не передаются. Одна рекурсивная CTE на всех\n   родителей страницы (`WHERE id IN (...)`), результат кэшируется в объекте запроса. Правила свёртки\n   (ближайший deny, приоритеты) — ровно те же, что в текущем `resolveAcl`; алгоритм выносится в общий\n   `AclFolder`, которым пользуются и `effectiveGrants()`, и `evaluateMany()`.\n\n- `09:3b254327`\n\n4. Одна выборка grants по `node_id IN (<ids страницы>) AND (subject_type, subject_id) IN (<subjects>)`, не истёкших.\n\n- `09:1aa80b9d`\n\n5. Для каждого узла: если `inherit_grants = false` — наследуемая маска `P = (0, 0, null)` (как в текущем\n   `resolveAcl`: обход останавливается на узле), иначе `P` — маска его родителя; поверх — собственные\n   grants узла `O` (и `item`, и `subtree` применяются к самому узлу). Свёртка эквивалентна текущему\n   правилу «deny пробивается только строго более близким allow»:\n\n- `09:b7fdb0f8`\n\n   ```text\n   P.allow  = объединение allow по цепочке родителя (только subtree, с обрывами)\n   P.denied = deny цепочки родителя, уже пробитые более близкими allow внутри цепочки\n   allowed  = O.allow | P.allow\n   denied   = O.deny  | (P.denied & ~O.allow)      # allow узла пробивает deny предков, но не свой deny\n   level    = max(O.level, P.level)\n   ``` Затем роль-лейн драйвера (`resolve()` по субъектам в `AccessScope` drive) —\n   одинаков для всех узлов drive, кроме `nodeOwner`, поэтому кэшируется по `owned_by`.\n\n- `09:5482b224`\n\n6. Результат совпадает с `effectiveGrants()` для каждого узла — это контрактный тест (property-based:\n   случайные деревья, grants, deny, inherit cut-off).\n\n- `09:5c008642`\n\nСложность: O(1) SQL-запросов на страницу независимо от `per_page` (≤ 3 запроса)."
+    },
+    {
+      "id": "09-integrity-and-security.md-3.",
+      "title": "09-integrity-and-security.md — 3. Листинг с точной видимостью",
+      "text": "- `09:42ec8d3c`\n\n```text\ncursor = decode(options.cursor)              # (sort key tuple, id) последнего ПРОСМОТРЕННОГО\nvisible = []; scanned = 0; last = cursor\nwhile count(visible) < perPage and scanned < scanBudget:\n    batch = SQL(children of folder, after last, order by sort+id, limit perPage*2)\n    if batch empty: last = null; break\n    visible += guard.visible(context, batch)[: perPage - count(visible)]\n    last = key(последний элемент batch, который был ПРОСМОТРЕН до заполнения страницы)\n    scanned += count(просмотренных)\nreturn NodePage(visible, nextCursor = last === null ? null : encode(last), scanned)\n```\n\n- `09:3f8c6b95`\n\nКурсор подписывается HMAC (`app.key`) и включает drive id + сортировку, чтобы не принимать курсор другого\nзапроса. `total` не выдаётся. Поиск: то же, но кандидаты — `lower(name) LIKE %term%` по drive (экранирование как сейчас)."
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.3",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.3 — Точная видимость листинга и поиска",
+      "text": "- `13:3efee162`\n\n- Решения: D12 · Находки: N08, E10 · Сценарии: V09, V22.\n\n- `13:a8181f49`\n\n- Сделать: вынести свёртку в `AclFolder`; `AccessResolver::evaluateMany()` (09 §2); листинг детей, поиск, корзина,\n  shared, Filament-таблица — через точный фильтр с курсором «последний просмотренный» (09 §3) для **всех**\n  драйверов; `NodeResource::abilities` — из того же пакетного результата.\n\n- `13:8f23049f`\n\n- Готово: property-тест эквивалентности `evaluateMany` ≡ `effectiveGrants` (≥ 500 случайных деревьев); V09, V22\n  зелёные; число SQL-запросов на страницу 50 узлов ≤ 5 (тест счётчика запросов).\n\n- `13:ea96dc41`\n\n- Исполнитель: opus/high."
+    },
+    {
+      "id": "14-verification.md-Codex",
+      "title": "14-verification.md — Принятые от Codex (с уточнениями)",
+      "text": "- `14:b891e4d6`\n\n| ID | Сценарий | Ожидание после решений | БД | Пункт |\n\n- `14:dd60651a`\n\n| V09 | Allow на предке + deny на ребёнке; первые 300 кандидатов запрещены, 301-й разрешён | Запрещённые не видны в листинге/поиске/abilities; курсор доходит до 301-го; нет `total` | любая | P1.3 |"
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:5d9f3b69`\n\n| V22 | Драйвер `gate`: Gate разрешает папку, на ребёнке явный deny-grant | Ребёнок не виден в листинге (раньше был виден) | любая | P1.3 |"
+    }
+  ],
+  "applies_to": [
+    "P1.3"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.3-opus.md",
+    "sha256": "32a52a42ed97743980ad323c20440b78236424b61bd93c4b8bd1dc36055d0719"
+  }
+}

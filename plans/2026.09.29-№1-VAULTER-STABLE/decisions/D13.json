@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D13",
+  "title": "Ревью PA01 (E23) выполняет codex/gpt-6.1-sol/high — та же модель, что исполнитель (accepted)",
+  "date": "2026-10-02",
+  "status": "accepted",
+  "decision": "1. Исключение из D09 п.3 и правила `@plan/knowledge/session-routing.json` «Reviewer model ≠ executor model» — только для ревью E23 PA01 в P0.2.\n2. Ревьюер — `codex/gpt-6.1-sol/high`, новая сессия без контекста исполнителя, sandbox `read-only`, вход — неизменный\n   `artifacts/P0.2-PA01/review-prompt.txt` (с пометкой о D13), вывод — `@plan/knowledge/artifacts-P0.2-PA01-review-gpt61.json`.\n3. Ревью записывается как **same-model review, не независимое** (как D08); вердикт GREEN закрывает E23 для P0.2, но\n   фазовая приёмка P0 и правило для остальных items и фаз не меняются.",
+  "rationale": "Владелец явно выбрал этот вариант после показанного конфликта.",
+  "applies_to": [
+    "P0.2"
+  ],
+  "supersedes": [],
+  "actor": {
+    "provider": "legacy",
+    "model": "repository owner; фиксирует claude-opus-5-5/high."
+  },
+  "sections": [
+    {
+      "id": "Preamble",
+      "title": "Preamble",
+      "text": "---\nid: D13\ndate: 2026-10-02\nstatus: accepted\nitem: P0.2\nitems: [P0.2]\nsupersedes: []\nsuperseded_by: null\n---"
+    },
+    {
+      "id": "D13-PA01-E23-codex-gpt-6.1-sol-high-accepted",
+      "title": "D13 — Ревью PA01 (E23) выполняет codex/gpt-6.1-sol/high — та же модель, что исполнитель (accepted)",
+      "text": "**Actor:** repository owner; фиксирует claude-opus-5-5/high.\n**Evidence:** `@plan/brief.json#2026-10-02-pa01-review-same-model`; `artifacts/P0.2-PA01/checkpoint.json` (`route: codex/gpt-6.1-sol/high`);\n`artifacts/P0.2-PA01/review-result.json` (попытка на claude-sonnet-5-5 — HTTP 429, вердикта нет)."
+    },
+    {
+      "id": "Solution",
+      "title": "Solution",
+      "text": "1. Исключение из D09 п.3 и правила `@plan/knowledge/session-routing.json` «Reviewer model ≠ executor model» — только для ревью E23 PA01 в P0.2.\n2. Ревьюер — `codex/gpt-6.1-sol/high`, новая сессия без контекста исполнителя, sandbox `read-only`, вход — неизменный\n   `artifacts/P0.2-PA01/review-prompt.txt` (с пометкой о D13), вывод — `@plan/knowledge/artifacts-P0.2-PA01-review-gpt61.json`.\n3. Ревью записывается как **same-model review, не независимое** (как D08); вердикт GREEN закрывает E23 для P0.2, но\n   фазовая приёмка P0 и правило для остальных items и фаз не меняются."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "Владелец явно выбрал этот вариант после показанного конфликта."
+    },
+    {
+      "id": "Consequences",
+      "title": "Consequences",
+      "text": "Completion Notes P0.2: `review: codex/gpt-6.1-sol/high <GREEN|findings:N> (same-model, D13)`."
+    }
+  ]
+}

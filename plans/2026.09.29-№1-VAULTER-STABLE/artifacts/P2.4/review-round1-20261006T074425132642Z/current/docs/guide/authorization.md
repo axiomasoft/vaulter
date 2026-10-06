@@ -1,0 +1,393 @@
+---
+title: Authorization
+description: How Vaulter decides who can do what — the host-delegated AccessResolver, the deny-veto algorithm, grant inheritance and the inherit_grants cut-off, the ability flags the UI binds against, and the fail-loud null driver.
+outline: deep
+---
+
+# Authorization
+
+Vaulter answers exactly one authorization question: **may this actor perform this
+ability on this node?** The answer is computed by a single, Vaulter-owned engine —
+the `AccessResolver` — that folds together two lanes:
+
+1. the **per-node ACL** (`v_node_grants` rows), Vaulter's own grant store; and
+2. a **swappable host-role lane** (`PermissionDriver`) that bridges your application's
+   identity and role system in.
+
+The resolver itself is **not** a contract and **not** swappable — only the host-role
+lane is. This page documents the engine, its algorithm, and the rules that make a
+decision deterministic. The role drivers are covered in
+[Permission Drivers](./permission-drivers), and the grant rows themselves in
+[Grants](./grants).
+
+::: info Two lanes, one authority
+The `AccessResolver` is the single authority every Policy, `DriveHandle`, controller
+and Resource asks. It lives at `Vaulter\Access\AccessResolver`. The host plugs into
+it through the `PermissionDriver` contract — never by replacing the resolver.
+:::
+
+## The public surface
+
+`AccessResolver` exposes a small, stable API. Everything else is private.
+
+| Method | Returns | Purpose |
+|---|---|---|
+| `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | The single yes/no entry point Policies and the `DriveHandle` call. |
+| `effectiveGrants(Authorizable $actor, Node $node)` | `GrantSet` | The folded result of the whole algorithm — allow-mask, deny-mask, level. |
+| `abilitiesFor(Authorizable $actor, Node $node)` | `array<string, bool>` | Every `Ability` mapped to allowed/denied — fills the UI `abilities` object. |
+| `canCreateInWorkspace(Authorizable $actor, Storage $storage)` | `bool` | The create gate for folders/uploads, where there is no existing node. |
+| `sharedNodeIds(Authorizable $actor)` | `list<int\|string>` | The candidate node ids the actor has any live allow-grant on. |
+| `filterSharedWith(Authorizable $actor, iterable $candidates)` | `list<Node>` | Re-resolves "shared with me" candidates through the full algorithm. |
+
+```php
+use Vaulter\Access\AccessResolver;
+use Vaulter\Enums\Access\Ability;
+
+$resolver = app(AccessResolver::class);
+
+if ($resolver->can($user, Ability::Edit, $node)) {
+    // the actor may edit this node
+}
+```
+
+`can()` is sugar over `effectiveGrants($actor, $node)->allows($ability)` — there is one
+place the algorithm lives, and every other method reads its result.
+
+## Abilities, levels and the CRUDS bitmask
+
+Vaulter reasons over a single integer. Every grant is reduced to a **CRUDS bitmask**
+(`Vaulter\Enums\Access\Permission`), and every ability declares the bits it requires.
+
+```
+READ = 1   UPDATE = 2   CREATE = 4   DELETE = 8   SHARE = 16   ALL = 31
+```
+
+### Abilities → required bits
+
+`Vaulter\Enums\Access\Ability` is the Drive action vocabulary. `requiredBits()` maps
+each ability to exactly the bit(s) that must be in the effective allow-mask:
+
+| Ability | Required bits |
+|---|---|
+| `View`, `Download`, `Comment` | `READ` |
+| `Edit` | `UPDATE` |
+| `Create`, `Copy` | `CREATE` |
+| `Move` | `UPDATE \| CREATE` (re-parent = update here, create there) |
+| `Trash`, `Restore`, `Delete` | `DELETE` |
+| `Share` | `SHARE` |
+| `Manage` | `ALL` (31) |
+
+An ability is satisfied only when **all** its required bits are present:
+`Ability::Edit->satisfiedBy($bits)` is `($bits & UPDATE) === UPDATE`.
+
+### Grant levels → bitmask
+
+A grant row may store a ranked **level** (`Vaulter\Enums\Access\GrantLevel`) instead of
+raw bits. `GrantLevel::bits()` normalises a level to its bitmask so the engine always
+reasons in bits:
+
+| Level | Rank | Bits |
+|---|---|---|
+| `Reader` | 1 | `READ` |
+| `Commenter` | 2 | `READ` (comment is a view-side capability) |
+| `Writer` | 3 | `READ \| UPDATE \| CREATE` |
+| `Organizer` | 4 | `READ \| UPDATE \| CREATE \| DELETE` |
+| `Owner` | 5 | `ALL` (adds `SHARE` / management) |
+
+A higher rank implies every lower one. A grant row may carry **both** a level and
+extra `permissions` bits — they are OR-ed, so an `Organizer` grant plus an extra
+`SHARE` bit confers both.
+
+::: tip No orphan delete action
+There is no standalone stringly-typed "delete" level or action. Permanent delete folds
+into the `DELETE` bit (held by `Organizer`/`Owner`), so `Trash`, `Restore` and `Delete`
+all require the same `DELETE` bit.
+:::
+
+## The algorithm
+
+`effectiveGrants()` runs the canonical algorithm in five steps. It is implemented
+exactly as described here — there is no hidden behaviour.
+
+```
+1. Host override (super-admin) — absolute, both directions.
+2. Walk ancestors nearest-first, BOUNDED to the storage root, collecting
+   direct + scope=subtree grants for the actor's subject-set;
+   STOP at the first ancestor with inherit_grants = false.
+3. aclAllow = max(allow bits/levels); deniedBits = OR of deny bits.
+   A NEARER explicit allow pierces a FARTHER inherited deny.
+4. granted = max(aclAllow, roleAllow), where roleAllow comes from the driver.
+5. FINAL VETO: if deniedBits covers the requested ability → DENY,
+   regardless of any role grant.
+```
+
+### Step 1 — host override
+
+The resolver first asks the active `PermissionDriver::override($actor, $scope)`. A
+super-admin / `Gate::before`-style override short-circuits the whole walk:
+
+- `Effect::Allow` → `GrantSet::superAllowed()` (full access, both directions);
+- `Effect::Deny` → `GrantSet::superDenied()` (no access, both directions);
+- `null` → no override; continue to the ACL walk.
+
+The override is **absolute** — it is not affected by any ACL row.
+
+### Step 2 — the bounded ancestor walk
+
+The driver expands the actor into a **subject-set** via `subjectsFor($actor)` (the user
+itself plus any host roles/teams). The resolver then walks the node's ancestor chain
+**nearest-first** — the node, its parent, … up to the storage root — collecting the
+live grants addressed to that subject-set.
+
+Two rules decide whether a grant *applies* at a given node:
+
+- a grant **on the node itself** applies directly, at any scope;
+- a grant on an **ancestor** applies only when its scope is `subtree`
+  (`GrantScope::inheritsDownward()`).
+
+The walk is **bounded to the storage**: it never crosses `storage_id`, so a decision
+can never escape its workspace. Expiry is enforced read-time in the grant query — an
+expired row never reaches the resolver, and there is no expiry cron.
+
+#### The inherit_grants cut-off
+
+Each node carries a boolean `inherit_grants`. When the walk consumes an ancestor whose
+`inherit_grants = false`, that ancestor's **own** grants still count, but **nothing
+above it does** — the walk stops there. This is the inheritance cut-off: a node can be
+sealed off so it ignores grants set higher in the tree.
+
+::: warning A deny on a sealed node is an unbreakable wall
+Because the walk stops at an `inherit_grants = false` node, a `deny` placed on that
+node sits at the farthest reachable depth — no farther allow exists to pierce it. It is
+a permanent veto for the subtree below the cut-off.
+:::
+
+### Step 3 — the deny-veto fold (explicit beats inherited)
+
+The walk buckets allow-bits and deny-bits **per depth** (nearest = depth 0). The fold
+then applies one rule:
+
+> A `deny` at depth *d* is final **except** for the bits allowed at a *strictly nearer*
+> depth (`< d`). A same-depth allow does **not** pierce a same-depth deny.
+
+Consequences:
+
+- a **nearer explicit allow** pierces a **farther inherited deny** (you can re-open
+  access closer to the node);
+- an `allow` and a `deny` on the **same node** ⇒ the **deny wins** (a same-node deny is
+  an absolute veto — explicit-beats-inherited applies across depths, never within one).
+
+This is why the resolver cannot fold an unordered grant set in a single pass: a
+same-depth allow seen before a same-depth deny must not swallow it. Allow/deny bits are
+bucketed per depth, then folded nearest-to-farthest, masking a deny only with bits
+allowed strictly nearer.
+
+### Step 4 — fold in the role lane
+
+For each subject the driver's `resolve($subject, $actor, $scope)` may return a
+`Decision` (a level + allow + bits). An allow `Decision` is OR-ed into the allow-mask
+and its level folded with `max()`:
+
+```
+allowedBits = aclAllowBits | roleAllowBits
+level       = max(aclLevel, roleLevel)
+```
+
+The role lane is folded **before** the deny veto, so it can **raise** access but can
+**never resurrect a denied bit**. The `AccessScope` handed to the driver is node-blind: it
+carries the panel + workspace coordinates and the node owner, never a `Node`.
+
+### Step 5 — the final veto
+
+The veto lives in `GrantSet::allows(Ability $ability)`:
+
+```php
+// Vaulter\Access\ValueObjects\GrantSet
+public function allows(Ability $ability): bool
+{
+    if ($this->superDeny) return false;   // override deny wins over everything
+    if ($this->superAllow) return true;   // override allow wins over everything
+
+    $required = $ability->requiredBits();
+
+    // Any required bit landing in the deny-mask kills the ability.
+    if (($this->deniedBits & $required) !== 0) {
+        return false;
+    }
+
+    return ($this->allowedBits & $required) === $required;
+}
+```
+
+A required bit in the deny-mask kills the ability **regardless of the allow-mask** — so
+a host-role grant from step 4 can never override an ACL deny.
+
+## The GrantSet
+
+`effectiveGrants()` returns a `Vaulter\Access\ValueObjects\GrantSet` — a final readonly
+value object carrying the folded decision:
+
+| Field | Meaning |
+|---|---|
+| `allowedBits` | the union of every applying allow (ACL + role) |
+| `deniedBits` | the OR of every applying deny |
+| `level` | the effective `GrantLevel` (max of ACL + role), or `null` |
+| `superAllow` / `superDeny` | a host override short-circuit |
+
+It answers `allows(Ability)` with the deny-veto baked in (above). Static constructors:
+`GrantSet::none()` (no access), `GrantSet::superAllowed()`, `GrantSet::superDenied()`.
+
+## Ability flags for the UI
+
+The resolver computes a flat ability map so the front-end renders only the actions an
+actor may perform — no permission logic duplicated in JavaScript, no extra round-trips.
+
+`NodeResource` fills its `abilities` object via
+`Vaulter\Access\ValueObjects\NodeAbilities::for($actor, $node, $resolver)`, which calls
+`abilitiesFor()`. When there is no acting user, **every flag is false** (the client
+shows a read-only shell rather than mis-advertising actions).
+
+```json
+{
+  "data": {
+    "id": "01J...",
+    "name": "Q3 Proposal",
+    "abilities": {
+      "view": true, "download": true, "comment": true, "edit": true,
+      "create": true, "move": false, "copy": true, "trash": false,
+      "restore": false, "share": false, "manage": false, "delete": false
+    }
+  }
+}
+```
+
+On the client, every node resource ships its resolved `abilities` map — bind your UI directly
+against those flags (a missing ability is falsy):
+
+```vue
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { Node } from '@vaulter/vue'
+
+const props = defineProps<{ node: Node }>()
+const canEdit = computed(() => props.node.abilities?.edit ?? false)
+const canManage = computed(() => props.node.abilities?.manage ?? false)
+</script>
+```
+
+## Create gate (no node yet)
+
+Folder creation and uploads have no existing node to resolve against, so they route
+through `canCreateInWorkspace($actor, $storage)`, which delegates straight to the
+driver's `canCreateInWorkspace($actor, $workspaceType, $workspaceId)` lane. See
+[Permission Drivers](./permission-drivers) for how each driver answers it.
+
+## Access-aware listings
+
+The per-action gate above answers *"may this actor do X to this node?"* exactly. Drive
+**listings** (the folder index, search, trash, and the Filament table) ask a different,
+cheaper question — *"which nodes should this actor even see?"* — and answer it with a
+**candidate set**, not the exact algorithm. The distinction matters, so be precise about
+what each guarantees.
+
+### Exact visibility
+
+Children, search, trash, shared nodes, folder `show` children and Filament table rows
+are filtered through `AccessResolver::evaluateMany()` for every permission driver.
+Only nodes with effective `View` are returned. Explicit deny and `inherit_grants`
+cut-offs apply before names, sizes or MIME types are exposed. The same batch result
+fills each listing item's `abilities`, avoiding a separate ancestor walk per resource.
+
+`evaluateMany()` preserves the rules of `effectiveGrants()`: a nearer allow can pierce
+a farther deny; a same-node deny vetoes its allow and the host role lane. Absolute
+host overrides retain their existing behavior. Parent `item` grants never inherit.
+
+SQL grant narrowing in `constrainToAccessible()` remains a candidate prefilter for
+grant-authoritative drivers. Its result needs exact ACL evaluation before display.
+The REST listings scan candidates directly; Filament applies the exact batch filter
+to the fetched page and uses simple pagination without totals.
+
+### Cursor and scan budget
+
+REST pages carry `meta.next_cursor`, `prev_cursor` (null), `per_page`, `path` and
+`scanned`; they do not carry `total` or numbered page links. A cursor records the
+last **inspected** candidate, including denied candidates, and is signed with the
+application key. It is bound to the storage, listing kind, parent or search term and
+ordering. An invalid signature or mismatched query returns 422 `validation_failed`
+with `errors.cursor`; restart that listing without a cursor.
+
+`vaulter.listing.scan_budget` defaults to 1000 candidates per request. A page can be
+short or empty while `next_cursor` remains non-null. Follow that cursor until null
+to reach later visible nodes. Changing `per_page` does not change the cursor's scope.
+
+## "Shared with me"
+
+`sharedNodeIds()` collects candidates with a live direct allow-grant across storages.
+The endpoint scans those candidates in `name, id` order and uses `evaluateMany()` to
+apply the same exact visibility rules as other listings.
+
+### The `GET /shared` endpoint
+
+The cross-storage "shared with me" listing is exposed at the top level of the Drive prefix
+(default `api/vaulter`) — **not** under a `{storage}`, because the subject index is not
+storage-bound:
+
+```
+GET {prefix}/shared        # e.g. GET /api/vaulter/shared
+```
+
+| Property | Behaviour |
+|---|---|
+| **Gating** | Registered only when the **`grants`** feature is on. |
+| **Auth** | An unauthenticated request gets an **empty** page (never an error). |
+| **Exactness** | Each candidate is evaluated through the batch ACL algorithm; an effective deny excludes it. |
+| **Pagination** | A signed cursor envelope (`meta.next_cursor`, `per_page`, `scanned`) without `total`; follow the cursor even after an empty page. |
+| **Payload** | `NodeResource` items with the owning `storage` eager-loaded (the only cross-storage context the payload carries; the breadcrumb is attached only on `show`). |
+
+On the client, `@vaulter/vue` ships [`useSharedNodes`](./vue) and `VaulterSharedWithMe`
+over this endpoint.
+
+## Fail-loud: the null driver
+
+The default driver is `database` — a fully standalone lane with zero host dependency.
+For local boot-up there is also an **open** driver, `Vaulter\Testing\NullPermissionDriver`,
+which grants every actor full access via an absolute `Allow` override.
+
+The `PermissionDriverManager` rejects the null driver **in production**:
+
+```php
+// Vaulter\Access\PermissionDriverManager::driver()
+if (is_a($class, NullPermissionDriver::class, allow_string: true) && $this->isProduction) {
+    throw MissingPermissionDriverException::nullDriverInProduction($key);
+}
+```
+
+`isProduction` is wired from `$app->environment('production')`. The exception message
+is explicit:
+
+> The open null host-role driver is forbidden in production. Why: it grants every actor
+> full access; running it in prod would expose every node. Fix: set
+> `config('vaulter.drivers.permission')` to a real driver (`database`/`gate`/`spatie`/
+> `azgard`) or bind your own `PermissionDriver`.
+
+::: danger Never ship the null driver
+`null` is selectable only outside production and exists purely so a consumer can boot
+and exercise Vaulter without wiring a real role system. A missing or `null` driver can
+**never** silently open a production install — it fails loud at resolve time.
+:::
+
+The `azgard` key requires `composer require axioma-studio/vaulter-azgard`.
+Its provider registers the driver and real guard adapter; bridge settings live under
+`vaulter-azgard.*`, and the user model must implement `AzgardBackedUser`.
+
+An **unknown** driver key fails the same way, via
+`MissingPermissionDriverException::unknownDriver($key, $known)`, listing the registered
+keys.
+
+## See also
+
+- [Permission Drivers](./permission-drivers) — the four `PermissionDriver` lanes and how
+  to select/configure each.
+- [Grants](./grants) — the per-node `v_node_grants` rows, subjects, effects, scopes,
+  expiry, and `GrantNodeAccess`.
+- ADR-0002 (authorization delegation) and ADR-0007 (the AzGuard seam).

@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "findings-design-recheck",
+  "title": "Перепроверка дизайна P0 после DA01–DA06",
+  "sections": [
+    {
+      "id": "P0-DA01-DA06",
+      "title": "Перепроверка дизайна P0 после DA01–DA06",
+      "text": "**Основание:** D08, явное поручение владельца завершить до GREEN в текущей сессии.\n**Reviewer:** gpt-6-sol/high; same-author recheck, не независимый аудит.\n**Граница:** исправления D07, их зависимости и execution-sheet; исходный независимый\nаудит @plan/knowledge/findings-design-audit.json используется для неизменённой части. Полный аудит не повторялся."
+    },
+    {
+      "id": "section",
+      "title": "Результаты перепроверки",
+      "text": "| Finding | Доказательство закрытия |\n|:--|:--|\n| DA01 | Типы reference в AutoIncrementIds/UlidIds тега v0.2.0 подтверждены; P0.3 задаёт корректные owner IDs для каждой стратегии и точную verify-проверку. Исходная схема не изменяется |\n| DA02 | P0.2 содержит точный PG шаг с явным каталогом, always(), четырьмя passed/нулём skipped и негативным контролем. Проверка приёмки согласована с D07: success нового шага, прочие failures сверяются с baseline |\n| DA03 | Workflow_dispatch существует; O-3-CI расположен до фазового аудита, O-3-PR — после. Итоговый SHA, run ID, JSON и лог обязательны; неподтверждённый hosted run не заменяется локальным passed |\n| DA04 | P0.1 создаёт скрипты после прямой проверки php8.4, затем --check/preflight и baseline; ненулевые exits останавливают suites. Phase Pitfalls и Routing не требуют скриптов до bootstrap |\n| DA05 | Шесть regression tests проходят, повреждение/отсутствие входа и изменение источника/реестра отвергаются. Входы регенерированы, исходный PHP с // и следующими вызовами сохраняет переносы |\n| DA06 | Baseline P0.1 явно указан в Inputs/Required Reads P0.4. Phase Context, Routing и execution-sheet одинаково задают P0.1 → P0.4, затем независимость от B0-A |\n\n**Открытых замечаний в проверенной дельте: 0.** Изменение D08 затрагивает только\nнезависимость этой повторной проверки. Предметная приёмка P0 не ослаблена."
+    },
+    {
+      "id": "section-2",
+      "title": "Проверки и границы",
+      "text": "- Unittest: 6 tests, OK, exit 0; временные файлы, без БД.\n- OPUS coverage: 1438 единиц, 254 секции, 0 нарушений, exit 0.\n- Исходные 16 OPUS-файлов, opus-units.tsv, ledger-P0.tsv, section-owners.tsv\n  совпадают с preimage по SHA-256; 19 файлов без изменений.\n- Task finish/lint/views/receipt проверяются перед записью итогового verdict;\n  fingerprint и GREEN записываются в journal.jsonl.\n- Это приёмка дизайна. PHP/SQL/hosted Validation продуктовых items ещё не выполнялись;\n  сами items остаются Not started. Их full-review, фазовый аудит и owner gates сохранены."
+    },
+    {
+      "id": "verdict",
+      "title": "Итоговый verdict",
+      "text": "**GREEN дизайна P0**, same-author recheck по D08.\n\nFingerprint: `b9c4769d06a7593e99dfbebf5757032e59e8e9eee13910bb99adc1b45eb4fc19`. Run: `cb450b4d-3801-4593-abc4-b31920751d50`.\nFinish exit 0; lint 0 ошибок/0 предупреждений; item/decision views свежие;\ncoverage и diff-check exit 0; receipt проверен. Запись audit-green — journal.jsonl.\nНезависимого второго аудита не было; разрешённое владельцем исключение явно сохранено."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "findings/design-recheck.md",
+    "sha256": "0d211e858d1d8c761e9cdac9eb80c84a1a7ab0138198905ddf2a77f3e070eb9d"
+  }
+}

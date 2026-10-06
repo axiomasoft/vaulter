@@ -1,0 +1,42 @@
+{
+  "pao": [],
+  "label": "diff-check",
+  "argv": [
+    "git",
+    "diff",
+    "--check"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "started": "2026-10-06T07:28:57.686172+00:00",
+  "finished": "2026-10-06T07:28:57.780090+00:00",
+  "exit_code": 0,
+  "expected_exit": 0,
+  "candidate_before": "fb820bf298b95d0881ec32ec124c8387e8789c593bc2efb618b8e2637b3d5e0f",
+  "candidate_after": "fb820bf298b95d0881ec32ec124c8387e8789c593bc2efb618b8e2637b3d5e0f",
+  "normative_inputs": [
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+      "sha256": "5f543d6474eb8d3210ba6b6f0f6d944a80d0b59bb07bdfc692416713ab9e19d5"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+      "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+      "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+      "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+    }
+  ],
+  "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/072857683942-diff-check.log",
+  "totals": [],
+  "environment": {
+    "APP_ENV": "testing",
+    "DB_CONNECTION": "sqlite",
+    "VAULTER_TEST_DB_CONNECTION": "sqlite",
+    "DB_DATABASE": ":memory:"
+  }
+}

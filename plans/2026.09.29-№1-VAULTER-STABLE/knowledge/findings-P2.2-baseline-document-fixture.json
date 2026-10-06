@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "findings-P2.2-baseline-document-fixture",
+  "title": "P2.2 mandatory PG gate — baseline document fixture",
+  "sections": [
+    {
+      "id": "P2.2-mandatory-PG-gate-baseline-document-fixture",
+      "title": "P2.2 mandatory PG gate — baseline document fixture",
+      "text": "The exact core PG grid stopped at Database/VaulterDatabaseTest.php:111 with SQLSTATE42703. The document fixture at line102 inserted `number`; current SchemaBuilder and NodeDocumentVersion require `version_no`. Migration000004 changes only file revisions.\n\nThe faulty fixture, schema and model are byte-identical to baseline4b72efd3a909f441eb415182218140575e61e4c5. Git history0df7704e→4b72efd3 introduced the incorrect document key during the file revision rename. No baseline test was run or claimed green.\n\nEvidence: artifacts/P2.2/validation-20261005T052140957420Z/canonical/91d35bdc247bee2867079b872fffdfec7091c0d388f26c1465d74280a16247b5/p22-full-01/core-p1-pg.log and receipt.json (39passed,1failed,0skipped; drivePG dependency-failed).\n\nCurrent acceptance repair restores this single fixture key. It changes no schema/model/public contract and implements no future item. Original RED evidence is retained; fresh affected/full checks are required on the repaired candidate."
+    }
+  ],
+  "applies_to": [
+    "P2.2"
+  ],
+  "provenance": {
+    "path": "findings/P2.2-baseline-document-fixture.md",
+    "sha256": "8e59019939285fc0d2f2f6a08f0ce63cd86d4093db62a173f10b39ffaddb978b"
+  }
+}

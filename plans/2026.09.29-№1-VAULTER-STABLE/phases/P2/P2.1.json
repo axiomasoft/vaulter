@@ -1,0 +1,302 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "Переименования классов core",
+  "status": "done",
+  "summary": "Все классы, контракты, исключения и Testing-хелперы core носят канонические имена OPUS 03 §3 (в части P2),\nown-tables режим профилей и мёртвые хуки удалены, `WebhookEvent`+`ActivityVerb` слиты в `EventType`, core provider —\nтонкий с registrars; таблицы, колонки, значения событий и ключи конфига не меняются (R1, D16). Все пакеты монорепо\nкомпилируются и зелёные на новых FQN.",
+  "why": "OPUS 13 P2.1, AD03–AD05, AD11 (PermissionLevel), AD14; N12, N26. Код `main` @ `938f0ea`: `Models\\Drive\\Storage`\n(75 файлов-носителей), `Panels\\*` (52), `Engines\\*` (30), `HostRoleDriver` (35), `WebhookEvent`/`ActivityVerb` (35);\n`Panel::pipes()/resource()`, `StoragePanelProvider::fillNode()/presentNode()/pipes()/booted()` не вызываются (N12).",
+  "scope": {
+    "include": [
+      "Карта FQN (было → стало; `Vaulter\\` опущен), исполняемая Rector-картой `artifacts/P2.1/rename-map.php` (R2):\n   `Models\\Drive\\Storage`→`Models\\Drive\\Drive`; `Models\\Drive\\FileVersion`→`Models\\Drive\\FileRevision`;\n   `Models\\Drive\\FileVersionBlob`→`Models\\Drive\\FileRevisionBlob`; `Panels\\Panel`→`Profiles\\Profile`;\n   `Panels\\StoragePanelProvider`→`Profiles\\ProfileProvider`; `Panels\\DefaultStoragePanel`→`Profiles\\DefaultProfile`;\n   `Panels\\PanelRegistry`→`Profiles\\ProfileRegistry`; `Schema\\PanelTablesBuilder`→`Schema\\SchemaBuilder`;\n   `Support\\VaulterSchema`→`Schema\\VaulterSchema`; `Console\\MakePanelCommand`→`Console\\MakeProfileCommand`;\n   `Console\\RelayOutboxCommand`→`Console\\RelayWebhooksCommand`; `Contracts\\Access\\HostRoleDriver`→`Contracts\\Access\\PermissionDriver`;\n   `Access\\HostRoleDriverManager`→`Access\\PermissionDriverManager`;\n   `Drivers\\Permission\\{Database,Gate,Spatie}PermissionResolver`→`Access\\Drivers\\{Database,Gate,Spatie}PermissionDriver`;\n   `Drivers\\Permission\\AzgardPermissionResolver`→`Access\\Drivers\\AzgardPermissionDriver` (временно в core; перенос в\n   `Vaulter\\Azgard\\` — P2.4); `Testing\\NullRoleDriver`→`Testing\\NullPermissionDriver`;\n   `Exceptions\\Access\\MissingHostRoleDriverException`→`Exceptions\\Access\\MissingPermissionDriverException`;\n   `Access\\ValueObjects\\AclScope`→`Access\\ValueObjects\\AccessScope` (поля без изменений — P3.5);\n   `Access\\Abilities\\NodeAbilities`→`Access\\ValueObjects\\NodeAbilities`;\n   `Contracts\\Handlers\\HandlerRegistry`→`Contracts\\Handlers\\FileHandlerRegistry` (+ метод `resolve()` в контракте, сигнатура\n   как у реализации); `Contracts\\Handlers\\NodeHandlerResolver`→`Contracts\\Handlers\\NodePresenter` (метод\n   `describe(Node, ?string)`→`present(Node): NodePresentation`; второй аргумент удаляется — вызовы, передававшие его,\n   получают то же значение из `Node`, иначе стоп и эскалация);\n   `Engines\\DocumentHandlerRegistry`→`Handlers\\FileHandlerRegistry`; `Engines\\NodeHandlerResolver`→`Handlers\\NodePresenter`;\n   `Engines\\DocumentFileDescriptorFactory`→`Handlers\\FileDescriptorFactory`; `Engines\\Handlers\\AbstractFileHandler`→`Handlers\\AbstractFileHandler`;\n   `Engines\\Handlers\\{Preview,DownloadOnly}Handler`→`Handlers\\Builtin\\{Preview,DownloadOnly}Handler`;\n   `ValueObjects\\Handlers\\HandlerUi`→`ValueObjects\\Handlers\\ViewerDescriptor` (поля `{key, props}`);\n   `ValueObjects\\Handlers\\HandlerDescriptor`→`ValueObjects\\Handlers\\NodePresentation` (поля без изменений — P4.3);\n   `ValueObjects\\Handlers\\HandlerCapabilities`→`ValueObjects\\Handlers\\ContentCapabilities` (`richText` остаётся до P4.3);\n   `Exceptions\\Panels\\{Invalid,Unknown}PanelException`→`Exceptions\\Profiles\\{Invalid,Unknown}ProfileException`;\n   `Exceptions\\Support\\TenantIsolationNotConfiguredException`→`Exceptions\\Tenancy\\TenancyMisconfiguredException`;\n   `Enums\\Webhooks\\WebhookEvent`+`Enums\\Activity\\ActivityVerb`→`Enums\\Events\\EventType` (п.4);\n   `Repositories\\Drive\\Storage{Read,Store}Repository`→`Repositories\\Drive\\Drive{Read,Store}Repository`;\n   `Repositories\\Drive\\FileVersion{Read,Store}Repository`→`Repositories\\Drive\\FileRevision{Read,Store}Repository`;\n   `Repositories\\Drive\\FileVersionBlobStoreRepository`→`Repositories\\Drive\\FileRevisionBlobStoreRepository`.\n   По непереданному требованию OPUS 04 §3 (`04:ad69bdda`) также:\n   `Data\\Access\\GrantNodeAccessData`→`Data\\Access\\GrantNodeAccessInput`;\n   `Data\\Sharing\\CreateShareLinkData`→`Data\\Sharing\\ShareLinkInput`;\n   `Data\\Webhooks\\RegisterWebhookEndpointData`→`Data\\Webhooks\\RegisterWebhookEndpointInput`;\n   `Data\\Webhooks\\UpdateWebhookEndpointData`→`Data\\Webhooks\\UpdateWebhookEndpointInput`.\n   Коды ошибок (`PROBLEM_CODE`) не меняются — P1.8 уже задал их по 10 §6 (`unknown_profile`, …); в\n   `docs/guide/errors.md` меняются только имена классов.",
+      "`FileHandler`: `id()`→`key()` (формат `vendor/name`: `vaulter/preview`, `vaulter/download`; проверка\n   `^[a-z0-9-]+/[a-z0-9-]+$` в `FileHandlerRegistry::register()` → `InvalidArgumentException`), `ui(FileDescriptor): HandlerUi`→\n   `viewer(FileDescriptor): ViewerDescriptor`. Реализации в documents (`TipTapHandler` → `vaulter/tiptap`,\n   `UniverHandler` → `vaulter/univer`) получают ключи в этом item (удаление — P4.3). Мемоизация реестра по\n   (mime, ext, capability) сохраняется; docblock контракта: `capabilities()` не зависит от других полей дескриптора.\n   Тег контейнера handler'ов `vaulter.handlers` → `vaulter.file_handlers` (04 §7): `VaulterServiceProvider.php:180`,\n   `Engines/DocumentHandlerRegistry.php:271`, `packages/documents/src/VaulterDocumentsServiceProvider.php:98`.",
+      "Удаления (D05, N12, AD11): `Models\\Concerns\\HasVaulterPanel`, `Panels\\PanelMigrationGenerator`, `Panels\\PanelTableResolver`,\n   `Console\\PanelMigrationsCommand` (`vaulter:panel:migrations`), `Enums\\Access\\PermissionLevel`; методы `Profile`:\n   `idStrategy`, `tablePrefix`, `tables`, `models`, `pipes`, `resource`, `idStrategyValue`, `tablePrefixValue`, `modelMap`,\n   `pipesList`, `resourceClass`, `hasOwnTables`, `table`, `model`, `idStrategyKey`; методы `ProfileProvider`: `fillNode`,\n   `presentNode`, `pipes`, `booted`; `ProfileProvider::panel()`→`profile()`. Остаются: `Profile::{id, host, grants,\n   withoutGrants, storageType, features, feature, getId, hostModel, storageTypeKey, hasGrants, featureEnabled}`\n   (`storageType*` удаляет P2.7 вместе с колонкой), `ProfileProvider::{profile, resolve}`;\n   `ProfileRegistry::{register, registerProvider, fromConfig, get, has, all, default}`. По D17 из реестра удаляются\n   вызов `booted()` и private validation удаляемых own-tables/models/pipes/resource настроек с её helpers.\n   `SchemaBuilder::createTable(string $entity)`/`dropTable(string $entity)` без параметра Panel; feature-гейты таблиц\n   внутри builder читают `Config::featureEnabled()` (снятие гейтов — P2.7). Тесты own-tables (`packages/core/tests/Panels`,\n   `PanelBoot`, `BrokenPanelBootTestCase.php` в части own-tables) удаляются; остальные проверки переносятся в\n   `packages/core/tests/Profiles/` без ослабления.",
+      "`EventType` (R7): `packages/core/src/Enums/Events/EventType.php` — `enum EventType: string` с case:\n   `DriveCreated='storage.created'`, `FolderCreated='node.created'`, `FileUploaded='file.uploaded'`,\n   `FileRevisionAdded='version.created'`, `UploadInitiated='upload_session.initiated'`, `UploadAborted='upload_session.aborted'`,\n   `UploadExpired='upload_session.expired'`, `NodeMoved`, `NodeRenamed`, `NodeCopied`, `NodeTrashed`, `NodeRestored`\n   (значения как сейчас), `NodePurged='node.force_deleted'`, `GrantCreated`, `GrantRevoked`, `ShareCreated`, `ShareRevoked`\n   (значения как сейчас); `public static function webhookTypes(): array` (list<self>) — все, кроме трёх `Upload*`.\n   Атрибуты/лейблы case (`Label`, `Icon`) переносятся из старых enum. Каждое использование `WebhookEvent::cases()` и\n   валидация подписок endpoint'ов используют `webhookTypes()`.",
+      "Фасад/менеджер (R6): `VaulterManager::panel()/panels()/registerPanel()` удаляются → `profiles(): ProfileRegistry`;\n   `registerHandler()` удаляется → `handlers(): FileHandlerRegistry` (существующий метод возвращает контракт);\n   `@method` в `Facades/Vaulter.php` обновлены. `for()/forStorage()` и методы документов/экспорта не меняются (P3.2, P4.3, P4.4).",
+      "Команды (R5): `MakeProfileCommand` — сигнатура `vaulter:make-panel` → `vaulter:make:profile`, генерирует в\n   `app/Vaulter/Profiles` класс из `packages/core/stubs/profile/profile-provider.stub` (перенос\n   `stubs/panel/storage-panel-provider.stub` с новыми именами); `stubs/panel/panel-migration.stub` удаляется;\n   `RelayWebhooksCommand` сохраняет сигнатуру `vaulter:relay-outbox` (P7.2).",
+      "Тонкий provider (R14): `packages/core/src/Providers/{BindingsRegistrar,AccessRegistrar,EventsRegistrar,HttpRegistrar,ConsoleRegistrar}.php`\n   (`final class`, методы `register(Application $app): void` и `boot(Application $app): void`; пустой метод не\n   объявляется — registrar без boot-логики имеет только `register`); вся логика\n   `VaulterServiceProvider::{register,boot,packageRegistered,packageBooted}` переносится без изменения поведения; provider\n   содержит `configurePackage()` и вызовы registrars. Тест на каждый registrar: `packages/core/tests/Providers/<Name>RegistrarTest.php`\n   (биндинги/маршруты/команды, которые он регистрирует, присутствуют после boot).",
+      "Ссылки в других пакетах: drive/documents/media/filament/azgard/tests и `config/*.php` используют новые FQN (Rector по\n   той же карте с путями всех пакетов). `Support\\Config` — только смена FQN в типах/docblock (R4); `config/vaulter.php`:\n   `'default_panel' => DefaultProfile::class`, `'handlers' => [PreviewHandler::class, DownloadOnlyHandler::class]` с\n   новыми `use`.",
+      "Документация: `UPGRADE.md` (таблица «было → стало» всех строк п.1–п.6 со ссылками AD03/AD04/AD05/AD11/AD14),\n   `CHANGELOG.md [Unreleased]`, `docs/{guide,reference,ru}/**` — новые FQN (`docs/plan` — история, не меняется) (поиск остатков — Validation); golden `PublicApiSnapshotTest`."
+    ],
+    "exclude": [
+      "таблицы/колонки/значения событий (P2.7); ключи конфига и `Support\\Config`-методы (P2.5); перенос\nAzGuard (P2.4); сигнатуры `PermissionDriver` и поля `AccessScope` (P3.5); `Profile`-builder и политика (P3.6);\n`TenantFootgunGuard` (P3.8); `TrashGuard` (P3.3); `Records*`-trait и writers (P5.1); новые классы 04 §3 (F3–F7)."
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D17"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P2-design-P2.1-opus.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/03-glossary-and-renames.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Panels/Panel.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Engines/DocumentHandlerRegistry.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Drivers/Permission/DatabasePermissionResolver.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "rector.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Panels/StoragePanelProvider.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/VaulterManager.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Arch/ArchTest.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Providers/*Registrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/stubs/*",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "Profiles/",
+      "change": "any"
+    },
+    {
+      "path": "Providers/",
+      "change": "any"
+    },
+    {
+      "path": "packages/{drive,documents,media,filament,azgard}/{src,tests,config}/**",
+      "change": "any"
+    },
+    {
+      "path": "@plan/artifacts/P2.1/{rename-map.php,rector-dry-run.txt}",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/*.md",
+      "change": "any"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Сначала `rename-map.php` + `vendor/bin/rector process --config plans/…/artifacts/P2.1/rename-map.php --dry-run` (вывод\n  сохраняется), затем `git mv` и apply; ручные правки — только для удалений и методов п.2–п.7.",
+    "Ни одного `class_alias`/deprecated-обёртки (R3); строки `'storage.created'` и т.п. в БД/тестах не меняются (R7).",
+    "Поведение не меняется: каждый существующий тест, кроме удалённых тестов own-tables, остаётся и зелёный.",
+    "По D17 названные callers реестра и удаляемого own-tables/schema API адаптируются вместе с удалением;\n  остальные неожиданные callers сверяются с нормативом. `booted()` был вызываемым hook; его удаление явно описывается в UPGRADE/CHANGELOG."
+  ],
+  "guidance": "`scripts/php84`/PHP-пакеты и текущие docs проверяются по FQN Rector-карты\nи границам токенов коротких удалённых имён; TS/Vue не входят в P2.1. Проверка и пустой результат:\n`artifacts/P2.1/check-old-symbols.py`, `artifacts/P2.1/old-symbols.log`.\nИсправлена неоднозначность прежнего regex: `HandlerRegistry\\b` совпадал также с новым `FileHandlerRegistry`.",
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "Code Guidance: no old PHP/docs symbols",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "procedure": "All six package PHPStan/Pint/Pest gates exit 0",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "procedure": "P1 PostgreSQL grid: 0 failed, 0 skipped",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "procedure": "Arch/Profiles/Providers and intentional API golden updates",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "procedure": "Invalid-key negative control red, byte restored, positive control green",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "канонические FQN core; `EventType` (значения 0.2) с `webhookTypes()`; registrars; удалённый own-tables\nрежим; `rename-map.php` и dry-run-лог; UPGRADE/CHANGELOG/golden."
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-04T15:56:37Z",
+    "finished_at": "2026-10-05T06:06:58Z",
+    "executor": {
+      "provider": "legacy",
+      "model": "codex/current-session"
+    },
+    "notes": "P2.1 implemented; all 6 PHP package gates GREEN; PG 203 passed, no skips; negative control verified. No audit/review per D17. Azgard qualified on P0 dependency. Details: artifacts/P2.1/completion.md. Changes uncommitted; next P2.7.\nwrite-site: pre_mutation: allow · pre_final: allow",
+    "deviations": [],
+    "pending": [],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-04T16:00:51Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-04T16:00:51Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-04T16:00:51Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-04T16:00:51Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-04T16:00:51Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      }
+    ]
+  },
+  "updated_at": "2026-10-05T06:06:58Z",
+  "sections": [
+    {
+      "id": "Intent",
+      "title": "Intent",
+      "text": "Все классы, контракты, исключения и Testing-хелперы core носят канонические имена OPUS 03 §3 (в части P2),\nown-tables режим профилей и мёртвые хуки удалены, `WebhookEvent`+`ActivityVerb` слиты в `EventType`, core provider —\nтонкий с registrars; таблицы, колонки, значения событий и ключи конфига не меняются (R1, D16). Все пакеты монорепо\nкомпилируются и зелёные на новых FQN."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "OPUS 13 P2.1, AD03–AD05, AD11 (PermissionLevel), AD14; N12, N26. Код `main` @ `938f0ea`: `Models\\Drive\\Storage`\n(75 файлов-носителей), `Panels\\*` (52), `Engines\\*` (30), `HostRoleDriver` (35), `WebhookEvent`/`ActivityVerb` (35);\n`Panel::pipes()/resource()`, `StoragePanelProvider::fillNode()/presentNode()/pipes()/booted()` не вызываются (N12)."
+    },
+    {
+      "id": "Scope-Included",
+      "title": "Scope Included",
+      "text": "1. Карта FQN (было → стало; `Vaulter\\` опущен), исполняемая Rector-картой `artifacts/P2.1/rename-map.php` (R2):\n   `Models\\Drive\\Storage`→`Models\\Drive\\Drive`; `Models\\Drive\\FileVersion`→`Models\\Drive\\FileRevision`;\n   `Models\\Drive\\FileVersionBlob`→`Models\\Drive\\FileRevisionBlob`; `Panels\\Panel`→`Profiles\\Profile`;\n   `Panels\\StoragePanelProvider`→`Profiles\\ProfileProvider`; `Panels\\DefaultStoragePanel`→`Profiles\\DefaultProfile`;\n   `Panels\\PanelRegistry`→`Profiles\\ProfileRegistry`; `Schema\\PanelTablesBuilder`→`Schema\\SchemaBuilder`;\n   `Support\\VaulterSchema`→`Schema\\VaulterSchema`; `Console\\MakePanelCommand`→`Console\\MakeProfileCommand`;\n   `Console\\RelayOutboxCommand`→`Console\\RelayWebhooksCommand`; `Contracts\\Access\\HostRoleDriver`→`Contracts\\Access\\PermissionDriver`;\n   `Access\\HostRoleDriverManager`→`Access\\PermissionDriverManager`;\n   `Drivers\\Permission\\{Database,Gate,Spatie}PermissionResolver`→`Access\\Drivers\\{Database,Gate,Spatie}PermissionDriver`;\n   `Drivers\\Permission\\AzgardPermissionResolver`→`Access\\Drivers\\AzgardPermissionDriver` (временно в core; перенос в\n   `Vaulter\\Azgard\\` — P2.4); `Testing\\NullRoleDriver`→`Testing\\NullPermissionDriver`;\n   `Exceptions\\Access\\MissingHostRoleDriverException`→`Exceptions\\Access\\MissingPermissionDriverException`;\n   `Access\\ValueObjects\\AclScope`→`Access\\ValueObjects\\AccessScope` (поля без изменений — P3.5);\n   `Access\\Abilities\\NodeAbilities`→`Access\\ValueObjects\\NodeAbilities`;\n   `Contracts\\Handlers\\HandlerRegistry`→`Contracts\\Handlers\\FileHandlerRegistry` (+ метод `resolve()` в контракте, сигнатура\n   как у реализации); `Contracts\\Handlers\\NodeHandlerResolver`→`Contracts\\Handlers\\NodePresenter` (метод\n   `describe(Node, ?string)`→`present(Node): NodePresentation`; второй аргумент удаляется — вызовы, передававшие его,\n   получают то же значение из `Node`, иначе стоп и эскалация);\n   `Engines\\DocumentHandlerRegistry`→`Handlers\\FileHandlerRegistry`; `Engines\\NodeHandlerResolver`→`Handlers\\NodePresenter`;\n   `Engines\\DocumentFileDescriptorFactory`→`Handlers\\FileDescriptorFactory`; `Engines\\Handlers\\AbstractFileHandler`→`Handlers\\AbstractFileHandler`;\n   `Engines\\Handlers\\{Preview,DownloadOnly}Handler`→`Handlers\\Builtin\\{Preview,DownloadOnly}Handler`;\n   `ValueObjects\\Handlers\\HandlerUi`→`ValueObjects\\Handlers\\ViewerDescriptor` (поля `{key, props}`);\n   `ValueObjects\\Handlers\\HandlerDescriptor`→`ValueObjects\\Handlers\\NodePresentation` (поля без изменений — P4.3);\n   `ValueObjects\\Handlers\\HandlerCapabilities`→`ValueObjects\\Handlers\\ContentCapabilities` (`richText` остаётся до P4.3);\n   `Exceptions\\Panels\\{Invalid,Unknown}PanelException`→`Exceptions\\Profiles\\{Invalid,Unknown}ProfileException`;\n   `Exceptions\\Support\\TenantIsolationNotConfiguredException`→`Exceptions\\Tenancy\\TenancyMisconfiguredException`;\n   `Enums\\Webhooks\\WebhookEvent`+`Enums\\Activity\\ActivityVerb`→`Enums\\Events\\EventType` (п.4);\n   `Repositories\\Drive\\Storage{Read,Store}Repository`→`Repositories\\Drive\\Drive{Read,Store}Repository`;\n   `Repositories\\Drive\\FileVersion{Read,Store}Repository`→`Repositories\\Drive\\FileRevision{Read,Store}Repository`;\n   `Repositories\\Drive\\FileVersionBlobStoreRepository`→`Repositories\\Drive\\FileRevisionBlobStoreRepository`.\n   По непереданному требованию OPUS 04 §3 (`04:ad69bdda`) также:\n   `Data\\Access\\GrantNodeAccessData`→`Data\\Access\\GrantNodeAccessInput`;\n   `Data\\Sharing\\CreateShareLinkData`→`Data\\Sharing\\ShareLinkInput`;\n   `Data\\Webhooks\\RegisterWebhookEndpointData`→`Data\\Webhooks\\RegisterWebhookEndpointInput`;\n   `Data\\Webhooks\\UpdateWebhookEndpointData`→`Data\\Webhooks\\UpdateWebhookEndpointInput`.\n   Коды ошибок (`PROBLEM_CODE`) не меняются — P1.8 уже задал их по 10 §6 (`unknown_profile`, …); в\n   `docs/guide/errors.md` меняются только имена классов.\n2. `FileHandler`: `id()`→`key()` (формат `vendor/name`: `vaulter/preview`, `vaulter/download`; проверка\n   `^[a-z0-9-]+/[a-z0-9-]+$` в `FileHandlerRegistry::register()` → `InvalidArgumentException`), `ui(FileDescriptor): HandlerUi`→\n   `viewer(FileDescriptor): ViewerDescriptor`. Реализации в documents (`TipTapHandler` → `vaulter/tiptap`,\n   `UniverHandler` → `vaulter/univer`) получают ключи в этом item (удаление — P4.3). Мемоизация реестра по\n   (mime, ext, capability) сохраняется; docblock контракта: `capabilities()` не зависит от других полей дескриптора.\n   Тег контейнера handler'ов `vaulter.handlers` → `vaulter.file_handlers` (04 §7): `VaulterServiceProvider.php:180`,\n   `Engines/DocumentHandlerRegistry.php:271`, `packages/documents/src/VaulterDocumentsServiceProvider.php:98`.\n3. Удаления (D05, N12, AD11): `Models\\Concerns\\HasVaulterPanel`, `Panels\\PanelMigrationGenerator`, `Panels\\PanelTableResolver`,\n   `Console\\PanelMigrationsCommand` (`vaulter:panel:migrations`), `Enums\\Access\\PermissionLevel`; методы `Profile`:\n   `idStrategy`, `tablePrefix`, `tables`, `models`, `pipes`, `resource`, `idStrategyValue`, `tablePrefixValue`, `modelMap`,\n   `pipesList`, `resourceClass`, `hasOwnTables`, `table`, `model`, `idStrategyKey`; методы `ProfileProvider`: `fillNode`,\n   `presentNode`, `pipes`, `booted`; `ProfileProvider::panel()`→`profile()`. Остаются: `Profile::{id, host, grants,\n   withoutGrants, storageType, features, feature, getId, hostModel, storageTypeKey, hasGrants, featureEnabled}`\n   (`storageType*` удаляет P2.7 вместе с колонкой), `ProfileProvider::{profile, resolve}`;\n   `ProfileRegistry::{register, registerProvider, fromConfig, get, has, all, default}`. По D17 из реестра удаляются\n   вызов `booted()` и private validation удаляемых own-tables/models/pipes/resource настроек с её helpers.\n   `SchemaBuilder::createTable(string $entity)`/`dropTable(string $entity)` без параметра Panel; feature-гейты таблиц\n   внутри builder читают `Config::featureEnabled()` (снятие гейтов — P2.7). Тесты own-tables (`packages/core/tests/Panels`,\n   `PanelBoot`, `BrokenPanelBootTestCase.php` в части own-tables) удаляются; остальные проверки переносятся в\n   `packages/core/tests/Profiles/` без ослабления.\n4. `EventType` (R7): `packages/core/src/Enums/Events/EventType.php` — `enum EventType: string` с case:\n   `DriveCreated='storage.created'`, `FolderCreated='node.created'`, `FileUploaded='file.uploaded'`,\n   `FileRevisionAdded='version.created'`, `UploadInitiated='upload_session.initiated'`, `UploadAborted='upload_session.aborted'`,\n   `UploadExpired='upload_session.expired'`, `NodeMoved`, `NodeRenamed`, `NodeCopied`, `NodeTrashed`, `NodeRestored`\n   (значения как сейчас), `NodePurged='node.force_deleted'`, `GrantCreated`, `GrantRevoked`, `ShareCreated`, `ShareRevoked`\n   (значения как сейчас); `public static function webhookTypes(): array` (list<self>) — все, кроме трёх `Upload*`.\n   Атрибуты/лейблы case (`Label`, `Icon`) переносятся из старых enum. Каждое использование `WebhookEvent::cases()` и\n   валидация подписок endpoint'ов используют `webhookTypes()`.\n5. Фасад/менеджер (R6): `VaulterManager::panel()/panels()/registerPanel()` удаляются → `profiles(): ProfileRegistry`;\n   `registerHandler()` удаляется → `handlers(): FileHandlerRegistry` (существующий метод возвращает контракт);\n   `@method` в `Facades/Vaulter.php` обновлены. `for()/forStorage()` и методы документов/экспорта не меняются (P3.2, P4.3, P4.4).\n6. Команды (R5): `MakeProfileCommand` — сигнатура `vaulter:make-panel` → `vaulter:make:profile`, генерирует в\n   `app/Vaulter/Profiles` класс из `packages/core/stubs/profile/profile-provider.stub` (перенос\n   `stubs/panel/storage-panel-provider.stub` с новыми именами); `stubs/panel/panel-migration.stub` удаляется;\n   `RelayWebhooksCommand` сохраняет сигнатуру `vaulter:relay-outbox` (P7.2).\n7. Тонкий provider (R14): `packages/core/src/Providers/{BindingsRegistrar,AccessRegistrar,EventsRegistrar,HttpRegistrar,ConsoleRegistrar}.php`\n   (`final class`, методы `register(Application $app): void` и `boot(Application $app): void`; пустой метод не\n   объявляется — registrar без boot-логики имеет только `register`); вся логика\n   `VaulterServiceProvider::{register,boot,packageRegistered,packageBooted}` переносится без изменения поведения; provider\n   содержит `configurePackage()` и вызовы registrars. Тест на каждый registrar: `packages/core/tests/Providers/<Name>RegistrarTest.php`\n   (биндинги/маршруты/команды, которые он регистрирует, присутствуют после boot).\n8. Ссылки в других пакетах: drive/documents/media/filament/azgard/tests и `config/*.php` используют новые FQN (Rector по\n   той же карте с путями всех пакетов). `Support\\Config` — только смена FQN в типах/docblock (R4); `config/vaulter.php`:\n   `'default_panel' => DefaultProfile::class`, `'handlers' => [PreviewHandler::class, DownloadOnlyHandler::class]` с\n   новыми `use`.\n9. Документация: `UPGRADE.md` (таблица «было → стало» всех строк п.1–п.6 со ссылками AD03/AD04/AD05/AD11/AD14),\n   `CHANGELOG.md [Unreleased]`, `docs/{guide,reference,ru}/**` — новые FQN (`docs/plan` — история, не меняется) (поиск остатков — Validation); golden `PublicApiSnapshotTest`."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "таблицы/колонки/значения событий (P2.7); ключи конфига и `Support\\Config`-методы (P2.5); перенос\nAzGuard (P2.4); сигнатуры `PermissionDriver` и поля `AccessScope` (P3.5); `Profile`-builder и политика (P3.6);\n`TenantFootgunGuard` (P3.8); `TrashGuard` (P3.3); `Records*`-trait и writers (P5.1); новые классы 04 §3 (F3–F7)."
+    },
+    {
+      "id": "Inputs",
+      "title": "Inputs",
+      "text": "`@plan/knowledge/artifacts-P2-design-P2.1-opus.json`;\n`audits/2026-09-29-stable-audit/opus/03-glossary-and-renames.md` (§3); `packages/core/src/Panels/Panel.php`; `packages/core/src/Engines/DocumentHandlerRegistry.php`;\n`packages/core/src/Drivers/Permission/DatabasePermissionResolver.php`;\n`packages/core/src/VaulterServiceProvider.php`; `packages/core/tests/Arch/PublicApiSnapshotTest.php`; `rector.php`."
+    },
+    {
+      "id": "Files",
+      "title": "Files",
+      "text": "`packages/core/src/**` (переименования/удаления п.1–п.7), `packages/core/src/Providers/*Registrar.php` (new),\n`packages/core/config/vaulter.php`, `packages/core/stubs/*` (stub профиля), `packages/core/tests/**` (новые FQN; `Profiles/`,\n`Providers/` new; удаление own-tables тестов), `tests/Pest.php` (перепривязка наборов),\n`phpstan.neon` (перенос scoped ignore переименованного Testing-класса; удаление ignore удалённого trait), `packages/{drive,documents,media,filament,azgard}/{src,tests,config}/**` (только\nновые FQN), `artifacts/P2.1/{rename-map.php,rector-dry-run.txt}` (new), `packages/core/tests/Arch/__snapshots__/*`,\n`docs/guide/*.md`, `UPGRADE.md`, `CHANGELOG.md`."
+    },
+    {
+      "id": "Required-Reads",
+      "title": "Required Reads",
+      "text": "0) `@plan/knowledge/artifacts-P2-design-P2.1-opus.json` (дословные требования OPUS — исполнить все,\nкроме переданных по `note` ledger); 1) `packages/core/src/Panels/Panel.php`; 2) `packages/core/src/Panels/StoragePanelProvider.php`;\n3) `packages/core/src/VaulterServiceProvider.php`; 4) `packages/core/src/VaulterManager.php`; 5) `packages/core/src/Engines/DocumentHandlerRegistry.php`;\n6) `packages/core/tests/Arch/ArchTest.php`; 7) `rector.php`."
+    },
+    {
+      "id": "Authority",
+      "title": "Authority",
+      "text": "routine"
+    },
+    {
+      "id": "Implementation-Rules",
+      "title": "Implementation Rules",
+      "text": "- Сначала `rename-map.php` + `vendor/bin/rector process --config plans/…/artifacts/P2.1/rename-map.php --dry-run` (вывод\n  сохраняется), затем `git mv` и apply; ручные правки — только для удалений и методов п.2–п.7.\n- Ни одного `class_alias`/deprecated-обёртки (R3); строки `'storage.created'` и т.п. в БД/тестах не меняются (R7).\n- Поведение не меняется: каждый существующий тест, кроме удалённых тестов own-tables, остаётся и зелёный.\n- По D17 названные callers реестра и удаляемого own-tables/schema API адаптируются вместе с удалением;\n  остальные неожиданные callers сверяются с нормативом. `booted()` был вызываемым hook; его удаление явно описывается в UPGRADE/CHANGELOG."
+    },
+    {
+      "id": "Code-Guidance",
+      "title": "Code Guidance",
+      "text": "`scripts/php84`/PHP-пакеты и текущие docs проверяются по FQN Rector-карты\nи границам токенов коротких удалённых имён; TS/Vue не входят в P2.1. Проверка и пустой результат:\n`artifacts/P2.1/check-old-symbols.py`, `artifacts/P2.1/old-symbols.log`.\nИсправлена неоднозначность прежнего regex: `HandlerRegistry\\b` совпадал также с новым `FileHandlerRegistry`."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "- Code Guidance → пустой вывод.\n- Гейт всех пакетов → exit 0 (PHPStan уровня пакета без новых baseline-записей).\n- Сетка P1 на PG (P2.md, «Окружение») → 0 failed, 0 skipped.\n- `env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch packages/core/tests/Profiles packages/core/tests/Providers` → 0 failed;\n  golden `PublicApiSnapshotTest` обновлён и содержит новые FQN, не содержит старых.\n- Негативный контроль: временно вызвать `FileHandlerRegistry::register()` с handler'ом ключа `Preview` → тест формата ключа\n  красный; вернуть."
+    },
+    {
+      "id": "Deliverables",
+      "title": "Deliverables",
+      "text": "канонические FQN core; `EventType` (значения 0.2) с `webhookTypes()`; registrars; удалённый own-tables\nрежим; `rename-map.php` и dry-run-лог; UPGRADE/CHANGELOG/golden."
+    }
+  ]
+}

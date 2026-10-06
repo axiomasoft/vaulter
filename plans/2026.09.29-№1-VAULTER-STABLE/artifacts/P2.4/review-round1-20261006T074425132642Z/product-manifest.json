@@ -1,0 +1,656 @@
+[
+  {
+    "status": "M",
+    "path": "CHANGELOG.md",
+    "sha256": "354b4640973579d9060c10ced4fdd6a6faf2e72eb063a56af83c668e0f5d88ee",
+    "snapshot": "current/CHANGELOG.md"
+  },
+  {
+    "status": "M",
+    "path": "UPGRADE.md",
+    "sha256": "bec7175bd486824e8d99c418b46913cecfc7708b2fbb528277bbb28ca87e9b78",
+    "snapshot": "current/UPGRADE.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/architecture.md",
+    "sha256": "d84c91c089608685a7a5d6e9fc67c490419d4967a9ad5164c3ebbc73bfc61f56",
+    "snapshot": "current/docs/guide/architecture.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/authorization.md",
+    "sha256": "1a8157e2133b01db219da6ff9ad2883839c1727d361fc10f32f5c273e7846a39",
+    "snapshot": "current/docs/guide/authorization.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/configuration.md",
+    "sha256": "93bbdace56c3acee533012c30cf957e5d7d51998cd484b9aef0d3bb9bc45ffe2",
+    "snapshot": "current/docs/guide/configuration.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/filament.md",
+    "sha256": "742536705395355905bb5cb7940b228c168ba4c2aea142106f1c5c7977aa5892",
+    "snapshot": "current/docs/guide/filament.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/multi-tenancy.md",
+    "sha256": "ee77f75d59e58381f28581babc867868bf2e5e20c964e96d16423cb9769b4607",
+    "snapshot": "current/docs/guide/multi-tenancy.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/permission-drivers.md",
+    "sha256": "2dffd87ba590452e6d75087dd05c75936a6f4c2cc16fe75061920801c5a3daf4",
+    "snapshot": "current/docs/guide/permission-drivers.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/recipes.md",
+    "sha256": "9d7e41a11d3d4f06d47abf521e725260cd4607fcd172cbd39b0204feb9952cf7",
+    "snapshot": "current/docs/guide/recipes.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/storage-and-blobs.md",
+    "sha256": "cede058f086c53bfb98e399567d867988c13feea85d43af31673a518edcb17b7",
+    "snapshot": "current/docs/guide/storage-and-blobs.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/troubleshooting.md",
+    "sha256": "589541dbced99c80f0037f9c190f2a45343fec42a3dcbbe226c73ad63da35c76",
+    "snapshot": "current/docs/guide/troubleshooting.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/guide/uploads.md",
+    "sha256": "e14d752bc3945bd002c704884db35bd93033ec60f39ebc7531c9c556a61a7b6b",
+    "snapshot": "current/docs/guide/uploads.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/reference/commands.md",
+    "sha256": "2d3e96a9e4b942c54f111184e772dcc2da71ee3e1fbe8d56a667aee49f10c17f",
+    "snapshot": "current/docs/reference/commands.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/reference/configuration.md",
+    "sha256": "e0fbb618900bfc7f8d94ca4b1a529f3e11cd7ded9b5fea1954f3b5ccaaaefc93",
+    "snapshot": "current/docs/reference/configuration.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/reference/contracts.md",
+    "sha256": "2ac1de1276750fcf9e04af1659739053dc4a36d2879626f485e26efc8bef2066",
+    "snapshot": "current/docs/reference/contracts.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/concepts/authorization.md",
+    "sha256": "4ddc39a4e20b7dd02b618719c81bf2a7eeb6c55ff22a9a1f5bf760184811fa5c",
+    "snapshot": "current/docs/ru/concepts/authorization.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/architecture.md",
+    "sha256": "363c497d25e566c3c01a0ce50afdd5db291a4b3f34b9f2efa2577fbb4ceb4e26",
+    "snapshot": "current/docs/ru/guide/architecture.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/configuration.md",
+    "sha256": "15e4a90325581eac5e8b5b317f9def3b685f5986ade70367e7e76ba3ef6284df",
+    "snapshot": "current/docs/ru/guide/configuration.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/filament.md",
+    "sha256": "04d1ce9aedfd2801443799f624fd492d164aaf8e3802f9aec5c30ad9a380bb13",
+    "snapshot": "current/docs/ru/guide/filament.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/multi-tenancy.md",
+    "sha256": "6386998dbaaa7aa99575dc6318853f71ead4a761eae36be0b61f401d61be79a3",
+    "snapshot": "current/docs/ru/guide/multi-tenancy.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/permission-drivers.md",
+    "sha256": "b50766ce033408d340b1ad11136e4ef48c3eddac060d417c02349bcaec36a97c",
+    "snapshot": "current/docs/ru/guide/permission-drivers.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/recipes.md",
+    "sha256": "19763eb606f456fd4cd17c01065a7c076b5d9e443ac42a1eec8da244c23806e5",
+    "snapshot": "current/docs/ru/guide/recipes.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/storage-and-blobs.md",
+    "sha256": "2cd4475be8bfd97318db625a91f5cb1f81ec6828fcbbc20dc221e9401891a34d",
+    "snapshot": "current/docs/ru/guide/storage-and-blobs.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/guide/troubleshooting.md",
+    "sha256": "fdfcb4cd3edd8e8031c71c85f9572417ffb9012f01299a5640cea2e07c38bbda",
+    "snapshot": "current/docs/ru/guide/troubleshooting.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/reference/commands.md",
+    "sha256": "3e7f6487ad2b15ed2dbd676da712643741f94dd0695e2fe654dd801c7c6e0595",
+    "snapshot": "current/docs/ru/reference/commands.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/reference/configuration.md",
+    "sha256": "1649b222e2a192da8d0aee51aa49635b485e2f5af6e8dc0b4b4384f6ffebb4ef",
+    "snapshot": "current/docs/ru/reference/configuration.md"
+  },
+  {
+    "status": "M",
+    "path": "docs/ru/reference/contracts.md",
+    "sha256": "2620bd6e950dc6aa55d46dfb2c6d33bfc7478eb7746d923d43d862a3f1fc6fb7",
+    "snapshot": "current/docs/ru/reference/contracts.md"
+  },
+  {
+    "status": "M",
+    "path": "load/app/Console/SeedLoadDatasetCommand.php",
+    "sha256": "fe981f0315c2ec12b9d67448eb01041735a365c03ad22609ad7e1b0354378458",
+    "snapshot": "current/load/app/Console/SeedLoadDatasetCommand.php"
+  },
+  {
+    "status": "M",
+    "path": "load/app/Listeners/RecordCommandPeakMemory.php",
+    "sha256": "de1d4f1e3201bd8c24268279172cd46ad24bfdf4099ab1a0567bf4905c204119",
+    "snapshot": "current/load/app/Listeners/RecordCommandPeakMemory.php"
+  },
+  {
+    "status": "M",
+    "path": "load/app/Observability/RedisMetricsRegistry.php",
+    "sha256": "a0ec816449f5169bfa8c98a3b54f5462214bbabc608fd1011291c480140cc5e1",
+    "snapshot": "current/load/app/Observability/RedisMetricsRegistry.php"
+  },
+  {
+    "status": "M",
+    "path": "load/scripts/p3-capture-workload.sh",
+    "sha256": "b47a61319582c6ac06cf3087dd6866e1b4d878dc23a0952e89a92a7205e10f78",
+    "snapshot": "current/load/scripts/p3-capture-workload.sh"
+  },
+  {
+    "status": "M",
+    "path": "load/scripts/p8-live-gate.sh",
+    "sha256": "2aa45f7ccea6104b3111af3f07e8769c5df98ec8b47c1d9bdb690467554becc3",
+    "snapshot": "current/load/scripts/p8-live-gate.sh"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/README.md",
+    "sha256": "dc38951dfc6701a76ed04d9022b637e83f354df17b42945fc3337c38c1dfdf41",
+    "snapshot": "current/packages/azgard/README.md"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/config/vaulter-azgard.php",
+    "sha256": "20c8f207aac8580bcd3393913712b23e0130553680ecd9db71254b79caa0f1c7",
+    "snapshot": "current/packages/azgard/config/vaulter-azgard.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/src/AzgardGuardAdapter.php",
+    "sha256": "84f813ed7da4b2602e0f18afa8d9053c0979a46ee577352b2bbb73b2d47c78f8",
+    "snapshot": "current/packages/azgard/src/AzgardGuardAdapter.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/src/AzgardPermissionDriver.php",
+    "sha256": "667f679d54a19a3a6471afca548cf0e782793cd9efcc4a7ee39728524e5c95f6",
+    "snapshot": "current/packages/azgard/src/AzgardPermissionDriver.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/src/AzgardPermissionMap.php",
+    "sha256": "9b5a4fd8e74d95224a41f0252d94c8b6ccf36048d90c5129e7524c539382f9aa",
+    "snapshot": "current/packages/azgard/src/AzgardPermissionMap.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/src/Configuration/AzgardConfig.php",
+    "sha256": "cfa9a2561b386db4d96a57c32d4390205b92c77c8a03b6fb722a362a5455a872",
+    "snapshot": "current/packages/azgard/src/Configuration/AzgardConfig.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/src/Contracts/AzgardGuard.php",
+    "sha256": "7fe77b3369757e4b810b0f5a9741d31ce27986747b3a4238239cfbca7b8b3d2b",
+    "snapshot": "current/packages/azgard/src/Contracts/AzgardGuard.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/src/NullAzgardGuard.php",
+    "sha256": "28d2de579f6a54852b0443fd10dddcc907188336427085b58dfb1aef78c6a099",
+    "snapshot": "current/packages/azgard/src/NullAzgardGuard.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/src/Testing/FakeAzgardGuard.php",
+    "sha256": "eff7dde2062930889ace843284db0bb4e20171a22e804f3010596f2b452e4094",
+    "snapshot": "current/packages/azgard/src/Testing/FakeAzgardGuard.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/src/VaulterAzgardServiceProvider.php",
+    "sha256": "17f969dddc201b3e6e26cc5ce211728c95149cac908fa5122fbcf9a3572536ce",
+    "snapshot": "current/packages/azgard/src/VaulterAzgardServiceProvider.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/Access/AccessTestCase.php",
+    "sha256": "d78ccdaec94db882c4c1d23f8ef181a326a9cfd75938ea881a5b47a3af5990d4",
+    "snapshot": "current/packages/azgard/tests/Access/AccessTestCase.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/Access/AccessTestHelpers.php",
+    "sha256": "b8b988ea3d4782455fc9a32a3b4710bb757802997699cd9716354c4c43efda55",
+    "snapshot": "current/packages/azgard/tests/Access/AccessTestHelpers.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/Access/AzgardDriverTest.php",
+    "sha256": "807f5a55fdbdc29f1dbca4ab80a720c364e475de10b84426c7869a41bb23953f",
+    "snapshot": "current/packages/azgard/tests/Access/AzgardDriverTest.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/Access/PermissionDriverContractTest.php",
+    "sha256": "55a369aadac4e928cc76ec0b61a7f0fb6ab2ca34fc41e7ae1752f4f78a67464b",
+    "snapshot": "current/packages/azgard/tests/Access/PermissionDriverContractTest.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/Access/TestUser.php",
+    "sha256": "8dfbddc5922310c1a32962fc7792cbe796554e9c4a9807904825bb8637f2f975",
+    "snapshot": "current/packages/azgard/tests/Access/TestUser.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/Arch/__snapshots__/public-api.txt",
+    "sha256": "759a290948c988e22e7a05bc97c6907784c057772a570d98dd6eb43c87f8fe6d",
+    "snapshot": "current/packages/azgard/tests/Arch/__snapshots__/public-api.txt"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/ArchTest.php",
+    "sha256": "7892af0040366e28a162e6a4040d49997f102db78267be4a089b6f22914b5163",
+    "snapshot": "current/packages/azgard/tests/ArchTest.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/azgard/tests/ConfigurationTest.php",
+    "sha256": "b80cb5b034f51c31691377fbbd0168977c1c1ebaec6cb736b395586200a42bc0",
+    "snapshot": "current/packages/azgard/tests/ConfigurationTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/Pest.php",
+    "sha256": "f6b8bb749bafc7acb94142aa33e6800ab085d8a093ffe73fced219055117c6f9",
+    "snapshot": "current/packages/azgard/tests/Pest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/ProviderBindingTest.php",
+    "sha256": "107c654b595ff20534fa3c115ec06475488c2c9f40cef8318e0c3f1abdbdedce",
+    "snapshot": "current/packages/azgard/tests/ProviderBindingTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php",
+    "sha256": "651356a3271569d7b5976074235cfe7a77eab439f1be9de77f878b63c128b976",
+    "snapshot": "current/packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/TestCase.php",
+    "sha256": "630caea09f213d8732dba1c0099db7ffa5ea0fa9f93760be02b372103da45f3e",
+    "snapshot": "current/packages/azgard/tests/TestCase.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/azgard/tests/VaulterResolverIntegrationTest.php",
+    "sha256": "9b54fbe6c3623e62a4dee5c4e4b7448474f314ff4432d19a51cb601420ac8420",
+    "snapshot": "current/packages/azgard/tests/VaulterResolverIntegrationTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/config/vaulter.php",
+    "sha256": "bd4002816dc7c990cfbc71f72329fab67438bb8724dd772042b067a5e829dfa3",
+    "snapshot": "current/packages/core/config/vaulter.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/core/src/Access/Drivers/AzgardPermissionDriver.php",
+    "sha256": "3002b93aa948e859101d6f79ce2a0f840a82e5d8d7d9fd9ff7cf8a3e18cd86ef",
+    "snapshot": "deleted/packages/core/src/Access/Drivers/AzgardPermissionDriver.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Access/Drivers/GatePermissionDriver.php",
+    "sha256": "6b2c23f7c91dcc024120fc6b68493c732d2ec0a6034c2c31daf2e1798c7127fd",
+    "snapshot": "current/packages/core/src/Access/Drivers/GatePermissionDriver.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Access/PermissionDriverManager.php",
+    "sha256": "07046e636144d38e8d6e00fc947f02f3223b335806bbffd638d3f7f6f22ed91a",
+    "snapshot": "current/packages/core/src/Access/PermissionDriverManager.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Actions/Access/GrantNodeAccessAction.php",
+    "sha256": "2276dcb5e1e0a156a5fefd9eaf5e1f2e34a3b2f7fa5b248bf6f47e44ced844cc",
+    "snapshot": "current/packages/core/src/Actions/Access/GrantNodeAccessAction.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/core/src/Contracts/Access/AzgardGuard.php",
+    "sha256": "178ef3517586c826b4838dd6c8cf66580f5876a8c0f7181f7030b71c625e9102",
+    "snapshot": "deleted/packages/core/src/Contracts/Access/AzgardGuard.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Contracts/Access/EnumeratesRoleSubjects.php",
+    "sha256": "2a3f485cc5b33a96d903f73619c1fc073df2037cb5848f3d49b103af8b606ae0",
+    "snapshot": "current/packages/core/src/Contracts/Access/EnumeratesRoleSubjects.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Contracts/Access/GrantAuthoritativeDriver.php",
+    "sha256": "47977a3020f5c51394fe9563638d62f6ac71c5670712ddb92cb7634321e7cb11",
+    "snapshot": "current/packages/core/src/Contracts/Access/GrantAuthoritativeDriver.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/core/src/Contracts/Access/NonEnumeratingPermissionDriver.php",
+    "sha256": "c29db8a7e9c3e35a57c1b698daa8000a90dcca1c2f4db1f7ca90a54ea0002415",
+    "snapshot": "current/packages/core/src/Contracts/Access/NonEnumeratingPermissionDriver.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/core/src/Contracts/Access/NonProductionPermissionDriver.php",
+    "sha256": "e9060af93ae68878f8fd98e3ac0dab5e0122a7660ce34287a77a8c79f27cede7",
+    "snapshot": "current/packages/core/src/Contracts/Access/NonProductionPermissionDriver.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Contracts/Access/PermissionDriver.php",
+    "sha256": "b4d51c623055adbbe43855937f8ac3390ac2fe6f053a087d461cb4220a4fe983",
+    "snapshot": "current/packages/core/src/Contracts/Access/PermissionDriver.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Contracts/IdStrategy.php",
+    "sha256": "7b2878c140f6e01016cfadfebb880d98f609c01998c3e11b4e27ee22ad96f889",
+    "snapshot": "current/packages/core/src/Contracts/IdStrategy.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Exceptions/Access/MissingPermissionDriverException.php",
+    "sha256": "51e16f9bc4c62759f1c867601fb1242565007968f3e2700f54e907dfb30851fa",
+    "snapshot": "current/packages/core/src/Exceptions/Access/MissingPermissionDriverException.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+    "sha256": "c0eb62a3ae44cc0ec46ba5aa733b7c7225dfeea483df3e831e5e353e3a0ed20d",
+    "snapshot": "current/packages/core/src/Repositories/Drive/NodeReadRepository.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Schema/UlidIds.php",
+    "sha256": "8c8c9b379723c4b20c920f9fde1feaf2de14286c6643f11cc5695b351aaf1128",
+    "snapshot": "current/packages/core/src/Schema/UlidIds.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/core/src/Support/AzgardConfig.php",
+    "sha256": "0767698c6a3adcb62206348e99077320105f1cf80abda970f9c83daeb54df090",
+    "snapshot": "deleted/packages/core/src/Support/AzgardConfig.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Support/Config.php",
+    "sha256": "6806f215cf4505d94d0561b2f5ae059dd24747c8ad70e0db39f8ec787d58270b",
+    "snapshot": "current/packages/core/src/Support/Config.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/core/src/Testing/FakeAzgardGuard.php",
+    "sha256": "64742a5fd403aec2ef1f63a3f8de1eae2697c854cc6d856b493bc3a0330d9c8d",
+    "snapshot": "deleted/packages/core/src/Testing/FakeAzgardGuard.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/src/Testing/NullPermissionDriver.php",
+    "sha256": "a74552f744f846846ad91e598b1b77454a723a247510012f81901d2a5ae919f1",
+    "snapshot": "current/packages/core/src/Testing/NullPermissionDriver.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/tests/Access/AccessAwareListingTest.php",
+    "sha256": "cc02c649e2da4305fb984d91a5927a435cf1561e8fa70e2339180adb94c87844",
+    "snapshot": "current/packages/core/tests/Access/AccessAwareListingTest.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/core/tests/Access/AzgardDriverTest.php",
+    "sha256": "157d5c54a3e64e32bbce9cc2e1af96504d4e290abb12af1cf690872e66703048",
+    "snapshot": "deleted/packages/core/tests/Access/AzgardDriverTest.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/core/tests/Access/PermissionDriverBoundaryTest.php",
+    "sha256": "328a01a8a57ad357e40707b3a0554435940fab0705bcbbedc4198380d8466855",
+    "snapshot": "current/packages/core/tests/Access/PermissionDriverBoundaryTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/tests/Access/PermissionDriverContractTest.php",
+    "sha256": "9013a6d0c658dcb81fd52c712f96ade93003c6513e5f6c8aa74cc7c781bb1bee",
+    "snapshot": "current/packages/core/tests/Access/PermissionDriverContractTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/tests/Arch/ArchTest.php",
+    "sha256": "d561bb4f31cca36556a3faca5df4f03d2f1743bc85d96771a6b6a593fc131294",
+    "snapshot": "current/packages/core/tests/Arch/ArchTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/tests/Arch/__snapshots__/public-api.txt",
+    "sha256": "c17882b989326ee81e2e7a31145798f9a86fbca5b675e50a783f41e2ac16d591",
+    "snapshot": "current/packages/core/tests/Arch/__snapshots__/public-api.txt"
+  },
+  {
+    "status": "M",
+    "path": "packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php",
+    "sha256": "dcca22c47440e716e2d95fff677f71e663c53a5f544d98501301ac386ca08a8b",
+    "snapshot": "current/packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/documents/tests/Arch/ArchTest.php",
+    "sha256": "bc1f03ed69cbc650d6ce8163e733c89daffb90e24ad878aedbe3365a49654320",
+    "snapshot": "current/packages/documents/tests/Arch/ArchTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/drive/src/Http/Controllers/Drives/ShowDriveController.php",
+    "sha256": "9539b1cc3cea462dd272a2cdfced67e9e924c27565971f9f2f752c963d9bc478",
+    "snapshot": "current/packages/drive/src/Http/Controllers/Drives/ShowDriveController.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/drive/tests/Arch/ArchTest.php",
+    "sha256": "1d99add2f1b9270e168859dc05fcd4e31bcce44179e05bbf69151a4861b3a81e",
+    "snapshot": "current/packages/drive/tests/Arch/ArchTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/drive/tests/Concurrency/QuotaRaceTest.php",
+    "sha256": "18515698901b64612894da18a223ba430817da3b47340c88e1d9dc60998b7e50",
+    "snapshot": "current/packages/drive/tests/Concurrency/QuotaRaceTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/config/vaulter-filament.php",
+    "sha256": "b4b80763240d0967c15d67679059cdc58bbdd8f514eac660b9023103dad9b5b6",
+    "snapshot": "current/packages/filament/config/vaulter-filament.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/filament/src/Resources/DriveResource.php",
+    "sha256": "b6d1ecc93de4aba454157c3ebfc880706c3d6836bcab9e029166eab6bb492ae9",
+    "snapshot": "current/packages/filament/src/Resources/DriveResource.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/filament/src/Resources/DriveResource/Pages/ListDrives.php",
+    "sha256": "3501cecbc5d3f6d98e98b7925abb32af81ce7f1e40cac63d240a75f589ca51ea",
+    "snapshot": "current/packages/filament/src/Resources/DriveResource/Pages/ListDrives.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/filament/src/Resources/DriveResource/Pages/ViewDrive.php",
+    "sha256": "921452132d1511a22927ce3258b08c82a1ce587de661dc3c48c687812298050d",
+    "snapshot": "current/packages/filament/src/Resources/DriveResource/Pages/ViewDrive.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/filament/src/Resources/StorageResource.php",
+    "sha256": "c92788d65b926424780d888eecfff37a79d99ab50e6c496aab5b87e972926e72",
+    "snapshot": "deleted/packages/filament/src/Resources/StorageResource.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/filament/src/Resources/StorageResource/Pages/ListStorages.php",
+    "sha256": "5136b2509f14b995430fa4aa5427a4e85ac6f3de8454f88288381bd1a4e49573",
+    "snapshot": "deleted/packages/filament/src/Resources/StorageResource/Pages/ListStorages.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/filament/src/Resources/StorageResource/Pages/ViewStorage.php",
+    "sha256": "96cf7c88255173456aa759034fd0b4eb9fd35cb4cc1078b3b1389bb1021f5709",
+    "snapshot": "deleted/packages/filament/src/Resources/StorageResource/Pages/ViewStorage.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/src/VaulterPlugin.php",
+    "sha256": "0412f6161b01ddd8017c58e24dea42cdbf4acafb0b549535920a36ad7dad3cd3",
+    "snapshot": "current/packages/filament/src/VaulterPlugin.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/tests/Arch/ArchTest.php",
+    "sha256": "944999d32e3ef991c1b310e6eb75e1654f4bf78e327ba6a76667274d33cc85d8",
+    "snapshot": "current/packages/filament/tests/Arch/ArchTest.php"
+  },
+  {
+    "status": "A",
+    "path": "packages/filament/tests/Feature/DriveResourceTest.php",
+    "sha256": "7086837a858c26a6ea85c84f490992710e54884c7dc68e88c8d4fded91364ca7",
+    "snapshot": "current/packages/filament/tests/Feature/DriveResourceTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/tests/Feature/ResourceListingScopeTest.php",
+    "sha256": "1ed62c74f03eeca2c82e8f9dd75ba082cd0d5e0c2a86d992d6a9053f49a1b49b",
+    "snapshot": "current/packages/filament/tests/Feature/ResourceListingScopeTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/tests/Feature/ResourcePagesTest.php",
+    "sha256": "b0c6c6582c6e4ab982fc7e2b17fb48625c1bd893430771a69abb21d2555d89cd",
+    "snapshot": "current/packages/filament/tests/Feature/ResourcePagesTest.php"
+  },
+  {
+    "status": "D",
+    "path": "packages/filament/tests/Feature/StorageResourceTest.php",
+    "sha256": "3de0492ebfd205883413ee6b1586d2c3e07e47f1eee99210fd58ebd9f090f462",
+    "snapshot": "deleted/packages/filament/tests/Feature/StorageResourceTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/tests/Feature/VaulterPluginTest.php",
+    "sha256": "db86b361954b7925224683aab2da216e35783bd87d00166d33e1a52b4affbf1e",
+    "snapshot": "current/packages/filament/tests/Feature/VaulterPluginTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/filament/tests/TestCase.php",
+    "sha256": "6859e6528d885ad692ebc64dda3efc01668f24ec96ff59d0478815711f3396d7",
+    "snapshot": "current/packages/filament/tests/TestCase.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/src/Console/GcBlobsCommand.php",
+    "sha256": "1da720c00f52a2a0f40474f731c58321d540570ac0bec4502fc0bbfe4c628fb8",
+    "snapshot": "current/packages/media/src/Console/GcBlobsCommand.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/src/Console/ReconcileBlobsCommand.php",
+    "sha256": "416e00622b3c44d3c2936dc039c9b45656ea7654b9328a2f8e8114944e233c3a",
+    "snapshot": "current/packages/media/src/Console/ReconcileBlobsCommand.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Arch/ArchTest.php",
+    "sha256": "a4528a82efe9d92b8c1d85629d6c177a1d7c42022df545a26c39f591f9a7f49c",
+    "snapshot": "current/packages/media/tests/Arch/ArchTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Cas/BlobCommandsTest.php",
+    "sha256": "ef4c9964cca256321843dab77c362a2c104aeafd6c8065d485a472ead605ab10",
+    "snapshot": "current/packages/media/tests/Cas/BlobCommandsTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Cas/BlobOrphanPruneTest.php",
+    "sha256": "4c308559ae024bcbd841135cd88dca229c3f58db7a3196d26c61193fcb04f530",
+    "snapshot": "current/packages/media/tests/Cas/BlobOrphanPruneTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Cas/CommandOutputContractTest.php",
+    "sha256": "6d8cb64400ed16614e56ba4ba1871031970ecee47566d7f04d2f8539227971e1",
+    "snapshot": "current/packages/media/tests/Cas/CommandOutputContractTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php",
+    "sha256": "5a2688082319df61f7b02a721d0876f37303785746194092fca8968651477fe5",
+    "snapshot": "current/packages/media/tests/Cas/ReconcileBlobsOrphanCommandTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Feature/BootTest.php",
+    "sha256": "ea5714a0d083adf9539fb6ca0a3fde9ba193d0fd8a0c122679f29cb2fa85637d",
+    "snapshot": "current/packages/media/tests/Feature/BootTest.php"
+  },
+  {
+    "status": "M",
+    "path": "packages/media/tests/Observability/P85Section53MediaMetricsTest.php",
+    "sha256": "8b897d2d7241a1bd565f77e439ce585a1e72fae88c164abe6f477ef941ffa7bc",
+    "snapshot": "current/packages/media/tests/Observability/P85Section53MediaMetricsTest.php"
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-10-06T10:55:37.874373+00:00",
+  "candidate": "42bda3fc2134c1c48773c3d8852674e8578f934cb3c0219ab41b6af27eaaf50f",
+  "input_manifest_still_identical": true,
+  "canonical_P2.6_context": {
+    "accepted_global_D25": true,
+    "policy_in_documents_and_required_reads": true,
+    "phase_check_ids": "V901–V926",
+    "item_acceptance_ids": [
+      "V1",
+      "V2"
+    ],
+    "item_status": "todo"
+  },
+  "independent_readonly_review": {
+    "agent": "/root/policy_consistency_d25",
+    "verdict": "PASS after PG union deduplication",
+    "remaining_demonstrated_issues": []
+  },
+  "historical_P2.5_and_product_diff": {
+    "command": [
+      "git",
+      "diff",
+      "--name-only",
+      "--",
+      "packages",
+      "composer.json",
+      "composer.lock",
+      "docs",
+      "scripts",
+      "tests",
+      "README.md",
+      "UPGRADE.md",
+      "CHANGELOG.md",
+      "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/P2.5.json",
+      "plans/2026.09.29-№1-VAULTER-STABLE/decisions/D24.json",
+      "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.5"
+    ],
+    "exit_code": 0,
+    "changed_paths": []
+  },
+  "no_product_execution": true
+}

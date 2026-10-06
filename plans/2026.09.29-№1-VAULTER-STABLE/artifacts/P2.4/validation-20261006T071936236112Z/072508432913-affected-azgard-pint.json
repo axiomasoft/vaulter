@@ -1,0 +1,47 @@
+{
+  "pao": [
+    {
+      "tool": "pint",
+      "result": "passed"
+    }
+  ],
+  "label": "affected-azgard-pint",
+  "argv": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint",
+    "--test"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+  "started": "2026-10-06T07:25:08.435156+00:00",
+  "finished": "2026-10-06T07:25:08.677172+00:00",
+  "exit_code": 0,
+  "expected_exit": 0,
+  "candidate_before": "19ddd29a4b8cd0fe74eb3138d84b4d6545a556d795fec02f3705aaa9ad0c457d",
+  "candidate_after": "19ddd29a4b8cd0fe74eb3138d84b4d6545a556d795fec02f3705aaa9ad0c457d",
+  "normative_inputs": [
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+      "sha256": "5f543d6474eb8d3210ba6b6f0f6d944a80d0b59bb07bdfc692416713ab9e19d5"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+      "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+      "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+      "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+    }
+  ],
+  "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/072508432913-affected-azgard-pint.log",
+  "totals": [],
+  "environment": {
+    "APP_ENV": "testing",
+    "DB_CONNECTION": "sqlite",
+    "VAULTER_TEST_DB_CONNECTION": "sqlite",
+    "DB_DATABASE": ":memory:"
+  }
+}

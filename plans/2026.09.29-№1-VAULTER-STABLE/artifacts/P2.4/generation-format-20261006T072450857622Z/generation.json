@@ -1,0 +1,40 @@
+{
+  "kind": "format-generation",
+  "argv": [
+    "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+    "vendor/bin/pint",
+    "src/AzgardPermissionDriver.php",
+    "tests/VaulterResolverIntegrationTest.php",
+    "tests/ProviderBindingTest.php",
+    "tests/ArchTest.php",
+    "tests/Pest.php",
+    "tests/Access/AccessTestHelpers.php",
+    "tests/Access/AzgardDriverTest.php",
+    "tests/Access/PermissionDriverContractTest.php",
+    "tests/RealAzgard/RealAzgardIntegrationTest.php"
+  ],
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+  "exit_code": 0,
+  "files_before": {
+    "src/AzgardPermissionDriver.php": "12005a5ca3eff1fa181dcc725e10b02986cb8748c25a567dc02220ec20397ea9",
+    "tests/VaulterResolverIntegrationTest.php": "0670a1cf09131060827bf778072468c189133d01b17644318914b1434849983f",
+    "tests/ProviderBindingTest.php": "efc2d6306d2b9fb27dc6077d027d35797372099fdbc1a05377613dbba696e49a",
+    "tests/ArchTest.php": "57a45c8d764a02e7a3db56a4d3f56b6b052bd970459d90b9553bda78c1989e0a",
+    "tests/Pest.php": "e6151a1c3b5879f2ccf129090d70c6b6ae12f496ac7acde32651b9ab38abffaa",
+    "tests/Access/AccessTestHelpers.php": "f5d8ffc6c2750335a8ea0d5803d6f92e4826cbc87a43e0d7e817311e0087d686",
+    "tests/Access/AzgardDriverTest.php": "51c193780cc7b8d8bd8c2db7846b90dec1e1f2eb945e36de712f7ef0ae358965",
+    "tests/Access/PermissionDriverContractTest.php": "5ca173dc6844feb7b4163f45f6daaf07ad027189366dd48063c056702f7940cd",
+    "tests/RealAzgard/RealAzgardIntegrationTest.php": "369752c1201f5fef6e40a89990a8dfdbfc8174e93e49f1c86a9ea2643209fdab"
+  },
+  "files_after": {
+    "src/AzgardPermissionDriver.php": "667f679d54a19a3a6471afca548cf0e782793cd9efcc4a7ee39728524e5c95f6",
+    "tests/VaulterResolverIntegrationTest.php": "9b54fbe6c3623e62a4dee5c4e4b7448474f314ff4432d19a51cb601420ac8420",
+    "tests/ProviderBindingTest.php": "107c654b595ff20534fa3c115ec06475488c2c9f40cef8318e0c3f1abdbdedce",
+    "tests/ArchTest.php": "7892af0040366e28a162e6a4040d49997f102db78267be4a089b6f22914b5163",
+    "tests/Pest.php": "f6b8bb749bafc7acb94142aa33e6800ab085d8a093ffe73fced219055117c6f9",
+    "tests/Access/AccessTestHelpers.php": "b8b988ea3d4782455fc9a32a3b4710bb757802997699cd9716354c4c43efda55",
+    "tests/Access/AzgardDriverTest.php": "807f5a55fdbdc29f1dbca4ab80a720c364e475de10b84426c7869a41bb23953f",
+    "tests/Access/PermissionDriverContractTest.php": "55a369aadac4e928cc76ec0b61a7f0fb6ab2ca34fc41e7ae1752f4f78a67464b",
+    "tests/RealAzgard/RealAzgardIntegrationTest.php": "651356a3271569d7b5976074235cfe7a77eab439f1be9de77f878b63c128b976"
+  }
+}

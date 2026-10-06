@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1.7-scope-repair",
+  "title": "bounded validation repairs and authorization",
+  "sections": [
+    {
+      "id": "P1.7-bounded-validation-repairs-and-authorization",
+      "title": "P1.7 — bounded validation repairs and authorization",
+      "text": "The host-key schema deliberately changes default reads from integer to string. Existing core helper expectations for actor/tenant in all three ID strategies and the persisted share.granted_by assertion were updated to that contract. The snapshot gate now reflects HostKeyColumns and VaulterSchema. No assertion was loosened.\n\nCore's TestCase previously selected SQLite for DB_CONNECTION=mysql. Its test connection resolver now selects real MySQL/MariaDB and refuses non-*_test persistent databases. A fixture-only MySQL TestCase omits the unrelated tree migrations, allowing an additional real-MySQL suite to prove all 27 host columns, values, nullability, indexes, all four types, idempotency and down(). The declared full-install MySQL command still runs and its error is retained rather than hidden.\n\nThe owner's explicit reply in this invocation was: «Разрешаю исправить три assertions». The permission question identified precisely two drive assertions (created_by 42 and tenant_id 99887766) and one documents assertion (resolved_by 7) as stale integer expectations, and cited AGENTS.md and the P1.7 Files boundary. Only those three assertions change in sibling packages; their full gates are rerun. No sibling product code changes.\n\nThe new V23 fresh-panel setup runs after automatic migrations, so the upgrade cannot hide a wrong fresh-schema subject_id type. Its mandated negative control fails on PostgreSQL inserting the UUID into char(26), and the restored test passes.\n\nThe MySQL 8 installation defect is pre-existing and assigned to PLAN2.P8.1 by the P1.7 contract. mysql-baseline-classification.json and mysql-known-deviation.md retain its proof and exact limits. No acceptance threshold or test skip was changed to accept the defect."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P1.7/scope-repair.md",
+    "sha256": "979808247a5747cdc5942d605debdeb82d1bc4f6a8564f1816b3d77c5fe573fc"
+  }
+}

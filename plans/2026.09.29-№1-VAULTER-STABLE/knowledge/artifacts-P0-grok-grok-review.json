@@ -1,0 +1,62 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P0-grok-grok-review",
+  "title": "независимое ревью Grok, 2026-10-03",
+  "sections": [
+    {
+      "id": "P0-Grok-2026-10-03",
+      "title": "P0 — независимое ревью Grok, 2026-10-03",
+      "text": "Кандидат: `a5d879243720e97b6dd7f1f82d9bf15e4fcf1a4a`.\nРевьюер не исполнял items P0. Продуктовые файлы этой сессией не менялись.\n«Доработка 0.2» прочитана как P0.2 (харнесс), не как фикстура тега v0.2.0."
+    },
+    {
+      "id": "1.",
+      "title": "1. Вердикт",
+      "text": "**GREEN после фикса двух Minor.** До фикса вердикт был ATTENTION.\n\nДефекта Blocker или Major в P0.1–P0.4 нет. PA01 на этом HEAD закрыт кодом теста. Hosted-шаг харнесса на `a5d8792` был зелёный (4 passed, 17 assertions). Длинные mutation-прогоны владелец снял с фазы (D14): они не входят в приёмку и не дорабатываются.\n\nОба Minor исправлены 2026-10-03: шаг CI требует `4 passed` и падает, если в сводке есть skipped; пояснения E15/E16/E18 в provenance больше не называют зелёные прогоны красным контролем. Фаза P0 закрыта записью в `@plan/plan.json` и `@plan/phases/P0/phase.json`."
+    },
+    {
+      "id": "2.",
+      "title": "2. Находки",
+      "text": ""
+    },
+    {
+      "id": "Minor-CI-skipped",
+      "title": "Minor — шаг CI зелёный, если харнесс весь skipped",
+      "text": "Item: P0.2. Файл: `.github/workflows/tests.yml:166-168`, `packages/core/tests/Concurrency/ForkRace.php:35-45`.\n\nСценарий. `supported()` ложен без `pgsql` или без `pcntl_fork`/`posix_kill`. Каждый тест вызывает `markTestSkipped` (`ForkRace.php:45`). Команда шага — `vendor/bin/pest --ci packages/core/tests/Concurrency` — при всех skipped завершается с exit 0. В YAML нет проверки «4 passed» и нет `--fail-on-skipped`.\n\nДоказательство. Локально без `DB_CONNECTION=pgsql`:\n\n`scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency` → exit 0, `Tests: 4 skipped (0 assertions)`.\n\nЭто тот же путь, что и отсутствие pcntl. Расширение из процесса не выгружалось: `function_exists('pcntl_fork')` на этом PHP истинен.\n\nНа текущем hosted-прогоне дыра не сработала: шаг success, `Tests: 4 passed (17 assertions)`. Чинка — в команде шага требовать 4 passed и 0 skipped. Не сделано: ниже Major, и SQLite-контракт P0.2 как раз требует exit 0 при 4 skipped."
+    },
+    {
+      "id": "Minor-provenance",
+      "title": "Minor — пояснения provenance путают зелёные прогоны с красным контролем",
+      "text": "Item: P0.2, артефакт, не продукт. Файл: `plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/validation-provenance.json:11-12` (E15), `:20-21` (E16). То же предложение у E18 (pint).\n\nСценарий. E15 ссылается на пять зелёных `serial-pgsql-*.log`, E16 — на `sqlite.log`, но `explanation` у обоих: «Expected RED controls demonstrate detection». Поле `mode` при этом различает прогоны: `fresh affected validation` у E15–E18 и E21–E22, `reused` у E19–E20, `contract hash re-bind` у блока E15–E22 с текстом «No re-execution».\n\nДоказательство: текст файла на HEAD (добавление E23 в рабочем дереве этот абзац не меняет). Чинка — поправить explanation. Не сделано: это не файл продукта P0.2, и граница сессии запрещает править чужие plan-артефакты."
+    },
+    {
+      "id": "3.",
+      "title": "3. Что реально запущено",
+      "text": "| Команда | Exit | Итог |\n|---|---|---|\n| `maind health --cwd` | 0 | `connected` |\n| `scripts/php84 --check` | 0 | `php84 OK: 8.4.26` |\n| `PHP84_BIN=$(command -v php8.3) scripts/php84 --check` | 1 | ожидаемо: PHP 8.3.35 |\n| `DB_DATABASE=vaulter scripts/db-preflight.sh pgsql` | 1 | имя не на `_test`, до подключения |\n| `scripts/db-preflight.sh pgsql` | 0 | `vaulter_test`, PostgreSQL 16.15 |\n| `bash -n scripts/php84 scripts/db-preflight.sh` | 0 | |\n| PG `pest --ci packages/core/tests/Concurrency` | 0 | 4 passed, 17 assertions, 11.30s |\n| Мутант `while (false)` через `auto_prepend_file`, репозиторий не менялся | 1 | 3 passed, 1 failed: readiness, `ForkRaceTest.php:122` |\n| Мутант спецификации: `while (false)` и `pcntl_waitpid` сразу после fork | 1 | 2 failed: lost update `ForkRaceTest.php:70` (значения чтений, не флаг ok), readiness `:122`. FOR UPDATE и тест исключения зелёные |\n| Мутант только `pcntl_waitpid`, барьер жив | 1 | 4 failed. Это не контроль спецификации: первый ребёнок упирается в барьер, пока родитель не форкнул второго |\n| Мутант `usleep(300_000)` между fork, барьер жив | 0 | 4 passed, 17 assertions. Порядок старта детей гонку не подменяет |\n| SQLite, та же команда pest без `DB_CONNECTION=pgsql` | 0 | 4 skipped, 0 assertions |\n| `sha256sum -c tests/fixtures/v0.2.0/SHA256SUMS` | 0 | три дампа OK |\n| `scripts/fixtures/make-v0.2-dump.sh --verify` | 0 | регенерация совпала с SHA256SUMS; три строки OK, owner bigint `{1,2,3}` и три ULID из спецификации. Дампы в git не изменились |\n| `git rev-parse v0.2.0^{commit}` | 0 | `983c345c1088363a1f52c6b44096f4e82c6a2cd4`, как в README фикстуры |\n\nНе запускалось и почему:\n\n- Пять повторов PG-suite подряд. Контракт части B требует их только после правки. Правки не было. Один зелёный прогон плюс мутанты.\n- Полный root-suite, Pest mutation, тесты чужих пакетов локально. Запрещены постановкой.\n- Повтор lanes baseline P0.1. Четыре неизвестных mutation-вердикта и красные L12/L13 B-01 не пересматривались (D11).\n- `npm run docs:build`. ADR сверены с текстом OPUS; повторный docs build не гонялся.\n- Выгрузка pcntl из PHP. Расширение вшито; путь skip доказан SQLite-прогоном и кодом `supported()`.\n\nPest под `auto_prepend_file` не писал stdout (файл лога пустой, exit и JUnit живые). У мутанта lost update в JUnit нет массива actual, только строка падения `:70`. Это утверждение `toBe([0, 0])` на прочитанные значения."
+    },
+    {
+      "id": "4.-B",
+      "title": "4. Правки (часть B)",
+      "text": "Нет. Условие было Major и выше в файлах P0.2. Такого дефекта ревью не подтвердило. `git status` по `packages/core/tests/Concurrency`, `tests/Pest.php`, workflows, фикстурам, `scripts/php84`, `scripts/db-preflight.sh`, `scripts/fixtures`, `docs/adr` пустой."
+    },
+    {
+      "id": "5.-CI",
+      "title": "5. CI на зеркале",
+      "text": "Remote `mirror` → `https://github.com/academici/vaulter-mirror.git` (до сессии remote не было).\nPush без force: `a5d8792` → `refs/heads/plan2/P0`. origin не пушился. Коммита не было. PR, merge, тегов нет (`git ls-remote` по tags пуст, `gh pr list` пуст).\n\nActions на пустом репозитории не видели workflow, пока первая ветка не была default. Поэтому тот же SHA запушен ещё и в `main`, default branch зеркала переключён на `main`. Обе ветки указывают на `a5d8792`. Push в `main` сам стартовал часть workflow. Лишние остановлены: Mutation Testing и Code Style — cancelled. Release (npm) уже успел упасть до публикации: changesets, пакет `@vaulter/client` не найден, `NODE_AUTH_TOKEN` пуст, ветка `changeset-release/main` на remote не появилась. Frontend и Static Analysis на том же SHA успели стать success до отмены; к приёмке P0 не относятся. Это следствие индексации зеркала, не дефект кандидата.\n\n| Workflow | Run | Event / ref | SHA | Conclusion | Jobs |\n|---|---|---|---|---|---|\n| tests.yml | [37120372889](https://github.com/academici/vaulter-mirror/actions/runs/37120372889) | push `main` (тот же SHA, что `plan2/P0`) | `a5d8792` | failure | L12 failure, L13 failure, **Postgres success** |\n| drive.yml | [37120440115](https://github.com/academici/vaulter-mirror/actions/runs/37120440115) | workflow_dispatch `plan2/P0` | `a5d8792` | cancelled | SQLite L12 success, SQLite L13 success, Postgres upload success, mutation cancelled |\n| media.yml | [37120442658](https://github.com/academici/vaulter-mirror/actions/runs/37120442658) | workflow_dispatch `plan2/P0` | `a5d8792` | failure | SQLite L12 success, SQLite L13 success, Postgres CAS success, mutation failure |\n| documents.yml | [37120445576](https://github.com/academici/vaulter-mirror/actions/runs/37120445576) | workflow_dispatch `plan2/P0` | `a5d8792` | failure | SQLite L12 success, SQLite L13 success, Postgres yjs/gin success, mutation failure |\n\nСравнение с `@plan/knowledge/findings-baseline.json`:\n\n- Tests L12/L13: единственный красный шаг `Type coverage (100%)`, `TracingSpanNames.php` co12, co14, co16, co18, `currently 99.8%`. Это B-01. Лог: `artifacts/P0-grok` не хранит полный job; выдержка снята в сессии из job `111195149739` и `111195149804`.\n- Postgres job tests.yml целиком success. Шаг `Postgres: concurrency harness` success. В логе job `111195149828`: `PASS Packages\\core\\tests\\Concurrency\\ForkRaceTest` и `Tests: 4 passed (17 assertions)`. Строка «4 skipped, 391 passed» выше по логу относится к base TestCase, не к харнессу. Выдержка: `artifacts/P0-grok/concurrency-step-excerpt.log`.\n- Media mutation union: Postgres 94.11% (30 untested / 479 tested), SQLite 92.92% (34 untested / 446 tested), union **94.36%** (485 killed / 29 escaped / 514 IDs, порог 95). Baseline B-12: 94.35% (484/29 из 513). Тот же класс, на один killed ID больше. Не новый красный.\n- Documents mutation (job `111195353342`, шаг с 11:41:59 до 14:39:11 UTC): не падение тестов и не инфраструктура. `vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95` закончился exit 1. Лог: `Mutations: 527 untested, 977 tested`, `Score: 64.96%`. Поведенческие job (SQLite L12/L13, Postgres yjs/gin) success. Локальный baseline этот прогон обрывал по SIGTERM без score (B-16, D11: не пересматривать). Число впервые получено на hosted; это измерение того же неизвестного гейта, не новый красный сверх классификации baseline.\n- Drive mutation (job с 11:41:58 UTC) отменён по просьбе владельца в 15:59 UTC: `gh run cancel 37120440115` → conclusion `cancelled`. SQLite L12/L13 и Postgres upload к этому моменту уже были success. Score мутации нет и зелёным не считается. Это тот же класс, что локальный B-16: измерение не доведено.\n\nЗакрывает ли это O-3-CI — решение владельца. Прошлый hosted run 36969058019 привязан к `5a7aac8`, не к этому кандидату. Новый прогон — зеркало, не origin. Шаг харнесса на `a5d8792` выполнен и зелёный."
+    },
+    {
+      "id": "6.",
+      "title": "6. Открытые вопросы",
+      "text": "- Нужен ли в шаге `Postgres: concurrency harness` явный отказ при 4 skipped? Сейчас это Minor, контракт SQLite требует exit 0 на skip.\n- Считать ли push `main` на зеркале (тот же SHA) достаточным tests.yml для O-3-CI, или нужен отдельный `workflow_dispatch` именно с ref `plan2/P0`.\n- Нужен ли позже отдельный короткий прогон Drive mutation. Сейчас он отменён, score неизвестен."
+    },
+    {
+      "id": "section",
+      "title": "Границы сверки, коротко",
+      "text": "- P0.1. Обёртка и preflight совпали со спецификацией, негативы exit 1 проверены. `filament.yml` по-прежнему маскирует Rector `|| true`: условие снятия не выполнено (B-02). B-05 (нет pcntl и нет шага Concurrency) в workflows закрыт: pcntl/posix стоят на PG job tests, drive, media, documents; шаг харнесса есть только в `tests.yml:test-pgsql`, как в P0.2.\n- P0.2. Четыре теста. Readiness: ровно один ребёнок падает в `DB::extend` до `ready.*` (`fopen` с `x`), второй обязан получить `ForkRace\\BarrierTimeout` и не создать `task-started`. Lost update требует оба чтения 0 и итог 1. Изоляция pid сохранена в том же тесте.\n- P0.3. MySQL-дампов нет по D09, это не пересматривалось. Формы §4 в README и в `--verify` есть, включая preflight-red отдельно от основных дампов.\n- P0.4. ADR 0019–0024 в `proposed`. Тексты D02, D05, D15–D17, D22–D23, D29–D31 перенесены без нового решения; 0009 и 0018 помечены amendment и сами не переписаны. Якоря `#dNN` в `02-decisions.md` есть. В памяти `project:vaulter` находятся AD01, AD07, AD20, AD40."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P0-grok/grok-review.md",
+    "sha256": "15703ef47932373eb3f74584b6664dd3afdde9c12d20599db40bd4b6fb336e0b"
+  }
+}

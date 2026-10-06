@@ -1,12 +1,32 @@
 {
   "item": "P2.6",
-  "candidate": "working-tree",
+  "candidate": "6c142527c35d2fb522331c51ca096e11e7165558",
   "checks": [
-    {"id": "V1-pg", "exit": 0, "result": "10 passed, 134 assertions, 0 skipped; key-column, upgrade, and schema-parity tests"},
-    {"id": "V1-mysql", "exit": 0, "result": "7 passed, 100 assertions; all six key configurations plus canonical schema behavior"},
-    {"id": "V1-negative", "exit": 1, "result": "temporary v_outbox.drive_id varchar(64) made all six PostgreSQL datasets report the expected mismatch; exact source restored and V1 returned green"},
-    {"id": "static", "exit": 0, "result": "PHPStan: 0 errors"},
-    {"id": "format", "exit": 0, "result": "Pint and git diff --check passed"}
+    {
+      "id": "V1-pg",
+      "exit": 0,
+      "result": "10 passed, 134 assertions, 0 skipped; key-column, upgrade, and schema-parity tests"
+    },
+    {
+      "id": "V1-mysql",
+      "exit": 0,
+      "result": "7 passed, 100 assertions; all six key configurations plus canonical schema behavior"
+    },
+    {
+      "id": "V1-negative",
+      "exit": 1,
+      "result": "temporary v_outbox.drive_id varchar(64) made all six PostgreSQL datasets report the expected mismatch; exact source restored and V1 returned green"
+    },
+    {
+      "id": "static",
+      "exit": 0,
+      "result": "PHPStan: 0 errors"
+    },
+    {
+      "id": "format",
+      "exit": 0,
+      "result": "Pint and git diff --check passed"
+    }
   ],
   "phase_barrier": {
     "local": {
@@ -26,8 +46,11 @@
     },
     "hosted": {
       "id": "V926",
-      "status": "pending_owner_gate",
-      "reason": "Hosted non-mutation CI for the final candidate requires O-3 authority to commit/push and start the external run."
+      "status": "green",
+      "repository": "ax1oma/vaulter-mirror",
+      "branch": "fix/p2.6-key-column-types",
+      "result": "9/9 non-mutation workflows succeeded; no GitHub Actions limit encountered",
+      "evidence": "hosted-ci.json"
     }
   },
   "review": "not run; owner explicitly requested no review"

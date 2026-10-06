@@ -1,0 +1,295 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P0.2",
+  "title": "Харнесс конкурентности PostgreSQL",
+  "status": "done",
+  "summary": "Дать всем пакетам один харнесс, который запускает N операций в **отдельных процессах на отдельных соединениях**\nPostgreSQL, отпускает их барьером одновременно и возвращает исходы; доказать его пример-тестом и негативным контролем\n(воспроизведённый lost update без блокировки) и включить в PG-лейн CI.",
+  "why": "OPUS 13 P0.2; сценарии V02, V03, V13, V17, V19, V20, V21 (P1.1, P1.2, P1.5, P1.6) требуют реальной гонки — SQLite\nсериализует записи. Сейчас fork+барьер скопирован в `packages/drive/tests/Concurrency/TusConcurrentPatchTest.php`,\n`TusPatchVsSweepRaceTest.php` и `packages/core/tests/Webhooks/ConcurrentDeliveryTest.php` (разные реализации); CI-лейн\n`tests.yml:test-pgsql` ставит расширения `mbstring, pdo, pdo_pgsql, pgsql` — без `pcntl`/`posix` такие тесты пропускаются.",
+  "scope": {
+    "include": [
+      "`packages/core/tests/Concurrency/ForkRace.php` (namespace `Vaulter\\Tests\\Concurrency`, `final class`):\n   - `public static function supported(?string $connection = null): bool` — драйвер соединения `pgsql` и есть\n     `pcntl_fork`, `posix_kill`;\n   - `public static function skipUnlessSupported(\\PHPUnit\\Framework\\TestCase $test, ?string $connection = null): void`;\n   - `/** @param list<\\Closure(): mixed> $tasks @param list<string> $connections @return list<RaceOutcome> */\n     public static function run(array $tasks, array $connections = [], int $timeoutMs = 10_000): array`.\n   Алгоритм: временный каталог `sys_get_temp_dir()/vlt_race_<pid>_<rand>`; на каждую задачу `pcntl_fork`; **ребёнок** —\n   `DB::purge()`+`DB::reconnect()` для каждого соединения из `$connections` (пусто → default), файл `ready.<i>`, ожидание\n   `ready.*` = N (шаг 200 мкс, по истечении `$timeoutMs` — исход `barrier-timeout`), вызов задачи, запись\n   `result.<i>` JSON `{ok, value, exception, message}` (`value` — только JSON-сериализуемое, иначе `exception =\n   'ForkRace\\\\UnserializableValue'`), `posix_kill(getmypid(), SIGKILL)`; **родитель** — `pcntl_waitpid` с дедлайном\n   `$timeoutMs + 5000` (просроченного ребёнка — `SIGKILL`, исход `timeout`), `DB::purge`+`reconnect` своих соединений,\n   чтение результатов в порядке задач, удаление каталога.",
+      "`packages/core/tests/Concurrency/RaceOutcome.php` — `final readonly class RaceOutcome(bool $ok, mixed $value,\n   ?string $exception, ?string $message)` + `public function failedWith(string $class): bool` (сравнение FQCN,\n   `is_a($this->exception, $class, true)`).",
+      "`packages/core/tests/Concurrency/ForkRaceTest.php` (4 теста, каждый начинается `ForkRace::skipUnlessSupported($this)`):\n   - **сериализация**: таблица `race_counter(id int pk, value int)` со строкой `(1, 0)`; две задачи в транзакции\n     `SELECT value … FOR UPDATE` → `usleep(200_000)` → `UPDATE value = value + 1` → итог `2`, обе `ok`;\n   - **негативный контроль (lost update)**: те же задачи без `FOR UPDATE`, запись `value = <прочитанное> + 1` → итог `1`\n     — харнесс действительно даёт перекрытие;\n   - **изоляция соединений**: задачи возвращают `select pg_backend_pid()` → два разных pid, оба ≠ pid родителя;\n   - **исключение**: задача бросает `RuntimeException('boom')` → `ok=false`, `failedWith(RuntimeException::class)`,\n     `message === 'boom'`; вторая задача — `ok`.\n   Таблица создаётся/удаляется в тесте через `Schema::create`/`dropIfExists`.",
+      "`tests/Pest.php`: `uses(TestCase::class, DatabaseMigrations::class)->in($core.'/Concurrency');` (коммит фикстур виден\n   детям; `RefreshDatabase` скрыл бы их транзакцией).",
+      "`packages/media/composer.json` `autoload-dev.psr-4`: `\"Vaulter\\\\Tests\\\\\": \"../core/tests/\"` (как у drive/documents) —\n   чтобы V13 (P1.5) использовал харнесс.",
+      "CI: в `setup-php` jobs `tests.yml:test-pgsql`, `drive.yml:drive-pgsql`, `media.yml:media-pgsql`,\n   `documents.yml:documents-pgsql` добавить `pcntl, posix` там, где их нет.\n   В `tests.yml:test-pgsql` после шага `Postgres: base TestCase suite` добавить отдельный шаг:\n\n   ```yaml\n   - name: 'Postgres: concurrency harness'\n     if: always()\n     run: vendor/bin/pest --ci packages/core/tests/Concurrency\n   ```\n\n   Он наследует DB_* job, запускается из корня после установки зависимостей; `always()` не позволяет\n   известной baseline-ошибке предшествующего suite скрыть новый тест. Ошибка setup/dependencies не считается passed.\n   Только добавление расширений или\n   регистрация TestCase в `tests/Pest.php` не заменяют явный выбор каталога в команде PG-job.",
+      "`CONTRIBUTING.md` — раздел «Тесты конкурентности»: когда нужен PG, пример `ForkRace::run`, команда локального прогона."
+    ],
+    "exclude": [
+      "перевод существующих конкурентных тестов drive/webhooks на харнесс (делается пунктом P1, который их\nкасается); сценарии V02/V03/… (P1); `VaulterDatabase` (P1.1); MySQL-вариант харнесса."
+    ]
+  },
+  "depends_on": [
+    "P0.1"
+  ],
+  "decisions": [
+    "D07"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/13-workstreams.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/14-verification.md",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/TusConcurrentPatchTest.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/TestCase.php",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/findings-baseline.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "@plan/decisions/D07.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    },
+    {
+      "path": "@plan/artifacts/coverage/opus-sources.sha256",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": false
+    },
+    {
+      "path": "@plan/knowledge/artifacts-P0-design-P0.2-opus.json",
+      "why": "Source input; exact context is preserved in item sections.",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/tests/Concurrency/{ForkRace.php,RaceOutcome.php,ForkRaceTest.php}",
+      "change": "any"
+    },
+    {
+      "path": "packages/media/composer.json",
+      "change": "any"
+    },
+    {
+      "path": ".github/workflows/{tests,drive,media,documents}.yml",
+      "change": "any"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Ребёнок никогда не возвращается в PHPUnit: только `SIGKILL` самому себе (иначе дубль вывода и teardown).",
+    "Родитель не использует унаследованный PDO после fork без `purge`+`reconnect`.",
+    "Проверка `str_ends_with(DB::connection()->getDatabaseName(), '_test')` в `run()` — иначе `LogicException` (защита от\n  прогона на рабочей БД).",
+    "Задержка `usleep(200_000)` — только в тестах харнесса; сам харнесс синхронизирует только барьером.",
+    "Стиль — существующие тесты core (Pest `it(...)`, `declare(strict_types=1)`, русские описания допустимы)."
+  ],
+  "guidance": "```php\n$outcomes = ForkRace::run([\n    fn () => DB::transaction(fn () => bump(lock: true)),\n    fn () => DB::transaction(fn () => bump(lock: true)),\n]);\nexpect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true])\n    ->and(DB::table('race_counter')->value('value'))->toBe(2);\n```\n\nНегативный контроль обязан падать при «сломанном» харнессе: временно заменить барьер на последовательный запуск\n(дети по очереди `pcntl_waitpid` сразу после fork) → тест lost update краснеет (`2` вместо `1`); результат — строка в\nCompletion Notes, правка откатывается.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php -r \"require 'packages/media/vendor/autoload.php'; exit(class_exists('Vaulter\\\\Tests\\\\Concurrency\\\\ForkRace') ? 0 : 1);\"",
+      "expect": "Source acceptance condition preserved in Validation section.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "procedure": "PG: pest packages/core/tests/Concurrency → 4 passed, 0 skipped; 5/5 serial after PA01 repair",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "procedure": "SQLite: pest packages/core/tests/Concurrency → 4 skipped",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "procedure": "Negative controls: sequential harness and barrier-only mutant → RED",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "procedure": "pint --test packages/core/tests/Concurrency tests/Pest.php",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "procedure": "media dump-autoload + class_exists ForkRace (reused, unchanged inputs)",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "procedure": "Root PG lane not worse than baseline (reused, unchanged inputs)",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "procedure": "Exact CI step command + local path control; hosted O-3-CI remains a phase gate",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "procedure": "Independent review: full — codex/gpt-6.1-sol/high GREEN findings:0 (same-model, D13)",
+      "expect": "Source evidence status: green",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "`ForkRace`, `RaceOutcome`, `ForkRaceTest` с негативным контролем; подключение в `tests/Pest.php`;\nautoload media; `pcntl, posix` в PG-лейнах CI; шаг `Postgres: concurrency harness` в tests.yml:test-pgsql;\nраздел CONTRIBUTING."
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "requested"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-01T19:36:30Z",
+    "finished_at": "2026-10-03T12:06:14Z",
+    "executor": {
+      "provider": "legacy",
+      "model": "claude-code/claude-sonnet-5-5/xhigh",
+      "effort": "xhigh"
+    },
+    "notes": "PA01 repaired: PG 5/5, mutants RED, SQLite/Pint OK; E23 review GREEN (gpt-6.1-sol, same-model D13). Hosted O-3-CI on changed candidate stays phase gate. Evidence: artifacts/P0.2/completion.md.\nwrite-site: pre_mutation: allow · pre_final: allow",
+    "deviations": [],
+    "pending": [],
+    "checks": [
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-03T12:06:14Z",
+        "summary": "Authentic terminal evidence recorded green in the source journal."
+      }
+    ]
+  },
+  "updated_at": "2026-10-03T12:06:14Z",
+  "sections": [
+    {
+      "id": "Intent",
+      "title": "Intent",
+      "text": "Дать всем пакетам один харнесс, который запускает N операций в **отдельных процессах на отдельных соединениях**\nPostgreSQL, отпускает их барьером одновременно и возвращает исходы; доказать его пример-тестом и негативным контролем\n(воспроизведённый lost update без блокировки) и включить в PG-лейн CI."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "OPUS 13 P0.2; сценарии V02, V03, V13, V17, V19, V20, V21 (P1.1, P1.2, P1.5, P1.6) требуют реальной гонки — SQLite\nсериализует записи. Сейчас fork+барьер скопирован в `packages/drive/tests/Concurrency/TusConcurrentPatchTest.php`,\n`TusPatchVsSweepRaceTest.php` и `packages/core/tests/Webhooks/ConcurrentDeliveryTest.php` (разные реализации); CI-лейн\n`tests.yml:test-pgsql` ставит расширения `mbstring, pdo, pdo_pgsql, pgsql` — без `pcntl`/`posix` такие тесты пропускаются."
+    },
+    {
+      "id": "Scope-Included",
+      "title": "Scope Included",
+      "text": "1. `packages/core/tests/Concurrency/ForkRace.php` (namespace `Vaulter\\Tests\\Concurrency`, `final class`):\n   - `public static function supported(?string $connection = null): bool` — драйвер соединения `pgsql` и есть\n     `pcntl_fork`, `posix_kill`;\n   - `public static function skipUnlessSupported(\\PHPUnit\\Framework\\TestCase $test, ?string $connection = null): void`;\n   - `/** @param list<\\Closure(): mixed> $tasks @param list<string> $connections @return list<RaceOutcome> */\n     public static function run(array $tasks, array $connections = [], int $timeoutMs = 10_000): array`.\n   Алгоритм: временный каталог `sys_get_temp_dir()/vlt_race_<pid>_<rand>`; на каждую задачу `pcntl_fork`; **ребёнок** —\n   `DB::purge()`+`DB::reconnect()` для каждого соединения из `$connections` (пусто → default), файл `ready.<i>`, ожидание\n   `ready.*` = N (шаг 200 мкс, по истечении `$timeoutMs` — исход `barrier-timeout`), вызов задачи, запись\n   `result.<i>` JSON `{ok, value, exception, message}` (`value` — только JSON-сериализуемое, иначе `exception =\n   'ForkRace\\\\UnserializableValue'`), `posix_kill(getmypid(), SIGKILL)`; **родитель** — `pcntl_waitpid` с дедлайном\n   `$timeoutMs + 5000` (просроченного ребёнка — `SIGKILL`, исход `timeout`), `DB::purge`+`reconnect` своих соединений,\n   чтение результатов в порядке задач, удаление каталога.\n2. `packages/core/tests/Concurrency/RaceOutcome.php` — `final readonly class RaceOutcome(bool $ok, mixed $value,\n   ?string $exception, ?string $message)` + `public function failedWith(string $class): bool` (сравнение FQCN,\n   `is_a($this->exception, $class, true)`).\n3. `packages/core/tests/Concurrency/ForkRaceTest.php` (4 теста, каждый начинается `ForkRace::skipUnlessSupported($this)`):\n   - **сериализация**: таблица `race_counter(id int pk, value int)` со строкой `(1, 0)`; две задачи в транзакции\n     `SELECT value … FOR UPDATE` → `usleep(200_000)` → `UPDATE value = value + 1` → итог `2`, обе `ok`;\n   - **негативный контроль (lost update)**: те же задачи без `FOR UPDATE`, запись `value = <прочитанное> + 1` → итог `1`\n     — харнесс действительно даёт перекрытие;\n   - **изоляция соединений**: задачи возвращают `select pg_backend_pid()` → два разных pid, оба ≠ pid родителя;\n   - **исключение**: задача бросает `RuntimeException('boom')` → `ok=false`, `failedWith(RuntimeException::class)`,\n     `message === 'boom'`; вторая задача — `ok`.\n   Таблица создаётся/удаляется в тесте через `Schema::create`/`dropIfExists`.\n4. `tests/Pest.php`: `uses(TestCase::class, DatabaseMigrations::class)->in($core.'/Concurrency');` (коммит фикстур виден\n   детям; `RefreshDatabase` скрыл бы их транзакцией).\n5. `packages/media/composer.json` `autoload-dev.psr-4`: `\"Vaulter\\\\Tests\\\\\": \"../core/tests/\"` (как у drive/documents) —\n   чтобы V13 (P1.5) использовал харнесс.\n6. CI: в `setup-php` jobs `tests.yml:test-pgsql`, `drive.yml:drive-pgsql`, `media.yml:media-pgsql`,\n   `documents.yml:documents-pgsql` добавить `pcntl, posix` там, где их нет.\n   В `tests.yml:test-pgsql` после шага `Postgres: base TestCase suite` добавить отдельный шаг:\n\n   ```yaml\n   - name: 'Postgres: concurrency harness'\n     if: always()\n     run: vendor/bin/pest --ci packages/core/tests/Concurrency\n   ```\n\n   Он наследует DB_* job, запускается из корня после установки зависимостей; `always()` не позволяет\n   известной baseline-ошибке предшествующего suite скрыть новый тест. Ошибка setup/dependencies не считается passed.\n   Только добавление расширений или\n   регистрация TestCase в `tests/Pest.php` не заменяют явный выбор каталога в команде PG-job.\n7. `CONTRIBUTING.md` — раздел «Тесты конкурентности»: когда нужен PG, пример `ForkRace::run`, команда локального прогона."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "перевод существующих конкурентных тестов drive/webhooks на харнесс (делается пунктом P1, который их\nкасается); сценарии V02/V03/… (P1); `VaulterDatabase` (P1.1); MySQL-вариант харнесса."
+    },
+    {
+      "id": "Inputs",
+      "title": "Inputs",
+      "text": "`audits/2026-09-29-stable-audit/opus/13-workstreams.md` (§F0 P0.2, правило 6) · `audits/2026-09-29-stable-audit/opus/14-verification.md` (V02, V03, V13, V17, V19–V21) ·\n`packages/drive/tests/Concurrency/TusConcurrentPatchTest.php` (образец fork/барьер/SIGKILL) · `packages/core/tests/TestCase.php` (`suiteDatabaseConnection`) ·\n`tests/Pest.php` · `@plan/knowledge/findings-baseline.json` (producer: P0.1) ·\n`@plan/decisions/D07.json` ·\n`plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-sources.sha256`"
+    },
+    {
+      "id": "Files",
+      "title": "Files",
+      "text": "`packages/core/tests/Concurrency/{ForkRace.php,RaceOutcome.php,ForkRaceTest.php}`, `tests/Pest.php`,\n`packages/media/composer.json`, `.github/workflows/{tests,drive,media,documents}.yml`, `CONTRIBUTING.md`."
+    },
+    {
+      "id": "Required-Reads",
+      "title": "Required Reads",
+      "text": "0) `@plan/knowledge/artifacts-P0-design-P0.2-opus.json` (дословные требования OPUS — исполнить все);\n1) `packages/drive/tests/Concurrency/TusConcurrentPatchTest.php`; 2) `packages/core/tests/TestCase.php`;\n3) `tests/Pest.php`; 4) `@plan/knowledge/findings-baseline.json` (строки pgsql и `B-nn` про pcntl);\n5) `@plan/decisions/D07.json`."
+    },
+    {
+      "id": "Authority",
+      "title": "Authority",
+      "text": "routine"
+    },
+    {
+      "id": "Implementation-Rules",
+      "title": "Implementation Rules",
+      "text": "- Ребёнок никогда не возвращается в PHPUnit: только `SIGKILL` самому себе (иначе дубль вывода и teardown).\n- Родитель не использует унаследованный PDO после fork без `purge`+`reconnect`.\n- Проверка `str_ends_with(DB::connection()->getDatabaseName(), '_test')` в `run()` — иначе `LogicException` (защита от\n  прогона на рабочей БД).\n- Задержка `usleep(200_000)` — только в тестах харнесса; сам харнесс синхронизирует только барьером.\n- Стиль — существующие тесты core (Pest `it(...)`, `declare(strict_types=1)`, русские описания допустимы)."
+    },
+    {
+      "id": "Code-Guidance",
+      "title": "Code Guidance",
+      "text": "```php\n$outcomes = ForkRace::run([\n    fn () => DB::transaction(fn () => bump(lock: true)),\n    fn () => DB::transaction(fn () => bump(lock: true)),\n]);\nexpect(array_map(fn (RaceOutcome $o) => $o->ok, $outcomes))->toBe([true, true])\n    ->and(DB::table('race_counter')->value('value'))->toBe(2);\n```\n\nНегативный контроль обязан падать при «сломанном» харнессе: временно заменить барьер на последовательный запуск\n(дети по очереди `pcntl_waitpid` сразу после fork) → тест lost update краснеет (`2` вместо `1`); результат — строка в\nCompletion Notes, правка откатывается."
+    },
+    {
+      "id": "Validation",
+      "title": "Validation",
+      "text": "- PG: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret\n  scripts/php84 vendor/bin/pest packages/core/tests/Concurrency` → `4 passed`, 0 skipped, exit 0; повтор 5 раз подряд —\n  5/5 зелёные (флейк-проверка), вывод в Completion Notes.\n- SQLite: `scripts/php84 vendor/bin/pest packages/core/tests/Concurrency` → `4 skipped`, exit 0.\n- Негативный контроль из Code Guidance выполнен и описан.\n- `scripts/php84 vendor/bin/pint --test packages/core/tests/Concurrency tests/Pest.php` exit 0.\n- `scripts/php84 composer --working-dir=packages/media dump-autoload` exit 0 и\n  `scripts/php84 php -r \"require 'packages/media/vendor/autoload.php'; exit(class_exists('Vaulter\\\\Tests\\\\Concurrency\\\\ForkRace') ? 0 : 1);\"` exit 0.\n- Полный root PG-лейн из `@plan/knowledge/findings-baseline.json` — не хуже baseline (те же или меньше failed).\n- Точная команда нового CI-шага локально: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test\n  DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency`\n  → `4 passed`, `0 skipped`, exit 0. Негативный контроль выбора каталога: временно добавить в `ForkRaceTest.php`\n  `it('CI path negative control', fn () => expect(false)->toBeTrue());`, повторить ту же команду → ненулевой exit;\n  убрать только эту временную проверку и повторить команду → `4 passed`, `0 skipped`, exit 0.\n- «Пример проходит в CI» (OPUS 13 P0.2) подтверждается hosted run итогового candidate P0 через O-3-CI **до** фазового\n  аудита (D07). Item Validation проверяет локальную эквивалентную команду и точный новый шаг workflow; hosted-исход\n  остаётся обязательной приёмкой фазы, локальный результат его не подменяет. Нет разрешения O-3-CI/run,\n  шаг харнесса не GREEN или появились ошибки вне классифицированного baseline (D07) → фазу не закрывать,\n  записать ожидание/реальное падение и owning continuation.\n- Independent review: full (reviewer из `execution-sheet/v1`, строка B0-A)."
+    },
+    {
+      "id": "Deliverables",
+      "title": "Deliverables",
+      "text": "`ForkRace`, `RaceOutcome`, `ForkRaceTest` с негативным контролем; подключение в `tests/Pest.php`;\nautoload media; `pcntl, posix` в PG-лейнах CI; шаг `Postgres: concurrency harness` в tests.yml:test-pgsql;\nраздел CONTRIBUTING."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "findings-P2.2-handle-contract-conflict",
+  "title": "конфликт двух обязательных требований к DriveHandle",
+  "sections": [
+    {
+      "id": "P2.2-DriveHandle",
+      "title": "P2.2 — конфликт двух обязательных требований к DriveHandle",
+      "text": "Проверено на product baseline `4b72efd3a909f441eb415182218140575e61e4c5`."
+    },
+    {
+      "id": "section",
+      "title": "Текущая приёмка",
+      "text": "- `@plan/phases/P2/P2.2.json`, Scope Included п.2: заменить `storage(): Drive` на\n  `model(): Drive`, а `panel(): string` на `profile(): Profile`.\n- `packages/drive/src/DriveContext.php` реализует\n  `Vaulter\\Contracts\\Drive\\DriveHandle`.\n- `packages/core/src/Contracts/Drive/DriveHandle.php` требует `storage(): Drive`\n  и `panel(): string`; методы `model()` и `profile()` отсутствуют.\n- P2.2 Scope Excluded откладывает контракт `DriveHandle` до P3.2. Files допускает\n  изменения core-тестов, но не этого интерфейса core.\n- P2.md R3 запрещает deprecated-обёртки. Поэтому оставить старые методы как\n  переходный мост без решения владельца нельзя.\n\nУдаление старых методов при сохранении интерфейса делает реализацию невалидной\nв PHP. Удаление `implements` нарушило бы тип результата фабрики и публичный seam.\nЭто выбор публичного контракта и распределения приёмки между P2.2/P3.2;\nмеханическое переименование классов его не разрешает."
+    },
+    {
+      "id": "section-2",
+      "title": "Конкретные варианты",
+      "text": "1. Перенести только `model()/profile()` в P3.2. В P2.2 выполнить карту классов,\n   раскладку, registrars и документацию, сохранив текущие `storage()/panel()`.\n   Уточнить P2.2 п.2, ledger и соответствующие производные входы; прочая приёмка\n   P2.2 и P2.3 сохраняется. Это сохраняет текущую границу контракта core.\n2. Включить минимальную смену интерфейса core и его callers в P2.2: заменить\n   только эти два метода, вернуть `Profile` через существующий\n   `ProfileRegistry::get()`, обновить golden и migration notes. Остальная работа\n   P3.2 остаётся у P3.2. Это расширяет объявленные Files и публичную приёмку P2.2.\n\nНужен принятый Owner-D# с выбранным вариантом. Исполнитель не выбирает его\nсамостоятельно и не объявляет GREEN. P2.3 ждёт своего predecessor P2.2."
+    },
+    {
+      "id": "section-3",
+      "title": "Воспроизведение и классификация",
+      "text": "`artifacts/P2.2/preflight-inputs.json` связывает проверку с SHA-256 фактических\nисходников, контракта, golden и спецификации. Отдельные команды и результаты —\n`artifacts/P2.2/contract-preflight-results.json`, логи —\n`contract-preflight-01.log` (Reflection, exit 0) и `contract-preflight-02.log`\n(in-memory реализация только новых методов, PHP fatal, exit 255).\n\n`task.plan_repair.evaluate()` принял закрытый `repair-decision/v1` и вернул\n`design-required`, `NEW_MATERIAL_DECISION_SURFACE`, `terminal_allowed=false`;\nполные носители — `artifacts/P2.2/contract-repair-{decision,result}.json`.\nAppend-only journal фиксирует `decision-pending` в текущем run/attempt.\nКод продукта не менялся; обязательные suites и product review не запускались."
+    },
+    {
+      "id": "Runtime-reviewer",
+      "title": "Runtime reviewer",
+      "text": "Canonical Task runtime обнаружен в marketplace `swissknifeman`:\n`/home/vostrikov/projects/packages/swissknifeman/packages/task` (plugin 0.28.2).\nСвежая Grok ACP session без `session/prompt` подтвердила `grok-4.7`, `high`,\n`context_window=500000`; canonical route verifier прошёл. Этот handshake\nне доказывает право на inference. Дорогой review не запускался."
+    }
+  ],
+  "applies_to": [
+    "P2.2"
+  ],
+  "provenance": {
+    "path": "findings/P2.2-handle-contract-conflict.md",
+    "sha256": "62e71851be7379bd852e602867be4686d20e437b2f8850de7f842dea899a387a"
+  }
+}

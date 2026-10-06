@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.10-opus",
+  "title": "OPUS — дословные требования для P1.10 (19 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.10-19",
+      "title": "OPUS — дословные требования для P1.10 (19 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:d23c6782` — _P1.10 — честные require; metapackage — P7.5_\n\n| «Сохранить набор пакетов» | Согласен + честные `require` и metapackage |"
+    },
+    {
+      "id": "01-review.md-4.-Codex-N14-S1-.-Filament",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N14 (S1). Filament обходит авторизацию назначения и не объявляет зависимость",
+      "text": "- `01:ccb9daf8` — _P1.10 — Create на назначении через AccessResolver и require drive; вызов через handle — P6.6_\n\nДействия в `packages/filament/src/Resources/NodeResource.php` проверяют право только через `->visible()` и вызывают\nнеавторизующий фасад (`Vaulter::forStorage(...)->move(...)`, строка 264). У `move` проверяется `Move` на исходном\nузле, но не `Create` на папке назначения — перенос в папку, куда пользователь писать не может. Фасад требует\n`vaulter-drive`, а `packages/filament/composer.json` требует только core."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N15-S2-.-vaulter-documents-vaulter-drive",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N15 (S2). `vaulter-documents` фактически требует `vaulter-drive`",
+      "text": "- `01:44c473fc`\n\nСоздать storage без `StorageManager` (drive) нельзя; тесты documents поднимают `VaulterDriveServiceProvider`\n(`packages/documents/tests/TestCase.php:34`). README утверждает обратное."
+    },
+    {
+      "id": "02-decisions.md-D02-T1",
+      "title": "02-decisions.md — D02 — Пакеты: сохранить набор, сделать зависимости честными · T1",
+      "text": "- `02:435d86ab`\n\n**Решение.**\n\n- `02:8a0023cd`\n\n1. Composer-пакеты остаются: `vaulter-core`, `vaulter-media`, `vaulter-drive`,\n   `vaulter-documents`, `vaulter-filament`, `vaulter-azgard`; npm — `@vaulter/vue`;\n   плюс `hocuspocus-server`.\n\n- `02:3267084f`\n\n3. `vaulter-documents` **требует** `vaulter-drive` (N15); `vaulter-filament` **требует**\n   `vaulter-drive` (N14).\n\n- `02:f9aa9d1e`\n\n**Почему.** Установки «core без drive» не существует: без `DriveProvisioner` нельзя создать drive.\nЧестные `require` дешевле, чем обратное слияние core+drive (отмена ADR-0015) или новые пакеты.\n\n- `02:91f6585f`\n\n**Отвергнуто.** Слияние drive в core (огромный перенос namespace); пакеты\n`contracts/kernel/sharing/webhooks/collaboration` (нет независимой установки)."
+    },
+    {
+      "id": "04-packages-and-layout.md-1.",
+      "title": "04-packages-and-layout.md — 1. Пакеты и зависимости",
+      "text": "- `04:4cf1b89d`\n\n| Пакет | Composer / npm | Namespace | `require` (Vaulter) | Назначение |\n\n- `04:6b19960a` — _drive уже требует core и media — проверка_\n\n| drive | `axioma-studio/vaulter-drive` | `Vaulter\\Drive\\` | core, media | Drive handle, операции дерева и файлов, загрузки (single/tus/S3), скачивание, корзина, HTTP Drive |\n\n- `04:f4f0ddec`\n\n| documents | `axioma-studio/vaulter-documents` | `Vaulter\\Documents\\` | core, **drive** | Типы документов, ревизии, комментарии, экспорт, коллаборация, HTTP Documents |\n\n- `04:cd9c5512`\n\n| filament | `axioma-studio/vaulter-filament` | `Vaulter\\Filament\\` | core, **drive** | Админ-панель поверх публичного API |\n\n- `04:147f3b2f` — _P1.10 — documents/filament require drive; arch-тесты графа — P2.4_\n\n1. Пакет импортирует только namespace пакетов, от которых зависит в `composer.json`."
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.10-Filament",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.10 — Честные зависимости и авторизация Filament",
+      "text": "- `13:1cd029db`\n\n- Решения: D02 · Находки: N14, N15 · Сценарии: V27.\n\n- `13:87f49c16`\n\n- Сделать: `vaulter-documents` и `vaulter-filament` `require` `vaulter-drive`; в Filament move проверяет `Create` на\n  назначении (временно через `AccessResolver`, до F3); README-строки о независимости удалить.\n\n- `13:2e218fc0`\n\n- Готово: V27 зелёный; consumer-установка documents без явного drive подтягивает drive.\n\n- `13:59c269d6`\n\n- Исполнитель: sonnet/low."
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:977718b1` — _P1.10 — отказ через AccessResolver; вызов через handle — P6.6_\n\n| V27 | Filament: пользователь с Move на узле без Create на целевой папке | Действие недоступно/отклонено; вызов идёт через handle | любая | P1.10, P6.6 |"
+    }
+  ],
+  "applies_to": [
+    "P1.10"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.10-opus.md",
+    "sha256": "3551fb006408d5a8f915b4b53307bdd8508993ef7d78e59f8c0ee2880ad6bf09"
+  }
+}

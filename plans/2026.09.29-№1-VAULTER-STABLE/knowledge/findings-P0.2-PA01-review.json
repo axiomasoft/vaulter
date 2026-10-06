@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "findings-P0.2-PA01-review",
+  "title": "P0.2 PA01 independent review — pending external quota",
+  "sections": [
+    {
+      "id": "P0.2-PA01-independent-review-pending-external-quota",
+      "title": "P0.2 PA01 independent review — pending external quota",
+      "text": "D09 requires fresh read-only claude-sonnet-5-5 review. Attempt returned session quota limit, reset 2026-10-02 13:20 Europe/Volgograd. No verdict; E23 is not GREEN.\n\nEvidence: artifacts/P0.2-PA01/review-result.json; review-prompt.txt; checkpoint.json; completion.md. Execute saved prompt once service availability is observed; no DB replay for unchanged SHA."
+    }
+  ],
+  "applies_to": [
+    "P0.2"
+  ],
+  "provenance": {
+    "path": "findings/P0.2-PA01-review.md",
+    "sha256": "7377b85145c68ffacd95afb58ea8b2db5549925044c690ad649c9644b6d6b000"
+  }
+}

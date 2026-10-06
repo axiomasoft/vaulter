@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P0.2-PA01-completion",
+  "title": "PA01 owning repair checkpoint",
+  "sections": [
+    {
+      "id": "P0.2-PA01-owning-repair-checkpoint",
+      "title": "P0.2 — PA01 owning repair checkpoint",
+      "text": "Only ForkRaceTest.php changed. Four tests retained. The connection test now forces exactly one child to fail reconnect before ready, using atomic fopen(..., 'x'). Its sibling must return ForkRace\\BarrierTimeout and no task may write its started marker. No scheduling delay and no harness source change.\n\n- PostgreSQL serial repetitions: 5/5 exit 0; each 4 passed, 17 assertions, 0 skipped.\n- SQLite: exit 0; 4 skipped.\n- Pint of Concurrency and tests/Pest.php: exit 0.\n- Barrier-only bypass: exit 1; only readiness test fails (BarrierTimeout replaced with null).\n- Sequential control: exit 1; lost-update fails on [0,1] vs [0,0], readiness also fails.\n\nInitial normal-repeat and mutant attempts overlapped on the same isolated test DB and caused migration errors. Their logs are retained but excluded. final-runs.json and serial/final logs are authoritative. All later DB checks were serialized under a file lock.\n\nUnchanged media autoload and root PG selections reuse earlier proof; the sole affected Concurrency step was rerun five times with --ci. validation-provenance.json distinguishes reuse from fresh runs, retaining original timestamps. Hosted CI for changed candidate remains a phase gate.\n\nD09 independent full review was attempted once: fresh context, safe mode, no tools, no persisted session, claude-sonnet-5-5. Claude Code returned session quota limit, reset 2026-10-02 13:20 Europe/Volgograd (10:20 UTC). No model usage or review verdict; E23 is missing. Raw response, prompt, source SHA and waiting-external gate are saved. Resume only when service availability is observed. Do not rerun passing checks for unchanged source SHA.\n\nP0.2 remains In progress; PA01 is fixed locally but closure awaits review. P0.1 mutation scores, P0.3/P0.4 and unrelated .gitignore are preserved. No full suite, push or hosted dispatch in this repair.\n\nwrite-site: pre_mutation: allow · pre_final: block:VALIDATION_RECEIPT_MISSING\n\nPlan metadata validation: plan-lint exit 0, 0 errors / 0 warnings (plan-lint.txt). Previous audit-handoff frontier lint mismatch is resolved while P0.2 is now actually In progress. Local checkpoint commit is a real external-quota boundary, not an item terminal close."
+    },
+    {
+      "id": "Closure-2026-10-03",
+      "title": "Closure (2026-10-03)",
+      "text": "E23 closed: `review-gpt61.md` — codex/gpt-6.1-sol/high, GREEN, 0 findings (same-model, D13; input-only review, no test reruns). The waiting-external gate is resolved; the earlier claude-sonnet-5-5 attempt (HTTP 429) produced no verdict and is not counted.\nReceipts E15–E22 re-bound to the current contract hash without re-execution; E23 fresh (`validation-provenance.json`). Hosted CI was not touched.\n\nwrite-site: pre_mutation: allow · pre_final: allow — terminal `closed-green` journal event 2026-10-03T12:06:14Z; `plan-work finalize` exit 0, plan-lint 0 errors."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P0.2-PA01/completion.md",
+    "sha256": "7cdabc7bccc2c3e24018dab54196ff4da5e0a19a6749e854b41e82f947fbb1e1"
+  }
+}

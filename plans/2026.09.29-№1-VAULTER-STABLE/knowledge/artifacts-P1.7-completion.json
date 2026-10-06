@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1.7-completion",
+  "title": "Independent host keys",
+  "sections": [
+    {
+      "id": "P1.7-Independent-host-keys",
+      "title": "P1.7 — Independent host keys",
+      "text": "All 27 host-owned columns now use ids.host_keys (default string/varchar(64)), with four supported types and unchanged entity references, nullability and indexes. HostKeyColumns and VaulterSchema::hostKey are added; actor/tenant helpers use host types. Upgrade migration №3 uses the configured Vaulter connection and legacy table map, converts and restores actual types, skips missing tables/columns and exact target types, and leaves SQLite unchanged. No exception is swallowed or host-key value manually rewritten.\n\nPostgreSQL declared validation: 27 passed, 305 assertions, zero skipped. Both committed v0.2 dumps preserve all fixture rows in the 11 host-column tables, all 27 columns widen, direct repeated up() emits no ALTER, repeat migrate is a no-op, rollback restores each strategy. Incompatible ULID-to-bigint conversion refuses and preserves rows. Fresh host types and helper conventions are checked. V23 fresh panel exercises UUID users, bigint project/Spatie role, actor and activity. Its temporary subject_id regression fails with SQLSTATE 22001/char(26); restored code passes.\n\nAll required core/drive/documents/media Pint/PHPStan/Pest gates exit 0 after bounded strict expectation updates: core 611 passed/20 skipped/17 risky; drive 454 passed/8 skipped/2 risky; documents 249 passed/1 skipped; media 128 passed/9 skipped/4 risky. Conditional skipped and risky cases are retained and are not claimed executed. The owner expressly authorized exactly three sibling assertions; scope-repair.md records the authorization and the additional core test-harness/snapshot updates."
+    },
+    {
+      "id": "Known-deviation-MySQL-installation-owner-PLAN2.P8.1",
+      "title": "Known deviation — MySQL installation, owner PLAN2.P8.1",
+      "text": "The declared real-MySQL fresh-install command returns exit 2 with 14 errors at the pre-existing sibling_active STORED/generated-column/cascading-FK incompatibility. The exact unchanged HEAD builder reproduces error 1215 using a harness that actually selects MySQL, rather than SQLite. This is the exception explicitly permitted by the item contract. No full MySQL installation success is claimed. Independent real-MySQL host-key DDL: 6 passed, 248 assertions, covering all 27 columns, both old strategies, all four fresh types, values, nullability, indexes, idempotency and rollback. Detailed proof is in mysql-baseline-classification.json and mysql-known-deviation.md. E10's conditional contract acceptance is satisfied by this classifier; its raw command exit remains 2 in validation.json and targeted-results.json."
+    },
+    {
+      "id": "Review-and-closure",
+      "title": "Review and closure",
+      "text": "review: grok/grok-4.7 GREEN. Fresh independent read-only high-effort context; actual model grok-4.7-build. Verbatim verdict, raw result, route and packet retained. The prior incomplete CLI invocation reached its turn cap without a verdict; it is retained and not counted as completed review. Reviewed product bytes match product-manifest.json.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nP1.7 closes with deviations solely for the contract's pre-existing MySQL installation gap. P1 remains open; the successor recommendation is P1.2, outside this invocation's authorized scope. Product changes and task-owned evidence will be committed in one scoped commit; shared pre-existing dirty plan/configuration carriers remain unstaged. No push, publication or unrelated edit."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P1.7/completion.md",
+    "sha256": "5229c95b15fb586388be733f52c316a98754133de35e711af059a6beb697c98f"
+  }
+}

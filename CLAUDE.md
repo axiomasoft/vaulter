@@ -34,24 +34,24 @@
 - Не дублируй marketplace скиллами «на всякий случай»; подгружай скилл только по триггеру задачи.
 - Локальный Cursor/Codex vendor-path `.agents/skills/` — **только CORE** (7 symlink + `ecosystem-*`), не полный `php-package` vendor. При раздувании: `bash scripts/sync-agent-skills.sh`.
 
-<!-- maind:healthcheck hash=cce842a2c675 (managed by maind — do not edit manually) -->
-## ⚠ PRIORITY №1 — connection with mAInd (shared memory + graph)
+<!-- maind:healthcheck hash=66b71fd2ffc8 (managed by maind — do not edit manually) -->
+## mAInd — temporary project context and graph
 
-Before starting work, make sure that the project is connected to the hub **mAInd**. This is critical:
-without communication changes this session **will not hit** to shared memory and the graph to history
-development, irreparable gaps will appear, and further connections will not be drawn.
+Memory defaults to this project's private scope `project:vaulter`. Read `ns:*` or `global`
+only for an explicit cross-project request and when the scope is authorized.
 
-1. Check connection: `maind health --cwd`
-2. If the status `partial` / `standalone` — fix: `maind health --cwd --fix`
-   (will raise the memory daemon and add MCP-hub servers to this project).
-3. Proceed with the task only when the status `connected`.
+Store only short useful temporary context: 48-hour default TTL, 72-hour maximum,
+800 characters, at most 8 live entries per scope. Use one replaceable `active-handoff`
+for continuity, then forget it when work finishes. Keep plans, decisions, progress,
+commit history and durable rules in repository artifacts. Empty memory is normal.
 
-Memory **general** (demon mAInd), scope of this project - `project:vaulter`; facts about the entire ecosystem - in
-scope `global`. Project connections with others: `maind graph --project vaulter`.
+Use `maind health --cwd` for connection symptoms or setup changes; repair with
+`maind health --cwd --fix`. A memory outage does not block ordinary repository work.
+Project connections: `maind graph --project vaulter`.
 <!-- /maind:healthcheck -->
 
 <!-- swissknifeman:hub:start -->
 <!-- swissknifeman hub: stub — skills and task-commands are connected natively; index and priority rules are not duplicated here. -->
-<!-- swissknifeman:registry sha=924fade20c2d skills=232 -->
+<!-- swissknifeman:registry sha=273bdbe54ab3 skills=232 -->
 <!-- Full index: `skiller status` or generate-hub.sh --target <dir> --full-index. -->
 <!-- swissknifeman:hub:end -->

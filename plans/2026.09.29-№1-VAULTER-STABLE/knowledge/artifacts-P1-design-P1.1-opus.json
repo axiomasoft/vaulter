@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.1-opus",
+  "title": "OPUS — дословные требования для P1.1 (12 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.1-12",
+      "title": "OPUS — дословные требования для P1.1 (12 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:c2fbe52c` — _P1.1 — то же соединение; запись outbox/activity в транзакции Action — P5.1_\n\n| E7 after-commit есть; outbox может потеряться | Согласен. Решение — запись outbox и activity в той же транзакции **и на том же соединении**; последнее сейчас невозможно из-за N01 |"
+    },
+    {
+      "id": "01-review.md-4.-Codex-N01-S1-.-vaulter.connection",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N01 (S1). Выделенное соединение `vaulter.connection` лишает все транзакции атомарности",
+      "text": "- `01:10f27bad`\n\nМодели читают соединение из `vaulter.connection` (`packages/core/src/Models/Concerns/ResolvesVaulterConnection.php`),\nсхема тоже (`PanelTablesBuilder::schemaConnection/dbConnection`, строки 43–56). Но **все ~40** `DB::transaction(...)` в Actions,\n`BlobLock` (`DB::connection()->getDriverName()`, `packages/core/src/Cas/BlobLock.php:92`), GC/relay и\n`UploadSessionStoreRepository` используют **соединение по умолчанию**. При настроенном отдельном\nсоединении (фича рекламируется в `docs/guide/database-compatibility.md`, раздел «Dedicated database connection»):\nзаписи Vaulter идут вне открытой транзакции, advisory-lock CAS берётся на чужой БД, SERIALIZABLE-ретраи GC\nотносятся не к той сессии. Гарантии «race-free commit/GC» и атомарности outbox при этом исчезают молча."
+    },
+    {
+      "id": "02-decisions.md-D25-Vaulter-T0",
+      "title": "02-decisions.md — D25 — База данных: соединение Vaulter и типы ключей хоста · T0",
+      "text": "- `02:5b3692a5`\n\n- `Vaulter\\Database\\VaulterDatabase`: `connection()`, `transaction(Closure, int $attempts = 3)`,\n  `lockTree(int|string $driveId)`, `advisoryLock(string $key)`, `driver()`. Все Actions,\n  репозитории, CAS, GC, relay используют только его (N01). Arch-тест запрещает\n  `DB::transaction`, `DB::connection()` без аргумента и фасад `DB` в `src`."
+    },
+    {
+      "id": "04-packages-and-layout.md-1.",
+      "title": "04-packages-and-layout.md — 1. Пакеты и зависимости",
+      "text": "- `04:ac0a9423` — _P1.1 — фасад DB только в Database\\ и Schema\\; config() — P2.5_\n\n6. Фасад `DB` и `config()` используются только в `Database\\VaulterDatabase` и `Configuration\\*` (D25, D26)."
+    },
+    {
+      "id": "08-data-model-and-migration.md-4.-VaulterDatabase-D25",
+      "title": "08-data-model-and-migration.md — 4. `VaulterDatabase` (D25)",
+      "text": "- `08:dffc739b`\n\n```php\nnamespace Vaulter\\Database;\n\nfinal class VaulterDatabase\n{\n    public function connection(): ConnectionInterface;                 // vaulter.database.connection\n    public function driver(): string;                                  // pgsql|mysql|mariadb|sqlite\n    /** Ретраи на serialization failure/deadlock (PG 40001/40P01, MySQL 1213/1205). */\n    public function transaction(Closure $callback, int $attempts = 3): mixed;\n    /** Блокировка дерева drive до конца транзакции. PG: pg_advisory_xact_lock; иначе SELECT … FOR UPDATE строки v_drives. */\n    public function lockTree(int|string $driveId): void;\n    /** Транзакционная advisory-блокировка по строковому ключу (CAS). */\n    public function advisoryLock(string $key): void;\n    public function afterCommit(Closure $callback): void;              // на соединении Vaulter\n}\n```\n\n- `08:88ec802e`\n\nВсе прежние вызовы `DB::transaction`, `DB::connection()`, `DB::afterCommit` в `src` заменяются. Arch-тест\nзапрещает импорт `Illuminate\\Support\\Facades\\DB` вне `Database\\` и `Schema\\`."
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.1-Vaulter",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.1 — Соединение Vaulter для транзакций и блокировок",
+      "text": "- `13:7003c0de`\n\n- Решения: D25 · Находки: N01 · Сценарии: V17.\n\n- `13:e6df5586`\n\n- Сделать: `Vaulter\\Database\\VaulterDatabase` (08 §4); заменить все `DB::transaction/connection/afterCommit` в\n  `src` всех пакетов; `BlobLock`, GC, reconciler, relay, retry, `UploadSessionStoreRepository`; arch-тест запрета фасада `DB`.\n\n- `13:4ad79870`\n\n- Готово: V17 зелёный на PG (выделенное соединение ≠ default); все прежние тесты зелёные.\n\n- `13:002a4fcf`\n\n- Исполнитель: sonnet/medium; ревью vaulter-reviewer."
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:eb2a4601`\n\n| V17 | `vaulter.database.connection = 'vaulter'` ≠ default; Action бросает исключение после вставки узла | Вставка откатилась на соединении `vaulter`; advisory lock CAS взят на нём же (проверка через `pg_locks`) | PG | P1.1 |"
+    }
+  ],
+  "applies_to": [
+    "P1.1"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.1-opus.md",
+    "sha256": "e88c33ba34102e23de219136361ed530eec8910326bb68791e2484a92eca5388"
+  }
+}

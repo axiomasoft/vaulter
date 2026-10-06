@@ -1,8 +1,0 @@
-# Architecture guard alignment
-
-Original red carrier: core-pest.log, ADR-0017 Law 1; sole offender `Exceptions/Contracts`.
-The P1.8 contract explicitly requires `Exceptions/Contracts/ProblemException.php`, while the old directory guard rejects any nested `Contracts` folder. Product placement follows the frozen contract. The existing guard permits exactly that directory and requires its complete immediate entries to equal `.`, `..`, `ProblemException.php`; all other nested technical layers and additional files/subdirectories remain rejected. This is a bounded test-contract repair within the declared core ArchTest.php. No public outcome, package dependency, schema or threshold is changed beyond the item contract.
-
-Pre-validation: core-pest.log (1 failed, exact directory). Post-validation: core-pest-final.log.
-
-Negative proof: negative-contract-directory-corrected.log rejects a second file; contract-directory-restored-corrected.log returns GREEN after its removal. The first directory probe ran from packages/core instead of root and failed to locate PHPUnit configuration; its exit 2 is a procedural observation, not negative or green evidence. Corrected logs are authoritative.

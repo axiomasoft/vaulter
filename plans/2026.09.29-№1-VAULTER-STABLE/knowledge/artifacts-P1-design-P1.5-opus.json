@@ -1,0 +1,79 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.5-opus",
+  "title": "OPUS — дословные требования для P1.5 (39 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.5-39",
+      "title": "OPUS — дословные требования для P1.5 (39 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-3.-Codex-01-04",
+      "title": "01-review.md — 3. Codex (01–04): позиция",
+      "text": "- `01:b362eeda`\n\n| Вывод Codex | Позиция |\n\n- `01:d1c63e40`\n\n| E1 CAS scope loss | Согласен. Добавляю: колонки `tenant_id`/`storage_id` в `v_blobs` сами типизированы по стратегии ID Vaulter, а tenant — это ключ хоста (N02) |"
+    },
+    {
+      "id": "01-review.md-4.-Codex-N02-S1-.-ID-Vaulter",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N02 (S1). Колонки ключей хоста типизированы стратегией ID Vaulter",
+      "text": "- `01:5368342b`\n\n`v_storages.owner_id`, `v_node_grants.subject_id`, все `tenant_id` создаются `$ids->reference()`, а все\nactor-колонки (`created_by`, `owner_id` узла, `trashed_by`, `granted_by`, `actor_id`) — `$ids->actor()`\n(`packages/core/src/Schema/UlidIds.php:31-39`, `AutoIncrementIds.php:22-30`, `PanelTablesBuilder.php:164,218`).\nЭто ключи **хоста**, а не Vaulter. По умолчанию (`ids.default = ulid`) они `char(26)`: хост с UUID-ключами\nпользователей/проектов/ролей (36 символов) получает ошибку вставки на PostgreSQL; при `bigint` — хост с\nULID/UUID-пользователями не может ни выдать grant, ни записать аудит."
+    },
+    {
+      "id": "02-decisions.md-D20-CAS-T0",
+      "title": "02-decisions.md — D20 — CAS: беспотерьная область дедупликации · T0",
+      "text": "- `02:8faad32b`\n\n**Решение.**\n\n- `02:6fd49a70`\n\n- `Vaulter\\ValueObjects\\Cas\\BlobScope`: `global()`, `tenant(string)`, `drive(string)`;\n  `key()` → `global` | `tenant:{id}` | `drive:{id}` (id — строка без преобразований).\n\n- `02:a727345d`\n\n- `BlobStore::commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob`.\n\n- `02:c6d163c2`\n\n- `v_blobs.scope_key varchar(191) NOT NULL`, `UNIQUE(scope_key, sha256)` заменяет пару\n  «unique по колонкам scope + отдельный unique storage_key» (NULL больше не участвует).\n\n- `02:579e2a66`\n\n- Физический ключ объекта: `{scope-segment}/{sha[0:2]}/{sha}` с URL-safe сегментом; reconciler\n  распознаёт старые (`s{int}`, `t{int}`, `snull`, `tnull`) и новые ключи, включая UUID с дефисами.\n\n- `02:6464dc87`\n\n- `vaulter:blobs:repair-scopes --dry-run|--execute`: инвентаризация объектов в `snull/tnull`,\n  вывод правильной области из связей ревизия→файл→узел→drive, проверка sha256, копирование в\n  новые области, атомарное переключение ссылок, удержание старого объекта до GC. Неизвестный\n  тенант не угадывается (отчёт, ручное решение).\n\n- `02:8b5cbc5d` — _P1.5 — disk из строки blob при чтении; doctor-проверка изоляции дисков — P7.1_\n\n- `blob.disk` — авторитетен для чтения; дедупликация между дисками при `scope=global|tenant`\n  допустима (ADR-0012 остаётся), изоляция дисков профилей требует `dedup.scope = drive` —\n  doctor это проверяет."
+    },
+    {
+      "id": "03-glossary-and-renames.md-7.",
+      "title": "03-glossary-and-renames.md — 7. Таблицы и колонки",
+      "text": "- `03:03308ccb`\n\n| Было | Стало |\n\n- `03:14f7d698`\n\n| — | `v_blobs.scope_key` (NOT NULL), `UNIQUE(scope_key, sha256)` |"
+    },
+    {
+      "id": "06-extension-points.md-9.-CAS-core--media",
+      "title": "06-extension-points.md — 9. CAS (core-контракты, media-реализации)",
+      "text": "- `06:a495ab27`\n\n| Контракт | Изменение |\n\n- `06:edf033b8`\n\n| `ContentStore` | `keyFor(BlobScope $scope, string $sha256): string` вместо `(string $scope, …)` |\n\n- `06:cef148e7`\n\n| `StorageDriver` | без изменений |\n\n- `06:ded2485b`\n\n| `BlobStore` | `commit(mixed $stream, BlobScope $scope, ?string $disk = null): Blob`; `attach(FileRevision, Blob, array $attributes = [])`; `detach(FileRevision, Blob, …)`; `read(Blob): mixed` |"
+    },
+    {
+      "id": "08-data-model-and-migration.md-1.",
+      "title": "08-data-model-and-migration.md — 1. Агрегаты",
+      "text": "- `08:ce144954`\n\n| I8 | Каждая строка `v_file_revision_blobs` ссылается на committed blob | CAS commit + reconcile |"
+    },
+    {
+      "id": "08-data-model-and-migration.md-2.-v_blobs",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_blobs`",
+      "text": "- `08:d206f4bc`\n\n`storage_id` → `drive_id` (REF null); `tenant_id` → HK null; добавить `scope_key varchar(191) NOT NULL`.\nУникальность: `UNIQUE(scope_key, sha256)`; `UNIQUE(storage_key)` остаётся как защита от двойного объекта;\nудалить прежний `…_dedup_uniq` по колонкам области."
+    },
+    {
+      "id": "08-data-model-and-migration.md-3.-Upgrade--0.2-0.3",
+      "title": "08-data-model-and-migration.md — 3. Upgrade-миграции 0.2 → 0.3",
+      "text": "- `08:e4f63f43`\n\nЕсли фаза F1 выпускается отдельно как 0.2.1 ([13-workstreams.md](13-workstreams.md)), миграции №3 (типы HK),\n№7 (scope_key) и ремонт «вторых корней» из №6 уходят в 0.2.1 с теми же телами; остальные остаются в 0.3.\n\n- `08:bd7ec0a7`\n\nПорядок — отдельные миграции (PostgreSQL выполняет каждую в транзакции; на MySQL DDL не транзакционен, поэтому\nкаждая миграция идемпотентна: проверяет состояние перед шагом). Все читают **старые** имена таблиц из\nустаревших `vaulter.table_names`/`vaulter.table_prefix`, если они заданы.\n\n- `08:c7629c6e`\n\n| # | Файл | Шаги |\n\n- `08:342a7303`\n\n| 7 | `…_000007_blob_scope_key.php` | Добавить `scope_key`, заполнить: `global` → `global`; `tenant` → `tenant:{tenant_id}` или `legacy:tnull`; `storage` → `drive:{drive_id}` или `legacy:snull`; затем `UNIQUE(scope_key, sha256)`, удалить старый dedup-индекс |\n\n- `08:8eb14e07`\n\nПосле миграций — команды (не миграции, потому что работают с объектным хранилищем):\n\n- `08:57fa9622`\n\n- `vaulter:blobs:repair-scopes --dry-run` → отчёт по `legacy:snull|tnull` blobs и их ссылкам;\n  `--execute` → перенос в правильные области (D20); идемпотентен, возобновляем, ведёт журнал в `storage/logs`.\n\n- `08:02425ed3`\n\nОткат: `down()` каждой миграции восстанавливает структуру; данные ремонта N04 и hard-delete grants\nнеобратимы — это отмечено в UPGRADE.md, preflight-миграция требует бэкап (флаг `--force` при наличии данных)."
+    },
+    {
+      "id": "09-integrity-and-security.md-7.-CAS",
+      "title": "09-integrity-and-security.md — 7. CAS-сага и сборка мусора",
+      "text": "- `09:30049801`\n\nПорядок commit (без изменений по сути, фиксируется в документации): stage → sha256 → advisory lock\n`(scope_key, sha256)` → найти blob (resurrect, если tombstoned) или promote объекта (`ifNoneMatch`) и вставить\nстроку → edge → SQL commit. Откат SQL после promote оставляет объект-сироту; `vaulter:blobs:reconcile`\nудаляет сирот старше `orphan_grace_hours`, перепроверяя отсутствие строки под той же блокировкой. GC:\nmark/sweep как сейчас, но все блокировки и транзакции — через `VaulterDatabase` (N01).\n\n- `09:9f12a2c4`\n\nДополнительно:\n\n- `09:da882554`\n\n- ключ объекта строится из `BlobScope::key()`; reconciler распознаёт старые форматы (`s\\d+`, `t\\d+`, `snull`,\n  `tnull`) и новые (`g`, `t-{urlsafe}`, `d-{urlsafe}`), включая UUID с дефисами;"
+    },
+    {
+      "id": "12-operations-and-release.md-1.-artisan-vaulter-area-verb",
+      "title": "12-operations-and-release.md — 1. Команды artisan (канон `vaulter:<area>:<verb>`)",
+      "text": "- `12:0a1f7109`\n\n| Команда | Пакет | Было | Назначение |\n\n- `12:16d6e434`\n\n| `vaulter:blobs:repair-scopes [--dry-run\\|--execute]` | media | — | D20 |\n\n- `12:49e9da36`\n\nВсе команды, изменяющие данные, поддерживают `--dry-run`, работают батчами, пишут итог в лог и идемпотентны."
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.5-CAS",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.5 — Беспотерьная область CAS",
+      "text": "- `13:9d5199d4`\n\n- Решения: D20 · Находки: E1, N02 (часть blobs) · Сценарии: V01, V13, V14.\n\n- `13:b861663d`\n\n- Сделать: `BlobScope`, `scope_key` + миграция заполнения + `UNIQUE(scope_key, sha256)`; сигнатуры `BlobStore`/`ContentStore`\n  без `int`; `UploadFileAction` передаёт строковый scope; reconciler узнаёт старые/новые/UUID-ключи;\n  `vaulter:blobs:repair-scopes --dry-run|--execute` (media).\n\n- `13:f6ca199c`\n\n- Готово: V01 для bigint/ulid/uuid7 × scope global/tenant/storage; V13, V14 зелёные.\n\n- `13:013a3482`\n\n- Исполнитель: opus/high."
+    },
+    {
+      "id": "14-verification.md-Codex",
+      "title": "14-verification.md — Принятые от Codex (с уточнениями)",
+      "text": "- `14:b891e4d6`\n\n| ID | Сценарий | Ожидание после решений | БД | Пункт |\n\n- `14:0b6274f1`\n\n| V01 | Два drive с ULID/UUID7, одинаковые байты, `dedup.scope = drive` | Разные `scope_key`, разные blobs и объекты; purge в одном drive не трогает другой; GC/reconcile распознают оба ключа | любая | P1.5 |\n\n- `14:75d1baf2`\n\n| V13 | Сбой между promote объекта и SQL commit; GC параллельно writer'у | Сирота удаляется reconcile только после grace и перепроверки; достижимые байты не удалены | PG | P1.5 |\n\n- `14:6eb21ef1`\n\n| V14 | `repair-scopes` на blob `legacy:snull` с рёбрами из двух drives; сбой посреди и повтор | Хэш проверен; для каждого drive свой blob; ссылки переключены идемпотентно; старый объект удерживается до GC; неизвестный тенант — в отчёте, не угадан | PG | P1.5 |"
+    }
+  ],
+  "applies_to": [
+    "P1.5"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.5-opus.md",
+    "sha256": "21f03425d7bbe1ba908b9f014e4f926f3405900b73d4bc0948aeb590c12cc8e8"
+  }
+}

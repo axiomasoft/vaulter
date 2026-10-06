@@ -1,0 +1,68 @@
+{
+  "decision": "D25",
+  "scope": "Prospective execution policy; no product item started",
+  "historical_item": "P2.5",
+  "timing": {
+    "lifecycle_window_utc": {
+      "start": "2026-10-06T08:04:29Z",
+      "finish": "2026-10-06T10:15:33Z",
+      "seconds": 7864
+    },
+    "validation_runs": 150,
+    "aggregate_validation_seconds": 1530.179,
+    "review_rounds": [
+      {
+        "source": "artifacts/P2.5/review/round-1/transport.json",
+        "seconds": 1186.459
+      },
+      {
+        "source": "artifacts/P2.5/review/round-2/transport.json",
+        "seconds": 630.352
+      }
+    ],
+    "aggregate_review_seconds": 1816.811,
+    "other_intervals_seconds_approx": 4517.01,
+    "other_intervals_note": "Preparation, reads, implementation, integration, waits and closure not independently timed; do not attribute all remaining time to thinking. Owner approximately 2h15 includes surrounding preflight/delivery."
+  },
+  "mutation_audit": {
+    "P2.5_command_records": 150,
+    "mutation_tool_commands": [],
+    "ordinary_mutation_named_regressions_preserved": true,
+    "historical_P0_runs_not_rewritten": true,
+    "ci_trap": "Package workflow_dispatch enables mutation jobs; only separately authorized safe push/PR hosted qualification is allowed within plan."
+  },
+  "causes_and_changes": [
+    {
+      "cause": "Broad package suites repeated before integration was stable and after review correction",
+      "change": "Impact profile before edits; focused checks during work; one stable phase or declared block barrier; identical full-input evidence may be explicitly reused."
+    },
+    {
+      "cause": "Large six-package API migration with late fixture/guard acceptance conflict and integration overhead",
+      "change": "Align API/type/default/ENV/DI map and detect norm-fixture conflicts before parallel implementation; bounded writing scopes and one integration owner."
+    },
+    {
+      "cause": "Two expensive reviewer sessions repeatedly explored broad context",
+      "change": "Actual route preflight; complete cold read-only packet, concise semantic risk map; second round findings+delta+changed closure; no automatic reviewer on every item."
+    },
+    {
+      "cause": "Poor attribution of preparation/integration intervals",
+      "change": "Record stage timestamps plus per-command durations; fresh independent research agents, short main context."
+    }
+  ],
+  "policy_files": [
+    "plans/2026.09.29-№1-VAULTER-STABLE/plan.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/decisions/D25.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/knowledge/validation-and-execution-policy.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/P2.6.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P2/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P3/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P4/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P5/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P6/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P7/phase.json",
+    "plans/2026.09.29-№1-VAULTER-STABLE/phases/P8/phase.json"
+  ],
+  "validation_index": "artifacts/execution-policy-D25/validation-index.json",
+  "P2.6_status": "todo",
+  "product_tests_or_mutators_run_in_this_policy_change": false
+}

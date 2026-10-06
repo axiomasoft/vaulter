@@ -1,0 +1,64 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "HTTP v1 и клиенты",
+  "design": "skeleton",
+  "goal": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P6`\n\nREST /api/vaulter/v1 поверх Operations: invokable-контроллеры, HttpOperationContextFactory, ресурсы без внутренних указателей с пакетными abilities, ETag/If-Match по sequence, X-Vaulter-Api-Version; RFC 9457 Problem Details; OpenAPI как источник TS-типов и контрактные тесты с oasdiff; @vaulter/vue на v1 (генерация типов, реестр viewer'ов, fallback-компонент); хаб на v1; Filament через handle.\n\n> **Контракт фазы (предварительный).** Потребляет: AD29–AD33, AD09; OPUS 10, 11; V24, V27, V36, V37. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: public-contract (wire); фазовый аудит (D03).",
+  "context": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P6`\n\nREST /api/vaulter/v1 поверх Operations: invokable-контроллеры, HttpOperationContextFactory, ресурсы без внутренних указателей с пакетными abilities, ETag/If-Match по sequence, X-Vaulter-Api-Version; RFC 9457 Problem Details; OpenAPI как источник TS-типов и контрактные тесты с oasdiff; @vaulter/vue на v1 (генерация типов, реестр viewer'ов, fallback-компонент); хаб на v1; Filament через handle.\n\n> **Контракт фазы (предварительный).** Потребляет: AD29–AD33, AD09; OPUS 10, 11; V24, V27, V36, V37. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: public-contract (wire); фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.",
+  "depends_on": [
+    "P5",
+    "P3"
+  ],
+  "items": [],
+  "batches": [],
+  "orchestration": {
+    "strategy": "sequential"
+  },
+  "sections": [
+    {
+      "id": "P6-HTTP-v1",
+      "title": "P6 — HTTP v1 и клиенты",
+      "text": "> **Статус дизайна:** skeleton (D03); items детализируются `task:plan-design 2026.09.29-№1-VAULTER-STABLE P6` после закрытия предыдущей фазы, по фактическому коду."
+    },
+    {
+      "id": "Phase-Context",
+      "title": "Phase Context",
+      "text": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P6`\n\nREST /api/vaulter/v1 поверх Operations: invokable-контроллеры, HttpOperationContextFactory, ресурсы без внутренних указателей с пакетными abilities, ETag/If-Match по sequence, X-Vaulter-Api-Version; RFC 9457 Problem Details; OpenAPI как источник TS-типов и контрактные тесты с oasdiff; @vaulter/vue на v1 (генерация типов, реестр viewer'ов, fallback-компонент); хаб на v1; Filament через handle.\n\n> **Контракт фазы (предварительный).** Потребляет: AD29–AD33, AD09; OPUS 10, 11; V24, V27, V36, V37. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: public-contract (wire); фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    },
+    {
+      "id": "Scope-Included-planned",
+      "title": "Scope Included (planned)",
+      "text": "Маршруты vaulter.v1.*; ProblemException/ProblemRenderer/коды/lang; openapi/vaulter-v1.yaml; vue клиент и composables; хаб; Filament без Actions/Repositories."
+    },
+    {
+      "id": "Scope-Excluded",
+      "title": "Scope Excluded",
+      "text": "doctor/install/генераторы (P7)."
+    },
+    {
+      "id": "Dependencies",
+      "title": "Dependencies",
+      "text": "P5 закрыта (контракты P3–P5 заморожены)."
+    },
+    {
+      "id": "Planned-Items-OPUS-13-D01-.3",
+      "title": "Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)",
+      "text": "- P6.1 — Контроллеры и маршруты v1 (implementation/high)\n- P6.2 — Problem Details (implementation/medium)\n- P6.3 — OpenAPI и контрактные тесты (implementation/high)\n- P6.4 — @vaulter/vue на v1 (implementation/high)\n- P6.5 — Хаб на v1 (implementation/medium)\n- P6.6 — Filament через handle (implementation/medium)"
+    },
+    {
+      "id": "Items",
+      "title": "Items",
+      "text": "| ID | Title | Status | Updated |\n|:--|:--|:--|:--|"
+    },
+    {
+      "id": "Phase-Handoff",
+      "title": "Phase Handoff",
+      "text": "—"
+    },
+    {
+      "id": "Validation-Execution-Policy",
+      "title": "Mandatory validation/execution policy (D25)",
+      "text": "**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+    }
+  ]
+}

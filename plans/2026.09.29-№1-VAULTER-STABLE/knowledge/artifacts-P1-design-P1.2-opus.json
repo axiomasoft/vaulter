@@ -1,0 +1,74 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1-design-P1.2-opus",
+  "title": "OPUS — дословные требования для P1.2 (40 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P1.2-40",
+      "title": "OPUS — дословные требования для P1.2 (40 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N04-S2-.-parent_id",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N04 (S2). Документ без `parent_id` становится вторым корнем и выпадает из листинга",
+      "text": "- `01:1d2c276b`\n\n`DocumentNodeController::store` передаёт `parent = null`, `CreateDocumentNodeAction` пишет `parent_id = NULL`\n(строка 62), тогда как Drive кладёт такие узлы в корневую папку. `GET storages/{storage}/nodes` листает детей\nкорня — документ не виден. Уникальность имён `(parent_id, lower(name)) WHERE ...` не защищает `parent_id IS NULL`\n(NULL различны), поэтому одинаковые имена «корней» допустимы."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N05-S1-.-move",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N05 (S1). Инварианты дерева не проверяются; гонка циклов при move",
+      "text": "- `01:c2d82bd7`\n\nНи одно Action не проверяет, что назначение — **активная папка того же drive**: можно переместить/скопировать\nузел, создать папку или загрузить файл «внутрь» файла, документа или удалённой в корзину папки (PHP API и HTTP с\nчужим `parent_id` в пределах storage). `MoveNodeAction::assertNoCycle` выполняется **до** транзакции и без\nблокировок (строки 44, 54): параллельные `A→B` и `B→A` оба проходят проверку и образуют цикл."
+    },
+    {
+      "id": "02-decisions.md-D13-T0",
+      "title": "02-decisions.md — D13 — Инварианты дерева и имён · T0",
+      "text": "- `02:81aee054`\n\n**Решение (проверяются в Actions, под блокировкой):**\n\n- `02:2b4f5dee`\n\n- родитель/назначение — **активная (не в корзине) папка того же drive**; корень нельзя\n  переместить, переименовать, удалить в корзину или скопировать как узел;\n\n- `02:d5604734`\n\n- `parent_id IS NULL` допустим **только** у корня drive (уникальный частичный индекс\n  `(drive_id) WHERE parent_id IS NULL` на PG/SQLite, generated column на MySQL — как у существующего\n  sibling-unique) — закрывает N04;\n\n- `02:89a6935c`\n\n- move берёт `VaulterDatabase::lockTree($driveId)` (advisory lock на PG, `SELECT ... FOR UPDATE`\n  строки drive на MySQL/SQLite) и проверяет цикл внутри транзакции (N05);\n\n- `02:3b185534`\n\n- имена: NFC-нормализация (`Normalizer`, при отсутствии `intl` — doctor warning), запрет\n  разделителей и управляющих символов, длина ≤ 255 байт UTF-8, сравнение уникальности\n  по `lower(name)` как сейчас;"
+    },
+    {
+      "id": "05-php-api.md-11.-API",
+      "title": "05-php-api.md — 11. Исключения публичного API",
+      "text": "- `05:25c4350e`\n\n| `InvalidDestinationException` | core | `invalid_destination` | не папка, в корзине, корень как объект операции, другой drive |\n\n- `05:ac3c5c42`\n\n| `NodeNotTrashedException` | core | `node_not_trashed` | purge не из корзины |"
+    },
+    {
+      "id": "08-data-model-and-migration.md-1.",
+      "title": "08-data-model-and-migration.md — 1. Агрегаты",
+      "text": "- `08:1a18d71c`\n\n```\nOwner (host) 1─* Drive 1─1 Root(Node)\nDrive 1─* Node ── parent ──► Node\nNode(kind=file)     1─1 File     1─* FileRevision 1─* FileRevisionBlob *─1 Blob\nNode(kind=document) 1─1 Document 1─* DocumentRevision\nNode 1─* NodeGrant, NodeShare, NodeComment\nDrive 1─* Activity, UploadSession\n```\n\n- `08:62762aa8`\n\nИнварианты (проверяются в Actions и, где возможно, индексами):\n\n- `08:3a0362e2`\n\n| # | Инвариант | Где |\n\n- `08:4be50853`\n\n| I1 | У drive ровно один узел с `parent_id IS NULL` — его корень | уникальный частичный индекс `(drive_id) WHERE parent_id IS NULL` (MySQL — generated column) + Actions |\n\n- `08:8397c3a7`\n\n| I2 | Родитель любого не-корневого узла — папка того же drive | Actions (D13) |\n\n- `08:4a18c3b1`\n\n| I3 | Имена активных соседей уникальны без учёта регистра | частичный уникальный индекс `(parent_id, lower(name)) WHERE trashed_at IS NULL` |\n\n- `08:1c4894ba`\n\n| I4 | Дерево ацикличное | tree lock + проверка в транзакции move |"
+    },
+    {
+      "id": "08-data-model-and-migration.md-2.-v_nodes",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`",
+      "text": "- `08:24547dbd` — _P1.2 — индекс единственного корня; P1.7 — HK-типы; переименования/sequence/удаления — P2.1/P4.1/P4.7_\n\nДобавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`\n(HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,\n`updated_by`, `trashed_by`, `tenant_id`. `extra` — jsonb null всегда (флаг `extra_data` удалён).\nУдалить: `current_version_id`, `file_id`, `deleted_at`.\nИндексы: как сейчас + `UNIQUE (drive_id) WHERE parent_id IS NULL`; sibling-unique без `deleted_at`."
+    },
+    {
+      "id": "08-data-model-and-migration.md-3.-Upgrade--0.2-0.3",
+      "title": "08-data-model-and-migration.md — 3. Upgrade-миграции 0.2 → 0.3",
+      "text": "- `08:e4f63f43`\n\nЕсли фаза F1 выпускается отдельно как 0.2.1 ([13-workstreams.md](13-workstreams.md)), миграции №3 (типы HK),\n№7 (scope_key) и ремонт «вторых корней» из №6 уходят в 0.2.1 с теми же телами; остальные остаются в 0.3.\n\n- `08:bd7ec0a7`\n\nПорядок — отдельные миграции (PostgreSQL выполняет каждую в транзакции; на MySQL DDL не транзакционен, поэтому\nкаждая миграция идемпотентна: проверяет состояние перед шагом). Все читают **старые** имена таблиц из\nустаревших `vaulter.table_names`/`vaulter.table_prefix`, если они заданы.\n\n- `08:c7629c6e`\n\n| # | Файл | Шаги |\n\n- `08:907d57d6` — _P1.2 — ремонт N04 и индекс корня; остальные шаги №6 — P4.1_\n\n| 6 | `…_000006_nodes_cleanup.php` | `sequence = 0`; `owner_id` → `owned_by`; удалить `current_version_id`, `file_id`, `deleted_at`; **ремонт N04**: не-корневые узлы с `parent_id IS NULL` перенести под корень их drive (конфликт имени → суффикс ` (legacy N)`), записать в activity `node.moved` от `vaulter:system`; создать индекс единственного корня |\n\n- `08:02425ed3`\n\nОткат: `down()` каждой миграции восстанавливает структуру; данные ремонта N04 и hard-delete grants\nнеобратимы — это отмечено в UPGRADE.md, preflight-миграция требует бэкап (флаг `--force` при наличии данных)."
+    },
+    {
+      "id": "08-data-model-and-migration.md-5.-D21",
+      "title": "08-data-model-and-migration.md — 5. Порядок блокировок (D21)",
+      "text": "- `08:bd2319dc`\n\n```\n1. VaulterDatabase::lockTree(drive)            — только операции, меняющие структуру (move, restore, purge поддерева, delete drive)\n2. SELECT … FOR UPDATE узлов по возрастанию id  — узел операции и назначение\n3. SELECT … FOR UPDATE агрегата                 — v_files / v_documents (ревизии, голова)\n4. UPDATE v_drives … used_bytes (условный)      — квота\n5. VaulterDatabase::advisoryLock(\"cas:{scope_key}:{sha256}\") — commit blob\n```\n\n- `08:e141b7f4`\n\nОперация не берёт блокировку уровня N после блокировки уровня M > N. Тест на PG: два параллельных сценария с\nпересекающимися ресурсами завершаются без deadlock или с одним ретраем."
+    },
+    {
+      "id": "09-integrity-and-security.md-4.-Actions-D13",
+      "title": "09-integrity-and-security.md — 4. Инварианты дерева в Actions (D13)",
+      "text": "- `09:ed66d963`\n\n| Action | Проверки внутри транзакции |\n\n- `09:aee29b69`\n\n| `CreateFolderAction`, `CreateDocumentAction`, `IngestFileAction` (новый файл) | родитель: `kind=folder`, `trashed_at IS NULL`, тот же drive; имя валидно; конфликт → `OnNameConflict` |\n\n- `09:f23ec8a8`\n\n| `RenameNodeAction` | не корень; имя валидно; конфликт с соседями |\n\n- `09:620a56e2`\n\n| `MoveNodeAction` | `lockTree`; не корень; назначение — активная папка того же drive; назначение не узел и не потомок (CTE внутри блокировки); конфликт имени |\n\n- `09:7d6ee90e` — _P1.2 — назначение и поддерево без корзины; P1.6 — квота одним условным UPDATE; байты через lifecycle — P4.2_\n\n| `CopyNodeAction` | назначение — активная папка того же drive; копия поддерева без узлов в корзине; байты через lifecycle; квота одним условным UPDATE на сумму |\n\n- `09:a2988b6b`\n\n| `TrashNodeAction` | не корень; не уже в корзине; поддерево помечается одним UPDATE по CTE (как сейчас) |\n\n- `09:a610525e` — _P1.2 — lockTree и выбор назначения; RestoreOptions и Rename по умолчанию — P3.3_\n\n| `RestoreNodeAction` | `lockTree`; исходный родитель активен → туда, иначе `RestoreOptions::destination` или корень; конфликт имени → `Rename` по умолчанию |\n\n- `09:3e595b1b` — _P1.2 — lockTree и «узел в корзине»; NodeContentLifecycle::purge() — P4.2_\n\n| `PurgeNodeAction` | `lockTree`; узел в корзине; для каждого узла поддерева — `NodeContentLifecycle::purge()`; освобождение квоты одним UPDATE |\n\n- `09:80634bc9`\n\nНормализация имени (`Vaulter\\Support\\NodeName::normalize(string): string`): trim пробелов по краям; NFC\n(`ext-intl`); запрет `/`, `\\`, NUL и C0/C1-управляющих; запрет `.` и `..`; длина ≤ `names.max_length` байт."
+    },
+    {
+      "id": "13-workstreams.md-F1-T0-0.2.1-P1.2",
+      "title": "13-workstreams.md — F1 — Исправления T0 (на текущих именах; кандидат 0.2.1) / P1.2 — Инварианты дерева",
+      "text": "- `13:9ffb8f85`\n\n- Решения: D13 · Находки: N04, N05 · Сценарии: V18, V19.\n\n- `13:c42d4c4c`\n\n- Сделать: проверка «родитель/назначение — активная папка того же storage» во всех Actions создания/перемещения/копирования/восстановления;\n  защита корня; `lockTree` + проверка цикла внутри транзакции move; `CreateDocumentNodeAction` с `parent = null` кладёт\n  под корень; миграция: перенос существующих «вторых корней» под корень + уникальный индекс единственного корня;\n  нормализация имён (`NodeName`).\n\n- `13:e1593c35`\n\n- Готово: V18, V19 зелёные; новые исключения `InvalidDestinationException` с render 409.\n\n- `13:946490b2`\n\n- Исполнитель: opus/high (миграция данных + блокировки), затем sonnet."
+    },
+    {
+      "id": "14-verification.md",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:51791b71`\n\n| ID | Сценарий | Ожидание | БД | Пункт |\n\n- `14:880baa7b`\n\n| V18 | Создать папку/загрузить/переместить/скопировать/восстановить с назначением: файл, документ, папка в корзине, корень другого drive | Везде `invalid_destination` или `cross_drive_operation`; корень нельзя переименовать/переместить/удалить | любая | P1.2 |\n\n- `14:f6daef9c`\n\n| V19 | Параллельно `move(A→B)` и `move(B→A)` | Одна успешна, вторая — `node_move_cycle`; цикла в БД нет | PG | P1.2 |"
+    }
+  ],
+  "applies_to": [
+    "P1.2"
+  ],
+  "provenance": {
+    "path": "artifacts/P1-design/P1.2-opus.md",
+    "sha256": "4b31430cd8b6f050fed87bd557f5ba771fcac0fed198b91903bdb9cbf4f36c20"
+  }
+}

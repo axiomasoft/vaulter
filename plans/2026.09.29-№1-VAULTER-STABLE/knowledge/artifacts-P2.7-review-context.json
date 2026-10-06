@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P2.7-review-context",
+  "title": "Review context",
+  "sections": [
+    {
+      "id": "Review-context",
+      "title": "Review context",
+      "text": "The owner explicitly requests Grok 4.7 with at least 500k context for P2.7.\nAccepted D18 resolves actual migration ordering and the 74 activity rows expectation.\nAll six package Pint/PHPStan/Pest gates pass. SQLite conditional skips and risky\ncounts are retained in package-gates.json; they are not claimed executed.\nPostgreSQL Upgrade+Schema: 100 passed, 611 assertions, 0 failed/skipped.\nBoth required negative controls fail under their intended mutations and pass after\nbyte-exact restoration. MySQL fresh installation reproduces the same error 1215\non archived, unchanged P2.1 product and on the candidate; the item explicitly allows\nthis known exception with owner P8.1. No successful MySQL install is claimed.\n\nThe PostgreSQL P1 regression grid is complete: 477 passed in total, zero failures;\nthe full supplemental Media CAS command skips four explicitly SQLite-premise cases.\nThose four cases execute in the green complete SQLite Media gate. Every PostgreSQL\nacceptance case executes. postgresql-applicability.json identifies the raw counts\nand each conditional case rather than falsely reporting raw zero skips. Review the entire code/schema delta and\ndependency closure; do not invent a product finding merely for the disclosed pending\nregression gate. No phase audit is requested.\n\nThe attempted general test-harness performance change was removed after it did not\nimprove timings. Only the dedicated Upgrade FixtureTestCase is retained because\nhistorical fixture setup must not automatically migrate unsafe data before preflight.\n\nreview-candidate.diff contains the complete tracked diff and full contents of every new product file. Read this complete delta first, then inspect actual source files for the necessary dependency closure. The manifest still binds every actual changed source/test/doc file individually."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P2.7/review-context.md",
+    "sha256": "bce1256c8bbd1b2496ea7c4a28225e39e200720af273907ef9cb22d8345fb76b"
+  }
+}

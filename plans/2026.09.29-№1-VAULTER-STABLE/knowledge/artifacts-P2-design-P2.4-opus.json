@@ -1,0 +1,69 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P2-design-P2.4-opus",
+  "title": "OPUS — дословные требования для P2.4 (39 единиц)",
+  "sections": [
+    {
+      "id": "OPUS-P2.4-39",
+      "title": "OPUS — дословные требования для P2.4 (39 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "01-review.md-4.-Codex-N21-S3-.-AzGuard--core-dev-main",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N21 (S3). AzGuard-специфика живёт в core, а мост требует `dev-main`",
+      "text": "- `01:1c3d640e`\n\n`Contracts\\Access\\AzgardGuard`, `Drivers\\Permission\\AzgardPermissionResolver`, `Support\\AzgardConfig` и ключи\n`azgard.*` — в core; `vaulter-azgard` содержит только адаптер и требует `axioma-studio/azguard-core: dev-main` —\nс таким требованием стабильный релиз невозможен."
+    },
+    {
+      "id": "02-decisions.md-D02-T1",
+      "title": "02-decisions.md — D02 — Пакеты: сохранить набор, сделать зависимости честными · T1",
+      "text": "- `02:435d86ab`\n\n**Решение.**\n\n- `02:8a0023cd`\n\n1. Composer-пакеты остаются: `vaulter-core`, `vaulter-media`, `vaulter-drive`,\n   `vaulter-documents`, `vaulter-filament`, `vaulter-azgard`; npm — `@vaulter/vue`;\n   плюс `hocuspocus-server`.\n\n- `02:7557780a` — _правило владения соблюдается раскладкой P2.1–P2.4; ADR-0019 — P0.4_\n\n4. Правило владения (фиксируется ADR-0019 «Kernel ownership»):\n\n- `02:51375102`\n\n   - **media** — движок CAS (content store, storage driver, GC, reconcile, repair);\n\n- `02:7bf67b19`\n\n   - **мосты** (azgard, filament) не содержат доменной логики.\n\n- `02:e15b4066`\n\n5. Всё AzGuard-специфичное (`AzgardGuard`, драйвер, карта прав, ключи `azgard.*`)\n   переносится из core в `vaulter-azgard` (N21).\n\n- `02:f9aa9d1e`\n\n**Почему.** Установки «core без drive» не существует: без `DriveProvisioner` нельзя создать drive.\nЧестные `require` дешевле, чем обратное слияние core+drive (отмена ADR-0015) или новые пакеты.\n\n- `02:91f6585f`\n\n**Отвергнуто.** Слияние drive в core (огромный перенос namespace); пакеты\n`contracts/kernel/sharing/webhooks/collaboration` (нет независимой установки)."
+    },
+    {
+      "id": "03-glossary-and-renames.md-preamble",
+      "title": "03-glossary-and-renames.md — (preamble)",
+      "text": "- `03:0a946809`\n\nЭтот файл — нормативный для исполнителей: новое имя берётся **только** отсюда. Если\nсимвола нет в таблицах, его имя не меняется (кроме перемещения в domain-подпапку по\nADR-0017, см. [04-packages-and-layout.md](04-packages-and-layout.md))."
+    },
+    {
+      "id": "03-glossary-and-renames.md-3.-core-Vaulter",
+      "title": "03-glossary-and-renames.md — 3. Классы: core (`Vaulter\\`)",
+      "text": "- `03:792772ee`\n\n| Было | Стало | Примечание |\n\n- `03:0065c62f`\n\n| `Drivers\\Permission\\AzgardPermissionResolver` | → `Vaulter\\Azgard\\AzgardPermissionDriver` | в пакет azgard |\n\n- `03:15134404`\n\n| `Contracts\\Access\\AzgardGuard` | → `Vaulter\\Azgard\\Contracts\\AzgardGuard` | в пакет azgard |\n\n- `03:5c0723c5`\n\n| `Support\\AzgardConfig` | → `Vaulter\\Azgard\\AzgardPermissionMap` | в пакет azgard |\n\n- `03:8378be94`\n\n| `Testing\\FakeAzgardGuard` | → `Vaulter\\Azgard\\Testing\\FakeAzgardGuard` | в пакет azgard |"
+    },
+    {
+      "id": "04-packages-and-layout.md-preamble",
+      "title": "04-packages-and-layout.md — (preamble)",
+      "text": "- `04:bc522d5e`\n\nОснование — [D02](02-decisions.md#d02), [D05](02-decisions.md#d05), [D08](02-decisions.md#d08),\nADR-0017 (layer-first + domain sub-namespace остаётся каноном)."
+    },
+    {
+      "id": "04-packages-and-layout.md-1.",
+      "title": "04-packages-and-layout.md — 1. Пакеты и зависимости",
+      "text": "- `04:4cf1b89d`\n\n| Пакет | Composer / npm | Namespace | `require` (Vaulter) | Назначение |\n\n- `04:2cf5c88c`\n\n| core | `axioma-studio/vaulter-core` | `Vaulter\\` | — | Kernel: схема, общие модели, доступ, шаринг, activity, события/webhooks, профили, файловые обработчики, контракты, конфиг ядра |\n\n- `04:b1839a2e`\n\n| media | `axioma-studio/vaulter-media` | `Vaulter\\Media\\` | core | CAS: staging, sha256, promote, GC, reconcile, repair scopes |\n\n- `04:6b19960a`\n\n| drive | `axioma-studio/vaulter-drive` | `Vaulter\\Drive\\` | core, media | Drive handle, операции дерева и файлов, загрузки (single/tus/S3), скачивание, корзина, HTTP Drive |\n\n- `04:cd9c5512` — _require drive — P1.10; переименования filament — P2.4_\n\n| filament | `axioma-studio/vaulter-filament` | `Vaulter\\Filament\\` | core, **drive** | Админ-панель поверх публичного API |\n\n- `04:5bbb932e`\n\n| azgard | `axioma-studio/vaulter-azgard` | `Vaulter\\Azgard\\` | core | Драйвер прав AzGuard + адаптер guard |\n\n- `04:45967c6d`\n\nГраф (разрешённые направления, проверяется Deptrac/Pest arch):\n\n- `04:61265661`\n\n```\n            ┌────────────┐\n            │    core    │◄─────────────┬──────────────┐\n            └─────▲──────┘              │              │\n                  │                     │              │\n            ┌─────┴──────┐        ┌─────┴─────┐  ┌─────┴─────┐\n            │   media    │        │  azgard   │  │ (host app)│\n            └─────▲──────┘        └───────────┘  └───────────┘\n                  │\n            ┌─────┴──────┐\n            │   drive    │◄──────────┐\n            └─────▲──────┘           │\n                  │                  │\n            ┌─────┴──────┐     ┌─────┴─────┐\n            │ documents  │     │ filament  │\n            └────────────┘     └───────────┘\n```\n\n- `04:409f3e4e`\n\nПравила (arch-тесты в каждом пакете):\n\n- `04:147f3b2f`\n\n1. Пакет импортирует только namespace пакетов, от которых зависит в `composer.json`.\n\n- `04:66bfddc4` — _arch-правило: Azgard/Hocuspocus/Filament — P2.4; TipTap/Univer (richText, NodeKind-доки) — P4.3_\n\n2. core не содержит слов `Azgard`, `TipTap`, `Univer`, `Hocuspocus`, `Filament` в `src` (кроме\n   строковых ключей типов событий/конфигов, перечисленных в allow-list теста).\n\n- `04:6021542f`\n\n5. `src` никогда не импортирует `Testing\\*` (D35)."
+    },
+    {
+      "id": "04-packages-and-layout.md-6.-media-azgard-filament",
+      "title": "04-packages-and-layout.md — 6. Раскладка: media, azgard, filament",
+      "text": "- `04:f9df15a0` — _media/azgard/filament — P2.4; MediaConfig — P2.5; ScopeRepairer/ObjectKey — выполнено P1.5; Doctor — P7.1_\n\n```text\npackages/media/src/\n├── VaulterMediaServiceProvider.php\n├── Configuration/MediaConfig.php\n├── Cas/{BlobStore,BlobGarbageCollector,BlobReconciler,FlysystemStorageDriver,Sha256ContentStore,StagedTempObject,ScopeRepairer,ObjectKey}.php\n├── Console/{GcBlobsCommand,ReconcileBlobsCommand,RepairBlobScopesCommand}.php\n└── Doctor/Checks/{ContentDiskProbeCheck,DedupScopeCheck}.php\n\npackages/azgard/src/\n├── VaulterAzgardServiceProvider.php\n├── AzgardPermissionDriver.php\n├── AzgardPermissionMap.php\n├── AzgardGuardAdapter.php\n├── NullAzgardGuard.php\n├── Contracts/{AzgardGuard,AzgardBackedUser}.php\n└── Testing/FakeAzgardGuard.php\n\npackages/filament/src/                  # конвенция Filament (исключение ADR-0017 сохраняется)\n├── VaulterPlugin.php\n├── VaulterFilamentServiceProvider.php\n├── Resources/{Drive,Node,NodeGrant,NodeShare,Activity}Resource/…\n└── Support/{PanelActor,DriveHandleFor}.php   # все действия через DriveHandle::actingAs(PanelActor::current())\n```\n\n- `04:51228a40` — _StorageResource → DriveResource — P2.4; удаление PanelAccessScope и видимость через handle — P6.6_\n\nВ `filament`: `StorageResource` → `DriveResource`; `PanelAccessScope` удаляется — таблицы берут\nвидимость из `Queries` через handle (точная видимость D12). «Panel» внутри filament означает\nFilament panel и не переименовывается."
+    },
+    {
+      "id": "04-packages-and-layout.md-7.-Service-providers",
+      "title": "04-packages-and-layout.md — 7. Service providers",
+      "text": "- `04:e5aa842c` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\nКаждый provider — тонкий: `configurePackage()` + вызовы registrar-классов (`Providers/*Registrar`),\nкаждый из которых тестируется отдельно. Порядок фаз:\n\n- `04:3c7a3675` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| Фаза | Что делает | Где |\n\n- `04:fff0cc96` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| `register` | merge конфига пакета, bind контрактов, singleton реестров, регистрация `DoctorCheck`, `NodeContentLifecycle` через tag | все |\n\n- `04:30a9881f` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\nТеги контейнера (единая схема):\n\n- `04:3ece3f1d` — _тонкие providers + registrars: core — P2.1, drive — P2.2, documents — P2.3; media/azgard/filament — одноклассовые (R14)_\n\n| Тег | Что | Кто добавляет |"
+    },
+    {
+      "id": "06-extension-points.md-5.-Permission-driver-core",
+      "title": "06-extension-points.md — 5. Permission driver (core)",
+      "text": "- `06:53200da4` — _встроенные ключи core — P2.1; ключ azgard регистрирует vaulter-azgard — P2.4_\n\n- Встроенные ключи: `database`, `gate`, `spatie` (core), `azgard` (vaulter-azgard регистрирует ключ сам),\n  `null` (только тесты; в production — исключение boot)."
+    },
+    {
+      "id": "13-workstreams.md-F2-T1-0.3-P2.4-AzGuard-core-vaulter-azgard-media-filament",
+      "title": "13-workstreams.md — F2 — Канон имён и конфигурации (T1, начало 0.3) / P2.4 — AzGuard из core в vaulter-azgard; media/filament",
+      "text": "- `13:bf492cbc`\n\n- Решения: D02 п.5 · Находки: N21. Сделать: перенос контракта/драйвера/карты/фейка; регистрация ключа `azgard`;\n  переименования media-команд; Filament `StorageResource`→`DriveResource`.\n\n- `13:5ff92789`\n\n- Готово: arch-тест «core не содержит Azgard»; тесты azgard зелёные.\n\n- `13:9343903e`\n\n- Исполнитель: sonnet/medium."
+    }
+  ],
+  "applies_to": [
+    "P2.4"
+  ],
+  "provenance": {
+    "path": "artifacts/P2-design/P2.4-opus.md",
+    "sha256": "5b6994c9c8ca61ced19788fad96952041031db320333f8fdcbacd8c4576d7ba7"
+  }
+}

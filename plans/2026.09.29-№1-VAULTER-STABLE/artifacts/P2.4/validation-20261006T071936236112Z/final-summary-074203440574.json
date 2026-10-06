@@ -1,0 +1,1202 @@
+{
+  "kind": "project-validation-evidence",
+  "candidate_sha256": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+  "complete_required_checks": true,
+  "same_candidate_all_final_runs": true,
+  "final_runs": [
+    {
+      "pao": [
+        {
+          "tool": "pint",
+          "result": "passed"
+        }
+      ],
+      "label": "final-core-pint",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pint",
+        "--test",
+        "packages/core"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:35:38.816916+00:00",
+      "finished": "2026-10-06T07:35:39.074802+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073538814663-final-core-pint.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073538814663-final-core-pint.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "phpstan",
+          "result": "passed",
+          "errors": 0
+        }
+      ],
+      "label": "final-core-phpstan",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/phpstan",
+        "analyse",
+        "-c",
+        "phpstan.neon",
+        "--memory-limit=1G",
+        "--no-progress"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:35:39.131458+00:00",
+      "finished": "2026-10-06T07:35:39.994224+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073539129243-final-core-phpstan.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073539129243-final-core-phpstan.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "pest",
+          "result": "passed",
+          "tests": 681,
+          "passed": 643,
+          "assertions": 8094,
+          "duration_ms": 107552,
+          "skipped": 38,
+          "risky": 17
+        }
+      ],
+      "label": "final-core-pest-sqlite",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:35:40.047703+00:00",
+      "finished": "2026-10-06T07:37:28.334055+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073540045475-final-core-pest-sqlite.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073540045475-final-core-pest-sqlite.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "pint",
+          "result": "passed"
+        }
+      ],
+      "label": "final-azgard-pint",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pint",
+        "--test"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+      "started": "2026-10-06T07:37:28.401545+00:00",
+      "finished": "2026-10-06T07:37:28.650973+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073728399318-final-azgard-pint.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073728399318-final-azgard-pint.json"
+    },
+    {
+      "pao": [],
+      "label": "final-azgard-phpstan",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/phpstan",
+        "analyse",
+        "--no-progress",
+        "--memory-limit=512M"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+      "started": "2026-10-06T07:37:28.709930+00:00",
+      "finished": "2026-10-06T07:37:30.571861+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073728707639-final-azgard-phpstan.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073728707639-final-azgard-phpstan.json"
+    },
+    {
+      "pao": [],
+      "label": "final-azgard-pest-sqlite",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/azgard",
+      "started": "2026-10-06T07:37:30.625686+00:00",
+      "finished": "2026-10-06T07:37:32.853826+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073730623410-final-azgard-pest-sqlite.log",
+      "totals": [
+        [
+          "",
+          "Tests\\AdapterTest"
+        ],
+        [
+          "",
+          "Tests\\Arch\\PublicApiSnapshotTest"
+        ],
+        [
+          "",
+          "Tests\\ArchTest"
+        ],
+        [
+          "",
+          "Tests\\ConfigurationTest"
+        ],
+        [
+          "",
+          "Tests\\ProviderBindingTest"
+        ],
+        [
+          "",
+          "Tests\\RealAzgard\\RealAzgardIntegrationTest"
+        ],
+        [
+          "",
+          "Tests\\VaulterResolverIntegrationTest"
+        ],
+        [
+          "44 passed (127 assertions)",
+          ""
+        ]
+      ],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073730623410-final-azgard-pest-sqlite.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "pint",
+          "result": "passed"
+        }
+      ],
+      "label": "final-media-pint",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pint",
+        "--test"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+      "started": "2026-10-06T07:37:32.905144+00:00",
+      "finished": "2026-10-06T07:37:33.142732+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073732902896-final-media-pint.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073732902896-final-media-pint.json"
+    },
+    {
+      "pao": [],
+      "label": "final-media-phpstan",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/phpstan",
+        "analyse",
+        "--no-progress",
+        "--memory-limit=512M"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+      "started": "2026-10-06T07:37:33.204535+00:00",
+      "finished": "2026-10-06T07:37:38.324978+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073733202307-final-media-phpstan.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073733202307-final-media-phpstan.json"
+    },
+    {
+      "pao": [],
+      "label": "final-media-pest-sqlite",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/media",
+      "started": "2026-10-06T07:37:38.381126+00:00",
+      "finished": "2026-10-06T07:38:07.948665+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073738378783-final-media-pest-sqlite.log",
+      "totals": [
+        [
+          "",
+          "Tests\\Cas\\CasPromoteAtomicTest"
+        ],
+        [
+          "",
+          "Tests\\Cas\\CommandOutputContractTest"
+        ],
+        [
+          "",
+          "Tests\\Cas\\MutationContractsTest"
+        ],
+        [
+          "",
+          "Tests\\Cas\\OrphanGraceConfigTest"
+        ],
+        [
+          "",
+          "Tests\\Cas\\ReconcileBlobsOrphanCommandTest"
+        ],
+        [
+          "",
+          "URE \u0438 \u043e\u0431\u044a\u0435\u043a\u0442 \u0432\u2026  0.08s  "
+        ],
+        [
+          "",
+          "Tests\\Feature\\BootTest"
+        ],
+        [
+          "4 risky, 16 skipped, 140 passed (546 assertions)",
+          ""
+        ]
+      ],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073738378783-final-media-pest-sqlite.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "pint",
+          "result": "passed"
+        }
+      ],
+      "label": "final-filament-pint",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pint",
+        "--test"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+      "started": "2026-10-06T07:38:08.000661+00:00",
+      "finished": "2026-10-06T07:38:08.253892+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073807998407-final-filament-pint.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073807998407-final-filament-pint.json"
+    },
+    {
+      "pao": [],
+      "label": "final-filament-phpstan",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/phpstan",
+        "analyse",
+        "--no-progress",
+        "--memory-limit=512M"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+      "started": "2026-10-06T07:38:08.304359+00:00",
+      "finished": "2026-10-06T07:38:12.573292+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073808302143-final-filament-phpstan.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073808302143-final-filament-phpstan.json"
+    },
+    {
+      "pao": [],
+      "label": "final-filament-pest-sqlite",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+      "started": "2026-10-06T07:38:12.624004+00:00",
+      "finished": "2026-10-06T07:38:25.130533+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073812621755-final-filament-pest-sqlite.log",
+      "totals": [
+        [
+          "",
+          "Tests\\Feature\\NodeResourceQueryTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\NodeResourceTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\NodeShareResourceTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\PanelActorGuardTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\ResourceListingScopeTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\ResourcePagesTest"
+        ],
+        [
+          "",
+          "Tests\\Feature\\VaulterPluginTest"
+        ],
+        [
+          "1 skipped, 83 passed (251 assertions)",
+          ""
+        ]
+      ],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073812621755-final-filament-pest-sqlite.json"
+    },
+    {
+      "pao": [],
+      "label": "final-pg-ready",
+      "argv": [
+        "pg_isready",
+        "-h",
+        "127.0.0.1",
+        "-p",
+        "5432",
+        "-U",
+        "vaulter",
+        "-d",
+        "vaulter_test"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:38:25.181621+00:00",
+      "finished": "2026-10-06T07:38:25.284262+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825179393-final-pg-ready.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "pgsql",
+        "VAULTER_TEST_DB_CONNECTION": "pgsql",
+        "DB_DATABASE": "vaulter_test",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "5432",
+        "DB_USERNAME": "vaulter"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825179393-final-pg-ready.json"
+    },
+    {
+      "pao": [],
+      "label": "final-pg-preflight",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/db-preflight.sh",
+        "pgsql"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:38:25.339046+00:00",
+      "finished": "2026-10-06T07:38:25.437150+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825336796-final-pg-preflight.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "pgsql",
+        "VAULTER_TEST_DB_CONNECTION": "pgsql",
+        "DB_DATABASE": "vaulter_test",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "5432",
+        "DB_USERNAME": "vaulter"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825336796-final-pg-preflight.json"
+    },
+    {
+      "pao": [
+        {
+          "tool": "pest",
+          "result": "passed",
+          "tests": 40,
+          "passed": 40,
+          "assertions": 529,
+          "duration_ms": 50679
+        }
+      ],
+      "label": "final-core-pg-grid",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "packages/core/tests/Concurrency",
+        "packages/core/tests/Database",
+        "packages/core/tests/Upgrade"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:38:25.488064+00:00",
+      "finished": "2026-10-06T07:39:16.375031+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825485806-final-core-pg-grid.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "pgsql",
+        "VAULTER_TEST_DB_CONNECTION": "pgsql",
+        "DB_DATABASE": "vaulter_test",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "5432",
+        "DB_USERNAME": "vaulter"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073825485806-final-core-pg-grid.json"
+    },
+    {
+      "pao": [],
+      "label": "final-drive-pg-grid",
+      "argv": [
+        "/home/vostrikov/projects/packages/vaulter/scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "tests/Concurrency",
+        "tests/Uploads"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "started": "2026-10-06T07:39:16.426637+00:00",
+      "finished": "2026-10-06T07:41:28.365333+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073916424361-final-drive-pg-grid.log",
+      "totals": [
+        [
+          "",
+          "Tests\\Uploads\\TusMutationBoundaryTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadIntegrityTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadModelsMassAssignmentTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadSchemaTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadSessionActivityTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadSessionCriticalSectionTest"
+        ],
+        [
+          "",
+          "Tests\\Uploads\\UploadSessionLockDriverTest"
+        ],
+        [
+          "174 passed (905 assertions)",
+          ""
+        ]
+      ],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "pgsql",
+        "VAULTER_TEST_DB_CONNECTION": "pgsql",
+        "DB_DATABASE": "vaulter_test",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "5432",
+        "DB_USERNAME": "vaulter"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/073916424361-final-drive-pg-grid.json"
+    },
+    {
+      "pao": [],
+      "label": "final-guidance-d23-old-names",
+      "argv": [
+        "python3",
+        "/tmp/vaulter-p24-guidance.py"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:42:02.874811+00:00",
+      "finished": "2026-10-06T07:42:02.988674+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074202872551-final-guidance-d23-old-names.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074202872551-final-guidance-d23-old-names.json"
+    },
+    {
+      "pao": [],
+      "label": "final-diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:42:03.039416+00:00",
+      "finished": "2026-10-06T07:42:03.144423+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074203037145-final-diff-check.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074203037145-final-diff-check.json"
+    },
+    {
+      "pao": [],
+      "label": "final-staged-diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "started": "2026-10-06T07:42:03.195035+00:00",
+      "finished": "2026-10-06T07:42:03.278180+00:00",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "candidate_before": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "candidate_after": "219c1b04c09a2056c60cd7b0efcc25c8c9dde2bec021b3fc4fe7ad1fa72f3df9",
+      "normative_inputs": [
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+          "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+          "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+          "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+          "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+        },
+        {
+          "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+          "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+        }
+      ],
+      "log": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074203192803-final-staged-diff-check.log",
+      "totals": [],
+      "environment": {
+        "APP_ENV": "testing",
+        "DB_CONNECTION": "sqlite",
+        "VAULTER_TEST_DB_CONNECTION": "sqlite",
+        "DB_DATABASE": ":memory:"
+      },
+      "record": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/074203192803-final-staged-diff-check.json"
+    }
+  ],
+  "totals": {
+    "final-core-pest-sqlite": {
+      "tool": "pest",
+      "result": "passed",
+      "tests": 681,
+      "passed": 643,
+      "assertions": 8094,
+      "duration_ms": 107552,
+      "skipped": 38,
+      "risky": 17
+    },
+    "final-azgard-pest-sqlite": {
+      "source": "pest-console",
+      "raw_summary": "44 passed (127 assertions)",
+      "counts": {
+        "passed": 44
+      },
+      "assertions": 127
+    },
+    "final-media-pest-sqlite": {
+      "source": "pest-console",
+      "raw_summary": "4 risky, 16 skipped, 140 passed (546 assertions)",
+      "counts": {
+        "risky": 4,
+        "skipped": 16,
+        "passed": 140
+      },
+      "assertions": 546
+    },
+    "final-filament-pest-sqlite": {
+      "source": "pest-console",
+      "raw_summary": "1 skipped, 83 passed (251 assertions)",
+      "counts": {
+        "skipped": 1,
+        "passed": 83
+      },
+      "assertions": 251
+    },
+    "final-core-pg-grid": {
+      "tool": "pest",
+      "result": "passed",
+      "tests": 40,
+      "passed": 40,
+      "assertions": 529,
+      "duration_ms": 50679
+    },
+    "final-drive-pg-grid": {
+      "source": "pest-console",
+      "raw_summary": "174 passed (905 assertions)",
+      "counts": {
+        "passed": 174
+      },
+      "assertions": 905
+    }
+  },
+  "normative_inputs": [
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/P2.4.json",
+      "sha256": "d32536de92cf67a54a527275de0c3d57b431f9fceca6b48d85d7b6f016c8e65a"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/decisions/D23.json",
+      "sha256": "242d854bc305d3e09defe6c3d2b504456685d2a60c5211acb4786fd3dcc7e3b7"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/knowledge/artifacts-P2-design-P2.4-opus.json",
+      "sha256": "02ad9bdd170a2c5f411be461e84f54a8693349987e3f973d35fc28f007a04f4b"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/phases/P2/phase.json",
+      "sha256": "69ab93c399c704bea09341419db06d45bb25675e0ffcb809ea0e18c1f7866ad7"
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/rename-map.php",
+      "sha256": "0371e78a92103e75b00952ece27b74580f98be374db43016fdfc3916595ef641"
+    }
+  ],
+  "candidate_manifest": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/final-stable-candidate-073538439489.json",
+  "negative_arch_control": {
+    "proof": "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/072922485071-negative-bridge-mutation.json",
+    "guard_input_paths_unchanged_in_final_candidate": true,
+    "compared_paths": 235,
+    "expected_red_then_exact_restore_green": true
+  },
+  "limits": [
+    "SQLite core/media/filament conditional skips and risky classifications retained exactly as tool output; not counted as universally passed.",
+    "No full load application suite; changed load consumers checked with syntax/Pint plus core P85 metrics behavior and final core suite."
+  ],
+  "finished": "2026-10-06T07:42:03.391094+00:00"
+}

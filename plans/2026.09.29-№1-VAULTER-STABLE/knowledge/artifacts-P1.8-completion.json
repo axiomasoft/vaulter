@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P1.8-completion",
+  "title": "P1.8 completion evidence",
+  "sections": [
+    {
+      "id": "P1.8-completion-evidence",
+      "title": "P1.8 completion evidence",
+      "text": "Implementation and all declared acceptance are GREEN, including the owner-requested independent Grok 4.7 review."
+    },
+    {
+      "id": "Delivered",
+      "title": "Delivered",
+      "text": "- ProblemException with problemCode()/httpStatus(), implemented by all 20 classes in the item contract.\n- Conditional central JSON renderer: Vaulter paths or requests expecting JSON; host HTML and infrastructure exceptions return false to Laravel. Existing messages are preserved.\n- Extra validation fields/content reasons and tus offset/version headers are retained.\n- NodeNotFoundException and StorageNotFoundException, public API snapshot, error reference, CHANGELOG and AD29 upgrade notes."
+    },
+    {
+      "id": "Acceptance",
+      "title": "Acceptance",
+      "text": "| Package | Pint | PHPStan | Pest |\n|:--|:--|:--|:--|\n| core | exit 0 | exit 0 | {\"tool\":\"pest\",\"result\":\"passed\",\"tests\":604,\"passed\":593,\"assertions\":1925,\"duration_ms\":69241,\"skipped\":11,\"risky\":17} |\n| drive | exit 0 | exit 0 | ✓ it acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NO… 0.06s     ✓ it acquireForPatch на MySQL берёт НЕблокирующий лок — FOR UPDATE NO… 0.05s      Tests:    2 risky, 8 skipped, 448 passed (1325 assertions)   Duration: 32.35s |\n| documents | exit 0 | exit 0 | ✓ it markdown-экспорт: \"|\" в ЦЕЛИ ссылки/картинки не добавляет таблиц… 0.05s     ✓ it markdown-экспорт: \"|\" в ЦЕЛИ ссылки/картинки не добавляет таблиц… 0.05s      Tests:    1 skipped, 245 passed (809 assertions)   Duration: 18.54s |\n| media | exit 0 | exit 0 | ! it records gc metrics via vaulter:gc-blobs command → This test did…  0.05s     ! it records reconcile metrics via vaulter:reconcile-blobs command →…  0.05s      Tests:    4 risky, 9 skipped, 128 passed (449 assertions)   Duration: 24.17s |\n| filament | exit 0 | exit 0 | ✓ it drops ActivityResource when the core activity feature is off, ev… 0.08s     ✓ it control: ActivityResource registers when the core activity featu… 0.08s      Tests:    1 skipped, 76 passed (215 assertions)   Duration: 9.07s |\n\nAll 15 explicit package gates exit 0. Existing skips/risky annotations are reported in the logs; they were neither removed nor treated as executed tests. No PG concurrency or mutation run is required by P1.8. D14 remains in force. SQLite :memory: and APP_ENV=testing were explicitly selected; the TestCase connection resolvers use in-memory SQLite, and upload fixtures use fake disks.\n\nV24: initial 20 failed; after implementation/restoration 20 passed (204 assertions). Removing implements ProblemException from CycleException makes V24 and the drive architecture guard fail; restoring the exact source returns both GREEN. Additional directory guard negative probe rejects a second file, restoration returns GREEN. See negative-controls.json and corrected logs. The first directory-probe invocation used the wrong core cwd and is procedural evidence only.\n\nCode Guidance: zero assertStatus(500)/assertServerError/assertInternalServerError matches in packages/*/tests. Scoped product git diff --check exits 0. An unrelated pre-existing roadmap blank-line finding is preserved."
+    },
+    {
+      "id": "Bounded-contract-alignment",
+      "title": "Bounded contract alignment",
+      "text": "The old ADR-0017 directory test rejects the exact Exceptions/Contracts namespace mandated by the item. Its guard now permits that directory only with ProblemException.php as its single entry; other files/subdirectories and all other nested technical layers remain forbidden. The supplied item spec is unchanged. See arch-contract-repair.md.\n\nOnly tests that failed on changed status/body/rendering were updated, besides that exact structural guard alignment. Other 415 tus protocol validation tests remain unchanged. OffsetMismatchException has no named factory in the existing API: V24 uses its existing named constructor argument, without adding an unsolicited factory."
+    },
+    {
+      "id": "Independent-review",
+      "title": "Independent review",
+      "text": "review: grok/grok-4.7 GREEN. Fresh Grok 4.7/high session 855f6154-2e5b-443a-a345-3ab2108008e1, actual provider model grok-4.7-build, read-only (26 read_file and 33 grep calls), no web/subagents. Candidate bytes: review-candidate.json; input: review-prompt.txt; invocation/model witness: review-route.json; verbatim final verdict: grok-review.md. Initial CLI invocation used flags after the agent subcommand and was rejected before dispatch; correction used the documented top-level CLI. No alternate reviewer was used."
+    },
+    {
+      "id": "Scope",
+      "title": "Scope",
+      "text": "P1.8 only; next recommendation is P1.4. Prior unrelated plan edits, :memory: artifact, and concurrent .gitignore/.swissknife.json edits are preserved. No push, tag, release, migration or external write was performed.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nTask terminal journal and generated P1.8 state are GREEN. plan-lint: OK, 0 errors, 0 warnings. The first terminal append exceeded Task's 300-character note limit and was rejected before mutation; shortening the note allowed the same run to close. Shared journal/status and prior P1 design files already contained owner work and are left in the working tree; the scoped commit contains only P1.8 product files, its evidence/state and updated handoff.\n\nThe raw review prompt embeds git diff context lines and verbatim test output, so its trailing whitespace is intentional evidence. It is kept byte-identical to the submitted prompt. The product-only staged diff passes git diff --check; the raw review input is not a product whitespace violation."
+    }
+  ],
+  "applies_to": [],
+  "provenance": {
+    "path": "artifacts/P1.8/completion.md",
+    "sha256": "4ddcd4975acf3316ff7b19aa43f10bb355b333982a6153699d3a61b25c3ecd37"
+  }
+}

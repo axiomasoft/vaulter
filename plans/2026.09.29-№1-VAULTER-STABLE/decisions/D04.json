@@ -1,0 +1,55 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D04",
+  "title": "Окружение исполнения (accepted)",
+  "date": "2026-09-29",
+  "status": "accepted",
+  "decision": "1. Все PHP-команды — через обёртку **`scripts/php84`** (кладёт php8.4 первым в `PATH`; `--check` проверяет версию и\n   расширения). Запуск на 8.3 запрещён: при отсутствии 8.4 — стоп.\n2. **PostgreSQL** — локальный 16 на `127.0.0.1:5432`, координаты как в CI: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1\n   DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret`. Имя БД обязано оканчиваться на `_test`\n   (проверяет `scripts/db-preflight.sh`). Создание роли и БД — **owner gate O-1**:\n   `sudo -u postgres psql -c \"CREATE ROLE vaulter LOGIN PASSWORD 'secret' CREATEDB\" && sudo -u postgres createdb -O vaulter vaulter_test`.\n3. **MySQL 8** — локальный `127.0.0.1:3306`, `vaulter`/`secret`, БД `vaulter_test` — **owner gate O-2** (нужен с P0.3):\n   `sudo mysql -e \"CREATE USER 'vaulter'@'localhost' IDENTIFIED BY 'secret'; CREATE DATABASE vaulter_test; GRANT ALL ON vaulter_test.* TO 'vaulter'@'localhost';\"`.\n4. Docker не обязателен до P4.5 (хаб в docker-compose); тогда — отдельный owner gate при дизайне P4.\n5. Тесты конкурентности — только PostgreSQL (OPUS 13, правило 6) через харнесс P0.2.",
+  "rationale": "Хост уже содержит PHP 8.4 со всеми нужными расширениями и нативные PG/MySQL — это быстрее и детерминированнее Docker.\nРоли БД требуют прав суперпользователя, которых у агента нет.",
+  "applies_to": [
+    "P0",
+    "P0.1",
+    "P0.2",
+    "P0.3",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "P8"
+  ],
+  "supersedes": [],
+  "actor": {
+    "provider": "legacy",
+    "model": "author-choice (claude-opus-5-5/high)."
+  },
+  "sections": [
+    {
+      "id": "Preamble",
+      "title": "Preamble",
+      "text": "---\nid: D04\ndate: 2026-09-29\nstatus: accepted\nitem: P0\nitems: [P0, P0.1, P0.2, P0.3, P1, P2, P3, P4, P5, P6, P7, P8]\nsupersedes: []\nsuperseded_by: null\n---"
+    },
+    {
+      "id": "D04-accepted",
+      "title": "D04 — Окружение исполнения (accepted)",
+      "text": "**Actor:** author-choice (claude-opus-5-5/high).\n**Evidence:** RAG:— хост 2026-09-29: `php -v` → 8.3.35; `/usr/bin/php8.4` есть, модули включают `pcntl posix pdo_pgsql\npdo_mysql pdo_sqlite pcov gd intl`; `packages/*/composer.json` → `\"php\": \"^8.4\"`; `pg_isready` → 127.0.0.1:5432 accepting\n(PostgreSQL 16.15); роль `vaulter` (CI: `DB_USERNAME=vaulter`, `DB_PASSWORD=secret`, `DB_DATABASE=vaulter_test`) —\n`password authentication failed`; MySQL 127.0.0.1:3306 слушает, root без пароля — `Access denied`; Docker Desktop не запущен,\nсистемный сокет — `permission denied`; `vendor/` в репозитории отсутствует. Образец — `corex:scripts/php84`."
+    },
+    {
+      "id": "Solution",
+      "title": "Solution",
+      "text": "1. Все PHP-команды — через обёртку **`scripts/php84`** (кладёт php8.4 первым в `PATH`; `--check` проверяет версию и\n   расширения). Запуск на 8.3 запрещён: при отсутствии 8.4 — стоп.\n2. **PostgreSQL** — локальный 16 на `127.0.0.1:5432`, координаты как в CI: `DB_CONNECTION=pgsql DB_HOST=127.0.0.1\n   DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret`. Имя БД обязано оканчиваться на `_test`\n   (проверяет `scripts/db-preflight.sh`). Создание роли и БД — **owner gate O-1**:\n   `sudo -u postgres psql -c \"CREATE ROLE vaulter LOGIN PASSWORD 'secret' CREATEDB\" && sudo -u postgres createdb -O vaulter vaulter_test`.\n3. **MySQL 8** — локальный `127.0.0.1:3306`, `vaulter`/`secret`, БД `vaulter_test` — **owner gate O-2** (нужен с P0.3):\n   `sudo mysql -e \"CREATE USER 'vaulter'@'localhost' IDENTIFIED BY 'secret'; CREATE DATABASE vaulter_test; GRANT ALL ON vaulter_test.* TO 'vaulter'@'localhost';\"`.\n4. Docker не обязателен до P4.5 (хаб в docker-compose); тогда — отдельный owner gate при дизайне P4.\n5. Тесты конкурентности — только PostgreSQL (OPUS 13, правило 6) через харнесс P0.2."
+    },
+    {
+      "id": "Why",
+      "title": "Why",
+      "text": "Хост уже содержит PHP 8.4 со всеми нужными расширениями и нативные PG/MySQL — это быстрее и детерминированнее Docker.\nРоли БД требуют прав суперпользователя, которых у агента нет."
+    },
+    {
+      "id": "Consequences",
+      "title": "Consequences",
+      "text": "P0.1 начинается с `scripts/php84 --check` и `scripts/db-preflight.sh`; при красном preflight item останавливается с\nточной командой owner gate, не обходит его SQLite-прогоном."
+    }
+  ]
+}
