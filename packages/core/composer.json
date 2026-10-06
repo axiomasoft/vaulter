@@ -30,7 +30,8 @@
         "illuminate/database": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0",
         "spatie/laravel-package-tools": "^1.92",
-        "staudenmeir/laravel-adjacency-list": "^1.0"
+        "staudenmeir/laravel-adjacency-list": "^1.0",
+        "psr/http-message": "^1.1|^2.0"
     },
     "require-dev": {
         "axioma-studio/vaulter-drive": "self.version",

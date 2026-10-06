@@ -1,3 +1,9 @@
+Vaulter\Contracts\Access\AccessOperations
+  explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
+  grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
+
 Vaulter\Contracts\Access\EnumeratesRoleSubjects
 
 
@@ -9,6 +15,10 @@ Vaulter\Contracts\Access\PermissionDriver
   override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
   resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision
   subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
+
+Vaulter\Contracts\Activity\ActivityOperations
+  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  forNode(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
 
 Vaulter\Contracts\Cas\BlobStore
   attach(\Vaulter\Models\Drive\FileRevision $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
@@ -67,6 +77,38 @@ Vaulter\Contracts\Drive\DriveHandleFactory
   forOwner(\Illuminate\Database\Eloquent\Model $entity, string $panel): \Vaulter\Contracts\Drive\DriveHandle
   forStorage(\Vaulter\Models\Drive\Drive $storage): \Vaulter\Contracts\Drive\DriveHandle
 
+Vaulter\Contracts\Drive\FileOperations
+  addRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Models\Drive\FileRevision
+  read(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|null|string $revision = null): \Vaulter\Data\Drive\FileStream
+  restoreRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision): \Vaulter\Models\Drive\FileRevision
+  revisions(\Vaulter\Models\Drive\Node|int|string $file, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  upload(\Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\UploadOptions $options = null): \Vaulter\Models\Drive\Node
+
+Vaulter\Contracts\Drive\FolderOperations
+  create(string $name, \Vaulter\Models\Drive\Node|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Models\Drive\Node
+
+Vaulter\Contracts\Drive\NodeContentLifecycle
+  copy(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy): \Vaulter\Data\Drive\CopyResult
+  kind(): \Vaulter\Enums\Drive\NodeKind
+  purge(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
+
+Vaulter\Contracts\Drive\NodeOperations
+  abilities(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  children(\Vaulter\Models\Drive\Node|int|null|string $folder = null, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
+  copy(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination = null, ?\Vaulter\Data\Drive\CopyOptions $options = null): \Vaulter\Models\Drive\Node
+  find(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
+  move(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination, ?\Vaulter\Data\Drive\MoveOptions $options = null): \Vaulter\Models\Drive\Node
+  rename(\Vaulter\Models\Drive\Node|int|string $node, string $name, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
+  search(string $term, ?\Vaulter\Data\Drive\SearchOptions $options = null): \Vaulter\Data\Drive\NodePage
+  trash(\Vaulter\Models\Drive\Node|int|string $node, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
+  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Drive\UpdateNodeOptions $options): \Vaulter\Models\Drive\Node
+
+Vaulter\Contracts\Drive\TrashOperations
+  empty(): int
+  list(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
+  purge(\Vaulter\Models\Drive\Node|int|string $node): void
+  restore(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\RestoreOptions $options = null): \Vaulter\Models\Drive\Node
+
 Vaulter\Contracts\Handlers\DocumentContent
   contentHash(): string
   sizeInBytes(): int
@@ -110,6 +152,11 @@ Vaulter\Contracts\Observability\MetricsRecorder
 
 Vaulter\Contracts\Observability\TraceRecorder
   span(string $name, callable $operation, array $attributes = []): mixed
+
+Vaulter\Contracts\Sharing\ShareOperations
+  create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
+  list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
 
 Vaulter\Contracts\Sharing\ShareTokenGenerator
   generate(): string
@@ -269,6 +316,122 @@ Vaulter\Data\Drive\NodePage
   getIterator(): \Traversable
   hasMore(): bool
   jsonSerialize(): array
+
+Vaulter\Data\Drive\CopyOptions
+  __construct(?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename)
+  make(): \self
+  name(?string $name): \self
+  onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly ?string $name
+  readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Data\Drive\CopyResult
+  __construct(int $addedBytes)
+  readonly int $addedBytes
+
+Vaulter\Data\Drive\CreateFolderOptions
+  __construct(\Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail)
+  make(): \self
+  onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Data\Drive\FileStream
+  __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, \Vaulter\Models\Drive\FileRevision $revision)
+  readonly \Vaulter\Models\Drive\FileRevision $revision
+  readonly int $size
+  readonly mixed $stream
+  readonly string $filename
+  readonly string $mimeType
+  readonly string $sha256
+
+Vaulter\Data\Drive\ListOptions
+  __construct(int $perPage = 50, ?string $cursor = null, \Vaulter\Enums\Drive\NodeSort $sort = Vaulter\Enums\Drive\NodeSort::Default, bool $descending = false, array $kinds = [])
+  cursor(?string $cursor): \self
+  descending(bool $descending): \self
+  kinds(array $kinds): \self
+  make(): \self
+  perPage(int $perPage): \self
+  sort(\Vaulter\Enums\Drive\NodeSort $sort, bool $descending = false): \self
+  readonly ?string $cursor
+  readonly \Vaulter\Enums\Drive\NodeSort $sort
+  readonly array $kinds
+  readonly bool $descending
+  readonly int $perPage
+
+Vaulter\Data\Drive\MoveOptions
+  __construct(?int $expectedSequence = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail)
+  expectedSequence(?int $expectedSequence): \self
+  make(): \self
+  onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly ?int $expectedSequence
+  readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
+
+Vaulter\Data\Drive\RestoreOptions
+  __construct(\Vaulter\Models\Drive\Node|int|null|string $destination = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename)
+  destination(\Vaulter\Models\Drive\Node|int|null|string $destination): \self
+  make(): \self
+  onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
+  readonly \Vaulter\Models\Drive\Node|int|null|string $destination
+
+Vaulter\Data\Drive\RevisionOptions
+  __construct(?int $expectedSequence = null, ?string $declaredMimeType = null)
+  declaredMimeType(?string $declaredMimeType): \self
+  expectedSequence(?int $expectedSequence): \self
+  make(): \self
+  readonly ?int $expectedSequence
+  readonly ?string $declaredMimeType
+
+Vaulter\Data\Drive\SearchOptions
+  __construct(int $perPage = 50, ?string $cursor = null, \Vaulter\Models\Drive\Node|int|null|string $within = null)
+  cursor(?string $cursor): \self
+  make(): \self
+  perPage(int $perPage): \self
+  within(\Vaulter\Models\Drive\Node|int|null|string $within): \self
+  readonly ?string $cursor
+  readonly \Vaulter\Models\Drive\Node|int|null|string $within
+  readonly int $perPage
+
+Vaulter\Data\Drive\UpdateNodeOptions
+  __construct(?bool $pinned = null, ?int $position = null, ?int $expectedSequence = null)
+  expectedSequence(?int $expectedSequence): \self
+  make(): \self
+  pinned(?bool $pinned): \self
+  position(?int $position): \self
+  readonly ?bool $pinned
+  readonly ?int $expectedSequence
+  readonly ?int $position
+
+Vaulter\Data\Drive\UploadOptions
+  __construct(\Vaulter\Models\Drive\Node|int|null|string $parent = null, ?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null)
+  declaredMimeType(?string $declaredMimeType): \self
+  make(): \self
+  name(?string $name): \self
+  onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  parent(\Vaulter\Models\Drive\Node|int|null|string $parent): \self
+  readonly ?string $declaredMimeType
+  readonly ?string $name
+  readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
+  readonly \Vaulter\Models\Drive\Node|int|null|string $parent
+
+Vaulter\Data\Drive\UploadSource
+  declaredMimeType(): ?string
+  declaredSize(): ?int
+  fromPath(string $path, ?string $name = null): \self
+  fromPsrStream(\Psr\Http\Message\StreamInterface $stream, string $name): \self
+  fromStream($stream, string $name, ?int $size = null): \self
+  fromString(string $bytes, string $name): \self
+  fromUploadedFile(\Illuminate\Http\UploadedFile $file): \self
+  name(): string
+
+Vaulter\Data\Access\GrantInput
+  __construct(\Vaulter\Access\ValueObjects\Subject $subject, \Vaulter\Enums\Access\GrantLevel $level, \Vaulter\Enums\Access\Effect $effect = Vaulter\Enums\Access\Effect::Allow, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Subtree, int $permissions = 0, ?\Illuminate\Support\Carbon $expiresAt = null)
+  readonly ?\Illuminate\Support\Carbon $expiresAt
+  readonly \Vaulter\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Enums\Access\Effect $effect
+  readonly \Vaulter\Enums\Access\GrantLevel $level
+  readonly \Vaulter\Enums\Access\GrantScope $scope
+  readonly int $permissions
 
 Vaulter\Access\ValueObjects\AccessScope
   __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null, int|null|string $tenantId = null)
@@ -447,6 +610,17 @@ Vaulter\Enums\Access\Ability
   Share = share
   Manage = manage
   Delete = delete
+
+Vaulter\Enums\Drive\OnNameConflict
+  Fail = fail
+  Rename = rename
+  AddRevision = add_revision
+
+Vaulter\Enums\Drive\NodeSort
+  Default = default
+  Name = name
+  UpdatedAt = updated_at
+  Size = size
 
 Vaulter\ValueObjects\Access\ActorRef::SYSTEM_TYPE = vaulter:system
 

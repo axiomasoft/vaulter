@@ -8,11 +8,14 @@ use Vaulter\Access\ExactListing;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Drive\NodeSort;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -312,7 +315,8 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         $blocks[] = vaulterSnapshotInterface($class);
     }
 
-    foreach ([AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, ScanPolicySpec::class] as $class) {
+    $driveValues = array_filter(vaulterSnapshotContracts(__DIR__.'/../../src/Data/Drive', 'Vaulter\Data\Drive'), static fn (string $class): bool => $class !== NodePage::class);
+    foreach (array_merge($driveValues, [GrantInput::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, ScanPolicySpec::class]) as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
@@ -326,7 +330,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         OperationKind::cases(),
     ));
     $blocks[] = vaulterSnapshotInterface(PermissionDriverContractTests::class);
-    foreach ([Permission::class, GrantLevel::class, Ability::class] as $enum) {
+    foreach ([Permission::class, GrantLevel::class, Ability::class, OnNameConflict::class, NodeSort::class] as $enum) {
         $blocks[] = $enum."\n".implode("\n", array_map(static fn ($case): string => '  '.$case->name.' = '.$case->value, $enum::cases()));
     }
     $blocks[] = ActorRef::class.'::SYSTEM_TYPE = '.ActorRef::SYSTEM_TYPE;

@@ -1,0 +1,240 @@
+{
+  "item": "PLAN2.P3.2",
+  "status": "done",
+  "route": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "session": "01a112c5-3308-7960-9680-cbad571cd8b2"
+  },
+  "base_commit": "bad3ba7fdf864ef67bc215523cb0f4c2bfe8755c",
+  "candidate_files": "candidate-files.json",
+  "validation": {
+    "V1": {
+      "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/PublicApi packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "cwd": ".",
+      "exit": 0,
+      "log": "V1.log",
+      "executed_tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "assertions": 751,
+      "completed_at": "2026-10-06T20:00:46.593114+00:00"
+    },
+    "V2": {
+      "exit": 0,
+      "evidence": "V1 literal reflection tests, staged activation map below, new namespaces/imports verified",
+      "introduced_symbols": "Seven Operations, NodeContentLifecycle, eleven Drive values/options plus preserved NodePage, CopyResult, GrantInput and two enums. Source includes five factories; no activation claim."
+    },
+    "V80": {
+      "exit": 0,
+      "commands": [
+        {
+          "command": [
+            "scripts/php84",
+            "vendor/bin/pint",
+            "--test",
+            "packages/core/src/Contracts/Access/AccessOperations.php",
+            "packages/core/src/Contracts/Activity/ActivityOperations.php",
+            "packages/core/src/Contracts/Drive/FileOperations.php",
+            "packages/core/src/Contracts/Drive/FolderOperations.php",
+            "packages/core/src/Contracts/Drive/NodeContentLifecycle.php",
+            "packages/core/src/Contracts/Drive/NodeOperations.php",
+            "packages/core/src/Contracts/Drive/TrashOperations.php",
+            "packages/core/src/Contracts/Sharing/ShareOperations.php",
+            "packages/core/src/Data/Access/GrantInput.php",
+            "packages/core/src/Data/Drive/CopyOptions.php",
+            "packages/core/src/Data/Drive/CopyResult.php",
+            "packages/core/src/Data/Drive/CreateFolderOptions.php",
+            "packages/core/src/Data/Drive/FileStream.php",
+            "packages/core/src/Data/Drive/ListOptions.php",
+            "packages/core/src/Data/Drive/MoveOptions.php",
+            "packages/core/src/Data/Drive/RestoreOptions.php",
+            "packages/core/src/Data/Drive/RevisionOptions.php",
+            "packages/core/src/Data/Drive/SearchOptions.php",
+            "packages/core/src/Data/Drive/UpdateNodeOptions.php",
+            "packages/core/src/Data/Drive/UploadOptions.php",
+            "packages/core/src/Data/Drive/UploadSource.php",
+            "packages/core/src/Enums/Drive/NodeSort.php",
+            "packages/core/src/Enums/Drive/OnNameConflict.php",
+            "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+            "packages/core/tests/PublicApi/OperationsContractTest.php",
+            "packages/core/tests/PublicApi/OptionsTest.php",
+            "packages/core/tests/PublicApi/SequenceOptionContractTest.php",
+            "packages/core/tests/PublicApi/UploadSourceTest.php"
+          ],
+          "cwd": ".",
+          "exit": 0,
+          "log": "pint-test.log"
+        },
+        {
+          "command": "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+          "cwd": ".",
+          "exit": 0,
+          "log": "phpstan.log",
+          "errors": 0
+        }
+      ]
+    },
+    "V81": {
+      "exit": 0,
+      "evidence": "V1: SequenceOptionContractTest, OptionsTest, UploadSourceTest; positive/current-offset/non-seekable/PSR ownership tests plus negative inputs. Contract-only I2/I9; no new auth or data runtime guard; injected fault non-applicable per normative V81."
+    },
+    "V82": {
+      "command": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "cwd": ".",
+      "exit": 0,
+      "log": "V82.log",
+      "units": 1438,
+      "sections": 254,
+      "violations": 0,
+      "completed_at": "2026-10-06T19:59:30.360109+00:00"
+    }
+  },
+  "invariant_self_check": {
+    "applicable": [
+      "I2: pure typed Node/key unions do not infer scope; guard activation remains P3.3",
+      "I9: source hint metadata explicitly untrusted, no reading in factories, caller resources/PSR not closed/detached/rewound, owned readers released in finally",
+      "I18/C07: optional nonnegative signed int64 sequence options; negative and overflow inputs rejected"
+    ],
+    "non_applicable": "I1/I3–I8/I10–I17 runtime auth/profile/locking/scan/idempotency/quota/tenancy/share work is unchanged. No interfering-lock pair introduced; no schema/network/public egress activation. Existing I2 locator and I9 staging remain under their owners.",
+    "contracts": [
+      "security-correction-contract#Authority/#Sequence",
+      "P3-security-contracts#Authority/#Sequence/#Evidence/#Acceptance"
+    ]
+  },
+  "activation_map": {
+    "owner": "PLAN2.P3.3",
+    "atomic_boundary": "Contracts+concrete DriveHandle/Factory+VaulterManager/facade+live consumers+golden in one candidate; no wrappers or aliases",
+    "handle_existing_methods": {
+      "model()": "model(): Drive (preserved)",
+      "profile()": "profile(): Profile (preserved)",
+      "root()": "root(): Node, scoped locator and View",
+      "createFolder(name,parent,actorId)": "folders()->create(name,parent,CreateFolderOptions)",
+      "upload(source,into,name,mimeType,originalName,actorId)": "files()->upload(source: typed UploadSource preserving originalName ?? client/source filename,options: UploadOptions(parent: into,name: name,declaredMimeType: mimeType)); never collapse explicit originalName into stored-name override; explicit actor on handle",
+      "uploadVersion(target,source,mimeType,originalName,actorId)": "files()->addRevision(file: target,source: typed UploadSource preserving originalName ?? client/source filename,options: RevisionOptions(declaredMimeType: mimeType)): FileRevision; existing node name unchanged; HTTP returns located Node",
+      "move(node,into,actorId)": "nodes()->move(node,destination: into,options: MoveOptions)",
+      "rename(node,name,actorId)": "nodes()->rename(node,name,expectedSequence: null)",
+      "copy(node,into,name,actorId)": "nodes()->copy(node,destination: into,options: CopyOptions(name: name))",
+      "trash(node,actorId)": "nodes()->trash(node,expectedSequence: null)",
+      "restore(node,actorId)": "trash()->restore(node,options: RestoreOptions)",
+      "forceDelete(node,actorId)": "trash()->purge(node)",
+      "list(folder)": "nodes()->children(folder,ListOptions): NodePage; legacy HTTP adapter retains current shape"
+    },
+    "handle_added": [
+      "actor(): Actor",
+      "actingAs(Authorizable $user): static",
+      "asSystem(string $reason): static",
+      "withCorrelationId(string $correlationId): static",
+      "nodes(): NodeOperations",
+      "folders(): FolderOperations",
+      "files(): FileOperations",
+      "trash(): TrashOperations",
+      "access(): AccessOperations",
+      "shares(): ShareOperations",
+      "activity(): ActivityOperations",
+      "extension(string $operations): object, template T of object/class-string<T>/return T"
+    ],
+    "manager_existing_methods": {
+      "for(entity,panel)": "drive(ownerOrDrive: entity,profile: panel)",
+      "forStorage(storage)": "drive(ownerOrDrive: storage)",
+      "profiles()": "profiles(): ProfileRegistry (preserved)",
+      "handlers()": "handlers(): Contracts\\Handlers\\FileHandlerRegistry (preserved)",
+      "registerDocumentType(type,definition)": "Documents::types()->register(type,definition), minimal registry preserves current definitions",
+      "documentTypes()": "Documents::types() registry reads; documents consumer calls its current reader",
+      "registerExporter(exporter)": "Documents::exporters()->register(exporter), minimal registry preserves current interface/map",
+      "exporter(format)": "Documents::exporters() format lookup, existing NodeExportService direct dependency migrates",
+      "exporterFormats()": "Documents::exporters() supported format keys"
+    },
+    "manager_added": [
+      "findDrive(Model $owner,?string $profile=null): ?DriveHandle",
+      "permissions(): PermissionDriverManager",
+      "withoutTenancy(Closure $callback): mixed"
+    ],
+    "factory": {
+      "forOwner(Model $entity,string $panel)": "forOwner(Model $owner,string $profile): DriveHandle",
+      "forStorage(Drive $storage)": "forDrive(Drive $drive): DriveHandle",
+      "added": "findForOwner(Model $owner,string $profile): ?DriveHandle"
+    },
+    "identity": "Remove every public actorId parameter; explicit actingAs(user) or asSystem(reason). Current auth resolves lazily per operation, no authorization-result cache. Model inputs re-fetched by key in scoped locator, profile default from registry, findDrive read-only.",
+    "callers": {
+      "packages/drive/src/Http/Controllers/NodeController.php": "driveFor->manager.drive; create/upload/addRevision/move/rename/trash/restore/purge and pagination adapters; include copy() explicitly",
+      "packages/drive/src/DriveHandleFactory.php": "renamed parameters/forDrive plus new read-only findForOwner",
+      "packages/filament/src/Resources/NodeResource.php": "all five manager/handle mutation calls route through actor-bound Operations",
+      "packages/core/src/VaulterManager.php": "new canonical facade methods and factory dispatch, document/export registration moved out of core",
+      "packages/core/src/Facades/Vaulter.php": "docblock precisely new six manager methods",
+      "packages/core/src/Contracts/Handlers/DocumentExporter.php": "current registration documentation moves to Documents exporter registry; core does not import package",
+      "packages/documents/src/Export/NodeExportService.php": "move manager exporter/format dependency to minimal Documents registry",
+      "packages/documents/src/Providers/BindingsRegistrar.php": "bind minimal DocumentsManager/types/exporters; full Document Operations remain P4",
+      "packages/core/src/Http/Controllers/Activity/ActivityController.php": "P3.4 core Activity Operations integration; query adapters preserve current HTTP shape"
+    },
+    "dto_migration_owner": "PLAN2.P3.4",
+    "dto_map": {
+      "GrantNodeAccessInput": "GrantInput(Subject $subject,GrantLevel $level,Effect $effect=Allow,GrantScope $scope=Subtree,int $permissions=0,?Carbon $expiresAt=null); grantedBy derived solely from OperationContext.actor",
+      "ShareLinkInput": "existing fields permissions,level,scope,password,requireLogin,allowDiscovery,expiresAt,maxUses; remove trusted grantedBy in P3.4; MintedShareLink existing one-time result preserved",
+      "ShareLinkInput callers": "packages/core/src/Http/Controllers/Sharing/ShareController.php, packages/core/src/Http/Requests/Sharing/StoreShareLinkRequest.php, packages/core/src/Actions/Sharing/CreateShareLinkAction.php: P3.4 remove trusted grantedBy and derive actor from OperationContext; preserve one-time MintedShareLink",
+      "GrantNodeAccessAction/GrantController": "switch type and construct GrantInput without supplied grantedBy at live HTTP boundary, authoritative actor in core Operations; actual HTTP paths: Http/Controllers/Access/GrantController.php and Http/Requests/Access/StoreNodeGrantRequest.php"
+    },
+    "return_baselines": {
+      "abilities": "Access\\ValueObjects\\NodeAbilities",
+      "explain": "Access\\ValueObjects\\AccessExplanation",
+      "mint": "Data\\Sharing\\MintedShareLink",
+      "revision_operations": "Models\\Drive\\FileRevision",
+      "node_lists": "Data\\Drive\\NodePage"
+    },
+    "future_policy": "Revision/activity feeds support perPage/cursor only; implementations reject sort/descending/kinds per P3-design#ReadAlgorithms. Streaming ingest and scan evidence remain P3.7.",
+    "upload_source_callers": {
+      "public PHP": "New API takes UploadSource explicitly: fromUploadedFile for UploadedFile; fromPath for local file paths (SplFileInfo -> getPathname); fromStream for readable resources at current offset; fromString for literal bytes; fromPsrStream for PSR streams. Remove old mixed toStream helper, no aliases or guessing strings as paths.",
+      "HTTP NodeController": "Use request UploadedFile -> fromUploadedFile preserving client name; optional stored node name supplied independently in UploadOptions.name. Include create/upload/addRevision/move/rename/copy/trash/restore/purge calls.",
+      "originalName": "For live typed PHP adapters, select explicit name parameter on path/resource/string/PSR factories. UploadedFile canonical factory uses client name; new PHP callers with explicit different originalName construct a stream/path source with that name. No new UploadSource public override method.",
+      "PSR": "Preserve caller object/offset; never (string), getContents, detach or close. Future ingest reader consumes read(65536) chunks and caller resource remains open; package-owned handles released in finally. P3.3 action adapter must not invoke removed whole-buffer toStream helper. Full unified staging P3.7.",
+      "MIME": "RevisionOptions/UploadOptions.declaredMimeType ?? UploadSource.declaredMimeType() remains a hint, not persisted detected MIME."
+    }
+  },
+  "dependency": {
+    "require": "psr/http-message ^1.1|^2.0",
+    "composer_update_log": "composer-update.log",
+    "lock": "Root composer.lock is ignored/untracked by repository policy; synchronized locally only, no force-add. Composer output: only path-package core metadata update, zero dependency installs/removals.",
+    "sibling_changes": []
+  },
+  "deferred": "P3.3 activation; P3.4 trusted DTO/audit migration; P3.7 staging/scanning. Full suites/PG/MySQL/barrier/phase audit remain P3.8.",
+  "preexisting_dirty": "Owner design/decisions/knowledge/global plan/view changes preserved; excluded from candidate and scoped commit.",
+  "review": {
+    "verdict": "GREEN",
+    "blockers": 0,
+    "completed_rounds": 1,
+    "session_id": "32b56910-d4ad-443e-8392-97f3e94a380c",
+    "provider": "grok",
+    "model": "grok-4.7",
+    "reasoning_effort": "high",
+    "context_option": null,
+    "native_exit": 0,
+    "stop_reason": "end_turn",
+    "candidate_manifest": "candidate-files.json",
+    "candidate_unchanged": true,
+    "completed_at": "2026-10-06T20:17:46.998783+00:00",
+    "read_only": true,
+    "verdict_file": "review-verdict.txt",
+    "future_owner_notes": [
+      "P3.3 explicit five source factories, no PSR whole-buffer conversion",
+      "P3.3 original/client filename on UploadSource; options.name stored-name override, never collapse distinct originalName",
+      "P3.3 NodeController.copy live callsite",
+      "P3.4 ShareController/StoreShareLinkRequest/CreateShareLinkAction trusted grantedBy removal",
+      "P3.3 raw sequence and revision/activity list field validation"
+    ],
+    "disposition": "No product correction required. Nonblocking future-owner clarifications incorporated into staged activation map. No tests rerun because product, test, dependency and validation inputs are unchanged."
+  },
+  "structural_checks": {
+    "plan_check": {
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0,
+      "log": "plan-check.log"
+    },
+    "render_check": {
+      "exit": 0,
+      "log": "plan-render-check.log"
+    }
+  }
+}

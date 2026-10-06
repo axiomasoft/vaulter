@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Typed Operations and immutable inputs (AD06, AD17, AD18; PLAN2.P3.2)
+
+Core adds seven typed Operations interfaces, immutable `Data\Drive` options,
+`UploadSource`, bytes-only `FileStream`, and lifecycle/copy result contracts.
+`Node|int|string` arguments and named options replace positional source/actor
+arguments in the prepared target API. Existing DriveHandle/manager methods are
+switched atomically in PLAN2.P3.3; these additive contracts do not activate them.
+`GrantInput` excludes caller-supplied `grantedBy`; live grant/share DTO callers
+migrate in PLAN2.P3.4.
+
+Use `UploadSource::fromUploadedFile/fromPath/fromStream/fromString/fromPsrStream`.
+Readers consume the current position and leave caller resources and PSR streams
+open. Path/string readers belong to the package and must be released in `finally`.
+Declared MIME/size are hints; trusted facts are computed by ingest in PLAN2.P3.7.
+PSR streams stay typed and are read in chunks; core directly requires
+`psr/http-message` (^1.1 or ^2.0). FileStream carries bytes and revision metadata.
+
+Options support `make()` and immutable fluent setters. List/search page sizes
+must be 1–200. Optional expectedSequence accepts nonnegative signed int64 values;
+PHP calls retain the nullable default. `AddRevision` is permitted only on uploads;
+other conflict options reject it. NodeSort applies to node lists; revision/activity
+Operations validate their supported list fields when implemented.
+
 ### Profile permission drivers and Comment (PLAN2.P3.5, OPUS D11 / AD01)
 
 `Permission::Comment = 32` is independent of Read. `Permission::all()` replaces

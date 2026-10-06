@@ -1,0 +1,75 @@
+{
+  "item": "PLAN2.P3.2",
+  "prepared_at": "2026-10-06T19:53:53.610460+00:00",
+  "runtime": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "php": "8.4.26"
+  },
+  "base_commit": "bad3ba7fdf864ef67bc215523cb0f4c2bfe8755c",
+  "packages": [
+    "core"
+  ],
+  "impact": [
+    "Seven additive Operations contracts; lifecycle and result prerequisites",
+    "Immutable options and enums; caller-owned resource/PSR readers and owned path/string descriptors",
+    "GrantInput additive DTO without trusted grantedBy; old callers switch in P3.4",
+    "Core public golden; staged activation map, docs and direct PSR dependency"
+  ],
+  "callers": "No existing Operations callers; DriveHandle/Factory/VaulterManager/Facades and existing grant/share DTO consumers retain current signatures. Switch map for P3.3 only.",
+  "inputs": [
+    "packages/core/src/Contracts",
+    "packages/core/src/Data",
+    "packages/core/src/Enums",
+    "packages/core/tests/PublicApi",
+    "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+    "tests/Pest.php",
+    "phpunit.xml",
+    "composer.lock",
+    "packages/core/composer.json",
+    "phpstan.neon",
+    "audits/2026-09-29-stable-audit/opus/05-php-api.md"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/PublicApi packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "cwd": ".",
+      "expect": "exit0, no failures/skips; pure PHPUnit tests, no database migration or Testbench boot"
+    },
+    {
+      "id": "V2",
+      "procedure": "Reflection test compares literal 05 interfaces/constructor/factory signatures, defaults, union types and actual enums; activation map covers old handle/manager/factory calls."
+    },
+    {
+      "id": "V80",
+      "commands": [
+        "scripts/php84 vendor/bin/pint --test <actual owning PHP paths recorded in changed-php.json>",
+        "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress"
+      ],
+      "cwd": "."
+    },
+    {
+      "id": "V81",
+      "procedure": "I2 contract-only: model unions establish no authority, no activation; I9 positive/negative source tests (current offset, non-seekable, no PSR string conversion/detach/close, own handles finally, safe path exceptions), ranges and AddRevision misuse tests. New runtime security guard fault injection non-applicable."
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "cwd": "."
+    }
+  ],
+  "isolation": {
+    "database": ":memory:",
+    "files": "Only tempnam paths and tmpfile resources created/closed/deleted by own pure tests; no app storage"
+  },
+  "barrier": "PLAN2.P3.8 owns full non-mutation core/consumer/PG/MySQL checks; no changed sibling, persistence/schema/queue/concurrency/tenancy/egress enforcement here.",
+  "review": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_parameter": false,
+    "timing": "one fresh read-only session after final green affected checks"
+  }
+}
