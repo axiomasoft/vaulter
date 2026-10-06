@@ -10,6 +10,8 @@ use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\NodePage;
+use Vaulter\Data\Sharing\MintedShareLink;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
@@ -27,8 +29,11 @@ use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Operations\AccessOperations;
+use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\ShareOperations;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileProvider;
 use Vaulter\Profiles\ProfileRegistry;
@@ -316,7 +321,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     }
 
     $driveValues = array_filter(vaulterSnapshotContracts(__DIR__.'/../../src/Data/Drive', 'Vaulter\Data\Drive'), static fn (string $class): bool => $class !== NodePage::class);
-    foreach (array_merge($driveValues, [GrantInput::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, ScanPolicySpec::class]) as $class) {
+    foreach (array_merge($driveValues, [GrantInput::class, ShareLinkInput::class, MintedShareLink::class, AccessOperations::class, ShareOperations::class, ActivityOperations::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, ScanPolicySpec::class]) as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {

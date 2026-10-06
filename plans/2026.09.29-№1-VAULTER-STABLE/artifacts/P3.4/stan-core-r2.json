@@ -1,0 +1,15 @@
+{
+  "id": "stan-core-r2",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+  "started_at": 1791320862.6859803,
+  "duration_seconds": 5.897,
+  "exit": 0,
+  "output": "stan-core-r2.log",
+  "input_fingerprint": "64f2a85f3e7846a8ed4291b3d11c71d5c3c0dfe99bd73f6e769b211abe7c4296",
+  "summary": {
+    "tool": "phpstan",
+    "result": "passed",
+    "errors": 0
+  }
+}

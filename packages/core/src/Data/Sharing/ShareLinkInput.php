@@ -30,6 +30,5 @@ final readonly class ShareLinkInput
         public bool $allowDiscovery = false,
         public ?Carbon $expiresAt = null,
         public ?int $maxUses = null,
-        public int|string|null $grantedBy = null,
     ) {}
 }

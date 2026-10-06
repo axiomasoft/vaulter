@@ -6,6 +6,7 @@ namespace Vaulter\Events\Sharing;
 
 use Illuminate\Support\Str;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A bearer share-link was minted on a node (§2.7 / M2c). Carries the persisted
@@ -27,6 +28,8 @@ final readonly class NodeShareCreated
         public NodeShare $share,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

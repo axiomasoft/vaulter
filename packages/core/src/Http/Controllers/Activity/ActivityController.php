@@ -7,143 +7,46 @@ namespace Vaulter\Http\Controllers\Activity;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Vaulter\Access\AccessResolver;
+use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Enums\Events\EventType;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Activity\ActivityResource;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Activity\ActivityReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Operations\ActivityOperations;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
+use Vaulter\ValueObjects\Access\Actor;
 
-/**
- * The read surface over the append-only activity feed (§2.9 / M2c-activity): the
- * activity for a storage tree or a single node, cursor-paginated newest-first.
- *
- * "Recipients resolved at READ" is exactly this controller: the feed is queried by
- * storage/node scope (no notification rows, no per-user fan-out). Authorization is
- * Ability::View on the scope through the AccessResolver — a node feed needs View on
- * the node; a storage feed needs View on its root node. A denial 403s via
- * PermissionDeniedException; an unauthenticated request is denied (no actor ⇒ no
- * grant). Thin — every read is repository work, the Resource shapes the response.
- */
 final class ActivityController extends Controller
 {
-    public function __construct(
-        private readonly AccessResolver $access,
-        private readonly ActivityReadRepository $activity,
-        private readonly NodeReadRepository $nodes,
-        private readonly MetricsRecorder $metrics,
-    ) {}
+    public function __construct(private readonly MetricsRecorder $metrics) {}
 
-    /**
-     * The feed for a whole storage tree. Authorized by View on the storage's root
-     * node (seeing the storage = being able to view its root).
-     */
     public function forStorage(Request $request, Drive $storage): AnonymousResourceCollection
     {
-        $root = $this->rootNodeOf($storage);
-
-        $this->guardView($request, $root);
-
-        return $this->metrics->timing(
-            name: 'vaulter_activity_feed_duration_seconds',
-            operation: function () use ($request, $storage): AnonymousResourceCollection {
-                $feed = $this->activity
-                    ->forStorage($storage, $this->verb($request))
-                    ->cursorPaginate(perPage: $this->perPage($request))
-                    ->withQueryString();
-
-                return ActivityResource::collection($feed);
-            },
-            labels: [
-                'filtered' => $this->verb($request) !== null,
-                'tier' => LoadTier::label(),
-            ],
-        );
+        return $this->feed($request, $storage);
     }
 
-    /**
-     * The feed for a single node (events targeting it), newest-first. Authorized by
-     * View on the node.
-     */
     public function forNode(Request $request, Node $node): AnonymousResourceCollection
     {
-        $this->guardView($request, $node);
-
-        return $this->metrics->timing(
-            name: 'vaulter_activity_feed_duration_seconds',
-            operation: function () use ($request, $node): AnonymousResourceCollection {
-                $feed = $this->activity
-                    ->forNode($node, $this->verb($request))
-                    ->cursorPaginate(perPage: $this->perPage($request))
-                    ->withQueryString();
-
-                return ActivityResource::collection($feed);
-            },
-            labels: [
-                'filtered' => $this->verb($request) !== null,
-                'tier' => LoadTier::label(),
-            ],
-        );
+        return $this->feed($request, $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id), $node);
     }
 
-    /**
-     * The storage's root folder node, resolved through the read repository (the
-     * swappable node model). A storage always has a root (provisioned with it); a
-     * miss is a corrupt state and 404s.
-     */
-    private function rootNodeOf(Drive $storage): Node
-    {
-        $root = $storage->root_node_id === null ? null : $this->nodes->find($storage->root_node_id);
-
-        if (!$root instanceof Node) {
-            abort(404);
-        }
-
-        return $root;
-    }
-
-    /**
-     * The optional verb filter from the query string, or null. An unknown verb is
-     * ignored (the feed simply isn't narrowed) rather than 422 — the feed is a
-     * forgiving read surface.
-     */
-    private function verb(Request $request): ?EventType
-    {
-        $value = $request->string('verb')->toString();
-
-        return $value === '' ? null : EventType::tryFrom($value);
-    }
-
-    /**
-     * Authorize View on the node through the AccessResolver (H.2), throwing 403 on a
-     * denial. An unauthenticated request is denied (no actor ⇒ no grant).
-     */
-    private function guardView(Request $request, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, Ability::View, $node)) {
-            throw PermissionDeniedException::forAbility(Ability::View->value);
-        }
-    }
-
-    private function authorizable(Request $request): ?Authorizable
+    private function feed(Request $request, Drive $drive, ?Node $node = null): AnonymousResourceCollection
     {
         $user = $request->user();
+        if (!$user instanceof Authorizable) {
+            throw MissingActorException::required();
+        }
+        $operations = app()->makeWith(ActivityOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($user), correlationId: (string) Str::ulid())]);
+        $verb = EventType::tryFrom($request->string('verb')->toString());
+        $cursor = $request->query('cursor');
+        $options = new ListOptions(perPage: max(1, min($request->integer('per_page', 50), 200)), cursor: is_string($cursor) ? $cursor : null);
 
-        return $user instanceof Authorizable ? $user : null;
-    }
-
-    private function perPage(Request $request): int
-    {
-        $perPage = (int) $request->integer('per_page', 50);
-
-        return max(1, min($perPage, 200));
+        return $this->metrics->timing(name: 'vaulter_activity_feed_duration_seconds', operation: fn (): AnonymousResourceCollection => ActivityResource::collection($operations->filtered(node: $node, options: $options, verb: $verb)->withQueryString()), labels: ['filtered' => $verb !== null, 'tier' => LoadTier::label()]);
     }
 }

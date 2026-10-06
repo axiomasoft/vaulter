@@ -19,34 +19,37 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
-use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Access\GrantNodeAccessInput;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\NodeGrantResource\Pages\ListNodeGrants;
-use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\AccessOperations;
+use Vaulter\Operations\OperationContext;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The per-node ACL admin surface (master plan §2.6 / §3): list, create and revoke
- * the node grants the {@see AccessResolver} folds into effective permissions. A
+ * the node grants the {@see AccessOperations} folds into effective permissions. A
  * grant addresses a subject (type + id) on a node with a level + CRUDS bits, an
  * allow|deny effect, an item|subtree scope and an optional read-time expiry.
  *
  * Every mutation flows through a CORE Action — never a direct Eloquent write:
- *   - create → {@see GrantNodeAccessAction} (idempotent upsert on the grant key);
- *   - revoke → {@see RevokeNodeAccessAction} (drops every grant a subject holds).
- * Both require Ability::Share on the target node, gated through the AccessResolver,
+ *   - create → {@see AccessOperations} (idempotent upsert on the grant key);
+ *   - revoke → {@see AccessOperations} (drops every grant a subject holds).
+ * Both require Ability::Share on the target node, gated through the AccessOperations,
  * so the panel never bypasses the ACL. The model resolves through
  * {@see app(VaulterConfig::class)->model('grant')} for swappability.
  */
@@ -75,18 +78,19 @@ final class NodeGrantResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        $nodeIds = PanelAccessScope::candidateNodeIds();
-
-        if ($nodeIds === null) {
-            return $query;
+        $ids = [];
+        $nodeClass = app(VaulterConfig::class)->model('node');
+        foreach ($nodeClass::query()->whereNull('trashed_at')->lazyById(100) as $node) {
+            try {
+                foreach (self::operations($node)->grants($node) as $row) {
+                    $ids[] = $row->getKey();
+                }
+            } catch (VaulterException) {
+                // Hidden nodes and disabled features contribute no rows.
+            }
         }
 
-        if ($nodeIds === []) {
-            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
-            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
-        }
-
-        return $query->whereIn('node_id', $nodeIds);
+        return $query->whereKey($ids);
     }
 
     #[Override]
@@ -211,10 +215,10 @@ final class NodeGrantResource extends Resource
 
             TextInput::make('permissions')
                 ->label('Extra CRUDS bits')
-                ->helperText('0–31; OR-ed on top of the level bits. Leave 0 for level-only.')
+                ->helperText('0–63; OR-ed on top of the level bits. Leave 0 for level-only.')
                 ->numeric()
                 ->minValue(0)
-                ->maxValue(31)
+                ->maxValue(Permission::all())
                 ->default(0),
 
             DateTimePicker::make('expires_at')
@@ -249,9 +253,9 @@ final class NodeGrantResource extends Resource
         /** @var string $expiresAt */
         $expiresAt = $data['expires_at'] ?? '';
 
-        app(GrantNodeAccessAction::class)->execute(
+        self::operations($node)->grant(
             node: $node,
-            data: new GrantNodeAccessInput(
+            grant: new GrantInput(
                 subject: new Subject(
                     // Filament validation already supplies these enum/string fields with their declared types.
                     type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
@@ -262,7 +266,6 @@ final class NodeGrantResource extends Resource
                 scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
                 permissions: (int) ($data['permissions'] ?? 0),
                 expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
-                grantedBy: PanelActor::id(),
             ),
         );
 
@@ -282,11 +285,7 @@ final class NodeGrantResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (NodeGrant $record): bool => self::actorCanShare($record->node))
             ->action(function (NodeGrant $record): void {
-                app(RevokeNodeAccessAction::class)->execute(
-                    node: $record->node,
-                    subject: $record->subject(),
-                    actorId: PanelActor::id(),
-                );
+                self::revokeRecord($record);
 
                 Notification::make()->title('Grant revoked')->success()->send();
             });
@@ -304,7 +303,27 @@ final class NodeGrantResource extends Resource
             return false;
         }
 
-        return app(AccessResolver::class)->can($actor, Ability::Share, $node);
+        try {
+            self::operations($node)->grants($node);
+
+            return true;
+        } catch (VaulterException) {
+            return false;
+        }
+    }
+
+    public static function revokeRecord(NodeGrant $record): void
+    {
+        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
+        self::operations($node)->revoke(node: $node, grant: $record);
+    }
+
+    private static function operations(Node $node): AccessOperations
+    {
+        $actor = PanelActor::current() ?? throw MissingActorException::required();
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+
+        return app()->makeWith(AccessOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
     }
 
     private static function resolveNode(int|string|null $id): ?Node
@@ -332,6 +351,7 @@ final class NodeGrantResource extends Resource
             ->orderBy('drive_id')
             ->orderBy('name')
             ->get()
+            ->filter(fn (Node $node): bool => self::actorCanShare($node))
             ->mapWithKeys(fn (Node $node): array => [
                 $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
             ])

@@ -6,7 +6,7 @@ namespace Vaulter\Repositories\Access;
 
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 
@@ -22,7 +22,7 @@ final class GrantStoreRepository
         private readonly VaulterConfig $vaulterConfig,
     ) {}
 
-    public function grant(Node $node, GrantNodeAccessInput $data): NodeGrant
+    public function grant(Node $node, GrantInput $data, int|string|null $grantedBy = null): NodeGrant
     {
         $model = $this->vaulterConfig->model('grant');
 
@@ -48,10 +48,11 @@ final class GrantStoreRepository
 
         $grant->forceFill([
             ...$match,
+            'tenant_id' => $node->tenant_id,
             'level' => $data->level->value,
             'permissions' => $data->permissions,
             'expires_at' => $data->expiresAt,
-            'granted_by' => $data->grantedBy,
+            'granted_by' => $grantedBy,
         ]);
         $grant->save();
 

@@ -6,6 +6,7 @@ namespace Vaulter\Events\Access;
 
 use Illuminate\Support\Str;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A per-node ACL grant was created or updated (§2.6 / H.2).
@@ -29,6 +30,8 @@ final readonly class NodeGrantCreated
         public NodeGrant $grant,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

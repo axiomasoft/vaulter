@@ -6,6 +6,7 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantLevel;
@@ -33,7 +34,11 @@ final class StoreShareLinkRequest extends VaulterFormRequest
     public function rules(SharingConfig $sharingConfig): array
     {
         return [
-            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::all()],
+            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::all(), function (string $attribute, mixed $value, \Closure $fail): void {
+                if (is_numeric($value) && ((int) $value & Permission::Comment->value) !== 0) {
+                    $fail('Anonymous shares cannot grant Comment.');
+                }
+            }],
             'level' => ['nullable', Rule::enum(GrantLevel::class)->except([GrantLevel::Commenter])],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
             'password' => ['nullable', 'string', 'min:1', 'max:255'],
@@ -49,7 +54,18 @@ final class StoreShareLinkRequest extends VaulterFormRequest
         ];
     }
 
-    public function toData(int|string|null $grantedBy): ShareLinkInput
+    /** @return list<\Closure(Validator): void> */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            $level = $this->input('level');
+            if ($this->input('permissions') === null && is_string($level) && ($resolved = GrantLevel::tryFrom($level)) !== null && ($resolved->bits() & Permission::Comment->value) !== 0) {
+                $validator->errors()->add('permissions', 'Anonymous shares cannot grant Comment. Supply explicit non-comment permissions.');
+            }
+        }];
+    }
+
+    public function toData(): ShareLinkInput
     {
         $expiresAt = $this->input('expires_at');
         $password = $this->input('password');
@@ -64,7 +80,6 @@ final class StoreShareLinkRequest extends VaulterFormRequest
             allowDiscovery: $this->boolean('allow_discovery'),
             expiresAt: is_string($expiresAt) ? Carbon::parse($expiresAt) : null,
             maxUses: is_numeric($maxUses) ? (int) $maxUses : null,
-            grantedBy: $grantedBy,
         );
     }
 

@@ -7,15 +7,16 @@ namespace Vaulter\Http\Requests\Access;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Rules\Access\RegisteredSubjectType;
 
 /**
- * Validates a grant-access request (§2.6) and assembles its GrantNodeAccessInput
+ * Validates a grant-access request (§2.6) and assembles its GrantInput
  * command. The subject (type + id), level, effect, scope and optional expiry are
  * host-supplied; the controller authorizes Share/Manage on the node first.
  */
@@ -32,16 +33,16 @@ final class StoreNodeGrantRequest extends VaulterFormRequest
             'level' => ['required', Rule::enum(GrantLevel::class)],
             'effect' => ['nullable', Rule::enum(Effect::class)],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
-            'permissions' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::all()],
             'expires_at' => ['nullable', 'date'],
         ];
     }
 
-    public function toData(int|string|null $grantedBy): GrantNodeAccessInput
+    public function toData(): GrantInput
     {
         $expiresAt = $this->input('expires_at');
 
-        return new GrantNodeAccessInput(
+        return new GrantInput(
             subject: new Subject(
                 type: $this->string('subject_type')->toString(),
                 id: $this->scalarId('subject_id'),
@@ -51,7 +52,6 @@ final class StoreNodeGrantRequest extends VaulterFormRequest
             scope: GrantScope::from($this->string('scope', GrantScope::Subtree->value)->toString()),
             permissions: (int) $this->integer('permissions', 0),
             expiresAt: is_string($expiresAt) ? Carbon::parse($expiresAt) : null,
-            grantedBy: $grantedBy,
         );
     }
 }

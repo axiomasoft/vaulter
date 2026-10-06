@@ -30,6 +30,7 @@ it('rejects every invalid share-link request boundary', function (array $payload
     'permissions must be an integer' => [['permissions' => 'read'], 'permissions'],
     'permissions cannot be negative' => [['permissions' => -1], 'permissions'],
     'permissions cannot exceed the CRUDS mask' => [['permissions' => Permission::all() + 1], 'permissions'],
+    'raw Comment bit is never anonymous' => [['permissions' => Permission::Comment->value], 'permissions'],
     'level must be a GrantLevel' => [['level' => 'super-owner'], 'level'],
     'scope must be a GrantScope' => [['scope' => 'workspace'], 'scope'],
     'password must be a string' => [['password' => ['secret']], 'password'],
@@ -70,12 +71,12 @@ it('maps the complete valid request into the persisted share contract', function
         ->and($share->granted_by)->toBe('1');
 });
 
-it('derives permissions from the selected level when no mask is supplied', function (): void {
+it('rejects a default level mask containing Comment when no explicit mask is supplied', function (): void {
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
         'level' => GrantLevel::Writer->value,
-    ])->assertCreated();
+    ])->assertUnprocessable()->assertJsonValidationErrors('permissions');
 
-    expect(NodeShare::query()->sole()->permissions)->toBe(GrantLevel::Writer->bits());
+    expect(NodeShare::query()->count())->toBe(0);
 });
 
 it('preserves an explicit zero permission mask', function (): void {

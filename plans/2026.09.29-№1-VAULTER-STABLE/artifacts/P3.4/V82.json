@@ -1,0 +1,10 @@
+{
+  "id": "V82",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+  "started_at": 1791319887.0587292,
+  "duration_seconds": 0.07,
+  "exit": 0,
+  "output": "V82.log",
+  "input_fingerprint": "8ebb903cea75dc70799cdc0ab2cc6b2af1cb0cff923d37cf6efcd87a7d49861b"
+}

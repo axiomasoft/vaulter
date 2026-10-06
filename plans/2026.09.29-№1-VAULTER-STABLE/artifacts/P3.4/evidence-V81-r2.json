@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "PLAN2.P3.4-V81-r2",
+  "check_id": "V81",
+  "subject": "PLAN2.P3.4",
+  "procedure": {
+    "procedure": "Applicable invariant self-check plus new PostgreSQL correlation red-to-green correction and repeated isolated grant-guard negative control.",
+    "cwd": "/home/vostrikov/projects/packages/vaulter"
+  },
+  "candidate": {
+    "head": "f5987542830959037ad7bba4953264b8d49325a0",
+    "dirty_digest": "b1201bd33c337ea5d8473755c88d64ff384288ac7da7f4fbaa49bd11fc3edca4"
+  },
+  "verdict": "pass",
+  "observation": "Current owning exits0. Receipts: V81-negative-r2.json, V81-self-check.json",
+  "started_at": "2026-10-06T21:10:15.720425Z",
+  "finished_at": "2026-10-06T21:10:15.720477Z",
+  "producer": {
+    "kind": "executor",
+    "actor": "codex/gpt-6.1-sol/high"
+  }
+}

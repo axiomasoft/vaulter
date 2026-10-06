@@ -1,0 +1,18 @@
+{
+  "id": "snapshots-update",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: UPDATE_SNAPSHOT=1 scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch/PublicApiSnapshotTest.php",
+  "started_at": 1791319747.2346008,
+  "duration_seconds": 0.085,
+  "exit": 0,
+  "output": "snapshots-update.log",
+  "input_fingerprint": "c06def5774ed2d8159ba064479410dad1bf5532bb3a4655af45f170b6e86f718",
+  "summary": {
+    "tool": "pest",
+    "result": "passed",
+    "tests": 1,
+    "passed": 1,
+    "assertions": 2,
+    "duration_ms": 15
+  }
+}

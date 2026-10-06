@@ -1,0 +1,18 @@
+{
+  "id": "correlation-PG-green",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/CoreOperationsSecurityTest.php --filter=\"records explicit system actor and correlation|preserves request UUID\"",
+  "started_at": 1791320800.215794,
+  "duration_seconds": 1.409,
+  "exit": 0,
+  "output": "correlation-PG-green.log",
+  "input_fingerprint": "64f2a85f3e7846a8ed4291b3d11c71d5c3c0dfe99bd73f6e769b211abe7c4296",
+  "summary": {
+    "tool": "pest",
+    "result": "passed",
+    "tests": 2,
+    "passed": 2,
+    "assertions": 28,
+    "duration_ms": 1340
+  }
+}

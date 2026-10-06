@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Authorized access, sharing and activity (AD08, AD12, AD17; PLAN2.P3.4)
+
+Core `Operations\AccessOperations`, `ShareOperations` and `ActivityOperations`
+now take an `OperationContext` and enforce current View plus Share/Manage,
+scoped child identity and effective profile features. HTTP and Filament use
+these same boundaries. Hidden targets return `node_not_found` (404); visible
+nodes without the required ability return 403. Grants are independent of
+`share_links`; their own `grants` feature must be enabled.
+
+Use public `GrantInput` and `ShareLinkInput` without a caller-supplied actor.
+Internal Actions now accept `execute(OperationContext, *Input)` with a located
+node; grant revoke addresses one row and hard-deletes it. The existing HTTP
+subject revoke retains its all-scopes/effects behavior. Share revocation retains
+`revoked_at` and idempotence. Events carry ActorRef and `activity.context.correlation_id`; the request UUID
+remains in `request_id`. They retain explicit system reason without attributing an ambient authenticated user.
+
+Activity uses current target visibility, newest-first `(created_at,id)` order,
+and signed forward cursors scoped to drive/tenant/node/filter. Old activity
+cursors must be discarded. A scan-budget-limited empty page can still carry a
+next cursor. No hidden-target totals or historical-payload authorization.
+Only page size and cursor apply to activity ListOptions.
+
+Anonymous share mint rejects Commenter and every raw Comment bit, including
+level-derived masks; Writer/Organizer/Owner require an explicit mask without
+Comment. TTL, use budget and password bounds are enforced on direct PHP calls.
+The plaintext token is returned once; later reads expose metadata only.
+New requests after revoke commit return 404; already-started streams can continue.
+The legacy public-download scan hook accepts `not_required`/`clean`; versioned
+required-mode evidence and complete egress qualification remain PLAN2.P3.7.
+
 ### Typed Operations and immutable inputs (AD06, AD17, AD18; PLAN2.P3.2)
 
 Core adds seven typed Operations interfaces, immutable `Data\Drive` options,

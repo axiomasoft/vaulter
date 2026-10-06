@@ -9,105 +9,50 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Actions\Sharing\CreateShareLinkAction;
-use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Illuminate\Support\Str;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Sharing\StoreShareLinkRequest;
 use Vaulter\Http\Resources\Sharing\NodeShareResource;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Repositories\Sharing\NodeShareReadRepository;
-use Vaulter\Support\Identity;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\ShareOperations;
+use Vaulter\ValueObjects\Access\Actor;
 
-/**
- * The authenticated OWNER surface for bearer share-links (§2.7 / M2c): list, create
- * and revoke shares on a node. Every action requires Ability::Share on the node —
- * the AccessResolver enforces it (a denial 403s through PermissionDeniedException),
- * so this is the identity-ACL channel governing who may MINT a public link. The
- * public, token-resolved channel lives in {@see PublicShareController}.
- *
- * Thin — writes delegate to the Create/Revoke Actions, reads to the
- * NodeShareReadRepository. create() returns the raw token exactly once; index()
- * never exposes it (the listing carries prefix/hash-free metadata only).
- */
 final class ShareController extends Controller
 {
-    public function __construct(
-        private readonly AccessResolver $access,
-        private readonly NodeShareReadRepository $shares,
-        private readonly CreateShareLinkAction $create,
-        private readonly RevokeShareLinkAction $revoke,
-    ) {}
-
     public function index(Request $request, Node $node): AnonymousResourceCollection
     {
-        $this->guardShare($request, $node);
+        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
 
-        $shares = $this->shares
-            ->forNode($node)
-            ->cursorPaginate(perPage: $this->perPage($request))
-            ->withQueryString();
-
-        return NodeShareResource::collection($shares);
+        return NodeShareResource::collection($operations->paginate(node: $node, perPage: max(1, min($request->integer('per_page', 50), 200)))->withQueryString());
     }
 
     public function store(StoreShareLinkRequest $request, Node $node): JsonResponse
     {
-        $this->guardShare($request, $node);
+        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
+        $minted = $operations->create(node: $node, input: $request->toData());
 
-        $minted = $this->create->execute(
-            node: $node,
-            data: $request->toData(grantedBy: $this->actorId($request)),
-        );
-
-        // The raw token is attached here and ONLY here — returned exactly once.
-        return NodeShareResource::make($minted->share)
-            ->withToken($minted->token)
-            ->response()
-            ->setStatusCode(201);
+        return NodeShareResource::make($minted->share)->withToken($minted->token)->response()->setStatusCode(201);
     }
 
     public function destroy(Request $request, Node $node, int|string $share): Response
     {
-        $this->guardShare($request, $node);
-
-        $model = $this->shares->find($share);
-
-        // The share must exist AND belong to the authorized node — a foreign share
-        // id can never be revoked through this node (and a 404 leaks nothing).
-        if (!$model instanceof NodeShare || Identity::stringify($model->node_id) !== Identity::stringify($node->getKey())) {
-            throw new NotFoundHttpException('Share link not found.');
-        }
-
-        $this->revoke->execute(share: $model, actorId: $this->actorId($request));
+        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
+        $operations->revoke(node: $node, share: $share);
 
         return response()->noContent();
     }
 
-    private function guardShare(Request $request, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, Ability::Share, $node)) {
-            throw PermissionDeniedException::forAbility(Ability::Share->value);
-        }
-    }
-
-    private function authorizable(Request $request): ?Authorizable
+    private function context(Request $request, Node $node): OperationContext
     {
         $user = $request->user();
+        if (!$user instanceof Authorizable) {
+            throw MissingActorException::required();
+        }
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 
-        return $user instanceof Authorizable ? $user : null;
-    }
-
-    private function perPage(Request $request): int
-    {
-        $perPage = (int) $request->integer('per_page', 50);
-
-        return max(1, min($perPage, 200));
+        return new OperationContext(drive: $drive, actor: Actor::user($user), correlationId: (string) Str::ulid());
     }
 }

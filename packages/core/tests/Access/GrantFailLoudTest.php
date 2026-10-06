@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Log;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SubclassedRoleDriver;
 
@@ -38,10 +40,10 @@ it('warns and throws when a role grant is written under the gate driver, F-P1.2-
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessInput(
+    expect(fn (): NodeGrant => $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '7'),
         level: GrantLevel::Reader,
-    )))->toThrow(UnenumerableGrantSubjectException::class);
+    ))))->toThrow(UnenumerableGrantSubjectException::class);
 
     $spy->shouldHaveReceived('warning')->once();
 });
@@ -55,10 +57,10 @@ it('throws for a team subject under the gate driver, F-P1.2-01', function (): vo
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute($folder, new GrantNodeAccessInput(
+    expect(fn (): NodeGrant => $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'team', id: '3'),
         level: GrantLevel::Reader,
-    )))->toThrow(UnenumerableGrantSubjectException::class);
+    ))))->toThrow(UnenumerableGrantSubjectException::class);
 });
 
 // ── F-P1.2-01 control: a USER subject under gate is fine (no role enumeration needed).
@@ -70,10 +72,10 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessInput(
+    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'user', id: '1'),
         level: GrantLevel::Reader,
-    ));
+    )));
 
     expect($grant)->toBeInstanceOf(NodeGrant::class);
 });
@@ -93,10 +95,10 @@ it('does not throw for a role grant under an unmarked subclass that overrides su
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessInput(
+    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '7'),
         level: GrantLevel::Reader,
-    ));
+    )));
 
     expect($grant)->toBeInstanceOf(NodeGrant::class);
 });
@@ -111,10 +113,10 @@ it('does not throw when a role grant is written under the spatie driver, F-P1.2-
 
     $action = grantAction();
 
-    $grant = $action->execute($folder, new GrantNodeAccessInput(
+    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '9'),
         level: GrantLevel::Reader,
-    ));
+    )));
 
     expect($grant)->toBeInstanceOf(NodeGrant::class);
 });

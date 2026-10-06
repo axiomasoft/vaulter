@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Filament\Tests\Fixtures;
 
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
@@ -70,7 +70,7 @@ final class DriveBuilder
     ): NodeGrant {
         return app(GrantStoreRepository::class)->grant(
             node: $node,
-            data: new GrantNodeAccessInput(
+            data: new GrantInput(
                 subject: Subject::ofModel($user),
                 level: $level,
                 effect: $effect,

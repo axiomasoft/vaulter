@@ -1,0 +1,18 @@
+{
+  "id": "V1-first",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations packages/core/tests/Access/GrantRevokeTest.php packages/core/tests/Access/GrantFailLoudTest.php packages/core/tests/Sharing packages/core/tests/Activity packages/core/tests/Arch/OperationsBoundaryTest.php",
+  "started_at": 1791319560.9968812,
+  "duration_seconds": 11.788,
+  "exit": 0,
+  "output": "V1-first.log",
+  "input_fingerprint": "74cce9f546f5a4db3b88f98388ea2584534d1e0a160fbcce097efb68e60a3a75",
+  "summary": {
+    "tool": "pest",
+    "result": "passed",
+    "tests": 114,
+    "passed": 114,
+    "assertions": 387,
+    "duration_ms": 11683
+  }
+}

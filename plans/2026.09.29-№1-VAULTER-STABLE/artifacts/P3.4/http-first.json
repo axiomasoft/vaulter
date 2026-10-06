@@ -1,0 +1,19 @@
+{
+  "id": "http-first",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Feature/NodeShareApiTest.php packages/core/tests/Feature/ShareLinkRequestMutationContractTest.php packages/core/tests/Feature/ActivityApiTest.php",
+  "started_at": 1791319608.1621232,
+  "duration_seconds": 4.349,
+  "exit": 1,
+  "output": "http-first.log",
+  "input_fingerprint": "54b13b30c499acf57c71afdf5252e4a1c5a9e14f75fa3d10916c622685cf0dbd",
+  "summary": {
+    "tool": "pest",
+    "result": "failed",
+    "tests": 38,
+    "passed": 37,
+    "assertions": 128,
+    "duration_ms": 4255,
+    "failed": 1
+  }
+}

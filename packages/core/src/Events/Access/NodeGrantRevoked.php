@@ -7,6 +7,7 @@ namespace Vaulter\Events\Access;
 use Illuminate\Support\Str;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A subject's grants on a node were revoked (§2.6 / H.2). The grant rows are gone,
@@ -30,6 +31,8 @@ final readonly class NodeGrantRevoked
         public int $revoked,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

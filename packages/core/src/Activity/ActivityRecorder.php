@@ -17,6 +17,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\RequestContext;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Writes EXACTLY ONE activity row from a domain event (master plan §2.9 /
@@ -55,6 +56,8 @@ final readonly class ActivityRecorder
             storageId: $node->drive_id,
             tenantId: $event->grant->tenant_id,
             actorId: $event->actorId,
+            actor: $event->actor,
+            correlationId: $event->correlationId,
             target: $node,
             context: [
                 'grant_id' => Identity::stringify($event->grant->getKey()),
@@ -73,6 +76,8 @@ final readonly class ActivityRecorder
             verb: EventType::GrantRevoked,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor,
+            correlationId: $event->correlationId,
             context: [
                 'subject_type' => $event->subject->type,
                 'subject_id' => Identity::stringify($event->subject->id),
@@ -90,6 +95,8 @@ final readonly class ActivityRecorder
             storageId: $node->drive_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
+            actor: $event->actor,
+            correlationId: $event->correlationId,
             target: $node,
             context: [
                 'share_id' => Identity::stringify($event->share->getKey()),
@@ -110,6 +117,8 @@ final readonly class ActivityRecorder
             storageId: $node->drive_id,
             tenantId: $event->share->tenant_id,
             actorId: $event->actorId,
+            actor: $event->actor,
+            correlationId: $event->correlationId,
             target: $node,
             context: [
                 'share_id' => Identity::stringify($event->share->getKey()),
@@ -130,6 +139,8 @@ final readonly class ActivityRecorder
         Node $node,
         int|string|null $actorId,
         ?array $context = null,
+        ?ActorRef $actor = null,
+        ?string $correlationId = null,
     ): Activity {
         return $this->record(
             verb: $verb,
@@ -138,6 +149,8 @@ final readonly class ActivityRecorder
             actorId: $actorId,
             target: $node,
             context: $context,
+            actor: $actor,
+            correlationId: $correlationId,
         );
     }
 
@@ -156,9 +169,14 @@ final readonly class ActivityRecorder
         int|string|null $actorId = null,
         ?Model $target = null,
         ?array $context = null,
+        ?ActorRef $actor = null,
+        ?string $correlationId = null,
     ): Activity {
-        [$actorType, $resolvedActorId] = $this->resolveActor($actorId);
+        [$actorType, $resolvedActorId] = $actor === null ? $this->resolveActor($actorId) : [$actor->type, $actor->id];
         $request = RequestContext::capture();
+        if ($correlationId !== null) {
+            $context = [...($context ?? []), 'correlation_id' => $correlationId];
+        }
 
         $activity = $this->store->record(new RecordActivityCommand(
             verb: $verb,
@@ -168,7 +186,7 @@ final readonly class ActivityRecorder
             actorId: $resolvedActorId,
             targetType: $target?->getMorphClass(),
             targetId: $target === null ? null : Identity::key($target->getKey()),
-            context: $context,
+            context: $actor?->reason === null ? $context : [...($context ?? []), 'system_reason' => $actor->reason],
             ip: $request->ip,
             userAgent: $request->userAgent,
             requestId: $request->requestId,

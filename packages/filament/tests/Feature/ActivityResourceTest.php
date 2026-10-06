@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
@@ -40,4 +42,19 @@ it('lists every verb the audit filter offers', function (): void {
     foreach (EventType::cases() as $verb) {
         expect($verb->label())->toBeString()->not->toBe('');
     }
+});
+
+it('reads the panel activity through current root and target visibility', function (): void {
+    $actor = DriveBuilder::user();
+    $this->actingAs($actor);
+    $drive = DriveBuilder::storage();
+    $root = $drive->rootNode()->firstOrFail();
+    DriveBuilder::grant($root, $actor, GrantLevel::Reader, scope: GrantScope::Item);
+    $node = DriveBuilder::folder($drive, 'hidden');
+    $hidden = Activity::query()->where('target_id', $node->id)->firstOrFail();
+    expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeFalse();
+    $grant = DriveBuilder::grant($node, $actor, GrantLevel::Reader);
+    expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeTrue();
+    $grant->delete();
+    expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeFalse();
 });

@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Actions\Access\RevokeNodeAccessAction;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Access\NodeGrant;
@@ -175,14 +174,22 @@ it('revokes every grant a subject holds through the core RevokeNodeAccessAction'
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(2);
 
     // The row revoke action calls exactly this Action.
-    app(RevokeNodeAccessAction::class)->execute(
-        node: $folder,
-        subject: Subject::ofModel($subject),
-        actorId: $owner->getKey(),
-    );
+    NodeGrantResource::revokeRecord(app(GrantReadRepository::class)->forNode($folder)->where('subject_id', 2)->firstOrFail());
 
     $remaining = app(GrantReadRepository::class)->forNode($folder)->get();
 
     expect($remaining)->toHaveCount(1)
         ->and((string) $remaining->first()->subject_id)->toBe('1');
+});
+
+it('rechecks a reader and foreign membership inside actual grant revoke', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive);
+    $grant = DriveBuilder::grant($node, $owner);
+    $grant->forceFill(['level' => GrantLevel::Reader])->save();
+    expect(fn () => NodeGrantResource::revokeRecord($grant))->toThrow(PermissionDeniedException::class)
+        ->and($grant->fresh())->not->toBeNull()
+        ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0);
 });

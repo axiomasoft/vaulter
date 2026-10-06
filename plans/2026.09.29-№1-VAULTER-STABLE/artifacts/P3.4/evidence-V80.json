@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "PLAN2.P3.4-V80",
+  "check_id": "V80",
+  "subject": "PLAN2.P3.4",
+  "procedure": {
+    "procedure": "Observed impact-derived Pint --test for all changed/new owning PHP files and full supported core/filament PHPStan; exact commands and exits in linked receipts.",
+    "cwd": "/home/vostrikov/projects/packages/vaulter"
+  },
+  "candidate": {
+    "head": "f5987542830959037ad7bba4953264b8d49325a0",
+    "dirty_digest": "90330b92b6ba937be2ea3249fe91187223a229df47c525369ade4ea2006ea560"
+  },
+  "verdict": "pass",
+  "observation": "All owning command exits0; evidence: pint-core.json, pint-filament.json, stan-core.json, stan-filament.json",
+  "started_at": "2026-10-06T20:56:32.914578Z",
+  "finished_at": "2026-10-06T20:56:32.915374Z",
+  "producer": {
+    "kind": "executor",
+    "actor": "codex/gpt-6.1-sol/high"
+  }
+}

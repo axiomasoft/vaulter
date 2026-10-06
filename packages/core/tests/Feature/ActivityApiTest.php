@@ -6,6 +6,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -97,13 +98,13 @@ it('cursor-paginates the feed', function (): void {
         ->and($response->json('meta.next_cursor'))->not->toBeNull();
 });
 
-it('403s a node feed for an actor WITHOUT View', function (): void {
+it('403s a node feed for an actor WITHOUT View (opaque404)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'private');
     // No grant for user 1 → no View.
     targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
 
-    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity')->assertStatus(403);
+    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity')->assertStatus(404);
 });
 
 /**
@@ -114,6 +115,8 @@ function activityRow(int|string $storageId, EventType $verb, string $name): Acti
     $activity = new Activity;
     $activity->forceFill([
         'drive_id' => $storageId,
+        'target_type' => (new Drive)->getMorphClass(),
+        'target_id' => $storageId,
         'verb' => $verb->value,
         'context' => ['name' => $name],
         'created_at' => now(),

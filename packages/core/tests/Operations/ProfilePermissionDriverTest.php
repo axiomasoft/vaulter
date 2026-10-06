@@ -11,6 +11,7 @@ use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
@@ -18,6 +19,7 @@ use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -112,9 +114,9 @@ it('uses each selected subject lane for shared candidates and role grant inserti
     expect($resolver->sharedNodeIds($actor))->toContain($a->id)->not->toContain($b->id)
         ->and(app(NodeReadRepository::class)->candidateNodeIds($actor))->toContain($a->id)->not->toContain($b->id)
         ->and(app(NodeReadRepository::class)->sharedWith($actor)->modelKeys())->toContain($a->id)->not->toContain($b->id);
-    $data = new GrantNodeAccessInput(subject: new Subject(type: 'role', id: 8), level: GrantLevel::Reader);
-    expect(app(GrantNodeAccessAction::class)->execute($a, $data)->subject_id)->toBe(8)
-        ->and(fn () => app(GrantNodeAccessAction::class)->execute($b, $data))->toThrow(UnenumerableGrantSubjectException::class);
+    $data = new GrantInput(subject: new Subject(type: 'role', id: 8), level: GrantLevel::Reader);
+    expect(app(GrantNodeAccessAction::class)->execute(OperationContext::system($a->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $a, grant: $data))->subject_id)->toBe(8)
+        ->and(fn () => app(GrantNodeAccessAction::class)->execute(OperationContext::system($b->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $b, grant: $data)))->toThrow(UnenumerableGrantSubjectException::class);
 });
 
 it('keeps host denial when grants are disabled and preserves raw masks', function (): void {

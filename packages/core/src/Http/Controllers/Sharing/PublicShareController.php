@@ -28,6 +28,7 @@ use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareContext;
+use Vaulter\Sharing\ShareResolver;
 use Vaulter\Support\LoadTier;
 
 /**
@@ -56,6 +57,7 @@ final class PublicShareController extends Controller
         private readonly NodeShareStoreRepository $shares,
         private readonly StorageDriver $driver,
         private readonly MetricsRecorder $metrics,
+        private readonly ShareResolver $resolver,
     ) {}
 
     /**
@@ -186,6 +188,8 @@ final class PublicShareController extends Controller
         if (!$blob instanceof Blob || $blob->status !== BlobStatus::Committed) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
+
+        $this->resolver->assertContentAvailable(node: $node, revision: $version);
 
         $filename = $version->original_name !== '' ? $version->original_name : $node->name;
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';

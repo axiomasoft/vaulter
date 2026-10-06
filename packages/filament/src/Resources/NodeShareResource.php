@@ -21,35 +21,37 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Actions\Sharing\CreateShareLinkAction;
-use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
-use Vaulter\Filament\Support\PanelAccessScope;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\ShareOperations;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The bearer share-link admin surface (master plan §2.7 / §3): list, create and
  * revoke the public share-links on a node. The raw token is NEVER stored and NEVER
  * displayed here — only the non-secret `token_prefix` plus the live/expired/revoked
- * status. It is shown exactly ONCE, at mint time, via the {@see CreateShareLinkAction}
+ * status. It is shown exactly ONCE, at mint time, via the {@see ShareOperations}
  * result ({@see MintedShareLink}).
  *
  * Every mutation flows through a CORE Action:
- *   - create → {@see CreateShareLinkAction} (mints + hashes the token; raw shown once);
- *   - revoke → {@see RevokeShareLinkAction} (stamps revoked_at; idempotent).
- * Both require Ability::Share on the node, gated through the AccessResolver. The model
+ *   - create → {@see ShareOperations} (mints + hashes the token; raw shown once);
+ *   - revoke → {@see ShareOperations} (stamps revoked_at; idempotent).
+ * Both require Ability::Share on the node, gated through the ShareOperations. The model
  * resolves through {@see app(VaulterConfig::class)->model('node_share')} for swappability.
  */
 final class NodeShareResource extends Resource
@@ -78,18 +80,19 @@ final class NodeShareResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        $nodeIds = PanelAccessScope::candidateNodeIds();
-
-        if ($nodeIds === null) {
-            return $query;
+        $ids = [];
+        $nodeClass = app(VaulterConfig::class)->model('node');
+        foreach ($nodeClass::query()->whereNull('trashed_at')->lazyById(100) as $node) {
+            try {
+                foreach (self::operations($node)->list($node) as $row) {
+                    $ids[] = $row->getKey();
+                }
+            } catch (VaulterException) {
+                // Hidden nodes and disabled features contribute no rows.
+            }
         }
 
-        if ($nodeIds === []) {
-            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
-            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
-        }
-
-        return $query->whereIn('node_id', $nodeIds);
+        return $query->whereKey($ids);
     }
 
     #[Override]
@@ -215,10 +218,10 @@ final class NodeShareResource extends Resource
 
             TextInput::make('permissions')
                 ->label('Permissions (CRUDS bits)')
-                ->helperText('0–31. Defaults to READ (1) when 0.')
+                ->helperText('0–63. Defaults to READ (1) when 0.')
                 ->numeric()
                 ->minValue(0)
-                ->maxValue(31)
+                ->maxValue(Permission::all())
                 ->default(Permission::Read->value),
 
             TextInput::make('password')
@@ -272,9 +275,9 @@ final class NodeShareResource extends Resource
         $expiresAt = $data['expires_at'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
 
-        $minted = app(CreateShareLinkAction::class)->execute(
+        $minted = self::operations($node)->create(
             node: $node,
-            data: new ShareLinkInput(
+            input: new ShareLinkInput(
                 permissions: $permissions > 0 ? $permissions : Permission::Read->value,
                 // Filament validation already supplies enum/string and toggle values with these types.
                 level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)), // @pest-mutate-ignore: RemoveStringCast
@@ -284,7 +287,6 @@ final class NodeShareResource extends Resource
                 allowDiscovery: (bool) ($data['allow_discovery'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
                 expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
                 maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
-                grantedBy: PanelActor::id(),
             ),
         );
 
@@ -311,10 +313,7 @@ final class NodeShareResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (NodeShare $record): bool => !$record->isRevoked() && self::actorCanShare($record->node))
             ->action(function (NodeShare $record): void {
-                app(RevokeShareLinkAction::class)->execute(
-                    share: $record,
-                    actorId: PanelActor::id(),
-                );
+                self::revokeRecord($record);
 
                 Notification::make()->title('Share link revoked')->success()->send();
             });
@@ -345,7 +344,27 @@ final class NodeShareResource extends Resource
             return false;
         }
 
-        return app(AccessResolver::class)->can($actor, Ability::Share, $node);
+        try {
+            self::operations($node)->list($node);
+
+            return true;
+        } catch (VaulterException) {
+            return false;
+        }
+    }
+
+    public static function revokeRecord(NodeShare $record): void
+    {
+        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
+        self::operations($node)->revoke(node: $node, share: $record);
+    }
+
+    private static function operations(Node $node): ShareOperations
+    {
+        $actor = PanelActor::current() ?? throw MissingActorException::required();
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+
+        return app()->makeWith(ShareOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
     }
 
     private static function resolveNode(int|string|null $id): ?Node
@@ -373,6 +392,7 @@ final class NodeShareResource extends Resource
             ->orderBy('drive_id')
             ->orderBy('name')
             ->get()
+            ->filter(fn (Node $node): bool => self::actorCanShare($node))
             ->mapWithKeys(fn (Node $node): array => [
                 $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
             ])

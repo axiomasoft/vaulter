@@ -16,14 +16,20 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Enums\Events\EventType;
+use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
-use Vaulter\Filament\Support\PanelAccessScope;
+use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Activity\Activity;
+use Vaulter\Operations\ActivityOperations;
+use Vaulter\Operations\OperationContext;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The audit-feed admin surface (master plan §2.9 / §3): a READ-ONLY view of the
@@ -62,22 +68,29 @@ final class ActivityResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        $nodeIds = PanelAccessScope::candidateNodeIds();
-
-        if ($nodeIds === null) {
-            return $query;
+        $actor = PanelActor::current();
+        if ($actor === null) {
+            return $query->whereRaw('1 = 0');
+        }
+        $ids = [];
+        $driveClass = app(VaulterConfig::class)->model('drive');
+        foreach ($driveClass::query()->lazyById(100) as $drive) {
+            $operations = app()->makeWith(ActivityOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
+            try {
+                $cursor = null;
+                do {
+                    $page = $operations->forDrive(new ListOptions(perPage: 200, cursor: $cursor));
+                    foreach ($page as $row) {
+                        $ids[] = $row->id;
+                    }
+                    $cursor = $page->nextCursor()?->encode();
+                } while ($cursor !== null);
+            } catch (VaulterException) {
+                // Drives without root View contribute no activity.
+            }
         }
 
-        if ($nodeIds === []) {
-            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
-            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
-        }
-
-        $nodeMorphClass = (new (app(VaulterConfig::class)->model('node')))->getMorphClass();
-
-        return $query
-            ->where('target_type', $nodeMorphClass)
-            ->whereIn('target_id', $nodeIds);
+        return $query->whereKey($ids);
     }
 
     #[Override]

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Actions\Sharing\RevokeShareLinkAction;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
+
+beforeEach(fn () => config()->set('vaulter.features.share_links', true));
 
 it('resolves the configured node-share model (swappable)', function (): void {
     expect(NodeShareResource::getModel())->toBe(NodeShare::class);
@@ -58,6 +60,7 @@ it('preserves the validated share form contract and one-time token notification'
     DriveBuilder::grant($folder, $owner);
 
     session()->forget('filament.notifications');
+    $expires = Carbon::now()->addDay()->startOfSecond();
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
@@ -67,7 +70,7 @@ it('preserves the validated share form contract and one-time token notification'
         'password' => 'top-secret',
         'require_login' => true,
         'allow_discovery' => true,
-        'expires_at' => '2035-02-03 04:05:06',
+        'expires_at' => $expires->toDateTimeString(),
         'max_uses' => '7',
     ]);
 
@@ -80,7 +83,7 @@ it('preserves the validated share form contract and one-time token notification'
         ->and(Hash::check('top-secret', $share->password_hash))->toBeTrue()
         ->and($share->require_login)->toBeTrue()
         ->and($share->allow_discovery)->toBeTrue()
-        ->and($share->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-02-03 04:05:06')
+        ->and($share->expires_at?->format('Y-m-d H:i:s'))->toBe($expires->toDateTimeString())
         ->and($share->max_uses)->toBe(7)
         ->and((string) $share->granted_by)->toBe('51');
 
@@ -227,10 +230,7 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
     expect($share->isRevoked())->toBeFalse();
 
-    app(RevokeShareLinkAction::class)->execute(
-        share: $share,
-        actorId: $owner->getKey(),
-    );
+    NodeShareResource::revokeRecord($share);
 
     expect($share->fresh()->isRevoked())->toBeTrue();
 });
@@ -263,4 +263,30 @@ it('does not create a share when the admin may not share the node', function ():
         ->and($notification['title'])->toBe('Share not created')
         ->and($notification['body'])->toBe('You may not share this node.')
         ->and($notification['status'])->toBe('warning');
+});
+
+it('does not mint or list shares when the feature is disabled', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive);
+    DriveBuilder::grant($node, $owner);
+    config()->set('vaulter.features.share_links', false);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    expect(NodeShare::query()->count())->toBe(0)
+        ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);
+});
+
+it('rechecks the reader ability inside the actual revoke mutation', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive);
+    $grant = DriveBuilder::grant($node, $owner);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    $share = NodeShare::query()->sole();
+    $grant->forceFill(['level' => GrantLevel::Reader])->save();
+    expect(fn () => NodeShareResource::revokeRecord($share))->toThrow(PermissionDeniedException::class)
+        ->and($share->fresh()->revoked_at)->toBeNull()
+        ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);
 });

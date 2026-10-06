@@ -1,0 +1,39 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeGrantResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured grant model (swappable)[39m[90m                  [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is not creatable from a flat form (grants come from the core Act[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a grant through the core GrantNodeAccessAction[39m[90m           [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves the validated grant form contract at the core Action b[39m[90m…[39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies grant defaults when optional form values are omitted[39m[90m     [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a missing grant node with the declared warning[39m[90m           [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not create a grant when the admin may not share the node[39m[90m    [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit revokes every grant a subject holds through the core RevokeNodeA[39m[90m…[39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rechecks a reader and foreign membership inside actual grant rev[39m[90m…[39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\NodeShareResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured node-share model (swappable)[39m[90m             [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is not creatable from a flat form (shares come from the core Act[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a share link through the core CreateShareLinkAction[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preserves the validated share form contract and one-time token n[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies safe share defaults to omitted and blank optional values[39m[90m [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a missing share node with the declared warning[39m[90m           [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never persists the raw token — only its hash and prefix[39m[90m          [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reveals the token prefix but never the full hash in the prefix c[39m[90m…[39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit revokes a share link through the core RevokeShareLinkAction[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not create a share when the admin may not share the node[39m[90m    [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not mint or list shares when the feature is disabled[39m[90m        [39m [90m0.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rechecks the reader ability inside the actual revoke mutation[39m[90m    [39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ActivityResourceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the configured activity model (swappable)[39m[90m               [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit is strictly read-only (no create / edit / delete)[39m[90m                [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit surfaces the append-only feed recorded by the core Drive Actions[39m[90m [39m [90m0.13s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists every verb the audit filter offers[39m[90m                         [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reads the panel activity through current root and target visibil[39m[90m…[39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\OperationsBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mmigrated Filament resources use Operations rather than Actions or R[39m[90m…[39m [90m0.25s[39m  
+
+  [90mTests:[39m    [32;1m27 passed[39;22m[90m (138 assertions)[39m
+  [90mDuration:[39m [39m3.88s[39m
+

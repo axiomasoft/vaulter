@@ -4,41 +4,31 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Access;
 
-use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Data\Access\RevokeGrantInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantRevoked;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Access\GrantStoreRepository;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\OperationContext;
 
-/**
- * Revoke every grant a subject holds on a node (§2.6 / H.2): both effects, both
- * scopes. Returns the count removed; emits NodeGrantRevoked only when something was
- * actually revoked (an empty revoke is a silent no-op). Transactional.
- */
+/** @internal Authorization belongs to AccessOperations; membership is also enforced here. */
 final readonly class RevokeNodeAccessAction
 {
-    public function __construct(
-        private GrantStoreRepository $grants,
-        private VaulterDatabase $database,
-    ) {}
+    public function __construct(private VaulterDatabase $database, private NodeLocator $locator) {}
 
-    public function execute(Node $node, Subject $subject, int|string|null $actorId = null): int
+    public function execute(OperationContext $context, RevokeGrantInput $input): int
     {
-        // The event fires INSIDE the transaction (F-P1.7-03) so the outbox/activity
-        // rows stage atomically with the revoke — no crash window after commit.
-        return $this->database->transaction(function () use ($node, $subject, $actorId): int {
-            $revoked = $this->grants->revoke(node: $node, subject: $subject);
-
-            if ($revoked > 0) {
-                event(new NodeGrantRevoked(
-                    node: $node,
-                    subject: $subject,
-                    revoked: $revoked,
-                    actorId: $actorId,
-                ));
+        return $this->database->transaction(function () use ($context, $input): int {
+            $node = $this->locator->find(context: $context, key: $input->node);
+            $grant = $input->grant->newQuery()->where('node_id', $node->getKey())->whereKey($input->grant->getRawOriginal($input->grant->getKeyName()))->lockForUpdate()->first();
+            if ($grant === null) {
+                throw NodeNotFoundException::forId($node->id);
             }
+            $subject = $grant->subject();
+            $grant->delete();
+            event(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
-            return $revoked;
+            return 1;
         });
     }
 }

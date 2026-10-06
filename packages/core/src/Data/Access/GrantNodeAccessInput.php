@@ -4,27 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Access;
 
-use Illuminate\Support\Carbon;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Models\Drive\Node;
 
-/**
- * The command DTO for granting (or denying) a subject access to a node (§2.6).
- * Carries the subject, the level + optional extra CRUDS bits, the effect
- * (allow|deny), the scope (item|subtree) and an optional read-time expiry. Built
- * from a validated request and consumed only by {@see GrantNodeAccessAction}.
- */
+/** @internal Located command; the public grant value never carries caller authority. */
 final readonly class GrantNodeAccessInput
 {
-    public function __construct(
-        public Subject $subject,
-        public GrantLevel $level,
-        public Effect $effect = Effect::Allow,
-        public GrantScope $scope = GrantScope::Subtree,
-        public int $permissions = 0,
-        public ?Carbon $expiresAt = null,
-        public int|string|null $grantedBy = null,
-    ) {}
+    public function __construct(public Node $node, public GrantInput $grant) {}
 }

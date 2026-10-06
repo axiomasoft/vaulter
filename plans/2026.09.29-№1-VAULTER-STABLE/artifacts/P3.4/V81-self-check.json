@@ -1,0 +1,39 @@
+{
+  "exit": 0,
+  "invariants": {
+    "I1": "explicit context and real HTTP/PanelActor; V1/CoreOperationsSecurity+existing actor tests",
+    "I2": "locator and scoped child row re-fetch; foreign forged grant/share tests V1",
+    "I3": "View404 before ability403; CoreOperationsSecurity+HTTP tests",
+    "I4": "system only ACL bypass, profile feature scope still enforced; ProfileGuardBoundaryTest; PostgreSQL ActorRef/request UUID/context correlation checked for all four core mutations",
+    "I5": "accepted precheck ACL window; hard membership re-fetch under grant/share row lock; no ACL graph lock guarantee",
+    "I6": "resolver evaluated on each invocation, ACL changed between activity pages and panel revoke",
+    "I7": "ActivityVisibilityTest bounded scans, deny windows, unknown/deleted/foreign, signed scoped forward cursor",
+    "I8": "grant and share feature gates independent; user/system profile tests",
+    "I9": "N/A no upload computation edits; established bytes paths reused",
+    "I10": "legacy public download hook tested before storage get; complete versioned evidence owned by P3.7 pending",
+    "I11": "N/A no complete/session edits",
+    "I12": "N/A no quota/revision allocator/CAS lock changes",
+    "I13": "N/A no editorial sequence mutation",
+    "I14": "share derives owning drive/tenant; strict tenant integration remains P3.8, no qualification claimed",
+    "I15": "N/A no withoutTenancy changes",
+    "I16": "foreign child identity404; token only result+create UI response; persisted activity/event models omit token; actual panel invoke rechecks",
+    "I17": "N/A versioned work/backfill implementation remains P3.7",
+    "I18": "N/A no HTTP validators or sequences changed"
+  },
+  "lock_pairs": {
+    "grant/revoke": "membership locked row inside VaulterDatabase transaction; event stages same transaction",
+    "share/revoke": "live row lock, revoke_at commit; read beginning after commit404 proved with ForkRace separate backends",
+    "activity/ACL": "fresh batch evaluation at read; no historic payload authorization",
+    "revoked/admitted mutations": "accepted ACL precheck window preserved; no instantaneous cancellation promise"
+  },
+  "negative_control": "V81-negative.json",
+  "applicable_corrections": {
+    "C04": "grants/share feature taxonomy; context system bypass only ACL; scanner/tenancy owners remain P3.8",
+    "C08": "share live auth, derived tenant and scan hook; no complete required-mode egress qualification claimed"
+  },
+  "correlation_proof": {
+    "red": "correlation-PG-red.json",
+    "green": "correlation-PG-green.json",
+    "system_and_all_four_mutations": true
+  }
+}

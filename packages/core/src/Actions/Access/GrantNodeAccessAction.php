@@ -8,12 +8,15 @@ use Illuminate\Support\Facades\Log;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\AccessConfig;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
@@ -32,10 +35,13 @@ final readonly class GrantNodeAccessAction
         private GrantStoreRepository $grants,
         private PermissionDriverManager $drivers,
         private VaulterDatabase $database,
+        private NodeLocator $locator,
     ) {}
 
-    public function execute(Node $node, GrantNodeAccessInput $data): NodeGrant
+    public function execute(OperationContext $context, GrantNodeAccessInput $input): NodeGrant
     {
+        $node = $this->locator->find(context: $context, key: $input->node);
+        $data = $input->grant;
         // Fail-loud (F-P1.2-01) BEFORE persisting: a grant to a role/team subject under
         // a driver that cannot enumerate role subjects would be silently inert.
         $this->guardEnumerableSubject($node, $data);
@@ -44,10 +50,10 @@ final readonly class GrantNodeAccessAction
         // stage in the SAME commit as the grant — no crash window between commit and
         // staging. The subscribers swallow their own failures, so staging still never
         // rolls the grant back.
-        return $this->database->transaction(function () use ($node, $data): NodeGrant {
-            $grant = $this->grants->grant(node: $node, data: $data);
+        return $this->database->transaction(function () use ($context, $node, $data): NodeGrant {
+            $grant = $this->grants->grant(node: $node, data: $data, grantedBy: $context->actor->ref()->id);
 
-            event(new NodeGrantCreated(grant: $grant, actorId: $data->grantedBy));
+            event(new NodeGrantCreated(grant: $grant, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $grant;
         });
@@ -66,7 +72,7 @@ final readonly class GrantNodeAccessAction
      * notices immediately. The direction is safe (an inert grant grants nothing), so
      * production degrades to a log line rather than a broken write path.
      */
-    private function guardEnumerableSubject(Node $node, GrantNodeAccessInput $data): void
+    private function guardEnumerableSubject(Node $node, GrantInput $data): void
     {
         if (!$this->isRoleLikeSubject($data->subject)) {
             return;

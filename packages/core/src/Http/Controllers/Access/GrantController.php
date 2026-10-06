@@ -9,95 +9,56 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Actions\Access\RevokeNodeAccessAction;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Illuminate\Support\Str;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Access\DestroyNodeGrantRequest;
 use Vaulter\Http\Requests\Access\StoreNodeGrantRequest;
 use Vaulter\Http\Resources\Drive\NodeGrantResource;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Access\GrantReadRepository;
+use Vaulter\Operations\AccessOperations;
+use Vaulter\Operations\OperationContext;
+use Vaulter\ValueObjects\Access\Actor;
 
-/**
- * The per-node ACL surface (§2.6 / H.2): list, grant and revoke node grants. Every
- * action requires the Share ability on the node (only someone who may share a node
- * may change its grants); the AccessResolver enforces it, a denial 403s through
- * the existing PermissionDeniedException. Writes delegate to the Grant/Revoke
- * Actions; reads to the GrantReadRepository.
- */
 final class GrantController extends Controller
 {
-    public function __construct(
-        private readonly AccessResolver $access,
-        private readonly GrantReadRepository $grants,
-        private readonly GrantNodeAccessAction $grant,
-        private readonly RevokeNodeAccessAction $revoke,
-    ) {}
-
     public function index(Request $request, Node $node): AnonymousResourceCollection
     {
-        $this->guardShare($request, $node);
+        $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context($request, $node)]);
 
-        $grants = $this->grants
-            ->forNode($node)
-            ->cursorPaginate(perPage: $this->perPage($request))
-            ->withQueryString();
-
-        return NodeGrantResource::collection($grants);
+        return NodeGrantResource::collection($operations->paginate(node: $node, perPage: max(1, min($request->integer('per_page', 50), 200)))->withQueryString());
     }
 
     public function store(StoreNodeGrantRequest $request, Node $node): JsonResponse
     {
-        $this->guardShare($request, $node);
-
-        $grant = $this->grant->execute(
-            node: $node,
-            data: $request->toData(grantedBy: $this->actorId($request)),
-        );
+        $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context($request, $node)]);
+        $grant = $operations->grant(node: $node, grant: $request->toData());
 
         return NodeGrantResource::make($grant)->response()->setStatusCode(201);
     }
 
     public function destroy(DestroyNodeGrantRequest $request, Node $node): Response
     {
-        $this->guardShare($request, $node);
-
-        $this->revoke->execute(
-            node: $node,
-            subject: new Subject(
-                type: $request->string('subject_type')->toString(),
-                id: $this->scalarId($request, 'subject_id'),
-            ),
-            actorId: $this->actorId($request),
-        );
+        $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context($request, $node)]);
+        // The existing HTTP command revokes all scopes/effects for this subject.
+        foreach ($operations->grants($node) as $grant) {
+            if ($grant->subject_type === $request->string('subject_type')->toString() && (string) $grant->subject_id === (string) $this->scalarId($request, 'subject_id')) {
+                $operations->revoke(node: $node, grant: $grant);
+            }
+        }
 
         return response()->noContent();
     }
 
-    private function guardShare(Request $request, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, Ability::Share, $node)) {
-            throw PermissionDeniedException::forAbility(Ability::Share->value);
-        }
-    }
-
-    private function authorizable(Request $request): ?Authorizable
+    private function context(Request $request, Node $node): OperationContext
     {
         $user = $request->user();
+        if (!$user instanceof Authorizable) {
+            throw MissingActorException::required();
+        }
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 
-        return $user instanceof Authorizable ? $user : null;
-    }
-
-    private function perPage(Request $request): int
-    {
-        $perPage = (int) $request->integer('per_page', 50);
-
-        return max(1, min($perPage, 200));
+        return new OperationContext(drive: $drive, actor: Actor::user($user), correlationId: (string) Str::ulid());
     }
 }

@@ -1,0 +1,10 @@
+{
+  "id": "V2-first",
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/filament",
+  "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/NodeGrantResourceTest.php tests/Feature/NodeShareResourceTest.php tests/Feature/ActivityResourceTest.php tests/Arch/OperationsBoundaryTest.php",
+  "started_at": 1791319566.4028785,
+  "duration_seconds": 3.478,
+  "exit": 2,
+  "output": "V2-first.log",
+  "input_fingerprint": "74cce9f546f5a4db3b88f98388ea2584534d1e0a160fbcce097efb68e60a3a75"
+}

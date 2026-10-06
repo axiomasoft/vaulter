@@ -1,0 +1,18 @@
+{
+  "id": "V3",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Sharing/ShareSecurityBoundaryTest.php --filter=\"revoke commit\"",
+  "started_at": 1791319594.698184,
+  "duration_seconds": 0.906,
+  "exit": 0,
+  "output": "V3.log",
+  "input_fingerprint": "54b13b30c499acf57c71afdf5252e4a1c5a9e14f75fa3d10916c622685cf0dbd",
+  "summary": {
+    "tool": "pest",
+    "result": "passed",
+    "tests": 1,
+    "passed": 1,
+    "assertions": 7,
+    "duration_ms": 821
+  }
+}

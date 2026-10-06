@@ -1,0 +1,23 @@
+{
+  "id": "V3-r2",
+  "cwd": "/home/vostrikov/projects/packages/vaulter",
+  "command": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Sharing/ShareSecurityBoundaryTest.php --filter=\"revoke commit\"",
+  "started_at": 1791320865.025032,
+  "duration_seconds": 0.823,
+  "exit": 0,
+  "output": "V3-r2.log",
+  "input_fingerprint": "64f2a85f3e7846a8ed4291b3d11c71d5c3c0dfe99bd73f6e769b211abe7c4296",
+  "summary": {
+    "tool": "pest",
+    "result": "passed",
+    "tests": 1,
+    "passed": 1,
+    "assertions": 7,
+    "duration_ms": 722
+  },
+  "executed_tests": 1,
+  "skipped": 0,
+  "matched_test_names": [
+    "P\\Packages\\core\\tests\\Sharing\\ShareSecurityBoundaryTest::__pest_evaluable_it_denies_every_new_resolution_after_revoke_commit_on_independent_connections"
+  ]
+}

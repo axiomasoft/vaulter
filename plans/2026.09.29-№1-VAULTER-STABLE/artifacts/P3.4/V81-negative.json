@@ -1,0 +1,54 @@
+{
+  "scenario": "conceals hidden grants and shares before checking Share",
+  "guard": "OperationGuard::authorizeGrants Share ability",
+  "isolated_temporary_source_copy": true,
+  "working_source_sha256_before": "b3ab7e1d8cc45eac8082ab477fb3d5e76125ebb3a6dfe4c4ac64ed2bf71a7c9d",
+  "working_source_sha256_after": "b3ab7e1d8cc45eac8082ab477fb3d5e76125ebb3a6dfe4c4ac64ed2bf71a7c9d",
+  "attempts": [
+    {
+      "stage": "red",
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": [
+        "env",
+        "APP_ENV=testing",
+        "DB_CONNECTION=sqlite",
+        "DB_DATABASE=:memory:",
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "--bootstrap",
+        "/tmp/vaulter-p34-negative-spmycgzv/bootstrap.php",
+        "packages/core/tests/Operations/CoreOperationsSecurityTest.php",
+        "--filter",
+        "conceals hidden grants and shares"
+      ],
+      "exit": 1,
+      "duration_seconds": 0.2607688903808594,
+      "copy_sha256": "ca28488c58128f08ccf5bdbb81ca2d3767f4086507b7b185ded615c329d7c717",
+      "log": "negative-red.log"
+    },
+    {
+      "stage": "restored-green",
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": [
+        "env",
+        "APP_ENV=testing",
+        "DB_CONNECTION=sqlite",
+        "DB_DATABASE=:memory:",
+        "scripts/php84",
+        "vendor/bin/pest",
+        "--ci",
+        "--bootstrap",
+        "/tmp/vaulter-p34-negative-spmycgzv/bootstrap.php",
+        "packages/core/tests/Operations/CoreOperationsSecurityTest.php",
+        "--filter",
+        "conceals hidden grants and shares"
+      ],
+      "exit": 0,
+      "duration_seconds": 0.2678995132446289,
+      "copy_sha256": "b3ab7e1d8cc45eac8082ab477fb3d5e76125ebb3a6dfe4c4ac64ed2bf71a7c9d",
+      "log": "negative-restored-green.log"
+    }
+  ],
+  "exit": 0
+}

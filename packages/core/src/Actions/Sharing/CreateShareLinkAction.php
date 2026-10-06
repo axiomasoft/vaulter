@@ -7,14 +7,20 @@ namespace Vaulter\Actions\Sharing;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use InvalidArgumentException;
 use RuntimeException;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Support\ShareToken;
 
@@ -30,8 +36,7 @@ use Vaulter\Support\ShareToken;
  * at mint time (NOT a DB column default, so it stays host-config-overridable and
  * every direct repository write in a test still goes through the same rule when it
  * routes through this Action). An explicit `expiresAt` above
- * `$this->sharingConfig->maxTtlHours()` is rejected by request validation
- * (StoreShareLinkRequest) before it reaches here — the Action does not re-clamp it.
+ * `$this->sharingConfig->maxTtlHours()` is rejected both by request validation and by the Action before minting.
  *
  * Authorization (the actor may Share the node) is enforced by the caller
  * (controller via AccessResolver Ability::Share) before reaching the Action — the
@@ -50,10 +55,25 @@ final readonly class CreateShareLinkAction
         private ShareTokenGenerator $tokens,
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
+        private NodeLocator $locator,
     ) {}
 
-    public function execute(Node $node, ShareLinkInput $data): MintedShareLink
+    public function execute(OperationContext $context, CreateShareLinkInput $input): MintedShareLink
     {
+        $node = $this->locator->find(context: $context, key: $input->node);
+        $data = $input->link;
+        if ($data->permissions < 0 || ($data->permissions & ~Permission::all()) !== 0 || $data->level === GrantLevel::Commenter || ($data->permissions & Permission::Comment->value) !== 0) {
+            throw new InvalidArgumentException('Invalid anonymous share permissions.');
+        }
+        if ($data->maxUses !== null && $data->maxUses < 1) {
+            throw new InvalidArgumentException('A share use budget must be positive.');
+        }
+        if ($data->password !== null && strlen($data->password) > 255) {
+            throw new InvalidArgumentException('Share password is too long.');
+        }
+        if ($data->expiresAt !== null && ($data->expiresAt->lte(Carbon::now()) || $data->expiresAt->gt(Carbon::now()->addHours($this->sharingConfig->maxTtlHours())))) {
+            throw new InvalidArgumentException('Share expiry must be within the configured TTL.');
+        }
         $passwordHash = $data->password === null || $data->password === ''
             ? null
             : Hash::make($data->password);
@@ -64,15 +84,16 @@ final readonly class CreateShareLinkAction
             ? $data->expiresAt
             : Carbon::now()->addHours($this->sharingConfig->defaultTtlHours());
 
-        return $this->database->transaction(function () use ($node, $data, $passwordHash, $expiresAt): MintedShareLink {
+        return $this->database->transaction(function () use ($context, $node, $data, $passwordHash, $expiresAt): MintedShareLink {
             $minted = $this->mint(
+                context: $context,
                 node: $node,
                 data: $data,
                 passwordHash: $passwordHash,
                 expiresAt: $expiresAt,
             );
 
-            event(new NodeShareCreated(share: $minted->share, actorId: $data->grantedBy));
+            event(new NodeShareCreated(share: $minted->share, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $minted;
         });
@@ -83,7 +104,7 @@ final readonly class CreateShareLinkAction
      * persist its hash + prefix. Returns the raw token alongside the row exactly
      * once — it is never recoverable afterward.
      */
-    private function mint(Node $node, ShareLinkInput $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
+    private function mint(OperationContext $context, Node $node, ShareLinkInput $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
     {
         $prefixLength = $this->sharingConfig->prefixLength();
 
@@ -103,7 +124,7 @@ final readonly class CreateShareLinkAction
                     allowDiscovery: $data->allowDiscovery,
                     expiresAt: $expiresAt,
                     maxUses: $data->maxUses,
-                    grantedBy: $data->grantedBy,
+                    grantedBy: $context->actor->ref()->id,
                 );
             } catch (QueryException $exception) {
                 // A token_hash collision (or any unique violation on this row) means

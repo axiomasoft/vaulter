@@ -433,6 +433,40 @@ Vaulter\Data\Access\GrantInput
   readonly \Vaulter\Enums\Access\GrantScope $scope
   readonly int $permissions
 
+Vaulter\Data\Sharing\ShareLinkInput
+  __construct(int $permissions, \Vaulter\Enums\Access\GrantLevel $level = Vaulter\Enums\Access\GrantLevel::Reader, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?string $password = null, bool $requireLogin = false, bool $allowDiscovery = false, ?\Illuminate\Support\Carbon $expiresAt = null, ?int $maxUses = null)
+  readonly ?\Illuminate\Support\Carbon $expiresAt
+  readonly ?int $maxUses
+  readonly ?string $password
+  readonly \Vaulter\Enums\Access\GrantLevel $level
+  readonly \Vaulter\Enums\Access\GrantScope $scope
+  readonly bool $allowDiscovery
+  readonly bool $requireLogin
+  readonly int $permissions
+
+Vaulter\Data\Sharing\MintedShareLink
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, string $token)
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly string $token
+
+Vaulter\Operations\AccessOperations
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete)
+  explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
+  grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
+
+Vaulter\Operations\ShareOperations
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink)
+  create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
+  list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
+
+Vaulter\Operations\ActivityOperations
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query)
+  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  forNode(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+
 Vaulter\Access\ValueObjects\AccessScope
   __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null, int|null|string $tenantId = null)
   forDrive(\Vaulter\Models\Drive\Drive $drive, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null): \self
@@ -479,6 +513,7 @@ Vaulter\Access\OperationGuard
   abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
   authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
   authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
+  authorizeGrants(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
   visible(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
 
 Vaulter\Exceptions\Access\MissingActorException
@@ -728,13 +763,17 @@ FACADE Vaulter\Facades\Vaulter
   static void registerExporter(DocumentExporter|class-string<DocumentExporter> $exporter)
 
 Vaulter\Events\Access\NodeGrantCreated
-  __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
+  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly ?string $correlationId
   readonly \Vaulter\Models\Access\NodeGrant $grant
   readonly int|null|string $actorId
   readonly string $eventId
 
 Vaulter\Events\Access\NodeGrantRevoked
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
+  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly ?string $correlationId
   readonly \Vaulter\Access\ValueObjects\Subject $subject
   readonly \Vaulter\Models\Drive\Node $node
   readonly int $revoked
@@ -742,13 +781,17 @@ Vaulter\Events\Access\NodeGrantRevoked
   readonly string $eventId
 
 Vaulter\Events\Sharing\NodeShareCreated
-  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
+  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly ?string $correlationId
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly int|null|string $actorId
   readonly string $eventId
 
 Vaulter\Events\Sharing\NodeShareRevoked
-  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
+  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly ?string $correlationId
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly int|null|string $actorId
   readonly string $eventId

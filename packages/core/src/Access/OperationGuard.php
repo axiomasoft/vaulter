@@ -40,6 +40,22 @@ final readonly class OperationGuard
         }
     }
 
+    /** Grant management uses the grants feature, independently of bearer links. */
+    public function authorizeGrants(OperationContext $context, Node $node): void
+    {
+        $node = $this->scoped(context: $context, node: $node);
+        if (!$context->actor->isSystem()) {
+            $grants = $this->grants(context: $context, node: $node);
+            $this->requireView(grants: $grants, node: $node);
+            if (!$grants->allows(Ability::Share)) {
+                throw PermissionDeniedException::forAbility(Ability::Share->value);
+            }
+        }
+        if (!$this->profileAllows(context: $context, node: $node, ability: Ability::Manage, operation: OperationKind::Metadata)) {
+            throw ProfileRestrictionException::forOperation('grants');
+        }
+    }
+
     public function authorizeCreate(OperationContext $context, Node $parent): void
     {
         $parent = $this->scoped(context: $context, node: $parent);

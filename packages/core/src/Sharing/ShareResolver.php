@@ -14,8 +14,11 @@ use Illuminate\Support\Facades\Hash;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Profiles\ProfilePolicy;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
@@ -51,6 +54,9 @@ final class ShareResolver
         private readonly NodeShareReadRepository $shares,
         private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
+        private readonly ProfilePolicy $profiles,
+        private readonly ProfileRegistry $registry,
+        private readonly ShareContentGuard $content,
     ) {}
 
     /**
@@ -114,6 +120,11 @@ final class ShareResolver
      * trashed, not soft-deleted, and attached to a real storage (the tenant
      * boundary). Returns null otherwise so a share on an unsafe node is opaque.
      */
+    public function assertContentAvailable(Node $node, FileRevision $revision): void
+    {
+        $this->content->assertAvailable(node: $node, revision: $revision);
+    }
+
     private function safeTargetNode(NodeShare $share): ?Node
     {
         /** @var Node|null $node */
@@ -132,7 +143,8 @@ final class ShareResolver
 
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
-        if (!$this->storages->find($node->drive_id) instanceof Drive) {
+        $drive = $this->storages->find($node->drive_id);
+        if (!$drive instanceof Drive || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id) {
             return null;
         }
 
@@ -173,7 +185,7 @@ final class ShareResolver
             return false;
         }
 
-        return $this->access->can($issuer, Ability::Share, $node);
+        return $this->access->can($issuer, Ability::View, $node) && $this->access->can($issuer, Ability::Share, $node);
     }
 
     /**
