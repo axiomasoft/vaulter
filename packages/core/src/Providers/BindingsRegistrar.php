@@ -15,10 +15,13 @@ use Vaulter\Configuration\IdsConfig;
 use Vaulter\Configuration\ListingConfig;
 use Vaulter\Configuration\ObservabilityConfig;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
+use Vaulter\Content\OffScanPolicyResolver;
+use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
@@ -33,6 +36,7 @@ use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Operations\NodeLocator;
+use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
@@ -45,6 +49,9 @@ final class BindingsRegistrar
     public function register(Application $app): void
     {
         $app->singleton(VaulterConfig::class);
+        $app->singleton(ScanConfig::class);
+        $app->bind(ProfilePolicy::class);
+        $app->bindIf(ScanPolicyResolver::class, OffScanPolicyResolver::class);
         $app->singleton(DatabaseConfig::class);
         $app->singleton(IdsConfig::class);
         $app->singleton(TenancyConfig::class);
@@ -85,6 +92,7 @@ final class BindingsRegistrar
             static fn (Application $app): ProfileRegistry => ProfileRegistry::fromConfig(
                 providerClasses: $app->make(VaulterConfig::class)->profileProviders(),
                 defaultClass: $app->make(VaulterConfig::class)->defaultProfile(),
+                container: $app,
             ),
         );
 

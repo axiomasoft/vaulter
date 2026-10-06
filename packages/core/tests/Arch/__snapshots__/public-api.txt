@@ -186,6 +186,12 @@ Vaulter\Configuration\RoutesConfig
   publicRateLimit(): int
   uploadsRateLimit(): int
 
+Vaulter\Configuration\ScanConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  globalSpec(): \Vaulter\Content\ScanPolicySpec
+  mode(): \Vaulter\Enums\Cas\ScanMode
+  scanner(): ?string
+
 Vaulter\Configuration\SharingConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   defaultTtlHours(): int
@@ -213,6 +219,7 @@ Vaulter\Configuration\VaulterConfig
   observability(): \Vaulter\Configuration\ObservabilityConfig
   profileProviders(): array
   routes(): \Vaulter\Configuration\RoutesConfig
+  scan(): \Vaulter\Configuration\ScanConfig
   sharing(): \Vaulter\Configuration\SharingConfig
   tenancy(): \Vaulter\Configuration\TenancyConfig
   webhooks(): \Vaulter\Configuration\WebhooksConfig
@@ -290,7 +297,7 @@ Vaulter\Operations\NodeLocator
   find(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
 
 Vaulter\Access\OperationGuard
-  __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator)
+  __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles)
   abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
   authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
   authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
@@ -327,6 +334,66 @@ Vaulter\Exceptions\Profiles\ProfileRestrictionException
   httpStatus(): int
   problemCode(): string
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
+
+Vaulter\Profiles\Profile
+  comments(bool $enabled = true): \static
+  commentsEnabled(): bool
+  defaultQuota(?int $bytes): \static
+  disk(string $disk): \static
+  documentTypes(string ...$typeKeys): \static
+  getDefaultQuota(): ?int
+  getDisk(): ?string
+  getDocumentTypes(): array
+  getKey(): string
+  getOwners(): array
+  getPermissionDriver(): ?string
+  getRevisionLimit(): ?int
+  getTrashRetentionDays(): ?int
+  getUploadPolicy(): \Vaulter\Profiles\UploadPolicy
+  grants(bool $enabled = true): \static
+  grantsEnabled(): bool
+  key(string $key): \static
+  owners(string ...$modelClasses): \static
+  permissionDriver(string $driverKey): \static
+  revisionLimit(?int $max): \static
+  shareLinks(bool $enabled = true): \static
+  shareLinksEnabled(): bool
+  trashRetentionDays(?int $days): \static
+  uploads(\Vaulter\Profiles\UploadPolicy $policy): \static
+
+Vaulter\Profiles\ProfileRegistry
+  __construct(?\Illuminate\Contracts\Container\Container $container = null)
+  all(): array
+  default(): \Vaulter\Profiles\Profile
+  freeze(): void
+  fromConfig(array $providerClasses, string $defaultClass, ?\Illuminate\Contracts\Container\Container $container = null): \self
+  get(string $key): \Vaulter\Profiles\Profile
+  has(string $key): bool
+  register(\Vaulter\Profiles\Profile|\Vaulter\Profiles\ProfileProvider|string $profile): void
+
+Vaulter\Profiles\ProfileProvider
+  profile(\Vaulter\Profiles\Profile $profile): \Vaulter\Profiles\Profile
+  resolve(): \Vaulter\Profiles\Profile
+
+Vaulter\Profiles\UploadPolicy
+  __construct(?int $maxFileSize = null, array $allowedMimeTypes = [], array $blockedExtensions = [], ?bool $requireScan = null, ?\Vaulter\Enums\Cas\ScanMode $scanMode = null, ?string $scanPolicyVersion = null)
+  readonly ?\Vaulter\Enums\Cas\ScanMode $scanMode
+  readonly ?bool $requireScan
+  readonly ?int $maxFileSize
+  readonly ?string $scanPolicyVersion
+  readonly array $allowedMimeTypes
+  readonly array $blockedExtensions
+
+Vaulter\Content\ScanPolicySpec
+  __construct(string $predicateKey, \Vaulter\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
+  requiresScan(int $admissionSequence, ?int $boundarySequence): bool
+  specKey(): string
+  readonly ?string $rolloutKey
+  readonly \Vaulter\Enums\Cas\ScanMode $mode
+  readonly string $policyVersion
+  readonly string $predicateKey
+  readonly string $scannerKey
+  readonly string $scannerVersion
 
 Vaulter\Enums\Operations\OperationKind
   Metadata = metadata

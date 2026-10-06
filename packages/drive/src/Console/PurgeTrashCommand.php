@@ -10,6 +10,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
@@ -42,6 +43,7 @@ final class PurgeTrashCommand extends Command
     public function __construct(
         private readonly VaulterDatabase $database,
         private readonly DriveConfig $driveConfig,
+        private readonly ProfileRegistry $profiles,
     ) {
         parent::__construct();
     }
@@ -75,9 +77,18 @@ final class PurgeTrashCommand extends Command
             operation: function () use ($nodes, $store, $forceDelete, $metrics, $threshold, &$purgedRoots, &$purgedNodeCount): void {
                 // Materialise the candidates first: the transaction below mutates rows,
                 // which would shift a live cursor mid-iteration.
-                $candidates = $nodes->trashedBefore($threshold)->get();
+                $candidates = $nodes->trashedBefore(Carbon::now())->get();
 
                 foreach ($candidates as $node) {
+                    $drive = $node->storage()->first();
+                    if ($drive === null) {
+                        continue;
+                    }
+                    $override = $this->option('days');
+                    $days = (is_string($override) || is_int($override)) && is_numeric($override)
+                        ? max((int) $override, 0)
+                        : ($this->profiles->get($drive->profile)->getTrashRetentionDays() ?? $this->driveConfig->trashRetentionDays());
+                    $threshold = Carbon::now()->subDays($days);
                     $purged = $this->database->transaction(function () use ($node, $threshold, $nodes, $forceDelete, $store, $metrics): int {
                         // Re-verify + row-lock under the SAME transaction that performs the
                         // physical delete (TOCTOU guard, P2.2 review fix): the candidate
@@ -136,7 +147,7 @@ final class PurgeTrashCommand extends Command
     {
         $override = $this->option('days');
 
-        if (is_string($override) && is_numeric($override)) {
+        if ((is_string($override) || is_int($override)) && is_numeric($override)) {
             return max((int) $override, 0);
         }
 

@@ -44,7 +44,7 @@ it('SEC-R14 metadata and purge do not invent upload or scanner dependencies', fu
     $context = OperationContext::system(drive: $drive, reason: 'maintenance');
     $guard = app(OperationGuard::class);
     $guard->authorizeCreate(context: $context, parent: $node);
-    expect(array_values($guard->abilities(context: $context, node: $node)->flags))->each->toBeTrue();
+    expect($guard->abilities(context: $context, node: $node)->flags)->toMatchArray(['view' => true, 'create' => true, 'delete' => true, 'share' => false, 'comment' => false]);
     expect($guard->visible(context: $context, nodes: [$node])[0]->id)->toBe($node->id)
         ->and(array_column(OperationKind::cases(), 'name'))->toBe(['Metadata', 'Mutation', 'ContentEgress', 'Purge']);
 });

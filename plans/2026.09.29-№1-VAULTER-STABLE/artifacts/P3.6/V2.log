@@ -1,0 +1,29 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Profiles\ProfileRuntimeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit applies disk and quota defaults only on a new drive[39m[90m              [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit inherits nullable quota defaults and accepts zero[39m[90m                [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks owner restrictions before either provisioning or returnin[39m[90m…[39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit intersects MIME predicates and size limits while combining block[39m[90m…[39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses the profile retention cutoff per drive and preserves an exp[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit prunes edges while preserving head permanent revisions quota and[39m[90m…[39m [90m0.13s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\StorageManagerTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit создаёт storage и корневую папку при первом обращении[39m[90m            [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit идемпотентен: второе обращение возвращает тот же storage[39m[90m         [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit применяет дефолтный диск из конфига к новому storage[39m[90m             [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit диспатчит StorageCreated с корнем при провижене[39m[90m                  [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the registered profile object through the core handle co[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an unknown profile before owner provisioning[39m[90m             [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit opens an existing drive before an unknown profile is requested[39m[90m   [39m [90m0.07s[39m  
+
+  [30;43;1m WARN [39;49;22m[39m Tests\Feature\PurgeTrashTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit physically purges a node trashed past the retention window, F-P1[39m[90m…[39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit leaves a node still inside the retention window untouched[39m[90m        [39m [90m0.08s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit frees the blob edges of a purged file subtree (GC-eligible)[39m[90m      [39m [90m0.10s[39m  
+  [33;1m-[39;22m[90m [39m[90mit cascades the physical purge to file/version rows on PostgreSQL,[39m[90m… [39m [90m0.07s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit does not physically purge a node restored between candidate mate[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit honours the --days override[39m[90m                                      [39m [90m0.09s[39m  
+
+  [90mTests:[39m    [33;1m1 skipped[39;22m[90m,[39m[39m [39m[32;1m18 passed[39;22m[90m (59 assertions)[39m
+  [90mDuration:[39m [39m1.81s[39m
+

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Full profile builder, immutable upload policies and container-resolved frozen
+  registry snapshots (AD05, PLAN2.P3.6). Profiles control drive defaults, owners,
+  comments, document types and retention. OperationGuard enforces effective
+  policy for user and system actors; maintenance purge has no upload/egress gate.
+- Schema-free scan modes/specs and independent global/profile predicates
+  (PLAN2.D26, PLAN2.D27). Canonical and alias conflicts fail validation; persisted
+  scan activation and evidence remain PLAN2.P3.7.
+
 - Core operation security primitives: `Actor`/serializable `ActorRef`, immutable
   `OperationContext`, scoped `NodeLocator` and `OperationGuard` (AD05, AD07,
   PLAN2.P3.1). Node models supply persisted keys; caller attributes and relations
@@ -18,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Profile and tenant enforcement connect in the following integration steps.
 
 ### Changed
+
+- Profile APIs use `key`/`owners` and named feature methods; duplicate keys and
+  post-boot mutation fail explicitly. Implicit feature flags inherit globals;
+  explicit enabling cannot override a globally disabled feature. New drive
+  disk/quota defaults, per-drive trash retention and existing document/comment
+  HTTP policy boundaries now use the frozen profile (AD05, PLAN2.P3.6).
 
 - Configuration now belongs to each package (`vaulter`, `vaulter-media`, `vaulter-drive`,
   `vaulter-documents`, `vaulter-azgard`, `vaulter-filament`) and is read through typed

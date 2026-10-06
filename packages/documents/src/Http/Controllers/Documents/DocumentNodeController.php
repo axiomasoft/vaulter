@@ -33,6 +33,7 @@ use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
@@ -52,6 +53,7 @@ final class DocumentNodeController extends Controller
         private readonly NodeReadRepository $nodes,
         private readonly DocumentRevisionReadRepository $versions,
         private readonly AccessResolver $access,
+        private readonly ProfilePolicy $profiles,
         private readonly CreateDocumentAction $createDocument,
         private readonly UpdateDocumentContentAction $updateContent,
         private readonly CreateNamedRevisionAction $createNamedVersion,
@@ -70,6 +72,7 @@ final class DocumentNodeController extends Controller
         $parent = $this->resolveParentById($request->parentId(), $storage);
 
         $this->guardCreate($request, $storage, $parent);
+        $this->profiles->assertDocumentType(drive: $storage, type: $request->versionFormat());
 
         $node = $this->createDocument->execute(new CreateDocumentInput(
             storage: $storage,

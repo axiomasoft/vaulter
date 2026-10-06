@@ -42,6 +42,10 @@ return [
     ],
     'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false)],
     'profiles' => ['default' => DefaultProfile::class, 'providers' => []],
+    'scan' => [
+        'mode' => null, 'required' => null, 'scanner' => null, 'scanner_key' => null,
+        'scanner_version' => null, 'policy_version' => null, 'rollout_key' => null,
+    ],
     'features' => [
         'grants' => true,
         'activity' => true,

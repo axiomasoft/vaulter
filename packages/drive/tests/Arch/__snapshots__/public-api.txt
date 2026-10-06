@@ -7,7 +7,9 @@ Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler
 Vaulter\Drive\Configuration\DriveConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   allowedMimeTypes(): array
+  blockedExtensions(): array
   chunkSize(): int
+  defaultQuota(): ?int
   maxActiveSessionsPerActor(): int
   maxChunkSize(): int
   maxFileSize(): int

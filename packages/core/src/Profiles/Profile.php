@@ -4,86 +4,253 @@ declare(strict_types=1);
 
 namespace Vaulter\Profiles;
 
-/** A named policy for drives sharing the configured Vaulter schema. */
+use Illuminate\Database\Eloquent\Model;
+use LogicException;
+use Vaulter\Exceptions\Profiles\InvalidProfileException;
+
+/** A fluent policy builder; the registry stores independent frozen snapshots. */
 final class Profile
 {
-    /** @param array<string, bool> $features */
-    public function __construct(
-        private string $id = '',
-        private ?string $hostModel = null,
-        private bool $hasGrants = true,
-        private array $features = [],
-    ) {}
+    private bool $frozen = false;
 
-    public function id(string $id): self
+    private string $key = '';
+
+    /** @var list<class-string<Model>> */
+    private array $owners = [];
+
+    private ?string $disk = null;
+
+    private ?int $defaultQuota = null;
+
+    private ?UploadPolicy $uploads = null;
+
+    private ?string $permissionDriver = null;
+
+    /** @var list<string> */
+    private array $documentTypes = [];
+
+    private ?bool $grants = null;
+
+    private ?bool $shareLinks = null;
+
+    private ?bool $comments = null;
+
+    private ?int $revisionLimit = null;
+
+    private ?int $trashRetentionDays = null;
+
+    public function key(string $key): static
     {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function host(string $model): self
-    {
-        $this->hostModel = $model;
-
-        return $this;
-    }
-
-    public function grants(): self
-    {
-        $this->hasGrants = true;
-
-        return $this;
-    }
-
-    public function withoutGrants(): self
-    {
-        $this->hasGrants = false;
-
-        return $this;
-    }
-
-    /** @param array<string, bool> $flags */
-    public function features(array $flags): self
-    {
-        $this->features = [...$this->features, ...$flags];
-
-        return $this;
-    }
-
-    public function feature(string $name, bool $on = true): self
-    {
-        $this->features[$name] = $on;
-
-        return $this;
-    }
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    public function hostModel(): ?string
-    {
-        return $this->hostModel;
-    }
-
-    public function hasGrants(): bool
-    {
-        return $this->hasGrants;
-    }
-
-    public function featureEnabled(string $name): bool
-    {
-        if (array_key_exists($name, $this->features)) {
-            return $this->features[$name];
+        $this->assertMutable();
+        if (preg_match('/^[a-z0-9][a-z0-9-]{0,63}$/D', $key) !== 1) {
+            throw new InvalidProfileException('Invalid profile key.');
         }
+        $this->key = $key;
 
-        return match ($name) {
-            'grants' => $this->hasGrants,
-            'versions', 'blobs', 'tags', 'activity', 'uploads', 'extra_data', 'webhooks' => true,
-            'share_links', 'public_listing', 'document_versions' => false,
-            default => false,
+        return $this;
+    }
+
+    public function owners(string ...$modelClasses): static
+    {
+        $this->assertMutable();
+        $owners = [];
+        foreach ($modelClasses as $class) {
+            if (!is_a($class, Model::class, true)) {
+                throw new InvalidProfileException('Profile owners must extend Eloquent Model.');
+            }
+            $owners[] = $class;
+        }
+        $this->owners = $owners;
+
+        return $this;
+    }
+
+    public function disk(string $disk): static
+    {
+        $this->assertMutable();
+        if (trim($disk) === '') {
+            throw new InvalidProfileException('Profile disk must be nonempty.');
+        }
+        $this->disk = $disk;
+
+        return $this;
+    }
+
+    public function defaultQuota(?int $bytes): static
+    {
+        $this->assertMutable();
+        $this->nonnegative($bytes);
+        $this->defaultQuota = $bytes;
+
+        return $this;
+    }
+
+    public function uploads(UploadPolicy $policy): static
+    {
+        $this->assertMutable();
+        $this->uploads = $policy;
+
+        return $this;
+    }
+
+    public function permissionDriver(string $driverKey): static
+    {
+        $this->assertMutable();
+        if (trim($driverKey) === '') {
+            throw new InvalidProfileException('Profile permission driver must be nonempty.');
+        }
+        $this->permissionDriver = $driverKey;
+
+        return $this;
+    }
+
+    public function documentTypes(string ...$typeKeys): static
+    {
+        $this->assertMutable();
+        foreach ($typeKeys as $key) {
+            if (trim($key) === '') {
+                throw new InvalidProfileException('Document type keys must be nonempty.');
+            }
+        }
+        $this->documentTypes = array_values($typeKeys);
+
+        return $this;
+    }
+
+    public function grants(bool $enabled = true): static
+    {
+        $this->assertMutable();
+        $this->grants = $enabled;
+
+        return $this;
+    }
+
+    public function shareLinks(bool $enabled = true): static
+    {
+        $this->assertMutable();
+        $this->shareLinks = $enabled;
+
+        return $this;
+    }
+
+    public function comments(bool $enabled = true): static
+    {
+        $this->assertMutable();
+        $this->comments = $enabled;
+
+        return $this;
+    }
+
+    public function revisionLimit(?int $max): static
+    {
+        $this->assertMutable();
+        if ($max !== null && $max < 1) {
+            throw new InvalidProfileException('Revision limit must be positive or null.');
+        }
+        $this->revisionLimit = $max;
+
+        return $this;
+    }
+
+    public function trashRetentionDays(?int $days): static
+    {
+        $this->assertMutable();
+        $this->nonnegative($days);
+        $this->trashRetentionDays = $days;
+
+        return $this;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    /** @return list<class-string<Model>> */
+    public function getOwners(): array
+    {
+        return $this->owners;
+    }
+
+    public function getDisk(): ?string
+    {
+        return $this->disk;
+    }
+
+    public function getDefaultQuota(): ?int
+    {
+        return $this->defaultQuota;
+    }
+
+    public function getUploadPolicy(): UploadPolicy
+    {
+        return $this->uploads ?? new UploadPolicy;
+    }
+
+    public function getPermissionDriver(): ?string
+    {
+        return $this->permissionDriver;
+    }
+
+    /** @return list<string> */
+    public function getDocumentTypes(): array
+    {
+        return $this->documentTypes;
+    }
+
+    public function grantsEnabled(): bool
+    {
+        return $this->grants ?? true;
+    }
+
+    public function shareLinksEnabled(): bool
+    {
+        return $this->shareLinks ?? true;
+    }
+
+    public function commentsEnabled(): bool
+    {
+        return $this->comments ?? true;
+    }
+
+    public function getRevisionLimit(): ?int
+    {
+        return $this->revisionLimit;
+    }
+
+    public function getTrashRetentionDays(): ?int
+    {
+        return $this->trashRetentionDays;
+    }
+
+    /** @internal Nullable flags distinguish explicit enabling from inheritance. */
+    public function featureFlag(string $feature): ?bool
+    {
+        return match ($feature) {
+            'grants' => $this->grants,
+            'share_links' => $this->shareLinks,
+            'comments' => $this->comments,
+            default => null,
         };
+    }
+
+    /** @internal Called only on the registry's independent copy. */
+    public function freeze(): void
+    {
+        $this->frozen = true;
+    }
+
+    private function assertMutable(): void
+    {
+        if ($this->frozen) {
+            throw new LogicException('A registered profile is immutable.');
+        }
+    }
+
+    private function nonnegative(?int $value): void
+    {
+        if ($value !== null && $value < 0) {
+            throw new InvalidProfileException('Profile limits must be nonnegative or null.');
+        }
     }
 }

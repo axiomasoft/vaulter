@@ -6,6 +6,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\AclFolder;
 use Vaulter\Access\ExactListing;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Events\EventType;
@@ -21,6 +22,10 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
 use Vaulter\ValueObjects\Access\Actor;
@@ -301,7 +306,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         $blocks[] = vaulterSnapshotInterface($class);
     }
 
-    foreach ([Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class] as $class) {
+    foreach ([Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, ScanPolicySpec::class] as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {

@@ -1,0 +1,40 @@
+{
+  "control": "NC-PROFILE",
+  "isolated_root": "/tmp/vaulter-p36-nc-uiaxll2k",
+  "cwd": ".",
+  "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/ProfileGuardBoundaryTest.php --filter=SEC-R14",
+  "environment": {
+    "APP_ENV": "testing",
+    "DB_CONNECTION": "sqlite",
+    "DB_DATABASE": ":memory:"
+  },
+  "loader_path": "/tmp/vaulter-p36-nc-uiaxll2k/packages/core/src/Access/OperationGuard.php",
+  "fault": "OperationGuard::profileAllows returns true after scoped lookup",
+  "source_original_sha256": "6cd4fa6679b61894a746c9c346a2069193952e05d6ce6f4733b4dad8612ae427",
+  "own_candidate_unchanged": true,
+  "restored_exact_bytes": true,
+  "runs": [
+    {
+      "phase": "red",
+      "exit": 1,
+      "source_sha256": "f074f79ea65f811011d2d38f3731e6782aaa7e5fa876cac18656bfb86f0c3dc4",
+      "duration_seconds": 0.6349637399980566,
+      "output": "artifacts/P3.6/NC-PROFILE-red.log",
+      "matched_tests": 5,
+      "passed": 3,
+      "failed": 2,
+      "skipped": 0
+    },
+    {
+      "phase": "restored-green",
+      "exit": 0,
+      "source_sha256": "6cd4fa6679b61894a746c9c346a2069193952e05d6ce6f4733b4dad8612ae427",
+      "duration_seconds": 0.6404585059935926,
+      "output": "artifacts/P3.6/NC-PROFILE-restored-green.log",
+      "matched_tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

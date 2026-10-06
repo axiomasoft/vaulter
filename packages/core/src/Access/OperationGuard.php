@@ -15,12 +15,14 @@ use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\ProfilePolicy;
 
 final readonly class OperationGuard
 {
     public function __construct(
         private AccessResolver $resolver,
         private NodeLocator $locator,
+        private ProfilePolicy $profiles,
     ) {}
 
     public function authorize(OperationContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
@@ -123,9 +125,10 @@ final readonly class OperationGuard
     /** Tenant enforcement is connected by the strict tenancy integration. */
     private function tenantBoundary(OperationContext $context, Node $node): void {}
 
-    /** The frozen profile policy connects here before handle activation. */
     private function profileAllows(OperationContext $context, Node $node, Ability $ability, OperationKind $operation): bool
     {
-        return true;
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+
+        return $this->profiles->allows(drive: $drive, node: $node, ability: $ability, operation: $operation);
     }
 }

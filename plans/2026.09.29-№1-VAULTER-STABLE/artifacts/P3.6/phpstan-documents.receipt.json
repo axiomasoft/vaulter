@@ -1,0 +1,12 @@
+{
+  "id": "phpstan-documents",
+  "command": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+  "cwd": "packages/documents",
+  "environment": {},
+  "started_at": "2026-10-06T18:17:16.948651+00:00",
+  "duration_seconds": 3.908,
+  "exit": 0,
+  "input_fingerprint": "ff34b11893bff92219c6d1798d8fa5554da12902f9740f694a6670bcbd420b78",
+  "after_fingerprint": "ff34b11893bff92219c6d1798d8fa5554da12902f9740f694a6670bcbd420b78",
+  "output": "artifacts/P3.6/phpstan-documents.log"
+}

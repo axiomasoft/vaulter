@@ -2,34 +2,85 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Model;
+use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfilePolicy;
+use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Tests\Fixtures\Panels\FakeProject;
+use Vaulter\Tests\Fixtures\TestUser;
 
-it('применяет дефолты фич Vaulter с override панели', function (): void {
-    $panel = (new Profile)->id('p');
+it('inherits global flags and cannot enable a globally disabled feature', function (): void {
+    $profile = (new Profile)->key('p');
+    $policy = app(ProfilePolicy::class);
+    $policy->validate($profile);
+    expect($policy->featureEnabled($profile, 'grants'))->toBeTrue()
+        ->and($policy->featureEnabled($profile, 'share_links'))->toBeFalse();
+    $policy->validate($profile->shareLinks(true));
+})->throws(InvalidConfigurationException::class, 'globally disabled');
 
-    expect($panel->featureEnabled('grants'))->toBeTrue()
-        ->and($panel->featureEnabled('versions'))->toBeTrue()
-        ->and($panel->featureEnabled('blobs'))->toBeTrue()
-        ->and($panel->featureEnabled('activity'))->toBeTrue()
-        ->and($panel->featureEnabled('uploads'))->toBeTrue()
-        ->and($panel->featureEnabled('extra_data'))->toBeTrue()
-        ->and($panel->featureEnabled('webhooks'))->toBeTrue()
-        ->and($panel->featureEnabled('share_links'))->toBeFalse()
-        ->and($panel->featureEnabled('public_listing'))->toBeFalse()
-        ->and($panel->featureEnabled('document_versions'))->toBeFalse();
+it('conjoins every explicit profile flag with the global policy', function (string $feature): void {
+    config()->set('vaulter.features.'.$feature, true);
+    config()->set('vaulter-documents.comments.enabled', true);
+    $setter = ['grants' => 'grants', 'share_links' => 'shareLinks', 'comments' => 'comments'][$feature];
+    $profile = (new Profile)->key('p');
+    expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeTrue();
+    $profile->$setter(false);
+    expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeFalse();
+})->with(['grants', 'share_links', 'comments']);
 
-    // grants follows hasGrants; explicit override wins.
-    expect((new Profile)->withoutGrants()->featureEnabled('grants'))->toBeFalse()
-        ->and((new Profile)->withoutGrants()->feature('grants', true)->featureEnabled('grants'))->toBeTrue()
-        ->and((new Profile)->feature('share_links', true)->featureEnabled('share_links'))->toBeTrue();
+it('rejects malformed profile values', function (Closure $build): void {
+    $build();
+})->with([
+    'key underscore' => fn () => (new Profile)->key('project_drive'),
+    'blank key' => fn () => (new Profile)->key(''),
+    'long key' => fn () => (new Profile)->key(str_repeat('a', 65)),
+    'owner class' => fn () => (new Profile)->owners(stdClass::class),
+    'negative quota' => fn () => (new Profile)->defaultQuota(-1),
+    'zero revisions' => fn () => (new Profile)->revisionLimit(0),
+    'negative retention' => fn () => (new Profile)->trashRetentionDays(-1),
+    'blank disk' => fn () => (new Profile)->disk(''),
+    'negative upload size' => fn () => new UploadPolicy(maxFileSize: -1),
+])->throws(InvalidProfileException::class);
+
+it('checks owner subtypes and leaves empty owner restrictions open', function (): void {
+    $profile = (new Profile)->key('p')->owners(FakeProject::class);
+    expect(app(ProfilePolicy::class)->ownerAllowed($profile, new FakeProject))->toBeTrue()
+        ->and(app(ProfilePolicy::class)->ownerAllowed((new Profile)->key('base')->owners(Model::class), new FakeProject))->toBeTrue()
+        ->and(app(ProfilePolicy::class)->ownerAllowed($profile, new TestUser))->toBeFalse()
+        ->and(app(ProfilePolicy::class)->ownerAllowed((new Profile)->key('any'), new FakeProject))->toBeTrue();
 });
 
-it('хранит host, storage type и grants', function (): void {
-    $panel = (new Profile)->id('p')->host(FakeProject::class);
+it('rejects unknown disks and permission driver keys at validation', function (Profile $profile): void {
+    app(ProfilePolicy::class)->validate($profile);
+})->with([
+    'disk' => fn () => (new Profile)->key('p')->disk('missing'),
+    'driver' => fn () => (new Profile)->key('p')->permissionDriver('missing'),
+])->throws(InvalidConfigurationException::class);
 
-    expect($panel->getId())->toBe('p')
-        ->and($panel->hostModel())->toBe(FakeProject::class)
-        ->and($panel->hasGrants())->toBeTrue()
-        ->and((new Profile)->withoutGrants()->hasGrants())->toBeFalse();
+it('hydrates DI profile providers only once during boot validation', function (): void {
+    $count = 0;
+    $provider = new class extends ProfileProvider
+    {
+        public function profile(Profile $profile): Profile
+        {
+            return $profile->key('custom');
+        }
+    };
+    app()->bind($provider::class, function () use (&$count, $provider) {
+        $count++;
+
+        return $provider;
+    });
+    config()->set('vaulter.profiles.providers', [$provider::class]);
+    app()->forgetInstance(ProfileRegistry::class);
+    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    app(ProfileRegistry::class);
+    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    expect($count)->toBe(1);
 });

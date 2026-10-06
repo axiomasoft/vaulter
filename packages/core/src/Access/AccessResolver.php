@@ -205,7 +205,9 @@ final class AccessResolver
             $sameStorage = $chain !== [] && Identity::stringify($chain[0]->drive_id) === Identity::stringify($node->drive_id);
             $parent = $node->inherit_grants && $sameStorage ? $inherited[$parentKey] : AclMask::none();
             $own = $this->grantMask($byNode[Identity::stringify($node->id)] ?? [], false);
-            $mask = $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level']);
+            $mask = $this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)
+                ? $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level'])
+                : AclMask::none();
             [$roleAllow, $roleLevel] = $roles[$key];
             $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied, level: $this->maxLevel($mask->level, $roleLevel));
         }
@@ -412,7 +414,7 @@ final class AccessResolver
      */
     private function resolveAcl(Node $node, array $subjects): array
     {
-        if ($subjects === []) {
+        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)) {
             return [0, 0, null];
         }
 
@@ -493,7 +495,7 @@ final class AccessResolver
      */
     private function resolveAclWithProvenance(Node $node, array $subjects): array
     {
-        if ($subjects === []) {
+        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)) {
             return [0, 0, null, []];
         }
 

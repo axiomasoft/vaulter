@@ -6,6 +6,49 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Frozen runtime profiles (AD05, PLAN2.P3.6, PLAN2.D26, PLAN2.D27)
+
+Replace `Profile::id()/getId()` with `key()/getKey()`, `host()/hostModel()` with
+`owners()/getOwners()`, and `withoutGrants()` with `grants(false)`. Replace arbitrary
+`feature()/features()/featureEnabled()` calls with `grants()`, `shareLinks()`,
+`comments()` and the effective `ProfilePolicy` feature reader. Keys match
+`^[a-z0-9][a-z0-9-]{0,63}$`; rename underscore keys consistently in stored drive
+profiles and provider configuration. `vaulter:make:profile` emits the canonical
+builder and kebab keys.
+
+Register provider FQCNs in `vaulter.profiles` before boot. Providers resolve once
+through the container; duplicate keys fail boot, including an explicitly repeated
+default key. Configure a replacement default provider via `profiles.default`.
+Registry values are independent frozen snapshots. Mutating a returned profile or
+registering after boot throws `LogicException`; the caller's original builder
+remains independent. Configuration remains cacheable without closures.
+
+Profile flags inherit global settings when unset. Explicitly enabling a globally
+disabled feature fails boot. Runtime flags conjoin global and profile settings;
+user View/ACL checks precede profile errors and system actors still obey profile
+restrictions. Disabled grants remove their ACL contribution and preserve the host
+role lane. Comment HTTP operations and document creation honor profile policy.
+Owner restrictions apply before returning or provisioning a drive. Disk and quota
+defaults affect new drives only; existing values remain stored. A nullable profile
+quota inherits `vaulter-drive.quota.default_bytes` (default unlimited).
+
+Upload size is the minimum limit, MIME lists are independent allow predicates,
+and blocked extensions combine case-insensitively. `UploadPolicy` retains its
+`requireScan` argument and appends optional `scanMode` and `scanPolicyVersion`.
+Canonical `vaulter.scan` policy values default to null; matching
+`vaulter-drive.uploads.scan` values are compatibility aliases. Unequal explicit
+values fail boot. `required=true` means `all_content` and conflicts with an
+explicit weaker mode. Global and profile eligibility remain independent; profile
+`off` cannot subtract a global requirement. Persisted activation, scan evidence,
+scanner bindings and admission consumers are supplied by PLAN2.P3.7; this
+intermediate step is not a release qualification.
+
+Trash retention uses each drive's frozen profile; `--days` is an explicit command
+override. The revision retention helper keeps the current head and permanent
+revisions, detaches obsolete CAS edges, preserves used bytes and the monotonic
+revision allocation counter. Rewritten revision actions connect this helper in
+PLAN2.P3.3/PLAN2.P3.7.
+
 ### Operation security foundations (AD05, AD07, PLAN2.P3.1)
 
 Core now provides `Vaulter\ValueObjects\Access\Actor` and `ActorRef`,

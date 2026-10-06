@@ -7,11 +7,14 @@ namespace Vaulter\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\ProfilePolicy;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -36,6 +39,9 @@ final readonly class DriveProvisioner
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
         private MediaConfig $mediaConfig,
+        private ProfileRegistry $profiles,
+        private ProfilePolicy $policy,
+        private DriveConfig $config,
     ) {}
 
     /**
@@ -44,6 +50,8 @@ final readonly class DriveProvisioner
      */
     public function forOwner(Model $owner, string $panel = 'default'): Drive
     {
+        $profile = $this->profiles->get($panel);
+        $this->policy->assertOwner(profile: $profile, owner: $owner);
         $existing = $this->read->forOwner(owner: $owner, panel: $panel);
 
         if ($existing instanceof Drive) {
@@ -79,7 +87,8 @@ final readonly class DriveProvisioner
                 'owner_type' => $owner->getMorphClass(),
                 'owner_id' => $owner->getKey(),
                 'name' => $this->defaultName($owner),
-                'disk' => $this->mediaConfig->disk(),
+                'disk' => $this->profiles->get($panel)->getDisk() ?? $this->mediaConfig->disk(),
+                'quota_bytes' => $this->profiles->get($panel)->getDefaultQuota() ?? $this->config->defaultQuota(),
                 'used_bytes' => 0,
             ]);
 

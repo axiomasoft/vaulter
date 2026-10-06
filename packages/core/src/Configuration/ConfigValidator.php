@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Log;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Profiles\ProfileProvider;
+use Vaulter\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Profiles\ProfilePolicy;
+use Vaulter\Profiles\ProfileRegistry;
 
 final readonly class ConfigValidator
 {
@@ -55,18 +57,24 @@ final readonly class ConfigValidator
             $config->model($key);
         }
 
-        $classes = [$config->defaultProfile(), ...$config->profileProviders()];
-        $ids = [];
-        foreach ($classes as $class) {
-            $provider = $app->make($class);
-            if (!$provider instanceof ProfileProvider) {
-                throw new InvalidConfigurationException('[Vaulter] Container binding for profile provider "'.$class.'" must return a ProfileProvider.');
+        try {
+            if ($app->resolved(ProfileRegistry::class)) {
+                $registry = $app->make(ProfileRegistry::class);
+                // Standalone validation may use a different Repository than the booted app.
+                if ($config !== $app->make(VaulterConfig::class)) {
+                    $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
+                }
+            } else {
+                $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
+                $app->instance(ProfileRegistry::class, $registry);
             }
-            $id = $provider->resolve()->getId();
-            if ($id === '' || isset($ids[$id])) {
-                throw new InvalidConfigurationException('[Vaulter] Profile keys must be nonempty and unique; duplicate "'.$id.'".');
+            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config));
+            foreach ($registry->all() as $profile) {
+                $policy->validate($profile);
             }
-            $ids[$id] = true;
+            (new ScanConfig($this->config))->scanner();
+        } catch (InvalidProfileException $exception) {
+            throw new InvalidConfigurationException($exception->getMessage(), previous: $exception);
         }
     }
 

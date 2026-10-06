@@ -83,7 +83,7 @@ it('batches visibility in input order and re-evaluates ACL on every call', funct
     foreach ($visible as $node) {
         $guard->authorize(context: $context, ability: Ability::View, node: $node);
         expect($guard->abilities(context: $context, node: $node)->flags['view'])->toBeTrue();
-        expect($guard->abilities(context: $context, node: $node)->flags)->toBe(app(AccessResolver::class)->abilitiesFor(actor: AccessTestHelpers::user(), node: $node));
+        expect($guard->abilities(context: $context, node: $node)->flags)->toBe(array_replace(app(AccessResolver::class)->abilitiesFor(actor: AccessTestHelpers::user(), node: $node), ['share' => false, 'comment' => false]));
     }
     $grant->delete();
     expect(fn () => $guard->authorize(context: $context, ability: Ability::View, node: $a))->toThrow(NodeNotFoundException::class)

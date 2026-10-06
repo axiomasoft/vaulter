@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Profiles\DefaultProfile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -20,18 +21,12 @@ it('строит реестр из конфига и регистрирует д
         ->and($registry->has('team'))->toBeTrue()
         ->and($registry->has('missing'))->toBeFalse()
         ->and(array_keys($registry->all()))->toBe(['default', 'project', 'team'])
-        ->and($registry->default()->getId())->toBe('default');
+        ->and($registry->default()->getKey())->toBe('default');
 });
 
-it('явная панель переопределяет дефолт, зарегистрированный первым', function (): void {
-    $registry = ProfileRegistry::fromConfig(
-        providerClasses: [OverrideDefaultProfile::class],
-        defaultClass: DefaultProfile::class,
-    );
-
-    expect($registry->all())->toHaveCount(1)
-        ->and($registry->default()->getId())->toBe('default');
-});
+it('rejects duplicate explicit default keys', function (): void {
+    ProfileRegistry::fromConfig(providerClasses: [OverrideDefaultProfile::class], defaultClass: DefaultProfile::class);
+})->throws(InvalidProfileException::class, 'unique');
 
 it('get бросает UnknownProfileException на неизвестную панель', function (): void {
     $registry = ProfileRegistry::fromConfig(

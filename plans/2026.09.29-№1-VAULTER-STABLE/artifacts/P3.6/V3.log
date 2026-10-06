@@ -1,0 +1,18 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Profiles\ProfileBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit rejects profile document type restrictions after ACL and leaves[39m[90m… [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces comments policy for list create resolve and delete incl[39m[90m…[39m [90m0.12s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Comment\NodeCommentApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit lists the node comment thread for a viewer[39m[90m                       [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s the thread listing without any grant[39m[90m                        [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a comment with the REGISTERED morph alias, not a raw FQC[39m[90m…[39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s creating a comment without a grant[39m[90m                          [39m [90m0.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit threads a reply and rejects a cross-node parent[39m[90m                  [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets the AUTHOR resolve and delete their own comment[39m[90m             [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s a non-author WITHOUT Manage on resolve and delete[39m[90m           [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets a MANAGER who is not the author resolve and delete[39m[90m          [39m [90m0.11s[39m  
+
+  [90mTests:[39m    [32;1m10 passed[39;22m[90m (38 assertions)[39m
+  [90mDuration:[39m [39m1.21s[39m
+

@@ -4,71 +4,84 @@ declare(strict_types=1);
 
 namespace Vaulter\Profiles;
 
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Container\Container as ContainerContract;
+use LogicException;
+use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 
-/** Named profiles hydrated from config, with the default registered before overrides. */
 final class ProfileRegistry
 {
-    /**
-     * @var array<string, Profile>
-     */
-    private array $panels = [];
+    /** @var array<string, Profile> */
+    private array $profiles = [];
 
-    public function register(Profile $panel): void
+    private bool $frozen = false;
+
+    public function __construct(private ?ContainerContract $container = null) {}
+
+    public function register(ProfileProvider|Profile|string $profile): void
     {
-
-        $this->panels[$panel->getId()] = $panel;
-    }
-
-    public function registerProvider(ProfileProvider $provider): void
-    {
-        $panel = $provider->resolve();
-
-        $this->register($panel);
-
-    }
-
-    /**
-     * Build a registry from a list of provider FQCN plus the default provider.
-     * The default is registered FIRST so an explicit panel may override it.
-     *
-     * @param array<int, class-string<ProfileProvider>> $providerClasses
-     * @param class-string<ProfileProvider>             $defaultClass
-     */
-    public static function fromConfig(array $providerClasses, string $defaultClass): self
-    {
-        $registry = new self;
-
-        $registry->registerProvider(new $defaultClass);
-
-        foreach ($providerClasses as $providerClass) {
-            $registry->registerProvider(new $providerClass);
+        if ($this->frozen) {
+            throw new LogicException('The profile registry is frozen.');
         }
+        if (is_string($profile)) {
+            if (!is_a($profile, ProfileProvider::class, true)) {
+                throw new InvalidProfileException('A profile provider FQCN is required.');
+            }
+            $profile = ($this->container ?? Container::getInstance())->make($profile);
+            if (!$profile instanceof ProfileProvider) {
+                throw new InvalidProfileException('The container must return a ProfileProvider.');
+            }
+        }
+        if ($profile instanceof ProfileProvider) {
+            $profile = $profile->resolve();
+        }
+        $key = $profile->getKey();
+        if ($key === '' || isset($this->profiles[$key])) {
+            throw new InvalidProfileException('Profile keys must be nonempty and unique; duplicate "'.$key.'".');
+        }
+        $snapshot = clone $profile;
+        $snapshot->freeze();
+        $this->profiles[$key] = $snapshot;
+    }
+
+    /** @param list<class-string<ProfileProvider>> $providerClasses
+     * @param class-string<ProfileProvider> $defaultClass
+     */
+    public static function fromConfig(array $providerClasses, string $defaultClass, ?ContainerContract $container = null): self
+    {
+        $registry = new self($container);
+        foreach ([$defaultClass, ...$providerClasses] as $class) {
+            $registry->register($class);
+        }
+        $registry->freeze();
 
         return $registry;
     }
 
-    public function get(string $name): Profile
+    public function freeze(): void
     {
-        return $this->panels[$name]
-            ?? throw UnknownProfileException::forName($name, array_keys($this->panels));
+        $this->frozen = true;
     }
 
-    public function has(string $name): bool
+    public function get(string $key): Profile
     {
-        return array_key_exists($name, $this->panels);
+        return $this->profiles[$key] ?? throw UnknownProfileException::forName($key, array_keys($this->profiles));
     }
 
-    /**
-     * @return array<string, Profile>
-     */
+    public function has(string $key): bool
+    {
+        return isset($this->profiles[$key]);
+    }
+
+    /** @return array<string, Profile> */
     public function all(): array
     {
-        return $this->panels;
+        return $this->profiles;
     }
 
     public function default(): Profile
     {
-        return $this->get('default');
+        return reset($this->profiles) ?: throw new InvalidProfileException('The default profile is missing.');
     }
 }

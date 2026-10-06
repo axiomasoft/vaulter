@@ -14,6 +14,25 @@ final readonly class DriveConfig
 {
     public function __construct(private Repository $config) {}
 
+    public function defaultQuota(): ?int
+    {
+        $value = $this->config->get('vaulter-drive.quota.default_bytes');
+        if ($value === null) {
+            return null;
+        }
+        if (!is_int($value) || $value < 0) {
+            throw new InvalidConfigurationException('Default quota must be nonnegative or null.');
+        }
+
+        return $value;
+    }
+
+    /** @return list<string> */
+    public function blockedExtensions(): array
+    {
+        return $this->stringList($this->config->get('vaulter-drive.uploads.blocked_extensions', []), []);
+    }
+
     public function maxFileSize(): int
     {
         $value = $this->config->get(key: 'vaulter-drive.uploads.max_file_size', default: 5_368_709_120); // 5 GiB

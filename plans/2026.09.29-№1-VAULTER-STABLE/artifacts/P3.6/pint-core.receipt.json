@@ -1,0 +1,12 @@
+{
+  "id": "pint-core",
+  "command": "scripts/php84 vendor/bin/pint --test packages/core/config/vaulter.php packages/core/src/Access/AccessResolver.php packages/core/src/Access/OperationGuard.php packages/core/src/Configuration/ConfigValidator.php packages/core/src/Configuration/ScanConfig.php packages/core/src/Configuration/VaulterConfig.php packages/core/src/Console/MakeProfileCommand.php packages/core/src/Content/OffScanPolicyResolver.php packages/core/src/Content/ScanPolicySpec.php packages/core/src/Contracts/Content/ScanPolicyResolver.php packages/core/src/Enums/Cas/ScanMode.php packages/core/src/Profiles/DefaultProfile.php packages/core/src/Profiles/Profile.php packages/core/src/Profiles/ProfilePolicy.php packages/core/src/Profiles/ProfileRegistry.php packages/core/src/Profiles/UploadPolicy.php packages/core/src/Providers/BindingsRegistrar.php packages/core/tests/Arch/PublicApiSnapshotTest.php packages/core/tests/Fixtures/Panels/OverrideDefaultProfile.php packages/core/tests/Fixtures/Panels/ProjectProfile.php packages/core/tests/Fixtures/Panels/TeamProfile.php packages/core/tests/IdStrategy/Ulid/HostKeysTest.php packages/core/tests/Operations/OperationGuardTest.php packages/core/tests/Operations/OperationTaxonomyTest.php packages/core/tests/Operations/ProfileGuardBoundaryTest.php packages/core/tests/Profiles/FrozenProfileTest.php packages/core/tests/Profiles/MakeProfileCommandTest.php packages/core/tests/Profiles/ProfilePolicyTest.php packages/core/tests/Profiles/ProfileRegistryTest.php packages/core/tests/Profiles/ScanPolicyAlgebraTest.php packages/core/tests/Webhooks/DeliverWebhookTest.php",
+  "cwd": ".",
+  "environment": {},
+  "started_at": "2026-10-06T18:17:14.911698+00:00",
+  "duration_seconds": 4.846,
+  "exit": 0,
+  "input_fingerprint": "ff34b11893bff92219c6d1798d8fa5554da12902f9740f694a6670bcbd420b78",
+  "after_fingerprint": "ff34b11893bff92219c6d1798d8fa5554da12902f9740f694a6670bcbd420b78",
+  "output": "artifacts/P3.6/pint-core.log"
+}

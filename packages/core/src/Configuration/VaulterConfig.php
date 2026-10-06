@@ -21,6 +21,7 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\DefaultProfile;
+use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileProvider;
 use Vaulter\Profiles\ProfileRegistry;
 
@@ -117,12 +118,17 @@ final readonly class VaulterConfig
     public function featureEnabled(string $feature, ?string $profile = null): bool
     {
         if ($profile !== null) {
-            return app(ProfileRegistry::class)->get($profile)->featureEnabled($feature);
+            return app(ProfilePolicy::class)->featureEnabled(app(ProfileRegistry::class)->get($profile), $feature);
         }
 
         $value = $this->config->get('vaulter.features.'.$feature);
 
         return is_bool($value) && $value;
+    }
+
+    public function scan(): ScanConfig
+    {
+        return new ScanConfig($this->config);
     }
 
     public function database(): DatabaseConfig

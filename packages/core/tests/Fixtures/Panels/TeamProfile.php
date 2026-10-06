@@ -7,18 +7,15 @@ namespace Vaulter\Tests\Fixtures\Panels;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileProvider;
 
-/**
- * A shared-schema panel (zero migrations): no prefix, no table map — it resolves
- * the default v_* tables, just with its own storage type and grants disabled.
- */
+/** A shared-schema team profile with local grants and share links disabled. */
 final class TeamProfile extends ProfileProvider
 {
     public function profile(Profile $panel): Profile
     {
         return $panel
-            ->id('team')
+            ->key('team')
 
-            ->withoutGrants()
-            ->feature('share_links', true);
+            ->grants(false)
+            ->shareLinks(false);
     }
 }

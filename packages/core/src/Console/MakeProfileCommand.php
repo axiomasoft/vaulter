@@ -29,7 +29,12 @@ final class MakeProfileCommand extends Command
     {
         /** @var string $rawName */
         $rawName = $this->argument('name');
-        $id = Str::snake(Str::lower($rawName));
+        $id = Str::kebab(str_replace('_', '-', $rawName));
+        if (preg_match('/^[a-z0-9][a-z0-9-]{0,63}$/D', $id) !== 1) {
+            $this->components->error('Profile key must contain 1..64 lowercase letters, digits or hyphens.');
+
+            return self::FAILURE;
+        }
         $studly = Str::studly($id);
 
         $provider = $this->writeProvider(
@@ -92,13 +97,13 @@ final class MakeProfileCommand extends Command
             return '';
         }
 
-        return PHP_EOL.'            ->host(\\'.ltrim($host, '\\').'::class)';
+        return PHP_EOL.'            ->owners(\\'.ltrim($host, '\\').'::class)';
     }
 
     private function renderGrants(): string
     {
         return (bool) $this->option('no-grants')
-            ? PHP_EOL.'            ->withoutGrants()'
+            ? PHP_EOL.'            ->grants(false)'
             : '';
     }
 
@@ -109,7 +114,7 @@ final class MakeProfileCommand extends Command
         $this->newLine();
         $this->components->info(sprintf('Profile [%s] scaffolded.', $id));
         $this->line('Next steps:');
-        $this->line("  1. Register the provider in <info>config/vaulter.php</info> under 'panels':");
+        $this->line("  1. Register the provider in <info>config/vaulter.php</info> under 'profiles.providers':");
         $this->line(sprintf('         \%s::class,', $providerFqcn));
     }
 

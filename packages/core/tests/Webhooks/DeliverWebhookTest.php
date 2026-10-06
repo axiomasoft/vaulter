@@ -313,7 +313,7 @@ it('delivers on the custom model connection without holding a transaction during
     config()->set('vaulter.database.connection', 'delivery_other');
 
     $builder = new SchemaBuilder;
-    $panel = (new Profile)->id('default');
+    $panel = (new Profile)->key('default');
     $builder->createTable(entity: 'webhook_endpoints');
     $builder->createTable(entity: 'webhook_deliveries');
 

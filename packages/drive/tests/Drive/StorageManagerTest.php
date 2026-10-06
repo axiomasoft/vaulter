@@ -73,14 +73,9 @@ it('returns the registered profile object through the core handle contract', fun
     expect($drive->profile())->toBe(app(ProfileRegistry::class)->get($drive->model()->profile));
 });
 
-it('preserves owner provisioning before an unknown profile is requested', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host(), 'missing-profile');
-
-    expect($drive->model()->profile)->toBe('missing-profile')
-        ->and($drive->root()->getKey())->toEqual($drive->model()->root_node_id)
-        ->and(Drive::query()->count())->toBe(1);
-
-    expect(fn () => $drive->profile())->toThrow(UnknownProfileException::class);
+it('rejects an unknown profile before owner provisioning', function (): void {
+    expect(fn () => Vaulter::for(DriveTestHelpers::host(), 'missing-profile'))->toThrow(UnknownProfileException::class)
+        ->and(Drive::query()->count())->toBe(0);
 });
 
 it('opens an existing drive before an unknown profile is requested', function (): void {

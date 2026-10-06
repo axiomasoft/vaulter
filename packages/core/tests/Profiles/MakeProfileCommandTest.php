@@ -32,7 +32,7 @@ it('создаёт файл провайдера панели и НЕ трога
     expect($contents)
         ->toContain('namespace App\\Vaulter\\Profiles;')
         ->toContain('final class ProjectDriveProfile extends ProfileProvider')
-        ->toContain("->id('project_drive')")
+        ->toContain("->key('project-drive')")
         ->toContain('')
         // Profiles share the schema and never emit own-table settings.
         ->not->toContain('->tablePrefix(');
@@ -57,8 +57,8 @@ it('эмитит host и withoutGrants по флагам', function (): void {
     $contents = File::get($this->panelDir.'/ProjectDriveProfile.php');
 
     expect($contents)
-        ->toContain('->host(\\App\\Models\\Project::class)')
-        ->toContain('->withoutGrants()');
+        ->toContain('->owners(\\App\\Models\\Project::class)')
+        ->toContain('->grants(false)');
 });
 
 it('не перезаписывает существующий провайдер без --force', function (): void {

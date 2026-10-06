@@ -1,0 +1,29 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\ArchTest[39m
+  [32;1m✓[39;22m[90m [39m[90mstrict types[39m[90m                                                        [39m [90m0.46s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdocuments never depends on drive or media (T6 — documents requires[39m[90m… [39m [90m1.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe package never depends on the host application (E5.1)[39m
+  [32;1m✓[39;22m[90m [39m[90mnon-test src never references the host App namespace (E5.1, F-P4.3-[39m[90m…[39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90minternal namespaces are not used outside the package (E3.1)[39m[90m         [39m [90m3.09s[39m  
+  [32;1m✓[39;22m[90m [39m[90mlayers group classes under a domain sub-namespace, not flat (ADR-0017 Law 2)[39m
+  [32;1m✓[39;22m[90m [39m[90mDB facade is routed through VaulterDatabase (AD25)[39m
+  [32;1m✓[39;22m[90m [39m[90mdomain exceptions implement the HTTP problem contract[39m[90m               [39m [90m0.02s[39m  
+  [32;1m✓[39;22m[90m [39m[90mproduction source never imports testing helpers (D35)[39m
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\ConfigurationBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mdocuments reads configuration through typed package accessors (P2.5[39m[90m…[39m [90m0.01s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdocuments source has no direct Vaulter configuration reads (P2.5)[39m[90m   [39m [90m0.01s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Arch\PublicApiSnapshotTest[39m
+  [32;1m✓[39;22m[90m [39m[90mvaulter-documents public API surface matches the frozen golden (VLT[39m[90m…[39m [90m0.01s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Document\DocumentNodeApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit runs the document node cycle: create → content → autosave → vers[39m[90m…[39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a content write on a non-document node[39m[90m                   [39m [90m0.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects invalid document-create boundaries without persisting a[39m[90m… [39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects invalid autosave boundaries without changing the current[39m[90m…[39m [90m0.11s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces named-version label and boolean boundaries[39m[90m              [39m [90m0.11s[39m  
+
+  [90mTests:[39m    [32;1m17 passed[39;22m[90m (172 assertions)[39m
+  [90mDuration:[39m [39m5.40s[39m
+

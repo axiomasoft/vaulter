@@ -24,6 +24,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Support\Identity;
 
 /**
@@ -43,6 +44,7 @@ final class NodeCommentController extends Controller
 {
     public function __construct(
         private readonly AccessResolver $access,
+        private readonly ProfilePolicy $profiles,
         private readonly NodeCommentReadRepository $comments,
     ) {}
 
@@ -114,6 +116,7 @@ final class NodeCommentController extends Controller
      */
     private function authorOrManageActor(Request $request, Node $node, int|string $commentId): void
     {
+        $this->guardAbility($request, Ability::View, $node);
         $actor = $this->authorizable($request);
 
         if ($actor === null) {
@@ -157,6 +160,8 @@ final class NodeCommentController extends Controller
         if ($actor === null || !$this->access->can($actor, $ability, $node)) {
             throw PermissionDeniedException::forAbility($ability->value);
         }
+        $drive = $node->storage()->first() ?? throw new NotFoundHttpException('Node drive not found.');
+        $this->profiles->assertComments($drive);
     }
 
     private function authorizable(Request $request): ?Authorizable

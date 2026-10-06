@@ -19,10 +19,10 @@ use Vaulter\Tests\Fixtures\HostKeyUser;
 beforeEach(function (): void {
     config()->set('vaulter.ids.host_keys', 'string');
     config()->set('vaulter.database.table_prefix', 'hk_v23_');
-    (new SchemaBuilder)->createAll((new Profile)->id('default'));
+    (new SchemaBuilder)->createAll((new Profile)->key('default'));
 });
 afterEach(function (): void {
-    (new SchemaBuilder)->dropAll((new Profile)->id('default'));
+    (new SchemaBuilder)->dropAll((new Profile)->key('default'));
 });
 
 it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulter IDs', function (): void {
