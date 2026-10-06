@@ -82,10 +82,17 @@ it('takes the storage row before the parent row, as every node insert does', fun
 
     createDocumentUnder($drive, 'Ordered', $folder);
 
-    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_drives"')));
+    $driver = $drive->model()->getConnection()->getDriverName();
+    $storageLock = array_key_first(array_filter($queries, static function (string $sql) use ($driver): bool {
+        if ($driver === 'pgsql') {
+            return str_contains(strtolower($sql), 'pg_advisory_xact_lock_shared');
+        }
+
+        return str_starts_with($sql, 'select "id" from "v_drives"');
+    }));
     $nodeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, 'order by')));
 
-    // SQLite (like MySQL) implements the tree lock as the storage row.
+    // PostgreSQL takes a shared advisory tree lock. SQLite and MySQL lock the storage row.
     expect($storageLock)->not->toBeNull()
         ->and($nodeLock)->not->toBeNull()
         ->and($storageLock)->toBeLessThan($nodeLock);

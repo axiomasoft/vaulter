@@ -159,7 +159,7 @@ jobs:
           packages/core/tests/Access
           packages/core/tests/Activity
           packages/core/tests/Feature
-          packages/core/tests/Panels
+          packages/core/tests/Profiles
           packages/core/tests/Schema
           packages/core/tests/Sharing
           packages/core/tests/Webhooks

@@ -37,7 +37,7 @@ final class ListNodes extends ListRecords
         }
         $actor = PanelActor::current();
         $sets = $actor === null ? [] : app(AccessResolver::class)->evaluateMany($actor, $nodes);
-        $visible = $collection->filter(fn ($node): bool => $node instanceof Node && isset($sets[(string) $node->id]) && $sets[(string) $node->id]->allows(Ability::View));
+        $visible = $collection->filter(fn (mixed $node): bool => $node instanceof Node && isset($sets[(string) $node->id]) && $sets[(string) $node->id]->allows(Ability::View));
         if ($records instanceof Collection) {
             return $this->cachedTableRecords = $visible;
         }

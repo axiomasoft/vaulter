@@ -35,11 +35,11 @@ final class RepairBlobScopesCommand extends Command
         $skipped = 0;
         $failed = false;
         $model = Config::blobModel();
-        $model::query()->whereIn('scope_key', ['legacy:snull', 'legacy:tnull'])->chunkById(100, function ($batch) use ($database, $content, $blobs, $lock, &$repaired, &$skipped, &$failed): void {
+        $model::query()->whereIn('scope_key', ['legacy:snull', 'legacy:tnull'])->chunkById(100, function (Collection $batch) use ($database, $content, $blobs, $lock, &$repaired, &$skipped, &$failed): void {
             $rows = [];
             foreach ($batch as $blob) {
                 $references = $this->referenceRows($database, $blob);
-                $groups = $references->groupBy(fn ($ref): string => $this->target($blob, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key());
+                $groups = $references->groupBy(fn (object $ref): string => $this->target($blob, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key());
                 if ($groups->isEmpty()) {
                     $rows[] = [$blob->getKey(), $blob->sha256, $blob->scope_key, '—', 0, '—', 'unreferenced'];
                     $skipped++;
@@ -51,7 +51,7 @@ final class RepairBlobScopesCommand extends Command
                     $action = 'move';
                     try {
                         if ($this->option('execute')) {
-                            $action = $this->repair($database, $content, $blobs, $lock, $blob, $scope, array_values(array_unique($refs->map(static fn ($ref): string => (string) $ref->drive_id)->all())));
+                            $action = $this->repair($database, $content, $blobs, $lock, $blob, $scope, array_values(array_unique($refs->map(static fn (object $ref): string => (string) $ref->drive_id)->all())));
                             $action === 'move' ? $repaired++ : $skipped++;
                         } elseif (!$this->validObject($content, $blob->storage_key, $blob->disk, $blob->sha256)) {
                             $action = 'hash_mismatch';
@@ -133,7 +133,7 @@ final class RepairBlobScopesCommand extends Command
 
             $old = $blobs->lockForUpdate($candidate);
             $refs = $this->referenceRows($database, $old, $storageIds)
-                ->filter(fn ($ref): bool => $this->target($old, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key() === $scope->key());
+                ->filter(fn (object $ref): bool => $this->target($old, (string) $ref->drive_id, $ref->tenant_id === null ? null : (string) $ref->tenant_id)->key() === $scope->key());
             if ($refs->isEmpty()) {
                 return 'unreferenced';
             }

@@ -38,8 +38,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout latest public AzGuard
-        run: git clone --depth=1 https://github.com/axiomasoft/azguard-private.git ../azguard
+      # Composer path repos expect axioma-studio/azguard-core and azguard-context
+      # at packages/{core,context}. Current azguard main moved that tree under
+      # legacy/0.3. de09959e is the last commit that still matches those paths.
+      # Qualifying the renamed dev-main API stays with plan item P2.4.
+      - name: Checkout qualified AzGuard
+        run: |
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin de09959e238c92c1f5fdf974cfbc3202a69fbd8e
+          git -C ../azguard checkout --detach FETCH_HEAD
 
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
