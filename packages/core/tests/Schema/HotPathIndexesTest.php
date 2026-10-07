@@ -33,11 +33,11 @@ it('v_nodes carries a (trashed_at) scan index for the purge-trash predicate (F-P
     expect(hotPathIndexColumnSets('v_nodes'))->toContain(['trashed_at']);
 });
 
-it('v_nodes does not carry a redundant (drive_id, parent_id) index — a strict prefix of (drive_id, parent_id, position) (F-P4.1-02)', function (): void {
+it('v_nodes lists children through one (drive_id, parent_id) index now that manual positions are gone (PLAN2.D40)', function (): void {
     $columnSets = hotPathIndexColumnSets('v_nodes');
 
-    expect($columnSets)->not->toContain(['drive_id', 'parent_id'])
-        ->and($columnSets)->toContain(['drive_id', 'parent_id', 'position']);
+    expect($columnSets)->toContain(['drive_id', 'parent_id'])
+        ->and($columnSets)->not->toContain(['drive_id', 'parent_id', 'position']);
 });
 
 it('v_blobs does not carry a redundant single-column status index — a strict prefix of the GC index (F-P4.1-02)', function (): void {

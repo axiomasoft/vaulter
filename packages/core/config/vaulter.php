@@ -174,5 +174,4 @@ return [
         'webhook_delivery' => WebhookDelivery::class,
     ],
     'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
-    'extra_data' => ['enabled' => true],
 ];

@@ -19,9 +19,9 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -51,11 +51,12 @@ final readonly class CreateDocumentAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DocumentsConfig $documentsConfig,
+        private DrivePolicyEnforcer $policy,
     ) {}
 
     public function execute(CreateDocumentInput $data): Node
     {
-        $name = NodeName::normalize($data->name);
+        $name = $this->policy->name(drive: $data->storage, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
@@ -75,6 +76,8 @@ final readonly class CreateDocumentAction
             }
 
             $this->tree->assertActiveFolder($parent);
+            $this->policy->assertChildren(drive: $data->storage, parentId: $parentId);
+            $this->policy->assertDepth(drive: $data->storage, parent: $parent);
 
             if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
                 throw NodeNameConflictException::forName(name: $name, parentId: $parentId);

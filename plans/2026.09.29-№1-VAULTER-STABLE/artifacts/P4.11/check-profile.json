@@ -1,0 +1,119 @@
+{
+  "item": "PLAN2.P4.11",
+  "prepared_at": "2026-10-07T16:20:00Z",
+  "runtime": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high",
+    "session": "2fe69ba0-a398-4d54-a216-0efcad883188",
+    "source": "observed CLAUDE_EFFORT=high, CLAUDE_CODE_SESSION_ID, system model id"
+  },
+  "base_head": "ada321f38ca7c0d8ba42bef3241eee2fc1601d84",
+  "runs_mode": "D51 L — SQLite/Arch/golden/Pint/PHPStan/opus-coverage only; V3 (PG upgrade + NameKeyUniqueness) and V4 (MySQL NameKeyUniqueness + CanonicalSchema) are kind=impact and run at the P4.9 barrier (V90).",
+  "environment": {
+    "php": "scripts/php84 --check → php84 OK: 8.4.26",
+    "package_vendors": "drive/documents/filament vendors present; packages/media/vendor absent → composer install in packages/media before its V80 lane (gitignored, no tracked change); core uses the root vendor"
+  },
+  "changed_behaviour": [
+    "Names: NodeName::normalize no longer trims; NodeName::key = NFC(casefold(NFC(name))); NamePolicy (Vaulter\\Naming) portable-v1 default / permissive-v1; InvalidNodeNameException code invalid_node_name + reason.",
+    "Schema (fresh + migration 2026_10_07_000004): v_nodes.name_key (binary compare; PG COLLATE \"C\", SQLite BINARY, MySQL utf8mb4_bin + name_key_hash generated column) replaces the lower(name) sibling index; properties json; content_modified_at/by; is_pinned/position dropped; extra_data dropped from every table; v_node_user_states; v_file_revisions.client_modified_at.",
+    "Backfill: name_key in id batches, casefold/NFC collisions among live siblings renamed '<base> (conflict N)<.ext>' with activity node.renamed from vaulter:system and a log line; nodes.extra_data → properties['legacy'] with preflight refusal above D43 limits; content_modified_at/by from file head / document row.",
+    "Models: HasExtraData deleted; Node loses is_pinned/position, gains properties/content_modified_*, name mutator keeps name_key in step; NodeUserState model.",
+    "DrivePolicy in ProfilePolicy/Profile builder; Actions enforce maxFolderChildren (parent lock, trash counted), maxFolderDepth (create/move/copy/restore), maxFileBytes (declared/streaming/final), properties limits.",
+    "API: nodes()->star/unstar/starred/properties/setProperties; nodes()->update() + UpdateNodeOptions removed; UploadOptions::clientModifiedAt; NodeResource viewer.starred (is_pinned/position removed).",
+    "Config: vaulter.extra_data.enabled and vaulter-drive.names.max_length deprecated+ignored by ConfigNormalizer."
+  ],
+  "callers_and_entry_boundaries": {
+    "core": [
+      "Support/{NodeName,DriveNameRules}, Naming/*, Schema/{SchemaBuilder,VaulterSchema}, Models/** (HasExtraData users: Drive, Node, File, FileRevision, Blob, NodeGrant, NodeShare, Activity), Models/Drive/NodeUserState",
+      "Profiles/{Profile,ProfilePolicy,DrivePolicy,DrivePolicyBuilder}, Exceptions/{Nodes,Policy}/*, Contracts/Drive/NodeOperations, Data/Drive/{UpdateNodeOptions(deleted),UploadOptions}",
+      "Configuration/{VaulterConfig,ConfigNormalizer}, config/vaulter.php, Repositories/Drive/{NodeReadRepository,NodeStoreRepository} (sibling predicate by name_key, children order), Http/Resources/Drive/NodeResource"
+    ],
+    "drive": [
+      "Actions/Nodes/{CreateFolder,Rename,Move,Copy,NameConflictResolver,UpdateNode(deleted)}, Actions/Trash/RestoreNodeAction, Actions/Files/IngestFileAction, Actions/Uploads/{Initiate,Complete}UploadAction",
+      "Operations/{NodeOperations,FileOperations}, Queries/NodePageQuery (Default sort without position), Uploads size limit (UploadInspection/SizeInspector/StagedUpload/UploadSessionManager), Policies/UploadPolicy, Configuration/DriveConfig (nameMaxLength removed), config/vaulter-drive.php",
+      "Models/Uploads/UploadSession (HasExtraData)"
+    ],
+    "documents": [
+      "Actions/Documents/CreateDocumentAction (name policy, children/depth limits), Models/Comments/NodeComment (HasExtraData), Http/Requests/CreateDocumentNodeRequest (DriveNameRules)"
+    ],
+    "filament": [
+      "grep: no is_pinned/position/extra_data usage in src — only affected tests if any"
+    ],
+    "media": [
+      "grep: no HasExtraData/extra_data in src/Models — V80 lane only"
+    ]
+  },
+  "fixtures_and_support": [
+    "packages/{drive,documents}/tests/TestCase.php run core migrations through the path-repo symlink: every fresh suite exercises SchemaBuilder fresh nodes + 2026_10_07_000004 as guarded no-op",
+    "packages/core/tests/Upgrade/{LoadsV02Fixture,FixtureTestCase}.php + tests/fixtures/v0.2.0/pgsql-{bigint,ulid}.sql (read-only; PG upgrade lane deferred to P4.9 barrier)",
+    "packages/{core,drive}/tests/Arch/__snapshots__/public-api.txt golden; core/tests/Arch/__snapshots__/service-locator.json ratchet (no new app() in existing files)"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema packages/core/tests/Naming packages/core/tests/Profiles packages/core/tests/Arch",
+      "expect": "exit 0; NamePolicyTest (OPUS examples), NameKeyUniquenessTest (SQLite), NodeDataContractSchemaTest, DrivePolicyTest, CanonicalSchemaTest, golden"
+    },
+    {
+      "id": "V2",
+      "cwd": "packages/drive",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/PublicApi tests/Uploads tests/Arch",
+      "expect": "exit 0; DrivePolicyEnforcementTest, NodeStarPropertiesTest, golden"
+    },
+    {
+      "id": "V3",
+      "kind": "impact → barrier P4.9",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade packages/core/tests/Schema/NameKeyUniquenessTest.php",
+      "expect": "deferred (D51); NodeDataContractUpgradeTest bigint+ulid + NameKeyUniquenessTest on PG, executed>=1 skipped=0"
+    },
+    {
+      "id": "V4",
+      "kind": "impact → barrier P4.9",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/NameKeyUniquenessTest.php packages/core/tests/Schema/CanonicalSchemaTest.php",
+      "expect": "deferred (D51); name_key_hash uniqueness on MySQL 8"
+    },
+    {
+      "id": "V5",
+      "cwd": "packages/documents",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document",
+      "expect": "exit 0; document create passes the name policy"
+    },
+    {
+      "id": "V80",
+      "cwd": ".",
+      "cmd": "pint --test + phpstan for core (root phpstan.neon), drive, documents, filament, media exactly as the item procedure",
+      "expect": "all exit 0; negative controls in artifacts/P4.11/negative-controls.md"
+    },
+    {
+      "id": "V81",
+      "cwd": ".",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit 0"
+    }
+  ],
+  "affected_regressions_beyond_acceptance": [
+    "packages/core/tests/Unit/NodeNameTest.php (trim removed, reasons) — SQLite",
+    "packages/core/tests/Configuration/ConfigNormalizerTest.php (extra_data / names.max_length deprecated+ignored) — SQLite",
+    "packages/core/tests/Upgrade/{UpgradePreflightTest,FreshFeatureFlagsMigrationTest}.php on SQLite where they run (extra_data flag, problem code)",
+    "packages/drive/tests/{Feature,Profiles,Configuration,Concurrency}/** files referencing is_pinned/position/update()/maxFileSize/file_too_large/names.max_length — SQLite run of the touched files",
+    "packages/documents/tests/** referencing NodeComment extra_data or DriveNameRules — SQLite run of touched files",
+    "packages/filament/tests/** if any assert is_pinned/position/extra_data — SQLite run of touched files"
+  ],
+  "negative_controls_planned": [
+    "NameKeyUniquenessTest: temporarily build the sibling index on lower(name) instead of name_key → the NFC/casefold insert test goes red on SQLite; restore exact bytes",
+    "NamePolicyTest: temporarily re-add trim in NodeName::normalize → ' a.txt' invalid case red; restore",
+    "DrivePolicyEnforcementTest: temporarily skip the children-limit check in CreateFolderAction → red; restore",
+    "NodeDataContract migration guard: run up() on a schema with name_key present but no new sibling index → UpgradePreflightException asserted (partial-state refusal) on SQLite"
+  ],
+  "deferred_broad_checks": "V3/V4 run at the P4.9 barrier V90 (block P4.11+P4.9); phase barrier V901–V931 in P4.6. Mutation tools excluded (D51/D25).",
+  "baseline": {
+    "V1": "not captured at base_head: the command names packages/core/tests/Naming, which this item creates (pest exit 2 'Test file not found')",
+    "V2": "exit 0 — 391 passed, 1 skipped (SQLite); indicative only: it ran while the first core edits (NodeName, exceptions) were being written",
+    "V5": "exit 0 — 145 passed, 3 skipped (SQLite); same caveat as V2",
+    "known_preexisting": "drive tests/Providers/BindingsRegistrarTest (CommentsFeature not instantiable) — recorded as out-of-scope by P4.1; not part of V2"
+  }
+}

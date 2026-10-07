@@ -169,7 +169,6 @@ and affects new uploads. See [Storage & blobs](/guide/storage-and-blobs).
         ],
     ],
 ],
-'names' => ['max_length' => 255],
 'trash' => ['retention_days' => 30],
 'models' => [
     'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
@@ -179,8 +178,11 @@ and affects new uploads. See [Storage & blobs](/guide/storage-and-blobs).
 
 `max_file_size` is a byte limit shared by ordinary and resumable uploads. A zero chunk cap
 or active-session cap disables that cap. `resumable.enabled` controls resumable endpoints;
-upload tables exist independently of this setting. Name separator rules are fixed in code.
-See [Uploads](/guide/uploads) and [Trash](/guide/trash).
+upload tables exist independently of this setting. Name rules, folder limits and the
+per-profile file size limit live in the profile's drive policy (see
+[Drive → Names, limits, stars and properties](/guide/drive)); `vaulter-drive.names.max_length`,
+`vaulter.drive.name_rules.max_length` and `vaulter.extra_data.enabled` are deprecated and
+ignored (`E_USER_DEPRECATED`). See [Uploads](/guide/uploads) and [Trash](/guide/trash).
 
 ## Documents: content, revisions, comments and collaboration
 
@@ -301,7 +303,6 @@ Support for deprecated keys ends at 1.0.
 | `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
 | `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
 | `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
-| `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
 | `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
 | `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
 | `vaulter.features.comments` | `vaulter-documents.comments.enabled` |

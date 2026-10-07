@@ -23,7 +23,6 @@ Vaulter\Drive\Configuration\DriveConfig
   metadataAllowedKeys(): array
   metadataMaxValueLength(): int
   model(string $key): string
-  nameMaxLength(): int
   resumableEnabled(): bool
   scanQueue(): string
   scanWork(string $key): int

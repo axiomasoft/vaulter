@@ -15,6 +15,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
@@ -28,7 +29,8 @@ use Vaulter\Support\TreeGuard;
  *   2. the destination is a live folder of the same storage (no destination = root);
  *   3. cycle — the destination must not be the node itself or one of its own
  *      descendants (checked via the bounded subtree, NOT whereHas('descendants'));
- *   4. sibling-name conflict at the destination.
+ *   4. the drive policy's children and depth limits at the destination;
+ *   5. sibling-name conflict at the destination.
  *
  * The tree lock is what makes the cycle check sound: row locks on the node and the
  * destination alone do not cover the ancestor chain, so two moves over disjoint rows
@@ -44,6 +46,8 @@ final readonly class MoveNodeAction
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DrivePolicyEnforcer $policy,
+        private NameConflictResolver $names,
     ) {}
 
     public function execute(OperationContext $context, MoveNodeInput $data): Node
@@ -78,7 +82,13 @@ final readonly class MoveNodeAction
                 return $current;
             }
 
-            $name = app(NameConflictResolver::class)->resolve($context->drive, $into->id, $current->name, $data->onConflict, $current->id);
+            $this->policy->assertChildren(drive: $context->drive, parentId: $into->id);
+            $height = $this->nodes->height($current, $this->policy->heightBound($context->drive));
+            $this->policy->assertDepth(drive: $context->drive, parent: $into, height: $height,
+                currentDeepest: $this->nodes->depth($current) + $height);
+
+            $name = $this->names->resolve($context->drive, $into->id, $current->name, $data->onConflict, $current->id,
+                $this->policy->policy($context->drive)->names());
             if ($name !== $current->name) {
                 $this->store->rename($current, $name);
             }

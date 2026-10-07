@@ -322,23 +322,16 @@ it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', fun
     expect($drive->model()->refresh()->used_bytes)->toBe($usedBefore + 1);
 });
 
-// L94 FalseToTrue / L95 TrueToFalse:
-// is_pinned and inherit_grants are NOT NULL in the schema, so their values on any
-// live node are always a boolean (never PHP null). The `?? false` / `?? true`
-// fallbacks are therefore dead code and these two mutations are EQUIVALENT.
-// Traceability note: CopyMutationContractsTest already asserts is_pinned=true and
-// inherit_grants=false when the source has those values set explicitly.
-//
-// What we CAN assert: the boolean values copy correctly for the common false/true cases.
-it('CopyNode L94/L95: is_pinned and inherit_grants propagate correctly from source to copy', function (): void {
+// inherit_grants is NOT NULL in the schema, so a live node always carries a boolean.
+// The copy keeps the source's value; properties copy with it (PLAN2.D41).
+it('CopyNode: inherit_grants and properties propagate from source to copy', function (): void {
     $drive = DriveTestHelpers::drive();
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));
 
-    // Source defaults: is_pinned=false, inherit_grants=true (schema defaults).
     $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'copy.bin'));
 
-    expect((bool) $copy->is_pinned)->toBeFalse()
-        ->and((bool) $copy->inherit_grants)->toBeTrue();
+    expect((bool) $copy->inherit_grants)->toBeTrue()
+        ->and($copy->properties)->toBeNull();
 });
 
 // Shortcut payload copy is deliberately unavailable until its full lifecycle exists.

@@ -12,18 +12,19 @@ use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\MoveOptions;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\SearchOptions;
-use Vaulter\Data\Drive\UpdateNodeOptions;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Actions\Nodes\RenameNodeAction;
-use Vaulter\Drive\Actions\Nodes\UpdateNodeAction;
+use Vaulter\Drive\Actions\Nodes\SetNodePropertiesAction;
+use Vaulter\Drive\Actions\Nodes\StarNodeAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
-use Vaulter\Drive\Data\Nodes\UpdateNodeInput;
+use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Drive\Queries\ListChildrenQuery;
+use Vaulter\Drive\Queries\NodePageQuery;
 use Vaulter\Drive\Queries\SearchQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
@@ -36,7 +37,7 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class NodeOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private UpdateNodeAction $updateAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages) {}
 
     public function find(Node|int|string $node): Node
     {
@@ -82,9 +83,34 @@ final readonly class NodeOperations implements Contract
         return $this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized));
     }
 
-    public function update(Node|int|string $node, UpdateNodeOptions $options): Node
+    public function star(Node|int|string $node): Node
     {
-        return $this->updateAction->execute($this->context, new UpdateNodeInput($this->authorized($node, Ability::Edit), $options->pinned, $options->position, $options->expectedSequence));
+        return $this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: true);
+    }
+
+    public function unstar(Node|int|string $node): Node
+    {
+        return $this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: false);
+    }
+
+    public function starred(?ListOptions $options = null): NodePage
+    {
+        return $this->pages->starred($this->context, $options ?? new ListOptions);
+    }
+
+    /** @return array<string, array<string, string>> */
+    public function properties(Node|int|string $node): array
+    {
+        return $this->authorized($node, Ability::View)->properties ?? [];
+    }
+
+    /**
+     * @param array<string, string> $set
+     * @param list<string>          $unset
+     */
+    public function setProperties(Node|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Node
+    {
+        return $this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence));
     }
 
     public function trash(Node|int|string $node, ?int $expectedSequence = null): Node

@@ -12,7 +12,6 @@ use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Data\Drive\UpdateNodeOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
@@ -68,8 +67,8 @@ function operationMatrixState(): array
 dataset('operation permission matrix', static function (): array {
     $cases = [];
     foreach ([
-        'find' => 1, 'children' => 1, 'abilities' => 1, 'revisions' => 1, 'read' => 1,
-        'rename' => 2, 'update' => 2, 'move' => 6, 'copy' => 4, 'create' => 4, 'upload' => 4,
+        'find' => 1, 'children' => 1, 'abilities' => 1, 'revisions' => 1, 'read' => 1, 'star' => 1, 'properties' => 1,
+        'rename' => 2, 'setProperties' => 2, 'move' => 6, 'copy' => 4, 'create' => 4, 'upload' => 4,
         'addRevision' => 2, 'restoreRevision' => 2, 'trash' => 8, 'restore' => 8, 'purge' => 8,
     ] as $operation => $bits) {
         foreach (['hidden', 'allowed', ...($bits === 1 ? [] : ['missing'])] as $lane) {
@@ -104,7 +103,9 @@ it('enforces the complete public operation source permission matrix', function (
         'revisions' => $this->actor->files()->revisions($source),
         'read' => $this->actor->files()->read($source),
         'rename' => $this->actor->nodes()->rename($source, 'renamed'),
-        'update' => $this->actor->nodes()->update($source, new UpdateNodeOptions(pinned: true)),
+        'star' => $this->actor->nodes()->star($source),
+        'properties' => $this->actor->nodes()->properties($source),
+        'setProperties' => $this->actor->nodes()->setProperties($source, 'acme', ['k' => 'v']),
         'move' => $this->actor->nodes()->move($source, $destination),
         'copy' => $this->actor->nodes()->copy($source, $destination),
         'create' => $this->actor->folders()->create('new child', $source),
@@ -142,8 +143,14 @@ it('enforces the complete public operation source permission matrix', function (
             case 'rename':
                 expect($result->id)->toBe($source->id)->and($source->refresh()->name)->toBe('renamed');
                 break;
-            case 'update':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->is_pinned)->toBeTrue();
+            case 'star':
+                expect($result->id)->toBe($source->id)->and($this->actor->nodes()->starred()->items[0]->id ?? null)->toBe($source->id);
+                break;
+            case 'properties':
+                expect($result)->toBe([]);
+                break;
+            case 'setProperties':
+                expect($result->id)->toBe($source->id)->and($source->refresh()->properties)->toBe(['acme' => ['k' => 'v']]);
                 break;
             case 'move':
                 expect($result->id)->toBe($source->id)->and($source->refresh()->parent_id)->toBe($destination->id);

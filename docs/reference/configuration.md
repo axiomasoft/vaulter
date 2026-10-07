@@ -288,7 +288,6 @@ The retention window before a trashed node's subtree is permanently force-delete
 | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` | `20` | `VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS` |
 | `vaulter-drive.uploads.resumable.metadata.allowed_keys` | `['filename', 'filetype', 'name', 'mime_type']` | — |
 | `vaulter-drive.uploads.resumable.metadata.max_value_length` | `512` | — |
-| `vaulter-drive.names.max_length` | `255` | — |
 
 ## Reliability — webhooks — `webhooks.*`
 
@@ -379,7 +378,6 @@ See [Collaboration → Overview](/guide/collaboration) and
 | `vaulter-documents.tiptap.url_attributes` | `[]` |
 | `vaulter-media.gc.orphan_grace_hours` | `24` (`VAULTER_ORPHAN_GRACE_HOURS`, fallback `VAULTER_GC_GRACE_HOURS`) |
 | `ids.host_keys` | `string` (`VAULTER_HOST_KEYS`) |
-| `extra_data.enabled` | `true` |
 | `listing.scan_budget` | `1000` |
 | `routes.middleware.authenticated` | `['api', 'auth:sanctum']` |
 | `routes.middleware.public` | `['api']` |

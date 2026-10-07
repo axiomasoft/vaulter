@@ -1,0 +1,76 @@
+{
+  "item": "PLAN2.P4.11",
+  "recorded_at": "2026-10-07T16:45:56Z",
+  "runtime": "anthropic/claude-opus-5-5/high session 2fe69ba0-a398-4d54-a216-0efcad883188",
+  "checks": [
+    {
+      "id": "V1",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema packages/core/tests/Naming packages/core/tests/Profiles packages/core/tests/Arch",
+      "exit": 0,
+      "result": "262 tests: 255 passed, 7 skipped (PG/MySQL-only), 1678 assertions, 53 s"
+    },
+    {
+      "id": "V2",
+      "cwd": "packages/drive",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/PublicApi tests/Uploads tests/Arch",
+      "exit": 0,
+      "result": "414 passed, 1 skipped, 1403 assertions, 96 s"
+    },
+    {
+      "id": "V3",
+      "kind": "impact",
+      "status": "deferred to P4.9 barrier V90 (D51)",
+      "note": "NodeDataContractUpgradeTest and NameKeyUniquenessTest are driver-agnostic and green on SQLite; PG receipt required at the barrier"
+    },
+    {
+      "id": "V4",
+      "kind": "impact",
+      "status": "deferred to P4.9 barrier V90 (D51)"
+    },
+    {
+      "id": "V5",
+      "cwd": "packages/documents",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document",
+      "exit": 0,
+      "result": "145 passed, 3 skipped, 698 assertions, 29 s"
+    },
+    {
+      "id": "V80",
+      "cwd": ".",
+      "cmd": "pint --test + phpstan: core (root phpstan.neon), drive, documents, filament, media",
+      "exit": 0,
+      "result": "all ten lanes exit 0; media vendor installed with composer update (gitignored)",
+      "negative_controls": "artifacts/P4.11/negative-controls.md"
+    },
+    {
+      "id": "V81",
+      "cwd": ".",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "exit": 0,
+      "result": "opus-coverage OK: 1438 единиц, 254 секций, 0 нарушений"
+    }
+  ],
+  "affected_regressions": [
+    {
+      "cmd": "core: pest --ci packages/core/tests/{Schema,Naming,Profiles,Arch,Unit,Configuration,IdStrategy,PublicApi,Upgrade} (SQLite)",
+      "result": "707 tests: 677 passed, 30 skipped, exit 0"
+    },
+    {
+      "cmd": "core: pest --ci packages/core/tests/Support/DocsDriftGuardTest.php",
+      "result": "exit 0"
+    },
+    {
+      "cmd": "documents: full pest suite (SQLite)",
+      "result": "after fixes: DocumentTreeInvariantsTest + NodeCommentSchemaTest rerun green; first full run 320 passed with only those two red"
+    },
+    {
+      "cmd": "drive: pest --ci tests/Feature tests/Profiles tests/Configuration tests/Observability tests/Tenancy tests/Panels tests/Providers",
+      "result": "322 passed; ExactListingTest fixed and rerun green; Providers/BindingsRegistrarTest red as before this item (recorded out of scope by P4.1)"
+    },
+    {
+      "cmd": "filament: full pest suite (SQLite)",
+      "result": "106 passed, 1 skipped, exit 0"
+    }
+  ]
+}

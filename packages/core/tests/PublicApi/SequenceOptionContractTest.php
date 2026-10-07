@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Vaulter\Data\Drive\MoveOptions;
 use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\UpdateNodeOptions;
 
 it('preserves optional signed int64 sequence bounds at constructor and fluent boundaries', function (string $class): void {
     expect(PHP_INT_SIZE)->toBe(8);
@@ -18,4 +17,4 @@ it('preserves optional signed int64 sequence bounds at constructor and fluent bo
         expect(fn () => new $class(expectedSequence: $invalid))->toThrow(TypeError::class)
             ->and(fn () => $class::make()->expectedSequence($invalid))->toThrow(TypeError::class);
     }
-})->with([MoveOptions::class, RevisionOptions::class, UpdateNodeOptions::class]);
+})->with([MoveOptions::class, RevisionOptions::class]);

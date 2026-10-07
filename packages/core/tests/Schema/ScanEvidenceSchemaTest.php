@@ -34,7 +34,7 @@ it('SEC-SCHEMA-fresh SEC-SCHEMA-additive-up-down-data qualifies additive scan up
         $builder->createAll();
         $migration->down();
         $db->table('scan_probe_drives')->insert(['id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'prior']);
-        $db->table('scan_probe_nodes')->insert(['id' => $node, 'drive_id' => $drive, 'kind' => 'file', 'name' => 'prior']);
+        $db->table('scan_probe_nodes')->insert(['id' => $node, 'drive_id' => $drive, 'kind' => 'file', 'name' => 'prior', 'name_key' => 'prior']);
         $db->table('scan_probe_files')->insert(['id' => $file, 'node_id' => $node]);
         $db->table('scan_probe_blobs')->insert(['id' => $blob, 'sha256' => str_repeat('a', 64), 'size_bytes' => 3, 'scope_key' => 'drive:'.$drive, 'storage_key' => 'prior', 'status' => 'committed']);
         $db->table('scan_probe_file_revisions')->insert(['id' => $revision, 'file_id' => $file, 'blob_id' => $blob,

@@ -59,11 +59,6 @@ final readonly class VaulterConfig
         return $handlers;
     }
 
-    public function extraDataEnabled(): bool
-    {
-        return (bool) $this->config->get('vaulter.extra_data.enabled', true);
-    }
-
     /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<Outbox> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
     public function model(string $key): string
     {

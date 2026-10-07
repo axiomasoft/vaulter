@@ -17,6 +17,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
@@ -32,6 +33,7 @@ final readonly class RestoreNodeAction
         private NodeLocator $locator,
         private NodeSequence $sequence,
         private NameConflictResolver $names,
+        private DrivePolicyEnforcer $policy,
     ) {}
 
     /** Public authorization must use the destination this resolution actually chooses. */
@@ -88,8 +90,17 @@ final readonly class RestoreNodeAction
                     throw InvalidDestinationException::otherDrive($member, $context->driveId());
                 }
             }
+            // Back under its own parent the node was never gone from the children
+            // count; anywhere else it is one more child, possibly deeper.
+            if (Identity::stringify($destination->id) !== Identity::stringify($current->parent_id)) {
+                $this->policy->assertChildren(drive: $context->drive, parentId: $destination->id);
+                $height = $this->nodes->height($current, $this->policy->heightBound($context->drive));
+                $this->policy->assertDepth(drive: $context->drive, parent: $destination, height: $height,
+                    currentDeepest: $this->nodes->depth($current) + $height);
+            }
             $name = $this->names->resolve(drive: $context->drive, parentId: $destination->id,
-                name: $current->name, onConflict: $data->onConflict, ignoreId: $current->id);
+                name: $current->name, onConflict: $data->onConflict, ignoreId: $current->id,
+                policy: $this->policy->policy($context->drive)->names());
             $this->store->update(node: $current, attributes: ['parent_id' => $destination->id, 'name' => $name]);
             $this->store->restoreSubtree($changed->map(fn (Node $member) => $member->id)->values());
             foreach ($changed as $member) {

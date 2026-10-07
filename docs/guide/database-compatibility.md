@@ -43,7 +43,7 @@ are not a public API — change Vaulter data only through its PHP API.
 |---|---|---|
 | **PostgreSQL 14+** | **Recommended.** The full test suite runs against Postgres in CI across every id strategy. | Production. Everything below works natively. |
 | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
-| **MySQL 8+** | Supported. Functional unique indexes enforce live siblings and the single drive root while preserving cascading foreign keys. | Production where Postgres-only locking and index features are not required. |
+| **MySQL 8+** | Supported. Live siblings are unique by a stored `name_key_hash` (sha2 of the binary `name_key`, NULL when trashed); a functional unique index enforces the single drive root; cascading foreign keys are preserved. | Production where Postgres-only locking and index features are not required. |
 | **MariaDB** | Host-key DDL is tested. A complete fresh installation is not guaranteed: the `mariadb` driver still guards live siblings and the single drive root with STORED generated columns over `parent_id`, the pattern that conflicts with cascading foreign keys on MySQL. The complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
 
 ::: tip PHP extension
@@ -82,9 +82,17 @@ The primary-key strategy is configurable (see
 
 The recursive folder tree (`v_nodes.parent_id → v_nodes.id`) is a self-referencing foreign
 key and migrates under all three strategies. PostgreSQL and SQLite use partial unique
-indexes for live sibling names and the single root. MySQL 8 expresses the same predicates
-as functional unique indexes, so `ON DELETE CASCADE` remains valid without stored generated
+indexes for live sibling names and the single root. MySQL 8 expresses the root predicate as
+a functional unique index, so `ON DELETE CASCADE` remains valid without stored generated
 columns based on foreign-key fields.
+
+## Name uniqueness does not depend on collation
+
+Sibling names are compared through `v_nodes.name_key` = NFC(full case folding(NFC(name))),
+computed by PHP and compared byte for byte: `COLLATE "C"` in the PostgreSQL index, SQLite's
+default `BINARY`, `utf8mb4_bin` plus a `sha2(name_key, 256)` generated column on MySQL (a
+varchar(1024) key exceeds the 3072-byte index limit). The fold follows the Unicode version
+of the running PHP mbstring/intl; a change of that version needs a recompute migration.
 
 ## Case-insensitive search
 

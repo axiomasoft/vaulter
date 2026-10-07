@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\MoveOptions;
 use Vaulter\Data\Drive\RevisionOptions;
-use Vaulter\Data\Drive\UpdateNodeOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
@@ -44,7 +43,7 @@ it('SEC-R19-noop checks a current or stale expectation before every effective no
     $run = fn (int $expected): Node => match ($operation) {
         'rename' => $this->drive->nodes()->rename($node, 'same', $expected),
         'move' => $this->drive->nodes()->move($node, $this->drive->root(), new MoveOptions(expectedSequence: $expected)),
-        'update' => $this->drive->nodes()->update($node, new UpdateNodeOptions(pinned: false, position: 0, expectedSequence: $expected)),
+        'setProperties' => $this->drive->nodes()->setProperties($node, 'acme', [], ['absent'], $expected),
     };
     $before = sequenceContractState();
     expect($node->sequence)->toBe(0)->and($run(0)->sequence)->toBe(0)
@@ -56,7 +55,7 @@ it('SEC-R19-noop checks a current or stale expectation before every effective no
         expect($exception->httpStatus())->toBe(412)->and($exception->problemCode())->toBe('node_sequence_mismatch');
     }
     expect(sequenceContractState())->toBe($before);
-})->with(['rename', 'move', 'update']);
+})->with(['rename', 'move', 'setProperties']);
 
 it('increments sequence once for each metadata or content transition and leaves new nodes at zero', function (): void {
     $folder = $this->drive->folders()->create('folder');
@@ -66,7 +65,7 @@ it('increments sequence once for each metadata or content transition and leaves 
     $this->drive->files()->addRevision($file, UploadSource::fromString('second', 'renamed.txt'), new RevisionOptions(expectedSequence: 1));
     expect($file->refresh()->sequence)->toBe(2)
         ->and($this->drive->nodes()->move($file, $folder, new MoveOptions(expectedSequence: 2))->sequence)->toBe(3)
-        ->and($this->drive->nodes()->update($file, new UpdateNodeOptions(pinned: true, expectedSequence: 3))->sequence)->toBe(4);
+        ->and($this->drive->nodes()->setProperties($file, 'acme', ['k' => 'v'], [], 3)->sequence)->toBe(4);
     $revisions = $this->drive->files()->revisions($file)->items();
     $oldest = collect($revisions)->sortBy('number')->first();
     $this->drive->files()->restoreRevision($file, $oldest);

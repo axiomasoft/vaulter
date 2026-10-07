@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
@@ -13,8 +12,8 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -24,6 +23,9 @@ use Vaulter\Support\TreeGuard;
  * rather than silently auto-renamed: Drive never invents a name behind the
  * caller's back.
  *
+ * The name passes the drive's name policy; the drive policy's children and depth
+ * limits are checked under the parent lock.
+ *
  * Operations authorize before this command; the destination is checked again under lock.
  */
 final readonly class CreateFolderAction
@@ -32,12 +34,13 @@ final readonly class CreateFolderAction
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
-        private DriveConfig $driveConfig,
+        private DrivePolicyEnforcer $policy,
+        private NameConflictResolver $names,
     ) {}
 
     public function execute(OperationContext $context, CreateFolderInput $data): Node
     {
-        $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
+        $name = $this->policy->name(drive: $context->drive, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId): Node {
@@ -49,8 +52,10 @@ final readonly class CreateFolderAction
             }
 
             $this->tree->assertActiveFolder($parent);
+            $this->policy->assertChildren(drive: $context->drive, parentId: $parentId);
+            $this->policy->assertDepth(drive: $context->drive, parent: $parent);
 
-            $name = app(NameConflictResolver::class)->resolve($context->drive, $parentId, $name, $data->onConflict);
+            $name = $this->names->resolve($context->drive, $parentId, $name, $data->onConflict);
 
             $node = $this->store->create([
                 'drive_id' => $data->storage->id,

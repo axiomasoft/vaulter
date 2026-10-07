@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Node data contract (PLAN2.D39–D43; PLAN2.P4.11)
+
+- Added `v_nodes.name_key` (NFC + full case folding, byte-compared: PG `COLLATE "C"`, SQLite
+  `BINARY`, MySQL `utf8mb4_bin` + `name_key_hash`). Was: sibling uniqueness by `lower(name)`,
+  collation-dependent and blind to NFC/casefold twins. Upgrade renames later colliding siblings
+  `"<base> (conflict N)"` with a `node.renamed` system activity.
+- Added name policies `portable-v1` (default) and `permissive-v1` (`Vaulter\Naming`), selected by
+  `DrivePolicy::$namePolicy`. Was: names were trimmed and only base rules applied. Now: nothing is
+  trimmed; `InvalidNodeNameException` renders `invalid_node_name` with a `reason`.
+- Added `DrivePolicy` (`Profile::drivePolicy()`): `maxFolderDepth` 100, `maxFolderChildren` 10 000,
+  `maxFileBytes`, `maxPropertiesBytes` 16 KiB, `maxPropertyCount` 100, `maxShareLinkTtlDays`.
+  Checked in every create/upload/move/copy/restore path; new errors
+  `folder_children_limit_exceeded` (409), `tree_depth_limit_exceeded` (409),
+  `file_size_limit_exceeded` (413, was 422 `upload_rejected`), `invalid_properties` (422).
+- Added `nodes()->star()/unstar()/starred()` (personal, `v_node_user_states`) and
+  `nodes()->properties()/setProperties()` (namespaced strings). Removed `nodes()->update()`,
+  `UpdateNodeOptions`, `v_nodes.is_pinned` and `v_nodes.position`. Was: global pin and manual
+  position on the node.
+- Added `v_nodes.content_modified_at/by`, `v_file_revisions.client_modified_at` and
+  `UploadOptions::clientModifiedAt()`; REST nodes carry `viewer.starred` and `content_modified_at`.
+- Removed `extra_data` from every table, `HasExtraData`, `VaulterConfig::extraDataEnabled()`,
+  `VaulterSchema::extraData()` and `DriveConfig::nameMaxLength()`; `vaulter.extra_data.enabled`
+  and `vaulter-drive.names.max_length` are deprecated and ignored. Node `extra_data` moves to
+  `properties['legacy']`.
+
 ### Document aggregate with working state and immutable checkpoints (AD16; PLAN2.D34, PLAN2.D35, PLAN2.P4.1)
 
 - Added `v_documents` (one aggregate per document node: working state, head, `state_version`,

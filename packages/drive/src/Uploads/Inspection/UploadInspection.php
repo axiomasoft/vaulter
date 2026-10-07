@@ -19,7 +19,7 @@ final readonly class UploadInspection
     public function maximum(OperationContext $context): ?int
     {
         $global = $this->config->maxFileSize();
-        $profile = $this->profiles->get($context->drive->profile)->getUploadPolicy()->maxFileSize;
+        $profile = $this->profiles->get($context->drive->profile)->getDrivePolicy()->maxFileBytes;
         $limits = array_filter([$global > 0 ? $global : null, $profile], static fn (?int $limit): bool => $limit !== null);
 
         return $limits === [] ? null : min($limits);
@@ -37,7 +37,13 @@ final readonly class UploadInspection
         }
         usort($inspectors, static fn (UploadInspector $a, UploadInspector $b): int => ($b->priority() <=> $a->priority()) ?: strcmp($a->key(), $b->key()));
         $global = new UploadPolicy(maxFileSize: $this->config->maxFileSize() ?: null, allowedMimeTypes: $this->config->allowedMimeTypes(), blockedExtensions: $this->config->blockedExtensions());
-        foreach ([$global, $this->profiles->get($context->drive->profile)->getUploadPolicy()] as $policy) {
+        $profile = $this->profiles->get($context->drive->profile);
+        $uploads = $profile->getUploadPolicy();
+        // The profile's file size limit lives in its drive policy (PLAN2.D43).
+        $local = new UploadPolicy(maxFileSize: $profile->getDrivePolicy()->maxFileBytes, allowedMimeTypes: $uploads->allowedMimeTypes,
+            blockedExtensions: $uploads->blockedExtensions, requireScan: $uploads->requireScan, scanMode: $uploads->scanMode,
+            scanPolicyVersion: $uploads->scanPolicyVersion);
+        foreach ([$global, $local] as $policy) {
             foreach ($inspectors as $inspector) {
                 $inspector->inspect($facts, $policy, $context);
             }

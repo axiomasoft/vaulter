@@ -15,7 +15,6 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -64,7 +63,6 @@ use Vaulter\Models\Drive\Drive;
  */
 class UploadSession extends Model
 {
-    use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;

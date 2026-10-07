@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Data\Drive;
 
+use DateTimeInterface;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Models\Drive\Node;
 
@@ -14,6 +15,7 @@ final readonly class UploadOptions
         public ?string $name = null,
         public OnNameConflict $onConflict = OnNameConflict::Fail,
         public ?string $declaredMimeType = null,
+        public ?DateTimeInterface $clientModifiedAt = null,
     ) {}
 
     public static function make(): self
@@ -23,21 +25,27 @@ final readonly class UploadOptions
 
     public function parent(Node|int|string|null $parent): self
     {
-        return new self(parent: $parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType);
+        return new self(parent: $parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType, clientModifiedAt: $this->clientModifiedAt);
     }
 
     public function name(?string $name): self
     {
-        return new self(parent: $this->parent, name: $name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType);
+        return new self(parent: $this->parent, name: $name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType, clientModifiedAt: $this->clientModifiedAt);
     }
 
     public function onConflict(OnNameConflict $onConflict): self
     {
-        return new self(parent: $this->parent, name: $this->name, onConflict: $onConflict, declaredMimeType: $this->declaredMimeType);
+        return new self(parent: $this->parent, name: $this->name, onConflict: $onConflict, declaredMimeType: $this->declaredMimeType, clientModifiedAt: $this->clientModifiedAt);
     }
 
     public function declaredMimeType(?string $declaredMimeType): self
     {
-        return new self(parent: $this->parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $declaredMimeType);
+        return new self(parent: $this->parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $declaredMimeType, clientModifiedAt: $this->clientModifiedAt);
+    }
+
+    /** The uploader's own modification time: stored for display, never trusted. */
+    public function clientModifiedAt(?DateTimeInterface $clientModifiedAt): self
+    {
+        return new self(parent: $this->parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType, clientModifiedAt: $clientModifiedAt);
     }
 }

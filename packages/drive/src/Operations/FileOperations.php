@@ -52,11 +52,11 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($target, Ability::Edit);
 
-                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail);
+                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt);
             }
         }
 
-        return $this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict);
+        return $this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt);
     }
 
     public function addRevision(Node|int|string $file, UploadSource $source, ?RevisionOptions $options = null): FileRevision
@@ -125,7 +125,7 @@ final readonly class FileOperations implements Contract
         });
     }
 
-    private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict): Node
+    private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): Node
     {
         $reader = $source->openForReading();
         $prepared = null;
@@ -133,9 +133,9 @@ final readonly class FileOperations implements Contract
             if (!is_resource($reader) && !$reader instanceof StreamInterface) {
                 throw new InvalidArgumentException('Upload source must provide a byte stream.');
             }
-            $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict);
+            $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, clientModifiedAt: $clientModifiedAt);
             $prepared = $this->ingest->prepare($this->context, $input);
-            $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, prepared: $prepared);
+            $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, prepared: $prepared, clientModifiedAt: $clientModifiedAt);
             try {
                 return $this->ingest->execute($this->context, $input);
             } catch (NodeNameConflictException $exception) {
@@ -148,7 +148,7 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($sibling, Ability::Edit);
 
-                return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target, prepared: $prepared));
+                return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target, prepared: $prepared, clientModifiedAt: $clientModifiedAt));
             }
         } finally {
             $prepared?->discard();

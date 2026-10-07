@@ -35,7 +35,6 @@ final class SchemaProbe
             VaulterSchema::morphs($table, 'owner');
             VaulterSchema::actor($table, 'created_by');
             VaulterSchema::bits($table, 'permissions');
-            VaulterSchema::extraData($table);
             $table->string('name');
         });
     }

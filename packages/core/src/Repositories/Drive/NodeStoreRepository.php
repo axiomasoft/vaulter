@@ -39,9 +39,9 @@ final class NodeStoreRepository
         $node->forceFill($attributes);
         $node->save();
 
-        // Refresh so DB-default columns (size_bytes, is_pinned, inherit_grants,
-        // position, panel) are populated in-memory — callers (copy, list, the
-        // facade return) read a fully hydrated row, never a half-set new model.
+        // Refresh so DB-default columns (size_bytes, inherit_grants, sequence,
+        // panel) are populated in-memory — callers (copy, list, the facade return)
+        // read a fully hydrated row, never a half-set new model.
         return $node->refresh();
     }
 
@@ -218,30 +218,42 @@ final class NodeStoreRepository
     }
 
     /**
-     * Stamp who last changed the node and when, without touching its sequence —
-     * document content writes change the node's content, not its editorial state.
+     * Stamp a content change (who and when, PLAN2.D42) without touching the
+     * sequence — document content writes change the node's content, not its
+     * editorial state.
      */
     public function touch(Node $node, int|string|null $actorId): Node
     {
-        $node->forceFill(['updated_by' => $actorId, 'updated_at' => $node->freshTimestamp()])->save();
+        $now = $node->freshTimestamp();
+        $node->forceFill([
+            'updated_by' => $actorId,
+            'updated_at' => $now,
+            'content_modified_by' => $actorId,
+            'content_modified_at' => $now,
+        ])->save();
 
         return $node;
     }
 
     /**
      * Refresh a file node's cached mime/size/extension after its aggregate's head
-     * moved (§2.4). The head pointer itself lives on v_files.
+     * moved (§2.4) and stamp the content change. The head pointer itself lives on
+     * v_files.
      */
     public function cacheHead(
         Node $node,
         ?string $mimeType,
         ?string $extension,
         int $sizeBytes,
+        int|string|null $actorId = null,
     ): Node {
         $node->forceFill([
             'mime_type' => $mimeType,
             'extension' => $extension,
             'size_bytes' => $sizeBytes,
+            'updated_by' => $actorId,
+            'content_modified_by' => $actorId,
+            'content_modified_at' => $node->freshTimestamp(),
         ])->save();
 
         return $node;

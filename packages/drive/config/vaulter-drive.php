@@ -27,7 +27,6 @@ return [
             ],
         ],
     ],
-    'names' => ['max_length' => 255],
     'trash' => ['retention_days' => 30],
     'models' => [
         'upload_session' => UploadSession::class,

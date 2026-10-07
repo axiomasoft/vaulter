@@ -11,7 +11,6 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
@@ -33,12 +32,12 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\LoadTier;
-use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
@@ -71,7 +70,7 @@ final readonly class IngestFileAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private MediaConfig $mediaConfig,
-        private DriveConfig $driveConfig,
+        private DrivePolicyEnforcer $policy,
         private UploadInspection $inspection,
         private StagedUpload $staging,
         private NameConflictResolver $names,
@@ -110,14 +109,14 @@ final readonly class IngestFileAction
 
     private function executeUpload(OperationContext $context, IngestFileInput $data): Node
     {
-        $name = $data->isNewVersion() ? null : NodeName::normalize(name: $data->resolvedName(), maxLength: $this->driveConfig->nameMaxLength());
+        $name = $data->isNewVersion() ? null : $this->policy->name(drive: $context->drive, name: $data->resolvedName());
         $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
         $ownsPreparation = $data->prepared === null;
         $prepared = $data->prepared ?? $this->prepare($context, $data);
         $facts = $prepared->facts;
         $data = new IngestFileInput(storage: $context->drive, stream: $data->stream, originalName: $data->originalName,
             mimeType: $facts->detectedMimeType, into: $data->into, name: $data->name, targetNode: $data->targetNode,
-            expectedSequence: $data->expectedSequence, onConflict: $data->onConflict, prepared: $prepared, declaredMimeType: $facts->declaredMimeType);
+            expectedSequence: $data->expectedSequence, onConflict: $data->onConflict, prepared: $prepared, declaredMimeType: $facts->declaredMimeType, clientModifiedAt: $data->clientModifiedAt);
         $staged = $prepared->staged;
 
         try {
@@ -131,7 +130,7 @@ final readonly class IngestFileAction
                 $this->database->lockTreeShared($data->storage->id);
 
                 if ($name !== null && $parentId !== null) {
-                    $this->assertDestination(data: $data, parentId: $parentId, name: $name);
+                    $this->assertDestination(context: $context, data: $data, parentId: $parentId);
                     $name = $this->names->resolve($context->drive, $parentId, $name, $data->onConflict);
                 }
 
@@ -214,6 +213,8 @@ final readonly class IngestFileAction
             'size_bytes' => $size,
             'owner_id' => $context->actor->ref()->id,
             'created_by' => $context->actor->ref()->id,
+            'content_modified_at' => now(),
+            'content_modified_by' => $context->actor->ref()->id,
         ]);
 
         $file = $this->files->create([
@@ -283,6 +284,7 @@ final readonly class IngestFileAction
             mimeType: $data->mimeType ?? $node->mime_type,
             extension: $node->extension,
             sizeBytes: $size,
+            actorId: $context->actor->ref()->id,
         );
 
         $this->sequence->bump($node);
@@ -322,6 +324,7 @@ final readonly class IngestFileAction
             'status' => 'committed',
             'created_by' => $context->actor->ref()->id,
             'committed_at' => now(),
+            'client_modified_at' => $data->clientModifiedAt,
         ]);
     }
 
@@ -350,9 +353,10 @@ final readonly class IngestFileAction
 
     /**
      * The destination folder is locked before the bytes are committed, so it cannot
-     * be trashed or replaced by a file between the check and the insert.
+     * be trashed or replaced by a file between the check and the insert, nor fill
+     * past the drive policy's children limit.
      */
-    private function assertDestination(IngestFileInput $data, int|string $parentId, string $name): void
+    private function assertDestination(OperationContext $context, IngestFileInput $data, int|string $parentId): void
     {
         $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
         if (!$this->tree->sameStorage($parent, $data->storage->id)) {
@@ -360,7 +364,8 @@ final readonly class IngestFileAction
         }
 
         $this->tree->assertActiveFolder($parent);
-
+        $this->policy->assertChildren(drive: $context->drive, parentId: $parentId);
+        $this->policy->assertDepth(drive: $context->drive, parent: $parent);
     }
 
     private function extension(string $name): ?string

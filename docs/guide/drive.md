@@ -149,11 +149,63 @@ $sub = $drive->createFolder('2026', parent: $folder, actorId: $user->id);
 ```
 
 A name is a single tree **segment** — it may not contain path separators
-(`/` or `\`). Build a path by creating folders level by level. Every write that takes a
-name (create, upload, rename, copy with `$name`) trims it, normalizes it to Unicode NFC
-(with ext-intl) and rejects an empty name, `.`/`..`, control characters or more than
-`vaulter-drive.names.max_length` UTF-8 bytes with `InvalidNodeNameException`
-(422 `validation_failed`, `errors.name`).
+(`/` or `\`). Build a path by creating folders level by level.
+
+### Names, limits, stars and properties
+
+**Names.** Every write that sets a new name (create, upload, rename, copy with a name, a
+conflict rename on move or restore) normalizes it to Unicode NFC and checks it against the
+profile's name policy. Nothing is trimmed: `" a.txt"` is refused, not changed. Two policies
+ship, selected per profile:
+
+- `portable-v1` (default) — names every desktop OS and ZIP can hold: no `< > : " | ? *`,
+  no leading/trailing whitespace, no trailing dot, no Windows device names (`CON`, `PRN`,
+  `AUX`, `NUL`, `COM0`–`COM9`, `LPT0`–`LPT9`, with any extension), no `desktop.ini` or
+  `.DS_Store`, at most 255 UTF-8 bytes and 255 UTF-16 code units;
+- `permissive-v1` — only the base rules: not empty, not `.`/`..`, no `/`, `\` or control
+  characters, at most 255 UTF-8 bytes.
+
+A refused name throws `InvalidNodeNameException` (422 `invalid_node_name` with a `reason`).
+Names already stored are never changed; renaming to them must pass the policy.
+
+Siblings are unique by `name_key` = NFC(full case folding(NFC(name))), compared byte for
+byte on every database: `Report.pdf`/`report.pdf`, `Résumé.pdf` in NFC/NFD and
+`STRASSE`/`straße` are the same name, while a node may change only the case of its own
+name. Trashed siblings do not count.
+
+**Limits.** The profile's drive policy holds the tree and content limits; Actions check
+them under the locks of the rows they change, on every path:
+
+```php
+$profile->drivePolicy(fn (DrivePolicyBuilder $p) => $p
+    ->namePolicy('portable-v1')
+    ->maxFolderDepth(100)        // levels below the root
+    ->maxFolderChildren(10_000)  // trashed children count until purged
+    ->maxFileBytes(null)         // null = only the installation upload limit
+    ->maxPropertiesBytes(16_384)
+    ->maxPropertyCount(100));
+```
+
+Exceeding them throws `FolderChildrenLimitExceededException` (409), `TreeDepthLimitExceededException`
+(409) or `FileSizeLimitExceededException` (413). Lowering a limit deletes nothing: only
+operations that make an excess worse are refused.
+
+**Stars** are personal: `nodes()->star($node)`, `unstar($node)` and `starred(?ListOptions)`
+(the actor's visible starred nodes, newest star first). A star changes neither the node's
+sequence nor its timestamps; REST responses carry `viewer.starred` for the request user.
+There is no manual order of children; sort with `ListOptions`.
+
+**Properties** are namespaced strings: `nodes()->properties($node)` returns
+`[namespace => [key => value]]`, and `setProperties($node, 'acme.crm', set: ['deal' => '42'],
+unset: ['old'], expectedSequence: …)` patches one namespace atomically and bumps the node
+sequence. Namespaces match `^[a-z0-9][a-z0-9.-]{0,127}$`, keys `^[A-Za-z0-9_.-]{1,64}$`,
+values are UTF-8 strings of at most 1024 bytes; `vaulter` and `vaulter.*` are written by the
+system only. A broken rule throws `InvalidPropertiesException` (422 `invalid_properties`).
+
+**Times.** `content_modified_at`/`content_modified_by` record the last content change (a file
+revision, a document state write); `updated_at` moves on any change.
+`UploadOptions::make()->clientModifiedAt($time)` stores the uploader's own modification time
+on the revision as information only.
 
 ### `upload()`
 

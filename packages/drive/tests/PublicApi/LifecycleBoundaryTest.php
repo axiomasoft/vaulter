@@ -173,7 +173,7 @@ it('copies and restores immutable payload identity edge attributes and metadata 
 it('uses fresh destination admission without inheriting a legacy scan exemption', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy admitted bytes', 'legacy.txt'));
     $original = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $original->forceFill(['scan_status' => 'not_required', 'extra_data' => ['legacy_scan_exemption' => true]])->save();
+    $original->forceFill(['scan_status' => 'not_required'])->save();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'legacy-copy');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -183,9 +183,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     $copied = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     expect($copied->scan_status)->toBe('pending')
-        ->and(($copied->extra_data ?? [])['legacy_scan_exemption'] ?? null)->toBeNull()
-        ->and($original->fresh()->scan_status)->toBe('not_required')
-        ->and($original->fresh()->extra_data['legacy_scan_exemption'])->toBeTrue();
+        ->and($original->fresh()->scan_status)->toBe('not_required');
 });
 
 it('refuses known infected immutable bytes before copying changes the database', function (): void {

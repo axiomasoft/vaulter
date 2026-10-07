@@ -46,7 +46,7 @@ trait ExercisesWideNodeListing
                     'parent_id' => $anchor->getKey(),
                     'kind' => NodeKind::Folder->value,
                     'name' => 'leaf-'.str_pad((string) $i, 6, '0', STR_PAD_LEFT),
-                    'position' => 0,
+                    'name_key' => 'leaf-'.str_pad((string) $i, 6, '0', STR_PAD_LEFT),
                 ];
             }
             $connection->table($anchor->getTable())->insert($rows);
@@ -64,7 +64,7 @@ trait ExercisesWideNodeListing
         expect($rootIds)->toBe([$anchor->getKey()])
             ->not->toContain($outside->getKey(), $foreign->getKey());
 
-        // All siblings tie on position: retain ordering and both cursor directions.
+        // Siblings ordered by name: retain ordering and both cursor directions.
         $page1 = (clone $query)->cursorPaginate(2);
         $page2 = (clone $query)->cursorPaginate(2, cursor: $page1->nextCursor());
         $back = (clone $query)->cursorPaginate(2, cursor: $page2->previousCursor());

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Enums\Events\EventType;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -46,7 +45,6 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  */
 class Activity extends Model
 {
-    use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;

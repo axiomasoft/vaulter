@@ -15,7 +15,7 @@ final readonly class UploadPolicy
 
     public function maxFileSize(Profile $profile): int
     {
-        return min($this->config->maxFileSize(), $profile->getUploadPolicy()->maxFileSize ?? PHP_INT_MAX);
+        return min($this->config->maxFileSize(), $profile->getDrivePolicy()->maxFileBytes ?? PHP_INT_MAX);
     }
 
     public function mimeAllowed(Profile $profile, string $mime): bool

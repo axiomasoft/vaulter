@@ -25,6 +25,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
+use Vaulter\Support\NodeName;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
@@ -85,7 +86,7 @@ final class NodeReadRepository
 
     /**
      * Direct children of a folder (or the storage root when $parent is null),
-     * ordered by the manual sibling position then name.
+     * ordered by name.
      *
      * @return Builder<Node>
      */
@@ -97,7 +98,6 @@ final class NodeReadRepository
                 ->treeOf($storage->id)
                 ->whereNull('trashed_at')
                 ->where('parent_id', $parent?->id)
-                ->orderBy('position')
                 ->orderBy('name')
                 ->orderBy('id'),
             labels: [
@@ -168,6 +168,37 @@ final class NodeReadRepository
                 'tier' => LoadTier::label(),
             ],
         );
+    }
+
+    /**
+     * Every child row of a folder, trashed ones included: they count against the
+     * drive policy's maxFolderChildren until purged.
+     */
+    public function childCount(int|string $parentId): int
+    {
+        return $this->query()->where('parent_id', $parentId)->count();
+    }
+
+    /** Levels between the node and its drive root: the root is 0, its children 1. */
+    public function depth(Node $node): int
+    {
+        $node = $this->scopedNode($node);
+
+        return $node->ancestors()->count();
+    }
+
+    /**
+     * Levels below the node in its subtree, trashed members included: 0 for a leaf.
+     * Read at most $bound levels deep, so a deeper subtree reports $bound.
+     */
+    public function height(Node $node, int $bound): int
+    {
+        $node = $this->scopedNode($node);
+        $model = $this->vaulterConfig->model('node');
+
+        $height = $model::withMaxDepth($bound, static fn (): mixed => $node->descendants()->max('depth'));
+
+        return is_numeric($height) ? (int) $height : 0;
     }
 
     /**
@@ -376,7 +407,8 @@ final class NodeReadRepository
 
     /**
      * Whether a live sibling already owns $name under $parentId in this storage
-     * (case-insensitive) — the §2.2 sibling-unique predicate the Actions check
+     * (same name_key: NFC + full case folding, compared byte for byte) — the
+     * sibling-unique predicate the Actions check
      * before create/move/rename. $ignoreId excludes the node being renamed in
      * place. Uses a direct EXISTS, NOT a recursive descendant aggregate (H.4).
      */
@@ -402,7 +434,7 @@ final class NodeReadRepository
             ->treeOf($storage->id)
             ->where('parent_id', $parentId)
             ->whereNull('trashed_at')
-            ->whereRaw('lower(name) = ?', [mb_strtolower($name)]);
+            ->where('name_key', NodeName::key($name));
 
         if ($ignoreId !== null) {
             $query->whereKeyNot($ignoreId);

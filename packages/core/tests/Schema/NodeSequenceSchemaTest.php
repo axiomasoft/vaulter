@@ -39,8 +39,8 @@ it('P3 additive migration preserves prior rows and foreign keys with a signed 64
             'id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'prior drive',
         ]);
         $db->table('sequence_probe_nodes')->insert([
-            ['id' => $parent, 'drive_id' => $drive, 'parent_id' => null, 'kind' => 'folder', 'name' => 'prior parent'],
-            ['id' => $child, 'drive_id' => $drive, 'parent_id' => $parent, 'kind' => 'file', 'name' => 'prior child'],
+            ['id' => $parent, 'drive_id' => $drive, 'parent_id' => null, 'kind' => 'folder', 'name' => 'prior parent', 'name_key' => 'prior parent'],
+            ['id' => $child, 'drive_id' => $drive, 'parent_id' => $parent, 'kind' => 'file', 'name' => 'prior child', 'name_key' => 'prior child'],
         ]);
         $before = $db->table('sequence_probe_nodes')->orderBy('name')->get()->map(fn ($row): array => (array) $row)->all();
 

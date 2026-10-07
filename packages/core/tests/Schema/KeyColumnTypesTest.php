@@ -68,12 +68,12 @@ it('uses the configured types for every key column on a fresh schema', function 
                 ->and(array_column($schema->getColumns($database->table('blobs')), null, 'name')['storage_key']['type_name'])->toBe('varchar');
 
             $connection->table($drives)->insert(['id' => 1, 'owner_id' => 'owner', 'owner_type' => 'user', 'name' => 'Drive']);
-            $connection->table($nodes)->insert(['id' => 1, 'drive_id' => 1, 'parent_id' => null, 'kind' => 'folder', 'name' => 'Root']);
-            expect(fn () => $connection->table($nodes)->insert(['id' => 2, 'drive_id' => 1, 'parent_id' => null, 'kind' => 'folder', 'name' => 'Other root']))
+            $connection->table($nodes)->insert(['id' => 1, 'drive_id' => 1, 'parent_id' => null, 'kind' => 'folder', 'name' => 'Root', 'name_key' => 'root']);
+            expect(fn () => $connection->table($nodes)->insert(['id' => 2, 'drive_id' => 1, 'parent_id' => null, 'kind' => 'folder', 'name' => 'Other root', 'name_key' => 'other root']))
                 ->toThrow(QueryException::class, $nodes.'_root_uniq');
 
-            $connection->table($nodes)->insert(['id' => 2, 'drive_id' => 1, 'parent_id' => 1, 'kind' => 'folder', 'name' => 'Folder']);
-            expect(fn () => $connection->table($nodes)->insert(['id' => 3, 'drive_id' => 1, 'parent_id' => 1, 'kind' => 'folder', 'name' => 'folder']))
+            $connection->table($nodes)->insert(['id' => 2, 'drive_id' => 1, 'parent_id' => 1, 'kind' => 'folder', 'name' => 'Folder', 'name_key' => 'folder']);
+            expect(fn () => $connection->table($nodes)->insert(['id' => 3, 'drive_id' => 1, 'parent_id' => 1, 'kind' => 'folder', 'name' => 'folder', 'name_key' => 'folder']))
                 ->toThrow(QueryException::class, $nodes.'_sibling_uniq');
 
             $connection->table($drives)->where('id', 1)->delete();

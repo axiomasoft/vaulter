@@ -6,14 +6,13 @@ namespace Vaulter\Schema;
 
 use Illuminate\Database\Schema\Blueprint;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\IdStrategy;
 
 /**
  * Static migration helper over the resolved IdStrategy. Hand-written migrations
  * call these helpers instead of hard-coding column types, so "ulid vs uuid7 vs
  * bigint" stays driven by configuration key vaulter.ids.strategy. Key/reference/morphs route through the strategy;
- * hostKey/actor/tenant use the independent host-key type; panel/extra_data/bits/reference add
+ * hostKey/actor/tenant use the independent host-key type; panel/bits/reference add
  * the per-table convention columns from the master plan §2.0.
  */
 final class VaulterSchema
@@ -92,19 +91,6 @@ final class VaulterSchema
     public static function panel(Blueprint $table): void
     {
         $table->string(column: 'profile')->default(value: 'default')->index();
-    }
-
-    /**
-     * Add the optional extra_data jsonb escape-hatch when enabled in config
-     * (default true).
-     */
-    public static function extraData(Blueprint $table): void
-    {
-        if (!app(VaulterConfig::class)->extraDataEnabled()) {
-            return;
-        }
-
-        $table->json(column: 'extra_data')->nullable();
     }
 
     /**

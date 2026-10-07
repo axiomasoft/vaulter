@@ -33,7 +33,7 @@ it('creates the v_node_comments table with every column', function (): void {
     expect(Schema::hasTable('v_node_comments'))->toBeTrue()
         ->and(Schema::hasColumns('v_node_comments', [
             'id', 'tenant_id', 'node_id', 'parent_id', 'author_type', 'author_id',
-            'body', 'anchor', 'resolved_at', 'resolved_by', 'extra_data',
+            'body', 'anchor', 'resolved_at', 'resolved_by',
             'created_at', 'updated_at',
         ]))->toBeTrue();
 });

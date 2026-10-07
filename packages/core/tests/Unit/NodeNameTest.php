@@ -6,14 +6,14 @@ use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Support\NodeName;
 use Vaulter\Tests\TestCase;
 
-// NodeName receives the package-owned byte limit explicitly.
+// The base rules every name policy builds on; nothing is trimmed (PLAN2.D39).
 uses(TestCase::class);
 
 it('normalizes a valid name', function (string $given, string $expected): void {
     expect(NodeName::normalize($given))->toBe($expected);
 })->with([
     'unchanged' => ['Report.pdf', 'Report.pdf'],
-    'edge whitespace trimmed' => ["  \tPlan 2026 \n", 'Plan 2026'],
+    'edge spaces kept, never trimmed' => ['  Plan 2026 ', '  Plan 2026 '],
     'inner whitespace kept' => ['a  b', 'a  b'],
     'NFC composition' => ["e\u{0301}", "\u{00E9}"],
     'dots inside a name' => ['...hidden..', '...hidden..'],
@@ -21,37 +21,50 @@ it('normalizes a valid name', function (string $given, string $expected): void {
     'multibyte within the byte limit' => [str_repeat('я', 127), str_repeat('я', 127)],
 ]);
 
-it('rejects an invalid name', function (string $given, string $reason): void {
-    expect(fn () => NodeName::normalize($given))->toThrow(InvalidNodeNameException::class, $reason);
+it('rejects an invalid name with a stable reason', function (string $given, string $reason): void {
+    try {
+        NodeName::normalize($given);
+        $this->fail('The name was accepted.');
+    } catch (InvalidNodeNameException $exception) {
+        expect($exception->reason)->toBe($reason);
+    }
 })->with([
-    'empty' => ['', 'it is empty'],
-    'whitespace only' => ["  \t ", 'it is empty'],
-    'dot' => ['.', 'it is a path alias'],
-    'dot dot' => [' .. ', 'it is a path alias'],
-    'slash' => ['a/b', 'it contains a path separator'],
-    'backslash' => ['a\\b', 'it contains a path separator'],
-    'NUL' => ["a\0b", 'it contains a control character'],
-    'leading NUL is not trimmed away' => ["\0a", 'it contains a control character'],
-    'C0 control' => ["a\x07b", 'it contains a control character'],
-    'DEL' => ["a\x7Fb", 'it contains a control character'],
-    'C1 control (NEL)' => ["a\u{0085}b", 'it contains a control character'],
-    '256 bytes' => [str_repeat('a', 256), 'longer than 255 bytes'],
-    '256 bytes of two-byte characters' => [str_repeat('я', 128), 'longer than 255 bytes'],
-    'invalid UTF-8' => ["a\xC3", 'not valid UTF-8'],
+    'empty' => ['', 'empty'],
+    'tab is a control character, not trimmed away' => ["  \t ", 'control_char'],
+    'dot' => ['.', 'path_alias'],
+    'dot dot' => ['..', 'path_alias'],
+    'slash' => ['a/b', 'separator'],
+    'backslash' => ['a\\b', 'separator'],
+    'NUL' => ["a\0b", 'control_char'],
+    'leading NUL' => ["\0a", 'control_char'],
+    'C0 control' => ["a\x07b", 'control_char'],
+    'DEL' => ["a\x7Fb", 'control_char'],
+    'C1 control (NEL)' => ["a\u{0085}b", 'control_char'],
+    '256 bytes' => [str_repeat('a', 256), 'too_long'],
+    '256 bytes of two-byte characters' => [str_repeat('я', 128), 'too_long'],
+    'invalid UTF-8' => ["a\xC3", 'reserved_char'],
 ]);
 
-it('measures the limit against the configured byte length', function (): void {
-    expect(NodeName::normalize('abcd', maxLength: 4))->toBe('abcd')
-        ->and(fn () => NodeName::normalize('abcde', maxLength: 4))->toThrow(InvalidNodeNameException::class, 'longer than 4 bytes');
+it('keeps " .. " as a name: only the bare aliases are refused by the base rules', function (): void {
+    expect(NodeName::normalize(' .. '))->toBe(' .. ');
 });
 
-it('renders as a 422 validation error on the name field', function (): void {
-    $exception = InvalidNodeNameException::forName('a/b', 'it contains a path separator');
+it('keys names by NFC and full case folding', function (): void {
+    expect(NodeName::key('Report.PDF'))->toBe(NodeName::key('report.pdf'))
+        ->and(NodeName::key("Re\u{0301}sume\u{0301}.pdf"))->toBe(NodeName::key('Résumé.pdf'))
+        ->and(NodeName::key('STRASSE'))->toBe(NodeName::key('straße'))
+        ->and(NodeName::key('ΣΑΣ'))->toBe(NodeName::key('σας'))
+        ->and(NodeName::key(' a'))->not->toBe(NodeName::key('a'));
+});
+
+it('renders as a 422 invalid_node_name problem with the reason and the name field', function (): void {
+    $exception = InvalidNodeNameException::forName('a/b', InvalidNodeNameException::SEPARATOR);
     $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
 
     expect($response->getStatusCode())->toBe(422)
         ->and($response->getData(true))->toMatchArray([
-            'code' => 'validation_failed',
+            'code' => 'invalid_node_name',
+            'reason' => 'separator',
             'errors' => ['name' => [$exception->getMessage()]],
         ]);
 });

@@ -36,7 +36,6 @@ it('creates the canonical schema independently of runtime features and legacy ta
     $indexes = array_column($schema->getIndexes('v_node_grants'), null, 'name');
     expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope', 'effect']);
     config()->set('vaulter.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
-    config()->set('vaulter.extra_data.enabled', false);
     config()->set('vaulter.database.table_prefix', 'features_off_');
     (new SchemaBuilder)->createAll();
     expect($schema->hasTable('features_off_file_revisions'))->toBeTrue()

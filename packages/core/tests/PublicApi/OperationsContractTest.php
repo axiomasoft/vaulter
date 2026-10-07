@@ -70,6 +70,7 @@ function p32ExpectedType(string $type): string
         'MintedShareLink' => MintedShareLink::class,
         'UploadedFile' => UploadedFile::class,
         'StreamInterface' => StreamInterface::class,
+        'DateTimeInterface' => DateTimeInterface::class,
     ];
     $type = str_replace('NodeKey', 'Node|int|string', $type);
     if (str_starts_with($type, '?')) {
@@ -111,11 +112,22 @@ function p32AssertSignature(ReflectionMethod $method, string $parameters, string
 
 it('matches all seven Operations signatures against the literal normative PHP API', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
+    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41).
+    $removed = ['NodeOperations::update'];
+    $amendments = ['NodeOperations' => '
+        public function star(NodeKey $node): Node;
+        public function unstar(NodeKey $node): Node;
+        public function starred(?ListOptions $options = null): NodePage;
+        public function properties(NodeKey $node): array;
+        public function setProperties(NodeKey $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Node;
+    '];
     $count = 0;
     foreach (['Drive' => ['NodeOperations', 'FolderOperations', 'FileOperations', 'TrashOperations'], 'Access' => ['AccessOperations'], 'Sharing' => ['ShareOperations'], 'Activity' => ['ActivityOperations']] as $domain => $names) {
         foreach ($names as $name) {
             preg_match('/interface '.$name.'\s*\{(.*?)\n\}/s', $literal, $body);
-            preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1], $methods, PREG_SET_ORDER);
+            preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1].($amendments[$name] ?? ''), $methods, PREG_SET_ORDER);
+            // PLAN2.D40 removes the shared pinned/position update in favour of personal stars.
+            $methods = array_values(array_filter($methods, static fn (array $method): bool => !in_array($name.'::'.$method[1], $removed, true)));
             $ref = new ReflectionClass('Vaulter\\Contracts\\'.$domain.'\\'.$name);
             expect($ref->isInterface())->toBeTrue()->and($ref->getMethods())->toHaveCount(count($methods));
             foreach ($methods as $method) {
@@ -124,18 +136,22 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             }
         }
     }
-    expect($count)->toBe(28);
+    expect($count)->toBe(32);
 });
 
 it('matches immutable value constructors and UploadSource factory signatures against literal 05', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
     $literal = preg_replace('/\/\/[^\n]*/', '', $literal);
-    foreach (['UploadOptions', 'RevisionOptions', 'CreateFolderOptions', 'MoveOptions', 'CopyOptions', 'RestoreOptions', 'UpdateNodeOptions', 'ListOptions', 'SearchOptions', 'FileStream'] as $name) {
+    foreach (['UploadOptions', 'RevisionOptions', 'CreateFolderOptions', 'MoveOptions', 'CopyOptions', 'RestoreOptions', 'ListOptions', 'SearchOptions', 'FileStream'] as $name) {
         preg_match('/final readonly class '.$name.'\b.*?public function __construct\((.*?)\)/s', $literal, $matches);
         $ref = new ReflectionClass('Vaulter\\Data\\Drive\\'.$name);
         expect($ref->isFinal())->toBeTrue()->and($ref->isReadOnly())->toBeTrue();
         if (in_array($name, ['UploadOptions', 'RevisionOptions'], true) && !str_contains($matches[1], 'declaredMimeType')) {
             $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?string $declaredMimeType = null';
+        }
+        if ($name === 'UploadOptions') {
+            // PLAN2.D42: the uploader's own modification time, informational only.
+            $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?DateTimeInterface $clientModifiedAt = null';
         }
         p32AssertSignature($ref->getConstructor(), $matches[1], '');
     }

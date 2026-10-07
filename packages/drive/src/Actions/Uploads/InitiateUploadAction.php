@@ -14,11 +14,12 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NotAFileException;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Support\NodeName;
 
 final readonly class InitiateUploadAction
 {
-    public function __construct(private NodeLocator $locator, private OperationGuard $guard, private UploadSessionManager $manager) {}
+    public function __construct(private NodeLocator $locator, private OperationGuard $guard, private UploadSessionManager $manager, private DrivePolicyEnforcer $policy) {}
 
     public function execute(OperationContext $context, InitiateUploadInput $input): UploadSession
     {
@@ -33,8 +34,17 @@ final readonly class InitiateUploadAction
             $this->guard->authorizeCreate(context: $context, parent: $parent ?? throw NodeNotFoundException::forId('root'));
         }
 
+        // Refuse what the drive policy will refuse at completion before any byte is sent.
+        if ($input->totalSizeBytes !== null) {
+            $this->policy->assertFileSize(drive: $context->drive, bytes: $input->totalSizeBytes);
+        }
+        // A revision's name is only its original_name; a new file's name is a new node name.
+        $name = $node !== null
+            ? NodeName::normalize($input->targetName ?? $node->name)
+            : $this->policy->name(drive: $context->drive, name: $input->targetName ?? 'upload.bin');
+
         return $this->manager->initiate(context: $context, data: new InitiateUploadInput(
-            protocol: $input->protocol, targetParent: $parent, targetName: NodeName::normalize($input->targetName ?? $node->name ?? 'upload.bin'),
+            protocol: $input->protocol, targetParent: $parent, targetName: $name,
             targetNode: $node, expectedSha256: $input->expectedSha256, totalSizeBytes: $input->totalSizeBytes,
             mimeType: $input->mimeType, metadata: $input->metadata, expectedSequence: $input->expectedSequence,
         ));

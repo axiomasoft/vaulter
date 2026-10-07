@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
@@ -14,14 +13,15 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 /**
  * Rename a node in place (§2.2), subject to the sibling-name conflict check at
- * its current parent (the node itself is excluded from the check). The root is
+ * its current parent (the node itself is excluded from the check, so changing
+ * only the case of a name succeeds). The root is
  * never renamed; the check runs against the locked row.
  *
  * Operations authorize before this command; locked invariants remain in the Action.
@@ -33,13 +33,14 @@ final readonly class RenameNodeAction
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
-        private DriveConfig $driveConfig,
+        private DrivePolicyEnforcer $policy,
     ) {}
 
     public function execute(OperationContext $context, RenameNodeInput $data): Node
     {
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node);
-        $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
+        // A rename is a new name: it passes the policy even when the old one would not.
+        $name = $this->policy->name(drive: $context->drive, name: $data->name);
 
         return $this->database->transaction(function () use ($node, $name, $data, $context): Node {
             $this->database->lockTreeShared($node->drive_id);

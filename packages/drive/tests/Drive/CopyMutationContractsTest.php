@@ -21,7 +21,7 @@ it('copies node and current version attributes and charges the exact logical siz
     $dest = $drive->folders()->create('Destination');
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'source.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
     $drive->actingAs(DriveTestHelpers::actor($drive, 7))->files()->addRevision($source, UploadSource::fromStream(DriveTestHelpers::streamFor('second bytes'), $source->name));
-    $source->refresh()->forceFill(['is_pinned' => true, 'inherit_grants' => false])->save();
+    $source->refresh()->forceFill(['properties' => ['acme' => ['k' => 'v']], 'inherit_grants' => false])->save();
     $head = $source->file()->firstOrFail()->currentRevision()->firstOrFail();
     $used = $drive->model()->refresh()->used_bytes;
 
@@ -35,7 +35,7 @@ it('copies node and current version attributes and charges the exact logical siz
         ->and($copy->mime_type)->toBe('text/plain')
         ->and($copy->extension)->toBe($source->extension)
         ->and($copy->size_bytes)->toBe(12)
-        ->and($copy->is_pinned)->toBeTrue()
+        ->and($copy->properties)->toBe(['acme' => ['k' => 'v']])
         ->and($copy->inherit_grants)->toBeFalse()
         ->and($copy->owner_id)->toEqual(17)
         ->and($copy->created_by)->toEqual(17)

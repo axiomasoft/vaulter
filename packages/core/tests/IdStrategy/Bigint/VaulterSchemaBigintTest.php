@@ -15,7 +15,7 @@ it('emits every convention column under the bigint strategy', function (): void 
 
     expect(Schema::hasColumns($table, [
         'id', 'profile', 'tenant_id', 'drive_id', 'parent_id',
-        'owner_type', 'owner_id', 'created_by', 'permissions', 'extra_data',
+        'owner_type', 'owner_id', 'created_by', 'permissions',
     ]))->toBeTrue();
 });
 

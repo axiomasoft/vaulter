@@ -19,11 +19,9 @@ it('reads drive settings live and uses the canonical byte ceiling', function ():
 
     $repository->set('vaulter-drive.uploads.max_file_size', 1025);
     $repository->set('vaulter-drive.uploads.resumable.enabled', false);
-    $repository->set('vaulter-drive.names.max_length', 100);
 
     expect($config->maxFileSize())->toBe(1025)
-        ->and($config->resumableEnabled())->toBeFalse()
-        ->and($config->nameMaxLength())->toBe(100);
+        ->and($config->resumableEnabled())->toBeFalse();
 });
 
 it('preserves resumable boolean casting for live canonical settings', function (mixed $value, bool $enabled): void {

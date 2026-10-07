@@ -21,16 +21,16 @@ it('migrates and rolls back a fresh installation with all module features disabl
         config()->set('vaulter.features.'.$feature, false);
     }
 
-    config()->set('vaulter.extra_data.enabled', false);
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-    $entities = ['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'file_revision_blobs', 'node_grants', 'node_shares', 'node_comments', 'documents', 'document_revisions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'];
+    $entities = ['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'file_revision_blobs', 'node_grants', 'node_shares', 'node_comments', 'node_user_states', 'documents', 'document_revisions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'];
     foreach ($entities as $entity) {
         expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeTrue($entity);
     }
 
+    // extra_data is gone from every table (PLAN2.D41).
     expect($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'extra_data'))->toBeFalse()
-        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('blobs'), 'extra_data'))->toBeTrue();
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('blobs'), 'extra_data'))->toBeFalse();
     $this->artisan('migrate:rollback', ['--force' => true])->assertSuccessful();
     foreach ($entities as $entity) {
         expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeFalse($entity);

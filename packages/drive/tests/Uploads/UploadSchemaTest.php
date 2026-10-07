@@ -24,7 +24,7 @@ it('creates v_upload_sessions with every §2.8 column', function (): void {
         'id', 'tenant_id', 'drive_id', 'upload_id', 'target_node_id', 'result_node_id', 'result_revision_id', 'target_parent_id',
         'target_name', 'protocol', 'status', 'expected_sha256', 'total_size_bytes',
         'received_bytes', 'chunk_size', 'mime_type', 'parts', 'assembled_blob_id',
-        'metadata', 'extra_data', 'expires_at', 'created_by', 'created_at', 'updated_at',
+        'metadata', 'expires_at', 'created_by', 'created_at', 'updated_at',
     ]))->toBeTrue();
 });
 

@@ -58,3 +58,39 @@
 `collaboration_epoch_mismatch` (409) — запись коллаборации пришла из комнаты старого поколения:
 документ восстановили или заменили его JSON после открытия комнаты. Запись отвергнута, чтобы не
 влить брошенную историю обратно; откройте документ в новой комнате.
+
+## invalid-node-name
+
+`InvalidNodeNameException` (422 `invalid_node_name`, с `reason` и `errors.name`) — новое имя
+нарушило базовые правила или политику имён профиля. Ничего не обрезается. `reason`: `empty`,
+`path_alias` (`.`/`..`), `separator` (`/`, `\`), `control_char`, `reserved_char`
+(`< > : " | ? *` в `portable-v1` или невалидный UTF-8), `trailing_dot_or_space`,
+`leading_or_trailing_space`, `reserved_name` (имена устройств Windows, `desktop.ini`,
+`.DS_Store`) или `too_long` (больше 255 байт UTF-8 или единиц UTF-16). Имена хранятся в Unicode
+NFC, если установлен ext-intl.
+
+## folder-children-limit-exceeded
+
+`FolderChildrenLimitExceededException` (409 `folder_children_limit_exceeded`, `limit`) — в папке
+уже `maxFolderChildren` узлов политики диска; дети в корзине считаются до очистки. Используйте
+другую папку или очистите её корзину.
+
+## tree-depth-limit-exceeded
+
+`TreeDepthLimitExceededException` (409 `tree_depth_limit_exceeded`, `limit`) — создание,
+перемещение, копирование или восстановление поместило бы узел глубже `maxFolderDepth` политики
+диска. Выберите назначение повыше.
+
+## file-size-limit-exceeded
+
+`FileSizeLimitExceededException` (413 `file_size_limit_exceeded`, `limit`) — заявленный,
+потоковый или итоговый размер больше `maxFileBytes` политики диска или
+`vaulter-drive.uploads.max_file_size` установки.
+
+## invalid-properties
+
+`InvalidPropertiesException` (422 `invalid_properties`, `reason`) — патч свойств нарушил
+контракт: `namespace` (`^[a-z0-9][a-z0-9.-]{0,127}$`), `key` (`^[A-Za-z0-9_.-]{1,64}$`),
+`value_too_long` (значение — строка UTF-8 до 1024 байт), `too_many` / `too_large`
+(`maxPropertyCount` / `maxPropertiesBytes` политики диска) или `reserved_namespace` (`vaulter` и
+`vaulter.*` пишет только система).

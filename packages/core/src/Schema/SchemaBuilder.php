@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\IdStrategy;
 
 /** The shared Vaulter schema. Runtime features never control table existence. */
@@ -63,6 +62,7 @@ final class SchemaBuilder
         'node_grants',
         'node_shares',
         'node_comments',
+        'node_user_states',
         'documents',
         'document_revisions',
         'upload_sessions',
@@ -129,6 +129,7 @@ final class SchemaBuilder
                 'node_grants' => $this->defineNodeGrants(table: $table, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, ids: $ids),
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
+                'node_user_states' => $this->defineNodeUserStates(table: $table, ids: $ids),
                 'documents' => $this->defineDocuments(table: $table, ids: $ids),
                 'document_revisions' => $this->defineDocumentRevisions(table: $table, ids: $ids),
                 'upload_sessions' => $this->defineUploadSessions(table: $table, ids: $ids),
@@ -189,7 +190,6 @@ final class SchemaBuilder
         $table->bigInteger('used_bytes')->default(0);
         $this->scanInteger($table, 'scan_admission_sequence')->default(0);
         $table->string('status', 16)->default('active')->index();
-        $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamps();
 
@@ -223,15 +223,19 @@ final class SchemaBuilder
 
         $table->string('kind', 16)->index();
         $table->string('name');
+        $this->nameKeyColumn(table: $table);
         $table->string('mime_type', 191)->nullable()->index();
         $table->string('extension', 32)->nullable();
         $table->bigInteger('size_bytes')->default(0);
-        $table->integer('position')->default(0);
-        $table->boolean('is_pinned')->default(false);
         $table->boolean('inherit_grants')->default(true);
         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
         HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false);
-        $this->extraData(table: $table);
+        // Namespaced string properties (PLAN2.D41): {namespace: {key: value}}.
+        $table->jsonb('properties')->nullable();
+        // The last content change (a file revision, a document state write), apart
+        // from updated_at which any public change moves (PLAN2.D42).
+        $table->timestamp('content_modified_at')->nullable();
+        HostKeyColumns::add(table: $table, column: 'content_modified_by', nullable: true, index: false);
 
         // Soft-trash triplet (D17); purge is a real DELETE, there is no tombstone.
         $table->timestamp('trashed_at')->nullable();
@@ -242,12 +246,9 @@ final class SchemaBuilder
         HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
         $table->timestamps();
 
-        // Hot listing indexes (§2.2 index plan). (drive_id, parent_id) is NOT
-        // repeated as its own index (F-P4.1-02, VLT-REMED P4.3): it is a strict
-        // column-prefix of the composite below, so it never wins over it and only
-        // pays extra write cost. The purge-trash scan index (trashed_at, driver-aware
-        // partial) is emitted in afterCreate() — F-P4.1-01.
-        $table->index(['drive_id', 'parent_id', 'position']);
+        // Hot listing indexes (§2.2 index plan). The purge-trash scan index
+        // (trashed_at, driver-aware partial) is emitted in afterCreate() — F-P4.1-01.
+        $table->index(['drive_id', 'parent_id']);
         $table->index(['drive_id', 'kind', 'trashed_at']);
 
         $table->foreign('drive_id')
@@ -302,7 +303,6 @@ final class SchemaBuilder
         $table->timestamp('first_seen_at')->useCurrent();
         $table->timestamp('committed_at')->nullable();
         $table->timestamp('delete_after_at')->nullable();
-        $this->extraData(table: $table);
 
         $table->string('scope_key', 191);
         $name = $table->getTable();
@@ -327,7 +327,6 @@ final class SchemaBuilder
         $table->string('mime_type', 191)->nullable();
         $table->bigInteger('size_bytes')->default(0);
         $table->unsignedInteger('revision_count')->default(0);
-        $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamps();
 
@@ -362,10 +361,11 @@ final class SchemaBuilder
         $table->string('status', 12)->default('pending')->index();
         $table->boolean('keep_forever')->default(false);
         $ids->reference(table: $table, column: 'restored_from_revision_id', nullable: true);
-        $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
+        // The uploader's own modification time: informational, never trusted (PLAN2.D42).
+        $table->timestamp('client_modified_at')->nullable();
 
         $table->unique(['file_id', 'number'], $table->getTable().'_no_uniq');
         // The target of v_files' composite head FK: a head must be a revision of
@@ -443,7 +443,6 @@ final class SchemaBuilder
 
         $table->timestamp('expires_at')->nullable()->index();
         HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
-        $this->extraData(table: $table);
         $table->timestamps();
 
         $name = $table->getTable();
@@ -499,7 +498,6 @@ final class SchemaBuilder
         $table->timestamp('revoked_at')->nullable()->index();
 
         HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
-        $this->extraData(table: $table);
         $table->timestamps();
 
         $name = $table->getTable();
@@ -552,7 +550,6 @@ final class SchemaBuilder
         $table->timestamp('resolved_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'resolved_by', nullable: true, index: false);
 
-        $this->extraData(table: $table);
         $table->timestamps();
 
         $name = $table->getTable();
@@ -574,6 +571,32 @@ final class SchemaBuilder
         $table->foreign('parent_id')
             ->references('id')
             ->on(app(DatabaseConfig::class)->table('node_comments'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * v_node_user_states — one actor's personal state of a node (PLAN2.D40): starred
+     * now, more per-user flags later. Never part of the node: a star changes neither
+     * the node's sequence nor its updated_at, and is invisible to other actors.
+     */
+    private function defineNodeUserStates(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table);
+        $ids->reference(table: $table, column: 'node_id');
+        $table->string('actor_type', 191);
+        HostKeyColumns::add(table: $table, column: 'actor_id', nullable: false, index: false);
+        $table->timestamp('starred_at')->nullable();
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        $table->unique(['node_id', 'actor_type', 'actor_id'], $name.'_actor_uniq');
+        $table->index(['actor_type', 'actor_id', 'starred_at'], $name.'_starred_idx');
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($this->table('nodes'))
             ->cascadeOnDelete();
     }
 
@@ -732,10 +755,8 @@ final class SchemaBuilder
         // The blob the assembled bytes deduped/committed into (set at commit).
         $ids->reference(table: $table, column: 'assembled_blob_id', nullable: true);
 
-        // The tus Upload-Metadata (decoded key→value map) — distinct from the host
-        // extra_data hatch.
+        // The tus Upload-Metadata (decoded key→value map).
         $table->json('metadata')->nullable();
-        $this->extraData(table: $table);
 
         $table->timestamp('expires_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
@@ -818,7 +839,7 @@ final class SchemaBuilder
         $table->string('target_type')->nullable();
 
         // The structured payload (before/after, old/new path/role, …). Always
-        // present — this is the audit body, distinct from the host extra_data hatch.
+        // present — this is the audit body.
         // jsonb on Postgres (the gin jsonb_path_ops index requires it); json/text elsewhere.
         $table->jsonb('context')->nullable();
 
@@ -829,8 +850,6 @@ final class SchemaBuilder
         // minted uuid), NOT a Vaulter entity reference — so it is a fixed nullable
         // uuid column independent of the panel id strategy (§2.9 "request_id uuid").
         $table->uuid('request_id')->nullable();
-
-        $this->extraData(table: $table);
 
         // Append-only: created_at ONLY. No timestamps()/softDeletes() — there is no
         // update or delete path for an audit row. No inline ->index() here
@@ -1169,15 +1188,17 @@ final class SchemaBuilder
     }
 
     /**
-     * Sibling-name uniqueness among active nodes (§2.2).
+     * Sibling-name uniqueness among active nodes (PLAN2.D39): one live name_key per
+     * parent, compared byte for byte so the host's collation never decides.
      *
-     *  - PostgreSQL / SQLite: a PARTIAL unique index on (parent_id, lower(name))
-     *    WHERE trashed_at IS NULL — a trashed duplicate name is allowed, a live
-     *    one is rejected.
-     *  - MySQL: no partial indexes, so a functional key part folds active liveness
-     *    into a value (NULL when trashed, which is exempt from UNIQUE).
-     *    Keeping the expression inside the index is essential: a stored generated
-     *    column based on parent_id is incompatible with its cascading FK.
+     *  - PostgreSQL: a PARTIAL unique index on (parent_id, name_key COLLATE "C")
+     *    WHERE trashed_at IS NULL — a trashed duplicate is allowed, a live one not.
+     *  - SQLite: the same partial index; BINARY is SQLite's default collation.
+     *  - MySQL / MariaDB: a varchar(1024) utf8mb4 key outgrows the 3072-byte index
+     *    limit, so a stored generated column holds sha2(name_key) for live rows and
+     *    NULL for trashed ones (NULL is exempt from UNIQUE). It reads neither
+     *    parent_id nor any other FK column, which a stored generated column may not
+     *    do alongside a cascading FK.
      */
     private function addSiblingUniqueIndex(string $table): void
     {
@@ -1186,40 +1207,43 @@ final class SchemaBuilder
         // its own index name (index names are global on SQLite/PG, not per-table).
         $name = $table.'_sibling_uniq';
 
-        if ($driver === 'pgsql' || $driver === 'sqlite') {
-            $this->dbConnection()->statement(
-                sprintf('CREATE UNIQUE INDEX %s ON %s (parent_id, lower(name)) ', $name, $table).
-                'WHERE trashed_at IS NULL',
-            );
+        if ($driver === 'pgsql') {
+            $this->dbConnection()->statement(sprintf('CREATE UNIQUE INDEX %s ON %s (parent_id, name_key COLLATE "C") WHERE trashed_at IS NULL', $name, $table));
 
             return;
         }
 
-        if ($driver === 'mysql') {
-            $this->dbConnection()->statement(
-                sprintf('CREATE UNIQUE INDEX `%s` ON `%s` ', $name, $table).
-                '(`parent_id`, ((CASE WHEN `trashed_at` IS NULL THEN LOWER(`name`) ELSE NULL END)))',
-            );
+        if ($driver === 'sqlite') {
+            $this->dbConnection()->statement(sprintf('CREATE UNIQUE INDEX %s ON %s (parent_id, name_key) WHERE trashed_at IS NULL', $name, $table));
 
             return;
         }
 
-        if ($driver === 'mariadb') {
-            $this->dbConnection()->statement(
-                sprintf('ALTER TABLE `%s` ADD COLUMN `sibling_active` VARCHAR(512) ', $table).
-                'GENERATED ALWAYS AS (CASE WHEN `trashed_at` IS NULL '.
-                "THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED",
-            );
-            $this->dbConnection()->statement(sprintf('ALTER TABLE `%s` ADD UNIQUE INDEX `%s` (`sibling_active`)', $table, $name));
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            $this->dbConnection()->statement(sprintf(
+                'ALTER TABLE `%s` ADD COLUMN `name_key_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin '
+                .'GENERATED ALWAYS AS (CASE WHEN `trashed_at` IS NULL THEN SHA2(`name_key`, 256) ELSE NULL END) STORED',
+                $table,
+            ));
+            $this->dbConnection()->statement(sprintf('CREATE UNIQUE INDEX `%s` ON `%s` (`parent_id`, `name_key_hash`)', $name, $table));
 
             return;
         }
 
-        // Unknown driver: fall back to a plain (non-soft-delete-aware) unique so
-        // the schema is still defended. Supported drivers above are the canon.
+        // Unknown driver: fall back to a plain (non-trash-aware) unique so the schema
+        // is still defended. Supported drivers above are the canon.
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($name): void {
-            $blueprint->unique(['parent_id', 'name'], $name);
+            $blueprint->unique(['parent_id', 'name_key'], $name);
         });
+    }
+
+    /** name_key compares byte for byte; MySQL needs a binary collation on the column itself. */
+    private function nameKeyColumn(Blueprint $table): void
+    {
+        $column = $table->string('name_key', 1024);
+        if (in_array($this->dbConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            $column->charset('utf8mb4')->collation('utf8mb4_bin');
+        }
     }
 
     /**
@@ -1385,19 +1409,6 @@ final class SchemaBuilder
         }
 
         return false;
-    }
-
-    /**
-     * The optional extra_data jsonb escape hatch (D13), gated per panel.
-     */
-    private function extraData(Blueprint $table): void
-    {
-        // The node extra-data flag remains until P4.1; it never gates a table.
-        if ($table->getTable() === app(DatabaseConfig::class)->table('nodes') && !app(VaulterConfig::class)->extraDataEnabled()) {
-            return;
-        }
-
-        $table->json(column: 'extra_data')->nullable();
     }
 
     /** A signed counter with SQLite type checks preventing REAL overflow promotion. */

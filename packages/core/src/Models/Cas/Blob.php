@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Content\ScanUtcDateTime;
@@ -53,7 +52,6 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  */
 class Blob extends Model
 {
-    use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 

@@ -65,11 +65,13 @@ it('rejects a parent folder of another drive', function (): void {
         ->toThrow(InvalidDestinationException::class, 'belongs to drive');
 });
 
-it('normalizes the document name and rejects an invalid one', function (): void {
+it('normalizes the document name to NFC and refuses one the name policy rejects, never trimming it', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    expect(createDocumentUnder($drive, "  Caf\u{0065}\u{0301}  ", null)->name)->toBe("Caf\u{00E9}")
-        ->and(fn (): Node => createDocumentUnder($drive, 'a/b', null))->toThrow(InvalidNodeNameException::class);
+    expect(createDocumentUnder($drive, "Caf\u{0065}\u{0301}", null)->name)->toBe("Caf\u{00E9}")
+        ->and(fn (): Node => createDocumentUnder($drive, 'a/b', null))->toThrow(InvalidNodeNameException::class)
+        ->and(fn (): Node => createDocumentUnder($drive, '  Café  ', null))->toThrow(InvalidNodeNameException::class, 'whitespace')
+        ->and(fn (): Node => createDocumentUnder($drive, 'CON.md', null))->toThrow(InvalidNodeNameException::class, 'reserve');
 });
 
 it('takes the storage row before the parent row, as every node insert does', function (): void {

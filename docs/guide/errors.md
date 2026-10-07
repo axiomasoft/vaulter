@@ -33,7 +33,11 @@ Codes are a stable public contract (AD29).
 | `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
-| `validation_failed` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
+| `invalid_node_name` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
+| `invalid_properties` | 422 | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
+| `folder_children_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
+| `tree_depth_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\TreeDepthLimitExceededException` |
+| `file_size_limit_exceeded` | 413 | `Vaulter\Exceptions\Policy\FileSizeLimitExceededException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
@@ -81,11 +85,39 @@ another drive as `cross_drive_operation`.
 
 ## invalid-node-name
 
-`InvalidNodeNameException` — a node name must be non-empty after trimming, not `.` or
-`..`, free of `/`, `\` and control characters, and at most
-`vaulter-drive.names.max_length` UTF-8 bytes (default 255). Names are stored in
-Unicode NFC when ext-intl is installed. Rendered as 422 `validation_failed` with
-`errors.name`.
+`InvalidNodeNameException` (422 `invalid_node_name`, with `reason` and `errors.name`) — the
+new name broke the base rules or the profile's name policy. Nothing is trimmed. `reason` is one
+of `empty`, `path_alias` (`.`/`..`), `separator` (`/`, `\`), `control_char`, `reserved_char`
+(`< > : " | ? *` under `portable-v1`, or invalid UTF-8), `trailing_dot_or_space`,
+`leading_or_trailing_space`, `reserved_name` (Windows device names, `desktop.ini`, `.DS_Store`)
+or `too_long` (over 255 UTF-8 bytes or UTF-16 code units). Names are stored in Unicode NFC
+when ext-intl is installed.
+
+## folder-children-limit-exceeded
+
+`FolderChildrenLimitExceededException` (409 `folder_children_limit_exceeded`, `limit`) — the
+folder already holds the drive policy's `maxFolderChildren` nodes; trashed children count until
+purged. Use another folder or purge its trash.
+
+## tree-depth-limit-exceeded
+
+`TreeDepthLimitExceededException` (409 `tree_depth_limit_exceeded`, `limit`) — the create, move,
+copy or restore would place a node deeper than the drive policy's `maxFolderDepth`. Choose a
+shallower destination.
+
+## file-size-limit-exceeded
+
+`FileSizeLimitExceededException` (413 `file_size_limit_exceeded`, `limit`) — the declared,
+streamed or final size is above the drive policy's `maxFileBytes` or the installation's
+`vaulter-drive.uploads.max_file_size`.
+
+## invalid-properties
+
+`InvalidPropertiesException` (422 `invalid_properties`, `reason`) — a properties patch broke the
+contract: `namespace` (`^[a-z0-9][a-z0-9.-]{0,127}$`), `key` (`^[A-Za-z0-9_.-]{1,64}$`),
+`value_too_long` (values are UTF-8 strings of at most 1024 bytes), `too_many` / `too_large`
+(the drive policy's `maxPropertyCount` / `maxPropertiesBytes`) or `reserved_namespace`
+(`vaulter` and `vaulter.*` are system-only).
 
 ## invalid-tiptap-content
 

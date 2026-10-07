@@ -111,6 +111,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
         'parent_id' => null,
         'kind' => 'folder',
         'name' => 'Second root',
+        'name_key' => 'second root',
     ]))->toThrow(QueryException::class, 'v_nodes_root_uniq');
 });
 

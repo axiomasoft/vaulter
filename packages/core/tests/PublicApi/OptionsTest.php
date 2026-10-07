@@ -13,7 +13,6 @@ use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\SearchOptions;
-use Vaulter\Data\Drive\UpdateNodeOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\NodeSort;
@@ -36,8 +35,7 @@ it('builds independent options with named fields and preserves original defaults
         ->and(CreateFolderOptions::make()->onConflict(OnNameConflict::Rename)->onConflict)->toBe(OnNameConflict::Rename)
         ->and(MoveOptions::make()->expectedSequence(5)->onConflict(OnNameConflict::Rename)->expectedSequence)->toBe(5)
         ->and(CopyOptions::make()->name('new')->onConflict(OnNameConflict::Fail)->name)->toBe('new')
-        ->and(RestoreOptions::make()->destination('folder-key')->onConflict(OnNameConflict::Fail)->destination)->toBe('folder-key')
-        ->and(UpdateNodeOptions::make()->pinned(false)->position(-1)->expectedSequence(9)->pinned)->toBeFalse();
+        ->and(RestoreOptions::make()->destination('folder-key')->onConflict(OnNameConflict::Fail)->destination)->toBe('folder-key');
     expect(fn () => $upload->name = 'changed')->toThrow(Error::class);
 });
 

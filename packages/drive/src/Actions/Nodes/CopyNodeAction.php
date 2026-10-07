@@ -6,7 +6,6 @@ namespace Vaulter\Drive\Actions\Nodes;
 
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeCopied;
@@ -19,10 +18,10 @@ use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
-use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 final readonly class CopyNodeAction
@@ -33,7 +32,7 @@ final readonly class CopyNodeAction
         private DriveStoreRepository $storageStore,
         private VaulterDatabase $database,
         private TreeGuard $tree,
-        private DriveConfig $driveConfig,
+        private DrivePolicyEnforcer $policy,
         private NodeContentLifecycleRegistry $lifecycles,
         private NameConflictResolver $names,
     ) {}
@@ -41,7 +40,8 @@ final readonly class CopyNodeAction
     public function execute(OperationContext $context, CopyNodeInput $data): Node
     {
         $source = app(NodeLocator::class)->find(context: $context, key: $data->node);
-        $name = $data->name === null ? null : NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
+        // "Copy as" is a new name; without one the copy keeps the source's stored name.
+        $name = $data->name === null ? null : $this->policy->name(drive: $context->drive, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $context->drive, into: $data->into);
 
         try {
@@ -92,8 +92,10 @@ final readonly class CopyNodeAction
                         $addedBytes += $member->size_bytes;
                     }
                 }
+                $this->assertLimits($context, $current, $destination, $sources->all());
                 $resolvedName = $this->names->resolve(drive: $context->drive, parentId: $parentId,
-                    name: $name ?? $current->name, onConflict: $data->onConflict);
+                    name: $name ?? $current->name, onConflict: $data->onConflict,
+                    policy: $this->policy->policy($context->drive)->names());
                 if ($addedBytes > 0) {
                     $this->storageStore->reserveBytes(storage: $context->drive, delta: $addedBytes);
                 }
@@ -113,6 +115,42 @@ final readonly class CopyNodeAction
         }
     }
 
+    /**
+     * The copy adds one child to the destination, nests the copied subtree under it,
+     * and creates each copied folder with as many children as its source has live:
+     * every one of them is a new excess if it breaks the drive policy.
+     *
+     * @param array<string, Node> $sources the live members being copied, root included
+     */
+    private function assertLimits(OperationContext $context, Node $root, Node $destination, array $sources): void
+    {
+        $this->policy->assertChildren(drive: $context->drive, parentId: $destination->id);
+
+        $children = [];
+        foreach ($sources as $member) {
+            if ((string) $member->id !== (string) $root->id) {
+                $children[(string) $member->parent_id][] = (string) $member->id;
+            }
+        }
+        foreach ($children as $parentId => $ids) {
+            $this->policy->assertChildCount(drive: $context->drive, folderId: $parentId, children: count($ids));
+        }
+
+        $height = 0;
+        $level = [(string) $root->id];
+        while ($level !== []) {
+            $next = [];
+            foreach ($level as $id) {
+                array_push($next, ...($children[$id] ?? []));
+            }
+            if ($next !== []) {
+                $height++;
+            }
+            $level = $next;
+        }
+        $this->policy->assertDepth(drive: $context->drive, parent: $destination, height: $height);
+    }
+
     /** @param array<string, Node> $sources */
     private function copyNode(OperationContext $context, Node $source, int|string $parentId, string $name, array $sources, int &$addedBytes): Node
     {
@@ -125,9 +163,10 @@ final readonly class CopyNodeAction
             'mime_type' => $source->mime_type,
             'extension' => $source->extension,
             'size_bytes' => $source->size_bytes,
-            'is_pinned' => $source->is_pinned,
             'inherit_grants' => $source->inherit_grants,
-            'position' => $source->position,
+            'properties' => $source->properties,
+            'content_modified_at' => $source->content_modified_at,
+            'content_modified_by' => $source->content_modified_by,
             'owner_id' => $context->actor->ref()->id,
             'created_by' => $context->actor->ref()->id,
             'sequence' => 0,

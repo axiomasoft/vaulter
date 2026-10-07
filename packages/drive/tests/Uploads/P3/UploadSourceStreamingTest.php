@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Stream;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 
 it('V30 consumes a borrowed PSR stream from its current position and never closes it', function (): void {
     $resource = UploadTestHelpers::streamFor('prefixpayload');
@@ -24,7 +24,7 @@ it('V30 consumes a borrowed PSR stream from its current position and never close
 
 it('V30 rejects actual oversize PSR bytes without closing the borrowed stream', function (): void {
     $psr = new Stream(UploadTestHelpers::streamFor('payload'));
-    expect(fn () => app(StagedUpload::class)->stageSource(UploadSource::fromPsrStream($psr, 'x.txt'), 3))->toThrow(UploadRejectedException::class);
+    expect(fn () => app(StagedUpload::class)->stageSource(UploadSource::fromPsrStream($psr, 'x.txt'), 3))->toThrow(FileSizeLimitExceededException::class);
     expect($psr->isReadable())->toBeTrue();
     $psr->close();
 });

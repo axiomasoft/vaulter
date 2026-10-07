@@ -39,6 +39,8 @@ final class Profile
 
     private ?int $trashRetentionDays = null;
 
+    private ?DrivePolicy $drive = null;
+
     public function key(string $key): static
     {
         $this->assertMutable();
@@ -161,6 +163,22 @@ final class Profile
         return $this;
     }
 
+    /**
+     * Tree and content limits of the profile's drives (PLAN2.D43):
+     * ->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFolderChildren(5000)).
+     *
+     * @param callable(DrivePolicyBuilder): mixed $configure
+     */
+    public function drivePolicy(callable $configure): static
+    {
+        $this->assertMutable();
+        $builder = new DrivePolicyBuilder($this->drive ?? new DrivePolicy);
+        $configure($builder);
+        $this->drive = $builder->build();
+
+        return $this;
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -185,6 +203,21 @@ final class Profile
     public function getUploadPolicy(): UploadPolicy
     {
         return $this->uploads ?? new UploadPolicy;
+    }
+
+    /**
+     * A profile upload policy's maxFileSize predates the drive policy; it still
+     * applies when the drive policy sets no maxFileBytes of its own.
+     */
+    public function getDrivePolicy(): DrivePolicy
+    {
+        $policy = $this->drive ?? new DrivePolicy;
+        $legacy = $this->uploads?->maxFileSize;
+        if ($policy->maxFileBytes !== null || $legacy === null) {
+            return $policy;
+        }
+
+        return (new DrivePolicyBuilder($policy))->maxFileBytes($legacy)->build();
     }
 
     public function getPermissionDriver(): ?string

@@ -180,13 +180,6 @@ final readonly class DriveConfig implements ScanWorkSettings
         return max($days, 0);
     }
 
-    public function nameMaxLength(): int
-    {
-        $value = $this->config->get(key: 'vaulter-drive.names.max_length', default: 255);
-
-        return is_numeric($value) ? (int) $value : 255;
-    }
-
     /** @return list<string> */
     public function allowedMimeTypes(): array
     {

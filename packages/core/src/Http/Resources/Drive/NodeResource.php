@@ -15,6 +15,8 @@ use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\NodeUserState;
+use Vaulter\Support\Identity;
 
 /**
  * The read shape of a Drive node (§2.2 / §5): the unified folder|file|document
@@ -56,6 +58,9 @@ final class NodeResource extends JsonResource
      * @var Collection<int, Node>|null
      */
     private ?Collection $children = null;
+
+    /** Whether the request's user starred this node, when the caller already knows. */
+    private ?bool $viewerStarred = null;
 
     /**
      * The breadcrumb chain (root → this node), attached by NodeController::show.
@@ -108,14 +113,14 @@ final class NodeResource extends JsonResource
             'storage_id' => $node->drive_id,
             'parent_id' => $node->parent_id,
             ...$this->headKeys($node),
-            'is_pinned' => $node->is_pinned,
-            'position' => $node->position,
             'trashed_at' => $node->trashed_at,
             'created_at' => $node->created_at,
             'updated_at' => $node->updated_at,
+            'content_modified_at' => $node->content_modified_at,
+            'viewer' => $this->viewer($request, $node),
             'children' => $this->children === null
                 ? null
-                : self::collection($this->children->map(fn (Node $child): self => isset($this->childrenGrants[(string) $child->id]) ? self::make($child)->withGrantSet($this->childrenGrants[(string) $child->id]) : self::make($child))),
+                : self::collection($this->childResources($request, $this->children)),
             'breadcrumb' => $this->breadcrumb === null
                 ? null
                 : self::collection($this->breadcrumb),
@@ -171,6 +176,66 @@ final class NodeResource extends JsonResource
             node: $node,
             resolver: app(AccessResolver::class),
         )->toArray();
+    }
+
+    /**
+     * The request user's personal state of the node (PLAN2.D40); null without a
+     * user. A listing passes the stars of its page in one query.
+     *
+     * @return array{starred: bool}|null
+     */
+    private function viewer(Request $request, Node $node): ?array
+    {
+        $user = $request->user();
+        if (!$user instanceof Model) {
+            return null;
+        }
+
+        if ($this->viewerStarred !== null) {
+            return ['starred' => $this->viewerStarred];
+        }
+        // ExactListing preloads the stars of its actor, who is the request user.
+        if ($node->relationLoaded('userStates')) {
+            return ['starred' => $node->userStates->contains(static fn (NodeUserState $state): bool => $state->starred_at !== null
+                && $state->actor_type === $user->getMorphClass()
+                && Identity::stringify($state->actor_id) === Identity::stringify($user->getKey()))];
+        }
+
+        return ['starred' => $node->userStates()
+            ->where('actor_type', $user->getMorphClass())
+            ->where('actor_id', $user->getKey())
+            ->whereNotNull('starred_at')
+            ->exists()];
+    }
+
+    /**
+     * @param  Collection<int, Node>                     $children
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    private function childResources(Request $request, Collection $children): \Illuminate\Support\Collection
+    {
+        $user = $request->user();
+        $starred = [];
+        if ($user instanceof Model && $children->isNotEmpty()) {
+            $ids = NodeUserState::query()
+                ->where('actor_type', $user->getMorphClass())
+                ->where('actor_id', $user->getKey())
+                ->whereIn('node_id', $children->modelKeys())
+                ->whereNotNull('starred_at')
+                ->pluck('node_id');
+            foreach ($ids as $id) {
+                if (is_int($id) || is_string($id)) {
+                    $starred[Identity::stringify($id)] = true;
+                }
+            }
+        }
+
+        return $children->toBase()->map(function (Node $child) use ($starred): self {
+            $resource = isset($this->childrenGrants[(string) $child->id]) ? self::make($child)->withGrantSet($this->childrenGrants[(string) $child->id]) : self::make($child);
+            $resource->viewerStarred = isset($starred[Identity::stringify($child->id)]);
+
+            return $resource;
+        });
     }
 
     /**

@@ -11,6 +11,7 @@ use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
@@ -50,7 +51,7 @@ it('V30 counts from the current position and enforces the actual byte limit', fu
     }
     expect(is_resource($stream))->toBeTrue();
     rewind($stream);
-    expect(fn () => app(StagedUpload::class)->stageSource($source, 2))->toThrow(UploadRejectedException::class);
+    expect(fn () => app(StagedUpload::class)->stageSource($source, 2))->toThrow(FileSizeLimitExceededException::class);
     expect(is_resource($stream))->toBeTrue();
     fclose($stream);
 });

@@ -36,6 +36,7 @@ final readonly class IngestFileInput
         public OnNameConflict $onConflict = OnNameConflict::Fail,
         public ?PreparedUpload $prepared = null,
         public ?string $declaredMimeType = null,
+        public ?\DateTimeInterface $clientModifiedAt = null,
     ) {}
 
     /**

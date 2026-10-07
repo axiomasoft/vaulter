@@ -6,6 +6,45 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Node data contract: names, properties, stars, times, drive policy (PLAN2.D39–D43; PLAN2.P4.11)
+
+Back up the database before migrating. `2026_10_07_000004_node_data_contract` refuses
+(`UpgradePreflightException`) a node whose `extra_data` cannot become 1.0 properties (more than
+100 keys, a key over 64 bytes after replacing characters outside `A-Za-z0-9_.-` with `_`, two
+keys that collide after that replacement, a value over 1024 bytes, or more than 16 KiB in all) and
+a `name_key`/`properties`/`content_modified_at` column or `v_node_user_states` table it did not
+create. It changes nothing in that case; move the data out and run it again.
+
+- **Names are no longer trimmed.** `NodeName::normalize()` lost its `$maxLength` argument and the
+  trim; new names pass the profile's name policy — `portable-v1` by default, which refuses
+  `< > : " | ? *`, edge whitespace, a trailing dot, Windows device names and `desktop.ini`/`.DS_Store`.
+  Hosts that need the old acceptance set `->drivePolicy(fn ($p) => $p->namePolicy('permissive-v1'))`.
+  `InvalidNodeNameException` renders `invalid_node_name` (was `validation_failed`) with a `reason`.
+  Stored names are kept as they are.
+- **Sibling uniqueness uses `name_key`** (NFC + full case folding, byte comparison) instead of
+  `lower(name)`. The migration renames each later live sibling that now collides with an earlier
+  one (`Straße`/`STRASSE`, NFC/NFD pairs) to `"<base> (conflict N)<.ext>"`, logs a warning and
+  records a `node.renamed` activity from `vaulter:system`. Raw inserts into `v_nodes` must now
+  write `name_key` (`NodeName::key($name)`); the `Node` model sets it on every name write.
+- **`extra_data` is gone from every table** and `HasExtraData` was removed. `v_nodes.extra_data`
+  moves to `properties['legacy']` (top-level keys, non-string values JSON-encoded); the other
+  tables' `extra_data` is dropped (no Vaulter code wrote it). `vaulter.extra_data.enabled` and
+  `VaulterConfig::extraDataEnabled()`/`VaulterSchema::extraData()` are gone; the config key is
+  deprecated and ignored.
+- **`is_pinned`/`position` and `nodes()->update()` were removed** with `UpdateNodeOptions`. Use the
+  personal `nodes()->star()/unstar()/starred()`; children sort by name (or `ListOptions`). Store
+  shared metadata with `nodes()->setProperties($node, 'your.namespace', [...])`. The REST node no
+  longer has `is_pinned`/`position`; it has `viewer.starred` and `content_modified_at`.
+- **Limits live in `DrivePolicy`.** `vaulter-drive.names.max_length` (and the legacy
+  `vaulter.drive.name_rules.max_length`) is deprecated and ignored and `DriveConfig::nameMaxLength()`
+  is gone: names are limited to 255 UTF-8 bytes by the policy. A profile's `UploadPolicy::maxFileSize`
+  still applies as `DrivePolicy::maxFileBytes` when the drive policy sets none. Oversized uploads
+  now fail with 413 `file_size_limit_exceeded` (was 422 `upload_rejected` / `file_too_large`).
+  New 409 `folder_children_limit_exceeded` / `tree_depth_limit_exceeded` (defaults 10 000 children,
+  trashed included, and 100 levels) can refuse writes that used to succeed.
+- **`DriveNameRules::rules()` takes no argument** (was `rules(int $maxLength = 255)`): request
+  validation keeps the 255-character shape check; the Actions apply the policy.
+
 ### Document aggregate and node pointers (PLAN2.D34, PLAN2.D35, ADR-0022; PLAN2.P4.1)
 
 Back up the database and stop writes before migrating. The upgrade is three migrations:

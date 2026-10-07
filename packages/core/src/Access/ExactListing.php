@@ -7,6 +7,8 @@ namespace Vaulter\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Configuration\ListingConfig;
 use Vaulter\Data\Drive\NodePage;
@@ -79,6 +81,12 @@ final readonly class ExactListing
                 break;
             }
             $sets = $actor === null ? [] : $this->access->evaluateMany($actor, $batch);
+            if ($actor instanceof Model) {
+                // The listing actor's own stars, one query per batch (viewer.starred).
+                $batch->load(['userStates' => static function (Relation $states) use ($actor): void {
+                    $states->where('actor_type', $actor->getMorphClass())->where('actor_id', $actor->getKey());
+                }]);
+            }
             $allowed = $operation === null ? null : array_fill_keys(array_map(static fn (Node $node): string => (string) $node->id, app(OperationGuard::class)->visible($operation, $batch)), true);
             foreach ($batch as $node) {
                 $scanned++;

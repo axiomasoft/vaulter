@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,10 +15,10 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
+use Vaulter\Support\NodeName;
 
 /**
  * A node in the unified folder|file|document adjacency tree (master plan §2.2,
@@ -30,34 +31,35 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * under every id strategy. Swappable — point configuration key vaulter.models.node at a
  * subclass for tenant scoping.
  *
- * @property int|string      $id
- * @property string          $profile
- * @property int|string|null $tenant_id
- * @property int|string      $drive_id
- * @property int|string|null $parent_id
- * @property NodeKind        $kind
- * @property string          $name
- * @property string|null     $mime_type
- * @property string|null     $extension
- * @property int             $size_bytes
- * @property int             $sequence
- * @property int             $position
- * @property bool            $is_pinned
- * @property bool            $inherit_grants
- * @property int|string|null $shortcut_target_id
- * @property int|string|null $owner_id
- * @property Carbon|null     $trashed_at
- * @property int|string|null $trashed_by
- * @property int|string|null $trashed_from_parent_id
- * @property Carbon|null     $created_at
- * @property Carbon|null     $updated_at
+ * @property int|string                                $id
+ * @property string                                    $profile
+ * @property int|string|null                           $tenant_id
+ * @property int|string                                $drive_id
+ * @property int|string|null                           $parent_id
+ * @property NodeKind                                  $kind
+ * @property string                                    $name
+ * @property string                                    $name_key
+ * @property string|null                               $mime_type
+ * @property string|null                               $extension
+ * @property int                                       $size_bytes
+ * @property int                                       $sequence
+ * @property array<string, array<string, string>>|null $properties
+ * @property bool                                      $inherit_grants
+ * @property int|string|null                           $shortcut_target_id
+ * @property int|string|null                           $owner_id
+ * @property Carbon|null                               $trashed_at
+ * @property int|string|null                           $trashed_by
+ * @property int|string|null                           $trashed_from_parent_id
+ * @property Carbon|null                               $content_modified_at
+ * @property int|string|null                           $content_modified_by
+ * @property Carbon|null                               $created_at
+ * @property Carbon|null                               $updated_at
  * @property-read Drive $storage
  * @property-read Node|null        $parent
  * @property-read File|null        $file
  */
 class Node extends Model
 {
-    use HasExtraData;
     use HasRecursiveRelationships;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
@@ -78,7 +80,6 @@ class Node extends Model
         'name',
         'mime_type',
         'extension',
-        'is_pinned',
         'inherit_grants',
     ];
 
@@ -89,6 +90,19 @@ class Node extends Model
         // CTE alias during descendants()/ancestors()); only fall back to the
         // shared schema name when none was set.
         return $this->table ?? app(DatabaseConfig::class)->table('nodes');
+    }
+
+    /**
+     * Every write of the name also writes its sibling-uniqueness key, so no path —
+     * an Action, a host model write or a seeder — can store one without the other.
+     *
+     * @return Attribute<string, string>
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: static fn (string $value): array => ['name' => $value, 'name_key' => NodeName::key($value)],
+        );
     }
 
     /**
@@ -171,6 +185,16 @@ class Node extends Model
     }
 
     /**
+     * Personal state of this node, one row per actor (PLAN2.D40).
+     *
+     * @return HasMany<NodeUserState, $this>
+     */
+    public function userStates(): HasMany
+    {
+        return $this->hasMany(NodeUserState::class, 'node_id');
+    }
+
+    /**
      * @return array<string, string>
      */
     #[\Override]
@@ -179,11 +203,11 @@ class Node extends Model
         return [
             'kind' => NodeKind::class,
             'size_bytes' => 'integer',
-            'position' => 'integer',
             'sequence' => 'integer',
-            'is_pinned' => 'boolean',
+            'properties' => 'array',
             'inherit_grants' => 'boolean',
             'trashed_at' => 'datetime',
+            'content_modified_at' => 'datetime',
         ];
     }
 }

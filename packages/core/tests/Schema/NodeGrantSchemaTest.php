@@ -21,7 +21,7 @@ it('creates the v_node_grants table with every column', function (): void {
         ->and(Schema::hasColumns('v_node_grants', [
             'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'level',
             'permissions', 'effect', 'scope',
-            'expires_at', 'granted_by', 'extra_data',
+            'expires_at', 'granted_by',
         ]))->toBeTrue();
 });
 

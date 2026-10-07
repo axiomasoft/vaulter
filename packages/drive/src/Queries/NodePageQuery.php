@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Queries;
 
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 use Vaulter\Access\ExactListing;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Models\Drive\NodeUserState;
 use Vaulter\Operations\OperationContext;
 
 final readonly class NodePageQuery
@@ -36,12 +38,44 @@ final readonly class NodePageQuery
             $query->whereIn('kind', array_map(static fn ($kind): string => $kind->value, $options->kinds));
         }
         $columns = match ($options->sort) {
-            NodeSort::Default => ['position', 'name', 'id'], NodeSort::Name => ['name', 'id'], NodeSort::UpdatedAt => ['updated_at', 'id'], NodeSort::Size => ['size_bytes', 'id'],
+            NodeSort::Default => ['name', 'id'], NodeSort::Name => ['name', 'id'], NodeSort::UpdatedAt => ['updated_at', 'id'], NodeSort::Size => ['size_bytes', 'id'],
         };
         $direction = $options->descending ? 'desc' : 'asc';
         $order = array_map(static fn (string $column): array => ['column' => $column, 'direction' => $direction], $columns);
         $identity = json_encode(['drive' => (string) $context->driveId(), 'tenant' => $context->drive->tenant_id, 'kind' => $kind, 'filter' => $filter, 'kinds' => $options->kinds, 'sort' => $options->sort->value, 'direction' => $direction], JSON_THROW_ON_ERROR);
 
         return $this->listing->page(actor: $context, candidates: $query, order: $order, perPage: $options->perPage, cursor: $options->cursor, context: $identity);
+    }
+
+    /**
+     * The acting user's starred nodes of this drive that are live and visible now,
+     * newest star first. The star joins in under the node table's own name, so the
+     * listing paginates over starred_at like over any node column.
+     */
+    public function starred(OperationContext $context, ListOptions $options): NodePage
+    {
+        if ($options->sort !== NodeSort::Default || $options->descending || $options->kinds !== []) {
+            throw new InvalidArgumentException('Starred lists support perPage and cursor only.');
+        }
+        $actor = $context->actor->ref();
+        if ($context->actor->isSystem() || $actor->type === null || $actor->id === null) {
+            return new NodePage(items: [], nextCursor: null, scanned: 0);
+        }
+
+        $class = $this->config->model('node');
+        $table = (new $class)->getTable();
+        $states = (new NodeUserState)->getTable();
+        $starred = $class::query()->toBase()
+            ->join($states.' as vaulter_star', 'vaulter_star.node_id', '=', $table.'.id')
+            ->where('vaulter_star.actor_type', $actor->type)
+            ->where('vaulter_star.actor_id', $actor->id)
+            ->whereNotNull('vaulter_star.starred_at')
+            ->where($table.'.drive_id', $context->driveId())
+            ->whereNull($table.'.trashed_at')
+            ->select([$table.'.*', 'vaulter_star.starred_at as starred_at']);
+        $order = [['column' => 'starred_at', 'direction' => 'desc'], ['column' => 'id', 'direction' => 'desc']];
+        $identity = json_encode(['drive' => (string) $context->driveId(), 'tenant' => $context->drive->tenant_id, 'kind' => 'starred', 'actor' => [$actor->type, (string) $actor->id]], JSON_THROW_ON_ERROR);
+
+        return $this->listing->page(actor: $context, candidates: $class::query()->fromSub($starred, $table), order: $order, perPage: $options->perPage, cursor: $options->cursor, context: $identity);
     }
 }

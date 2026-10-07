@@ -5,24 +5,24 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 /**
- * The shared node-name validation contract for the Drive write requests (§2.2):
- * a name is required, bounded in length, and must carry no path separators (the
- * tree is adjacency-based — a name is a single segment, never a path). Kept in
- * one place so create/rename/upload/copy enforce the exact same rule and surface
- * the same message.
+ * The request-shape check for node names in the Drive write requests (§2.2): a name
+ * is required, at most 255 characters, and carries no path separators (the tree is
+ * adjacency-based — a name is a single segment, never a path). Kept in one place so
+ * create/rename/upload/copy surface the same message.
  *
- * The owning package passes its length bound. Separators remain a fixed tree invariant.
+ * The drive's name policy (portable-v1 or permissive-v1) is applied by the Actions,
+ * which also hold the byte limit; this only rejects obviously malformed input early.
  */
 final class DriveNameRules
 {
     /**
      * @return list<string>
      */
-    public static function rules(int $maxLength = 255): array
+    public static function rules(): array
     {
         $pattern = '~^[^/\\\\]+$~u';
 
-        return ['required', 'string', "max:{$maxLength}", "regex:{$pattern}"];
+        return ['required', 'string', 'max:'.NodeName::MAX_BYTES, "regex:{$pattern}"];
     }
 
     /**

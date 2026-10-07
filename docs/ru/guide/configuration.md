@@ -169,7 +169,6 @@ CAS-бакет должен быть без версионирования: уд
         ],
     ],
 ],
-'names' => ['max_length' => 255],
 'trash' => ['retention_days' => 30],
 'models' => [
     'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
@@ -180,7 +179,10 @@ CAS-бакет должен быть без версионирования: уд
 `max_file_size` — общий лимит в байтах для обычных и резюмируемых загрузок.
 Нулевой лимит чанка или активных сессий отключает это ограничение.
 `resumable.enabled` управляет резюмируемыми маршрутами; таблицы загрузок существуют
-независимо от флага. Правила разделителей имён зафиксированы в коде.
+независимо от флага. Правила имён, лимиты папок и лимит размера файла профиля задаёт политика
+диска профиля (см. [Drive → Имена, лимиты, избранное и свойства](/ru/guide/drive));
+`vaulter-drive.names.max_length`, `vaulter.drive.name_rules.max_length` и
+`vaulter.extra_data.enabled` устарели и игнорируются (`E_USER_DEPRECATED`).
 См. [Загрузки](/ru/guide/uploads) и [Корзина](/ru/guide/trash).
 
 ## Documents: содержимое, ревизии, комментарии и коллаборация
@@ -302,7 +304,6 @@ $connection = $database->connection();
 | `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
 | `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
 | `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
-| `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
 | `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
 | `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
 | `vaulter.features.comments` | `vaulter-documents.comments.enabled` |

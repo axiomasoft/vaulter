@@ -109,10 +109,14 @@ Vaulter\Contracts\Drive\NodeOperations
   copy(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination = null, ?\Vaulter\Data\Drive\CopyOptions $options = null): \Vaulter\Models\Drive\Node
   find(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
   move(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination, ?\Vaulter\Data\Drive\MoveOptions $options = null): \Vaulter\Models\Drive\Node
+  properties(\Vaulter\Models\Drive\Node|int|string $node): array
   rename(\Vaulter\Models\Drive\Node|int|string $node, string $name, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
   search(string $term, ?\Vaulter\Data\Drive\SearchOptions $options = null): \Vaulter\Data\Drive\NodePage
+  setProperties(\Vaulter\Models\Drive\Node|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
+  star(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
+  starred(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
   trash(\Vaulter\Models\Drive\Node|int|string $node, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
-  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Drive\UpdateNodeOptions $options): \Vaulter\Models\Drive\Node
+  unstar(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
 
 Vaulter\Contracts\Drive\TrashOperations
   empty(): int
@@ -277,7 +281,6 @@ Vaulter\Configuration\VaulterConfig
   database(): \Vaulter\Configuration\DatabaseConfig
   defaultProfile(): string
   downloads(): \Vaulter\Configuration\DownloadsConfig
-  extraDataEnabled(): bool
   featureEnabled(string $feature, ?string $profile = null): bool
   handlers(): array
   ids(): \Vaulter\Configuration\IdsConfig
@@ -412,23 +415,15 @@ Vaulter\Data\Drive\SearchOptions
   readonly \Vaulter\Models\Drive\Node|int|null|string $within
   readonly int $perPage
 
-Vaulter\Data\Drive\UpdateNodeOptions
-  __construct(?bool $pinned = null, ?int $position = null, ?int $expectedSequence = null)
-  expectedSequence(?int $expectedSequence): \self
-  make(): \self
-  pinned(?bool $pinned): \self
-  position(?int $position): \self
-  readonly ?bool $pinned
-  readonly ?int $expectedSequence
-  readonly ?int $position
-
 Vaulter\Data\Drive\UploadOptions
-  __construct(\Vaulter\Models\Drive\Node|int|null|string $parent = null, ?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null)
+  __construct(\Vaulter\Models\Drive\Node|int|null|string $parent = null, ?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null, ?\DateTimeInterface $clientModifiedAt = null)
+  clientModifiedAt(?\DateTimeInterface $clientModifiedAt): \self
   declaredMimeType(?string $declaredMimeType): \self
   make(): \self
   name(?string $name): \self
   onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
   parent(\Vaulter\Models\Drive\Node|int|null|string $parent): \self
+  readonly ?\DateTimeInterface $clientModifiedAt
   readonly ?string $declaredMimeType
   readonly ?string $name
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
@@ -576,9 +571,11 @@ Vaulter\Profiles\Profile
   defaultQuota(?int $bytes): \static
   disk(string $disk): \static
   documentTypes(string ...$typeKeys): \static
+  drivePolicy(callable $configure): \static
   getDefaultQuota(): ?int
   getDisk(): ?string
   getDocumentTypes(): array
+  getDrivePolicy(): \Vaulter\Profiles\DrivePolicy
   getKey(): string
   getOwners(): array
   getPermissionDriver(): ?string
@@ -618,6 +615,40 @@ Vaulter\Profiles\UploadPolicy
   readonly ?string $scanPolicyVersion
   readonly array $allowedMimeTypes
   readonly array $blockedExtensions
+
+Vaulter\Profiles\DrivePolicy
+  __construct(string $namePolicy = Vaulter\Naming\PortableNamePolicy::KEY, int $maxFolderDepth = 100, int $maxFolderChildren = 10000, ?int $maxFileBytes = null, int $maxPropertiesBytes = 16384, int $maxPropertyCount = 100, ?int $maxShareLinkTtlDays = null)
+  names(): \Vaulter\Naming\NamePolicy
+  readonly ?int $maxFileBytes
+  readonly ?int $maxShareLinkTtlDays
+  readonly int $maxFolderChildren
+  readonly int $maxFolderDepth
+  readonly int $maxPropertiesBytes
+  readonly int $maxPropertyCount
+  readonly string $namePolicy
+
+Vaulter\Profiles\DrivePolicyBuilder
+  __construct(\Vaulter\Profiles\DrivePolicy $from = Vaulter\Profiles\DrivePolicy)
+  build(): \Vaulter\Profiles\DrivePolicy
+  maxFileBytes(?int $bytes): \static
+  maxFolderChildren(int $children): \static
+  maxFolderDepth(int $depth): \static
+  maxPropertiesBytes(int $bytes): \static
+  maxPropertyCount(int $count): \static
+  maxShareLinkTtlDays(?int $days): \static
+  namePolicy(string $key): \static
+
+Vaulter\Naming\NamePolicy
+  apply(string $name): string
+  key(): string
+
+Vaulter\Naming\PortableNamePolicy
+  apply(string $name): string
+  key(): string
+
+Vaulter\Naming\PermissiveNamePolicy
+  apply(string $name): string
+  key(): string
 
 Vaulter\Content\ScanPolicySpec
   __construct(string $predicateKey, \Vaulter\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
@@ -713,7 +744,6 @@ Vaulter\Schema\HostKeyColumns
 Vaulter\Schema\VaulterSchema
   actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = true): void
   bits(\Illuminate\Database\Schema\Blueprint $table, string $column, int $default = 0): void
-  extraData(\Illuminate\Database\Schema\Blueprint $table): void
   foreignKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
   hostKey(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
   key(\Illuminate\Database\Schema\Blueprint $table, string $column = 'id'): void

@@ -13,10 +13,10 @@ use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
+use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Media\Cas\StagedTempObject;
 use Vaulter\Models\Drive\Drive;
 
@@ -76,7 +76,7 @@ final readonly class StagedUpload
                 }
                 $length = strlen($bytes);
                 if ($size > PHP_INT_MAX - $length || ($maximum !== null && $length > $maximum - $size)) {
-                    throw new UploadRejectedException('file_too_large');
+                    throw FileSizeLimitExceededException::forLimit($maximum ?? PHP_INT_MAX);
                 }
                 $size += $length;
                 hash_update($hash, $bytes);

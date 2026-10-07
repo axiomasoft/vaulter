@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
-use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
@@ -20,10 +19,10 @@ final class RenameNodeRequest extends VaulterFormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(DriveConfig $driveConfig): array
+    public function rules(): array
     {
         return [
-            'name' => DriveNameRules::rules(maxLength: $driveConfig->nameMaxLength()),
+            'name' => DriveNameRules::rules(),
         ];
     }
 

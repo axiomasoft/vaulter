@@ -119,6 +119,9 @@ it('deprecates ignored removed keys once', function (string $key, mixed $value, 
     ['vaulter.versions.autosave_debounce_seconds', 30, 'vaulter-documents'],
     ['vaulter-documents.revisions.autosave_debounce_seconds', 30, 'vaulter-documents'],
     ['vaulter.drive.name_rules.no_separators_pattern', '/custom/', 'vaulter-drive'],
+    ['vaulter.drive.name_rules.max_length', 100, 'vaulter-drive'],
+    ['vaulter-drive.names.max_length', 100, 'vaulter-drive'],
+    ['vaulter.extra_data.enabled', false, 'vaulter'],
 ]);
 
 // The expected mapping is a fixed acceptance dataset, independent of the normalizer table.
@@ -173,7 +176,6 @@ dataset('legacy configuration keys', [
     'vaulter.uploads.metadata.allowed_keys' => ['vaulter.uploads.metadata.allowed_keys', 'vaulter-drive.uploads.resumable.metadata.allowed_keys', ['custom'], ['custom']],
     'vaulter.uploads.metadata.max_value_length' => ['vaulter.uploads.metadata.max_value_length', 'vaulter-drive.uploads.resumable.metadata.max_value_length', 'custom', 'custom'],
     'vaulter.trash.retention_days' => ['vaulter.trash.retention_days', 'vaulter-drive.trash.retention_days', 'custom', 'custom'],
-    'vaulter.drive.name_rules.max_length' => ['vaulter.drive.name_rules.max_length', 'vaulter-drive.names.max_length', 'custom', 'custom'],
     'vaulter.max_document_size_kb' => ['vaulter.max_document_size_kb', 'vaulter-documents.content.max_size_kb', 'custom', 'custom'],
     'vaulter.versions.max' => ['vaulter.versions.max', 'vaulter-documents.revisions.limit', 'custom', 'custom'],
     'vaulter.max_versions' => ['vaulter.max_versions', 'vaulter-documents.revisions.limit', 'custom', 'custom'],

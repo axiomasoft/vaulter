@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
@@ -44,7 +43,6 @@ use Vaulter\Models\Drive\Node;
  */
 class NodeComment extends Model
 {
-    use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 

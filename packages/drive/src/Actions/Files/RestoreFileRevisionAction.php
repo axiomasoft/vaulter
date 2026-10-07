@@ -63,7 +63,7 @@ final readonly class RestoreFileRevisionAction
                 $this->revisions->markSuperseded($previous);
             }
             $this->files->repointHead($file, $revision->id, $revision->mime_type, $revision->size_bytes, $revision->number);
-            $this->nodes->cacheHead($node, $revision->mime_type, $node->extension, $revision->size_bytes);
+            $this->nodes->cacheHead($node, $revision->mime_type, $node->extension, $revision->size_bytes, $context->actor->ref()->id);
             $this->sequence->bump($node);
             event(new FileRevisionAdded(node: $node, file: $file, version: $revision, versionNo: $revision->number, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
