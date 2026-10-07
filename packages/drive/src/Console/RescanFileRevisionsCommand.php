@@ -9,6 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanSnapshot;
@@ -23,7 +24,6 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\VaulterManager;
@@ -94,7 +94,7 @@ final class RescanFileRevisionsCommand extends Command
     }
 
     public function handle(VaulterDatabase $database, ScanPolicyResolver $policies, ScanPolicyStateRepository $states,
-        ScanObligationRepository $work, ScanEvidenceRepository $evidence, ScanSnapshot $snapshots,
+        RequestScanWorkAction $requestWork, ScanEvidenceRepository $evidence, ScanSnapshot $snapshots,
         ScanWorkReconciler $publisher): int
     {
         $started = microtime(true);
@@ -103,7 +103,7 @@ final class RescanFileRevisionsCommand extends Command
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $states, $work, $evidence, $snapshots, $publisher));
+                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $states, $requestWork, $evidence, $snapshots, $publisher));
 
                     return $result;
                 } finally {
@@ -203,14 +203,14 @@ final class RescanFileRevisionsCommand extends Command
 
                             continue;
                         }
-                        $obligation = $database->transaction(function () use ($database, $drive, $revision, $snapshots, $policies, $work, $spec, $request, $scope, $existing, $publisher) {
+                        $obligation = $database->transaction(function () use ($database, $drive, $revision, $snapshots, $policies, $requestWork, $spec, $request, $scope, $existing, $publisher) {
                             $database->lockTreeShared($drive->id);
                             $snapshot = $snapshots->load($revision, true);
                             $policies->forDrive($snapshot['drive']);
                             $context = OperationContext::system($snapshot['drive'], $scope['reason']);
                             $result = $this->option('rescan') || ($this->option('retry-failed') && $existing?->outcome === 'failed')
-                                ? $work->requestRescan($snapshot['revision'], $spec, $request, $context)
-                                : $work->ensure($snapshot['revision'], $spec, $request, $context);
+                                ? $requestWork->requestRescan($snapshot['revision'], $spec, $request, $context)
+                                : $requestWork->ensure($snapshot['revision'], $spec, $request, $context);
                             if ($result->state !== 'settled') {
                                 $publisher->afterCommit($result);
                             }

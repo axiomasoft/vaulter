@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Content\ScanInput;
@@ -129,7 +130,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $repo = app(ScanObligationRepository::class);
     $oldKey = (string) Str::uuid();
     $newKey = (string) Str::uuid();
-    $request = fn (string $key) => app(VaulterDatabase::class)->transaction(fn () => $repo->requestRescan($revision, $spec, $key, $context));
+    $request = fn (string $key) => app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, $key, $context));
     $first = $request($oldKey);
     $second = $request($newKey);
     $replayed = $request($oldKey);

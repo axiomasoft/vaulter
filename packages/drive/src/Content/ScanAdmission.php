@@ -6,17 +6,17 @@ namespace Vaulter\Drive\Content;
 
 use Illuminate\Support\Str;
 use LogicException;
+use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 
 final readonly class ScanAdmission
 {
     public function __construct(private VaulterDatabase $database, private ScanPolicyResolver $policies,
-        private ScanEvidenceRepository $evidence, private ScanObligationRepository $work,
+        private ScanEvidenceRepository $evidence, private RequestScanWorkAction $request,
         private ScanWorkReconciler $publisher) {}
 
     public function next(OperationContext $context): int
@@ -47,7 +47,7 @@ final readonly class ScanAdmission
             if (!$this->policies->required($revision, $spec)) {
                 continue;
             }
-            $obligation = $this->work->ensure($revision, $spec, (string) Str::uuid(), $context);
+            $obligation = $this->request->ensure($revision, $spec, (string) Str::uuid(), $context);
             $candidate = $source === null ? $this->evidence->compatible($revision, $spec)
                 : $this->evidence->compatible($source, $spec);
             if ($candidate !== null && (string) $candidate->driveId === (string) $context->driveId()) {

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Content;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class ScanBackfillReconciler
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database,
         private ScanPolicyResolver $policies, private ScanSnapshot $snapshots,
-        private ScanObligationRepository $work, private ScanWorkReconciler $publisher) {}
+        private RequestScanWorkAction $request, private ScanWorkReconciler $publisher) {}
 
     /** @param list<int|string>|Builder<Drive>|null $driveIds
      * @return array<string,int>
@@ -86,7 +86,7 @@ final readonly class ScanBackfillReconciler
                             $snapshot = $this->snapshots->load($selected, true);
                             $context = OperationContext::system($snapshot['drive'], 'scan policy backfill');
                             $this->policies->forDrive($snapshot['drive']);
-                            $obligation = $this->work->ensure($snapshot['revision'], $spec, $run->request_key, $context);
+                            $obligation = $this->request->ensure($snapshot['revision'], $spec, $run->request_key, $context);
                         }
                         $cursor = $class::query()->whereKey($run->id)->lockForUpdate()->first();
                         if ($cursor === null || $cursor->last_admission_sequence !== $run->last_admission_sequence

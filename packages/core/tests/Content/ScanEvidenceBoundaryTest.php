@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
+use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
@@ -60,20 +61,20 @@ it('persists work and request atomically and preserves explicit rescan request d
     $db = app(VaulterDatabase::class);
     $repository = app(ScanObligationRepository::class);
     $firstKey = (string) Str::uuid();
-    $first = $db->transaction(fn () => $repository->ensure($revision, $spec, $firstKey, $context));
-    $duplicate = $db->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $first = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, $firstKey, $context));
+    $duplicate = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     expect($duplicate->id)->toBe($first->id)->and(ScanRequest::count())->toBe(1);
     $attempt = $repository->claim($first->id, 1, new DateTimeImmutable('now', new DateTimeZone('UTC')));
     expect($attempt)->not->toBeNull()->and($repository->claim($first->id, 1, new DateTimeImmutable))->toBeNull();
     $secondKey = (string) Str::uuid();
-    $second = $db->transaction(fn () => $repository->requestRescan($revision, $spec, $secondKey, $context));
-    $third = $db->transaction(fn () => $repository->requestRescan($revision, $spec, (string) Str::uuid(), $context));
-    $repeatedOld = $db->transaction(fn () => $repository->requestRescan($revision, $spec, $secondKey, $context));
+    $second = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, $secondKey, $context));
+    $third = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
+    $repeatedOld = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, $secondKey, $context));
     expect($second->generation)->toBe(2)->and($third->generation)->toBe(3)->and($repeatedOld->generation)->toBe(3)
         ->and(ScanRequest::count())->toBe(3)->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
         ->and(ScanEvidenceRecord::count())->toBe(0);
-    expect(fn () => $db->transaction(function () use ($repository, $revision, $spec, $context): void {
-        $repository->requestRescan($revision, $spec, (string) Str::uuid(), $context);
+    expect(fn () => $db->transaction(function () use ($revision, $spec, $context): void {
+        app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context);
         throw new RuntimeException('rollback fixture');
     }))->toThrow(RuntimeException::class);
     expect($first->fresh()->generation)->toBe(3)->and(ScanRequest::count())->toBe(3);
@@ -81,7 +82,7 @@ it('persists work and request atomically and preserves explicit rescan request d
 
 it('SEC-R20-scan-validator reads actual immutable input and settles only the exact live attempt without changing head or sequence', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
-    $work = app(VaulterDatabase::class)->transaction(fn () => app(ScanObligationRepository::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $repository = app(ScanObligationRepository::class);
     $attempt = $repository->claim($work->id, 1, new DateTimeImmutable);
     $before = [$revision->file->current_revision_id, $revision->file->node->sequence, $revision->file->revision_count];
@@ -125,7 +126,7 @@ it('SEC-R11 rejects altered identity and keeps sticky infection through later cl
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
     $db = app(VaulterDatabase::class);
-    $work = $db->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = $repository->claim($work->id, 1, new DateTimeImmutable);
     $blob->forceFill(['storage_version' => 'changed'])->save();
     expect($repository->fencedAttempt($attempt))->toBeNull()->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
@@ -134,7 +135,7 @@ it('SEC-R11 rejects altered identity and keeps sticky infection through later cl
     $revision->refresh();
     $blob->refresh();
     expect($revision->quarantined_at)->not->toBeNull()->and($blob->quarantined_at)->not->toBeNull();
-    $next = $db->transaction(fn () => $repository->requestRescan($revision, $spec, (string) Str::uuid(), $context));
+    $next = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
     $cleanAttempt = $repository->claim($next->id, 2, new DateTimeImmutable);
     expect($repository->settle($cleanAttempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull()
@@ -146,18 +147,18 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
     $db = app(VaulterDatabase::class);
-    $work = $db->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $repository->settle($repository->claim($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
     $sourceEvidence = app(ScanEvidenceRepository::class)->compatible($revision, $spec);
     [, $copy] = scanBoundaryFixture($blob, $drive);
-    $own = $db->transaction(fn () => $repository->ensure($copy, $spec, (string) Str::uuid(), $context));
+    $own = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($copy, $spec, (string) Str::uuid(), $context));
     expect($own->state)->toBe('settled')->and($own->outcome)->toBe('clean')->and(ScanRequest::count())->toBe(2)
         ->and(ScanEvidenceRecord::query()->where('revision_id', $copy->id)->first()->reused_from_id)->toBe($sourceEvidence->id);
     // Tenant-global physical storage can be shared, but evidence never grants
     // another drive authority, even for byte-for-byte identical immutable identity.
     $blob->forceFill(['drive_id' => null])->save();
     [$foreignDrive, $foreignRevision, , $foreignContext] = scanBoundaryFixture($blob);
-    $foreignWork = $db->transaction(fn () => $repository->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
+    $foreignWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
     expect($foreignWork->state)->toBe('pending');
     expect(fn () => $db->transaction(fn () => app(ScanEvidenceRepository::class)->reuse($foreignRevision, $sourceEvidence, $spec, $foreignWork)))
         ->toThrow(LogicException::class);
@@ -179,7 +180,7 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
 it('records retry evidence, recovers lost leases and terminates exhausted attempts', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
-    $work = app(VaulterDatabase::class)->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = $repository->claim($work->id, 1, new DateTimeImmutable);
     expect($repository->settle($attempt, new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true)))->toBeTrue();
     $work->refresh();
@@ -199,7 +200,7 @@ it('records retry evidence, recovers lost leases and terminates exhausted attemp
 it('settles unsupported manifests without opening bytes and rejects fabricated passed scope attributes', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $revision->forceFill(['blob_id' => null, 'manifest_blob_id' => $blob->id])->save();
-    $work = app(VaulterDatabase::class)->transaction(fn () => app(ScanObligationRepository::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     expect($work->state)->toBe('settled')->and($work->reason)->toBe('unsupported')->and($work->attempt)->toBe(1)
         ->and(ScanEvidenceRecord::count())->toBe(1)->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull();
     $revision->forceFill(['tenant_id' => 'fabricated', 'sha256' => str_repeat('f', 64), 'blob_id' => $blob->id]);
@@ -217,23 +218,23 @@ it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner e
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $db = app(VaulterDatabase::class);
     $repository = app(ScanObligationRepository::class);
-    $work = $db->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $repository->settle($repository->claim($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
-    $rescan = $db->transaction(fn () => $repository->requestRescan($revision, $spec, (string) Str::uuid(), $context));
+    $rescan = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
     expect($repository->settle($repository->claim($rescan->id, 2, new DateTimeImmutable), new ScanResult(ScanVerdict::Failed, 'unknown')))->toBeTrue()
         ->and($revision->fresh()->scan_status)->toBe('clean')->and($rescan->fresh()->outcome)->toBe('failed')
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->not->toBeNull();
     config()->set('vaulter.scan.scanner_version', '2');
     $newSpec = app(ScanConfig::class)->globalSpec();
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $newSpec))->toBeNull();
-    $newWork = $db->transaction(fn () => $repository->ensure($revision, $newSpec, (string) Str::uuid(), $context));
+    $newWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $newSpec, (string) Str::uuid(), $context));
     expect($newWork->id)->not->toBe($work->id)->and($newWork->generation)->toBe(1)->and($newWork->state)->toBe('pending');
 });
 
 it('SEC-R12 deterministic identity failure settles the current fenced snapshot without retry or blob mutation', function (): void {
     [$drive, $revision, $blob, $context, $spec] = scanBoundaryFixture();
     $repository = app(ScanObligationRepository::class);
-    $work = app(VaulterDatabase::class)->transaction(fn () => $repository->ensure($revision, $spec, (string) Str::uuid(), $context));
+    $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = $repository->claim($work->id, 1, new DateTimeImmutable);
     $blob->forceFill(['storage_version' => 'invalid changed object'])->save();
     expect($repository->fencedAttempt($attempt))->toBeNull()
