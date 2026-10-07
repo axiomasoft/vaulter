@@ -6,6 +6,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -99,7 +100,8 @@ it('rolls back uploads and document model inserts on the dedicated connection', 
             'node_id' => $node->getKey(), 'author_type' => 'user', 'author_id' => 1, 'body' => 'test',
         ],
         DocumentRevision::class => [
-            'node_id' => $node->getKey(), 'version_no' => 1, 'format' => 'tiptap',
+            'document_id' => Document::forceCreate(['node_id' => $node->getKey(), 'type' => 'tiptap', 'schema_version' => 1])->getKey(),
+            'number' => 1, 'schema_version' => 1,
         ],
     };
     $before = $modelClass::query()->count();
