@@ -370,3 +370,28 @@ it('SEC-C03-db-clock-live keeps advancing inside an open transaction', function 
         expect($work->now()->getTimestamp())->toBeGreaterThan($first->getTimestamp());
     });
 });
+
+it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limit', function (): void {
+    Storage::fake('local');
+    Bus::fake();
+    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter.scan.scanner_key', 'fixture');
+    config()->set('vaulter.scan.scanner_version', '1');
+    $drive = UploadTestHelpers::storage();
+    $context = OperationContext::system($drive, 'remaining fixture');
+    app(ScanPolicyResolver::class)->initialize($drive, $context);
+    foreach (['a', 'b', 'c'] as $name) {
+        $stream = UploadTestHelpers::streamFor($name);
+        app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name.'.txt', 'text/plain'));
+        fclose($stream);
+    }
+    $class = app(VaulterConfig::class)->model('scan_obligation');
+    $class::query()->update(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()]);
+
+    // The count must not inherit the batch's ORDER BY/LIMIT (PostgreSQL rejects ORDER BY on a bare aggregate).
+    $dry = app(ScanWorkReconciler::class)->reconcile(limit: 1, dryRun: true);
+    $live = app(ScanWorkReconciler::class)->reconcile(limit: 1);
+
+    expect($dry['scanned'])->toBe(1)->and($dry['remaining_due'])->toBe(3)
+        ->and($live['published'])->toBe(1)->and($live['remaining_due'])->toBe(2);
+});
