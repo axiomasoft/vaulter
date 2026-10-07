@@ -351,6 +351,23 @@ it('SEC-CONFLICT keeps a folder sibling as an upload conflict without side effec
     expect(operationMatrixState())->toBe($before);
 });
 
+it('SEC-CONFLICT answers 404 about the requested name for a hidden sibling, file or folder', function (string $kind): void {
+    $hidden = $kind === 'file'
+        ? $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'))
+        : $this->system->folders()->create('Report.txt');
+    operationMatrixGrant($this->system, $this->system->root(), $this->user, 5);
+    $before = operationMatrixState();
+    try {
+        $this->actor->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision));
+        $this->fail('A hidden sibling must not accept a revision or reveal a conflict.');
+    } catch (NodeNotFoundException $exception) {
+        expect($exception->getMessage())->toContain('report.TXT')
+            ->not->toContain('['.$hidden->id.']')
+            ->not->toContain('Report.txt');
+    }
+    expect(operationMatrixState())->toBe($before);
+})->with(['file', 'folder']);
+
 it('SEC-CURSOR rejects a file list cursor for a different kind filter', function (): void {
     $this->system->folders()->create('a-folder');
     $this->system->files()->upload(UploadSource::fromString('x', 'z-file.txt'));

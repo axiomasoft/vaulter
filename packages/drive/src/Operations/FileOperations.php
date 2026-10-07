@@ -46,8 +46,10 @@ final readonly class FileOperations implements Contract
         $parent = $this->locator->find($this->context, $options->parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
         $this->guard->authorizeCreate($this->context, $parent);
         if ($options->onConflict === OnNameConflict::AddRevision) {
-            $target = $this->uploadSibling($parent, $options->name ?? $source->name());
+            $name = $options->name ?? $source->name();
+            $target = $this->uploadSibling($parent, $name);
             if ($target !== null) {
+                $this->assertSiblingVisible($target, $name);
                 if ($target->kind !== NodeKind::File) {
                     throw NodeNameConflictException::forName($target->name, $parent->id);
                 }
@@ -115,6 +117,17 @@ final readonly class FileOperations implements Contract
         return $file->versions()->whereKey($id)->whereIn('status', ['committed', 'superseded'])->first() ?? throw NodeNotFoundException::forId($node->id);
     }
 
+    /**
+     * A sibling the actor cannot View answers 404 about the requested name, never its id or kind
+     * (D33/Q4): the name-conflict policy discloses occupancy, nothing more.
+     */
+    private function assertSiblingVisible(Node $sibling, string $name): void
+    {
+        if ($this->guard->visible($this->context, [$sibling]) === []) {
+            throw NodeNotFoundException::forId($name);
+        }
+    }
+
     private function uploadSibling(Node $parent, string $name): ?Node
     {
         return $this->database->transaction(function () use ($parent, $name): ?Node {
@@ -144,6 +157,9 @@ final readonly class FileOperations implements Contract
                     throw $exception;
                 }
                 $sibling = $this->uploadSibling($parent, $name ?? $source->name());
+                if ($sibling !== null) {
+                    $this->assertSiblingVisible($sibling, $name ?? $source->name());
+                }
                 if ($sibling === null || $sibling->kind !== NodeKind::File) {
                     throw $exception;
                 }
