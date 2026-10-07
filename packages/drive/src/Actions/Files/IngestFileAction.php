@@ -72,6 +72,12 @@ final readonly class IngestFileAction
         private TreeGuard $tree,
         private MediaConfig $mediaConfig,
         private DriveConfig $driveConfig,
+        private UploadInspection $inspection,
+        private StagedUpload $staging,
+        private NameConflictResolver $names,
+        private NodeLocator $locator,
+        private NodeSequence $sequence,
+        private ScanAdmission $scans,
     ) {}
 
     public function execute(OperationContext $context, IngestFileInput $data): Node
@@ -91,10 +97,9 @@ final readonly class IngestFileAction
         $source = $data->stream instanceof StreamInterface
             ? UploadSource::fromPsrStream($data->stream, $data->originalName)
             : UploadSource::fromStream($data->stream, $data->originalName);
-        $inspection = app(UploadInspection::class);
-        $prepared = app(StagedUpload::class)->stageSource($source, $inspection->maximum($context), $data->mimeType, $data->resolvedName());
+        $prepared = $this->staging->stageSource($source, $this->inspection->maximum($context), $data->mimeType, $data->resolvedName());
         try {
-            $inspection->inspect($prepared->facts, $context);
+            $this->inspection->inspect($prepared->facts, $context);
 
             return $prepared;
         } catch (\Throwable $exception) {
@@ -127,10 +132,10 @@ final readonly class IngestFileAction
 
                 if ($name !== null && $parentId !== null) {
                     $this->assertDestination(data: $data, parentId: $parentId, name: $name);
-                    $name = app(NameConflictResolver::class)->resolve($context->drive, $parentId, $name, $data->onConflict);
+                    $name = $this->names->resolve($context->drive, $parentId, $name, $data->onConflict);
                 }
 
-                $target = $data->targetNode === null ? null : app(NodeLocator::class)->find(context: $context, key: $data->targetNode);
+                $target = $data->targetNode === null ? null : $this->locator->find(context: $context, key: $data->targetNode);
                 $file = null;
                 $previousHead = null;
 
@@ -142,12 +147,12 @@ final readonly class IngestFileAction
                     }
                     /** @var File $currentFile */
                     $currentFile = $target->file()->firstOrFail();
-                    app(NodeSequence::class)->assertExpected(locked: $target, expected: $data->expectedSequence);
+                    $this->sequence->assertExpected(locked: $target, expected: $data->expectedSequence);
                     $file = $this->files->lockForUpdate($currentFile);
                     $previousHead = $file->currentVersion()->first();
                 }
 
-                $admissionSequence = app(ScanAdmission::class)->next($context);
+                $admissionSequence = $this->scans->next($context);
 
                 $size = $staged->sizeBytes();
                 $delta = $size - ($previousHead->size_bytes ?? 0);
@@ -235,7 +240,7 @@ final readonly class IngestFileAction
             'current_version_id' => $version->id,
         ]);
 
-        app(ScanAdmission::class)->admit($context, $version);
+        $this->scans->admit($context, $version);
 
         event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
@@ -286,9 +291,9 @@ final readonly class IngestFileAction
             sizeBytes: $size,
         );
 
-        app(NodeSequence::class)->bump($node);
+        $this->sequence->bump($node);
 
-        app(ScanAdmission::class)->admit($context, $version);
+        $this->scans->admit($context, $version);
 
         event(new FileRevisionAdded(
             node: $node->refresh(),

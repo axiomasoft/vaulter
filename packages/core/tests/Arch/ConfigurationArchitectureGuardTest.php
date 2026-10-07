@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use PhpParser\Node\Scalar\String_;
+use PhpParser\NodeFinder;
+use PhpParser\ParserFactory;
+use Symfony\Component\Finder\Finder;
 use Vaulter\Tests\Support\ConfigurationArchitectureGuard;
 
 test('AST configuration guard rejects retired names even without autoloadable classes', function (string $code): void {
@@ -167,4 +171,26 @@ test('published v02 fixture is pinned and mutation is rejected before execution'
             unlink($executed);
         }
     }
+});
+
+test('core never reads another package\'s configuration keys directly', function (): void {
+    // ADR-0019: the package that owns a key answers questions about it through a contract
+    // (ScanWorkSettings, CommentsFeature). ConfigNormalizer alone maps legacy keys by name.
+    $parser = (new ParserFactory)->createForNewestSupportedVersion();
+    $offenders = [];
+    foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src')->name('*.php') as $file) {
+        if ($file->getRelativePathname() === 'Configuration/ConfigNormalizer.php') {
+            continue;
+        }
+        foreach ((new NodeFinder)->findInstanceOf($parser->parse($file->getContents()) ?? [], String_::class) as $literal) {
+            // P3-security-contracts C01: the canonical `vaulter.scan.*` keys accept the
+            // published `vaulter-drive.uploads.scan.*` names as a compatibility alias.
+            $alias = $file->getRelativePathname() === 'Configuration/ScanConfig.php' && $literal->value === 'vaulter-drive.uploads.scan.';
+            if (!$alias && preg_match('/^vaulter-(?:drive|documents|media|azgard|filament)\./', $literal->value) === 1) {
+                $offenders[] = $file->getRelativePathname().':'.$literal->getStartLine().' '.$literal->value;
+            }
+        }
+    }
+
+    expect($offenders)->toBe([]);
 });

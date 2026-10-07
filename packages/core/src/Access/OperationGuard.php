@@ -25,6 +25,8 @@ final readonly class OperationGuard
         private AccessResolver $resolver,
         private NodeLocator $locator,
         private ProfilePolicy $profiles,
+        private TenancyConfig $tenancy,
+        private TenancyBoundary $boundary,
     ) {}
 
     public function authorize(OperationContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
@@ -80,9 +82,34 @@ final readonly class OperationGuard
      */
     public function visible(OperationContext $context, iterable $nodes): array
     {
+        return array_map(static fn (array $decision): Node => $decision[0], $this->decide($context, $nodes));
+    }
+
+    /**
+     * Visible nodes with whether the actor also holds $ability on each, from the same
+     * single batch evaluation. A system actor holds every ability.
+     *
+     * @param  iterable<Node>      $nodes
+     * @return array<string, bool> visible node key => holds $ability
+     */
+    public function visibleWith(OperationContext $context, iterable $nodes, Ability $ability): array
+    {
+        $holds = [];
+        foreach ($this->decide($context, $nodes) as [$node, $set]) {
+            $holds[(string) $node->id] = $set === null || $set->allows($ability);
+        }
+
+        return $holds;
+    }
+
+    /** @param iterable<Node> $nodes
+     * @return list<array{Node, ?GrantSet}> visible nodes with their ACL set (null for a system actor)
+     */
+    private function decide(OperationContext $context, iterable $nodes): array
+    {
         $nodes = $this->locator->findMany(context: $context, nodes: $nodes);
         foreach ($nodes as $node) {
-            $this->tenantBoundary(context: $context, node: $node);
+            $this->tenantBoundary($node);
         }
         $actor = $context->actor->authorizable();
         $sets = $actor === null ? [] : $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
@@ -91,15 +118,63 @@ final readonly class OperationGuard
             ?? throw NodeNotFoundException::forId('drive');
         $visible = [];
         foreach ($nodes as $node) {
-            if (!$context->actor->isSystem() && !($sets[(string) $node->id] ?? GrantSet::superDenied())->allows(Ability::View)) {
+            $set = $context->actor->isSystem() ? null : ($sets[(string) $node->id] ?? GrantSet::superDenied());
+            if ($set !== null && !$set->allows(Ability::View)) {
                 continue;
             }
             if ($this->profiles->allows(drive: $drive, node: $node, ability: Ability::View, operation: OperationKind::Metadata)) {
-                $visible[] = $node;
+                $visible[] = [$node, $set];
             }
         }
 
         return $visible;
+    }
+
+    /**
+     * COPY duplicates every active descendant, so one the actor cannot see and copy
+     * stops the whole copy (D30): a hidden child must not leak through its folder.
+     * Returns the authorised node keys so the Action can refuse a descendant that
+     * appears between this check and its locks; null for a system actor, which
+     * bypasses only ACL (tenancy is still checked for every node).
+     *
+     * @param  iterable<Node>    $subtree the root and its descendants, any order
+     * @return list<string>|null
+     */
+    public function copyableSubtree(OperationContext $context, Node $root, iterable $subtree): ?array
+    {
+        $active = [];
+        foreach ($subtree as $node) {
+            $active[(string) $node->id] = $node;
+        }
+        $included = [(string) $root->id => true];
+        do {
+            $before = count($included);
+            foreach ($active as $id => $node) {
+                if ($node->trashed_at === null && isset($included[(string) $node->parent_id])) {
+                    $included[$id] = true;
+                }
+            }
+        } while (count($included) > $before);
+        $nodes = $this->locator->findMany(context: $context, nodes: array_values(array_intersect_key($active, $included)));
+        if (count($nodes) !== count($included)) {
+            throw PermissionDeniedException::forAbility(Ability::Copy->value);
+        }
+        foreach ($nodes as $node) {
+            $this->tenantBoundary($node);
+        }
+        if ($context->actor->isSystem()) {
+            return null;
+        }
+        $actor = $context->actor->authorizable() ?? throw MissingActorException::required();
+        $sets = $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
+        foreach ($nodes as $node) {
+            $set = $sets[(string) $node->id] ?? GrantSet::superDenied();
+            if (!$set->allows(Ability::View) || !$set->allows(Ability::Copy)) {
+                throw PermissionDeniedException::forAbility(Ability::Copy->value);
+            }
+        }
+
+        return array_map(static fn (Node $node): string => (string) $node->id, $nodes);
     }
 
     public function abilities(OperationContext $context, Node $node): NodeAbilities
@@ -120,7 +195,7 @@ final readonly class OperationGuard
     {
         // Trash operations pass an explicitly located trashed node to the guard.
         $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
-        $this->tenantBoundary(context: $context, node: $node);
+        $this->tenantBoundary($node);
 
         return $node;
     }
@@ -144,10 +219,10 @@ final readonly class OperationGuard
     }
 
     /** Tenant enforcement is connected by the strict tenancy integration. */
-    private function tenantBoundary(OperationContext $context, Node $node): void
+    private function tenantBoundary(Node $node): void
     {
-        if (app(TenancyConfig::class)->enabled()) {
-            app(TenancyBoundary::class)->assertNode($node);
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertNode($node);
         }
     }
 

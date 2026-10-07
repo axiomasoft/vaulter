@@ -50,6 +50,8 @@ final readonly class UploadOperations
     {
         $session = $this->find($session);
 
+        // Outermost retry (bounded): the staged protocol bytes survive a rollback, so a
+        // deadlock/serialization failure anywhere below re-runs the whole completion.
         return $this->manager->withSession($session, function (UploadSession $locked): Node {
             if ($locked->status === UploadStatus::Committed) {
                 return $this->completion->execute(context: $this->context, session: $locked);
@@ -64,7 +66,7 @@ final readonly class UploadOperations
             }
 
             return $this->manager->commitAssembled(session: $locked, commit: fn (UploadSession $assembled): Node => $this->completion->execute(context: $this->context, session: $assembled));
-        });
+        }, attempts: 3);
     }
 
     public function abort(UploadSession|int|string $session): void

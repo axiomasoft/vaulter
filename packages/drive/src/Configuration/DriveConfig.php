@@ -6,11 +6,12 @@ namespace Vaulter\Drive\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
-final readonly class DriveConfig
+final readonly class DriveConfig implements ScanWorkSettings
 {
     public function __construct(private Repository $config) {}
 
@@ -28,6 +29,21 @@ final readonly class DriveConfig
         }
 
         return $queue;
+    }
+
+    public function leaseSeconds(): int
+    {
+        return $this->scanWork('lease_seconds');
+    }
+
+    public function scannerTimeoutSeconds(): int
+    {
+        return $this->scanWork('scanner_timeout_seconds');
+    }
+
+    public function maxAttempts(): int
+    {
+        return $this->scanWork('max_attempts');
     }
 
     public function scanWork(string $key): int

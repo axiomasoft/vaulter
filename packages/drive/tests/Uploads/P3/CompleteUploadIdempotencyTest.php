@@ -16,6 +16,8 @@ use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
@@ -173,4 +175,22 @@ it('SEC-CLEANUP-backoff follows the bounded retry schedule without re-ingest', f
         Storage::set('local', $disk);
         $this->travelBack();
     }
+});
+
+it('SEC-C03-replay-ability replays a committed completion only while the actor still holds the mutation right', function (): void {
+    config()->set('vaulter.access.permission_driver', 'database');
+    $session = assembledIdempotencyUpload();
+    $user = AccessTestHelpers::user(993);
+    $session->forceFill(['created_by' => $user->getKey(), 'metadata' => ['actor_type' => $user->getMorphClass()]])->save();
+    $grant = AccessTestHelpers::grant($session->storage->rootNode()->firstOrFail(), GrantLevel::Writer, scope: GrantScope::Subtree, subjectId: $user->getKey());
+    $context = new OperationContext(drive: $session->storage, actor: Actor::user($user), correlationId: 'replay-ability');
+    $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+
+    expect(app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh())->id)->toBe($node->id);
+
+    // Still able to read the result, no longer allowed to create in the parent.
+    $grant->forceFill(['level' => GrantLevel::Reader->value, 'permissions' => 0])->save();
+
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(PermissionDeniedException::class)
+        ->and(FileRevision::query()->count())->toBe(1);
 });

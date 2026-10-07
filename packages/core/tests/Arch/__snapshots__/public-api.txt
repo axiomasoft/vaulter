@@ -311,7 +311,7 @@ Vaulter\Configuration\WebhooksConfig
   urlGuard(): string
 
 Vaulter\Access\AccessResolver
-  __construct(\Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages)
+  __construct(\Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
   can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
   canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $drive): bool
@@ -525,16 +525,18 @@ Vaulter\Operations\OperationContext
   readonly string $correlationId
 
 Vaulter\Operations\NodeLocator
-  __construct(\Vaulter\Configuration\VaulterConfig $config, \Vaulter\Database\VaulterDatabase $database)
+  __construct(\Vaulter\Configuration\VaulterConfig $config, \Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   find(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
 
 Vaulter\Access\OperationGuard
-  __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles)
+  __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
   authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
   authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
   authorizeGrants(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
+  copyableSubtree(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $root, iterable $subtree): ?array
   visible(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
+  visibleWith(\Vaulter\Operations\OperationContext $context, iterable $nodes, \Vaulter\Enums\Access\Ability $ability): array
 
 Vaulter\Exceptions\Access\MissingActorException
   __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)

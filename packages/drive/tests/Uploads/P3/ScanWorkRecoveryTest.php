@@ -314,3 +314,28 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         date_default_timezone_set($originalTimezone);
     }
 })->with(['ahead' => 'Europe/Moscow', 'behind' => 'America/New_York']);
+
+it('SEC-C03-db-clock decides which scan work is due regardless of application clock skew', function (): void {
+    Storage::fake('local');
+    Bus::fake();
+    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter.scan.scanner_key', 'fixture');
+    config()->set('vaulter.scan.scanner_version', '1');
+    $drive = UploadTestHelpers::storage();
+    $context = OperationContext::system($drive, 'clock skew fixture');
+    app(ScanPolicyResolver::class)->initialize($drive, $context);
+    $stream = UploadTestHelpers::streamFor('clock skew');
+    $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'skew.txt', 'text/plain'));
+    fclose($stream);
+    $work = $node->currentVersion()->firstOrFail()->scanObligations()->firstOrFail();
+    $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->addMinutes(5)])->save();
+
+    // The application clock runs ten minutes ahead; the database clock still says "not due yet".
+    $this->travel(10)->minutes();
+    try {
+        expect(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0)
+            ->and(app(ScanObligationRepository::class)->claim($work->id, $work->generation, app(ScanObligationRepository::class)->now()))->toBeNull();
+    } finally {
+        $this->travelBack();
+    }
+});

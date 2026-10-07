@@ -15,6 +15,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\Identity;
 
+/** @internal Persisted per-drive scan activation state. */
 final readonly class ScanPolicyStateRepository
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database) {}

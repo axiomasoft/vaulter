@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Support\Str;
 use LogicException;
-use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ImmutableContentIdentity;
@@ -17,6 +16,7 @@ use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Cas\Blob;
@@ -28,10 +28,14 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
-/** SQL owns retries and generation fencing; no scanner IO runs in these transactions. */
+/**
+ * SQL owns retries and generation fencing; no scanner IO runs in these transactions.
+ *
+ * @internal The scan work state machine; hosts reach it through the drive scan commands and jobs.
+ */
 final readonly class ScanObligationRepository
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanWorkSettings $settings, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanPolicyResolver $policies) {}
 
     public function find(int|string $id): ?ScanObligation
     {
@@ -59,8 +63,8 @@ final readonly class ScanObligationRepository
             throw new LogicException('Scan work requires a configured scanner identity.');
         }
         $snapshot = $this->snapshots->load($revision, true);
-        if (app(TenancyConfig::class)->enabled()) {
-            app(TenancyBoundary::class)->assertDrive($snapshot['drive']);
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertDrive($snapshot['drive']);
         }
         if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
             throw new LogicException('Scan request scope differs.');
@@ -143,8 +147,8 @@ final readonly class ScanObligationRepository
             }
             $attempt = $this->increment($work->attempt);
             $token = (string) Str::uuid();
-            $lease = $now->modify('+'.$this->setting('lease_seconds', 120).' seconds');
-            $deadline = $now->modify('+'.$this->setting('scanner_timeout_seconds', 60).' seconds');
+            $lease = $now->modify('+'.$this->settings->leaseSeconds().' seconds');
+            $deadline = $now->modify('+'.$this->settings->scannerTimeoutSeconds().' seconds');
             $work->forceFill(['state' => 'leased', 'attempt' => $attempt, 'lease_token' => $token,
                 'lease_expires_at' => $lease, 'updated_at' => $now])->save();
 
@@ -172,8 +176,8 @@ final readonly class ScanObligationRepository
 
     public function settle(ScanAttempt $attempt, ScanResult $result): bool
     {
-        if (app(TenancyConfig::class)->enabled()) {
-            app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertJobDrive($attempt->driveId, $attempt->tenantId);
         }
 
         return $this->database->transaction(function () use ($attempt, $result): bool {
@@ -223,8 +227,8 @@ final readonly class ScanObligationRepository
     /** @internal A live trusted attempt may record a deterministic failure without trusting altered content. */
     public function failAttempt(ScanAttempt $attempt, string $reason): bool
     {
-        if (app(TenancyConfig::class)->enabled()) {
-            app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertJobDrive($attempt->driveId, $attempt->tenantId);
         }
         if (!in_array($reason, ['content_identity_mismatch', 'access_denied', 'unsupported', 'unknown'], true)) {
             throw new LogicException('Invalid deterministic attempt failure.');
@@ -274,7 +278,7 @@ final readonly class ScanObligationRepository
             }
             $driveClass = $this->config->model('drive');
             $drive = $driveClass::query()->whereKey($work->drive_id)->firstOrFail();
-            $specs = app(ScanPolicyResolver::class)->forDrive($drive);
+            $specs = $this->policies->forDrive($drive);
             if (array_any($specs, static fn (ScanPolicySpec $spec): bool => $spec->specKey() === $work->spec_key)) {
                 return false;
             }
@@ -332,7 +336,7 @@ final readonly class ScanObligationRepository
 
     private function currentSpec(Drive $drive, string $specKey): ScanPolicySpec
     {
-        foreach (app(ScanPolicyResolver::class)->forDrive($drive) as $spec) {
+        foreach ($this->policies->forDrive($drive) as $spec) {
             if ($spec->specKey() === $specKey) {
                 return $spec;
             }
@@ -351,12 +355,13 @@ final readonly class ScanObligationRepository
 
     private function maxAttempts(): int
     {
-        return $this->setting('max_attempts', 5);
+        return $this->settings->maxAttempts();
     }
 
-    private function setting(string $key, int $fallback): int
+    /** @internal The database clock is the only time source for leases, fences and backoff. */
+    public function now(): DateTimeImmutable
     {
-        return app(ScanConfig::class)->workSetting($key, $fallback);
+        return $this->clock();
     }
 
     private function clock(): DateTimeImmutable

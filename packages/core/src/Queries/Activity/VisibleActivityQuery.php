@@ -12,6 +12,7 @@ use Vaulter\Access\OperationGuard;
 use Vaulter\Configuration\ListingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
@@ -21,6 +22,9 @@ use Vaulter\Operations\OperationContext;
 /** @internal Bounded exact scan; cursors advance over every examined candidate. */
 final readonly class VisibleActivityQuery
 {
+    /** Context keys that describe who holds access; only a Share-capable reader sees them. */
+    private const array PRIVILEGED_CONTEXT_KEYS = ['subject_type', 'subject_id', 'permissions', 'token_prefix'];
+
     public function __construct(private VaulterConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
 
     public function execute(OperationContext $context, ListOptions $options, ?Node $node = null, ?EventType $verb = null): VisibleActivityPaginator
@@ -44,15 +48,15 @@ final readonly class VisibleActivityQuery
             $keys = $batch->where('target_type', (new ($this->config->model('node')))->getMorphClass())->pluck('target_id')->filter()->unique()->all();
             $class = $this->config->model('node');
             $nodes = $class::query()->where('drive_id', $context->driveId())->whereNull('trashed_at')->whereKey($keys)->get();
-            $allowed = [];
-            foreach ($this->guard->visible(context: $context, nodes: $nodes) as $target) {
-                $allowed[(string) $target->id] = true;
-            }
+            // Visible target key => whether the actor may also Share it (and so see who did what).
+            $allowed = $this->guard->visibleWith(context: $context, nodes: $nodes, ability: Ability::Share);
             foreach ($batch as $event) {
                 $last = ['created_at' => $this->scalar($event->getRawOriginal('created_at')), 'id' => (string) $event->id];
                 $remaining--;
-                if ($context->actor->isSystem() || $this->visible($context, $event, $allowed)) {
+                if ($context->actor->isSystem()) {
                     $visible[] = $event;
+                } elseif ($this->visible($context, $event, $allowed)) {
+                    $visible[] = $this->project($event, $allowed);
                 }
                 if (count($visible) === $options->perPage || $remaining === 0) {
                     break;
@@ -90,6 +94,32 @@ final readonly class VisibleActivityQuery
         }
 
         return $event->target_type === (new ($this->config->model('node')))->getMorphClass() && isset($allowed[(string) $event->target_id]);
+    }
+
+    /**
+     * A reader without Share on the target sees WHAT happened, not who did it from where
+     * or to whom access was granted: the request fingerprint, the actor key and the
+     * grant/share subject, permission and token details are withheld. The row is a read
+     * projection (original attributes synced), so it can never write the redaction back.
+     *
+     * @param array<string, bool> $allowed
+     */
+    private function project(Activity $event, array $allowed): Activity
+    {
+        $target = $event->target_type === (new ($this->config->model('node')))->getMorphClass() ? (string) $event->target_id : null;
+        if ($target !== null && ($allowed[$target] ?? false)) {
+            return $event;
+        }
+        foreach (['ip', 'user_agent', 'request_id', 'actor_id'] as $attribute) {
+            $event->setAttribute($attribute, null);
+        }
+        $context = $event->context;
+        if (is_array($context)) {
+            $event->setAttribute('context', array_diff_key($context, array_flip(self::PRIVILEGED_CONTEXT_KEYS)));
+        }
+        $event->syncOriginal();
+
+        return $event;
     }
 
     /** @param Builder<Activity> $query

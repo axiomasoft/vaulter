@@ -13,6 +13,7 @@ use Vaulter\Drive\Events\Nodes\NodeCopied;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
@@ -79,6 +80,11 @@ final readonly class CopyNodeAction
                     }
                 }
                 $sources = $sources->filter(fn (Node $member): bool => isset($included[(string) $member->id]));
+                if ($data->authorizedNodeIds !== null
+                    && array_diff($sources->map(fn (Node $member): string => (string) $member->id)->all(), $data->authorizedNodeIds) !== []) {
+                    // A descendant appeared after the Operations layer authorised the subtree.
+                    throw PermissionDeniedException::forAbility('copy');
+                }
                 app(FileContentLifecycle::class)->prepareCopy($sources);
                 $addedBytes = 0;
                 foreach ($sources->sortBy('file_id') as $member) {

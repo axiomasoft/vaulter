@@ -134,18 +134,23 @@ final readonly class UploadSessionManager
     }
 
     /**
+     * Every attempt re-reads the session under its lock. More than one attempt is only
+     * for operations whose inputs survive a rollback (retained staged bytes), never for
+     * a PATCH/part body that was already consumed from the request stream.
+     *
      * @template TResult
      *
      * @param  callable(UploadSession): TResult $operation
+     * @param  int<1, max>                      $attempts
      * @return TResult
      */
-    public function withSession(UploadSession $session, callable $operation): mixed
+    public function withSession(UploadSession $session, callable $operation, int $attempts = 1): mixed
     {
         $this->assertTenant($session);
 
-        return $this->database->transaction(function () use ($session, $operation): mixed {
+        return $this->database->retryingOutermost(fn (): mixed => $this->database->transaction(function () use ($session, $operation): mixed {
             return $operation($this->sessions->acquireForPatch($session));
-        }, attempts: 1);
+        }, attempts: 1), $attempts);
     }
 
     /**
@@ -168,13 +173,14 @@ final readonly class UploadSessionManager
      * @template TResult
      *
      * @param  callable(UploadSession): TResult $commit
+     * @param  int<1, max>                      $attempts honoured only when this is the outermost unit of work
      * @return TResult
      */
-    public function commitAssembled(UploadSession $session, callable $commit): mixed
+    public function commitAssembled(UploadSession $session, callable $commit, int $attempts = 1): mixed
     {
         $this->assertTenant($session);
 
-        return $this->database->transaction(function () use ($session, $commit): mixed {
+        return $this->database->retryingOutermost(fn (): mixed => $this->database->transaction(function () use ($session, $commit): mixed {
             $locked = $this->sessions->acquireForPatch($session);
 
             if ($locked->status === UploadStatus::Committed) {
@@ -190,7 +196,7 @@ final readonly class UploadSessionManager
             }
 
             return $commit($locked);
-        }, attempts: 1);
+        }, attempts: 1), $attempts);
     }
 
     /**

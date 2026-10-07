@@ -7,6 +7,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
+use Symfony\Component\Finder\Finder;
 
 /** @return list<string> */
 function forbiddenBoundaryDependencies(string $source): array
@@ -82,4 +83,40 @@ it('detects both fully qualified class calls and a literal container dependency'
 \Vaulter\Drive\Actions\Nodes\RenameNodeAction::execute();
 app('Vaulter\\Repositories\\Drive\\NodeReadRepository');
 PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\Repositories\Drive\NodeReadRepository');
+});
+
+/**
+ * ADR 0020 §3 as a ratchet (audit F13): no HTTP controller or Filament class imports Actions or
+ * Repositories. The files below predate the migration to Operations; the list can only shrink,
+ * and a file that is clean again must be removed from it. Documents controllers leave in P4.
+ */
+it('keeps every HTTP and Filament boundary on Operations except the shrinking exemption list', function (): void {
+    $root = dirname(__DIR__, 3);
+    $exempt = [
+        'core/src/Http/Controllers/Sharing/PublicShareController.php',
+        'core/src/Http/Controllers/Webhooks/WebhookEndpointsController.php',
+        'core/src/Http/Support/HttpResourceResolver.php',
+        'documents/src/Http/Controllers/Collaboration/NodeCollaborationController.php',
+        'documents/src/Http/Controllers/Comments/NodeCommentController.php',
+        'documents/src/Http/Controllers/Documents/DocumentNodeController.php',
+        'drive/src/Http/Controllers/Drives/ShowDriveController.php',
+        'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
+        'drive/src/Http/Controllers/Uploads/TusProtocolController.php',
+        'drive/src/Http/Resources/DriveResource.php',
+        'filament/src/Support/PanelAccessScope.php',
+    ];
+    $offenders = [];
+    $directories = array_filter([
+        $root.'/core/src/Http', $root.'/drive/src/Http', $root.'/documents/src/Http', $root.'/filament/src',
+    ], 'is_dir');
+    foreach ((new Finder)->files()->in($directories)->name('*.php') as $file) {
+        if (forbiddenBoundaryDependencies($file->getContents()) !== []) {
+            $offenders[] = substr($file->getPathname(), strlen($root) + 1);
+        }
+    }
+    sort($offenders);
+
+    expect(array_values(array_diff($offenders, $exempt)))->toBe([], 'New controller/Filament code must call Operations, not Actions or Repositories.')
+        ->and(array_values(array_filter($exempt, static fn (string $path): bool => is_file($root.'/'.$path) && !in_array($path, $offenders, true))))
+        ->toBe([], 'These files no longer import Actions/Repositories: remove them from the exemption list.');
 });

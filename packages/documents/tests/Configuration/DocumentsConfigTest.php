@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -55,4 +56,14 @@ it('rejects incompatible document model overrides', function (): void {
     $config = new DocumentsConfig(new Repository(['vaulter-documents' => ['models' => ['node_comment' => stdClass::class]]]));
 
     expect(fn () => $config->model('node_comment'))->toThrow(InvalidConfigurationException::class);
+});
+
+it('answers core\'s comments feature question from its own config instead of core reading it', function (): void {
+    $feature = app(CommentsFeature::class);
+
+    expect($feature)->toBeInstanceOf(DocumentsConfig::class)->and($feature->enabled())->toBeTrue();
+
+    config()->set('vaulter-documents.comments.enabled', false);
+
+    expect(app(CommentsFeature::class)->enabled())->toBeFalse();
 });

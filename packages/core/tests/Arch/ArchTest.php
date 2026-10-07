@@ -281,6 +281,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
+        // ADR-0017 amendment (ADR-0020): entry-point layers stay flat, so the allow-list is explicit.
+        'Operations' => ['AccessOperations', 'ActivityOperations', 'NodeLocator', 'NodeSequence', 'OperationContext', 'ShareOperations'],
         // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
         // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
         // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*

@@ -41,8 +41,10 @@ final readonly class CompleteUploadAction
 
     public function execute(OperationContext $context, UploadSession $session): Node
     {
-        // The SQL retry owned by ingest reuses one immutable preparation. Retrying
-        // this resource-owning transaction would otherwise reread protocol bytes.
+        // This transaction owns the staged-byte readers, so it never retries itself, and
+        // the transactions nested below cannot either (Laravel retries only the outermost
+        // level). A deadlock/serialization failure is retried by UploadOperations::complete()
+        // through UploadSessionManager::withSession(attempts: 3) once everything rolled back.
         return $this->database->transaction(function () use ($context, $session): Node {
             $locked = $this->sessions->acquireForPatch($session);
             $this->assertOwnership(context: $context, session: $locked);
@@ -52,7 +54,11 @@ final readonly class CompleteUploadAction
             $this->authorizeSession(context: $context, session: $locked);
             if ($locked->status === UploadStatus::Committed) {
                 $result = $this->result(context: $context, session: $locked);
+                // Replay proves the same current mutation right as the original request did.
+                $this->authorizeMutation(context: $context, session: $locked);
                 $revision = $result->file()->firstOrFail()->versions()->whereKey($locked->result_revision_id)->firstOrFail();
+                // The caller's session object carries the completion intent being replayed; the
+                // locked row only proves what was committed. Comparing the two detects a changed intent.
                 $hash = $this->fingerprint(session: $session, sha256: $revision->sha256, size: $revision->size_bytes, mime: $revision->mime_type, name: $revision->original_name);
                 if ($locked->input_fingerprint === null || !hash_equals($locked->input_fingerprint, $hash)) {
                     throw UploadConflictException::forClosedSession($locked->upload_id);
@@ -108,12 +114,18 @@ final readonly class CompleteUploadAction
     public function authorizeSession(OperationContext $context, UploadSession $session): void
     {
         $this->assertOwnership(context: $context, session: $session);
-        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
         if ($session->status === UploadStatus::Committed) {
             $this->result(context: $context, session: $session);
 
             return;
         }
+        $this->authorizeMutation(context: $context, session: $session);
+    }
+
+    /** The right the original request needed: Edit on the target file, or Create in the parent. */
+    private function authorizeMutation(OperationContext $context, UploadSession $session): void
+    {
+        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
         if ($session->isNewVersion()) {
             $this->guard->authorize(context: $context, ability: Ability::Edit, node: $this->locator->find(context: $context, key: $session->target_node_id ?? 'missing'));
         } else {

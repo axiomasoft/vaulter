@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Tests\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
@@ -80,26 +81,6 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function suiteDatabaseConnection(): array
     {
-        if (env('DB_CONNECTION') !== 'pgsql') {
-            return [
-                'driver' => 'sqlite',
-                'database' => ':memory:',
-                'prefix' => '',
-            ];
-        }
-
-        return [
-            'driver' => 'pgsql',
-            'host' => (string) env('DB_HOST', '127.0.0.1'),
-            'port' => (string) env('DB_PORT', '5432'),
-            'database' => (string) env('DB_DATABASE', 'vaulter_test'),
-            'username' => (string) env('DB_USERNAME', 'vaulter'),
-            'password' => (string) env('DB_PASSWORD', ''),
-            'charset' => 'utf8',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => 'prefer',
-        ];
+        return SuiteDatabaseConnection::resolve();
     }
 }

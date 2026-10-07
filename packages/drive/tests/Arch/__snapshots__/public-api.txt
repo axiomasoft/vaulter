@@ -15,7 +15,9 @@ Vaulter\Drive\Configuration\DriveConfig
   blockedExtensions(): array
   chunkSize(): int
   defaultQuota(): ?int
+  leaseSeconds(): int
   maxActiveSessionsPerActor(): int
+  maxAttempts(): int
   maxChunkSize(): int
   maxFileSize(): int
   metadataAllowedKeys(): array
@@ -25,6 +27,7 @@ Vaulter\Drive\Configuration\DriveConfig
   resumableEnabled(): bool
   scanQueue(): string
   scanWork(string $key): int
+  scannerTimeoutSeconds(): int
   sessionTtlHours(): int
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void

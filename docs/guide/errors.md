@@ -35,6 +35,7 @@ Codes are a stable public contract (AD29).
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
+| `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
 | `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
 | `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
 
@@ -240,3 +241,9 @@ System actors still enforce tenant scope, profile policy and content availabilit
 `profile_restriction` (403) means the effective drive profile disables the
 requested operation. Global and profile policies both apply. An actor without
 View receives `node_not_found` (404) before profile restrictions are disclosed.
+
+## concurrent-update
+
+`concurrent_update` (409, with `Retry-After: 1`) means a deadlock or serialization failure
+survived the bounded outermost retry (three attempts for upload completion). Nothing was
+committed and the staged upload bytes are intact, so repeat the request unchanged.

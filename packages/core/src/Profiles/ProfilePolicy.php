@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Enums\Operations\OperationKind;
@@ -20,12 +21,12 @@ use Vaulter\Models\Drive\Node;
 
 final readonly class ProfilePolicy
 {
-    public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan) {}
+    public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private CommentsFeature $comments) {}
 
     public function featureEnabled(Profile $profile, string $feature): bool
     {
         $global = $feature === 'comments'
-            ? (bool) $this->repository->get('vaulter-documents.comments.enabled', false)
+            ? $this->comments->enabled()
             : $this->config->featureEnabled($feature);
 
         return $global && ($profile->featureFlag($feature) ?? true);

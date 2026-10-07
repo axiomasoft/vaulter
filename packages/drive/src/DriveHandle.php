@@ -9,7 +9,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Vaulter\Access\OperationGuard;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
 use Vaulter\Contracts\Drive\DriveHandle as Contract;
@@ -37,8 +36,6 @@ final readonly class DriveHandle implements Contract
 
     public function model(): Drive
     {
-        $class = $this->container->make(VaulterConfig::class)->model('drive');
-
         return $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
     }
 

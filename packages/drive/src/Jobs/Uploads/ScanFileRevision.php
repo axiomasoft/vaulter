@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Jobs\Uploads;
 
-use DateTimeImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -63,7 +62,7 @@ final class ScanFileRevision implements ShouldQueue
             || $scanner->version() !== $config->globalSpec()->scannerVersion) {
             throw new InvalidConfigurationException('Configured scanner identity differs from durable work.');
         }
-        $attempt = $work->claim($this->obligationId, $this->generation, new DateTimeImmutable('now'));
+        $attempt = $work->claim($this->obligationId, $this->generation, $work->now());
         if ($attempt === null || $attempt->blobId === null) {
             return;
         }
@@ -112,7 +111,7 @@ final class ScanFileRevision implements ShouldQueue
                     $attempt->driveId, $attempt->tenantId, $identity->scopeKey, $identity->sha256,
                     $identity->size, $revision->mime_type, $attempt->spec->scannerVersion,
                     $attempt->spec->policyVersion, $attempt->deadline));
-                if (new DateTimeImmutable('now') >= $attempt->deadline) {
+                if ($work->now() >= $attempt->deadline) {
                     $result = new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true);
                 }
             }

@@ -16,6 +16,7 @@ Vaulter\Documents\Configuration\DocumentsConfig
   collaborationEnabled(): bool
   collaborationRoom(mixed $nodeId): string
   commentsEnabled(): bool
+  enabled(): bool
   enabledDocumentTypes(): array
   exporters(): array
   hubJwtSecret(): ?string

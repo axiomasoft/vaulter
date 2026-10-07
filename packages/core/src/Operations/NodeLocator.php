@@ -17,6 +17,8 @@ final readonly class NodeLocator
     public function __construct(
         private VaulterConfig $config,
         private VaulterDatabase $database,
+        private TenancyConfig $tenancy,
+        private TenancyBoundary $boundary,
     ) {}
 
     public function find(OperationContext $context, Node|int|string $key, bool $includeTrashed = false): Node
@@ -73,11 +75,11 @@ final readonly class NodeLocator
         $model = new $class;
         $model->setConnection($this->database->connection()->getName());
 
-        if (app(TenancyConfig::class)->enabled()) {
-            app(TenancyBoundary::class)->assertDrive($context->drive);
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertDrive($context->drive);
         }
 
-        return app(TenancyBoundary::class)->constrain($model->newQuery())->where(column: 'drive_id', operator: '=', value: $context->driveId());
+        return $this->boundary->constrain($model->newQuery())->where(column: 'drive_id', operator: '=', value: $context->driveId());
     }
 
     private function key(Node|int|string $key): int|string|null

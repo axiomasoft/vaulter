@@ -10,6 +10,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
@@ -26,6 +27,7 @@ final class BindingsRegistrar extends ServiceProvider
         $path = __DIR__.'/../../config/vaulter-documents.php';
         $this->mergeConfigFrom(path: $path, key: 'vaulter-documents');
         $this->app->singleton(DocumentsConfig::class, fn (Container $app): DocumentsConfig => new DocumentsConfig($app->make('config')));
+        $this->app->bind(CommentsFeature::class, DocumentsConfig::class);
         $this->app->singletonIf(ConfigNormalizer::class);
         $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-documents', path: $path);
 

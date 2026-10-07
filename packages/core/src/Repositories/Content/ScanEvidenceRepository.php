@@ -17,6 +17,7 @@ use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 
+/** @internal Immutable scan evidence persistence; availability decisions go through ContentAvailabilityGuard. */
 final readonly class ScanEvidenceRepository
 {
     public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots) {}

@@ -10,6 +10,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
@@ -75,7 +76,7 @@ final readonly class ConfigValidator
                 $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
                 $app->instance(ProfileRegistry::class, $registry);
             }
-            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config));
+            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config), $app->make(CommentsFeature::class));
             foreach ($registry->all() as $profile) {
                 $policy->validate($profile);
                 $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();

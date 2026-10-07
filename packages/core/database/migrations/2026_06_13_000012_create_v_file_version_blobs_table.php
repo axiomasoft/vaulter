@@ -8,8 +8,9 @@ use Vaulter\Schema\SchemaBuilder;
 /**
  * v_file_revision_blobs — the version ↔ blob edge table, the GC truth (§2.4).
  *
- * Gated on the 'versions' feature (and depends on v_blobs / 'blobs'). Composite
- * primary key, never soft-deleted. Thin shell over SchemaBuilder.
+ * Created independently of runtime feature flags (core owns the whole schema); depends on
+ * v_blobs and the file revisions table. Composite primary key, never soft-deleted. Thin shell
+ * over SchemaBuilder.
  */
 return new class extends Migration
 {

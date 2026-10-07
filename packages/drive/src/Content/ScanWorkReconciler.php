@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
-use DateTimeImmutable;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -50,14 +49,16 @@ final readonly class ScanWorkReconciler
     public function reconcile(int $limit = 100, int $maxSeconds = 30, bool $dryRun = false, array|Builder|null $driveIds = null): array
     {
         $started = microtime(true);
+        $now = $this->work->now();
+        $cooldown = $this->driveConfig->scanWork('publish_cooldown_seconds');
         $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
         $class = $this->config->model('scan_obligation');
         $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', ['pending', 'retry_wait', 'leased'])
-            ->where(function ($query): void {
-                $query->where(function ($query): void {
-                    $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', now('UTC'))
-                        ->where(fn ($q) => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', now('UTC')->subSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))));
-                })->orWhere(fn ($q) => $q->where('state', 'leased')->where('lease_expires_at', '<=', now('UTC')));
+            ->where(function ($query) use ($now, $cooldown): void {
+                $query->where(function ($query) use ($now, $cooldown): void {
+                    $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', $now)
+                        ->where(fn ($q) => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', $now->modify('-'.$cooldown.' seconds')));
+                })->orWhere(fn ($q) => $q->where('state', 'leased')->where('lease_expires_at', '<=', $now));
             });
         if ($driveIds !== null) {
             $query->whereIn('drive_id', $driveIds);
@@ -95,20 +96,21 @@ final readonly class ScanWorkReconciler
                 continue;
             }
             if ($row->state === 'leased') {
-                $this->work->recover($row, new DateTimeImmutable('now'));
+                $this->work->recover($row, $this->work->now());
                 $row = $this->work->find($row->id);
             }
             if ($row === null || $row->state === 'settled' || $row->state === 'leased') {
                 continue;
             }
-            $claimed = $this->database->transaction(function () use ($class, $row): ?ScanObligation {
+            $claimed = $this->database->transaction(function () use ($class, $row, $cooldown): ?ScanObligation {
                 $fresh = $class::query()->whereKey($row->id)->lockForUpdate()->first();
+                $current = $this->work->now();
                 if ($fresh === null || !in_array($fresh->state, ['pending', 'retry_wait'], true)
-                    || $fresh->available_at->isFuture()
-                    || ($fresh->last_published_at !== null && $fresh->last_published_at->addSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))->isFuture())) {
+                    || $fresh->available_at > $current
+                    || ($fresh->last_published_at !== null && $fresh->last_published_at->addSeconds($cooldown) > $current)) {
                     return null;
                 }
-                $fresh->forceFill(['last_published_at' => now('UTC')])->save();
+                $fresh->forceFill(['last_published_at' => $current])->save();
 
                 return $fresh;
             });
@@ -117,7 +119,7 @@ final readonly class ScanWorkReconciler
                     $counts['published']++;
                 } else {
                     $class::query()->whereKey($claimed->id)->where('generation', $claimed->generation)
-                        ->whereIn('state', ['pending', 'retry_wait'])->update(['available_at' => now('UTC')->addSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))]);
+                        ->whereIn('state', ['pending', 'retry_wait'])->update(['available_at' => $this->work->now()->modify('+'.$cooldown.' seconds')]);
                 }
             }
         }

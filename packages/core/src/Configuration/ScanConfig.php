@@ -13,17 +13,6 @@ final readonly class ScanConfig
 {
     public function __construct(private Repository $config) {}
 
-    /** @internal Durable work tuning retains the drive package's published keys. */
-    public function workSetting(string $key, int $fallback): int
-    {
-        $value = $this->config->get('vaulter-drive.uploads.scan.'.$key, $fallback);
-        if (!is_int($value) || $value < 1) {
-            throw new \LogicException('Invalid positive scan work setting.');
-        }
-
-        return $value;
-    }
-
     public function mode(): ScanMode
     {
         $mode = $this->value('mode');

@@ -8,7 +8,9 @@ use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use LogicException;
+use Throwable;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 
 final class VaulterDatabase
 {
@@ -37,6 +39,60 @@ final class VaulterDatabase
     public function transaction(Closure $callback, int $attempts = 3): mixed
     {
         return $this->connection()->transaction($callback, $attempts);
+    }
+
+    /**
+     * Run $callback as the OUTERMOST unit of work and repeat it after a deadlock or
+     * serialization failure. Laravel cannot retry a nested transaction (it rethrows a
+     * DeadlockException and lets only the outermost level roll back), so a retry is
+     * only honest here, at transaction level 0, once the callback has fully rolled back.
+     * Anything else, or a non-concurrency failure, is rethrown untouched; an exhausted
+     * budget becomes a retryable {@see ConcurrentUpdateException}.
+     *
+     * @internal
+     *
+     * @template TReturn
+     *
+     * @param  Closure(): TReturn $callback
+     * @param  int<1, max>        $attempts
+     * @return TReturn
+     */
+    public function retryingOutermost(Closure $callback, int $attempts = 3): mixed
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $callback();
+            } catch (Throwable $exception) {
+                if ($this->connection()->transactionLevel() !== 0 || !$this->isConcurrencyFailure($exception)) {
+                    throw $exception;
+                }
+                if ($attempt >= $attempts) {
+                    throw new ConcurrentUpdateException($exception);
+                }
+            }
+        }
+    }
+
+    /**
+     * @internal Walks the previous chain: a nested failure arrives wrapped in a
+     *           DeadlockException whose own code and message may no longer match.
+     */
+    public function isConcurrencyFailure(Throwable $exception): bool
+    {
+        $detect = Closure::bind(
+            fn (Throwable $error): bool => $this->causedByConcurrencyError($error),
+            $this->connection(),
+            Connection::class,
+        );
+        for ($cursor = $exception; $cursor !== null; $cursor = $cursor->getPrevious()) {
+            if ($detect($cursor)
+                || in_array((string) $cursor->getCode(), ['40001', '40P01'], true)
+                || preg_match('/SQLSTATE\[(?:40001|40P01)\]/', $cursor->getMessage()) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

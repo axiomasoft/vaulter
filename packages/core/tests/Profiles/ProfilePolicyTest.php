@@ -5,8 +5,10 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Profiles\DisabledCommentsFeature;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileProvider;
@@ -14,6 +16,15 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Tests\Fixtures\Panels\FakeProject;
 use Vaulter\Tests\Fixtures\TestUser;
+
+it('treats comments as globally off when no package owns them and leaves the other flags untouched', function (): void {
+    $profile = (new Profile)->key('p');
+    $policy = app(ProfilePolicy::class);
+
+    expect(app(CommentsFeature::class))->toBeInstanceOf(DisabledCommentsFeature::class)
+        ->and($policy->featureEnabled($profile, 'comments'))->toBeFalse()
+        ->and($policy->featureEnabled($profile, 'grants'))->toBeTrue();
+});
 
 it('inherits global flags and cannot enable a globally disabled feature', function (): void {
     $profile = (new Profile)->key('p');
@@ -26,7 +37,14 @@ it('inherits global flags and cannot enable a globally disabled feature', functi
 
 it('conjoins every explicit profile flag with the global policy', function (string $feature): void {
     config()->set('vaulter.features.'.$feature, true);
-    config()->set('vaulter-documents.comments.enabled', true);
+    // Core does not read the documents package's config: the owner of comments answers.
+    app()->instance(CommentsFeature::class, new class implements CommentsFeature
+    {
+        public function enabled(): bool
+        {
+            return true;
+        }
+    });
     $setter = ['grants' => 'grants', 'share_links' => 'shareLinks', 'comments' => 'comments'][$feature];
     $profile = (new Profile)->key('p');
     expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeTrue();

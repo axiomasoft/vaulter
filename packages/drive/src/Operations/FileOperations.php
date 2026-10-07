@@ -37,7 +37,7 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class FileOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names) {}
 
     public function upload(UploadSource $source, ?UploadOptions $options = null): Node
     {
@@ -92,7 +92,7 @@ final readonly class FileOperations implements Contract
         $node = $this->file($file, Ability::Download);
         $revision = $this->revision($node, $revision);
 
-        return app(ContentDelivery::class)->stream($this->context, $node, $revision);
+        return $this->delivery->stream($this->context, $node, $revision);
     }
 
     private function file(Node|int|string $key, Ability $ability): Node
@@ -116,14 +116,12 @@ final readonly class FileOperations implements Contract
 
     private function uploadSibling(Node $parent, string $name): ?Node
     {
-        return app(VaulterDatabase::class)->transaction(function () use ($parent, $name): ?Node {
-            $database = app(VaulterDatabase::class);
-            $database->lockTreeShared($this->context->driveId());
-            $tree = app(TreeGuard::class);
-            $locked = $tree->locked($tree->lock([$parent->id]), $parent->id);
-            $tree->assertActiveFolder($locked);
+        return $this->database->transaction(function () use ($parent, $name): ?Node {
+            $this->database->lockTreeShared($this->context->driveId());
+            $locked = $this->tree->locked($this->tree->lock([$parent->id]), $parent->id);
+            $this->tree->assertActiveFolder($locked);
 
-            return app(NameConflictResolver::class)->sibling($this->context->drive, $locked, $name);
+            return $this->names->sibling($this->context->drive, $locked, $name);
         });
     }
 

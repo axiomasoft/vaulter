@@ -25,21 +25,21 @@ final readonly class ContentAvailabilityGuard
 
     public function assertAvailable(OperationContext $context, Node $node, FileRevision $revision): void
     {
-        [$actualNode, $actualRevision, $drive, $blob] = $this->selection($node, $revision);
+        [, $actualRevision, $drive] = $this->selection($node, $revision);
         if ((string) $drive->id !== (string) $context->driveId()) {
             throw NodeNotFoundException::forId($node->id);
         }
         app(TenancyBoundary::class)->assertDrive($drive);
-        $this->check($actualRevision, $drive, $blob);
+        $this->check($actualRevision, $drive);
     }
 
     public function assertAvailableForShare(ShareContext $context, Node $node, FileRevision $revision): void
     {
-        [$actualNode, $actualRevision, $drive, $blob] = $this->selection($node, $revision);
+        [$actualNode, $actualRevision, $drive] = $this->selection($node, $revision);
         if (!$context->containsNode($actualNode) || (string) $context->share->tenant_id !== (string) $drive->tenant_id) {
             throw NodeNotFoundException::forId($node->id);
         }
-        $this->check($actualRevision, $drive, $blob);
+        $this->check($actualRevision, $drive);
     }
 
     /** @return array{Node,FileRevision,Drive,Blob} */
@@ -68,7 +68,7 @@ final readonly class ContentAvailabilityGuard
         return [$actualNode, $actualRevision, $drive, $blob];
     }
 
-    private function check(FileRevision $revision, Drive $drive, Blob $blob): void
+    private function check(FileRevision $revision, Drive $drive): void
     {
         if ($this->evidence->infected($revision)) {
             throw new ContentUnavailableException;

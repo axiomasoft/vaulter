@@ -31,11 +31,12 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\TreeGuard;
 
 final readonly class NodeOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private UpdateNodeAction $updateAction, private TrashNodeAction $trashAction) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private UpdateNodeAction $updateAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes) {}
 
     public function find(Node|int|string $node): Node
     {
@@ -76,8 +77,9 @@ final readonly class NodeOperations implements Contract
         $node = $this->authorized($node, Ability::Copy);
         $parent = $this->destination($destination);
         $options ??= new CopyOptions;
+        $authorized = $this->guard->copyableSubtree($this->context, $node, $this->nodes->subtree($node));
 
-        return $this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict));
+        return $this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized));
     }
 
     public function update(Node|int|string $node, UpdateNodeOptions $options): Node

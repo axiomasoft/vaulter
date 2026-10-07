@@ -9,5 +9,6 @@ use Vaulter\Models\Drive\Node;
 
 final readonly class CopyNodeInput
 {
-    public function __construct(public Node $node, public ?Node $into = null, public ?string $name = null, public OnNameConflict $onConflict = OnNameConflict::Rename) {}
+    /** @param list<string>|null $authorizedNodeIds subtree keys the Operations layer authorised; null = no ACL (system actor) */
+    public function __construct(public Node $node, public ?Node $into = null, public ?string $name = null, public OnNameConflict $onConflict = OnNameConflict::Rename, public ?array $authorizedNodeIds = null) {}
 }

@@ -99,3 +99,38 @@ it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages',
     $grant->forceFill(['effect' => Effect::Deny])->save();
     expect($this->operation->forDrive(new ListOptions(cursor: $cursor->encode()))->items())->toBe([]);
 });
+
+it('SEC-I7-projection withholds request fingerprint and access details from a reader without Share', function (): void {
+    $readOnly = AccessTestHelpers::folder($this->drive, null, 'read only');
+    $managed = AccessTestHelpers::folder($this->drive, null, 'managed');
+    AccessTestHelpers::grant($readOnly, GrantLevel::Reader);
+    AccessTestHelpers::grant($managed, GrantLevel::Reader, permissions: 16);
+    $details = static fn (): array => [
+        'ip' => '203.0.113.9', 'user_agent' => 'curl/8', 'request_id' => 'req-1', 'actor_type' => 'user', 'actor_id' => '42',
+        'context' => ['subject_type' => 'user', 'subject_id' => '7', 'permissions' => 5, 'token_prefix' => 'abcd1234', 'level' => 'reader'],
+    ];
+    $rows = [];
+    foreach ([$readOnly, $managed] as $index => $node) {
+        $rows[(string) $node->id] = visibleActivityRow($node, $index + 1)->forceFill($details());
+        $rows[(string) $node->id]->save();
+    }
+    $byTarget = static fn (array $items): array => array_combine(array_map(static fn (Activity $row): string => (string) $row->target_id, $items), $items);
+
+    $seen = $byTarget($this->operation->forDrive()->items());
+
+    $restricted = $seen[(string) $readOnly->id];
+    expect($restricted->ip)->toBeNull()->and($restricted->user_agent)->toBeNull()->and($restricted->request_id)->toBeNull()
+        ->and($restricted->actor_id)->toBeNull()->and($restricted->actor_type)->toBe('user')
+        ->and($restricted->context)->toBe(['level' => 'reader']);
+    $full = $seen[(string) $managed->id];
+    expect($full->ip)->toBe('203.0.113.9')->and($full->actor_id)->toBe('42')->and($full->context)->toHaveKeys(['subject_id', 'permissions', 'token_prefix']);
+
+    $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
+    foreach ($system->forDrive()->items() as $row) {
+        expect($row->ip)->toBe('203.0.113.9')->and($row->context)->toHaveKey('subject_id');
+    }
+    // The projection is read-only: nothing was written back.
+    expect(Activity::query()->findOrFail($rows[(string) $readOnly->id]->id)->ip)->toBe('203.0.113.9');
+    $restricted->forceFill(['verb' => EventType::NodeRenamed])->save();
+    expect(Activity::query()->findOrFail($restricted->id)->ip)->toBe('203.0.113.9');
+});

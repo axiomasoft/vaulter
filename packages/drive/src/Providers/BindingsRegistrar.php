@@ -11,6 +11,7 @@ use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -36,6 +37,7 @@ final class BindingsRegistrar extends ServiceProvider
         $path = __DIR__.'/../../config/vaulter-drive.php';
         $this->mergeConfigFrom(path: $path, key: 'vaulter-drive');
         $this->app->singleton(DriveConfig::class, fn (Container $app): DriveConfig => new DriveConfig($app->make('config')));
+        $this->app->bind(ScanWorkSettings::class, DriveConfig::class);
         $this->app->singletonIf(ConfigNormalizer::class);
         $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-drive', path: $path);
 
