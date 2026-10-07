@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
@@ -54,7 +55,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
     $work->forceFill(['state' => 'retry_wait', 'lease_token' => null, 'lease_expires_at' => null, 'available_at' => now()])->save();
     $old = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
     $work->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
-    app(ScanObligationRepository::class)->recover($work, new DateTimeImmutable('now'));
+    app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable('now'));
     $fresh = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
     $otherToken = ($fresh->leaseToken[0] === '0' ? '1' : '0').substr($fresh->leaseToken, 1);
     $forged = new ScanAttempt(
@@ -125,7 +126,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
     expect($killed[0]->ok)->toBeFalse()->and($row->refresh()->state)->toBe('leased');
     $row->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     $surviving = ForkRace::run([function () use ($row): bool {
-        app(ScanObligationRepository::class)->recover($row, new DateTimeImmutable('now'));
+        app(RecoverScanWorkAction::class)->execute($row, new DateTimeImmutable('now'));
         $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
 
         return $attempt !== null && app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));

@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use LogicException;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Database\VaulterDatabase;
@@ -29,47 +28,6 @@ final readonly class ScanObligationRepository
         $class = $this->config->model('scan_obligation');
 
         return $class::query()->whereKey($id)->first();
-    }
-
-    /** Recovery only writes a failed snapshot, never invokes clean settle after lease expiry. */
-    public function recover(ScanObligation $obligation, DateTimeImmutable $now): bool
-    {
-        return $this->database->transaction(function () use ($obligation, $now): bool {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->first();
-            if ($work === null || $work->generation !== $obligation->generation || $work->state !== 'leased'
-                || $work->lease_expires_at > $now) {
-                return false;
-            }
-            if ($work->attempt < $this->transitions->maxAttempts()) {
-                $work->forceFill(['state' => 'retry_wait', 'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
-
-                return true;
-            }
-            $this->transitions->terminal($work, 'attempts_exhausted', $now);
-
-            return true;
-        });
-    }
-
-    public function supersede(ScanObligation $obligation): bool
-    {
-        return $this->database->transaction(function () use ($obligation): bool {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->first();
-            if ($work === null || $work->generation !== $obligation->generation || $work->state === 'settled') {
-                return false;
-            }
-            $driveClass = $this->config->model('drive');
-            $drive = $driveClass::query()->whereKey($work->drive_id)->firstOrFail();
-            $specs = $this->policies->forDrive($drive);
-            if (array_any($specs, static fn (ScanPolicySpec $spec): bool => $spec->specKey() === $work->spec_key)) {
-                return false;
-            }
-            $this->transitions->terminal($work, 'superseded_policy', $this->clock());
-
-            return true;
-        });
     }
 
     /** @internal The database clock is the only time source for leases, fences and backoff. */

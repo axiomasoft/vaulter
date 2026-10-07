@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
+use Vaulter\Actions\Content\SupersedeScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Content\ScanInput;
@@ -140,7 +142,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $second->forceFill(['attempt' => 4])->save();
     $attempt = app(ClaimScanWorkAction::class)->execute($second->id, $second->generation, new DateTimeImmutable('now'));
     $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
-    expect($repo->recover($second, new DateTimeImmutable('now')))->toBeTrue()
+    expect(app(RecoverScanWorkAction::class)->execute($second, new DateTimeImmutable('now')))->toBeTrue()
         ->and($second->refresh()->state)->toBe('settled')->and($second->reason)->toBe('attempts_exhausted')
         ->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $next = $request((string) Str::uuid());
@@ -306,7 +308,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save();
         $bus = Mockery::mock(Dispatcher::class);
         $bus->shouldReceive('dispatch')->andThrow(new RuntimeException('broker unavailable'));
-        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(VaulterConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), policies: app(ScanPolicyResolver::class), bus: $bus);
+        $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(VaulterConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), bus: $bus);
         $before = now('UTC')->getTimestamp();
         $publisher->reconcile();
         $available = $work->refresh()->available_at->getTimestamp();

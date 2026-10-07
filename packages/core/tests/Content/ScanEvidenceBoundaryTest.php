@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FailScanAttemptAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
@@ -193,11 +194,11 @@ it('records retry evidence, recovers lost leases and terminates exhausted attemp
     $work->forceFill(['available_at' => now()->subMinute()])->save();
     $second = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
-    expect($repository->recover($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('retry_wait')
+    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('retry_wait')
         ->and(app(SettleScanWorkAction::class)->execute($second, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $third = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['attempt' => 5, 'lease_expires_at' => now()->subSecond()])->save();
-    expect($repository->recover($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('settled')
+    expect(app(RecoverScanWorkAction::class)->execute($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('settled')
         ->and($work->fresh()->reason)->toBe('attempts_exhausted')->and(ScanEvidenceRecord::count())->toBe(2);
 });
 

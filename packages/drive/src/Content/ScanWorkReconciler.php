@@ -7,6 +7,8 @@ namespace Vaulter\Drive\Content;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Actions\Content\RecoverScanWorkAction;
+use Vaulter\Actions\Content\SupersedeScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -21,6 +23,7 @@ final readonly class ScanWorkReconciler
 {
     public function __construct(private VaulterDatabase $database, private VaulterConfig $config,
         private DriveConfig $driveConfig, private ScanObligationRepository $work,
+        private RecoverScanWorkAction $recover, private SupersedeScanWorkAction $supersede,
         private ScanPolicyResolver $policies, private Dispatcher $bus) {}
 
     public function afterCommit(ScanObligation $work): void
@@ -79,7 +82,7 @@ final readonly class ScanWorkReconciler
                 $specs = $this->policies->forDrive($drive);
                 if (!array_any($specs, fn ($spec): bool => $spec->specKey() === $row->spec_key)) {
                     if (!$dryRun) {
-                        $this->work->supersede($row);
+                        $this->supersede->execute($row);
                     }
                     $counts['failed']++;
 
@@ -96,7 +99,7 @@ final readonly class ScanWorkReconciler
                 continue;
             }
             if ($row->state === 'leased') {
-                $this->work->recover($row, $this->work->now());
+                $this->recover->execute($row, $this->work->now());
                 $row = $this->work->find($row->id);
             }
             if ($row === null || $row->state === 'settled' || $row->state === 'leased') {
