@@ -1,19 +1,19 @@
 ---
 title: Document Nodes
-description: Create, edit and version document nodes — TipTap content, autosave vs named versions, restore and prune — over the Documents REST surface.
+description: Create, edit and version document nodes — working state, immutable checkpoints, restore and prune — over the Documents REST surface.
 outline: deep
 ---
 
 # Document Nodes
 
 A **document node** is a `kind=document` entry in the unified node tree (`v_nodes`) whose
-payload is structural TipTap JSON, versioned in `v_node_document_versions`. It lives in the
-same tree as folders and files, so the Drive Actions (move / rename / trash / restore) and
-the quota + sibling-unique guards apply to it unchanged — a document is just a node with an
-attached version history.
+payload lives in its **document aggregate**: a working state in `v_documents` and immutable
+checkpoints in `v_document_revisions`. It lives in the same tree as folders and files, so the
+Drive Actions (move / rename / trash / restore) and the quota + sibling-unique guards apply to
+it unchanged — a document is a node with an attached aggregate.
 
 This page covers creating document nodes, reading and autosaving their content, the
-**autosave vs named version** model, restoring a prior version, and how the history is
+**working state vs checkpoints** model, restoring a prior checkpoint, and how the history is
 **pruned** (with `keep_forever` pins). For the format-routing layer — which editor a node
 opens in — see [Document Handlers](./document-handlers.md). For rendering content out to
 HTML/Markdown, see [Export](./export.md).
@@ -26,37 +26,51 @@ separately with `vaulter-documents.collaboration.enabled`.
 
 ## The data model
 
-A document node carries its head pointer the same way a file node does — `current_version_id`
-on the node points at the head `DocumentRevision`. The version table is **append-only**:
-a committed version is immutable (no `updated_at`, no soft-delete), `version_no` is monotonic
-per node, and the unique `(node_id, version_no)` index is the backbone two concurrent commits
-serialise on.
+A document has two parts (ADR-0022, amendment D34):
 
-`v_node_document_versions` columns (from `SchemaBuilder::defineDocumentVersions`):
+- **The working state** — one `v_documents` row per `kind=document` node (`node_id` unique,
+  cascade on node delete). It holds the content every editor sees right now and is rewritten by
+  every save.
+- **Checkpoints** — rows of `v_document_revisions`. A checkpoint is **immutable**: after INSERT
+  only `keep_forever` changes, so a revision id always names the same bytes. Autosave
+  checkpoints are taken on an interval, named ones on demand, and a restore copies an older
+  checkpoint forward.
+
+The head pointer lives on the aggregate (`v_documents.current_revision_id`), never on the node:
+`v_nodes` has no `current_version_id`/`file_id` any more, so a file revision and a document
+revision with the same id can never be confused. On PostgreSQL and MySQL a composite foreign
+key `(current_revision_id, id) → v_document_revisions(id, document_id)` with `ON DELETE
+RESTRICT` makes the head always one of the document's own checkpoints and keeps pruning from
+deleting it (SQLite: see [Database compatibility](./database-compatibility.md)).
+
+`v_documents` columns:
 
 | Column | Type | Meaning |
 |---|---|---|
-| `id` | id-strategy | Primary key (bigint / ulid / uuid7 per `ids.strategy`). |
-| `tenant_id` | nullable | Present only when `tenancy.enabled`. |
-| `node_id` | FK → `v_nodes` | The owning `kind=document` node (cascade on delete). |
-| `version_no` | integer | Monotonic per node; `unique(node_id, version_no)`. |
-| `content` | json / jsonb | The TipTap/ProseMirror JSON projection. |
-| `yjs_state` | bytea / longBlob | The binary Yjs CRDT update — the realtime source of truth (collaboration). |
-| `yjs_state_size` | integer, nullable | Cached byte length of `yjs_state` (a list never streams the blob to size it). |
-| `format` | string(16), default `tiptap` | The version format key. |
-| `content_hash` | char(64), nullable | Content hash (dedup / change detection). |
-| `snapshot_label` | string, nullable | The label of a **named** version; null for autosaves. |
-| `is_autosave` | boolean, default `false` | Distinguishes the autosave churn from named checkpoints. |
-| `status` | string(12), default `committed` | Lifecycle status (indexed). |
-| `keep_forever` | boolean, default `false` | Pins the version out of the prune window. |
-| `created_by` | actor, nullable | The actor id. |
-| `created_at` | timestamp, nullable | Append-only — there is no `updated_at`. |
+| `id` | id-strategy | Primary key. |
+| `tenant_id` | host key, nullable | Present only when tenancy is enabled. |
+| `node_id` | FK → `v_nodes`, unique | The owning `kind=document` node (cascade on delete). |
+| `type` | string(64) | The document type key, e.g. `vaulter/rich-text`, `vaulter/markdown`, `vaulter/spreadsheet`. |
+| `schema_version` | integer | Version of the content schema of the working state. |
+| `current_revision_id` | ref, nullable | The head checkpoint. |
+| `revision_count` | integer | Monotonic checkpoint counter; pruning never lowers it, so a number is never reused. |
+| `collab_epoch` | BIGINT ≥ 0 | Collaboration generation; moves on restore and on a JSON replace of Yjs state. |
+| `state_version` | BIGINT ≥ 0 | Content validator; +1 on every effective write of the working state. |
+| `checkpoint_state_version` | BIGINT ≥ 0 | The `state_version` the head captured. |
+| `content`, `content_hash`, `content_size` | json, char(64), integer | The canonical JSON projection, its hash and byte size. |
+| `yjs_state`, `yjs_state_size` | binary, integer | The Yjs CRDT state (collaboration source of truth) and its size. |
+| `last_checkpoint_at` | timestamp | When the last checkpoint was taken. |
+| `created_by`, `updated_by`, timestamps | | Audit. |
 
-::: info Distinct from the legacy version table
-`DocumentRevision` (node-attached, `v_node_document_versions`) is **separate** from the
-legacy `DocumentVersion` (document-id-attached, `v_document_versions`). The legacy path stays
-intact; this page documents only the node-attached path.
-:::
+`v_document_revisions` columns: `id`, `tenant_id`, `document_id` (FK, cascade), `number`
+(unique per document), `schema_version`, `content`, `content_hash`, `content_size`, `yjs_state`,
+`yjs_state_size`, `state_version` (the working state version captured), `label`, `is_autosave`,
+`keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) and
+`created_by`/`created_at`.
+
+The content validator is **independent of the node**: `v_nodes.sequence` moves on rename, move
+and trash, `state_version` on content writes. Renaming a document never invalidates an open
+editor, and saving it never invalidates a rename (PLAN2.D35).
 
 ## Creating a document node
 
@@ -119,9 +133,9 @@ const node = await client.documentNodes.createNode(storageId, {
 What happens (`CreateDocumentAction`):
 
 - The sibling-unique guard runs first — a name clash throws `NodeNameConflictException`.
-- One transaction creates the node, commits the **v1** version (`version_no = 1`,
-  `is_autosave = false`, `status = committed`), repoints `current_version_id` to it, then
-  fires `DocumentCreated` after commit.
+- One transaction creates the node and its aggregate, writes the working state
+  (`state_version = 1`) and takes checkpoint **#1** (`is_autosave = false`), then fires
+  `DocumentCreated` after commit.
 - The node is stamped with the Vaulter document mime
   (`application/vnd.vaulter.document+json`) so it always routes to the TipTap editor handler
   regardless of any extension in its name. See [Document Handlers](./document-handlers.md).
@@ -134,7 +148,7 @@ enforced upstream in the controller — the actor needs both `canCreateInWorkspa
 
 ## Reading content
 
-Fetch the node's **head** content — the single version that includes the full TipTap doc:
+Fetch the document's **working state** — the latest content, including the full TipTap doc:
 
 ::: code-group
 
@@ -156,31 +170,31 @@ curl https://app.test/api/vaulter/nodes/77/content
 
 :::
 
-Server-side the controller resolves `head($node) ?? latest($node)` (the head pointer, else
-the highest `version_no`) and returns a `DocumentRevisionResource` **with** content. The
-history listing (below) omits `content` to stay light — only this single-version fetch carries
-the full doc.
+The response keeps the shape of a version: `id` and `version_no` name the head checkpoint,
+`content`/`content_hash`/`yjs_state_size` are the working state, and `is_autosave` is `true`
+while the working state runs ahead of the head checkpoint. The history listing (below) omits
+`content` to stay light.
 
-## Autosave vs named versions
+## Working state and checkpoints
 
-The history has two lanes, and the distinction is the heart of the version model:
-
-- **Autosave** (`is_autosave = true`) — the churn of an editing session. Within the
-  **debounce window** of the head autosave version, a new autosave **overwrites it in place**
-  (no new row); outside the window a fresh autosave row is appended. This keeps a typing
-  session from flooding the history.
-- **Named** (`is_autosave = false`, `snapshot_label` set) — a durable, human-meaningful
-  checkpoint. A named version is **never** overwritten by the debounce path; it always
-  creates a fresh row, and with `keep_forever` it is pinned out of pruning entirely.
+- **Autosave** — every save replaces the **working state** (no history row). An **autosave
+  checkpoint** (`is_autosave = true`) is taken when the head is missing or
+  `vaulter-documents.revisions.checkpoint_interval_seconds` (default 300) has passed since the
+  last one; `0` checkpoints every effective save. Stored checkpoints are never rewritten.
+- **Named** (`is_autosave = false`, `label` set) — a durable, human-meaningful checkpoint of the
+  current working state, taken on demand even when nothing changed; with `keep_forever` it is
+  pinned out of pruning.
 
 ### Autosaving content
 
-`UpdateDocumentContentAction` is the autosave path. The decision to overwrite-vs-append is
-`shouldOverwrite(head)`:
+`UpdateDocumentContentAction` writes through `DocumentStateWriter`, the only writer of the
+working state:
 
-- the head must be an **autosave** version (a committed/named head always forces a fresh row), and
-- it must be within `config('vaulter-documents.revisions.autosave_debounce_seconds')` of now
-  (a window of `0` means every autosave overwrites the head autosave).
+- an identical save (same content hash and Yjs state) is a **no-op**: no version bump, no event;
+- otherwise `state_version` grows by exactly one; pass `expectedStateVersion` to refuse a save
+  based on a stale read (`412 document_state_mismatch`);
+- replacing the JSON of a document that has Yjs state drops that state and moves
+  `collab_epoch`, so open collaboration rooms reload instead of merging their old history back.
 
 ::: code-group
 
@@ -221,22 +235,25 @@ app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
     content:  TipTapContent::fromArray($tipTapDoc),
     yjsState: null,                  // optional raw Yjs binary update
     actorId:  $user->getKey(),
+    expectedStateVersion: 3,         // optional: 412 when another save landed first
 ));
 ```
 
 :::
 
-The PATCH returns `200` even when it appended a fresh row — an autosave is semantically an
-update. `yjs_state` is the optional **base64-encoded** Yjs CRDT update on the wire; the request
-decodes it back to raw bytes (and is null for the non-collaborative path). The TipTap `content`
-is its projection. The action fires `DocumentContentUpdated` after commit with `created`
-true/false telling listeners whether a row was appended.
+The PATCH returns `200` with the working state — an autosave is semantically an update.
+`yjs_state` is the optional **base64-encoded** Yjs CRDT update on the wire; the request decodes
+it back to raw bytes (and is null for the non-collaborative path). The TipTap `content` is its
+projection. When the save changed something the action fires `DocumentContentUpdated` after
+commit: `version` is the head checkpoint after the save and `created` tells whether this save
+took it.
 
-::: tip Two debounce windows
-There are two independent debounce knobs. `useDocumentNode({ debounceMs })` is the **client**
-timer before a PATCH is sent (default 800 ms). `versions.autosave_debounce_seconds` is the
-**server** window that decides overwrite-vs-append (default 30 s). They are unrelated — tune
-the client for network chatter and the server for how granular the autosave history is.
+::: tip Client debounce vs checkpoint interval
+`useDocumentNode({ debounceMs })` is the **client** timer before a PATCH is sent (default
+800 ms). `revisions.checkpoint_interval_seconds` is the **server** interval between autosave
+checkpoints (default 300 s). Tune the client for network chatter and the server for how
+granular the history is. The 0.2 key `revisions.autosave_debounce_seconds` is deprecated and
+ignored: it rewrote the head in place, which checkpoints never do.
 :::
 
 ### Creating a named version
@@ -273,10 +290,10 @@ app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
 
 :::
 
-`CreateNamedRevisionAction` copies the current head's content/yjs/format into a fresh
-`is_autosave = false` row, repoints the head to it, prunes, and fires `DocumentRevisionCreated`
-(`restored = false`). A named version converts the working state into a durable checkpoint —
-distinct from autosave churn.
+`CreateNamedRevisionAction` checkpoints the current **working state** into a fresh
+`is_autosave = false` revision, makes it the head, prunes, and fires `DocumentRevisionCreated`
+(`restored = false`). It changes neither `state_version` nor `collab_epoch`, so it needs no
+precondition.
 
 ## Listing the version history
 
@@ -319,9 +336,9 @@ interface DocumentVersion {
 
 ## Restoring a prior version
 
-A restore is **append-only**: it never mutates the target version — it copies its content
-into a fresh version that becomes the new head, so the history stays an immutable, auditable
-log and the restore is itself a versioned event.
+A restore is **copy-forward**: it never mutates the source checkpoint — its content and Yjs
+state become the working state and a fresh checkpoint records `restored_from_revision_id`, so
+the history stays an immutable, auditable log.
 
 ::: code-group
 
@@ -329,7 +346,7 @@ log and the restore is itself a versioned event.
 const { restoreVersion } = useDocumentNode(nodeId)
 
 const restored = await restoreVersion(versionId)
-// the new head is a copy of versionId, labelled "Restored from vN"
+// the new head is a copy of versionId, labelled "Restored from #N"
 ```
 
 ```bash [HTTP]
@@ -349,22 +366,23 @@ app(RestoreDocumentRevisionAction::class)->execute(
 
 :::
 
-`RestoreDocumentRevisionAction` resolves the source version **bounded to the node** (a version
-id from another node never restores here), copies its content/yjs/format into a new committed
-row labelled `Restored from vN`, repoints the head, prunes, and fires `DocumentRevisionCreated`
-with `restored = true`.
+`RestoreDocumentRevisionAction` resolves the source checkpoint **within the node's own
+document** (a revision id of another document, or a file revision with the same id, never
+restores here), writes its payload as the working state (`state_version` +1, `collab_epoch` +1;
+optional `expectedStateVersion`), takes a checkpoint labelled `Restored from #N` with
+`restored_from_revision_id`, prunes, and fires `DocumentRevisionCreated` with `restored = true`.
 
 ## Pruning & retention
 
 The history is bounded by `config('vaulter-documents.revisions.limit')` — the number of most-recent
-versions kept (`0` = unlimited). Pruning runs **inside** each write transaction
-(`DocumentRevisionStoreRepository::prune`) after a create/named/restore.
+checkpoints kept (`0` = unlimited). Pruning runs **inside** the write transaction right after
+each checkpoint (`DocumentRevisionStoreRepository::prune`).
 
 ```php
 // config/vaulter-documents.php
 'revisions' => [
-    'limit' => 50,                       // stored versions per node before pruning (0 = ∞)
-    'autosave_debounce_seconds' => 30, // the server overwrite window described above
+    'limit' => 50,                          // stored checkpoints per document before pruning (0 = ∞)
+    'checkpoint_interval_seconds' => 300,   // autosave checkpoint interval described above
 ],
 ```
 
@@ -375,12 +393,12 @@ The prune **never** deletes:
 - the **current head** — always excluded.
 
 The newest `max` of the remaining (prunable) rows are kept; everything past that window is
-deleted. `versions.max` falls back to the legacy `max_versions` key if unset.
+deleted. `versions.max` falls back to the legacy `max_versions` key if unset. The head is also
+protected by the head foreign key on PostgreSQL/MySQL.
 
 ::: warning Pruning is permanent
-A pruned version is hard-deleted (the table is append-only with no soft-delete). Pin anything
-you must keep with a named, `keep_forever` version **before** it falls out of the `max`
-window.
+A pruned checkpoint is hard-deleted. Pin anything you must keep with a named,
+`keep_forever` checkpoint **before** it falls out of the `max` window.
 :::
 
 ## Events
@@ -390,8 +408,8 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Event | Fired by | Payload |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (v1), `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave | `node`, `version`, `created` (bool — appended vs overwritten), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (checkpoint #1), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave / collaboration store (only when something changed) | `node`, `version` (the head checkpoint after the save), `created` (bool — this save took a checkpoint), `actorId` |
 | `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Errors
@@ -401,6 +419,8 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 | `Exceptions\NotADocumentException` | A content/version operation targets a node that is not `kind=document`. |
 | `Documents\Exceptions\InvalidDocumentContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
 | `Exceptions\DocumentRevisionNotFoundException` | A restore targets a version id that does not belong to the node. |
+| `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` no longer matches (`412 document_state_mismatch`). |
+| `Documents\Exceptions\CollaborationEpochMismatchException` | A collaboration write from an older room generation (`409 collaboration_epoch_mismatch`). |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |
 
 ## Next

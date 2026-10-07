@@ -61,4 +61,14 @@ final class FileStoreRepository
 
         return $file;
     }
+
+    /**
+     * Drop the head pointer of a file about to be purged. MySQL checks the RESTRICT
+     * head FK while the purge cascade deletes the revisions, before the file row
+     * itself is gone; with no head there is nothing to check.
+     */
+    public function releaseHead(File $file): void
+    {
+        $file->forceFill(['current_revision_id' => null])->save();
+    }
 }

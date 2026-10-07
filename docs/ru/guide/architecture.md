@@ -225,7 +225,8 @@ final class ProjectDriveProfile extends ProfileProvider
 | `v_blobs` | CAS: по одной строке на `(scope, sha256)` с жизненным циклом `BlobStatus` ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | Пер-узловой ACL с наследованием + вето-запретом. |
 | `v_node_shares` | Bearer-ссылки (share) — хранение только хеша токена ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | Documents: история версий документа, привязанного к узлу (при установленном Documents). |
+| `v_documents` | Documents: агрегат документа узла `kind=document` — рабочее состояние, голова и валидаторы. |
+| `v_document_revisions` | Documents: неизменяемые чекпоинты документа (история). |
 | `v_upload_sessions` / `v_upload_parts` | Сессии резюмируемых загрузок. |
 | `v_activity` | Append-only лента активности. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | Слой надёжности транзакционного outbox + вебхуков. |

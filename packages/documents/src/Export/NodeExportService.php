@@ -10,7 +10,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
@@ -47,7 +47,7 @@ use Vaulter\Support\LoadTier;
 final class NodeExportService
 {
     public function __construct(
-        private readonly DocumentRevisionReadRepository $versions,
+        private readonly DocumentReadRepository $documents,
         private readonly FileHandlerRegistry $handlers,
         private readonly DocumentExporterRegistry $exporters,
         private readonly FileDescriptorFactory $descriptors,
@@ -120,9 +120,9 @@ final class NodeExportService
     }
 
     /**
-     * The version content shaped for the node's resolved handler (P0.5, kind-neutral):
-     * a rich-text handler's head decays to {@see TipTapContent} (never throws — see
-     * {@see DocumentRevision::tipTapContent()}); any other editable handler's head
+     * The working-state content shaped for the node's resolved handler (P0.5,
+     * kind-neutral): rich text decays to {@see TipTapContent} (never throws — see
+     * {@see DocumentRevision::tipTapContent()}); any other editable handler's content
      * is an opaque snapshot, returned verbatim as {@see OpaqueDocumentContent}. A
      * non-rich-text node used to decay to an EMPTY TipTap doc here and export as
      * blank content instead of being refused by the exporter's narrowing guard
@@ -131,7 +131,7 @@ final class NodeExportService
      */
     private function contentOf(Node $node): DocumentContent
     {
-        $head = $this->versions->head($node);
+        $head = $this->documents->forNode($node);
 
         if ($head === null) {
             throw NodeNotFoundException::forId($node->id);

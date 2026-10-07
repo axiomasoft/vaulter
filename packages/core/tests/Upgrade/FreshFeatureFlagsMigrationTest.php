@@ -24,7 +24,7 @@ it('migrates and rolls back a fresh installation with all module features disabl
     config()->set('vaulter.extra_data.enabled', false);
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
-    $entities = ['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'file_revision_blobs', 'node_grants', 'node_shares', 'node_comments', 'node_document_versions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'];
+    $entities = ['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'file_revision_blobs', 'node_grants', 'node_shares', 'node_comments', 'documents', 'document_revisions', 'upload_sessions', 'upload_parts', 'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries'];
     foreach ($entities as $entity) {
         expect($schema->hasTable(app(DatabaseConfig::class)->table($entity)))->toBeTrue($entity);
     }

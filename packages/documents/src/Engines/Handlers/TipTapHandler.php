@@ -12,8 +12,8 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * The built-in rich-text handler (master plan §7 level 1): the TipTap/Yjs editor
- * for document nodes whose payload is the structural TipTap JSON in
- * v_node_document_versions. It wraps the EXISTING TipTapContent / TipTapRenderer
+ * for document nodes whose payload is the structural TipTap JSON in their
+ * v_documents aggregate. It wraps the EXISTING TipTapContent / TipTapRenderer
  * subsystem — the node-attached document path reuses the same renderer, so HTML/MD
  * export and the editor stay one source of truth.
  *

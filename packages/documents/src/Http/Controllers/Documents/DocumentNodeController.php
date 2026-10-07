@@ -25,6 +25,7 @@ use Vaulter\Documents\Http\Requests\CreateDocumentNodeRequest;
 use Vaulter\Documents\Http\Requests\CreateNamedVersionRequest;
 use Vaulter\Documents\Http\Requests\UpdateDocumentContentRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
@@ -57,6 +58,7 @@ final class DocumentNodeController extends Controller
     public function __construct(
         private readonly NodeReadRepository $nodes,
         private readonly DocumentRevisionReadRepository $versions,
+        private readonly DocumentReadRepository $documents,
         private readonly AccessResolver $access,
         private readonly ProfilePolicy $profiles,
         private readonly CreateDocumentAction $createDocument,
@@ -98,13 +100,13 @@ final class DocumentNodeController extends Controller
     public function content(Request $request, Node $node): DocumentRevisionResource
     {
         $node = $this->exports->assertContentAvailable($this->contentContext($request, $node), $node);
-        $head = $this->versions->head($node);
+        $document = $this->documents->forNode($node);
 
-        if ($head === null) {
+        if ($document === null) {
             abort(404);
         }
 
-        return DocumentRevisionResource::make($head)->withContent();
+        return DocumentRevisionResource::make($document)->withContent();
     }
 
     /**
@@ -116,6 +118,7 @@ final class DocumentNodeController extends Controller
 
         $history = $this->versions
             ->history($node)
+            ->with('document')
             ->cursorPaginate(perPage: $this->perPage($request))
             ->withQueryString();
 
@@ -129,16 +132,16 @@ final class DocumentNodeController extends Controller
     {
         $this->guardDocument($request, Ability::Edit, $node);
 
-        $version = $this->updateContent->execute(new UpdateDocumentContentInput(
+        $result = $this->updateContent->execute(new UpdateDocumentContentInput(
             node: $node,
             content: $request->content(),
             yjsState: $request->yjsState(),
             actorId: $this->actorId($request),
         ));
 
-        // Autosave is semantically an UPDATE (200) even when it appended a fresh
-        // version row — the resource's wasRecentlyCreated 201 default is overridden.
-        return DocumentRevisionResource::make($version)->response()->setStatusCode(200);
+        // Autosave is an UPDATE of the working state (200) even when it also took a
+        // checkpoint.
+        return DocumentRevisionResource::make($result->document)->response()->setStatusCode(200);
     }
 
     /**

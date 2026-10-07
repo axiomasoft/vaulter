@@ -221,7 +221,8 @@ with one id strategy per install (`config('vaulter.ids.strategy')`, default `uli
 | `v_blobs` | The CAS: one row per `(scope, sha256)` with a `BlobStatus` lifecycle ([ADR-0006](/adr/0006-content-addressed-blobs-gc)). |
 | `v_node_grants` | The per-node ACL with inheritance + deny-veto. |
 | `v_node_shares` | Bearer share links — hash-only token storage ([ADR-0013](/adr/0013-two-sharing-channels)). |
-| `v_node_document_versions` | Documents: node-attached document version history (enabled with the Documents package). |
+| `v_documents` | Documents: the document aggregate of a `kind=document` node — working state, head and validators. |
+| `v_document_revisions` | Documents: immutable checkpoints of a document (history). |
 | `v_upload_sessions` / `v_upload_parts` | Resumable upload sessions. |
 | `v_activity` | The append-only activity feed. |
 | `v_outbox` / `v_webhook_endpoints` / `v_webhook_deliveries` | The transactional-outbox + webhook reliability layer. |

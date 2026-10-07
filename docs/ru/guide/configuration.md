@@ -188,7 +188,7 @@ CAS-бакет должен быть без версионирования: уд
 ```php
 // config/vaulter-documents.php
 'content' => ['max_size_kb' => 5120],
-'revisions' => ['limit' => 50, 'autosave_debounce_seconds' => 30],
+'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
 'exporters' => [
     'html' => \Vaulter\Documents\Export\HtmlExporter::class,
@@ -305,7 +305,6 @@ $connection = $database->connection();
 | `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
 | `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
 | `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
-| `vaulter.versions.autosave_debounce_seconds` | `vaulter-documents.revisions.autosave_debounce_seconds` |
 | `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
 | `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
 | `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
@@ -336,6 +335,9 @@ $connection = $database->connection();
 
 `tenant.column`, `drive.name_rules.no_separators_pattern` и `migrations.path` игнорируются
 с deprecation: имя колонки тенанта и правила разделителей теперь фиксированы.
+`versions.autosave_debounce_seconds` и `vaulter-documents.revisions.autosave_debounce_seconds`
+игнорируются так же: чекпоинты документа неизменяемы и следуют
+`vaulter-documents.revisions.checkpoint_interval_seconds` (PLAN2.D34).
 Оставьте `table_names` только на время обновления физических таблиц.
 
 Старую публикацию Media перенесите в `config/vaulter-media.php`. Нормализатор переводит

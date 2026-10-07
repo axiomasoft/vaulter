@@ -102,7 +102,7 @@ it('checks the public download availability hook before opening bytes and keeps 
     Storage::fake('local');
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('quarantined'), 'sample.txt'));
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $revision->forceFill(['scan_status' => 'pending'])->save();
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');

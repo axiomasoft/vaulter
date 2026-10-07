@@ -68,11 +68,13 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $count = 0;
     foreach (hostKeyFixtureColumns() as $entity => $columns) {
-        expect($db->table(app(DatabaseConfig::class)->table($entity))->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
+        // Document versions keep their ids as document revisions.
+        $table = app(DatabaseConfig::class)->table($entity === 'node_document_versions' ? 'document_revisions' : $entity);
+        expect($db->table($table)->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
             ->get(['id', ...$columns])->map(static fn ($row): array => (array) $row)->all())->toBe($before[$entity]);
         foreach ($columns as $column) {
             $metadata = $db->table('information_schema.columns')->where('table_schema', 'public')
-                ->where('table_name', app(DatabaseConfig::class)->table($entity))->where('column_name', $column)->first();
+                ->where('table_name', $table)->where('column_name', $column)->first();
             expect($metadata->data_type)->toBe('character varying')
                 ->and($metadata->character_maximum_length)->toBe(64);
             $count++;

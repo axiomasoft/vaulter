@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantLevel;
@@ -49,12 +48,10 @@ it('never lets an actor granted in one storage reach a node in another via can()
 it('carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)', function (): void {
     // The standalone baseline does not add a TENANT global scope on its
     // default models (one would break GC/reconcile/sweeper, which must see EVERY
-    // tenant). Node DOES carry Laravel's own SoftDeletingScope (framework
-    // infrastructure, unrelated to tenancy) — this asserts no ADDITIONAL scope
-    // rides along with it, so this fails the moment a tenant/owner scope is
+    // tenant). Node carries no global scope at all (purge is a real DELETE, so not
+    // even SoftDeletingScope), so this fails the moment a tenant/owner scope is
     // registered, before any isolation symptom would even be reachable.
-    expect(array_keys((new Node)->getGlobalScopes()))
-        ->toBe([SoftDeletingScope::class]);
+    expect(array_keys((new Node)->getGlobalScopes()))->toBe([]);
 });
 
 it('resolves a node by bare key with zero tenant/owner predicate applied (delegated tenancy, F-P1.9-02)', function (): void {

@@ -75,7 +75,7 @@ it('throws when releasing a version id that does not belong to the node', functi
     $nodeA = createDocumentForRelease();
     $nodeB = createDocumentForRelease();
 
-    $versionA = DocumentRevision::query()->where('node_id', $nodeA->getKey())->firstOrFail();
+    $versionA = DocumentTestHelpers::head($nodeA);
 
     expect(fn () => app(UpdateRevisionRetentionAction::class)->execute($nodeB->refresh(), $versionA->getKey()))
         ->toThrow(DocumentRevisionNotFoundException::class);

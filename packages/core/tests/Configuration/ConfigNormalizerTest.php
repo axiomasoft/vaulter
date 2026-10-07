@@ -115,6 +115,9 @@ it('deprecates ignored removed keys once', function (string $key, mixed $value, 
     ['vaulter.features.blobs', false, 'vaulter'],
     ['vaulter.features.versions', false, 'vaulter'],
     ['vaulter.features.document_versions', false, 'vaulter-documents'],
+    // Checkpoints replaced the in-place autosave debounce; its value means nothing now.
+    ['vaulter.versions.autosave_debounce_seconds', 30, 'vaulter-documents'],
+    ['vaulter-documents.revisions.autosave_debounce_seconds', 30, 'vaulter-documents'],
     ['vaulter.drive.name_rules.no_separators_pattern', '/custom/', 'vaulter-drive'],
 ]);
 
@@ -174,7 +177,6 @@ dataset('legacy configuration keys', [
     'vaulter.max_document_size_kb' => ['vaulter.max_document_size_kb', 'vaulter-documents.content.max_size_kb', 'custom', 'custom'],
     'vaulter.versions.max' => ['vaulter.versions.max', 'vaulter-documents.revisions.limit', 'custom', 'custom'],
     'vaulter.max_versions' => ['vaulter.max_versions', 'vaulter-documents.revisions.limit', 'custom', 'custom'],
-    'vaulter.versions.autosave_debounce_seconds' => ['vaulter.versions.autosave_debounce_seconds', 'vaulter-documents.revisions.autosave_debounce_seconds', 'custom', 'custom'],
     'vaulter.features.comments' => ['vaulter.features.comments', 'vaulter-documents.comments.enabled', false, false],
     'vaulter.features.collaboration' => ['vaulter.features.collaboration', 'vaulter-documents.collaboration.enabled', false, false],
     'vaulter.collaboration.driver' => ['vaulter.collaboration.driver', 'vaulter-documents.collaboration.driver', 'custom', 'custom'],

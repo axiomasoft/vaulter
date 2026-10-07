@@ -56,7 +56,7 @@ beforeEach(function (): void {
 
 it('file -> versions -> blob связаны', function (): void {
     expect($this->file->versions()->count())->toBe(1)
-        ->and($this->file->currentVersion->getKey())->toBe($this->version->getKey())
+        ->and($this->file->currentRevision->getKey())->toBe($this->version->getKey())
         ->and($this->version->blob->getKey())->toBe($this->blob->getKey());
 });
 

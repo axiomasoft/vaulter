@@ -27,8 +27,8 @@ final class FileRevisionReadRepository
     ) {}
 
     /**
-     * The current head version a file node points at (its current_revision_id), or
-     * null when the node is not a committed file.
+     * The head revision of a file node's aggregate (v_files.current_revision_id),
+     * or null when the node is not a committed file.
      */
     public function head(Node $node): ?FileRevision
     {
@@ -37,12 +37,12 @@ final class FileRevisionReadRepository
             $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
         }
 
-        return $node->currentVersion()->first();
+        return $node->file()->first()?->currentRevision()->first();
     }
 
     /**
      * A specific version of the node's file by the version's primary key, bounded
-     * to the node's own file_id so a foreign version id never resolves. Returns
+     * to the node's own file aggregate so a foreign version id never resolves. Returns
      * null when the node has no file or the version does not belong to it.
      */
     public function forNode(Node $node, int|string $versionId): ?FileRevision
@@ -51,14 +51,14 @@ final class FileRevisionReadRepository
             app(TenancyBoundary::class)->assertNode($node);
             $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
         }
-        $fileId = $node->file_id;
+        $file = $node->file()->first();
 
-        if ($fileId === null) {
+        if ($file === null) {
             return null;
         }
 
         return $this->query()
-            ->where('file_id', $fileId)
+            ->where('file_id', $file->getKey())
             ->whereKey($versionId)
             ->first();
     }

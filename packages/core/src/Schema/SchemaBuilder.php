@@ -38,6 +38,9 @@ final class SchemaBuilder
         return DB::connection(app(DatabaseConfig::class)->connection());
     }
 
+    /** The entity key the frozen 0.2 migration shells use for the document tables. */
+    private const string DOCUMENTS_SLOT = 'node_document_versions';
+
     /**
      * The base entity keys this builder owns, in dependency order. The generator
      * and createAll()/dropAll() iterate this list independently of runtime features.
@@ -60,7 +63,8 @@ final class SchemaBuilder
         'node_grants',
         'node_shares',
         'node_comments',
-        'node_document_versions',
+        'documents',
+        'document_revisions',
         'upload_sessions',
         'upload_parts',
         'activity',
@@ -99,6 +103,14 @@ final class SchemaBuilder
      */
     public function createTable(string $entity): void
     {
+        // The frozen 0.2 migration shells still name the document slot by its old
+        // entity key. Creating the aggregate there would be undone: the next frozen
+        // shell drops the excised DocVault v_documents table by that very name. The
+        // 2026_10_01_000005 migration creates the aggregate instead.
+        if ($entity === self::DOCUMENTS_SLOT) {
+            return;
+        }
+
         $ids = $this->ids();
 
         $this->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
@@ -117,7 +129,8 @@ final class SchemaBuilder
                 'node_grants' => $this->defineNodeGrants(table: $table, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, ids: $ids),
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
-                'node_document_versions' => $this->defineDocumentVersions(table: $table, ids: $ids),
+                'documents' => $this->defineDocuments(table: $table, ids: $ids),
+                'document_revisions' => $this->defineDocumentRevisions(table: $table, ids: $ids),
                 'upload_sessions' => $this->defineUploadSessions(table: $table, ids: $ids),
                 'upload_parts' => $this->defineUploadParts(table: $table, ids: $ids),
                 'activity' => $this->defineActivity(table: $table, ids: $ids),
@@ -137,6 +150,21 @@ final class SchemaBuilder
      */
     public function dropTable(string $entity): void
     {
+        if ($entity === self::DOCUMENTS_SLOT) {
+            $this->dropTable(entity: 'document_revisions');
+            $this->dropTable(entity: 'documents');
+
+            return;
+        }
+
+        // An aggregate and its revisions reference each other (head FK one way,
+        // owner FK the other), so the head FK goes first whichever side drops.
+        match ($entity) {
+            'documents', 'document_revisions' => $this->dropHeadForeignKey(aggregate: 'documents'),
+            'files', 'file_revisions' => $this->dropHeadForeignKey(aggregate: 'files'),
+            default => null,
+        };
+
         $this->schemaConnection()->dropIfExists(app(DatabaseConfig::class)->table($entity));
     }
 
@@ -182,6 +210,8 @@ final class SchemaBuilder
      * v_nodes — the unified folder|file|document adjacency tree (§2.2, the
      * centre). Always created; carries the panel discriminator, the soft-trash
      * triplet and the sibling-unique guard (added in afterCreate, driver-aware).
+     * Content heads live in the kind's own aggregate (v_files, v_documents), never
+     * on the node: one shared pointer column cannot say which table it points into.
      */
     private function defineNodes(Blueprint $table, IdStrategy $ids): void
     {
@@ -196,8 +226,6 @@ final class SchemaBuilder
         $table->string('mime_type', 191)->nullable()->index();
         $table->string('extension', 32)->nullable();
         $table->bigInteger('size_bytes')->default(0);
-        $ids->reference(table: $table, column: 'current_version_id', nullable: true);
-        $ids->reference(table: $table, column: 'file_id', nullable: true);
         $table->integer('position')->default(0);
         $table->boolean('is_pinned')->default(false);
         $table->boolean('inherit_grants')->default(true);
@@ -205,14 +233,13 @@ final class SchemaBuilder
         HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false);
         $this->extraData(table: $table);
 
-        // Soft-trash triplet (D17) — distinct from the permanent soft-delete below.
+        // Soft-trash triplet (D17); purge is a real DELETE, there is no tombstone.
         $table->timestamp('trashed_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'trashed_by', nullable: true, index: false);
         $ids->reference(table: $table, column: 'trashed_from_parent_id', nullable: true);
 
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
-        $table->softDeletes();
         $table->timestamps();
 
         // Hot listing indexes (§2.2 index plan). (drive_id, parent_id) is NOT
@@ -334,18 +361,31 @@ final class SchemaBuilder
         $table->string('original_name');
         $table->string('status', 12)->default('pending')->index();
         $table->boolean('keep_forever')->default(false);
+        $ids->reference(table: $table, column: 'restored_from_revision_id', nullable: true);
         $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
 
         $table->unique(['file_id', 'number'], $table->getTable().'_no_uniq');
+        // The target of v_files' composite head FK: a head must be a revision of
+        // that very file, not merely some revision.
+        $table->unique(['id', 'file_id'], $table->getTable().'_id_file_uniq');
         $table->index(['file_id', 'status']);
 
         $table->foreign('file_id')
             ->references('id')
             ->on(app(DatabaseConfig::class)->table('files'))
             ->cascadeOnDelete();
+
+        // Restore is copy-forward: the new revision remembers its source until
+        // that source is pruned.
+        // Named explicitly: the default name outgrows MySQL's 64 characters under a
+        // longer table prefix.
+        $table->foreign('restored_from_revision_id', $table->getTable().'_restored_fk')
+            ->references('id')
+            ->on($table->getTable())
+            ->nullOnDelete();
     }
 
     /**
@@ -538,62 +578,104 @@ final class SchemaBuilder
     }
 
     /**
-     * v_node_document_versions — the NODE-attached, append-only document version
-     * (master plan §2.5 / M4a). Gated on 'document_versions'. DISTINCT from the legacy
-     * document_id-attached v_document_versions (that table is untouched); this one
-     * hangs off a kind=document node via node_id (cascade). version_no is monotonic
-     * per node (unique). content is the TipTap/ProseMirror JSON projection; yjs_state
-     * is the binary Yjs CRDT update (the M4b collaboration source of truth), with
-     * yjs_state_size caching its length. Append-only — created_at only, no
-     * updated_at / soft-delete.
+     * v_documents — the 1:1 aggregate of a kind=document node. It holds the WORKING
+     * state (the latest content and Yjs state every editor sees) apart from the
+     * immutable checkpoints in v_document_revisions, so autosave never rewrites
+     * history and the head checkpoint can be cached by id. state_version and
+     * collab_epoch are the content validators; they are independent of
+     * v_nodes.sequence, so renaming a document never invalidates an editor.
+     *
+     * The composite head FK (current_revision_id, id) → v_document_revisions(id,
+     * document_id) is added in afterCreate('document_revisions'): the revisions
+     * table does not exist yet when this one is created.
      */
-    private function defineDocumentVersions(Blueprint $table, IdStrategy $ids): void
+    private function defineDocuments(Blueprint $table, IdStrategy $ids): void
     {
         $ids->key(table: $table);
         $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'node_id');
 
-        $table->integer('version_no');
+        $table->string('type', 64);
+        $table->integer('schema_version');
+        $ids->reference(table: $table, column: 'current_revision_id', nullable: true);
+        // Monotonic: pruning old checkpoints never hands a number out twice.
+        $table->integer('revision_count')->default(0);
+        $this->counterColumn(table: $table, column: 'collab_epoch');
+        $this->counterColumn(table: $table, column: 'state_version');
+        $this->counterColumn(table: $table, column: 'checkpoint_state_version');
 
-        // The TipTap/ProseMirror snapshot (the structural JSON projection). jsonb on
-        // Postgres (the gin jsonb_path_ops index below requires it — a plain json column
-        // is rejected by that operator class); maps to json on MySQL and text on SQLite.
+        // The canonical JSON projection of the working state. jsonb on Postgres,
+        // json on MySQL, text on SQLite.
         $table->jsonb('content')->nullable();
-
-        // The binary Yjs CRDT update — the realtime source of truth (M4b). bytea on
-        // Postgres, longBlob on MySQL (§2.5 portability note); yjs_state_size caches
-        // its byte length so a list never streams the blob to size it.
+        $table->char('content_hash', 64)->nullable();
+        $table->integer('content_size')->nullable();
         $this->binaryColumn(table: $table, column: 'yjs_state');
         $table->integer('yjs_state_size')->nullable();
+        $table->timestamp('last_checkpoint_at')->nullable();
 
-        // No DB default (VLT-CANON P0.4/L3): the writing engine stamps its own format
-        // label explicitly — a silent 'tiptap' default protected exactly the kind of
-        // stale mime→editor association H.5 exists to prevent (D4/D12).
-        $table->string('format', 16);
+        HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
+        HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
+        $table->timestamps();
+
+        $name = $table->getTable();
+
+        $table->unique('node_id', $name.'_node_uniq');
+        // Lets doctor list documents of types no installed package registers.
+        $table->index('type', $name.'_type_idx');
+
+        $table->foreign('node_id')
+            ->references('id')
+            ->on($this->table('nodes'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * v_document_revisions — immutable checkpoints of a document's working state.
+     * After INSERT only keep_forever changes; a restore copies a checkpoint forward
+     * into a new one and records restored_from_revision_id. number is monotonic per
+     * document (unique). Ids survive the 0.2 upgrade, so activity and outbox
+     * payloads that name a revision id stay valid.
+     */
+    private function defineDocumentRevisions(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+        $this->tenant(table: $table);
+        $ids->reference(table: $table, column: 'document_id');
+        $table->integer('number');
+        $table->integer('schema_version');
+
+        $table->jsonb('content')->nullable();
         $table->char('content_hash', 64)->nullable();
-        $table->string('snapshot_label')->nullable();
-        $table->boolean('is_autosave')->default(false);
-        $table->string('status', 12)->default('committed')->index();
-        $table->boolean('keep_forever')->default(false);
+        $table->integer('content_size')->nullable();
+        $this->binaryColumn(table: $table, column: 'yjs_state');
+        $table->integer('yjs_state_size')->nullable();
+        // The working state version this checkpoint captured.
+        $this->counterColumn(table: $table, column: 'state_version');
 
-        $this->extraData(table: $table);
+        $table->string('label')->nullable();
+        $table->boolean('is_autosave')->default(false);
+        $table->boolean('keep_forever')->default(false);
+        $table->string('status', 12)->default('committed');
+        $ids->reference(table: $table, column: 'restored_from_revision_id', nullable: true);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
 
         $name = $table->getTable();
 
-        // version_no is monotonic per node — the unique index is the append-only
-        // backbone (two concurrent commits serialise on it).
-        $table->unique(['node_id', 'version_no'], $name.'_no_uniq');
+        $table->unique(['document_id', 'number'], $name.'_no_uniq');
+        // The target of the composite head FK on v_documents.
+        $table->unique(['id', 'document_id'], $name.'_id_doc_uniq');
+        $table->index(['document_id', 'is_autosave', 'created_at'], $name.'_history_idx');
 
-        // The autosave-vs-named history cursor (§2.5): the head autosave lookup and
-        // the named-version listing both scan this.
-        $table->index(['node_id', 'is_autosave', 'created_at'], $name.'_history_idx');
-
-        $table->foreign('node_id')
+        $table->foreign('document_id')
             ->references('id')
-            ->on(app(DatabaseConfig::class)->table('nodes'))
+            ->on($this->table('documents'))
             ->cascadeOnDelete();
+
+        $table->foreign('restored_from_revision_id', $name.'_restored_fk')
+            ->references('id')
+            ->on($name)
+            ->nullOnDelete();
     }
 
     /**
@@ -933,8 +1015,13 @@ final class SchemaBuilder
             $this->addShareExpiryIndex(table: app(DatabaseConfig::class)->table('node_shares'));
         }
 
-        if ($entity === 'node_document_versions') {
-            $this->addDocumentContentGinIndex(table: app(DatabaseConfig::class)->table('node_document_versions'));
+        if ($entity === 'file_revisions') {
+            $this->addHeadForeignKey(aggregate: 'files', revisions: 'file_revisions', owner: 'file_id');
+        }
+
+        if ($entity === 'document_revisions') {
+            $this->addDocumentContentGinIndex(table: $this->table('document_revisions'));
+            $this->addHeadForeignKey(aggregate: 'documents', revisions: 'document_revisions', owner: 'document_id');
         }
 
         if ($entity === 'upload_sessions') {
@@ -975,10 +1062,10 @@ final class SchemaBuilder
     }
 
     /**
-     * The OPTIONAL gin(content jsonb_path_ops) index for document-version content
+     * The OPTIONAL gin(content jsonb_path_ops) index for document-revision content
      * containment queries (§2.5). Postgres-only (gin + jsonb); on SQLite/MySQL
      * content is a plain json column and the index is skipped — the history is read
-     * by (node_id, version_no) / (node_id, is_autosave), all btree-covered.
+     * by (document_id, number) / (document_id, is_autosave), all btree-covered.
      */
     private function addDocumentContentGinIndex(string $table): void
     {
@@ -1082,13 +1169,13 @@ final class SchemaBuilder
     }
 
     /**
-     * Sibling-name uniqueness that survives soft-delete AND soft-trash (§2.2).
+     * Sibling-name uniqueness among active nodes (§2.2).
      *
      *  - PostgreSQL / SQLite: a PARTIAL unique index on (parent_id, lower(name))
-     *    WHERE deleted_at IS NULL AND trashed_at IS NULL — a trashed or
-     *    soft-deleted duplicate name is allowed, a live one is rejected.
+     *    WHERE trashed_at IS NULL — a trashed duplicate name is allowed, a live
+     *    one is rejected.
      *  - MySQL: no partial indexes, so a functional key part folds active liveness
-     *    into a value (NULL when trashed/deleted, which is exempt from UNIQUE).
+     *    into a value (NULL when trashed, which is exempt from UNIQUE).
      *    Keeping the expression inside the index is essential: a stored generated
      *    column based on parent_id is incompatible with its cascading FK.
      */
@@ -1102,7 +1189,7 @@ final class SchemaBuilder
         if ($driver === 'pgsql' || $driver === 'sqlite') {
             $this->dbConnection()->statement(
                 sprintf('CREATE UNIQUE INDEX %s ON %s (parent_id, lower(name)) ', $name, $table).
-                'WHERE deleted_at IS NULL AND trashed_at IS NULL',
+                'WHERE trashed_at IS NULL',
             );
 
             return;
@@ -1111,7 +1198,7 @@ final class SchemaBuilder
         if ($driver === 'mysql') {
             $this->dbConnection()->statement(
                 sprintf('CREATE UNIQUE INDEX `%s` ON `%s` ', $name, $table).
-                '(`parent_id`, ((CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL THEN LOWER(`name`) ELSE NULL END)))',
+                '(`parent_id`, ((CASE WHEN `trashed_at` IS NULL THEN LOWER(`name`) ELSE NULL END)))',
             );
 
             return;
@@ -1120,7 +1207,7 @@ final class SchemaBuilder
         if ($driver === 'mariadb') {
             $this->dbConnection()->statement(
                 sprintf('ALTER TABLE `%s` ADD COLUMN `sibling_active` VARCHAR(512) ', $table).
-                'GENERATED ALWAYS AS (CASE WHEN `deleted_at` IS NULL AND `trashed_at` IS NULL '.
+                'GENERATED ALWAYS AS (CASE WHEN `trashed_at` IS NULL '.
                 "THEN CONCAT(COALESCE(`parent_id`, ''), ':', LOWER(`name`)) ELSE NULL END) STORED",
             );
             $this->dbConnection()->statement(sprintf('ALTER TABLE `%s` ADD UNIQUE INDEX `%s` (`sibling_active`)', $table, $name));
@@ -1234,6 +1321,70 @@ final class SchemaBuilder
         }
 
         $table->binary($column)->nullable();
+    }
+
+    /**
+     * A signed BIGINT counter (0..2^63-1) with the same contract as
+     * v_nodes.sequence: the CHECK rejects negatives on every driver, and SQLite
+     * additionally rejects REAL values its overflow promotion would produce.
+     */
+    private function counterColumn(Blueprint $table, string $column): void
+    {
+        $type = $this->dbConnection()->getDriverName() === 'sqlite' ? "typeof({$column}) = 'integer' AND " : '';
+        $table->rawColumn($column, "BIGINT CHECK({$type}{$column} >= 0)")->default(0);
+    }
+
+    /**
+     * The composite head FK (current_revision_id, id) → revisions(id, <owner>): a
+     * head can only name a revision of the same aggregate, and RESTRICT keeps
+     * pruning from deleting it. SQLite cannot add a constraint to an existing
+     * table, so there the Actions (and the head integrity tests) hold the
+     * invariant alone.
+     */
+    private function addHeadForeignKey(string $aggregate, string $revisions, string $owner): void
+    {
+        $connection = $this->dbConnection();
+        $table = $this->table($aggregate);
+        $name = $table.'_head_fk';
+
+        if ($connection->getDriverName() === 'sqlite'
+            || !$this->schemaConnection()->hasColumn($table, 'current_revision_id')
+            || $this->hasForeignKey($table, $name)) {
+            return;
+        }
+
+        $grammar = $connection->getQueryGrammar();
+        $connection->statement(sprintf(
+            'ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s, %s) REFERENCES %s (%s, %s) ON DELETE RESTRICT',
+            $grammar->wrapTable($table),
+            $grammar->wrap($name),
+            $grammar->wrap('current_revision_id'),
+            $grammar->wrap('id'),
+            $grammar->wrapTable($this->table($revisions)),
+            $grammar->wrap('id'),
+            $grammar->wrap($owner),
+        ));
+    }
+
+    private function dropHeadForeignKey(string $aggregate): void
+    {
+        $table = $this->table($aggregate);
+        $name = $table.'_head_fk';
+
+        if ($this->schemaConnection()->hasTable($table) && $this->hasForeignKey($table, $name)) {
+            $this->schemaConnection()->table($table, static fn (Blueprint $blueprint) => $blueprint->dropForeign($name));
+        }
+    }
+
+    private function hasForeignKey(string $table, string $name): bool
+    {
+        foreach ($this->schemaConnection()->getForeignKeys($table) as $key) {
+            if ($key['name'] === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1431,6 +1582,11 @@ final class SchemaBuilder
                 $this->schemaConnection()->table($name, static fn (Blueprint $table) => $table->dropColumn($present));
             }
         }
+    }
+
+    private function table(string $entity): string
+    {
+        return app(DatabaseConfig::class)->table($entity);
     }
 
     private function ids(): IdStrategy

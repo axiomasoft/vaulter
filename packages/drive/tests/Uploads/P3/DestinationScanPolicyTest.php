@@ -34,12 +34,12 @@ it('SEC-R03 COPY owns fresh admission and clean evidence without copying a sourc
     $stream = UploadTestHelpers::streamFor('copy bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $source = $node->currentVersion()->firstOrFail();
+    $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $source->scanObligations()->firstOrFail();
     $attempt = app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now'));
     expect(app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue();
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt'));
-    $target = $copy->currentVersion()->firstOrFail();
+    $target = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($target->scan_admission_sequence)->toBeGreaterThan($source->scan_admission_sequence)
         ->and($target->scan_status)->toBe('clean')->and($target->scanObligations()->count())->toBe(1)
         ->and($target->scanEvidence()->first()->reused_from_id)->not->toBeNull();
@@ -53,14 +53,14 @@ it('SEC-R03 exempt legacy COPY receives required destination work and fresh admi
     $stream = UploadTestHelpers::streamFor('legacy copy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $source = $node->currentVersion()->firstOrFail();
+    $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'first');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt'));
-    $target = $copy->currentVersion()->firstOrFail();
+    $target = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($source->scanObligations()->count())->toBe(0)->and($target->scan_admission_sequence)->toBe(2)
         ->and($target->scan_status)->toBe('pending')->and($target->scanObligations()->count())->toBe(1)
         ->and($target->scanEvidence()->count())->toBe(0);
@@ -74,7 +74,7 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
     $stream = UploadTestHelpers::streamFor('historical');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $source = $node->currentVersion()->firstOrFail();
+    $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'first');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -84,7 +84,7 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
         new RestoreFileRevisionInput($node, $source));
     expect($target->id)->not->toBe($source->id)->and($target->scan_admission_sequence)->toBe(2)
         ->and($target->scan_status)->toBe('pending')->and($target->scanObligations()->count())->toBe(1)
-        ->and($node->refresh()->current_version_id)->toBe($target->id);
+        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($target->id);
 });
 
 it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomically', function (): void {
@@ -94,7 +94,7 @@ it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomicall
     $stream = UploadTestHelpers::streamFor('infected legacy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $node->currentVersion()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
+    $node->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
     expect(fn () => app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt')))
         ->toThrow(ContentQuarantinedException::class);
     $stream = UploadTestHelpers::streamFor('infected legacy');

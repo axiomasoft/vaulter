@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Symfony\Component\Process\ExecutableFinder;
 use Vaulter\Configuration\DatabaseConfig;
@@ -27,6 +28,29 @@ afterEach(function (): void {
 function nodesCleanupMigration(): object
 {
     return require __DIR__.'/../../database/migrations/2026_10_01_000006_nodes_cleanup.php';
+}
+
+/**
+ * Replays #6 after the whole chain. The released #6 reads v_nodes.deleted_at, which
+ * exists while the chain runs (№5 provides it) and is dropped by 2026_10_07_000001,
+ * so the replay gets the column for its duration.
+ */
+function replayNodesCleanup(): void
+{
+    $schema = app(VaulterDatabase::class)->connection()->getSchemaBuilder();
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+    $added = !$schema->hasColumn($nodes, 'deleted_at');
+    if ($added) {
+        $schema->table($nodes, static fn (Blueprint $table) => $table->timestamp('deleted_at')->nullable());
+    }
+
+    try {
+        nodesCleanupMigration()->up();
+    } finally {
+        if ($added) {
+            $schema->table($nodes, static fn (Blueprint $table) => $table->dropColumn('deleted_at'));
+        }
+    }
 }
 
 it('moves every second root under its drive root, logs each move and adds the root index', function (): void {
@@ -75,7 +99,7 @@ it('moves every second root under its drive root, logs each move and adds the ro
     $before = $db->table($nodes)->orderBy('id')->get()->all();
     $activityCount = $db->table(app(DatabaseConfig::class)->table('activity'))->count();
 
-    nodesCleanupMigration()->up();
+    replayNodesCleanup();
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
 
     expect($db->table($nodes)->orderBy('id')->get()->all())->toEqual($before)
@@ -101,7 +125,7 @@ it('drops the root index on rollback and keeps the repaired tree', function (): 
     expect($db->getSchemaBuilder()->hasIndex($nodes, $nodes.'_root_uniq'))->toBeFalse()
         ->and($db->table($nodes)->where('id', 40)->value('name'))->toBe('Projects (legacy 1)');
 
-    nodesCleanupMigration()->up();
+    replayNodesCleanup();
 
     expect($db->getSchemaBuilder()->hasIndex($nodes, $nodes.'_root_uniq'))->toBeTrue();
 });

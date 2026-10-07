@@ -6,7 +6,7 @@ outline: deep
 
 # Realtime Collaboration
 
-Vaulter edits **document nodes** (`kind = document`, content on `v_node_document_versions`)
+Vaulter edits **document nodes** (`kind = document`, content in the `v_documents` aggregate)
 collaboratively in realtime. The conflict-free merge is powered by **Yjs** — the binary
 CRDT state is the **source of truth**; the TipTap JSON is a derived projection. The
 transport sits behind the [`CollaborationDriver`](#drivers) contract, with two
@@ -135,7 +135,7 @@ With `driver = hocuspocus` the client connects to the hub's WebSocket URL presen
 - **`onAuthenticate`** → `POST {laravel}/api/vaulter/collab/authenticate` — Laravel
   resolves the user's ability on the node and answers `{allowed, readOnly, user}`.
 - **`onStoreDocument`** (debounced by the hub) → `POST {laravel}/api/vaulter/collab/store`
-  — the base64 binary Yjs state is persisted into `v_node_document_versions.yjs_state`.
+  — the base64 binary Yjs state is persisted into the working state `v_documents.yjs_state`.
 
 Vaulter mints the JWT with `firebase/php-jwt` (HS256, signed with `VAULTER_COLLAB_SECRET`).
 

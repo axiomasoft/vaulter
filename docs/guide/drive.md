@@ -119,7 +119,7 @@ Every folder, file and document is a row in `v_nodes`, discriminated by its
 |---|---|---|
 | `NodeKind::Folder` | `folder` | — (a virtual directory, holds children) |
 | `NodeKind::File` | `file` | `v_files` / `v_file_versions` / `v_blobs` |
-| `NodeKind::Document` | `document` | `v_node_document_versions` (TipTap/Yjs) |
+| `NodeKind::Document` | `document` | `v_documents` + `v_document_revisions` (TipTap/Yjs) |
 | `NodeKind::Shortcut` | `shortcut` | a pointer to another node (`shortcut_target_id`) |
 
 This page covers folders and files through the `DriveHandle`. Document nodes

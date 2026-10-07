@@ -7,8 +7,8 @@ namespace Vaulter\Documents\Data\Revisions;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Command for CreateNamedRevisionAction (§2.5 / M4a): snapshot a document node's
- * current head content as a NAMED (non-autosave) version with a label. keepForever
+ * Command for CreateNamedRevisionAction (§2.5 / M4a): checkpoint a document's
+ * current working state as a NAMED (non-autosave) revision with a label. keepForever
  * pins the snapshot out of the prune window.
  */
 final readonly class CreateNamedRevisionInput
@@ -18,6 +18,5 @@ final readonly class CreateNamedRevisionInput
         public string $label,
         public bool $keepForever = false,
         public int|string|null $actorId = null,
-        public ?int $expectedSequence = null,
     ) {}
 }

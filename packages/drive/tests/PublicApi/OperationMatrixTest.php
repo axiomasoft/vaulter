@@ -161,7 +161,7 @@ it('enforces the complete public operation source permission matrix', function (
                 break;
             case 'addRevision':
             case 'restoreRevision':
-                expect($result->number)->toBe(2)->and($source->refresh()->current_version_id)->toBe($result->id);
+                expect($result->number)->toBe(2)->and($source->refresh()->file()->value('current_revision_id'))->toBe($result->id);
                 break;
             case 'trash':
                 expect($result->id)->toBe($source->id)->and($source->refresh()->trashed_at)->not->toBeNull();
@@ -170,7 +170,7 @@ it('enforces the complete public operation source permission matrix', function (
                 expect($result->id)->toBe($source->id)->and($source->refresh()->trashed_at)->toBeNull();
                 break;
             case 'purge':
-                expect(Node::query()->withTrashed()->whereKey($source->id)->exists())->toBeFalse();
+                expect(Node::query()->whereKey($source->id)->exists())->toBeFalse();
                 break;
         }
     } else {
@@ -290,9 +290,9 @@ it('empty skips unauthorized roots and deletes only the independently authorized
         $this->system->nodes()->trash($node);
     }
     expect($this->actor->trash()->empty())->toBe(1)
-        ->and(Node::query()->withTrashed()->whereKey($hidden->id)->exists())->toBeTrue()
-        ->and(Node::query()->withTrashed()->whereKey($visible->id)->exists())->toBeTrue()
-        ->and(Node::query()->withTrashed()->whereKey($allowed->id)->exists())->toBeFalse();
+        ->and(Node::query()->whereKey($hidden->id)->exists())->toBeTrue()
+        ->and(Node::query()->whereKey($visible->id)->exists())->toBeTrue()
+        ->and(Node::query()->whereKey($allowed->id)->exists())->toBeFalse();
 });
 
 it('read blocks legacy infection and uncommitted content after Download authorization', function (string $scanStatus): void {
@@ -320,7 +320,7 @@ it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extr
     $result = $this->system->files()->upload(UploadSource::fromString('new', $incoming), new UploadOptions(onConflict: OnNameConflict::AddRevision));
     expect($result->id)->toBe($node->id)
         ->and($result->sequence)->toBe(1)
-        ->and($result->currentVersion->sha256)->toBe(hash('sha256', 'new'))
+        ->and($result->file->currentRevision->sha256)->toBe(hash('sha256', 'new'))
         ->and(Node::query()->count())->toBe(2)
         ->and(FileRevision::query()->count())->toBe(2)
         ->and($this->system->model()->used_bytes)->toBe(3);

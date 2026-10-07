@@ -105,9 +105,12 @@ final class ConfigNormalizer
         if (array_key_exists('vaulter-drive', $packageDefaults)) {
             $this->normalizeUploadLimit($config, $original, $defaults);
         }
-        foreach (['vaulter.tenant.column', 'vaulter.migrations.path', 'vaulter.features.blobs', 'vaulter.features.versions', 'vaulter.features.document_versions', 'vaulter.drive.name_rules.no_separators_pattern'] as $key) {
+        // The autosave debounce rewrote the head revision in place; checkpoints are
+        // immutable now and taken on their own interval, so its value has no meaning
+        // to carry over to checkpoint_interval_seconds.
+        foreach (['vaulter.tenant.column', 'vaulter.migrations.path', 'vaulter.features.blobs', 'vaulter.features.versions', 'vaulter.features.document_versions', 'vaulter.versions.autosave_debounce_seconds', 'vaulter-documents.revisions.autosave_debounce_seconds', 'vaulter.drive.name_rules.no_separators_pattern'] as $key) {
             $owner = match ($key) {
-                'vaulter.features.document_versions' => 'vaulter-documents',
+                'vaulter.features.document_versions', 'vaulter.versions.autosave_debounce_seconds', 'vaulter-documents.revisions.autosave_debounce_seconds' => 'vaulter-documents',
                 'vaulter.drive.name_rules.no_separators_pattern' => 'vaulter-drive',
                 default => 'vaulter',
             };
@@ -195,7 +198,6 @@ final class ConfigNormalizer
             'vaulter.max_document_size_kb' => 'vaulter-documents.content.max_size_kb',
             'vaulter.versions.max' => 'vaulter-documents.revisions.limit',
             'vaulter.max_versions' => 'vaulter-documents.revisions.limit',
-            'vaulter.versions.autosave_debounce_seconds' => 'vaulter-documents.revisions.autosave_debounce_seconds',
             'vaulter.features.comments' => 'vaulter-documents.comments.enabled',
             'vaulter.features.collaboration' => 'vaulter-documents.collaboration.enabled',
             'vaulter.collaboration.driver' => 'vaulter-documents.collaboration.driver',

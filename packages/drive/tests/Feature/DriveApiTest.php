@@ -106,7 +106,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
     expect(Node::query()->find($copy))->toBeNull()
-        ->and(Node::withTrashed()->find($copy))->toBeNull();
+        ->and(Node::query()->find($copy))->toBeNull();
 });
 
 it('dedups two identical uploads onto a shared blob', function (): void {
@@ -130,7 +130,7 @@ it('uploads a new version onto an existing file node', function (): void {
         ->assertCreated()
         ->json('data.id');
 
-    $firstVersion = Node::query()->find($node)->current_version_id;
+    $firstVersion = Node::query()->find($node)->file()->value('current_revision_id');
 
     $this->postJson($base, [
         'node_id' => $node,
@@ -141,7 +141,7 @@ it('uploads a new version onto an existing file node', function (): void {
 
     $reloaded = Node::query()->find($node);
 
-    expect($reloaded->current_version_id)->not->toEqual($firstVersion)
+    expect($reloaded->file()->value('current_revision_id'))->not->toEqual($firstVersion)
         ->and($reloaded->size_bytes)->toBe(9);
 });
 
@@ -214,7 +214,7 @@ it('streams a specific historical version', function (): void {
     $node = $this->postJson($base, ['file' => UploadedFile::fake()->createWithContent('h.txt', 'first')])
         ->json('data.id');
 
-    $firstVersionId = Node::query()->find($node)->current_version_id;
+    $firstVersionId = Node::query()->find($node)->file()->value('current_revision_id');
 
     $this->postJson($base, ['node_id' => $node, 'file' => UploadedFile::fake()->createWithContent('h.txt', 'second')])
         ->assertCreated();

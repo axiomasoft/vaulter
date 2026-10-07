@@ -9,7 +9,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
 return [
     'content' => ['max_size_kb' => 5120],
-    'revisions' => ['limit' => 50, 'autosave_debounce_seconds' => 30],
+    'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
     'comments' => ['enabled' => true],
     'exporters' => ['html' => HtmlExporter::class, 'markdown' => MarkdownExporter::class],
     'tiptap' => [

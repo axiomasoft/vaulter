@@ -162,10 +162,8 @@ final class ShareResolver
             return null;
         }
 
-        // Trashed (soft-trash) or soft-deleted nodes are never publicly reachable.
-        // trashed() is the Laravel SoftDeletes flag (deleted_at set); trashed_at is
-        // the distinct Drive soft-trash column (§2.10).
-        if ($node->trashed_at !== null || $node->trashed()) {
+        // Trashed nodes are never publicly reachable; purged ones no longer exist.
+        if ($node->trashed_at !== null) {
             return null;
         }
 

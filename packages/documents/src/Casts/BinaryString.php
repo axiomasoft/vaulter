@@ -24,13 +24,13 @@ use Illuminate\Database\Eloquent\Model;
  *     uniformly across drivers keeps the on-disk format identical everywhere — a row
  *     is driver-portable, and there is no per-driver branch to drift.
  *
- * The cached byte length (e.g. v_node_document_versions.yjs_state_size) is computed by
- * the writing Action from the RAW value before this cast encodes it, so it stays the
+ * The cached byte length (yjs_state_size) is computed by DocumentStateWriter from
+ * the RAW value before this cast encodes it, so it stays the
  * true payload size regardless of the at-rest base64 representation.
  *
- * Used for v_node_document_versions.yjs_state — the binary Yjs CRDT state that is the
- * M4b collaboration source of truth (§2.5), read back through Eloquent by the restore /
- * named-version copy actions. No code reads the column out of band (the hub persists it
+ * Used for v_documents.yjs_state and v_document_revisions.yjs_state — the binary Yjs
+ * CRDT state that is the M4b collaboration source of truth (§2.5), read back through
+ * Eloquent by the restore path and checkpoint capture. No code reads the column out of band (the hub persists it
  * via the collab/store webhook and never queries it directly).
  *
  * @implements CastsAttributes<string|null, string|null>

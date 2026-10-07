@@ -4,45 +4,42 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
-use Illuminate\Support\Carbon;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
-use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Write a document node's content — the AUTOSAVE path (§2.5 / M4a). Within the
- * autosave-debounce window of the head AUTOSAVE version the existing row is UPDATED
- * in place (no new history entry), so a typing session does not flood the history;
- * outside the window (or when the head is a committed/named version) a fresh
- * is_autosave version is appended and the head repoints to it.
+ * Write a document node's content — the autosave path (§2.5 / M4a). The working
+ * state is replaced; an autosave checkpoint is taken only when the checkpoint
+ * interval has passed, so a typing session does not flood the history and no
+ * stored checkpoint is ever rewritten. Replacing the JSON of a document that has
+ * Yjs state drops that state and moves the collaboration epoch, so open rooms
+ * reload instead of merging their old history back.
  *
- * One outer transaction; prune runs inside it (respecting keep_forever and the
- * current head); a single after-commit event carries whether a row was created.
+ * One outer transaction under T → N → D locks; a single after-commit event when the
+ * write changed something.
  */
 final readonly class UpdateDocumentContentAction
 {
     public function __construct(
-        private DocumentRevisionReadRepository $read,
-        private DocumentRevisionStoreRepository $store,
-        private NodeStoreRepository $nodes,
+        private DocumentReadRepository $documents,
+        private DocumentStateWriter $writer,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
         private TreeGuard $tree,
-        private NodeSequence $sequence,
     ) {}
 
-    public function execute(UpdateDocumentContentInput $data): DocumentRevision
+    public function execute(UpdateDocumentContentInput $data): DocumentStateResult
     {
         $node = $data->node;
 
@@ -54,7 +51,7 @@ final readonly class UpdateDocumentContentAction
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
-        return $this->database->transaction(function () use ($node, $data): DocumentRevision {
+        return $this->database->transaction(function () use ($node, $data): DocumentStateResult {
             $driveId = $node->getRawOriginal('drive_id');
             $nodeId = $node->getRawOriginal($node->getKeyName());
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
@@ -70,100 +67,27 @@ final readonly class UpdateDocumentContentAction
                 throw NotADocumentException::forNode($nodeId);
             }
             $node = $this->tree->sync($node, $current);
-            $this->sequence->assertExpected(locked: $node, expected: $data->expectedSequence);
-            $head = $this->read->head($node);
+            $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
+            $document->setRelation('node', $node);
 
-            if ($head !== null && $this->shouldOverwrite($head)) {
-                $payload = $this->payload($data);
-                if ($head->content == $payload['content'] && $head->content_hash === $payload['content_hash']
-                    && $head->yjs_state === $payload['yjs_state'] && $head->yjs_state_size === $payload['yjs_state_size']) {
-                    return $head;
-                }
-                $version = $this->store->update($head, $payload);
-                $this->sequence->bump(locked: $node);
-
-                event(new DocumentContentUpdated(
-                    node: $node,
-                    version: $version,
-                    created: false,
-                    actorId: $data->actorId,
-                ));
-
-                return $version;
-            }
-
-            $version = $this->store->create([
-                'node_id' => $node->getKey(),
-                'version_no' => $this->store->nextVersionNo($node),
-                // A new autosave row on an existing document CONTINUES its format —
-                // never a schema default (P0.4/L3, D4/D12). Falls back to the
-                // rich-text default only for the (practically unreachable) case of a
-                // document node with no prior version at all.
-                'format' => $head->format ?? DocumentType::RichText->value,
-                'is_autosave' => true,
-                'status' => 'committed',
-                'created_at' => now(),
-                ...$this->payload($data),
-            ]);
-
-            $this->nodes->update($node, ['current_version_id' => $version->getKey()]);
-
-            $this->store->prune(
-                node: $node,
-                max: $this->documentsConfig->revisionLimit(),
-                headId: $version->getKey(),
-            );
-            $this->sequence->bump(locked: $node);
-
-            event(new DocumentContentUpdated(
-                node: $node,
-                version: $version,
-                created: true,
+            $result = $this->writer->write($document, new DocumentStateChange(
+                cause: StateWriteCause::Update,
+                content: $data->content,
+                yjsState: $data->yjsState,
                 actorId: $data->actorId,
+                expectedStateVersion: $data->expectedStateVersion,
             ));
 
-            return $version;
+            if ($result->changed) {
+                event(new DocumentContentUpdated(
+                    node: $node,
+                    version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
+                    created: $result->checkpoint !== null,
+                    actorId: $data->actorId,
+                ));
+            }
+
+            return $result;
         });
-    }
-
-    /**
-     * Whether to overwrite the head in place: it must be an AUTOSAVE version created
-     * within the debounce window. A committed/named head, or an autosave older than
-     * the window, forces a fresh row so the history keeps the older state.
-     */
-    private function shouldOverwrite(DocumentRevision $head): bool
-    {
-        if (!$head->is_autosave) {
-            return false;
-        }
-
-        $debounce = $this->documentsConfig->autosaveDebounceSeconds();
-
-        if ($debounce === 0) {
-            return true;
-        }
-
-        $createdAt = $head->created_at;
-
-        if (!$createdAt instanceof Carbon) {
-            return true;
-        }
-
-        return $createdAt->greaterThanOrEqualTo(Carbon::now()->subSeconds($debounce));
-    }
-
-    /**
-     * The content payload shared by the overwrite + append paths.
-     *
-     * @return array<string, mixed>
-     */
-    private function payload(UpdateDocumentContentInput $data): array
-    {
-        return [
-            'content' => $data->content->toArray(),
-            'content_hash' => $data->content->contentHash(),
-            'yjs_state' => $data->yjsState,
-            'yjs_state_size' => $data->yjsState === null ? null : mb_strlen($data->yjsState, '8bit'),
-        ];
     }
 }

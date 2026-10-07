@@ -27,10 +27,10 @@ final class DriveSchemaAssertions
             ]],
             ['v_nodes', [
                 'id', 'profile', 'tenant_id', 'drive_id', 'parent_id', 'kind', 'name',
-                'mime_type', 'extension', 'size_bytes', 'current_version_id', 'file_id',
+                'mime_type', 'extension', 'size_bytes',
                 'position', 'is_pinned', 'inherit_grants', 'shortcut_target_id',
                 'owner_id', 'extra_data', 'trashed_at', 'trashed_by',
-                'trashed_from_parent_id', 'created_by', 'updated_by', 'deleted_at',
+                'trashed_from_parent_id', 'created_by', 'updated_by',
                 'created_at', 'updated_at',
             ]],
             ['v_blobs', [

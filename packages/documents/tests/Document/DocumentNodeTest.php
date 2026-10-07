@@ -16,7 +16,6 @@ use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\TipTapContent;
@@ -24,11 +23,13 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 
 /**
- * The M4a document-node lifecycle (§2.5): create a kind=document node with its v1
- * version, autosave vs named version, restore, prune. Authorization runs OPEN (the
- * base suite's null driver), so these exercise the Action/repository row work.
+ * The M4a document-node lifecycle (§2.5) on the document aggregate: create a
+ * kind=document node with its working state and checkpoint #1, autosave on the
+ * checkpoint interval, named checkpoints, copy-forward restore, prune.
+ * Authorization runs OPEN (the base suite's null driver), so these exercise the
+ * Action/repository row work.
  */
-it('creates a kind=document node with a v1 version in the node-attached table', function (): void {
+it('creates a kind=document node with its aggregate and checkpoint #1', function (): void {
     Event::fake([DocumentCreated::class]);
 
     $drive = DocumentTestHelpers::drive();
@@ -39,19 +40,23 @@ it('creates a kind=document node with a v1 version in the node-attached table', 
         content: DocumentTestHelpers::content('First draft'),
         parent: $drive->root(),
     ));
+    $document = DocumentTestHelpers::document($node);
+    $first = DocumentTestHelpers::head($node);
 
     expect($node->kind)->toBe(NodeKind::Document)
         ->and($node->mime_type)->toBe(TipTapHandler::DOCUMENT_MIME)
-        ->and($node->current_version_id)->not->toBeNull();
+        ->and($node->getAttributes())->not->toHaveKey('current_version_id')
+        ->and($document->type)->toBe('vaulter/rich-text')
+        ->and($document->state_version)->toBe(1)
+        ->and($document->checkpoint_state_version)->toBe(1)
+        ->and($document->collab_epoch)->toBe(0)
+        ->and($document->revision_count)->toBe(1)
+        ->and($first->number)->toBe(1)
+        ->and($first->is_autosave)->toBeFalse()
+        ->and($first->status)->toBe('committed')
+        ->and($first->content)->toBe($document->content);
 
-    $v1 = DocumentRevision::query()->where('node_id', $node->getKey())->firstOrFail();
-
-    expect($v1->version_no)->toBe(1)
-        ->and($v1->is_autosave)->toBeFalse()
-        ->and($v1->status)->toBe('committed')
-        ->and($node->current_version_id)->toEqual($v1->getKey());
-
-    Event::assertDispatched(DocumentCreated::class);
+    Event::assertDispatched(DocumentCreated::class, fn (DocumentCreated $event): bool => $event->version->is($first));
 });
 
 it('round-trips the content through TipTapRenderer', function (): void {
@@ -64,120 +69,123 @@ it('round-trips the content through TipTapRenderer', function (): void {
         parent: $drive->root(),
     ));
 
-    $v1 = DocumentRevision::query()->where('node_id', $node->getKey())->firstOrFail();
-    $html = app(TipTapRenderer::class)->toHtml($v1->tipTapContent());
+    $html = app(TipTapRenderer::class)->toHtml(DocumentTestHelpers::head($node)->tipTapContent());
 
     expect($html)->toContain('Round trip');
 });
 
-it('UPDATES the head autosave version in place within the debounce window', function (): void {
-    config()->set('vaulter-documents.revisions.autosave_debounce_seconds', 300);
+it('writes autosaves to the working state and leaves stored checkpoints alone inside the interval', function (): void {
+    config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 300);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Live');
+    $first = DocumentTestHelpers::head($node);
 
-    // First autosave appends an autosave version (v2).
     app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('edit one'),
     ));
-
-    // Second autosave within the window OVERWRITES the head autosave — no new row.
-    $version = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('edit two'),
     ));
 
-    $count = DocumentRevision::query()->where('node_id', $node->getKey())->count();
-
-    // v1 (initial) + one autosave row that was overwritten in place = 2 total.
-    expect($count)->toBe(2)
-        ->and($version->is_autosave)->toBeTrue()
-        ->and($version->tipTapContent()->toArray())
-        ->toBe(DocumentTestHelpers::content('edit two')->toArray());
+    expect($result->changed)->toBeTrue()
+        ->and($result->checkpoint)->toBeNull()
+        ->and(DocumentTestHelpers::revisions($node))->toHaveCount(1)
+        ->and($first->refresh()->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('seed')->toArray())
+        ->and($result->document->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('edit two')->toArray())
+        ->and($result->document->state_version)->toBe(3)
+        ->and($result->document->hasUncheckpointedChanges())->toBeTrue();
 });
 
-it('APPENDS a fresh autosave version outside the debounce window', function (): void {
-    config()->set('vaulter-documents.revisions.autosave_debounce_seconds', 0);
+it('takes an autosave checkpoint once the interval has passed', function (): void {
+    config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 300);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Churny');
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $this->travel(301)->seconds();
+    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
-        content: DocumentTestHelpers::content('a'),
-    ));
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
-        node: $node->refresh(),
-        content: DocumentTestHelpers::content('b'),
+        content: DocumentTestHelpers::content('later'),
     ));
 
-    // debounce 0 still overwrites the head autosave (the in-place path is chosen
-    // when the head is an autosave) — assert the append path via a committed head.
-    expect(DocumentRevision::query()->where('node_id', $node->getKey())->count())
-        ->toBeGreaterThanOrEqual(2);
+    expect($result->checkpoint)->not->toBeNull()
+        ->and($result->checkpoint?->number)->toBe(2)
+        ->and($result->checkpoint?->is_autosave)->toBeTrue()
+        ->and($result->checkpoint?->state_version)->toBe(2)
+        ->and($result->document->current_revision_id)->toEqual($result->checkpoint?->getKey())
+        ->and($result->document->hasUncheckpointedChanges())->toBeFalse();
 });
 
-it('creates a NAMED version with a label and repoints the head', function (): void {
+it('creates a NAMED checkpoint with a label and makes it the head', function (): void {
     Event::fake([DocumentRevisionCreated::class]);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Named');
+    $before = DocumentTestHelpers::document($node);
 
     $version = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'Final review',
     ));
+    $after = DocumentTestHelpers::document($node);
 
-    expect($version->snapshot_label)->toBe('Final review')
+    expect($version->label)->toBe('Final review')
         ->and($version->is_autosave)->toBeFalse()
-        ->and($node->refresh()->current_version_id)->toEqual($version->getKey());
+        ->and($version->number)->toBe(2)
+        ->and($after->current_revision_id)->toEqual($version->getKey())
+        ->and($after->state_version)->toBe($before->state_version)
+        ->and($after->collab_epoch)->toBe($before->collab_epoch);
 
     Event::assertDispatched(DocumentRevisionCreated::class, fn (DocumentRevisionCreated $e): bool => $e->restored === false);
 });
 
-it('restore repoints the head to a copy of a prior version (append-only)', function (): void {
+it('restore copies a prior checkpoint forward and records where it came from', function (): void {
     Event::fake([DocumentRevisionCreated::class]);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Restorable');
+    $first = DocumentTestHelpers::head($node);
 
-    $v1 = DocumentRevision::query()->where('node_id', $node->getKey())->firstOrFail();
-
-    // Move the head forward with a named version, then restore v1.
-    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
+    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
-        label: 'v2',
+        content: DocumentTestHelpers::content('moved on'),
     ));
+    $before = DocumentTestHelpers::document($node);
 
     $restored = app(RestoreDocumentRevisionAction::class)->execute(
         node: $node->refresh(),
-        versionId: $v1->getKey(),
+        versionId: $first->getKey(),
     );
+    $after = DocumentTestHelpers::document($node);
 
-    // The original v1 row is untouched; a NEW head version carries its content.
-    expect($restored->getKey())->not->toEqual($v1->getKey())
-        ->and($restored->content)->toEqual($v1->content)
-        ->and($node->refresh()->current_version_id)->toEqual($restored->getKey())
-        ->and(DocumentRevision::query()->whereKey($v1->getKey())->exists())->toBeTrue();
+    expect($restored->getKey())->not->toEqual($first->getKey())
+        ->and($restored->content)->toEqual($first->content)
+        ->and($restored->restored_from_revision_id)->toEqual($first->getKey())
+        ->and($restored->label)->toBe('Restored from #1')
+        ->and($after->current_revision_id)->toEqual($restored->getKey())
+        ->and($after->content)->toEqual($first->content)
+        ->and($after->state_version)->toBe($before->state_version + 1)
+        ->and($after->collab_epoch)->toBe($before->collab_epoch + 1)
+        ->and($first->refresh()->content)->toEqual($restored->content);
 
     Event::assertDispatched(DocumentRevisionCreated::class, fn (DocumentRevisionCreated $e): bool => $e->restored === true);
 });
 
-it('prunes past the max but NEVER a keep_forever version nor the head', function (): void {
+it('prunes past the max but NEVER a keep_forever checkpoint nor the head', function (): void {
     config()->set('vaulter-documents.revisions.limit', 3);
 
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Pruned');
 
-    // Pin v1 as keep_forever via a named keep-forever snapshot.
     app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'pinned',
         keepForever: true,
     ));
 
-    // Churn many named versions to overflow the window.
     foreach (range(1, 8) as $i) {
         app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
             node: $node->refresh(),
@@ -185,14 +193,15 @@ it('prunes past the max but NEVER a keep_forever version nor the head', function
         ));
     }
 
-    $versions = DocumentRevision::query()->where('node_id', $node->getKey())->get();
-    $headId = $node->refresh()->current_version_id;
+    $versions = DocumentTestHelpers::revisions($node);
+    $document = DocumentTestHelpers::document($node);
+    $headId = $document->current_revision_id;
 
-    // The keep_forever and the current head always survive; the window bounds the rest.
     expect($versions->firstWhere('keep_forever', true))->not->toBeNull()
         ->and($versions->firstWhere('id', $headId))->not->toBeNull()
-        ->and($versions->where('keep_forever', false)->where('id', '!=', $headId)->count())
-        ->toBeLessThanOrEqual(3);
+        ->and($versions->where('keep_forever', false)->where('id', '!=', $headId)->count())->toBeLessThanOrEqual(3)
+        // Pruning never lowers the counter, so a number is never handed out twice.
+        ->and($document->revision_count)->toBe(10);
 });
 
 /**

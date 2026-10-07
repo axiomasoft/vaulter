@@ -39,10 +39,10 @@ it('conceals foreign absent and unpersisted nodes', function (): void {
 it('excludes trashed nodes unless the internal trash mode is explicit', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'trashed');
-    $node->delete();
+    $node->forceFill(['trashed_at' => now()])->save();
     $context = OperationContext::system(drive: $drive, reason: 'test');
     expect(fn () => app(NodeLocator::class)->find(context: $context, key: $node->id))->toThrow(NodeNotFoundException::class)
-        ->and(app(NodeLocator::class)->find(context: $context, key: $node->id, includeTrashed: true)->trashed())->toBeTrue();
+        ->and(app(NodeLocator::class)->find(context: $context, key: $node->id, includeTrashed: true)->trashed_at)->not->toBeNull();
 });
 
 it('uses the configured node model', function (): void {

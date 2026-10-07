@@ -38,7 +38,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
     $stream = UploadTestHelpers::streamFor('race bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $revision->scanObligations()->firstOrFail();
     $outcomes = ForkRace::run([
         fn (): bool => app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now')) !== null,
@@ -65,7 +65,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
         ->and(app(ScanObligationRepository::class)->settle($old, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
         ->and(app(ScanObligationRepository::class)->settle($fresh, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
         ->and($revision->scanEvidence()->count())->toBe(1)
-        ->and($node->refresh()->current_version_id)->toBe($revision->id);
+        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });
 
 it('SEC-R09 killed committed publisher leaves intent recoverable by an independent process', function (): void {
@@ -111,7 +111,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
     $stream = UploadTestHelpers::streamFor('killed worker');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $row = $node->currentVersion()->firstOrFail()->scanObligations()->firstOrFail();
+    $row = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
     $killed = ForkRace::run([function () use ($row): void {
         $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
         if ($attempt === null) {
@@ -148,7 +148,7 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
                     file_put_contents($ready, 'admitted');
                     usleep(150_000);
 
-                    return $node->currentVersion()->firstOrFail()->scan_admission_sequence;
+                    return $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scan_admission_sequence;
                 });
             },
             function () use ($drive, $context, $ready): int {
@@ -179,8 +179,8 @@ it('SEC-POLICY-activation-race captures an admitted writer before exclusive acti
         $stream = UploadTestHelpers::streamFor('after activation');
         $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'after.txt', 'text/plain'));
         fclose($stream);
-        expect($node->currentVersion()->firstOrFail()->scan_admission_sequence)->toBe(2)
-            ->and($node->currentVersion()->firstOrFail()->scanObligations()->count())->toBe(1);
+        expect($node->file()->firstOrFail()->currentRevision()->firstOrFail()->scan_admission_sequence)->toBe(2)
+            ->and($node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->count())->toBe(1);
     } finally {
         if (file_exists($ready)) {
             unlink($ready);
@@ -198,7 +198,7 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
     $stream = UploadTestHelpers::streamFor('purge race');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $row = $revision->scanObligations()->firstOrFail();
     $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
     $node->newQuery()->whereKey($node->id)->update(['trashed_at' => now()]);
@@ -213,5 +213,5 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
     expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')->and($outcomes[1]->ok)->toBeTrue($outcomes[1]->message ?? '')
         ->and(FileRevision::query()->whereKey($revision->id)->exists())->toBeFalse()
         ->and(app(ScanObligationRepository::class)->find($row->id))->toBeNull()
-        ->and(Node::withTrashed()->whereKey($node->id)->exists())->toBeFalse();
+        ->and(Node::query()->whereKey($node->id)->exists())->toBeFalse();
 });

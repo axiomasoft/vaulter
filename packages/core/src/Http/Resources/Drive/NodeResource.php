@@ -6,6 +6,7 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\AccessResolver;
@@ -106,8 +107,7 @@ final class NodeResource extends JsonResource
             'size_bytes' => $node->size_bytes,
             'storage_id' => $node->drive_id,
             'parent_id' => $node->parent_id,
-            'file_id' => $node->file_id,
-            'current_version_id' => $node->current_version_id,
+            ...$this->headKeys($node),
             'is_pinned' => $node->is_pinned,
             'position' => $node->position,
             'trashed_at' => $node->trashed_at,
@@ -171,5 +171,31 @@ final class NodeResource extends JsonResource
             node: $node,
             resolver: app(AccessResolver::class),
         )->toArray();
+    }
+
+    /**
+     * The legacy file_id/current_version_id keys, read from the kind's own
+     * aggregate now that the node carries no head pointer. Core does not depend on
+     * the documents package: the documents package registers the `document`
+     * relation on the node model, and without it a document has no head here.
+     *
+     * @return array{file_id: int|string|null, current_version_id: int|string|null}
+     */
+    private function headKeys(Node $node): array
+    {
+        if ($node->kind === NodeKind::File) {
+            $file = $node->relationLoaded('file') ? $node->file : $node->file()->first();
+
+            return ['file_id' => $file?->id, 'current_version_id' => $file?->current_revision_id];
+        }
+
+        if ($node->kind === NodeKind::Document) {
+            $document = $node->getRelationValue('document');
+            $head = $document instanceof Model ? $document->getAttribute('current_revision_id') : null;
+
+            return ['file_id' => null, 'current_version_id' => is_int($head) || is_string($head) ? $head : null];
+        }
+
+        return ['file_id' => null, 'current_version_id' => null];
     }
 }

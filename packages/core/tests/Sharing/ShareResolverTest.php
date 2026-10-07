@@ -152,12 +152,12 @@ it('fails item-safety for a trashed target (NotFound)', function (): void {
     expect(shareResolver()->resolve('trash-token')->resolution)->toBe(ShareResolution::NotFound);
 });
 
-it('fails item-safety for a soft-deleted target (NotFound)', function (): void {
+it('fails item-safety for a purged target (NotFound)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'gone');
     ShareTestHelpers::share($node, token: 'deleted-token');
 
-    $node->delete(); // soft-delete (deleted_at)
+    $node->delete(); // purge is a real DELETE; the share row cascades with it
 
     expect(shareResolver()->resolve('deleted-token')->resolution)->toBe(ShareResolution::NotFound);
 });

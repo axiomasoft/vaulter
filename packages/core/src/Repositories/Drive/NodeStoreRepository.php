@@ -129,34 +129,11 @@ final class NodeStoreRepository
     }
 
     /**
-     * Permanently soft-delete a subtree (§2.10 stage 2: deleted_at tombstone). The
-     * bytes are NOT touched — detaching the version↔blob edges (done by the Action
-     * via the CAS) is what makes the blobs GC-eligible (M1b reclaims them).
-     *
-     * @param Collection<int, int|string> $ids
-     */
-    public function softDeleteSubtree(Collection $ids): void
-    {
-        if ($ids->isEmpty()) {
-            return;
-        }
-
-        $model = $this->vaulterConfig->model('node');
-        $model::query()->whereKey($ids->all())->delete();
-    }
-
-    /**
      * Physically purge a subtree's rows (§2.10 stage 3, F-P1.12-02) — a genuine
-     * DELETE, not the {@see softDeleteSubtree} tombstone. `withTrashed()` matches
-     * rows already carrying a `deleted_at` tombstone (the caller is expected to
-     * have run the stage-2 soft-delete on the same ids first, so the version↔blob
-     * edges are detached and GC-eligible before the rows disappear); the query
-     * builder's `forceDelete()` then bypasses the SoftDeletes scope for the
-     * statement itself, issuing a real `DELETE`, so FK `cascadeOnDelete` on every
-     * dependent table (files → file_revisions → file_revision_blobs, node_document_
-     * versions, node_grants, node_shares, …) physically removes their rows too —
-     * this is what makes "purge" actually purge, instead of leaving inline
-     * document content live in the database forever.
+     * DELETE (nodes have no tombstone), so FK `cascadeOnDelete` on every dependent
+     * table (files → file_revisions → file_revision_blobs, documents →
+     * document_revisions, node_grants, node_shares, …) physically removes their
+     * rows too — purge never leaves inline document content in the database.
      *
      * @param Collection<int, int|string> $ids
      */
@@ -167,7 +144,7 @@ final class NodeStoreRepository
         }
 
         $model = $this->vaulterConfig->model('node');
-        $model::query()->withTrashed()->whereKey($ids->all())->forceDelete();
+        $model::query()->whereKey($ids->all())->delete();
     }
 
     /**
@@ -212,8 +189,8 @@ final class NodeStoreRepository
      * Lock live node rows for the rest of the transaction, in ascending id order so
      * two operations over overlapping nodes queue instead of deadlocking (D21 level 2:
      * after lockTree, before aggregate and quota locks). SQLite has no row locks and
-     * serialises writers, so the grammar drops FOR UPDATE there. Soft-deleted rows are
-     * not returned — a missing id means the node is gone.
+     * serialises writers, so the grammar drops FOR UPDATE there. A missing id means
+     * the node is gone.
      *
      * @param  list<int|string|null>    $ids
      * @return Collection<string, Node> keyed by the stringified id
@@ -241,18 +218,27 @@ final class NodeStoreRepository
     }
 
     /**
-     * Repoint a file node's head after a new version is committed (§2.4): update
-     * the head pointer plus the cached mime/size/extension in one write.
+     * Stamp who last changed the node and when, without touching its sequence —
+     * document content writes change the node's content, not its editorial state.
      */
-    public function repointHead(
+    public function touch(Node $node, int|string|null $actorId): Node
+    {
+        $node->forceFill(['updated_by' => $actorId, 'updated_at' => $node->freshTimestamp()])->save();
+
+        return $node;
+    }
+
+    /**
+     * Refresh a file node's cached mime/size/extension after its aggregate's head
+     * moved (§2.4). The head pointer itself lives on v_files.
+     */
+    public function cacheHead(
         Node $node,
-        int|string $currentVersionId,
         ?string $mimeType,
         ?string $extension,
         int $sizeBytes,
     ): Node {
         $node->forceFill([
-            'current_version_id' => $currentVersionId,
             'mime_type' => $mimeType,
             'extension' => $extension,
             'size_bytes' => $sizeBytes,

@@ -10,7 +10,7 @@ use Vaulter\Models\Drive\Node;
 
 /**
  * The sibling-unique guard (§2.2) must reject a duplicate LIVE sibling name but
- * allow a duplicate name once the rival is trashed or soft-deleted.
+ * allow a duplicate name once the rival is trashed or purged.
  */
 function makeStorage(): Drive
 {
@@ -69,7 +69,7 @@ it('разрешает дубль имени, если конкурент в к�
     expect($second->exists)->toBeTrue();
 });
 
-it('разрешает дубль имени, если конкурент soft-deleted (deleted_at)', function (): void {
+it('разрешает дубль имени после purge конкурента (узлы без deleted_at)', function (): void {
     $storage = makeStorage();
     $parent = makeNode($storage, 'root3');
 

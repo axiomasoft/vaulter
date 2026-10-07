@@ -87,7 +87,7 @@ it('force-deletes a trashed node through the core ForceDelete Action', function 
     Vaulter::drive($folder->storage)->actingAs($user)->trash()->purge(node: $folder);
 
     expect($folder->fresh())->toBeNull()
-        ->and($folder->newQuery()->withTrashed()->whereKey($folder->getKey())->exists())->toBeFalse();
+        ->and($folder->newQuery()->whereKey($folder->getKey())->exists())->toBeFalse();
 });
 
 it('denies the trash ability to an admin who lacks a grant (row action hidden)', function (): void {

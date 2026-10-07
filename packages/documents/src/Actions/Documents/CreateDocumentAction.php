@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Documents;
 
+use LogicException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
+use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
@@ -21,12 +25,12 @@ use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Create a kind=document node under a folder (or the storage root) with its initial
- * v1 document version from the given content (§2.5 / M4a). The parent row is locked
- * and must be a live folder of the same storage; no parent means the root folder,
- * never a parentless node. One outer transaction: the
- * node row, the v1 version and the head repoint commit atomically, then a single
- * after-commit event fires.
+ * Create a kind=document node under a folder (or the storage root) with its document
+ * aggregate and first checkpoint from the given content (§2.5 / M4a). The parent row
+ * is locked and must be a live folder of the same storage; no parent means the root
+ * folder, never a parentless node. One outer transaction: the node row, the
+ * aggregate (working state at state version 1) and checkpoint #1 commit atomically,
+ * then a single after-commit event fires.
  *
  * The node mirrors the file-node shape so the unified tree + Drive Actions (move/
  * rename/trash) apply unchanged — quota and the sibling-unique guard come for free.
@@ -42,7 +46,8 @@ final readonly class CreateDocumentAction
     public function __construct(
         private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
-        private DocumentRevisionStoreRepository $versions,
+        private DocumentStoreRepository $documents,
+        private DocumentStateWriter $writer,
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DocumentsConfig $documentsConfig,
@@ -86,32 +91,28 @@ final readonly class CreateDocumentAction
                 'created_by' => $data->actorId,
             ]);
 
-            $version = $this->commitInitialVersion(node: $node, data: $data);
+            $document = $this->documents->create([
+                'node_id' => $node->getKey(),
+                'type' => DocumentTypeKey::fromFormat($data->format),
+                'schema_version' => 1,
+                'created_by' => $data->actorId,
+                'updated_by' => $data->actorId,
+            ]);
+            $document->setRelation('node', $node);
 
-            // Repoint the head to v1 — reusing the file-node head pointer so the
-            // unified tree carries the document head the same way it carries a file.
-            $this->store->update($node, ['current_version_id' => $version->getKey()]);
+            $result = $this->writer->write($document, new DocumentStateChange(
+                cause: StateWriteCause::Create,
+                content: $data->content,
+                actorId: $data->actorId,
+                forceCheckpoint: true,
+            ));
+            $checkpoint = $result->checkpoint ?? throw new LogicException('[Vaulter] A new document must get its first checkpoint.');
 
             $node = $node->refresh();
 
-            event(new DocumentCreated(node: $node, version: $version, actorId: $data->actorId));
+            event(new DocumentCreated(node: $node, version: $checkpoint, actorId: $data->actorId));
 
             return $node;
         });
-    }
-
-    private function commitInitialVersion(Node $node, CreateDocumentInput $data): DocumentRevision
-    {
-        return $this->versions->create([
-            'node_id' => $node->id,
-            'version_no' => 1,
-            'content' => $data->content->toArray(),
-            'format' => $data->format,
-            'content_hash' => $data->content->contentHash(),
-            'is_autosave' => false,
-            'status' => 'committed',
-            'created_by' => $data->actorId,
-            'created_at' => now(),
-        ]);
     }
 }

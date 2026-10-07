@@ -42,7 +42,7 @@ final readonly class RestoreFileRevisionAction
             }
             $this->admission->assertSource($source);
             $admissionSequence = app(ScanAdmission::class)->next($context);
-            $previous = $file->currentVersion()->first();
+            $previous = $file->currentRevision()->first();
             $delta = $source->size_bytes - ($previous->size_bytes ?? 0);
             if ($delta > 0) {
                 $this->drives->reserveBytes($context->drive, $delta);
@@ -51,7 +51,7 @@ final readonly class RestoreFileRevisionAction
             }
             $attributes = $source->getAttributes();
             unset($attributes[$source->getKeyName()],$attributes['created_at']);
-            $attributes = [...$attributes, 'status' => 'committed', 'number' => $file->revision_count + 1, 'created_by' => $context->actor->ref()->id, 'committed_at' => now(), 'scan_status' => $this->admission->status($context), 'scan_admission_sequence' => $admissionSequence];
+            $attributes = [...$attributes, 'status' => 'committed', 'number' => $file->revision_count + 1, 'created_by' => $context->actor->ref()->id, 'committed_at' => now(), 'scan_status' => $this->admission->status($context), 'scan_admission_sequence' => $admissionSequence, 'restored_from_revision_id' => $source->id];
             $revision = $this->revisions->create($attributes);
             foreach ($source->blobs as $blob) {
 
@@ -63,7 +63,7 @@ final readonly class RestoreFileRevisionAction
                 $this->revisions->markSuperseded($previous);
             }
             $this->files->repointHead($file, $revision->id, $revision->mime_type, $revision->size_bytes, $revision->number);
-            $this->nodes->repointHead($node, $revision->id, $revision->mime_type, $node->extension, $revision->size_bytes);
+            $this->nodes->cacheHead($node, $revision->mime_type, $node->extension, $revision->size_bytes);
             $this->sequence->bump($node);
             event(new FileRevisionAdded(node: $node, file: $file, version: $revision, versionNo: $revision->number, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 

@@ -31,7 +31,8 @@ final class KeyColumnInspector
             ['node_grants', 'tenant_id'], ['node_grants', 'subject_id'], ['node_grants', 'granted_by'],
             ['node_shares', 'tenant_id'], ['node_shares', 'granted_by'],
             ['node_comments', 'tenant_id'], ['node_comments', 'author_id'], ['node_comments', 'resolved_by'],
-            ['node_document_versions', 'tenant_id'], ['node_document_versions', 'created_by'],
+            ['documents', 'tenant_id'], ['documents', 'created_by'], ['documents', 'updated_by'],
+            ['document_revisions', 'tenant_id'], ['document_revisions', 'created_by'],
             ['upload_sessions', 'tenant_id'], ['upload_sessions', 'created_by'],
             ['activity', 'tenant_id'], ['activity', 'actor_id'],
         ];

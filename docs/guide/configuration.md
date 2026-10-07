@@ -187,7 +187,7 @@ See [Uploads](/guide/uploads) and [Trash](/guide/trash).
 ```php
 // config/vaulter-documents.php
 'content' => ['max_size_kb' => 5120],
-'revisions' => ['limit' => 50, 'autosave_debounce_seconds' => 30],
+'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
 'exporters' => [
     'html' => \Vaulter\Documents\Export\HtmlExporter::class,
@@ -304,7 +304,6 @@ Support for deprecated keys ends at 1.0.
 | `vaulter.drive.name_rules.max_length` | `vaulter-drive.names.max_length` |
 | `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
 | `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
-| `vaulter.versions.autosave_debounce_seconds` | `vaulter-documents.revisions.autosave_debounce_seconds` |
 | `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
 | `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
 | `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
@@ -335,6 +334,9 @@ two different custom values throw `InvalidConfigurationException`. Keep one
 
 `tenant.column`, `drive.name_rules.no_separators_pattern` and `migrations.path` are ignored
 with deprecation notices; tenant columns and separator checks now have fixed definitions.
+`versions.autosave_debounce_seconds` and `vaulter-documents.revisions.autosave_debounce_seconds`
+are ignored the same way: document checkpoints are immutable and follow
+`vaulter-documents.revisions.checkpoint_interval_seconds` instead (PLAN2.D34).
 Keep `table_names` only while upgrading physical tables.
 
 Migrate the old Media publication to `config/vaulter-media.php`. Normalization translates

@@ -48,7 +48,7 @@ Vaulter.
    edits.
 4. `onStoreDocument` (debounced) base64-encodes the **binary** Yjs state and POSTs it to
    `POST {backend}/api/vaulter/collab/store`, which persists it into
-   `v_node_document_versions.yjs_state`. The Yjs binary is the source of truth.
+   `v_documents.yjs_state` (the working state). The Yjs binary is the source of truth.
 
 The hub does **not** need the JWT signing secret — Laravel mints the token and the client
 forwards it; the hub only relays it to the webhook, which verifies the signature.

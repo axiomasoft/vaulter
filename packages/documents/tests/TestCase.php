@@ -22,7 +22,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             // Core owns the schema (v_nodes/v_drives/... + v_node_comments/
-            // v_node_document_versions), the Node/Storage models, Access/Sharing/
+            // v_documents/v_document_revisions), the Node/Storage models, Access/Sharing/
             // Activity and Configuration\VaulterConfig.
             VaulterServiceProvider::class,
             // The document-node tests build their Storage fixtures through
@@ -75,7 +75,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
-        // The whole v_* schema (incl. v_node_comments/v_node_document_versions) is
+        // The whole v_* schema (incl. v_node_comments/v_documents/v_document_revisions) is
         // owned by core; load its migrations through the path-repo symlink Composer
         // places in this package's vendor dir.
         $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');
@@ -85,7 +85,7 @@ abstract class TestCase extends OrchestraTestCase
      * The connection the whole suite runs on. Default: in-memory SQLite. Opt INTO
      * Postgres by exporting DB_CONNECTION=pgsql (plus the DB_* coordinates): the
      * dedicated pgsql CI lane exercises the yjs_state bytea NUL-safe round-trip and
-     * the v_activity/v_node_document_versions jsonb gin(jsonb_path_ops) indexes that
+     * the v_activity/v_document_revisions jsonb gin(jsonb_path_ops) indexes that
      * SQLite cannot model.
      *
      * @return array<string, string|bool|null>

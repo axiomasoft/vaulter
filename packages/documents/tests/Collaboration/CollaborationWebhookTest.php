@@ -8,7 +8,7 @@ use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
@@ -114,16 +114,13 @@ it('persists the yjs snapshot with the shared secret (bytea round-trips, size se
         ->assertOk()
         ->assertJsonPath('data.node_id', $node->getKey());
 
-    $version = DocumentRevision::query()
-        ->where('node_id', $node->getKey())
-        ->orderByDesc('version_no')
-        ->firstOrFail();
+    $state = Document::query()->where('node_id', $node->getKey())->firstOrFail();
 
     // Yjs binary is the source of truth — the exact bytes round-trip and the size is cached.
-    expect($version->yjs_state)->toBe($yjs)
-        ->and($version->yjs_state_size)->toBe(strlen($yjs))
+    expect($state->yjs_state)->toBe($yjs)
+        ->and($state->yjs_state_size)->toBe(strlen($yjs))
         // The TipTap projection updated alongside.
-        ->and($version->content['content'][0]['content'][0]['text'] ?? null)->toBe('From hub');
+        ->and($state->content['content'][0]['content'][0]['text'] ?? null)->toBe('From hub');
 });
 
 it('persists a yjs snapshot WITHOUT a projection, leaving Yjs the source of truth', function (): void {
@@ -138,13 +135,10 @@ it('persists a yjs snapshot WITHOUT a projection, leaving Yjs the source of trut
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
         ->assertOk();
 
-    $version = DocumentRevision::query()
-        ->where('node_id', $node->getKey())
-        ->orderByDesc('version_no')
-        ->firstOrFail();
+    $state = Document::query()->where('node_id', $node->getKey())->firstOrFail();
 
-    expect($version->yjs_state)->toBe($yjs)
-        ->and($version->yjs_state_size)->toBe(strlen($yjs));
+    expect($state->yjs_state)->toBe($yjs)
+        ->and($state->yjs_state_size)->toBe(strlen($yjs));
 });
 
 it('rejects a store call with no secret and no JWT', function (): void {
@@ -155,7 +149,7 @@ it('rejects a store call with no secret and no JWT', function (): void {
         'yjs_state' => base64_encode('bytes'),
     ])->assertStatus(401);
 
-    expect(DocumentRevision::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
+    expect(Document::query()->where('node_id', $node->getKey())->where('state_version', '>', 1)->exists())
         ->toBeFalse();
 });
 
@@ -183,7 +177,7 @@ it('accepts a store call authenticated by a writable room JWT', function (): voi
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['Authorization' => 'Bearer '.roomJwt($node, readOnly: false)]))
         ->assertOk();
 
-    expect(DocumentRevision::query()->where('node_id', $node->getKey())->orderByDesc('version_no')->firstOrFail()->yjs_state)
+    expect(Document::query()->where('node_id', $node->getKey())->firstOrFail()->yjs_state)
         ->toBe($yjs);
 });
 
@@ -212,7 +206,7 @@ it('forbids a JWT minted for node A from storing to node B (room bound to node)'
     test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['Authorization' => 'Bearer '.roomJwt($nodeA, readOnly: false)]))
         ->assertForbidden();
 
-    expect(DocumentRevision::query()->where('node_id', $nodeB->getKey())->where('version_no', '>', 1)->exists())
+    expect(Document::query()->where('node_id', $nodeB->getKey())->where('state_version', '>', 1)->exists())
         ->toBeFalse();
 });
 
@@ -247,10 +241,7 @@ it('resolves the node when the hub sends node_id EQUAL to the room name (regress
         ->assertOk()
         ->assertJsonPath('data.node_id', $node->getKey());
 
-    expect(DocumentRevision::query()
-        ->where('node_id', $node->getKey())
-        ->orderByDesc('version_no')
-        ->firstOrFail()
+    expect(Document::query()->where('node_id', $node->getKey())->firstOrFail()
         ->yjs_state)->toBe($yjs);
 });
 
@@ -268,7 +259,7 @@ it('rejects a store call with valid secret identity but NO signature at all', fu
     ], ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET])
         ->assertStatus(401);
 
-    expect(DocumentRevision::query()->where('node_id', $node->getKey())->where('version_no', '>', 1)->exists())
+    expect(Document::query()->where('node_id', $node->getKey())->where('state_version', '>', 1)->exists())
         ->toBeFalse();
 });
 

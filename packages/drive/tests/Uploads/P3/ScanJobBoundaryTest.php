@@ -53,7 +53,7 @@ it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the truste
     $stream = UploadTestHelpers::streamFor('scan bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $revision->scanObligations()->firstOrFail();
     app()->call([new ScanFileRevision($work->id, $work->generation, 'foreign', $work->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)->and($work->refresh()->attempt)->toBe(0);
@@ -98,7 +98,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
     $stream = UploadTestHelpers::streamFor('identity');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $row = $revision->scanObligations()->firstOrFail();
     $revision->blob()->firstOrFail()->forceFill(['storage_key' => 'changed-key'])->save();
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
@@ -107,5 +107,5 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
         ->and($row->retryable)->toBeFalse()->and($row->lease_token)->toBeNull();
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)->and($row->refresh()->attempt)->toBe(1)
-        ->and($node->refresh()->current_version_id)->toBe($revision->id);
+        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });

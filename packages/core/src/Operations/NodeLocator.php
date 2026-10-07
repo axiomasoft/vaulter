@@ -28,9 +28,7 @@ final readonly class NodeLocator
             throw NodeNotFoundException::forId('unpersisted');
         }
         $query = $this->query($context);
-        if ($includeTrashed) {
-            $query->withTrashed();
-        } else {
+        if (!$includeTrashed) {
             $query->whereNull('trashed_at');
         }
         $node = $query->whereKey($id)->first();

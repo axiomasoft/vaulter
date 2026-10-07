@@ -6,17 +6,17 @@ namespace Vaulter\Documents\Repositories\Revisions;
 
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Read-side lookups over the append-only v_node_document_versions (§2.5 / M4a). The
- * head version a document node points at, the latest autosave version (for the
- * debounce window), the named-version listing and the full history — all scoped to
- * the node's own id so a version from another node never resolves.
+ * Read-side lookups over the immutable checkpoints in v_document_revisions: the head
+ * of a node's document, one checkpoint and the history — always scoped to the node's
+ * own aggregate, so a revision id of another document (or a file revision with the
+ * same id) never resolves.
  *
- * Opens no transactions, makes no access decisions — the Actions wrap writes and the
- * controller authorizes via the AccessResolver.
+ * Opens no transactions, makes no access decisions.
  */
 final class DocumentRevisionReadRepository
 {
@@ -25,67 +25,54 @@ final class DocumentRevisionReadRepository
     ) {}
 
     /**
-     * The current head a document node points at (its current_version_id), or null
-     * when the node has no committed document version yet.
+     * The head checkpoint of the node's document, or null when the node has no
+     * document aggregate.
      */
     public function head(Node $node): ?DocumentRevision
     {
-        $headId = $node->current_version_id;
+        $document = Document::query()->where('node_id', $node->getKey())->first(['id', 'current_revision_id']);
 
-        if ($headId === null) {
+        if ($document === null || $document->current_revision_id === null) {
             return null;
         }
 
-        return $this->query()
-            ->where('node_id', $node->getKey())
-            ->whereKey($headId)
+        $model = $this->documentsConfig->model('document_revision');
+
+        return $model::query()
+            ->where('document_id', $document->getKey())
+            ->whereKey($document->current_revision_id)
             ->first();
     }
 
     /**
-     * The most recent version of a node (highest version_no) — the row a restore
-     * targets a prior version relative to, and the autosave-debounce baseline.
+     * A checkpoint of the node's document by its primary key.
      */
-    public function latest(Node $node): ?DocumentRevision
+    public function forNode(Node $node, int|string $revisionId): ?DocumentRevision
     {
-        return $this->query()
-            ->where('node_id', $node->getKey())
-            ->orderByDesc('version_no')
-            ->first();
+        return $this->forDocumentOf($node)->whereKey($revisionId)->first();
     }
 
     /**
-     * A specific version of the node's document by the version's primary key,
-     * bounded to the node so a foreign version id never resolves.
-     */
-    public function forNode(Node $node, int|string $versionId): ?DocumentRevision
-    {
-        return $this->query()
-            ->where('node_id', $node->getKey())
-            ->whereKey($versionId)
-            ->first();
-    }
-
-    /**
-     * Every version of a document node, newest version_no first (the history
-     * listing). Returns a Builder so the controller paginates it.
+     * Every checkpoint of the node's document, newest number first. Returns a
+     * Builder so the controller paginates it.
      *
      * @return Builder<DocumentRevision>
      */
     public function history(Node $node): Builder
     {
-        return $this->query()
-            ->where('node_id', $node->getKey())
-            ->orderByDesc('version_no');
+        return $this->forDocumentOf($node)->orderByDesc('number');
     }
 
     /**
      * @return Builder<DocumentRevision>
      */
-    private function query(): Builder
+    private function forDocumentOf(Node $node): Builder
     {
         $model = $this->documentsConfig->model('document_revision');
 
-        return $model::query();
+        return $model::query()->whereIn(
+            'document_id',
+            Document::query()->where('node_id', $node->getKey())->select('id'),
+        );
     }
 }

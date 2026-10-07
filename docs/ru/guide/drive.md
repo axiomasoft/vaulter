@@ -102,7 +102,7 @@ $storage->quota_bytes;  // ?int — null означает без огранич�
 |---|---|---|
 | `NodeKind::Folder` | `folder` | — (виртуальный каталог, держит потомков) |
 | `NodeKind::File` | `file` | `v_files` / `v_file_versions` / `v_blobs` |
-| `NodeKind::Document` | `document` | `v_node_document_versions` (TipTap/Yjs) |
+| `NodeKind::Document` | `document` | `v_documents` + `v_document_revisions` (TipTap/Yjs) |
 | `NodeKind::Shortcut` | `shortcut` | указатель на другой узел (`shortcut_target_id`) |
 
 Эта страница покрывает папки и файлы через `DriveHandle`. У узлов-документов

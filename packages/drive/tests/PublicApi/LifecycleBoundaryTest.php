@@ -126,7 +126,7 @@ it('rejects duplicate lifecycle registrations without replacing the first handle
 
 it('copies and restores immutable payload identity edge attributes and metadata with correct sequence', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('abcdef', 'source.txt'));
-    $original = $node->currentVersion()->firstOrFail();
+    $original = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $blob = $original->blob()->firstOrFail();
     $original->forceFill([
         'manifest_blob_id' => $blob->id,
@@ -139,7 +139,7 @@ it('copies and restores immutable payload identity edge attributes and metadata 
     $edges = lifecycleBoundaryEdges($original);
     $originalBeforeCopy = $original->fresh()->getAttributes();
     $copy = $this->system->nodes()->copy($node, options: new CopyOptions(name: 'copied.txt'));
-    $copied = $copy->currentVersion()->firstOrFail();
+    $copied = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     expect($copy->sequence)->toBe(0)->and($node->refresh()->sequence)->toBe(0)
         ->and($copied->id)->not->toBe($original->id)
@@ -160,6 +160,9 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         ->and($restored->manifest_blob_id)->toBe($original->manifest_blob_id)
         ->and($restored->declared_mime_type)->toBe('text/plain')
         ->and($restored->keep_forever)->toBeTrue()
+        // Copy-forward restore remembers its source (D34); a copy does not.
+        ->and($restored->restored_from_revision_id)->toBe($original->id)
+        ->and($copied->restored_from_revision_id)->toBeNull()
         ->and(lifecycleBoundaryEdges($restored))->toBe($edges)
         ->and($original->fresh()->getAttributes())->toBe($originalBeforeRestore)
         ->and($node->refresh()->sequence)->toBe(2)
@@ -169,7 +172,7 @@ it('copies and restores immutable payload identity edge attributes and metadata 
 
 it('uses fresh destination admission without inheriting a legacy scan exemption', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy admitted bytes', 'legacy.txt'));
-    $original = $node->currentVersion()->firstOrFail();
+    $original = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $original->forceFill(['scan_status' => 'not_required', 'extra_data' => ['legacy_scan_exemption' => true]])->save();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'legacy-copy');
@@ -177,7 +180,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     config()->set('vaulter.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), OperationContext::system($this->system->model(), 'lifecycle acceptance fixture'));
     $copy = $this->system->nodes()->copy($node);
-    $copied = $copy->currentVersion()->firstOrFail();
+    $copied = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     expect($copied->scan_status)->toBe('pending')
         ->and(($copied->extra_data ?? [])['legacy_scan_exemption'] ?? null)->toBeNull()
@@ -187,7 +190,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
 
 it('refuses known infected immutable bytes before copying changes the database', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('infected fixture bytes', 'infected.txt'));
-    $node->currentVersion()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
+    $node->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
     $before = lifecycleBoundaryState();
 
     expect(fn () => $this->system->nodes()->copy($node))->toThrow(ContentQuarantinedException::class)
@@ -224,7 +227,7 @@ it('empty completes later roots then rethrows the first original failure with fa
     // Distinct timestamps guarantee the failed root is processed first.
     $failed->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
     $later->refresh()->forceFill(['trashed_at' => Carbon::now()->subDay()])->save();
-    $failedRevision = $failed->currentVersion()->firstOrFail();
+    $failedRevision = $failed->file()->firstOrFail()->currentRevision()->firstOrFail();
     $failedEdges = lifecycleBoundaryEdges($failedRevision);
     $failure = new RuntimeException('first original failure');
     lifecycleBoundaryInjectFailure($failed, $failure);
@@ -235,8 +238,8 @@ it('empty completes later roots then rethrows the first original failure with fa
     } catch (RuntimeException $caught) {
         expect($caught)->toBe($failure);
     }
-    expect(Node::withTrashed()->whereKey($failed->id)->exists())->toBeTrue()
-        ->and(Node::withTrashed()->whereKey($later->id)->exists())->toBeFalse()
+    expect(Node::query()->whereKey($failed->id)->exists())->toBeTrue()
+        ->and(Node::query()->whereKey($later->id)->exists())->toBeFalse()
         ->and($failed->fresh()->sequence)->toBe(1)
         ->and(lifecycleBoundaryEdges($failedRevision->fresh()))->toBe($failedEdges)
         ->and($this->system->model()->refresh()->used_bytes)->toBe(strlen('bad payload'));
@@ -251,7 +254,7 @@ it('empty counts successful subtree roots rather than the number of nodes', func
     $this->system->nodes()->trash($second);
 
     expect($this->system->trash()->empty())->toBe(2)
-        ->and(Node::withTrashed()->whereIn('id', [$first->id, $second->id])->count())->toBe(0)
+        ->and(Node::query()->whereIn('id', [$first->id, $second->id])->count())->toBe(0)
         ->and($this->system->trash()->empty())->toBe(0);
 });
 
@@ -263,14 +266,14 @@ it('retention purge reports a failed root exits one and still physically commits
     }
     $failed->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(42)])->save();
     $later->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(41)])->save();
-    $failedRevision = $failed->currentVersion()->firstOrFail();
+    $failedRevision = $failed->file()->firstOrFail()->currentRevision()->firstOrFail();
     $edges = lifecycleBoundaryEdges($failedRevision);
     lifecycleBoundaryInjectFailure($failed, new RuntimeException('controlled retention failure'));
     Log::spy();
 
     $this->artisan('vaulter:purge-trash', ['--days' => 30])->assertExitCode(1);
-    expect(Node::withTrashed()->whereKey($failed->id)->exists())->toBeTrue()
-        ->and(Node::withTrashed()->whereKey($later->id)->exists())->toBeFalse()
+    expect(Node::query()->whereKey($failed->id)->exists())->toBeTrue()
+        ->and(Node::query()->whereKey($later->id)->exists())->toBeFalse()
         ->and(lifecycleBoundaryEdges($failedRevision->fresh()))->toBe($edges)
         ->and($this->system->model()->refresh()->used_bytes)->toBe(strlen('retained bad bytes'));
     Log::shouldHaveReceived('error')->once()->with('Vaulter retention purge root failed.', Mockery::on(

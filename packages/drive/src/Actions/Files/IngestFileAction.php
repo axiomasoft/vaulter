@@ -149,7 +149,7 @@ final readonly class IngestFileAction
                     $currentFile = $target->file()->firstOrFail();
                     $this->sequence->assertExpected(locked: $target, expected: $data->expectedSequence);
                     $file = $this->files->lockForUpdate($currentFile);
-                    $previousHead = $file->currentVersion()->first();
+                    $previousHead = $file->currentRevision()->first();
                 }
 
                 $admissionSequence = $this->scans->next($context);
@@ -235,11 +235,6 @@ final readonly class IngestFileAction
             versionNo: $version->number,
         );
 
-        $this->nodeStore->update($node, [
-            'file_id' => $file->id,
-            'current_version_id' => $version->id,
-        ]);
-
         $this->scans->admit($context, $version);
 
         event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
@@ -283,9 +278,8 @@ final readonly class IngestFileAction
             versionNo: $version->number,
         );
 
-        $this->nodeStore->repointHead(
+        $this->nodeStore->cacheHead(
             node: $node,
-            currentVersionId: $version->id,
             mimeType: $data->mimeType ?? $node->mime_type,
             extension: $node->extension,
             sizeBytes: $size,

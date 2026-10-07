@@ -66,7 +66,7 @@ final readonly class UploadCleanupReconciler
                     throw new RuntimeException('Upload cleanup has incomplete committed pointers.');
                 }
                 $nodeClass = app(VaulterConfig::class)->model('node');
-                $node = $nodeClass::query()->withTrashed()->where('drive_id', $locked->drive_id)->whereKey($locked->result_node_id)->first();
+                $node = $nodeClass::query()->where('drive_id', $locked->drive_id)->whereKey($locked->result_node_id)->first();
                 $revision = $node?->file()->first()?->versions()->whereKey($locked->result_revision_id)->first();
                 if ($revision === null || (string) $revision->blob_id !== (string) $locked->result_blob_id) {
                     throw new RuntimeException('Upload cleanup has inconsistent committed pointers.');

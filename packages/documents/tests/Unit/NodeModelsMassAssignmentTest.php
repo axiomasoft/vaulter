@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\MassAssignmentException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 
@@ -27,15 +28,12 @@ it('never mass-assigns author_id/node_id on NodeComment via fill() (F-P1.8-02)',
         ->and($comment->body)->toBe('legit comment text');
 });
 
-it('never mass-assigns node_id/status on DocumentRevision via fill() (F-P1.8-02)', function (): void {
-    $version = new DocumentRevision;
-    $version->fill([
-        'node_id' => 999,
+it('never mass-assigns anything on a DocumentRevision checkpoint via fill() (F-P1.8-02, D34)', function (): void {
+    // Checkpoints are written only by DocumentStateWriter with forceFill(); fill()
+    // with request-shaped input must not reach a single column.
+    expect(fn () => (new DocumentRevision)->fill([
+        'document_id' => 999,
         'status' => 'committed',
         'content' => ['type' => 'doc', 'content' => []],
-    ]);
-
-    expect($version->getAttributes())->not->toHaveKey('node_id')
-        ->and($version->getAttributes())->not->toHaveKey('status')
-        ->and($version->content)->toBe(['type' => 'doc', 'content' => []]);
+    ]))->toThrow(MassAssignmentException::class);
 });

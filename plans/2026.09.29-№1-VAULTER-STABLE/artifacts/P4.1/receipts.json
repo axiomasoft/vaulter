@@ -1,0 +1,166 @@
+{
+ "item": "PLAN2.P4.1",
+ "base_head": "82be74945541076c0abce7f1f82e9c9dffcc67c3",
+ "candidate": "working tree committed as the P4.1 executor commit",
+ "route": "anthropic/claude-opus-5-5/high",
+ "env": {
+  "SQ": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:",
+  "PG": "pgsql 127.0.0.1:5432 vaulter_test",
+  "MY": "mysql 127.0.0.1:3306 vaulter_test"
+ },
+ "receipts": {
+  "V1": {
+   "exit": 0,
+   "seconds": 48,
+   "finished_at": "2026-10-07T15:12:09Z",
+   "command": "cd . && env $SQ scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema packages/core/tests/Drive packages/core/tests/Operations packages/core/tests/PublicApi packages/core/tests/Arch",
+   "tools": [
+    {
+     "tool": "pest",
+     "result": "passed",
+     "tests": 264,
+     "passed": 257,
+     "skipped": 7,
+     "assertions": 2478
+    }
+   ],
+   "named_tests_seen": null
+  },
+  "V2": {
+   "exit": 0,
+   "seconds": 49,
+   "finished_at": "2026-10-07T15:12:58Z",
+   "command": "cd ./packages/documents && env $SQ ../../scripts/php84 vendor/bin/pest --ci tests/Schema tests/Document tests/Unit tests/Arch",
+   "tools": [],
+   "summary_line": "Tests:    3 skipped, 264 passed (1041 assertions)",
+   "named_tests_seen": [
+    "DocumentHeadIntegrityTest",
+    "DocumentStateVersionTest",
+    "PurgeTrashCascadeTest"
+   ]
+  },
+  "V3": {
+   "exit": 0,
+   "seconds": 78,
+   "finished_at": "2026-10-07T15:14:16Z",
+   "command": "cd ./packages/drive && env $SQ ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/Uploads tests/PublicApi",
+   "tools": [],
+   "summary_line": "Tests:    1 skipped, 376 passed (1161 assertions)",
+   "named_tests_seen": null
+  },
+  "V4": {
+   "exit": 0,
+   "seconds": 464,
+   "finished_at": "2026-10-07T15:22:00Z",
+   "command": "cd . && env $PG scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade packages/core/tests/Schema",
+   "tools": [
+    {
+     "tool": "pest",
+     "result": "passed",
+     "tests": 120,
+     "passed": 120,
+     "assertions": 1075
+    }
+   ],
+   "named_tests_seen": null
+  },
+  "V5": {
+   "exit": 0,
+   "seconds": 648,
+   "finished_at": "2026-10-07T15:32:48Z",
+   "command": "cd . && env $MY scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/CanonicalSchemaTest.php packages/core/tests/Schema/KeyColumnTypesTest.php packages/core/tests/Schema/FileHeadIntegrityTest.php",
+   "tools": [
+    {
+     "tool": "pest",
+     "result": "passed",
+     "tests": 10,
+     "passed": 10,
+     "assertions": 128
+    }
+   ],
+   "named_tests_seen": null
+  },
+  "V6": {
+   "exit": 0,
+   "seconds": 38,
+   "finished_at": "2026-10-07T15:33:26Z",
+   "command": "cd ./packages/documents && env $PG ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentHeadIntegrityTest.php tests/Document/DocumentStateVersionTest.php tests/Document/PurgeTrashCascadeTest.php",
+   "tools": [],
+   "summary_line": "Tests:    12 passed (73 assertions)",
+   "named_tests_seen": [
+    "DocumentHeadIntegrityTest",
+    "DocumentStateVersionTest",
+    "PurgeTrashCascadeTest"
+   ]
+  },
+  "V80a": {
+   "exit": 0,
+   "seconds": 11,
+   "finished_at": "2026-10-07T15:33:37Z",
+   "command": "cd . && scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+   "tools": [
+    {
+     "tool": "pint",
+     "result": "passed"
+    },
+    {
+     "tool": "phpstan",
+     "result": "passed",
+     "errors": 0
+    }
+   ],
+   "named_tests_seen": null
+  },
+  "V80b": {
+   "exit": 0,
+   "seconds": 9,
+   "finished_at": "2026-10-07T15:33:46Z",
+   "command": "cd ./packages/documents && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+   "tools": [
+    {
+     "tool": "pint",
+     "result": "passed"
+    }
+   ],
+   "summary_line": "[OK] No errors",
+   "named_tests_seen": null
+  },
+  "V80c": {
+   "exit": 0,
+   "seconds": 8,
+   "finished_at": "2026-10-07T15:33:54Z",
+   "command": "cd ./packages/drive && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+   "tools": [
+    {
+     "tool": "pint",
+     "result": "passed"
+    }
+   ],
+   "summary_line": "[OK] No errors",
+   "named_tests_seen": null
+  },
+  "V80d": {
+   "exit": 0,
+   "seconds": 10,
+   "finished_at": "2026-10-07T15:34:04Z",
+   "command": "cd ./packages/filament && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+   "tools": [
+    {
+     "tool": "pint",
+     "result": "passed"
+    }
+   ],
+   "summary_line": "[OK] No errors",
+   "named_tests_seen": null
+  },
+  "V81": {
+   "exit": 0,
+   "seconds": 0,
+   "finished_at": "2026-10-07T15:34:04Z",
+   "command": "cd . && python3 'plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py' check",
+   "tools": [],
+   "output": "opus-coverage OK: 1438 единиц, 254 секций, 0 нарушений",
+   "named_tests_seen": null
+  }
+ }
+}

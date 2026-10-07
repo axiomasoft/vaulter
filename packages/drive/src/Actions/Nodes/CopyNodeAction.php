@@ -87,7 +87,7 @@ final readonly class CopyNodeAction
                 }
                 app(FileContentLifecycle::class)->prepareCopy($sources);
                 $addedBytes = 0;
-                foreach ($sources->sortBy('file_id') as $member) {
+                foreach ($sources as $member) {
                     if ($member->kind === NodeKind::File && $member->trashed_at === null) {
                         $addedBytes += $member->size_bytes;
                     }

@@ -92,7 +92,7 @@ it('stores detected MIME separately when the upload source provides no declared 
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'raw.bin'), new UploadOptions(declaredMimeType: null));
 
-    expect($node->mime_type)->toBe('text/plain')->and($node->currentVersion()->firstOrFail()->declared_mime_type)->toBeNull();
+    expect($node->mime_type)->toBe('text/plain')->and($node->file()->firstOrFail()->currentRevision()->firstOrFail()->declared_mime_type)->toBeNull();
 
     $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
 

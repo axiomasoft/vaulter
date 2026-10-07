@@ -151,7 +151,7 @@ it('UploadFile L234-236: committed version has status=committed, correct created
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'doc.txt'));
 
-    $version = $node->currentVersion()->first();
+    $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->status)->toBe('committed')        // L234
         ->and($version->created_by)->toEqual(42)       // L235
         ->and($version->committed_at)->not->toBeNull() // L236
@@ -369,7 +369,7 @@ it('CopyNode L151: copied file version has status=committed', function (): void 
 
     $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'src-copy.bin'));
 
-    $version = $copy->currentVersion()->first();
+    $version = $copy->file()->firstOrFail()->currentRevision()->first();
     // RemoveArrayItem mutant: 'status' key missing → DB default (likely null or empty).
     expect($version->status)->toBe('committed');
 });
@@ -407,7 +407,7 @@ it('DownloadController L114: empty original_name falls back to node name in the 
     ])->assertCreated()->json('data.id');
 
     // Force original_name to '' on the current version so the fallback branch is exercised.
-    $version = Node::find($nodeId)->currentVersion()->first();
+    $version = Node::find($nodeId)->file()->firstOrFail()->currentRevision()->first();
     $version->forceFill(['original_name' => ''])->save();
 
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
@@ -448,7 +448,7 @@ it('DownloadController uses octet-stream when revision MIME is null despite node
     $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
         'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
-    $version = Node::find($nodeId)->currentVersion()->first();
+    $version = Node::find($nodeId)->file()->firstOrFail()->currentRevision()->first();
     $version->forceFill(['mime_type' => null])->save();
     Node::find($nodeId)->forceFill(['mime_type' => 'image/png'])->save();
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));

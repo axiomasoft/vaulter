@@ -89,6 +89,6 @@ it('copies a stale file from its current head and reserves that exact size', fun
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
     $copy = $drive->nodes()->copy($stale, destination: null, options: new CopyOptions(name: 'copy.txt'));
     expect($copy->size_bytes)->toBe(10)
-        ->and($copy->file->currentVersion->size_bytes)->toBe(10)
+        ->and($copy->file->currentRevision->size_bytes)->toBe(10)
         ->and($drive->model()->refresh()->used_bytes)->toBe(20);
 });

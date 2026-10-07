@@ -22,13 +22,13 @@ it('copies node and current version attributes and charges the exact logical siz
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'source.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
     $drive->actingAs(DriveTestHelpers::actor($drive, 7))->files()->addRevision($source, UploadSource::fromStream(DriveTestHelpers::streamFor('second bytes'), $source->name));
     $source->refresh()->forceFill(['is_pinned' => true, 'inherit_grants' => false])->save();
-    $head = $source->currentVersion()->firstOrFail();
+    $head = $source->file()->firstOrFail()->currentRevision()->firstOrFail();
     $used = $drive->model()->refresh()->used_bytes;
 
     AccessTestHelpers::grant($source, GrantLevel::Owner, subjectId: 17);
     $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($source, $dest)->refresh();
     $file = $copy->file()->firstOrFail();
-    $version = $copy->currentVersion()->firstOrFail();
+    $version = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     expect($copy->parent_id)->toEqual($dest->getKey())
         ->and($copy->name)->toBe('source.txt')

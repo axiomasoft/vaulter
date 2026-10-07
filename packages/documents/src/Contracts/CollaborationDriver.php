@@ -12,8 +12,8 @@ use Vaulter\Models\Drive\Node;
 /**
  * The node-attached realtime-collaboration transport (master plan §7 / ADR-0001 /
  * M4b). A Hocuspocus driver joins a document node through an external Node hub
- * and mints a signed room JWT. Document content remains in
- * v_node_document_versions until the later schema migration.
+ * and mints a signed room JWT. Document content lives in the document aggregate
+ * (v_documents working state, v_document_revisions checkpoints).
  *
  * The authorization decision (may this actor connect, and at what level) is NOT the
  * driver's job — the controller resolves it through the Vaulter-owned AccessResolver

@@ -27,7 +27,7 @@ it('V31 actual HTTP node revision and upload session routes cannot cross tenant'
     app()->instance(TenantResolver::class, $resolver);
     $handle = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $file = $handle->files()->upload(UploadSource::fromString('bytes', 'private.txt'));
-    $revision = $file->currentVersion()->firstOrFail();
+    $revision = $file->file()->firstOrFail()->currentRevision()->firstOrFail();
     $this->actingAs(AccessTestHelpers::user(10));
     $session = $this->postJson('api/vaulter/storages/'.$handle->model()->id.'/resumable-uploads', ['protocol' => 'tus', 'name' => 'resumed.txt', 'total_size_bytes' => 4])->assertCreated()->json('data.upload_id');
     expect($file->tenant_id)->toBe('A')->and($revision->tenant_id)->toBe('A');

@@ -1,19 +1,20 @@
 ---
 title: Узлы-документы
-description: Создание, редактирование и версионирование узлов-документов — контент TipTap, автосохранение против именованных версий, восстановление и прунинг — поверх REST-поверхности Documents.
+description: Создание, редактирование и версионирование узлов-документов — рабочее состояние, неизменяемые чекпоинты, восстановление и прунинг — поверх REST-поверхности Documents.
 outline: deep
 ---
 
 # Узлы-документы
 
 **Узел-документ** — это запись с `kind=document` в едином дереве узлов (`v_nodes`), полезная
-нагрузка которой — структурный TipTap JSON, версионируемый в `v_node_document_versions`. Он
+нагрузка которой живёт в **агрегате документа**: рабочее состояние в `v_documents` и неизменяемые
+чекпоинты в `v_document_revisions`. Он
 живёт в том же дереве, что папки и файлы, поэтому Drive Actions (перемещение / переименование /
 корзина / восстановление), а также стражи квоты и уникальности среди соседей применяются к нему
-без изменений — документ это просто узел с приложенной историей версий.
+без изменений — документ это узел с приложенным агрегатом.
 
 Эта страница описывает создание узлов-документов, чтение и автосохранение их контента, модель
-**автосохранение против именованных версий**, восстановление предыдущей версии и то, как история
+**рабочее состояние против чекпоинтов**, восстановление предыдущего чекпоинта и то, как история
 **прунится** (с пинами `keep_forever`). Про слой маршрутизации по форматам — в каком редакторе
 открывается узел — см. [Document Handlers](./document-handlers.md). Про рендер контента в
 HTML/Markdown — см. [Экспорт](./export.md).
@@ -26,37 +27,51 @@ HTML/Markdown — см. [Экспорт](./export.md).
 
 ## Модель данных
 
-Узел-документ несёт свой указатель на голову так же, как узел-файл — `current_version_id` на
-узле указывает на головную `DocumentRevision`. Таблица версий **append-only** (только
-дозапись): зафиксированная версия неизменяема (нет `updated_at`, нет soft-delete), `version_no`
-монотонен в пределах узла, а уникальный индекс `(node_id, version_no)` — тот стержень, на котором
-сериализуются два конкурентных коммита.
+Документ состоит из двух частей (ADR-0022, поправка D34):
 
-Колонки `v_node_document_versions` (из `SchemaBuilder::defineDocumentVersions`):
+- **Рабочее состояние** — одна строка `v_documents` на узел `kind=document` (`node_id`
+  уникален, каскад при удалении узла). Это контент, который сейчас видит любой редактор; каждое
+  сохранение его перезаписывает.
+- **Чекпоинты** — строки `v_document_revisions`. Чекпоинт **неизменяем**: после INSERT меняется
+  только `keep_forever`, поэтому id ревизии всегда означает одни и те же байты. Автосохранённые
+  чекпоинты снимаются по интервалу, именованные — по запросу, восстановление копирует старый
+  чекпоинт вперёд.
+
+Указатель головы живёт в агрегате (`v_documents.current_revision_id`), а не на узле: у `v_nodes`
+больше нет `current_version_id`/`file_id`, поэтому ревизия файла и ревизия документа с одинаковым
+id не путаются. На PostgreSQL и MySQL составной внешний ключ `(current_revision_id, id) →
+v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантирует, что голова — чекпоинт
+этого же документа, и не даёт прунингу её удалить (SQLite — см.
+[Совместимость с БД](./database-compatibility.md)).
+
+Колонки `v_documents`:
 
 | Колонка | Тип | Смысл |
 |---|---|---|
-| `id` | id-strategy | Первичный ключ (bigint / ulid / uuid7 согласно `ids.strategy`). |
-| `tenant_id` | nullable | Присутствует только при `tenancy.enabled`. |
-| `node_id` | FK → `v_nodes` | Узел-владелец с `kind=document` (каскад при удалении). |
-| `version_no` | integer | Монотонен в пределах узла; `unique(node_id, version_no)`. |
-| `content` | json / jsonb | Проекция TipTap/ProseMirror JSON. |
-| `yjs_state` | bytea / longBlob | Бинарный Yjs CRDT-апдейт — источник истины в реальном времени (совместное редактирование). |
-| `yjs_state_size` | integer, nullable | Кэшированная длина `yjs_state` в байтах (список никогда не тянет блоб, чтобы измерить его размер). |
-| `format` | string(16), default `tiptap` | Ключ формата версии. |
-| `content_hash` | char(64), nullable | Хэш контента (дедупликация / детекция изменений). |
-| `snapshot_label` | string, nullable | Метка **именованной** версии; null для автосохранений. |
-| `is_autosave` | boolean, default `false` | Отличает churn автосохранений от именованных чекпоинтов. |
-| `status` | string(12), default `committed` | Статус жизненного цикла (индексирован). |
-| `keep_forever` | boolean, default `false` | Пинит версию вне окна прунинга. |
-| `created_by` | actor, nullable | Идентификатор актора. |
-| `created_at` | timestamp, nullable | Только дозапись — `updated_at` нет. |
+| `id` | по стратегии id | Первичный ключ. |
+| `tenant_id` | ключ хоста, nullable | Только при включённой тенантности. |
+| `node_id` | FK → `v_nodes`, уникален | Узел `kind=document` (каскад при удалении). |
+| `type` | string(64) | Ключ типа документа: `vaulter/rich-text`, `vaulter/markdown`, `vaulter/spreadsheet`. |
+| `schema_version` | integer | Версия схемы контента рабочего состояния. |
+| `current_revision_id` | ссылка, nullable | Чекпоинт-голова. |
+| `revision_count` | integer | Монотонный счётчик чекпоинтов; прунинг его не уменьшает, номер не переиспользуется. |
+| `collab_epoch` | BIGINT ≥ 0 | Поколение коллаборации; растёт при восстановлении и при замене JSON у документа с Yjs. |
+| `state_version` | BIGINT ≥ 0 | Валидатор контента; +1 на каждую эффективную запись рабочего состояния. |
+| `checkpoint_state_version` | BIGINT ≥ 0 | `state_version`, захваченный головой. |
+| `content`, `content_hash`, `content_size` | json, char(64), integer | Каноническая JSON-проекция, её хеш и размер в байтах. |
+| `yjs_state`, `yjs_state_size` | binary, integer | Состояние Yjs CRDT (источник истины коллаборации) и его размер. |
+| `last_checkpoint_at` | timestamp | Когда снят последний чекпоинт. |
+| `created_by`, `updated_by`, метки времени | | Аудит. |
 
-::: info Отличие от легаси-таблицы версий
-`DocumentRevision` (привязана к узлу, `v_node_document_versions`) **отдельна** от легаси
-`DocumentVersion` (привязана к id документа, `v_document_versions`). Легаси-путь остаётся
-нетронутым; эта страница документирует только путь, привязанный к узлу.
-:::
+Колонки `v_document_revisions`: `id`, `tenant_id`, `document_id` (FK, каскад), `number`
+(уникален в документе), `schema_version`, `content`, `content_hash`, `content_size`, `yjs_state`,
+`yjs_state_size`, `state_version` (захваченная версия рабочего состояния), `label`, `is_autosave`,
+`keep_forever`, `status` (`committed`), `restored_from_revision_id` (FK, set null) и
+`created_by`/`created_at`.
+
+Валидатор контента **не зависит от узла**: `v_nodes.sequence` растёт при переименовании,
+перемещении и корзине, `state_version` — при записи контента. Переименование документа не
+инвалидирует открытый редактор, а сохранение не инвалидирует переименование (PLAN2.D35).
 
 ## Создание узла-документа
 
@@ -120,9 +135,9 @@ const node = await client.documentNodes.createNode(storageId, {
 
 - Первым отрабатывает страж уникальности среди соседей — коллизия имён бросает
   `NodeNameConflictException`.
-- Одна транзакция создаёт узел, коммитит версию **v1** (`version_no = 1`,
-  `is_autosave = false`, `status = committed`), перенаводит на неё `current_version_id`, затем
-  после коммита выбрасывает `DocumentCreated`.
+- Одна транзакция создаёт узел и агрегат, пишет рабочее состояние (`state_version = 1`) и
+  снимает чекпоинт **#1** (`is_autosave = false`), затем после коммита выбрасывает
+  `DocumentCreated`.
 - Узел штампуется документным mime Vaulter
   (`application/vnd.vaulter.document+json`), поэтому он всегда маршрутизируется к обработчику
   редактора TipTap независимо от любого расширения в его имени. См.
@@ -158,32 +173,31 @@ curl https://app.test/api/vaulter/nodes/77/content
 
 :::
 
-На стороне сервера контроллер резолвит `head($node) ?? latest($node)` (указатель на голову,
-иначе — наибольший `version_no`) и возвращает `DocumentRevisionResource` **с** контентом.
-Листинг истории (ниже) опускает `content`, чтобы оставаться лёгким — только этот запрос одной
-версии несёт полный документ.
+Ответ сохраняет форму версии: `id` и `version_no` называют чекпоинт-голову, а
+`content`/`content_hash`/`yjs_state_size` — это рабочее состояние; `is_autosave` равен `true`,
+пока рабочее состояние опережает голову. Листинг истории (ниже) опускает `content`.
 
-## Автосохранение против именованных версий
+## Рабочее состояние и чекпоинты
 
-У истории две полосы, и различие между ними — сердце модели версий:
-
-- **Автосохранение** (`is_autosave = true`) — churn сессии редактирования. В пределах **окна
-  дебаунса** головной автосохранённой версии новое автосохранение **перезаписывает её на месте**
-  (без новой строки); за пределами окна дозаписывается свежая строка автосохранения. Это не даёт
-  сессии набора текста затопить историю.
-- **Именованная** (`is_autosave = false`, задан `snapshot_label`) — устойчивый, осмысленный для
-  человека чекпоинт. Именованная версия **никогда** не перезаписывается путём дебаунса; она
-  всегда создаёт свежую строку, а с `keep_forever` полностью пинится вне прунинга.
+- **Автосохранение** — каждое сохранение заменяет **рабочее состояние** (без строки истории).
+  **Автосохранённый чекпоинт** (`is_autosave = true`) снимается, если головы нет или с прошлого
+  прошло `vaulter-documents.revisions.checkpoint_interval_seconds` (по умолчанию 300); `0` —
+  чекпоинт на каждое эффективное сохранение. Сохранённые чекпоинты никогда не перезаписываются.
+- **Именованный** (`is_autosave = false`, задан `label`) — устойчивый осмысленный чекпоинт
+  текущего рабочего состояния, снимается по запросу, даже если ничего не менялось; с
+  `keep_forever` закреплён вне прунинга.
 
 ### Автосохранение контента
 
-`UpdateDocumentContentAction` — это путь автосохранения. Решение перезаписать-против-дозаписать
-даёт `shouldOverwrite(head)`:
+`UpdateDocumentContentAction` пишет через `DocumentStateWriter` — единственного писателя
+рабочего состояния:
 
-- голова должна быть версией **автосохранения** (зафиксированная/именованная голова всегда
-  вынуждает свежую строку), и
-- она должна быть в пределах `config('vaulter-documents.revisions.autosave_debounce_seconds')` от текущего
-  момента (окно `0` означает, что каждое автосохранение перезаписывает головное автосохранение).
+- идентичное сохранение (тот же хеш контента и состояние Yjs) — **no-op**: ни роста версии, ни
+  события;
+- иначе `state_version` растёт ровно на единицу; передайте `expectedStateVersion`, чтобы
+  отказать сохранению по устаревшему чтению (`412 document_state_mismatch`);
+- замена JSON у документа с состоянием Yjs сбрасывает это состояние и двигает `collab_epoch`,
+  поэтому открытые комнаты перезагружаются, а не вливают старую историю обратно.
 
 ::: code-group
 
@@ -224,23 +238,23 @@ app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
     content:  TipTapContent::fromArray($tipTapDoc),
     yjsState: null,                  // optional raw Yjs binary update
     actorId:  $user->getKey(),
+    expectedStateVersion: 3,         // optional: 412 when another save landed first
 ));
 ```
 
 :::
 
-PATCH возвращает `200`, даже когда дозаписал свежую строку — автосохранение семантически это
-апдейт. `yjs_state` — это опциональный **закодированный в base64** Yjs CRDT-апдейт на проводе;
+PATCH возвращает `200` с рабочим состоянием — автосохранение семантически это апдейт. `yjs_state` — это опциональный **закодированный в base64** Yjs CRDT-апдейт на проводе;
 запрос декодирует его обратно в сырые байты (и он равен null для несовместного пути). TipTap
-`content` — его проекция. Action после коммита выбрасывает `DocumentContentUpdated` с
-`created` true/false, сообщая слушателям, была ли дозаписана строка.
+`content` — его проекция. Если сохранение что-то изменило, Action после коммита выбрасывает
+`DocumentContentUpdated`: `version` — чекпоинт-голова после сохранения, `created` — снят ли он
+этим сохранением.
 
-::: tip Два окна дебаунса
-Есть две независимые крутилки дебаунса. `useDocumentNode({ debounceMs })` — это **клиентский**
-таймер перед отправкой PATCH (по умолчанию 800 мс). `versions.autosave_debounce_seconds` —
-**серверное** окно, которое решает перезаписать-против-дозаписать (по умолчанию 30 с). Они не
-связаны — настраивайте клиент под сетевую болтовню, а сервер — под то, насколько гранулярна
-история автосохранений.
+::: tip Клиентский дебаунс и интервал чекпоинтов
+`useDocumentNode({ debounceMs })` — **клиентский** таймер перед отправкой PATCH (по умолчанию
+800 мс). `revisions.checkpoint_interval_seconds` — **серверный** интервал между
+автосохранёнными чекпоинтами (по умолчанию 300 с). Ключ 0.2 `revisions.autosave_debounce_seconds`
+устарел и игнорируется: он перезаписывал голову на месте, чего чекпоинты никогда не делают.
 :::
 
 ### Создание именованной версии
@@ -277,10 +291,10 @@ app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
 
 :::
 
-`CreateNamedRevisionAction` копирует content/yjs/format текущей головы в свежую строку с
-`is_autosave = false`, перенаводит на неё голову, прунит и выбрасывает `DocumentRevisionCreated`
-(`restored = false`). Именованная версия превращает рабочее состояние в устойчивый чекпоинт —
-в отличие от churn автосохранений.
+`CreateNamedRevisionAction` снимает текущее **рабочее состояние** в свежую ревизию с
+`is_autosave = false`, делает её головой, прунит и выбрасывает `DocumentRevisionCreated`
+(`restored = false`). Ни `state_version`, ни `collab_epoch` не меняются, поэтому предусловие не
+нужно.
 
 ## Листинг истории версий
 
@@ -323,9 +337,9 @@ interface DocumentVersion {
 
 ## Восстановление предыдущей версии
 
-Восстановление **только дозаписывает**: оно никогда не мутирует целевую версию — оно копирует её
-контент в свежую версию, которая становится новой головой, поэтому история остаётся неизменяемым,
-аудируемым логом, а само восстановление — версионируемым событием.
+Восстановление **копирует вперёд**: исходный чекпоинт не меняется — его контент и Yjs становятся
+рабочим состоянием, а свежий чекпоинт записывает `restored_from_revision_id`, поэтому история
+остаётся неизменяемым аудируемым логом.
 
 ::: code-group
 
@@ -333,7 +347,7 @@ interface DocumentVersion {
 const { restoreVersion } = useDocumentNode(nodeId)
 
 const restored = await restoreVersion(versionId)
-// the new head is a copy of versionId, labelled "Restored from vN"
+// the new head is a copy of versionId, labelled "Restored from #N"
 ```
 
 ```bash [HTTP]
@@ -353,22 +367,23 @@ app(RestoreDocumentRevisionAction::class)->execute(
 
 :::
 
-`RestoreDocumentRevisionAction` резолвит исходную версию **в границах узла** (id версии из другого
-узла здесь никогда не восстановится), копирует её content/yjs/format в новую зафиксированную
-строку с меткой `Restored from vN`, перенаводит голову, прунит и выбрасывает
+`RestoreDocumentRevisionAction` резолвит исходный чекпоинт **в документе этого узла** (id ревизии
+другого документа или ревизии файла с тем же id здесь не восстановится), пишет его как рабочее
+состояние (`state_version` +1, `collab_epoch` +1; опционально `expectedStateVersion`), снимает
+чекпоинт с меткой `Restored from #N` и `restored_from_revision_id`, прунит и выбрасывает
 `DocumentRevisionCreated` с `restored = true`.
 
 ## Прунинг и удержание
 
-История ограничена `config('vaulter-documents.revisions.limit')` — числом самых свежих сохраняемых версий
-(`0` = без лимита). Прунинг выполняется **внутри** каждой транзакции записи
-(`DocumentRevisionStoreRepository::prune`) после создания/именования/восстановления.
+История ограничена `config('vaulter-documents.revisions.limit')` — числом самых свежих сохраняемых
+чекпоинтов (`0` = без лимита). Прунинг выполняется **внутри** транзакции записи сразу после
+каждого чекпоинта (`DocumentRevisionStoreRepository::prune`).
 
 ```php
 // config/vaulter-documents.php
 'revisions' => [
-    'limit' => 50,                       // stored versions per node before pruning (0 = ∞)
-    'autosave_debounce_seconds' => 30, // the server overwrite window described above
+    'limit' => 50,                          // stored checkpoints per document before pruning (0 = ∞)
+    'checkpoint_interval_seconds' => 300,   // autosave checkpoint interval described above
 ],
 ```
 
@@ -379,12 +394,12 @@ app(RestoreDocumentRevisionAction::class)->execute(
 - **текущую голову** — всегда исключается.
 
 Из оставшихся (прунируемых) строк сохраняются самые свежие `max`; всё за пределами этого окна
-удаляется. Если `versions.max` не задан, он откатывается к легаси-ключу `max_versions`.
+удаляется. Если `versions.max` не задан, он откатывается к легаси-ключу `max_versions`. На
+PostgreSQL/MySQL голову дополнительно защищает внешний ключ головы.
 
 ::: warning Прунинг необратим
-Спрунённая версия удаляется жёстко (таблица append-only, без soft-delete). Прикрепите всё, что
-обязательно нужно сохранить, именованной версией с `keep_forever` **до** того, как она выпадет из
-окна `max`.
+Спрунённый чекпоинт удаляется жёстко. Закрепите всё, что обязательно нужно сохранить, именованным
+чекпоинтом с `keep_forever` **до** того, как он выпадет из окна `max`.
 :::
 
 ## События
@@ -394,8 +409,8 @@ app(RestoreDocumentRevisionAction::class)->execute(
 
 | Событие | Кем выбрасывается | Полезная нагрузка |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (v1), `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение | `node`, `version`, `created` (bool — дозаписано против перезаписано), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (чекпоинт #1), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение / store коллаборации (только при изменении) | `node`, `version` (чекпоинт-голова после сохранения), `created` (bool — снят ли чекпоинт этим сохранением), `actorId` |
 | `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
 
 ## Ошибки
@@ -405,6 +420,8 @@ app(RestoreDocumentRevisionAction::class)->execute(
 | `Exceptions\NotADocumentException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
 | `Documents\Exceptions\InvalidDocumentContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
 | `Exceptions\DocumentRevisionNotFoundException` | Восстановление нацелено на id версии, не принадлежащий узлу. |
+| `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` больше не совпадает (`412 document_state_mismatch`). |
+| `Documents\Exceptions\CollaborationEpochMismatchException` | Запись коллаборации из старого поколения комнаты (`409 collaboration_epoch_mismatch`). |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |
 
 ## Дальше

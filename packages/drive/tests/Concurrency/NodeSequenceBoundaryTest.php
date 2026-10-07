@@ -84,7 +84,7 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
     foreach (['v_file_revisions', 'v_blobs', 'v_file_revision_blobs'] as $table) {
         expect($db->table($table)->count())->toBe($before[$table] + (int) $contentWon);
     }
-    expect(FileRevision::query()->where('file_id', $node->file_id)->orderBy('number')->pluck('number')->all())
+    expect(FileRevision::query()->where('file_id', $node->file()->value('id'))->orderBy('number')->pluck('number')->all())
         ->toBe($contentWon ? [1, 2] : [1]);
     foreach (['v_activity', 'v_outbox'] as $table) {
         expect($db->table($table)->count() - $before[$table])->toBeLessThanOrEqual(1);
@@ -139,7 +139,7 @@ it('SEC-REV-RECEIPT returns its own committed revision when a later writer chang
         ->and($later->number)->toBe(3)
         ->and($later->sha256)->toBe(hash('sha256', 'later bytes'))
         ->and($receipt->id)->not->toBe($later->id)
-        ->and($node->refresh()->current_version_id)->toBe($later->id)
+        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($later->id)
         ->and($node->sequence)->toBe(2)
         ->and(FileRevision::query()->count())->toBe(3);
 });
@@ -193,7 +193,7 @@ it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two r
                     new UploadOptions(onConflict: OnNameConflict::AddRevision),
                 );
 
-                return ['id' => $node->id, 'sha' => $node->currentVersion->sha256, 'expected_sha' => hash('sha256', $bytes), 'source_open' => $stream->isReadable(), 'nonseekable' => !$stream->isSeekable(), 'pid' => getmypid(), 'backend' => app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid];
+                return ['id' => $node->id, 'sha' => $node->file->currentRevision->sha256, 'expected_sha' => hash('sha256', $bytes), 'source_open' => $stream->isReadable(), 'nonseekable' => !$stream->isSeekable(), 'pid' => getmypid(), 'backend' => app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid];
             } finally {
                 $stream->close();
             }

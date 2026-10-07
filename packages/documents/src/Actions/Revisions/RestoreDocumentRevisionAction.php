@@ -4,46 +4,46 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Revisions;
 
+use LogicException;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Restore a document node's head to a prior version (§2.5 / M4a). Append-only: a
- * restore never mutates the target version — it COPIES its content into a fresh
- * version that becomes the new head (so the history stays an immutable log and a
- * restore is itself a versioned, auditable event). The new version inherits the
- * restored snapshot's content/yjs and labels its provenance.
+ * Restore a document to an earlier checkpoint (§2.5 / M4a) — copy-forward: the
+ * source checkpoint is never changed; its content and Yjs state become the working
+ * state and a new checkpoint records restored_from_revision_id. The collaboration
+ * epoch moves, so rooms editing the replaced state cannot write it back.
  *
- * One outer transaction; prune runs inside it; a single after-commit event fires
- * with restored=true. The version-to-restore is resolved through the repository
- * bounded to the node, so a version id from another node never restores here.
+ * The source is resolved within the node's own aggregate, so a revision id of
+ * another document (or a file revision with the same id) never restores here. One
+ * outer transaction under T → N → D locks; a single after-commit event fires with
+ * restored=true.
  */
 final readonly class RestoreDocumentRevisionAction
 {
     public function __construct(
-        private DocumentRevisionReadRepository $read,
-        private DocumentRevisionStoreRepository $store,
-        private NodeStoreRepository $nodes,
+        private DocumentReadRepository $documents,
+        private DocumentRevisionReadRepository $revisions,
+        private DocumentStateWriter $writer,
         private VaulterDatabase $database,
-        private DocumentsConfig $documentsConfig,
         private TreeGuard $tree,
-        private NodeSequence $sequence,
     ) {}
 
-    public function execute(Node $node, int|string $versionId, int|string|null $actorId = null, ?int $expectedSequence = null): DocumentRevision
+    public function execute(Node $node, int|string $versionId, int|string|null $actorId = null, ?int $expectedStateVersion = null): DocumentRevision
     {
-        return $this->database->transaction(function () use ($node, $versionId, $actorId, $expectedSequence): DocumentRevision {
+        return $this->database->transaction(function () use ($node, $versionId, $actorId, $expectedStateVersion): DocumentRevision {
             $driveId = $node->getRawOriginal('drive_id');
             $nodeId = $node->getRawOriginal($node->getKeyName());
             if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
@@ -59,43 +59,34 @@ final readonly class RestoreDocumentRevisionAction
                 throw NotADocumentException::forNode($nodeId);
             }
             $node = $this->tree->sync($node, $current);
-            $this->sequence->assertExpected(locked: $node, expected: $expectedSequence);
-            $source = $this->read->forNode($node, $versionId);
+            $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
+            $document->setRelation('node', $node);
+            $source = $this->revisions->forNode($node, $versionId);
             if (!$source instanceof DocumentRevision) {
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
             }
-            $version = $this->store->create([
-                'node_id' => $node->getKey(),
-                'version_no' => $this->store->nextVersionNo($node),
-                'content' => $source->content,
-                'yjs_state' => $source->yjs_state,
-                'yjs_state_size' => $source->yjs_state_size,
-                'format' => $source->format,
-                'content_hash' => $source->content_hash,
-                'snapshot_label' => sprintf('Restored from v%d', $source->version_no),
-                'is_autosave' => false,
-                'status' => 'committed',
-                'created_by' => $actorId,
-                'created_at' => now(),
-            ]);
 
-            $this->nodes->update($node, ['current_version_id' => $version->getKey()]);
-
-            $this->store->prune(
-                node: $node,
-                max: $this->documentsConfig->revisionLimit(),
-                headId: $version->getKey(),
-            );
-            $this->sequence->bump(locked: $node);
+            $result = $this->writer->write($document, new DocumentStateChange(
+                cause: StateWriteCause::Restore,
+                content: OpaqueDocumentContent::fromArray($source->content ?? []),
+                yjsState: $source->yjs_state,
+                schemaVersion: $source->schema_version,
+                actorId: $actorId,
+                expectedStateVersion: $expectedStateVersion,
+                forceCheckpoint: true,
+                label: sprintf('Restored from #%d', $source->number),
+                restoredFrom: $source,
+            ));
+            $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A restore must create a checkpoint.');
 
             event(new DocumentRevisionCreated(
                 node: $node,
-                version: $version,
+                version: $revision,
                 restored: true,
                 actorId: $actorId,
             ));
 
-            return $version;
+            return $revision;
         });
     }
 }

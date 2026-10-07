@@ -33,7 +33,7 @@ it('I9 persists detected MIME separately from the declared generic MIME', functi
     $drive = UploadTestHelpers::storage();
     $stream = UploadTestHelpers::streamFor('plain text');
     $node = app(IngestFileAction::class)->execute(OperationContext::system($drive, 'test fixture'), new IngestFileInput($drive, $stream, 'note.txt', 'application/octet-stream'));
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($revision->mime_type)->toBe('text/plain')->and($revision->declared_mime_type)->toBe('application/octet-stream')->and($revision->sha256)->toBe(hash('sha256', 'plain text'));
     fclose($stream);
 });

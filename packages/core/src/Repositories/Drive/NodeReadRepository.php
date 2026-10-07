@@ -199,7 +199,7 @@ final class NodeReadRepository
         $sql = 'WITH RECURSIVE chain AS (SELECT seed.*, '.$initialPath.' FROM ('.$seed->toSql().') seed
             UNION ALL SELECT n.id, n.parent_id, n.drive_id, n.inherit_grants, c.origin, c.depth + 1'.($strict ? ', n.tenant_id' : '').', '.$path.'
             FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.drive_id = c.drive_id
-            WHERE c.inherit_grants = ? AND NOT ('.$cycle.') AND n.deleted_at IS NULL)
+            WHERE c.inherit_grants = ? AND NOT ('.$cycle.'))
             SELECT * FROM chain ORDER BY origin, depth';
         $rows = $connection->select($sql, [
             ...$seed->getBindings(),
@@ -708,7 +708,7 @@ final class NodeReadRepository
         }
         app(TenancyBoundary::class)->assertNode($node);
 
-        return $node->newQuery()->withTrashed()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+        return $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
     }
 
     /** @param Collection<int, Node> $nodes

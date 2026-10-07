@@ -217,8 +217,8 @@ it('R07b: one-day retention purges an old root and preserves one inside the wind
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '1']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
-        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
+        ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
 it('R07b: two-day retention includes the exact cutoff and reports two purged roots', function (): void {
@@ -233,9 +233,9 @@ it('R07b: two-day retention includes the exact cutoff and reports two purged roo
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '2']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 2 trashed subtrees.')
-        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($boundary->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
+        ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($boundary->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
 it('R07b: zero retention purges a root trashed now while leaving live nodes', function (): void {
@@ -247,8 +247,8 @@ it('R07b: zero retention purges a root trashed now while leaving live nodes', fu
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '0']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
-        ->and(Node::withTrashed()->whereKey($trashed->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($live->id)->exists())->toBeTrue();
+        ->and(Node::query()->whereKey($trashed->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($live->id)->exists())->toBeTrue();
 });
 
 it('R07b: non-numeric days uses configured retention rather than zero', function (): void {
@@ -262,8 +262,8 @@ it('R07b: non-numeric days uses configured retention rather than zero', function
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
-        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
+        ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
 // ── PurgeTrashCommand: ForceDeleteNodeAction (L94 RemoveMethodCall) ───────────
@@ -286,7 +286,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
 
 // ── PurgeTrashCommand: purgeSubtree (L99 RemoveMethodCall) ───────────────────
 
-it('R07b: purge-trash physically removes rows — withTrashed still finds nothing (L99)', function (): void {
+it('R07b: purge-trash physically removes rows — no query finds them afterwards (L99)', function (): void {
     $this->travelTo(Carbon::parse('2026-09-23 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $n = AccessTestHelpers::folder($storage, null, 'r07b-physical');
@@ -295,8 +295,8 @@ it('R07b: purge-trash physically removes rows — withTrashed still finds nothin
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
 
-    // Row must be physically deleted; withTrashed reveals soft-deleted but not purged rows
-    expect(Node::withTrashed()->whereKey($nodeId)->exists())->toBeFalse();
+    // Row must be physically deleted (nodes have no soft-delete tombstone)
+    expect(Node::query()->whereKey($nodeId)->exists())->toBeFalse();
 });
 
 // ── PurgeTrashCommand: purgedRoots / purgedNodeCount counting (L105/107) ──────

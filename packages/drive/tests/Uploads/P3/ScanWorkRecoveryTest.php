@@ -73,7 +73,7 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
     $stream = UploadTestHelpers::streamFor('durable');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $revision->scanObligations()->firstOrFail();
     expect($work->state)->toBe('pending')->and($work->attempt)->toBe(0);
     Bus::fake();
@@ -124,7 +124,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $stream = UploadTestHelpers::streamFor('dedup');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $spec = app(ScanPolicyResolver::class)->forDrive($drive)[0];
     $repo = app(ScanObligationRepository::class);
     $oldKey = (string) Str::uuid();
@@ -198,7 +198,7 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
     $stream = UploadTestHelpers::streamFor('pre-cutover');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'first');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -231,7 +231,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
     $stream = UploadTestHelpers::streamFor('versions');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $row = $node->currentVersion()->firstOrFail()->scanObligations()->firstOrFail();
+    $row = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
     config()->set('vaulter.scan.scanner_version', '2');
     $result = app(ScanWorkReconciler::class)->reconcile();
     expect($result['stalled_configuration'])->toBe(1)->and($row->refresh()->state)->toBe('pending');
@@ -240,7 +240,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
     expect($row->refresh()->state)->toBe('settled')->and($row->reason)->toBe('superseded_policy')
         ->and($row->lease_token)->toBeNull();
     app(ScanBackfillReconciler::class)->expand();
-    expect($node->currentVersion()->firstOrFail()->scanObligations()->count())->toBe(2);
+    expect($node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->count())->toBe(2);
 });
 
 it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publication', function (): void {
@@ -291,7 +291,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         $stream = UploadTestHelpers::streamFor('UTC recovery');
         $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'utc.txt', 'text/plain'));
         fclose($stream);
-        $work = $node->currentVersion()->firstOrFail()->scanObligations()->firstOrFail();
+        $work = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
         $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save();
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
             ->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
@@ -327,7 +327,7 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
     $stream = UploadTestHelpers::streamFor('clock skew');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'skew.txt', 'text/plain'));
     fclose($stream);
-    $work = $node->currentVersion()->firstOrFail()->scanObligations()->firstOrFail();
+    $work = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
     $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->addMinutes(5)])->save();
 
     // The application clock runs ten minutes ahead; the database clock still says "not due yet".

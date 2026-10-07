@@ -10,8 +10,8 @@ use Vaulter\Models\Drive\Node;
  * The ONE shared item-safety trash-check for the IDENTITY read/download/export
  * surface (P2.2 / F-P1.12-01) — the download/export twin of
  * {@see ShareResolver} 's `safeTargetNode()` trash guard on the
- * SHARE channel. A node sitting in the drive trash (`trashed_at` — distinct from
- * the Laravel SoftDeletes `deleted_at`) must be unreadable through the identity
+ * SHARE channel. A node sitting in the drive trash (`trashed_at`) must be
+ * unreadable through the identity
  * channel too, even when the actor's ACL grant on it is still live: trash is
  * item-safety, ORTHOGONAL to the ACL (H.2), so this stays out of AccessResolver
  * and instead gates the two PHP-stream/content controllers directly — the

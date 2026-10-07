@@ -7,9 +7,9 @@ namespace Vaulter\Operations;
 use InvalidArgumentException;
 use LogicException;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Int64Counter;
 
 final readonly class NodeSequence
 {
@@ -35,16 +35,14 @@ final readonly class NodeSequence
     {
         $this->transaction();
         $current = $locked->sequence;
-        if ($current < 0 || $current === PHP_INT_MAX) {
-            throw new SequenceOverflowException;
-        }
-        $updated = $locked->newQuery()->whereKey($locked->id)->where('drive_id', $locked->drive_id)->where('sequence', $current)->update(['sequence' => $current + 1]);
+        $next = Int64Counter::increment($current);
+        $updated = $locked->newQuery()->whereKey($locked->id)->where('drive_id', $locked->drive_id)->where('sequence', $current)->update(['sequence' => $next]);
         if ($updated !== 1) {
             throw new StaleNodeException;
         }
-        $locked->forceFill(['sequence' => $current + 1])->syncOriginalAttribute('sequence');
+        $locked->forceFill(['sequence' => $next])->syncOriginalAttribute('sequence');
 
-        return $current + 1;
+        return $next;
     }
 
     private function transaction(): void

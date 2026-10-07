@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -40,9 +40,8 @@ function readPathStorage(): Drive
  */
 function seedLegacyHeadContent(int|string $nodeId, array $content): void
 {
-    $head = DocumentRevision::query()->where('node_id', $nodeId)->orderByDesc('version_no')->firstOrFail();
-
-    DocumentRevision::query()->whereKey($head->getKey())->update(['content' => json_encode($content)]);
+    // The content endpoint reads the working state; seed it as old code stored it.
+    Document::query()->where('node_id', $nodeId)->update(['content' => json_encode($content)]);
 }
 
 it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {
@@ -108,9 +107,10 @@ it('круг чтение→сохранение: что ресурс отдал
 
     $content = $this->getJson('api/vaulter/nodes/'.$nodeId.'/content')->assertOk()->json('data.content');
 
+    // Accepted back as-is; an unchanged document is a no-op, a changed one autosaves.
     $this->patchJson('api/vaulter/nodes/'.$nodeId.'/content', ['content' => $content])
         ->assertOk()
-        ->assertJsonPath('data.is_autosave', true);
+        ->assertJsonPath('data.version_no', 1);
 })->with([
     'относительная ссылка' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',

@@ -43,5 +43,5 @@ it('applies the maintenance retention override and reports the actual subtree co
     $output = Artisan::output();
 
     expect($output)->toContain('Purged 1 trashed subtree.')
-        ->and(Node::withTrashed()->whereKey($node->getKey())->exists())->toBeFalse();
+        ->and(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
 });

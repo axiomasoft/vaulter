@@ -29,7 +29,7 @@ trait StampsDriveTenant
                     $nodeId = $fileClass::query()->whereKey($row->getAttribute('file_id'))->value('node_id');
                 }
                 $nodeClass = $config->model('node');
-                $driveId = $nodeClass::query()->withTrashed()->whereKey($nodeId)->value('drive_id');
+                $driveId = $nodeClass::query()->whereKey($nodeId)->value('drive_id');
             }
             $class = $config->model('drive');
             $drive = $class::query()->whereKey($driveId)->first();

@@ -41,7 +41,7 @@ it('uses the configured types for every key column on a fresh schema', function 
         $expected = $inspector->expected();
         $columns = array_map(static fn ($item): string => $item->column, $expected);
 
-        expect($expected)->toHaveCount(40)
+        expect($expected)->toHaveCount(43)
             ->and($columns)->toContain(
                 'drive_id',
                 'file_revision_id',

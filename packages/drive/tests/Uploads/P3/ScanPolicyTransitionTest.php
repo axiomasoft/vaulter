@@ -71,7 +71,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     $stream = UploadTestHelpers::streamFor('legacy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $revision->forceFill(['scan_status' => 'clean'])->save();
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -100,7 +100,7 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
     $stream = UploadTestHelpers::streamFor('fresh');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $revision->forceFill(['created_at' => '1990-01-01', 'committed_at' => '1990-01-01'])->save();
     expect($revision->scan_admission_sequence)->toBe(1);
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
@@ -135,7 +135,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
     $stream = UploadTestHelpers::streamFor('between');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $bind(ScanMode::NewContentOnly);
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     [$global, $profile] = app(ScanPolicyResolver::class)->forDrive($drive);
@@ -152,7 +152,7 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
     $stream = UploadTestHelpers::streamFor('restore');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id])->save();
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -160,7 +160,7 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $restored = app(RestoreNodeAction::class)->execute($context,
         new RestoreNodeInput($node, $drive->rootNode()->firstOrFail()));
-    expect($restored->trashed_at)->toBeNull()->and($restored->current_version_id)->toBe($revision->id)
+    expect($restored->trashed_at)->toBeNull()->and($restored->file()->value('current_revision_id'))->toBe($revision->id)
         ->and($revision->refresh()->scan_admission_sequence)->toBe(1);
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $restored, $revision))
         ->toThrow(ContentUnavailableException::class);

@@ -177,7 +177,7 @@ Vaulter::forStorage($record->storage)->rename(
 - **Filters**: kind (`SelectFilter` over `NodeKind` cases), storage, and a `Trashed` ternary
   (`Live only` / `Trashed only`).
 - **Query**: drops the `SoftDeletingScope` so soft-**trashed** rows (`trashed_at`) are visible to the
-  Trashed filter, while hard-deleted (`deleted_at`) rows stay hidden.
+  Trashed filter; purged nodes no longer exist.
 - **Create**: disabled — folders/files are created through the Drive Actions, not a resource form.
 - **Pages**: `index` only.
 

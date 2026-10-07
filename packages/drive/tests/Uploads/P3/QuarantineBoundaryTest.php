@@ -25,7 +25,7 @@ beforeEach(function (): void {
 
 it('SEC-R01 legacy not_required and bare clean cannot authorize required public bytes', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy', 'legacy.txt'));
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $revision->forceFill(['scan_status' => 'clean'])->save();
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
@@ -43,7 +43,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     config()->set('vaulter.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     $node = $this->system->files()->upload(UploadSource::fromString('payload', 'file.txt'));
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
     $attempt = $repo->claim($work->id, $work->generation, new DateTimeImmutable);

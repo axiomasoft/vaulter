@@ -303,7 +303,7 @@ it('keeps the source original name on a copied version', function (): void {
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('abc'), 'kept-name.txt'));
     $copy = $drive->nodes()->copy(node: $source, options: new CopyOptions(name: 'other.txt'));
 
-    expect($copy->refresh()->currentVersion->original_name)->toBe('kept-name.txt');
+    expect($copy->refresh()->file->currentRevision->original_name)->toBe('kept-name.txt');
 });
 
 it('hides move copy and revision sources when Create is present but Read is absent', function (): void {
@@ -420,6 +420,6 @@ it('floors negative retention at zero and purges a root trashed now', function (
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '-3']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
-        ->and(Node::withTrashed()->whereKey($trashed->id)->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($live->id)->exists())->toBeTrue();
+        ->and(Node::query()->whereKey($trashed->id)->exists())->toBeFalse()
+        ->and(Node::query()->whereKey($live->id)->exists())->toBeTrue();
 });

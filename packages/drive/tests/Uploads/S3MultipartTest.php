@@ -71,7 +71,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
         ->and(Blob::query()->count())->toBe(1);
 
     // The committed content hash is recomputed from the STITCHED bytes, not any ETag.
-    $version = $node->currentVersion()->first();
+    $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->sha256)->toBe(hash('sha256', $whole))
         ->and($session->refresh()->status)->toBe(UploadStatus::Committed);
 });
@@ -92,7 +92,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
     $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     // The committed bytes are the REPLACEMENT (bbbbb), not the original.
-    $version = $node->currentVersion()->first();
+    $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->sha256)->toBe(hash('sha256', 'bbbbb'));
 });
 
@@ -109,7 +109,7 @@ it('лживый ETag не используется как адрес — сер
     app(UploadSessionManager::class)->markAssembled($session->refresh());
     $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
-    $version = $node->currentVersion()->first();
+    $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->sha256)->toBe(hash('sha256', $bytes))
         ->and($version->sha256)->not->toBe(trim($result['etag'], '"'));
 });

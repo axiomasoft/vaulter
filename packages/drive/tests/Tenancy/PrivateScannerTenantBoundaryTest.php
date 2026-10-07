@@ -71,7 +71,7 @@ beforeEach(function (): void {
     } finally {
         fclose($stream);
     }
-    $this->revision = $this->node->currentVersion()->firstOrFail();
+    $this->revision = $this->node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $this->work = $this->revision->scanObligations()->firstOrFail();
 });
 

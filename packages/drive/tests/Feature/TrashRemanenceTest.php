@@ -51,7 +51,7 @@ it('404s on downloading a specific version of a trashed node, F-P1.12-01', funct
         'file' => UploadedFile::fake()->createWithContent('v.txt', 'v1'),
     ])->assertCreated()->json('data.id');
 
-    $versionId = Node::query()->find($nodeId)->current_version_id;
+    $versionId = Node::query()->find($nodeId)->file()->value('current_revision_id');
 
     $this->get('api/vaulter/nodes/'.$nodeId.'/versions/'.$versionId.'/download')->assertOk();
 

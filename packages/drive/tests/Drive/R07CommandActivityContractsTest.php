@@ -197,7 +197,7 @@ it('DriveContext upload from a string uses the provided original name for the ve
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 3))->files()->upload(UploadSource::fromString('plain-bytes', 'from-string.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     expect($node->name)->toBe('from-string.txt')
-        ->and($node->currentVersion()->firstOrFail()->original_name)->toBe('from-string.txt');
+        ->and($node->file()->firstOrFail()->currentRevision()->firstOrFail()->original_name)->toBe('from-string.txt');
 });
 
 it('StorageManager root() provisions a missing root with an empty name', function (): void {
@@ -208,7 +208,7 @@ it('StorageManager root() provisions a missing root with an empty name', functio
     // The root row must be gone for good: even a soft-deleted parentless row is the
     // drive's one parentless node under the single-root index.
     $storage->forceFill(['root_node_id' => null])->save();
-    Node::query()->whereKey($oldRootId)->forceDelete();
+    Node::query()->whereKey($oldRootId)->delete();
 
     $root = app(DriveProvisioner::class)->root($storage->refresh());
 

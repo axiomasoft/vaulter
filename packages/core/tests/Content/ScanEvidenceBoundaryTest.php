@@ -50,7 +50,6 @@ function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): ar
         'mime_type' => 'text/plain', 'original_name' => 'fixture.txt', 'status' => 'committed', 'committed_at' => now('UTC')]);
     $revision->save();
     (new FileRevisionBlob)->forceFill(['file_revision_id' => $revision->id, 'blob_id' => $blob->id, 'role' => 'data', 'ordinal' => 0])->save();
-    $node->forceFill(['file_id' => $file->id, 'current_version_id' => $revision->id])->save();
     $file->forceFill(['current_revision_id' => $revision->id])->save();
 
     return [$drive, $revision, $blob, OperationContext::system($drive, 'scan boundary fixture'), app(ScanConfig::class)->globalSpec()];

@@ -24,11 +24,15 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_numeric($value) ? (int) $value : 50;
     }
 
-    public function autosaveDebounceSeconds(): int
+    /**
+     * How long the working state may run ahead of its last autosave checkpoint.
+     * 0 checkpoints every effective write.
+     */
+    public function checkpointIntervalSeconds(): int
     {
-        $value = $this->config->get(key: 'vaulter-documents.revisions.autosave_debounce_seconds', default: 30);
+        $value = $this->config->get(key: 'vaulter-documents.revisions.checkpoint_interval_seconds', default: 300);
 
-        $seconds = is_numeric($value) ? (int) $value : 30;
+        $seconds = is_numeric($value) ? (int) $value : 300;
 
         return max($seconds, 0);
     }

@@ -142,7 +142,7 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     $session->refresh();
     expect($committed->sequence)->toBe(8)->and($session->status)->toBe(UploadStatus::Committed)
         ->and($session->result_node_id)->toBe($node->id)
-        ->and($session->result_revision_id)->toBe($committed->current_version_id)
+        ->and($session->result_revision_id)->toBe($committed->file()->value('current_revision_id'))
         ->and($session->input_fingerprint)->toBeString();
     $resultRevision = $session->result_revision_id;
     $this->drive->nodes()->rename($node, 'intervening rename.txt', 8);

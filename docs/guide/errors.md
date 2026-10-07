@@ -29,6 +29,8 @@ Codes are a stable public contract (AD29).
 | `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
+| `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
+| `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
@@ -42,6 +44,8 @@ Codes are a stable public contract (AD29).
 The response also preserves `errors.name` for name conflicts and invalid names, `errors.url` for blocked
 outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
 include `reason`: `mime_mismatch`, `invalid_tiptap` or `unsupported_content`.
+`document_state_mismatch` and `collaboration_epoch_mismatch` include `context.expected` and
+`context.actual`.
 Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
 
 ## node-not-found
@@ -158,7 +162,7 @@ trash. Trash the node first; a live node is never purged directly.
 ## not-a-document-node
 
 `NotADocumentException` — document content/version operations require a
-`kind=document` node (its payload lives in `v_node_document_versions`). Create the
+`kind=document` node (its payload lives in its `v_documents` aggregate). Create the
 document via the document-node create endpoint first, or target a document node.
 
 ## quota-exceeded
@@ -247,3 +251,16 @@ View receives `node_not_found` (404) before profile restrictions are disclosed.
 `concurrent_update` (409, with `Retry-After: 1`) means a deadlock or serialization failure
 survived the bounded outermost retry (three attempts for upload completion). Nothing was
 committed and the staged upload bytes are intact, so repeat the request unchanged.
+
+## document-state-mismatch
+
+`document_state_mismatch` (412) — the save carried `expectedStateVersion`, but another save of
+the document's content landed first (`context.actual` is the current `state_version`). Nothing
+was written. Reload the document and apply the edit again. Renames and moves never cause this:
+the node and its content have separate validators.
+
+## collaboration-epoch-mismatch
+
+`collaboration_epoch_mismatch` (409) — a collaboration write came from a room of an older
+generation: the document was restored or its JSON replaced since the room opened. The write is
+refused so the abandoned history is not merged back; reopen the document in a new room.

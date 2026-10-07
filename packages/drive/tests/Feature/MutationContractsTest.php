@@ -187,7 +187,7 @@ it('preserves move, rename and copy payloads and activity context', function ():
 it('preserves file upload and version payloads with their actual byte counts', function (): void {
     $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first bytes'), 'report.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
-    $firstVersion = $node->currentVersion()->firstOrFail();
+    $firstVersion = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     $uploaded = Outbox::query()->where('event', EventType::FileUploaded->value)->sole();
     $uploadPayload = $uploaded->payload;
@@ -209,7 +209,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
     ]);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->addRevision($node->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('second version'), $node->refresh()->name));
-    $secondVersion = $node->refresh()->currentVersion()->firstOrFail();
+    $secondVersion = $node->refresh()->file()->firstOrFail()->currentRevision()->firstOrFail();
     $versioned = Outbox::query()->where('event', EventType::FileRevisionAdded->value)->sole();
     $versionPayload = $versioned->payload;
     unset($versionPayload['event_id'], $versionPayload['actor_id']);

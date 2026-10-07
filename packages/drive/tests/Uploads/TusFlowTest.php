@@ -109,7 +109,7 @@ it('resume после разрыва: второй клиент читает HEA
     $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     // The reassembled bytes are intact (server-stitched at the authoritative offset).
-    $version = $node->currentVersion()->first();
+    $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->size_bytes)->toBe(16)
         ->and($version->sha256)->toBe(hash('sha256', $bytes));
 });
@@ -246,7 +246,7 @@ it('новая версия: резюмируемая загрузка на су
     app(UploadSessionManager::class)->markAssembled($v1->refresh());
     $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($v1->storage, 'test fixture'), session: $v1->refresh());
 
-    $firstVersionId = $node->current_version_id;
+    $firstVersionId = $node->file()->value('current_revision_id');
 
     // A NEW-VERSION resumable upload onto that node.
     $v2 = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
@@ -261,6 +261,6 @@ it('новая версия: резюмируемая загрузка на су
     $file = $updated->file;
 
     expect($file->revision_count)->toBe(2)
-        ->and($updated->current_version_id)->not->toEqual($firstVersionId)
-        ->and($file->currentVersion->number)->toBe(2);
+        ->and($updated->file()->value('current_revision_id'))->not->toEqual($firstVersionId)
+        ->and($file->currentRevision->number)->toBe(2);
 });

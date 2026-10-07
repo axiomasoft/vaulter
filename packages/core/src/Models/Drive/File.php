@@ -30,7 +30,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
- * @property-read FileRevision|null $currentVersion
+ * @property-read FileRevision|null $currentRevision
  */
 class File extends Model
 {
@@ -83,9 +83,12 @@ class File extends Model
     }
 
     /**
+     * The head revision. The composite head FK guarantees it is a revision of
+     * this file on PostgreSQL/MySQL.
+     *
      * @return BelongsTo<FileRevision, $this>
      */
-    public function currentVersion(): BelongsTo
+    public function currentRevision(): BelongsTo
     {
         return $this->belongsTo(app(VaulterConfig::class)->model('file_revision'), 'current_revision_id');
     }

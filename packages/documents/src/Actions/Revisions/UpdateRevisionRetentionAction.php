@@ -12,7 +12,7 @@ use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Release a version's `keep_forever` pin (§2.5 / M4a, F-P1.12-03) — the missing
+ * Release a checkpoint's `keep_forever` pin (§2.5 / M4a, F-P1.12-03) — the missing
  * inverse of the pin set by {@see CreateNamedRevisionAction} (`keepForever: true`).
  * Before this action existed, no code path ever cleared the flag, so a pinned
  * version was excluded from {@see DocumentRevisionStoreRepository::prune()}
@@ -40,6 +40,6 @@ final readonly class UpdateRevisionRetentionAction
             throw DocumentRevisionNotFoundException::forNode($node->getKey(), $versionId);
         }
 
-        return $this->store->update($version, ['keep_forever' => false]);
+        return $this->store->setRetention($version, keepForever: false);
     }
 }

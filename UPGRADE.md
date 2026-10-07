@@ -6,6 +6,59 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Document aggregate and node pointers (PLAN2.D34, PLAN2.D35, ADR-0022; PLAN2.P4.1)
+
+Back up the database and stop writes before migrating. The upgrade is three migrations:
+`2026_10_01_000005_documents_aggregate`, `2026_10_07_000001_drop_node_legacy_pointers` and
+`2026_10_07_000002_revision_provenance_and_heads`. Each refuses (`UpgradePreflightException`)
+instead of guessing: document nodes without any version, a document head that is not one of its
+own versions, versions attached to non-document nodes, soft-deleted nodes, or a file whose head is
+a revision of another file. Rolling back restores the 0.2 shape with the same ids.
+
+- **`v_node_document_versions` → `v_documents` + `v_document_revisions`.** Every 0.2 version
+  becomes a checkpoint with the **same id** (activity/outbox payloads stay valid):
+  `version_no` → `number`, `snapshot_label` → `label`, `format` → `v_documents.type`
+  (`richtext|table|template` → `vaulter/rich-text`, `markdown` → `vaulter/markdown`, `univer` →
+  `vaulter/spreadsheet`, anything else → `legacy/<format>`). The head's payload becomes the
+  document's working state. Per-version `extra_data` is not carried (no 0.2 code wrote it).
+- **`v_nodes` loses `current_version_id`, `file_id` and `deleted_at`.** Read heads from the
+  aggregate: `$node->file->current_revision_id` / `File::currentRevision()` for files,
+  `v_documents.current_revision_id` for documents. `Node` no longer uses `SoftDeletes`
+  (`withTrashed()`, `onlyTrashed()`, `forceDelete()`, `trashed()` are gone; purge is a real
+  DELETE). `Node::currentVersion()` was removed; `Node::file()` is now a `HasOne` by `node_id`.
+  `File::currentVersion()` → `File::currentRevision()`. Sibling-name uniqueness no longer
+  mentions `deleted_at`. The REST node JSON keeps `file_id`/`current_version_id`, computed from
+  the aggregate.
+- **Document checkpoints are immutable.** After INSERT only `keep_forever` changes; the model
+  throws on any other update and `DocumentRevisionStoreRepository::update()` was removed
+  (`setRetention()` remains). `DocumentRevision` has `document_id`, `number`, `label`,
+  `schema_version`, `state_version`, `content_size`, `restored_from_revision_id` and no
+  `node_id`/`version_no`/`snapshot_label`/`format`/`extra_data`; mass assignment is closed.
+- **Autosave writes the working state, not a revision row.** Saves replace
+  `v_documents.content`/`yjs_state`; an autosave checkpoint is taken when
+  `vaulter-documents.revisions.checkpoint_interval_seconds` (default 300) has passed. The 0.2 key
+  `revisions.autosave_debounce_seconds` (and `vaulter.versions.autosave_debounce_seconds`) is
+  deprecated and ignored with an `E_USER_DEPRECATED` notice — it described an in-place overwrite
+  that no longer exists. `DocumentsConfig::autosaveDebounceSeconds()` →
+  `checkpointIntervalSeconds()`.
+- **Document content writes no longer bump `v_nodes.sequence`.** Content has its own validator,
+  `v_documents.state_version` (+1 per effective write; identical saves are no-ops) and
+  `collab_epoch` (moves on restore and on a JSON replace of Yjs state). `UpdateDocumentContentInput`
+  takes `expectedStateVersion` instead of `expectedSequence` and a stale value throws
+  `StaleDocumentStateException` (`412 document_state_mismatch`); `CreateNamedRevisionInput` lost
+  `expectedSequence` (a named checkpoint changes no validator); `RestoreDocumentRevisionAction`
+  takes `expectedStateVersion`. Code that relied on a document save invalidating a node
+  `expectedSequence` must compare `state_version` instead.
+- **Restore is copy-forward with provenance** for files and documents:
+  `restored_from_revision_id` names the source revision. A restored document checkpoint is
+  labelled `Restored from #N` (was `Restored from vN`).
+- **Events keep their signatures.** `DocumentContentUpdated` fires only when a save changed
+  something; `$version` is the head checkpoint after the save and `$created` says whether this
+  save took it. `DocumentCreated::$version` is checkpoint #1.
+- **Head foreign keys.** On PostgreSQL/MySQL `v_files_head_fk` and `v_documents_head_fk` refuse a
+  head of another aggregate and the deletion of a head; SQLite relies on the Actions. Code that
+  deletes nodes outside Vaulter's purge must clear `current_revision_id` first on MySQL.
+
 ### P1–P3 audit follow-ups (PLAN2 audit 2026-10-07)
 
 - **Folder COPY needs View and Copy on every active descendant.** `nodes()->copy()` now refuses the

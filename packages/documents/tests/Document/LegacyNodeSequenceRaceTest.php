@@ -11,7 +11,6 @@ use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
@@ -56,12 +55,12 @@ function legacyRaceWrite(Closure $write): array
     }
 }
 
-it('SEC-LEGACY-RACE makes Document and rename expected-seven writers compete for one commit', function (): void {
+it('SEC-LEGACY-RACE lets a content write and a rename with their own validators both commit (D35)', function (): void {
     $node = legacyRaceDocument();
     $drive = $node->storage;
     $outcomes = ForkRace::run([
         static fn (): array => legacyRaceWrite(static fn () => app(UpdateDocumentContentAction::class)->execute(
-            new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('race edit'), expectedSequence: 7),
+            new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('race edit'), expectedStateVersion: 1),
         )),
         static fn (): array => legacyRaceWrite(static fn () => Vaulter::drive($drive)->asSystem('legacy sequence race')
             ->nodes()->rename(node: $node, name: 'race rename', expectedSequence: 7)),
@@ -71,21 +70,19 @@ it('SEC-LEGACY-RACE makes Document and rename expected-seven writers compete for
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
     $results = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
-    $kinds = array_column($results, 'kind');
-    sort($kinds);
-    expect($kinds)->toBe(['committed', 'stale'])
+    $document = DocumentTestHelpers::document($node);
+    expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
         ->and(count(array_unique(array_column($results, 'pid'))))->toBe(2)
-        ->and(array_sum(array_column($results, 'events')))->toBe(1)
-        ->and(array_values(array_filter($results, static fn (array $result): bool => $result['kind'] === 'stale'))[0]['status'])->toBe(412)
+        ->and(array_sum(array_column($results, 'events')))->toBe(2)
+        // Only the rename moves the node validator; only the edit moves the content one.
         ->and($node->refresh()->sequence)->toBe(8)
+        ->and($node->name)->toBe('race rename')
+        ->and($document->state_version)->toBe(2)
+        ->and($document->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('race edit')->toArray())
         ->and($drive->refresh()->used_bytes)->toBe(0);
-
-    $documentWon = $results[0]['kind'] === 'committed';
-    expect(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe($documentWon ? 2 : 1)
-        ->and($node->name)->toBe($documentWon ? 'Race document' : 'race rename');
 });
 
-it('SEC-LEGACY-RACE counts the unconditional installed Yjs writer against rename CAS', function (): void {
+it('SEC-LEGACY-RACE keeps the installed Yjs writer off the rename validator (D35)', function (): void {
     $node = legacyRaceDocument();
     $drive = $node->storage;
     $outcomes = ForkRace::run([
@@ -100,18 +97,13 @@ it('SEC-LEGACY-RACE counts the unconditional installed Yjs writer against rename
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
     $results = array_map(static fn (RaceOutcome $outcome): array => $outcome->value, $outcomes);
-    $renamed = $results[1]['kind'] === 'committed';
-    $head = DocumentRevision::query()->whereKey($node->refresh()->current_version_id)->firstOrFail();
-    expect($results[0]['kind'])->toBe('committed')
+    $document = DocumentTestHelpers::document($node);
+    expect(array_column($results, 'kind'))->toBe(['committed', 'committed'])
         ->and(count(array_unique(array_column($results, 'pid'))))->toBe(2)
-        ->and(array_sum(array_column($results, 'events')))->toBe($renamed ? 2 : 1)
-        ->and($node->sequence)->toBe($renamed ? 9 : 8)
-        ->and($node->name)->toBe($renamed ? 'race rename' : 'Race document')
-        ->and($head->yjs_state)->toBe("actual\0Yjs\0snapshot")
-        ->and(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe(2)
+        ->and(array_sum(array_column($results, 'events')))->toBe(2)
+        ->and($node->refresh()->sequence)->toBe(8)
+        ->and($node->name)->toBe('race rename')
+        ->and($document->yjs_state)->toBe("actual\0Yjs\0snapshot")
+        ->and($document->state_version)->toBe(2)
         ->and($drive->refresh()->used_bytes)->toBe(0);
-    if (!$renamed) {
-        expect($results[1]['status'])->toBe(412)
-            ->and($results[1]['events'])->toBe(0);
-    }
 });

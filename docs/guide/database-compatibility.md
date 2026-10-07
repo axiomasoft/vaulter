@@ -22,6 +22,21 @@ unsafe soft-deleted rows, missing document revisions and own-tables deployments.
 Back up and stop writes before changing code/schema. See
 [the upgrade guide](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
+## Aggregate head integrity
+
+A file's head (`v_files.current_revision_id`) and a document's head
+(`v_documents.current_revision_id`) must name a revision of that same aggregate. The guarantee
+differs per engine:
+
+| Engine | Head integrity |
+|---|---|
+| **PostgreSQL**, **MySQL** | Composite foreign keys `v_files_head_fk` / `v_documents_head_fk`: `(current_revision_id, id) → revisions(id, file_id \| document_id) ON DELETE RESTRICT`. A foreign head and deleting a head are refused by the database. |
+| **SQLite** | No head foreign key: SQLite cannot add a constraint to a table created before its revisions table. The Vaulter Actions (and the head-integrity tests) keep the invariant; writes that bypass the Actions are not checked. |
+
+Purge releases the head before the node row is deleted: MySQL checks the RESTRICT key while the
+node → aggregate → revision cascade runs, before the aggregate row is gone. Tables and columns
+are not a public API — change Vaulter data only through its PHP API.
+
 ## Supported engines
 
 | Engine | Status | Use it for |

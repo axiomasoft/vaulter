@@ -172,7 +172,7 @@ it('records download ttfb and bytes for a historical version stream', function (
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first-ver'), 'ver.bin'));
-    $firstVersionId = $file->refresh()->current_version_id;
+    $firstVersionId = $file->refresh()->file()->value('current_revision_id');
 
     $drive->files()->addRevision($file->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('second-ver'), 'ver.bin'));
 

@@ -76,6 +76,33 @@ kind without a registered lifecycle → `UnsupportedNodeKindException` (N06).
 - Revision terminology replaces "version" for content snapshots (`current_revision_id`,
   `FileRevision`, `DocumentRevision`).
 
+## Amendment — working state, immutable checkpoints, separate validators (2026-10-07)
+
+Accepted as PLAN2.D34 and PLAN2.D35; implemented in PLAN2.P4.1.
+
+**Working state + immutable checkpoints (PLAN2.D34).** `v_documents` holds the document's
+working state (`content`, `content_hash`, `content_size`, `yjs_state`, `yjs_state_size`,
+`schema_version`) next to its head pointer. `v_document_revisions` holds immutable checkpoints:
+after INSERT only `keep_forever` changes. Autosave checkpoints are taken on an interval
+(`vaulter-documents.revisions.checkpoint_interval_seconds`, default 300 s), named ones by
+`snapshot()`, and a restore copies a checkpoint forward with `restored_from_revision_id` (also
+added to `v_file_revisions`). The head of either aggregate is protected by a composite foreign
+key `(current_revision_id, id) → revisions(id, file_id | document_id) ON DELETE RESTRICT` on
+PostgreSQL/MySQL; SQLite relies on the Actions. `Vaulter\Documents\Content\DocumentStateWriter`
+is the only writer of the working state and its checkpoints.
+
+**Separate validators (PLAN2.D35).** `v_nodes.sequence` validates the node (name, parent, trash
+state, file head); the content of a document is validated by `v_documents.state_version` and
+`collab_epoch` (signed BIGINT, the `sequence` overflow contract). Every effective write of the
+working state moves `state_version` by one and never touches `v_nodes.sequence`; restore and an
+external JSON replace of a collaborative document also move `collab_epoch`. A stale content
+expectation fails with `412 document_state_mismatch`.
+
+Upgrade: the 0.2 version table becomes the checkpoints with unchanged ids; the head's payload
+becomes the working state (`2026_10_01_000005_documents_aggregate`), the node pointers and
+tombstone go (`2026_10_07_000001_drop_node_legacy_pointers`), and file heads get provenance and
+their foreign key (`2026_10_07_000002_revision_provenance_and_heads`).
+
 ## Alternatives rejected
 
 The source decisions D15–D17 record no rejected alternatives.
@@ -88,3 +115,4 @@ The source decisions D15–D17 record no rejected alternatives.
 - `audits/2026-09-29-stable-audit/opus/06-extension-points.md` §3
 - `audits/2026-09-29-stable-audit/opus/01-review.md` — N03, N06
 - [ADR-0018 — Pluggable editor-engine canon](/adr/0018-editor-engine-canon) (amended)
+- `plans/2026.09.29-№1-VAULTER-STABLE/decisions/D34.json`, `D35.json` — the amendment

@@ -43,6 +43,7 @@ use Vaulter\Models\Content\ScanUtcDateTime;
  * @property string               $original_name
  * @property string               $status
  * @property bool                 $keep_forever
+ * @property int|string|null      $restored_from_revision_id
  * @property int|string|null      $created_by
  * @property Carbon|null          $created_at
  * @property Carbon|null          $committed_at

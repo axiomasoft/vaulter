@@ -177,7 +177,7 @@ Vaulter::forStorage($record->storage)->rename(
 - **Фильтры**: тип (`SelectFilter` по кейсам `NodeKind`), хранилище и тернарный `Trashed`
   (`Live only` / `Trashed only`).
 - **Запрос**: сбрасывает `SoftDeletingScope`, чтобы мягко **удалённые в корзину** строки (`trashed_at`)
-  были видны фильтру Trashed, тогда как жёстко удалённые (`deleted_at`) строки остаются скрытыми.
+  были видны фильтру Trashed, а удалённые purge узлы больше не существуют.
 - **Create**: отключено — папки/файлы создаются через Drive Actions, а не через форму ресурса.
 - **Страницы**: только `index`.
 

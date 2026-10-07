@@ -119,7 +119,7 @@ final class NodeCollaborationController extends Controller
         $node = $this->resolveNode($request, $call);
         $yjsState = $this->yjsState($request);
 
-        $version = $action->execute(new PersistCollaborationStateInput(
+        $result = $action->execute(new PersistCollaborationStateInput(
             node: $node,
             yjsState: $yjsState,
             content: $this->projection($request),
@@ -129,8 +129,8 @@ final class NodeCollaborationController extends Controller
         return new JsonResponse([
             'data' => [
                 'node_id' => $node->getKey(),
-                'version_no' => $version->version_no,
-                'yjs_state_size' => $version->yjs_state_size,
+                'version_no' => $result->document->currentRevision?->number,
+                'yjs_state_size' => $result->document->yjs_state_size,
             ],
         ]);
     }

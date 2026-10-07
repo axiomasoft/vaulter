@@ -7,7 +7,7 @@ outline: deep
 # Совместное редактирование
 
 Vaulter редактирует **узлы-документы** (`kind = document`, контент в
-`v_node_document_versions`) совместно в реальном времени. Бесконфликтное слияние
+`v_documents`) совместно в реальном времени. Бесконфликтное слияние
 обеспечивает **Yjs** — бинарное CRDT-состояние является **источником истины**; JSON TipTap
 это производная проекция. Транспорт скрыт за контрактом `CollaborationDriver`, с двумя
 реализациями на выбор через конфиг.
@@ -61,7 +61,7 @@ Broadcast-каналы комментариев и проверки доступ
 - **`onAuthenticate`** → `POST {laravel}/api/vaulter/collab/authenticate` — Laravel
   определяет ability пользователя на узле и отвечает `{allowed, readOnly, user}`.
 - **`onStoreDocument`** (с дебаунсом на хабе) → `POST {laravel}/api/vaulter/collab/store` —
-  бинарное состояние Yjs (base64) сохраняется в `v_node_document_versions.yjs_state`.
+  бинарное состояние Yjs (base64) сохраняется в рабочее состояние `v_documents.yjs_state`.
 
 Vaulter выпускает JWT через `firebase/php-jwt` (HS256, подпись ключом `VAULTER_COLLAB_SECRET`):
 

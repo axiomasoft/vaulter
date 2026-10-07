@@ -30,8 +30,8 @@ it('загружает файл: node kind=file + File + FileRevision + ребр
         ->and($node->extension)->toBe('txt')
         ->and($node->mime_type)->toBe('text/plain')
         ->and($node->size_bytes)->toBe(11)
-        ->and($node->file_id)->not->toBeNull()
-        ->and($node->current_version_id)->not->toBeNull()
+        ->and($node->file()->value('id'))->not->toBeNull()
+        ->and($node->file()->value('current_revision_id'))->not->toBeNull()
         ->and(FileRevision::query()->count())->toBe(1)
         ->and(Blob::query()->count())->toBe(1);
 });
@@ -75,7 +75,7 @@ it('новая версия: бамп number, перенаведение head, �
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1'), 'doc.txt'));
-    $firstVersionId = $node->current_version_id;
+    $firstVersionId = $node->file()->value('current_revision_id');
 
     $updated = $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('version two longer'), 'doc.txt'));
     $updated = $node->refresh();
@@ -83,9 +83,9 @@ it('новая версия: бамп number, перенаведение head, �
     $file = $updated->file;
 
     expect($file->revision_count)->toBe(2)
-        ->and($updated->current_version_id)->not->toEqual($firstVersionId)
+        ->and($updated->file()->value('current_revision_id'))->not->toEqual($firstVersionId)
         ->and(FileRevision::query()->find($firstVersionId)->status)->toBe('superseded')
-        ->and($file->currentVersion->number)->toBe(2);
+        ->and($file->currentRevision->number)->toBe(2);
 });
 
 it('новая версия корректирует used_bytes на дельту размера', function (): void {

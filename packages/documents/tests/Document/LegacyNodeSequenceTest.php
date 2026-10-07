@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Event;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
@@ -13,13 +12,9 @@ use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
-use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
-use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Facades\Documents;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Exceptions\Nodes\SequenceOverflowException;
-use Vaulter\Exceptions\Nodes\StaleNodeException;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\Documents\FakeExporter;
 
@@ -35,158 +30,57 @@ function legacySequenceDocument(): Node
     ));
 }
 
-it('starts a document at zero and counts changed append and debounce writes once', function (): void {
+it('leaves node.sequence alone on every document content write and counts them in state_version (D35)', function (): void {
+    config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
     $node = legacySequenceDocument();
-    expect($node->sequence)->toBe(0);
+    $first = DocumentTestHelpers::head($node);
+    expect($node->refresh()->sequence)->toBe(0)
+        ->and(DocumentTestHelpers::document($node)->state_version)->toBe(1);
 
-    $action = app(UpdateDocumentContentAction::class);
-    $first = $action->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('first'),
-        expectedSequence: 0,
+        expectedStateVersion: 1,
     ));
-    expect($node->refresh()->sequence)->toBe(1);
+    app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "yjs\0state"));
+    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node, label: 'checkpoint', keepForever: true));
+    $restored = app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $first->id, expectedStateVersion: 3);
+    app(UpdateRevisionRetentionAction::class)->execute(node: $node, versionId: $restored->id);
 
-    $second = $action->execute(new UpdateDocumentContentInput(
-        node: $node,
-        content: DocumentTestHelpers::content('second'),
-        expectedSequence: 1,
-    ));
-    expect($second->id)->toBe($first->id)
-        ->and($node->refresh()->sequence)->toBe(2)
-        ->and(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe(2);
+    expect($node->refresh()->sequence)->toBe(0)
+        ->and(DocumentTestHelpers::document($node)->state_version)->toBe(4);
 });
 
-it('checks stale expectation before an identical overwrite and leaves no side effects', function (): void {
+it('keeps node and content validators independent: a rename bumps the node, not the content', function (): void {
     $node = legacySequenceDocument();
-    $action = app(UpdateDocumentContentAction::class);
-    $content = DocumentTestHelpers::content('saved');
-    $head = $action->execute(new UpdateDocumentContentInput(node: $node, content: $content, expectedSequence: 0));
-    Event::fake([DocumentContentUpdated::class]);
+    $drive = $node->storage;
 
-    $same = $action->execute(new UpdateDocumentContentInput(node: $node, content: $content, expectedSequence: 1));
-    expect($same->id)->toBe($head->id)
-        ->and($node->refresh()->sequence)->toBe(1);
-    Event::assertNotDispatched(DocumentContentUpdated::class);
+    Vaulter::drive($drive)->asSystem('validator independence')->nodes()->rename(node: $node, name: 'Renamed', expectedSequence: 0);
+    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+        node: $node->refresh(),
+        content: DocumentTestHelpers::content('after rename'),
+        expectedStateVersion: 1,
+    ));
 
-    expect(fn () => $action->execute(new UpdateDocumentContentInput(node: $node, content: $content, expectedSequence: 0)))
-        ->toThrow(StaleNodeException::class);
     expect($node->refresh()->sequence)->toBe(1)
-        ->and(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe(2);
-    Event::assertNotDispatched(DocumentContentUpdated::class);
+        ->and($node->name)->toBe('Renamed')
+        ->and(DocumentTestHelpers::document($node)->state_version)->toBe(2);
 });
 
-it('counts a new head identity even when an appended autosave has identical content', function (): void {
+it('touches the node change stamp without the sequence on a content write', function (): void {
     $node = legacySequenceDocument();
-    $originalId = $node->current_version_id;
-    $version = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $this->travel(5)->minutes();
+
+    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node,
-        content: DocumentTestHelpers::content('initial'),
-        expectedSequence: 0,
+        content: DocumentTestHelpers::content('stamped'),
+        actorId: 7,
     ));
 
-    expect($version->id)->not->toBe($originalId)
-        ->and($node->refresh()->sequence)->toBe(1)
-        ->and($node->current_version_id)->toBe($version->id);
-});
-
-it('reloads the protected head instead of trusting a stale caller model', function (): void {
-    $node = legacySequenceDocument();
-    $stale = $node->replicate();
-    $stale->setRawAttributes($node->getAttributes(), sync: true);
-    $stale->exists = true;
-    $action = app(UpdateDocumentContentAction::class);
-    $head = $action->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('new head')));
-
-    $updated = $action->execute(new UpdateDocumentContentInput(
-        node: $stale,
-        content: DocumentTestHelpers::content('latest edit'),
-        expectedSequence: 1,
-    ));
-    expect($updated->id)->toBe($head->id)
-        ->and($node->refresh()->sequence)->toBe(2)
-        ->and($updated->tipTapContent()->toArray())->toBe(DocumentTestHelpers::content('latest edit')->toArray());
-});
-
-it('counts named and restored heads even when their content is unchanged', function (): void {
-    $node = legacySequenceDocument();
-    $originalId = $node->current_version_id;
-    $named = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
-        node: $node,
-        label: 'checkpoint',
-        expectedSequence: 0,
-    ));
-    expect($node->refresh()->sequence)->toBe(1);
-
-    $restored = app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $originalId, expectedSequence: 1);
-    expect($restored->id)->not->toBe($named->id)
-        ->and($node->refresh()->sequence)->toBe(2)
-        ->and($node->current_version_id)->toBe($restored->id);
-
-    Event::fake([DocumentRevisionCreated::class]);
-    expect(fn () => app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node, label: 'stale', expectedSequence: 1)))
-        ->toThrow(StaleNodeException::class);
-    expect(fn () => app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $originalId, expectedSequence: 1))
-        ->toThrow(StaleNodeException::class);
-    expect(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe(3);
-    Event::assertNotDispatched(DocumentRevisionCreated::class);
-});
-
-it('counts Yjs append overwrite and projection changes while identical state is a noop', function (): void {
-    $node = legacySequenceDocument();
-    $action = app(PersistCollaborationStateAction::class);
-    $first = $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "first\0state"));
-    expect($node->refresh()->sequence)->toBe(1);
-
-    $second = $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "second\0state"));
-    expect($second->id)->toBe($first->id)
-        ->and($node->refresh()->sequence)->toBe(2);
-
-    Event::fake([DocumentContentUpdated::class]);
-    $same = $action->execute(new PersistCollaborationStateInput(node: $node, yjsState: "second\0state"));
-    expect($same->id)->toBe($second->id)
-        ->and($node->refresh()->sequence)->toBe(2);
-    Event::assertNotDispatched(DocumentContentUpdated::class);
-
-    $action->execute(new PersistCollaborationStateInput(
-        node: $node,
-        yjsState: "second\0state",
-        content: DocumentTestHelpers::content('projection changed'),
-    ));
-    expect($node->refresh()->sequence)->toBe(3);
-    Event::assertDispatchedTimes(DocumentContentUpdated::class, 1);
-});
-
-it('rolls back content and head writes when the sequence is exhausted', function (): void {
-    $node = legacySequenceDocument();
-    Node::query()->whereKey($node->id)->update(['sequence' => PHP_INT_MAX]);
-    $headId = $node->current_version_id;
-    Event::fake([DocumentContentUpdated::class]);
-
-    expect(fn () => app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
-        node: $node,
-        content: DocumentTestHelpers::content('uncommitted'),
-        expectedSequence: PHP_INT_MAX,
-    )))->toThrow(SequenceOverflowException::class);
-
-    expect($node->refresh()->sequence)->toBe(PHP_INT_MAX)
-        ->and($node->current_version_id)->toBe($headId)
-        ->and(DocumentRevision::query()->where('node_id', $node->id)->count())->toBe(1);
-    Event::assertNotDispatched(DocumentContentUpdated::class);
-});
-
-it('keeps history-only retention changes outside the editorial sequence', function (): void {
-    $node = legacySequenceDocument();
-    $named = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
-        node: $node,
-        label: 'retained',
-        keepForever: true,
-        expectedSequence: 0,
-    ));
-    app(UpdateRevisionRetentionAction::class)->execute(node: $node, versionId: $named->id);
-
-    expect($named->refresh()->keep_forever)->toBeFalse()
-        ->and($node->refresh()->sequence)->toBe(1);
+    $fresh = $node->refresh();
+    expect($fresh->sequence)->toBe(0)
+        ->and((string) $fresh->updated_by)->toBe('7')
+        ->and($fresh->updated_at?->greaterThan($node->created_at))->toBeTrue();
 });
 
 it('owns runtime document types and exporter registrations in the documents manager', function (): void {

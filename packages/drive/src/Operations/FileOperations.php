@@ -65,7 +65,7 @@ final readonly class FileOperations implements Contract
         $options ??= new RevisionOptions;
         $node = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
 
-        return $this->revision($node, $node->current_version_id ?? throw NodeNotFoundException::forId($node->id));
+        return $this->revision($node, $node->file()->firstOrFail()->current_revision_id ?? throw NodeNotFoundException::forId($node->id));
     }
 
     /** @return CursorPaginator<int, FileRevision> */

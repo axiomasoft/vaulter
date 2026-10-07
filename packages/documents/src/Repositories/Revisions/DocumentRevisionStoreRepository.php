@@ -7,19 +7,14 @@ namespace Vaulter\Documents\Repositories\Revisions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Models\Drive\Node;
 
 /**
- * Write-side row work for the append-only v_node_document_versions (§2.5 / M4a):
- * create a version, update the head autosave in place (the debounce path), and the
- * prune that keeps the history bounded. Opens NO transactions and dispatches NO
- * events — the document-node Actions wrap every call in VaulterDatabase::transaction and emit the
- * domain event.
- *
- * version_no is monotonic per node (the unique (node_id, version_no) index is the
- * backbone); nextVersionNo reads the current max under the caller's transaction so
- * two concurrent commits serialise on the index.
+ * Write-side row work for the immutable checkpoints in v_document_revisions:
+ * insert a checkpoint, change its retention pin, and prune the history. There is no
+ * general update — a checkpoint's payload never changes after INSERT. Opens NO
+ * transactions and dispatches NO events.
  */
 final class DocumentRevisionStoreRepository
 {
@@ -28,56 +23,33 @@ final class DocumentRevisionStoreRepository
     ) {}
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $attributes server-built by DocumentStateWriter
      */
     public function create(array $attributes): DocumentRevision
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
-        // from the document-node Actions, never raw request input.
         $model = $this->documentsConfig->model('document_revision');
-        $version = new $model;
-        $version->forceFill($attributes);
-        $version->save();
+        $revision = new $model;
+        $revision->forceFill($attributes);
+        $revision->save();
 
-        return $version->refresh();
+        return $revision->refresh();
     }
 
-    /**
-     * Overwrite an existing version's content/yjs in place — the autosave-debounce
-     * path (§2.5): a rapid autosave UPDATES the head autosave row rather than
-     * appending a new one, so a typing session does not flood the history.
-     *
-     * @param array<string, mixed> $attributes
-     */
-    public function update(DocumentRevision $version, array $attributes): DocumentRevision
+    /** The one mutation a stored checkpoint allows. */
+    public function setRetention(DocumentRevision $revision, bool $keepForever): DocumentRevision
     {
-        $version->forceFill($attributes)->save();
+        $revision->forceFill([DocumentRevision::RETENTION_COLUMN => $keepForever])->save();
 
-        return $version;
+        return $revision;
     }
 
     /**
-     * The next monotonic version_no for a node (§2.5) — current max + 1, or 1 for the
-     * first version. Read inside the caller's transaction so two concurrent commits
-     * serialise on the unique (node_id, version_no) index.
+     * Prune a document's history down to the $max most recent checkpoints (§2.5),
+     * NEVER deleting a keep_forever checkpoint nor the head. Returns the number of
+     * pruned rows. $max <= 0 means unlimited. revision_count is not lowered, so a
+     * number is never handed out twice.
      */
-    public function nextVersionNo(Node $node): int
-    {
-        $model = $this->documentsConfig->model('document_revision');
-
-        $max = $model::query()
-            ->where('node_id', $node->getKey())
-            ->max('version_no');
-
-        return is_numeric($max) ? ((int) $max) + 1 : 1;
-    }
-
-    /**
-     * Prune a node's document history down to the $max most recent versions (§2.5),
-     * NEVER deleting a keep_forever version nor the current head. Returns the number
-     * of pruned rows. $max <= 0 means unlimited (no pruning).
-     */
-    public function prune(Node $node, int $max, mixed $headId): int
+    public function prune(Document $document, int $max, int|string|null $headId): int
     {
         if ($max <= 0) {
             return 0;
@@ -85,21 +57,19 @@ final class DocumentRevisionStoreRepository
 
         $model = $this->documentsConfig->model('document_revision');
 
-        // The prunable rows: NOT keep_forever, NOT the current head, newest first.
         /** @var Collection<int, DocumentRevision> $prunable */
         $prunable = $model::query()
-            ->where('node_id', $node->getKey())
+            ->where('document_id', $document->getKey())
             ->where('keep_forever', false)
             ->when(
                 $headId !== null,
                 static fn (Builder $query): Builder => $query->whereKeyNot($headId),
             )
-            ->orderByDesc('version_no')
+            ->orderByDesc('number')
             ->get();
 
-        // Keep the newest $max; everything past the window is pruned. keep_forever
-        // rows and the head were already excluded, so they never count against the
-        // window and are never deleted.
+        // keep_forever rows and the head were excluded above, so they never count
+        // against the window and are never deleted.
         /** @var Collection<int, DocumentRevision> $excess */
         $excess = $prunable->slice($max)->values();
 

@@ -7,86 +7,98 @@ namespace Vaulter\Documents\Models\Revisions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use LogicException;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Casts\BinaryString;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
-use Vaulter\Models\Drive\Node;
 
 /**
- * An append-only snapshot of a DOCUMENT NODE's content (master plan §2.5 / M4a) —
- * the NEW node-attached document-version path. It is DISTINCT from the legacy
- * {@see DocumentVersion} (document_id-attached, the v_documents path that stays
- * intact); this one hangs off a kind=document {@see Node} via node_id and lives in
- * v_node_document_versions.
- *
- * Append-only (no updated_at / no soft-delete): a committed version is immutable;
- * the autosave HEAD is the one exception the Action overwrites in place within the
- * debounce window. version_no is monotonic per node (the unique index is the
- * backbone). The TipTap JSON projection lives in `content`; the binary Yjs CRDT
- * state (the M4b collaboration source of truth) in `yjs_state`.
+ * An immutable checkpoint of a document's working state (v_document_revisions).
+ * Autosave checkpoints are taken on an interval, named ones on snapshot(), and a
+ * restore copies an older checkpoint forward into a new one (restored_from_revision_id).
+ * After INSERT only keep_forever may change — the model refuses any other update,
+ * so a checkpoint id always names the same bytes (cacheable exports, stable history).
  *
  * @property int|string                $id
  * @property int|string|null           $tenant_id
- * @property int|string                $node_id
- * @property int                       $version_no
+ * @property int|string                $document_id
+ * @property int                       $number
+ * @property int                       $schema_version
  * @property array<string, mixed>|null $content
+ * @property string|null               $content_hash
+ * @property int|null                  $content_size
  * @property string|null               $yjs_state
  * @property int|null                  $yjs_state_size
- * @property string                    $format
- * @property string|null               $content_hash
- * @property string|null               $snapshot_label
+ * @property int                       $state_version
+ * @property string|null               $label
  * @property bool                      $is_autosave
- * @property string                    $status
  * @property bool                      $keep_forever
+ * @property string                    $status
+ * @property int|string|null           $restored_from_revision_id
  * @property int|string|null           $created_by
  * @property Carbon|null               $created_at
- * @property-read Node $node
+ * @property-read Document              $document
+ * @property-read DocumentRevision|null $restoredFrom
  */
 class DocumentRevision extends Model
 {
-    use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 
     public const UPDATED_AT = null;
 
+    /** The only column a stored checkpoint may change. */
+    public const string RETENTION_COLUMN = 'keep_forever';
+
     /**
-     * Closed allow-list (F-P1.8-02): the version's own document content/label.
-     * id/tenant_id/node_id/version_no/yjs_state/yjs_state_size/content_hash/
-     * status/created_by are structural/server-computed — every write path that
-     * sets them already uses forceFill() (DocumentRevisionStoreRepository).
+     * Nothing is mass-assignable: the payload is server-computed by
+     * DocumentStateWriter and written with forceFill().
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'content',
-        'format',
-        'snapshot_label',
-        'is_autosave',
-        'keep_forever',
-    ];
+    protected $fillable = [];
+
+    #[\Override]
+    protected static function booted(): void
+    {
+        static::updating(static function (self $revision): void {
+            $changed = array_keys($revision->getDirty());
+            if (array_diff($changed, [self::RETENTION_COLUMN]) !== []) {
+                throw new LogicException('[Vaulter] A document revision is immutable; only keep_forever may change.');
+            }
+        });
+    }
 
     #[\Override]
     public function getTable(): string
     {
-        return app(DatabaseConfig::class)->table('node_document_versions');
+        return app(DatabaseConfig::class)->table('document_revisions');
     }
 
     /**
-     * @return BelongsTo<Node, $this>
+     * @return BelongsTo<Document, $this>
      */
-    public function node(): BelongsTo
+    public function document(): BelongsTo
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('node'), 'node_id');
+        return $this->belongsTo(Document::class, 'document_id');
     }
 
     /**
-     * The TipTap content of this version (the structural JSON projection).
+     * The checkpoint this one was restored from, while that one still exists.
+     *
+     * @return BelongsTo<DocumentRevision, $this>
+     */
+    public function restoredFrom(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'restored_from_revision_id');
+    }
+
+    /**
+     * The TipTap content of this checkpoint (the structural JSON projection).
      *
      * READING NEVER THROWS (VLT-REMED D29 / R-01). A snapshot written before today's
      * allow-list existed — or by a host extension since switched off — DECAYS: unknown
@@ -113,7 +125,7 @@ class DocumentRevision extends Model
     }
 
     /**
-     * This version's content as an opaque, unvalidated snapshot (§7 level 2) — the
+     * This checkpoint's content as an opaque, unvalidated snapshot (§7 level 2) — the
      * shape a non-rich-text handler's content round-trips as, e.g. a Univer workbook.
      */
     public function opaqueContent(): OpaqueDocumentContent
@@ -134,7 +146,10 @@ class DocumentRevision extends Model
             // Postgres returns bytea as a stream resource; normalise to a string on every
             // driver so consumers (copy/restore actions, collab load) never see a resource.
             'yjs_state' => BinaryString::class,
-            'version_no' => 'integer',
+            'number' => 'integer',
+            'schema_version' => 'integer',
+            'state_version' => 'integer',
+            'content_size' => 'integer',
             'yjs_state_size' => 'integer',
             'is_autosave' => 'boolean',
             'keep_forever' => 'boolean',

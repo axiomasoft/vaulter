@@ -104,7 +104,7 @@ final readonly class TenancyBoundary
     public function assertNode(Node $node): Drive
     {
         $class = $this->models->model('node');
-        $fresh = $class::query()->withTrashed()->whereKey($node->getRawOriginal($node->getKeyName()))->first();
+        $fresh = $class::query()->whereKey($node->getRawOriginal($node->getKeyName()))->first();
         if (!$fresh instanceof Node) {
             throw NodeNotFoundException::forId('node');
         }

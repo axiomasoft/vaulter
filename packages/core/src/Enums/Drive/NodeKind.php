@@ -42,7 +42,7 @@ enum NodeKind: string
     case Shortcut = 'shortcut';
 
     /**
-     * Whether this is a Documents document leaf (payload in v_node_document_versions).
+     * Whether this is a Documents document leaf (payload in its v_documents aggregate).
      * Built-in sugar over the kind discriminator — the FileHandlerRegistry, not
      * this enum, decides what a node can actually do (H.5).
      */

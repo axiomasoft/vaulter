@@ -292,8 +292,8 @@ php artisan vendor:publish --tag=vaulter-config
 
 | Ключ | По умолчанию | Управляет |
 |---|---|---|
-| `vaulter-documents.revisions.limit` | `50` | Хранимых версий на узел до обрезки (`0` = без ограничений) |
-| `vaulter-documents.revisions.autosave_debounce_seconds` | `30` | Автосохранение в пределах этого окна от головной автосейв-версии обновляет её на месте (без новой строки) |
+| `vaulter-documents.revisions.limit` | `50` | Хранимых чекпоинтов на документ до обрезки (`0` = без ограничений) |
+| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Сколько секунд рабочее состояние может опережать последний автосохранённый чекпоинт (`0` — чекпоинт на каждое эффективное сохранение). Ключ 0.2 `autosave_debounce_seconds` устарел и игнорируется |
 
 См. [Использование → Версии](/ru/guide/documents).
 

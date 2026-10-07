@@ -232,7 +232,7 @@ it('resolves a missing destination to the root instead of a parentless node', fu
     $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/move', ['parent_id' => null])
         ->assertJsonPath('data.parent_id', $rootId);
 
-    expect(Node::withTrashed()->where('drive_id', $storageId)->whereNull('parent_id')->pluck('id')->all())
+    expect(Node::query()->where('drive_id', $storageId)->whereNull('parent_id')->pluck('id')->all())
         ->toEqual([$rootId]);
 });
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Configuration\DatabaseConfig;
@@ -40,8 +40,6 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property string|null     $mime_type
  * @property string|null     $extension
  * @property int             $size_bytes
- * @property int|string|null $current_version_id
- * @property int|string|null $file_id
  * @property int             $sequence
  * @property int             $position
  * @property bool            $is_pinned
@@ -56,7 +54,6 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property-read Drive $storage
  * @property-read Node|null        $parent
  * @property-read File|null        $file
- * @property-read FileRevision|null $currentVersion
  */
 class Node extends Model
 {
@@ -64,14 +61,13 @@ class Node extends Model
     use HasRecursiveRelationships;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
-    use SoftDeletes;
     use StampsDriveTenant;
 
     /**
      * Closed allow-list (F-P1.8-02): only the handful of columns a caller
      * legitimately mass-assigns through fill()/create() with untrusted-shaped
      * arrays. Everything structural/security (id, tenant_id, drive_id,
-     * parent_id, current_version_id, file_id, owner_id, shortcut_target_id, the
+     * parent_id, owner_id, shortcut_target_id, the
      * trashed_* triplet, timestamps) is excluded — every write path that sets
      * those columns already uses forceFill() (NodeStoreRepository) and is
      * unaffected by this list.
@@ -165,19 +161,13 @@ class Node extends Model
     }
 
     /**
-     * @return BelongsTo<File, $this>
+     * The file aggregate of a kind=file node; its head lives on the aggregate.
+     *
+     * @return HasOne<File, $this>
      */
-    public function file(): BelongsTo
+    public function file(): HasOne
     {
-        return $this->belongsTo(app(VaulterConfig::class)->model('file'), 'file_id');
-    }
-
-    /**
-     * @return BelongsTo<FileRevision, $this>
-     */
-    public function currentVersion(): BelongsTo
-    {
-        return $this->belongsTo(app(VaulterConfig::class)->model('file_revision'), 'current_version_id');
+        return $this->hasOne(app(VaulterConfig::class)->model('file'), 'node_id');
     }
 
     /**

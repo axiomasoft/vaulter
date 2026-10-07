@@ -319,8 +319,8 @@ The `features.webhooks` flag gates the outbox subscriber and endpoint routes; ta
 
 | Key | Default | Controls |
 |---|---|---|
-| `vaulter-documents.revisions.limit` | `50` | Stored versions per node before pruning (`0` = unlimited) |
-| `vaulter-documents.revisions.autosave_debounce_seconds` | `30` | An autosave within this window of the head autosave version updates it in place (no new row) |
+| `vaulter-documents.revisions.limit` | `50` | Stored checkpoints per document before pruning (`0` = unlimited) |
+| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Seconds the working state may run ahead of its last autosave checkpoint (`0` = checkpoint every effective save). The 0.2 `autosave_debounce_seconds` key is deprecated and ignored |
 
 See [Usage → Versions](/guide/documents).
 

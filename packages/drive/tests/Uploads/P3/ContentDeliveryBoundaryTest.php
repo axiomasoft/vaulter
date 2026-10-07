@@ -39,7 +39,7 @@ function p37DeliveryRequireScan($test): void
 
 function p37DeliverySettle($node, ScanVerdict $verdict): void
 {
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
     $attempt = $repo->claim($work->id, $work->generation, new DateTimeImmutable);
@@ -51,7 +51,7 @@ function p37DeliverySettle($node, ScanVerdict $verdict): void
 it('SEC-R17 checks pending head, explicit older clean, metadata and sticky infection before opening bytes', function (): void {
     p37DeliveryRequireScan($this);
     $node = $this->system->files()->upload(UploadSource::fromString('clean old', 'file.txt'));
-    $old = $node->currentVersion()->firstOrFail();
+    $old = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     p37DeliverySettle($node, ScanVerdict::Clean);
     $descriptor = app(FileDescriptorFactory::class)->forNode($node);
@@ -88,12 +88,12 @@ it('SEC-R16 strict refuses bearer URLs before touching a signer', function (): v
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldNotReceive('sign');
     app()->instance(DirectContentUrlSigner::class, $signer);
-    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, $node, $node->currentVersion()->firstOrFail(), 60))->toThrow(ProfileRestrictionException::class);
+    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, $node, $node->file()->firstOrFail()->currentRevision()->firstOrFail(), 60))->toThrow(ProfileRestrictionException::class);
 });
 
 it('SEC-R16 explicit direct delivery binds exact immutable bytes and TTL with bounded revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('content', 'file.txt'));
-    $revision = $node->currentVersion()->firstOrFail();
+    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldReceive('sign')->once()->andReturnUsing(static fn (ImmutableContentIdentity $identity, DateTimeImmutable $expiry): SignedContentUrl => new SignedContentUrl('https://storage.test/exact-capability', $expiry, $identity->fingerprint(), $identity->storageVersion));

@@ -188,9 +188,9 @@ final class NodeResource extends Resource
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        // Trashed nodes carry trashed_at (a soft-trash, not the Eloquent soft-delete);
-        // surface both so the Trashed filter can flip between them, but keep the
-        // hard-deleted (deleted_at) rows hidden.
+        // Trashed nodes carry trashed_at (a soft-trash); surface both live and
+        // trashed rows so the Trashed filter can flip between them. Purged nodes
+        // no longer exist.
         $query = parent::getEloquentQuery();
 
         // SQL narrows candidates only; ListNodes applies the exact ACL page filter.

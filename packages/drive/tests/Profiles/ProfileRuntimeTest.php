@@ -93,9 +93,9 @@ it('uses the profile retention cutoff per drive and preserves an explicit mainte
     $b = (new Node)->forceFill(['drive_id' => $second->id, 'parent_id' => $second->root_node_id, 'kind' => 'folder', 'name' => 'purge', 'trashed_at' => Carbon::now()->subDays(2)]);
     $b->save();
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
-    expect(Node::withTrashed()->whereKey($a->id)->exists())->toBeTrue()->and(Node::withTrashed()->whereKey($b->id)->exists())->toBeFalse();
+    expect(Node::query()->whereKey($a->id)->exists())->toBeTrue()->and(Node::query()->whereKey($b->id)->exists())->toBeFalse();
     $this->artisan('vaulter:purge-trash', ['--days' => 0])->assertSuccessful();
-    expect(Node::withTrashed()->whereKey($a->id)->exists())->toBeFalse();
+    expect(Node::query()->whereKey($a->id)->exists())->toBeFalse();
 });
 
 it('prunes edges while preserving head permanent revisions quota and allocation high-watermark', function (): void {

@@ -10,8 +10,8 @@ Vaulter\Documents\Contracts\HostUserResolver
 
 Vaulter\Documents\Configuration\DocumentsConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
-  autosaveDebounceSeconds(): int
   channelPrefix(): string
+  checkpointIntervalSeconds(): int
   collaborationDriver(): string
   collaborationEnabled(): bool
   collaborationRoom(mixed $nodeId): string

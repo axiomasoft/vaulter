@@ -33,11 +33,9 @@ it('physically purges a node trashed past the retention window, F-P1.12-02', fun
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
-    // The node is now PHYSICALLY gone — not merely soft-deleted (F-P1.12-02: purge
-    // means purge, not another soft-delete tombstone that a forensic
-    // withTrashed() query can still see).
-    expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse()
-        ->and(Node::withTrashed()->whereKey($node->getKey())->exists())->toBeFalse();
+    // The node is now PHYSICALLY gone (F-P1.12-02: purge means purge; nodes have no
+    // soft-delete tombstone a forensic query could still see).
+    expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
 });
 
 it('leaves a node still inside the retention window untouched', function (): void {
@@ -84,7 +82,7 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
     // The node AND every row that FK-cascades off it are physically gone — not
     // just the version↔blob edge (already covered by the GC-eligibility test
     // above), the v_files/v_file_revisions rows themselves.
-    expect(Node::withTrashed()->whereKey($fileNode->getKey())->exists())->toBeFalse()
+    expect(Node::query()->whereKey($fileNode->getKey())->exists())->toBeFalse()
         ->and(DB::table('v_files')->where('id', $fileId)->exists())->toBeFalse()
         ->and(DB::table('v_file_revisions')->where('file_id', $fileId)->exists())->toBeFalse();
 });

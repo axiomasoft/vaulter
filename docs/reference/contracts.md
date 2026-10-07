@@ -327,7 +327,7 @@ For a custom byte backend (S3 / local), implement `StorageDriver` and bind it â€
 ### `Vaulter\Documents\Contracts\CollaborationDriver`
 
 The **node-tree** realtime-collaboration transport (the current path). Abstracts how
-a document node (`kind=document`, content on `v_node_document_versions`) is joined for
+a document node (`kind=document`, content in the `v_documents` aggregate) is joined for
 realtime editing. The authorization decision is **not** the driver's job â€” the
 controller resolves it through `AccessResolver` and passes the granted ability in; the
 driver only encodes it into the session descriptor (`readOnly = ability is not Edit`).

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -31,13 +32,13 @@ function legacyVersion(array $content): DocumentRevision
         parent: $drive->root(),
     ));
 
-    $version = DocumentRevision::query()->where('node_id', $node->getKey())->firstOrFail();
+    $headId = Document::query()->where('node_id', $node->getKey())->value('current_revision_id');
 
-    // Перезаписываем снапшот «как он лежал до P0.1» — миграции данных нет, версия в БД
-    // остаётся ровно такой, какой её записал старый код.
-    $version->forceFill(['content' => $content])->save();
+    // Перезаписываем снапшот «как он лежал до P0.1» прямо в БД (ревизии неизменяемы
+    // через модель) — миграции данных нет, версия остаётся такой, какой её записал старый код.
+    DocumentRevision::query()->whereKey($headId)->update(['content' => json_encode($content)]);
 
-    return $version->fresh();
+    return DocumentRevision::query()->whereKey($headId)->firstOrFail();
 }
 
 it('легаси-версия с неизвестными узлами ЧИТАЕТСЯ (decay), а не бросает, R-01', function (): void {

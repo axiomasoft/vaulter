@@ -33,11 +33,11 @@ it('V03 serializes revisions and accounts for their actual preceding heads', fun
     }
 
     $file = $node->file()->firstOrFail();
-    $head = $file->currentVersion;
+    $head = $file->currentRevision;
     expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 2, 3])
         ->and($file->revision_count)->toBe(3)
         ->and($head->number)->toBe(3)
-        ->and($node->refresh()->current_version_id)->toBe($head->id)
+        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($head->id)
         ->and($drive->model()->refresh()->used_bytes)->toBe($head->size_bytes)
         ->and($node->size_bytes)->toBe($head->size_bytes);
 });
@@ -52,7 +52,7 @@ it('V03 aggregate lock protects counter allocation even without a caller node lo
         static fn (int $i): Closure => static fn (): int => app(VaulterDatabase::class)->transaction(function () use ($file): int {
             $files = app(FileStoreRepository::class);
             $locked = $files->lockForUpdate($file);
-            $head = $locked->currentVersion;
+            $head = $locked->currentRevision;
             // Widen the read/write overlap: an unlocked reader also sees counter 1.
             usleep(100_000);
             $versionNo = $locked->revision_count + 1;

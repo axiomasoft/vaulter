@@ -4,53 +4,44 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Collaboration;
 
-use Illuminate\Support\Carbon;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
-use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Data\Documents\DocumentStateResult;
+use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
-use Vaulter\Documents\Support\DocumentContentHasher;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\NodeSequence;
-use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\TreeGuard;
 
 /**
  * Persist a Yjs snapshot (master plan §7 / ADR-0001 / M4b) — the write the Node
  * Hocuspocus hub's debounced onStoreDocument drives. The Yjs binary CRDT state is the
- * SOURCE OF TRUTH: it is stored verbatim as yjs_state (bytea) with its byte length in
- * yjs_state_size; the optional TipTap JSON is the DERIVED projection (we never
- * reconstruct Yjs from JSON — when the hub omits the projection the prior projection
- * is left intact and only the Yjs state advances).
+ * SOURCE OF TRUTH and becomes the working state verbatim; the optional TipTap JSON is
+ * the DERIVED projection (we never reconstruct Yjs from JSON — when the hub omits the
+ * projection, the current projection stays and only the Yjs state advances).
  *
- * The persistence is append-only with debounce, the SAME policy as the autosave path
- * (the hub already debounces, so a rapid snapshot UPDATES the head autosave version in
- * place rather than flooding the history); outside the window a fresh is_autosave
- * version is appended and the head repoints. One outer transaction; prune runs inside
- * it (respecting keep_forever and the current head); a single after-commit
+ * An identical snapshot is a no-op. Checkpoints follow the same interval as the
+ * autosave path. One outer transaction under T → N → D locks; a single after-commit
  * DocumentContentUpdated event integrates with the activity/outbox subscribers.
  */
 final readonly class PersistCollaborationStateAction
 {
     public function __construct(
-        private DocumentRevisionReadRepository $read,
-        private DocumentRevisionStoreRepository $store,
-        private NodeStoreRepository $nodes,
+        private DocumentReadRepository $documents,
+        private DocumentStateWriter $writer,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
         private TreeGuard $tree,
-        private NodeSequence $sequence,
     ) {}
 
-    public function execute(PersistCollaborationStateInput $data): DocumentRevision
+    public function execute(PersistCollaborationStateInput $data): DocumentStateResult
     {
         $node = $data->node;
 
@@ -61,7 +52,7 @@ final readonly class PersistCollaborationStateAction
 
         return $this->metrics->timing(
             name: 'vaulter_collab_snapshot_duration_seconds',
-            operation: fn (): DocumentRevision => $this->database->transaction(function () use ($node, $data): DocumentRevision {
+            operation: fn (): DocumentStateResult => $this->database->transaction(function () use ($node, $data): DocumentStateResult {
                 $driveId = $node->getRawOriginal('drive_id');
                 $nodeId = $node->getRawOriginal($node->getKeyName());
                 if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
@@ -77,121 +68,28 @@ final readonly class PersistCollaborationStateAction
                     throw NotADocumentException::forNode($nodeId);
                 }
                 $node = $this->tree->sync($node, $current);
-                $this->sequence->assertExpected(locked: $node, expected: null);
-                $head = $this->read->head($node);
+                $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
+                $document->setRelation('node', $node);
 
-                if ($head !== null && $this->shouldOverwrite($head)) {
-                    $payload = $this->payload($data, $head);
-                    if ($head->content == $payload['content'] && $head->content_hash === $payload['content_hash']
-                        && $head->yjs_state === $payload['yjs_state'] && $head->yjs_state_size === $payload['yjs_state_size']) {
-                        return $head;
-                    }
-                    $version = $this->store->update($head, $payload);
-                    $this->sequence->bump(locked: $node);
-
-                    event(new DocumentContentUpdated(
-                        node: $node,
-                        version: $version,
-                        created: false,
-                        actorId: $data->actorId,
-                    ));
-
-                    return $version;
-                }
-
-                $version = $this->store->create([
-                    'node_id' => $node->getKey(),
-                    'version_no' => $this->store->nextVersionNo($node),
-                    // A new snapshot row on an existing document CONTINUES its format —
-                    // never a schema default (P0.4/L3, D4/D12). Falls back to the
-                    // rich-text default only for the (practically unreachable) case of a
-                    // document node with no prior version at all.
-                    'format' => $head->format ?? DocumentType::RichText->value,
-                    'is_autosave' => true,
-                    'status' => 'committed',
-                    'created_at' => now(),
-                    ...$this->payload($data, null),
-                ]);
-
-                $this->nodes->update($node, ['current_version_id' => $version->getKey()]);
-
-                $this->store->prune(
-                    node: $node,
-                    max: $this->documentsConfig->revisionLimit(),
-                    headId: $version->getKey(),
-                );
-                $this->sequence->bump(locked: $node);
-
-                event(new DocumentContentUpdated(
-                    node: $node,
-                    version: $version,
-                    created: true,
+                $result = $this->writer->write($document, new DocumentStateChange(
+                    cause: StateWriteCause::Collaboration,
+                    content: $data->content,
+                    yjsState: $data->yjsState,
                     actorId: $data->actorId,
                 ));
 
-                return $version;
+                if ($result->changed) {
+                    event(new DocumentContentUpdated(
+                        node: $node,
+                        version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
+                        created: $result->checkpoint !== null,
+                        actorId: $data->actorId,
+                    ));
+                }
+
+                return $result;
             }),
             labels: ['tier' => LoadTier::label()],
         );
-    }
-
-    /**
-     * Whether to overwrite the head in place: it must be an AUTOSAVE version created
-     * within the debounce window (the same rule as the autosave path). A committed/
-     * named head, or an autosave older than the window, forces a fresh row so the
-     * history keeps the older Yjs state.
-     */
-    private function shouldOverwrite(DocumentRevision $head): bool
-    {
-        if (!$head->is_autosave) {
-            return false;
-        }
-
-        $debounce = $this->documentsConfig->autosaveDebounceSeconds();
-
-        if ($debounce === 0) {
-            return true;
-        }
-
-        $createdAt = $head->created_at;
-
-        if (!$createdAt instanceof Carbon) {
-            return true;
-        }
-
-        return $createdAt->greaterThanOrEqualTo(Carbon::now()->subSeconds($debounce));
-    }
-
-    /**
-     * The snapshot payload. yjs_state is the source of truth — always written, with
-     * its byte length cached in yjs_state_size. The TipTap projection is written ONLY
-     * when the hub supplied it; otherwise the prior projection is preserved (when
-     * appending a new row with no projection, content stays null — the Yjs state is
-     * authoritative and the projection backfills on the next snapshot that carries it).
-     *
-     * @return array<string, mixed>
-     */
-    private function payload(PersistCollaborationStateInput $data, ?DocumentRevision $head): array
-    {
-        $payload = [
-            'yjs_state' => $data->yjsState,
-            'yjs_state_size' => mb_strlen($data->yjsState, '8bit'),
-        ];
-
-        if ($data->content !== null) {
-            $payload['content'] = $data->content->toArray();
-            $payload['content_hash'] = DocumentContentHasher::hash($data->content);
-
-            return $payload;
-        }
-
-        // No projection in this snapshot: keep the head's existing projection when
-        // overwriting in place; leave it null when appending (Yjs remains the truth).
-        if ($head !== null) {
-            $payload['content'] = $head->content;
-            $payload['content_hash'] = $head->content_hash;
-        }
-
-        return $payload;
     }
 }
